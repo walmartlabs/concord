@@ -23,8 +23,10 @@ package com.walmartlabs.concord.agent.executors.runner;
 import com.google.common.primitives.Bytes;
 import com.walmartlabs.concord.agent.logging.LogAppender;
 import com.walmartlabs.concord.agent.logging.LogSegmentStats;
-import com.walmartlabs.concord.agent.logging.SegmentHeaderParser;
 import com.walmartlabs.concord.agent.logging.SegmentedLogsConsumer;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentHeader;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentSerializer;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -156,12 +158,12 @@ public class SegmentedLogsConsumerTest {
     private static byte[] bb(int segmentId, String msg, int errorCount, int warnCount) {
         byte[] ab = msg.getBytes();
 
-        byte[] header = SegmentHeaderParser.serialize(SegmentHeaderParser.Header.builder()
+        byte[] header = LogSegmentSerializer.serializeHeader(LogSegmentHeader.builder()
                 .segmentId(segmentId)
                 .length(ab.length)
                 .warnCount(warnCount)
                 .errorCount(errorCount)
-                .done(false)
+                .status(LogSegmentStatus.RUNNING)
                 .build());
 
         return Bytes.concat(header, ab);

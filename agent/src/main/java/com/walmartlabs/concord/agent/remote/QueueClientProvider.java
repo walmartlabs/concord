@@ -26,13 +26,9 @@ import com.walmartlabs.concord.server.queueclient.QueueClient;
 import com.walmartlabs.concord.server.queueclient.QueueClientConfiguration;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
-import javax.inject.Singleton;
 import java.net.URISyntaxException;
 
-@Named
-@Singleton
 public class QueueClientProvider implements Provider<QueueClient> {
 
     private final AgentConfiguration agentCfg;
@@ -54,6 +50,8 @@ public class QueueClientProvider implements Provider<QueueClient> {
                     .connectTimeout(serverCfg.getConnectTimeout())
                     .pingInterval(serverCfg.getPingInterval())
                     .maxNoActivityPeriod(serverCfg.getMaxNoActivityPeriod())
+                    .processRequestDelay(serverCfg.getProcessRequestDelay())
+                    .reconnectDelay(serverCfg.getReconnectDelay())
                     .build());
 
             queueClient.start();

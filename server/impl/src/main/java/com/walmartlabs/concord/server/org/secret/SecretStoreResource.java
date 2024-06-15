@@ -20,14 +20,11 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.Authorization;
-import org.sonatype.siesta.Resource;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -35,10 +32,8 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Named
-@Singleton
-@Api(value = "Secret stores", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/secret/store")
+@Tag(name = "Secret stores")
 public class SecretStoreResource implements Resource {
 
     private final SecretManager secretManager;
@@ -49,8 +44,8 @@ public class SecretStoreResource implements Resource {
     }
 
     @GET
-    @ApiOperation(value = "List of active secret stores", responseContainer = "list", response = SecretStoreEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "List of active secret stores")
     public List<SecretStoreEntry> listActiveStores() {
         return secretManager.getActiveSecretStores().stream()
                 .map(s -> new SecretStoreEntry(s.getType(), s.getDescription()))

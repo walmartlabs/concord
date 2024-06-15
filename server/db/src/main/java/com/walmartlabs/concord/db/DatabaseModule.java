@@ -21,7 +21,7 @@ package com.walmartlabs.concord.db;
  */
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.inject.AbstractModule;
+import com.google.inject.Binder;
 import com.google.inject.Provides;
 import org.jooq.Configuration;
 
@@ -30,7 +30,9 @@ import javax.sql.DataSource;
 import java.util.Comparator;
 import java.util.Set;
 
-public class DatabaseModule extends AbstractModule {
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
+
+public class DatabaseModule implements com.google.inject.Module {
 
     private final boolean migrateDb;
 
@@ -43,7 +45,8 @@ public class DatabaseModule extends AbstractModule {
     }
 
     @Override
-    protected void configure() {
+    public void configure(Binder binder) {
+        newSetBinder(binder, DatabaseChangeLogProvider.class).addBinding().to(MainDBChangeLogProvider.class);
     }
 
     @Provides

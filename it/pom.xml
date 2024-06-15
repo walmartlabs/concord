@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>2.12.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -18,6 +18,7 @@
         <module>tasks/dependency-manager-test</module>
         <module>tasks/serialization-test</module>
         <module>tasks/suspend-test</module>
+        <module>tasks/client1-test</module>
 
         <module>common</module>
         <module>server</module>
@@ -25,6 +26,8 @@
         <module>runtime-v1</module>
         <module>runtime-v2</module>
         <module>compat</module>
+
+        <module>testing-server</module>
     </modules>
 
     <properties>

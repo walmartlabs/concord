@@ -38,7 +38,7 @@ const UserActivityPage = () => {
     return (
         <>
             <BreadcrumbsToolbar loading={loading} refreshHandler={refreshHandler}>
-                <Breadcrumb.Section active={true}>Activity today</Breadcrumb.Section>
+                <Breadcrumb.Section active={true}>Activity</Breadcrumb.Section>
             </BreadcrumbsToolbar>
 
             <UserProcessActivity forceRefresh={refresh} />

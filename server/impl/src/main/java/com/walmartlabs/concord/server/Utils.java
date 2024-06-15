@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,20 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import java.sql.Timestamp;
-import java.util.Calendar;
+import com.google.inject.Binder;
+import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
+import com.walmartlabs.concord.server.sdk.BackgroundTask;
+import com.walmartlabs.concord.server.sdk.ScheduledTask;
+import com.walmartlabs.concord.server.sdk.rest.Component;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
+
+import javax.servlet.Filter;
+import javax.ws.rs.ext.ExceptionMapper;
 import java.util.List;
+
+import static com.google.inject.Scopes.SINGLETON;
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
 
 public final class Utils {
 
@@ -49,21 +60,47 @@ public final class Utils {
         return s;
     }
 
-    public static Timestamp toTimestamp(IsoDateParam p) {
-        if (p == null) {
-            return null;
-        }
-
-        Calendar c = p.getValue();
-        return new Timestamp(c.getTimeInMillis());
-    }
-
     public static <T> T unwrap(WrappedValue<T> v) {
         if (v == null) {
             return null;
         }
 
         return v.getValue();
+    }
+
+    public static void bindServletFilter(Binder binder, Class<? extends Filter> klass) {
+        binder.bind(klass).in(SINGLETON);
+        newSetBinder(binder, Filter.class).addBinding().to(klass);
+    }
+
+    public static void bindServletHolder(Binder binder, Class<? extends ServletHolder> klass) {
+        binder.bind(klass).in(SINGLETON);
+        newSetBinder(binder, ServletHolder.class).addBinding().to(klass);
+    }
+
+    public static void bindJaxRsResource(Binder binder, Class<? extends Resource> klass) {
+        binder.bind(klass).in(SINGLETON);
+        newSetBinder(binder, Component.class).addBinding().to(klass);
+    }
+
+    public static void bindSingletonBackgroundTask(Binder binder, Class<? extends BackgroundTask> klass) {
+        binder.bind(klass).in(SINGLETON);
+        newSetBinder(binder, BackgroundTask.class).addBinding().to(klass);
+    }
+
+    public static void bindScheduledTask(Binder binder, Class<? extends ScheduledTask> klass) {
+        newSetBinder(binder, ScheduledTask.class).addBinding().to(klass);
+    }
+
+    public static void bindSingletonScheduledTask(Binder binder, Class<? extends ScheduledTask> klass) {
+        binder.bind(klass).in(SINGLETON);
+        newSetBinder(binder, ScheduledTask.class).addBinding().to(klass);
+    }
+
+    public static void bindExceptionMapper(Binder binder, Class<? extends ExceptionMapperSupport<?>> klass) {
+        binder.bind(klass).in(SINGLETON);
+        newSetBinder(binder, Component.class).addBinding().to(klass);
+        newSetBinder(binder, ExceptionMapper.class).addBinding().to(klass);
     }
 
     private Utils() {

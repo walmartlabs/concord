@@ -31,17 +31,16 @@ import com.walmartlabs.concord.server.jooq.tables.Triggers;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
+import static com.walmartlabs.concord.db.PgUtils.jsonbStripNulls;
 import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.TriggerSchedule.TRIGGER_SCHEDULE;
 import static com.walmartlabs.concord.server.jooq.tables.Triggers.TRIGGERS;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class TriggerScheduleDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
@@ -88,9 +87,9 @@ public class TriggerScheduleDao extends AbstractDao {
                     t.REPO_ID,
                     r.REPO_NAME,
                     t.ACTIVE_PROFILES,
-                    t.ARGUMENTS,
-                    t.TRIGGER_CFG,
-                    t.CONDITIONS,
+                    jsonbStripNulls(t.ARGUMENTS),
+                    jsonbStripNulls(t.TRIGGER_CFG),
+                    jsonbStripNulls(t.CONDITIONS),
                     currentOffsetDateTime(),
                     t.EVENT_SOURCE)
                     .from(t, p, r, o)
@@ -105,43 +104,40 @@ public class TriggerScheduleDao extends AbstractDao {
                 return null;
             }
 
-            UUID triggerId = record.value1();
-            UUID orgId = record.value2();
-            String organizationName = record.value3();
-            UUID projectId = record.value4();
-            String projectName = record.value5();
-            UUID repoId = record.value6();
-            String repositoryName = record.value7();
-            List<String> activeProfiles = toList(record.value8());
-            Map<String, Object> arguments = objectMapper.fromJSONB(record.value9());
-            Map<String, Object> cfg = objectMapper.fromJSONB(record.value10());
-            Map<String, Object> conditions = objectMapper.fromJSONB(record.value11());
             OffsetDateTime now = record.value12();
-            String eventSource = record.value13();
-
-            TriggerSchedulerEntry result = new TriggerSchedulerEntry(
-                    fireAt,
-                    triggerId,
-                    orgId,
-                    organizationName,
-                    projectId,
-                    projectName,
-                    repoId,
-                    repositoryName,
-                    conditions,
-                    cfg,
-                    activeProfiles,
-                    arguments,
-                    eventSource);
+            Map<String, Object> conditions = objectMapper.fromJSONB(record.value11());
 
             ZoneId zoneId = null;
             if (conditions.get(Constants.Trigger.CRON_TIMEZONE) != null) {
                 zoneId = TimeZone.getTimeZone((String) conditions.get(Constants.Trigger.CRON_TIMEZONE)).toZoneId();
             }
 
-            updateFireAt(tx, id, CronUtils.nextExecution(now, (String) conditions.get(Constants.Trigger.CRON_SPEC), zoneId));
+            OffsetDateTime nextExecutionAt = CronUtils.nextExecution(now, (String) conditions.get(Constants.Trigger.CRON_SPEC), zoneId);
+            updateFireAt(tx, id, nextExecutionAt);
 
-            return result;
+            Map<String, Object> arguments = objectMapper.fromJSONB(record.value9());
+            Map<String, Object> cfg = objectMapper.fromJSONB(record.value10());
+
+            TriggerEntry triggerEntry = new TriggerEntryBuilder()
+                    .id(record.value1())
+                    .orgId(record.value2())
+                    .orgName(record.value3())
+                    .projectId(record.value4())
+                    .projectName(record.value5())
+                    .repositoryId(record.value6())
+                    .repositoryName(record.value7())
+                    .eventSource(record.value13())
+                    .activeProfiles(toList(record.value8()))
+                    .arguments(arguments != null ? arguments : Collections.emptyMap())
+                    .conditions(conditions)
+                    .cfg(cfg != null ? cfg : Collections.emptyMap())
+                    .build();
+
+            return TriggerSchedulerEntry.builder()
+                    .fireAt(fireAt)
+                    .nextExecutionAt(nextExecutionAt)
+                    .trigger(triggerEntry)
+                    .build();
         });
     }
 
@@ -157,7 +153,13 @@ public class TriggerScheduleDao extends AbstractDao {
                 .execute();
     }
 
-    private void updateFireAt(DSLContext tx, UUID triggerId, OffsetDateTime fireAt) {
+    public void remove(UUID triggerId) {
+        tx(tx -> tx.deleteFrom(TRIGGER_SCHEDULE)
+                .where(TRIGGER_SCHEDULE.TRIGGER_ID.eq(triggerId))
+                .execute());
+    }
+
+    private static void updateFireAt(DSLContext tx, UUID triggerId, OffsetDateTime fireAt) {
         tx.update(TRIGGER_SCHEDULE)
                 .set(TRIGGER_SCHEDULE.FIRE_AT, fireAt)
                 .where(TRIGGER_SCHEDULE.TRIGGER_ID.eq(triggerId))

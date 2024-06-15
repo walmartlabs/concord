@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,133 +20,58 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Names;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.forms.Form;
-import com.walmartlabs.concord.runtime.common.FormService;
-import com.walmartlabs.concord.runtime.common.StateManager;
-import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
-import com.walmartlabs.concord.runtime.common.cfg.ImmutableRunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
-import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
-import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointUploader;
-import com.walmartlabs.concord.runtime.v2.runner.checkpoints.DefaultCheckpointService;
-import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
-import com.walmartlabs.concord.runtime.v2.runner.logging.LoggerProvider;
-import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingClient;
-import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
-import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.svm.ExecutionListener;
-import org.immutables.value.Value;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-import java.io.*;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
 import static java.util.regex.Pattern.quote;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class MainTest {
+public class MainTest extends AbstractTest {
 
-    private Path workDir;
-    private UUID instanceId;
-    private FormService formService;
-    private ProcessConfiguration processConfiguration;
+    private static final Logger log = LoggerFactory.getLogger(MainTest.class);
 
-    private ProcessStatusCallback processStatusCallback;
-    private Module testServices;
+    @Test
+    public void testVariablesAfterResume() throws Exception {
+        deploy("variablesAfterResume");
 
-    private TestCheckpointUploader checkpointService;
+        save(ProcessConfiguration.builder()
+                .build());
 
-    private byte[] lastLog;
-    private byte[] allLogs;
+        byte[] log = run();
+        assertLog(log, ".*workDir1: " + workDir.toAbsolutePath() + ".*");
+        assertLog(log, ".*workDir3: " + workDir.toAbsolutePath() + ".*");
 
-    @BeforeEach
-    public void setUp() throws IOException {
-        workDir = Files.createTempDirectory("test");
+        List<Form> forms = formService.list();
+        assertEquals(1, forms.size());
 
-        instanceId = UUID.randomUUID();
+        Form myForm = forms.get(0);
+        assertEquals("myForm", myForm.name());
 
-        Path formsDir = workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(Constants.Files.JOB_STATE_DIR_NAME)
-                .resolve(Constants.Files.JOB_FORMS_V2_DIR_NAME);
+        // resume the process using the saved form
 
-        formService = new FormService(formsDir);
+        Map<String, Object> data = new HashMap<>();
+        data.put("fullName", "John Smith");
 
-        processStatusCallback = mock(ProcessStatusCallback.class);
+        Path newWorkDir = Files.createTempDirectory("test-new");
+        IOUtils.copy(workDir, newWorkDir);
+        workDir = newWorkDir;
 
-        checkpointService = spy(new TestCheckpointUploader());
-
-        testServices = new AbstractModule() {
-            @Override
-            protected void configure() {
-                install(new BaseRunnerModule());
-
-                bind(ClassLoader.class).annotatedWith(Names.named("runtime")).toInstance(MainTest.class.getClassLoader());
-
-                bind(CheckpointUploader.class).toInstance(checkpointService);
-                bind(CheckpointService.class).to(DefaultCheckpointService.class);
-                bind(DependencyManager.class).to(DefaultDependencyManager.class);
-                bind(DockerService.class).to(DefaultDockerService.class);
-                bind(FileService.class).to(DefaultFileService.class);
-                bind(LockService.class).to(DefaultLockService.class);
-                bind(PersistenceService.class).toInstance(mock(PersistenceService.class));
-                bind(ProcessStatusCallback.class).toInstance(processStatusCallback);
-                bind(SecretService.class).to(DefaultSecretService.class);
-
-                Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
-                taskProviders.addBinding().to(TaskV2Provider.class);
-
-                Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
-                taskCallListeners.addBinding().to(TaskCallPolicyChecker.class);
-                taskCallListeners.addBinding().to(TaskResultListener.class);
-
-                Multibinder.newSetBinder(binder(), ExecutionListener.class);
-            }
-        };
-
-        allLogs = null;
-    }
-
-    @AfterEach
-    public void tearDown() throws IOException {
-        if (workDir != null) {
-            IOUtils.deleteRecursively(workDir);
-        }
-
-        LoggingConfigurator.reset();
+        log = resume(myForm.eventName(), ProcessConfiguration.builder().arguments(Collections.singletonMap("myForm", data)).build());
+        assertLog(log, ".*workDir4: " + workDir.toAbsolutePath() + ".*");
+        assertLog(log, ".*workDir2: " + workDir.toAbsolutePath() + ".*");
     }
 
     @Test
@@ -161,8 +86,167 @@ public class MainTest {
         byte[] log = run();
         assertLog(log, ".*Hello, Concord!.*");
         assertLog(log, ".*" + Pattern.quote("defaultsMap:{a=a-value}") + ".*");
+        assertLog(log, ".*k: \"value\".*");
 
         verify(processStatusCallback, times(1)).onRunning(instanceId);
+    }
+
+    @Test
+    public void testFlowNameVariable() throws Exception {
+        deploy("doNotTouchFlowNameVariable");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*flowName in inner flow: 'This is MY variable'.*");
+
+        verify(processStatusCallback, times(1)).onRunning(instanceId);
+    }
+
+    @Test
+    public void testStackTrace() throws Exception {
+        deploy("stackTrace");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 9, col: 7, thread: 0, flow: flowB") + ".*");
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA") + ".*");
+    }
+
+    @Test
+    public void testStackTrace2() throws Exception {
+        deploy("stackTrace2");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 10, col: 7, thread: 1, flow: flowB") + ".*");
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 4, col: 11, thread: 1, flow: flowA") + ".*");
+
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 5, col: 11, thread: 2, flow: flowB") + ".*");
+    }
+
+    @Test
+    public void testStackTrace3() throws Exception {
+        deploy("stackTrace3");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("in flowA") + ".*");
+
+        String expected = "Call stack:\n" +
+                "(concord.yml) @ line: 13, col: 7, thread: 2, flow: flowB\n" +
+                "(concord.yml) @ line: 3, col: 7, thread: 2, flow: flowA";
+
+        String logString = new String(lastLog);
+        assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
+    }
+
+    @Test
+    public void testStackTrace4() throws Exception {
+        deploy("stackTrace4");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String expected = "Call stack:\n" +
+                "(concord.yml) @ line: 8, col: 7, thread: 0, flow: flowB\n" +
+                "(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA";
+
+        String expected1 = "Call stack:\n" +
+                "(concord.yml) @ line: 16, col: 11, thread: 0, flow: flowThrow\n" +
+                "(concord.yml) @ line: 8, col: 7, thread: 0, flow: flowB\n" +
+                "(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA";
+
+        String logString = new String(lastLog);
+        assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
+        assertTrue(logString.contains(expected1), "expected log contains: " + expected1 + ", actual: " + logString);
+    }
+
+    @Test
+    public void testStackTrace5() throws Exception {
+        deploy("stackTrace5");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String expected = ".*Call stack:\n" +
+                "\\(concord.yml\\) @ line: 21, col: 7, thread: .*, flow: flowC\n" +
+                "\\(concord.yml\\) @ line: 11, col: 11, thread: 2, flow: flowB\n" +
+                "\\(concord.yml\\) @ line: 6, col: 7, thread: 0, flow: flowA\n" +
+                "\\(concord.yml\\) @ line: 3, col: 7, thread: 0, flow: flow0.*";
+        Pattern expectedPattern = Pattern.compile(expected, Pattern.MULTILINE|Pattern.DOTALL|Pattern.UNIX_LINES);
+
+        String logString = new String(lastLog);
+        assertTrue(expectedPattern.matcher(logString).matches(), "expected log contains: " + expected + ", actual: " + logString);
+    }
+
+    @Test
+    public void testStackTrace6() throws Exception {
+        deploy("stackTrace6");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        assertNoLog(lastLog, ".*" + Pattern.quote("[ERROR] Call stack:") + ".*");
+    }
+
+    @Test
+    public void testStackTrace7() throws Exception {
+        deploy("stackTrace7");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertNoLog(lastLog, ".*" + Pattern.quote("[ERROR] Call stack:") + ".*");
     }
 
     @Test
@@ -207,16 +291,6 @@ public class MainTest {
     @Test
     public void testTaskErrorBlock() throws Exception {
         deploy("faultyTask");
-
-        save(ProcessConfiguration.builder().build());
-
-        byte[] log = run();
-        assertLog(log, ".*error occurred:.*boom!.*");
-    }
-
-    @Test
-    public void testTaskErrorBlock2() throws Exception {
-        deploy("faultyTask2");
 
         save(ProcessConfiguration.builder().build());
 
@@ -434,6 +508,45 @@ public class MainTest {
     }
 
     @Test
+    public void testScriptVersion() throws Exception {
+        deploy("scriptEsVersion");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*\"charCountProduct\":9.*");
+    }
+
+    @Test
+    public void testScriptEsVersionInvalid() throws Exception {
+        deploy("scriptEsVersionInvalid");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("kv", Collections.singletonMap("k", "v"))
+                .build());
+
+        try {
+            run();
+        } catch (Exception e) {
+            assertLog(e.toString().getBytes(), ".*unsupported.*");
+            return;
+        }
+        throw new Exception("invalid esVersion should have thrown");
+    }
+
+
+    @Test
+    public void testScriptUnboundedInputMapOk() throws Exception {
+        deploy("scriptUnboundedInputMapOk");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*ok.*");
+    }
+
+    @Test
     public void testScriptVariablesSanitize() throws Exception {
         deploy("scriptVariablesSanitize");
 
@@ -516,22 +629,6 @@ public class MainTest {
     }
 
     @Test
-    public void testSystemOutRedirectInScripts() throws Exception {
-        deploy("systemOutRedirect");
-
-        save(ProcessConfiguration.builder()
-                .build());
-
-        RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
-                .logging(LoggingConfiguration.builder()
-                        .build())
-                .build();
-
-        byte[] log = run(runnerCfg);
-        assertLog(log, "^.*\\|1\\|.*System.out in a script.*");
-    }
-
-    @Test
     public void testMultipleWithItems() throws Exception {
         deploy("multipleWithItems");
 
@@ -545,6 +642,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelWithItemsTask() throws Exception {
         deploy("parallelWithItemsTask");
 
@@ -557,6 +655,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelLoopTask() throws Exception {
         deploy("parallelLoopTask");
 
@@ -630,7 +729,7 @@ public class MainTest {
             fail("should fail");
         } catch (Exception e) {
             String msg = e.getMessage();
-            assertTrue(msg.contains("Can't find 'sayGoodbye()' method"));
+            assertTrue(msg.contains("Can't find 'sayGoodbye()' method"), msg);
             assertTrue(msg.contains("Did you mean: sayHello()"));
         }
     }
@@ -755,6 +854,9 @@ public class MainTest {
         assertLog(log, ".*" + quote("single out a=a-value") + ".*");
         assertLog(log, ".*" + quote("array out a=a-value, b=b-value") + ".*");
         assertLog(log, ".*" + quote("expression out a=a-value, xx=123, zz=10000") + ".*");
+        assertLog(log, ".*" + quote("out after suspend: a=aaa-value") + ".*");
+
+        verify(checkpointService, times(1)).upload(any(), any(), eq("A"), any());
     }
 
     @Test
@@ -790,6 +892,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelIn() throws Exception {
         deploy("parallelIn");
 
@@ -807,6 +910,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelOut() throws Exception {
         deploy("parallelOut");
 
@@ -819,6 +923,30 @@ public class MainTest {
     }
 
     @Test
+    public void testSerialLoopEmptyCall() throws Exception {
+        deploy("serialEmptyCall");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("outVar: [null, null]") + ".*");
+    }
+
+    @Test
+    @IgnoreSerializationAssert
+    public void testParallelLoopEmptyCall() throws Exception {
+        deploy("parallelEmptyCall");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("outVar: [null, null]") + ".*");
+    }
+
+    @Test
+    @IgnoreSerializationAssert
     public void testParallelOutExpr() throws Exception {
         deploy("parallelOutExpr");
 
@@ -886,6 +1014,19 @@ public class MainTest {
     }
 
     @Test
+    public void testSetMapVariableOverride() throws Exception {
+        deploy("setVariableOverride");
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*myMap1: .*\\{y=2\\}.*");
+        assertLog(log, ".*myMap2: .*\\{y=2, z=3\\}.*");
+        assertLog(log, ".*myMap3: .*\\{z=4\\}.*");
+        assertLog(log, ".*myMap4: .*\\{k=v\\}.*");
+    }
+
+    @Test
     public void testRetry() throws Exception {
         deploy("retry");
 
@@ -941,6 +1082,8 @@ public class MainTest {
 
         assertLogAtLeast(allLogs, 2, ".*#3.*x=124.*");
         assertLogAtLeast(allLogs, 2, ".*#3.*y=345.*");
+
+        assertLog(allLogs, ".*Event Name: first.*");
     }
 
     @Test
@@ -950,7 +1093,7 @@ public class MainTest {
         save(ProcessConfiguration.builder()
                 .build());
 
-        checkpointService.put("first", Paths.get(MainTest.class.getResource("checkpointRestore2/first_1.93.0.zip").toURI()));
+        checkpointService.put("first", Paths.get(MainTest.class.getResource("checkpointRestore2/first_1.103.1.zip").toURI()));
         checkpointService.restore("first", workDir);
 
         run();
@@ -1007,6 +1150,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testFormsParallel() throws Exception {
         deploy("parallelForm");
 
@@ -1145,395 +1289,415 @@ public class MainTest {
         assertLog(log, ".*isDebug: true.*");
     }
 
-    private void deploy(String resource) throws URISyntaxException, IOException {
-        Path src = Paths.get(MainTest.class.getResource(resource).toURI());
-        IOUtils.copy(src, workDir);
+    @Test
+    public void argsFromArgs() throws Exception {
+        deploy("argsFromArgs");
+
+        Map<String, Object> args = new LinkedHashMap<>();
+        args.put("k1", "v1");
+        args.put("k2", "${resultTask.get('args.k1')}");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("args", args)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*Hello, " + Pattern.quote("{k1=v1, k2=v1}") + ".*");
     }
 
-    private void save(ProcessConfiguration cfg) {
-        ImmutableProcessConfiguration.Builder b = ProcessConfiguration.builder().from(cfg)
-                .instanceId(instanceId);
+    @Test
+    @IgnoreSerializationAssert
+    public void loopItemSerialization() throws Exception {
+        deploy("loopSerializationError");
 
-        if (cfg.entryPoint() == null) {
-            b.entryPoint(Constants.Request.DEFAULT_ENTRY_POINT_NAME);
-        }
+        save(ProcessConfiguration.builder()
+                .build());
 
-        this.processConfiguration = b.build();
+        byte[] log = run();
+        assertLog(log, ".*name=one.*");
     }
 
-    private byte[] resume(String eventName, ProcessConfiguration cfg) throws Exception {
-        StateManager.saveResumeEvent(workDir, eventName); // TODO use interface
-        if (cfg != null) {
-            save(cfg);
-        }
-        return run();
-    }
+    @Test
+    public void testThrowExpression() throws Exception {
+        deploy("throwExpression");
 
-    private byte[] run() throws Exception {
-        return run(null);
-    }
+        save(ProcessConfiguration.builder()
+                .build());
 
-    private byte[] run(RunnerConfiguration baseCfg) throws Exception {
-        assertNotNull(processConfiguration, "save() the process configuration first");
-
-        ImmutableRunnerConfiguration.Builder runnerCfg = RunnerConfiguration.builder()
-                .logging(LoggingConfiguration.builder().segmentedLogs(false).build());
-
-        if (baseCfg != null) {
-            runnerCfg.from(baseCfg);
-        }
-
-        runnerCfg.agentId(UUID.randomUUID().toString())
-                .api(ApiConfiguration.builder()
-                        .baseUrl("http://localhost:8001") // TODO make optional?
-                        .build());
-
-        PrintStream oldOut = System.out;
-
-        ByteArrayOutputStream logStream = new ByteArrayOutputStream();
-        PrintStream out = new PrintStream(logStream);
-        System.setOut(out);
-
-        AbstractModule runtimeModule = new AbstractModule() {
-            @Override
-            protected void configure() {
-                bind(DefaultTaskVariablesService.class).toProvider(new DefaultTaskVariablesProvider(processConfiguration));
-                bind(RunnerLogger.class).toProvider(LoggerProvider.class);
-                bind(LoggingClient.class).to(TestLoggingClient.class);
-            }
-        };
-
-        byte[] log;
         try {
-            Injector injector = new InjectorFactory(new WorkingDirectory(workDir),
-                    runnerCfg.build(),
-                    () -> processConfiguration,
-                    testServices,
-                    runtimeModule)
-                    .create();
-            injector.getInstance(Main.class).execute();
-        } finally {
-            out.flush();
-            System.setOut(oldOut);
-
-            log = logStream.toByteArray();
-            System.out.write(log, 0, log.length);
-
-            lastLog = log;
-        }
-
-        if (allLogs == null) {
-            allLogs = log;
-        } else {
-            // append the current log to allLogs
-            ByteArrayOutputStream baos = new ByteArrayOutputStream(allLogs.length + log.length);
-            baos.write(allLogs);
-            baos.write(log);
-            allLogs = baos.toByteArray();
-        }
-
-        return log;
-    }
-
-    private static void assertLogAtLeast(byte[] ab, int n, String pattern) throws IOException {
-        if (ab == null) {
-            fail("Log is empty");
-        }
-
-        if (grep(ab, pattern) < n) {
-            fail("Expected at least " + n + " log line(s): " + pattern + ", got: \n" + new String(ab));
+            run();
+            fail("exception expected");
+        } catch (UserDefinedException e) {
+            assertEquals("42 not found", e.getMessage());
         }
     }
 
-    private static void assertLog(byte[] ab, String pattern) throws IOException {
-        if (ab == null) {
-            fail("Log is empty");
-        }
+    @Test
+    public void testSensitiveData() throws Exception {
+        deploy("sensitiveData");
 
-        if (grep(ab, pattern) != 1) {
-            fail("Expected a single log line: " + pattern + ", got: \n" + new String(ab));
-        }
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("sensitive: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("log value: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("hack: B O O M") + ".*");
+
+        assertLog(log, ".*" + Pattern.quote("map: {nonSecretButMasked=******, secret=******}") + ".*");
+        assertLog(log, ".*" + Pattern.quote("map: {nonSecret=non secret value, secret=******}") + ".*");
+
+        assertLog(log, ".*" + Pattern.quote("plain: plain") + ".*");
+
+        assertLog(log, ".*" + Pattern.quote("secret from map: ******") + ".*");
+
+        log = resume("ev1", ProcessConfiguration.builder().build());
+        assertLog(log, ".*" + Pattern.quote("mySecret after suspend: ******") + ".*");
     }
 
-    private static void assertNoLog(byte[] ab, String pattern) throws IOException {
-        if (grep(ab, pattern) > 0) {
-            fail("Expected no log lines like this: " + pattern + ", got: \n" + new String(ab));
-        }
+    @Test
+    public void testIncVariable() throws Exception {
+        deploy("incVariable");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("counter", 0)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*counter: 1.*");
     }
 
-    private static int grep(byte[] ab, String pattern) throws IOException {
-        int cnt = 0;
+    @Test
+    public void testHasNonNullVariable() throws Exception {
+        deploy("hasNonNullVariable");
 
-        try (ByteArrayInputStream bais = new ByteArrayInputStream(ab);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(bais))) {
+        save(ProcessConfiguration.builder()
+                .build());
 
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.matches(pattern)) {
-                    cnt++;
-                }
-            }
-        }
-
-        return cnt;
+        byte[] log = run();
+        assertLog(log, ".*true == true.*");
+        assertLog(log, ".*false == false.*");
     }
 
-    @Named("testDefaults")
-    static class TestDefaults implements Task {
+    @Test
+    public void testInvalidExpressionError() throws Exception {
+        deploy("invalidExpression");
 
-        private final Variables defaults;
+        save(ProcessConfiguration.builder()
+                .build());
 
-        @Inject
-        public TestDefaults(Context ctx) {
-            this.defaults = ctx.defaultVariables();
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
         }
 
-        @Override
-        public TaskResult execute(Variables input) {
-            System.out.println("defaultsMap:" + defaults.toMap());
-            return TaskResult.success();
-        }
+        String logString = new String(lastLog);
+        String expected = "[ERROR] (concord.yml): Error @ line: 9, col: 7. Error Parsing: ${str.split('\\n')}. Encountered \"\\'\\\\n\" at line 1, column 13.\n" +
+                "Was expecting one of:\n" +
+                "    \"{\" ...\n" +
+                "    <INTEGER_LITERAL> ...\n" +
+                "    <FLOATING_POINT_LITERAL> ...\n" +
+                "    <STRING_LITERAL> ...\n" +
+                "    \"true\" ...\n" +
+                "    \"false\" ...\n" +
+                "    \"null\" ...\n" +
+                "    \"(\" ...\n" +
+                "    \")\" ...\n" +
+                "    \"[\" ...\n" +
+                "    \"!\" ...\n" +
+                "    \"not\" ...\n" +
+                "    \"empty\" ...\n" +
+                "    \"-\" ...\n" +
+                "    <IDENTIFIER> ...";
 
-        @Value.Immutable
-        @Value.Style(jdkOnly = true)
-        @JsonSerialize(as = ImmutableDefaults.class)
-        @JsonDeserialize(as = ImmutableDefaults.class)
-        public interface Defaults {
-
-            String a();
-
-            @Nullable
-            String b();
-        }
+        assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
     }
 
-    @Named("wrapExpression")
-    @SuppressWarnings("unused")
-    static class WrapExpressionTask implements Task {
+    @Test
+    public void testNPEInExpression() throws Exception {
+        deploy("npeInExpression");
 
-        @Override
-        public TaskResult execute(Variables input) {
-            return TaskResult.success()
-                    .value("expression", "${" + input.get("expression") + "}");
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
         }
+
+        String logString = new String(lastLog);
+        String expected = "[ERROR] (concord.yml): Error @ line: 7, col: 7. while evaluating expression '${'a' += m.n += 'b'}': ";
+
+        assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
     }
 
-    @Named("testTask")
-    @SuppressWarnings("unused")
-    static class TestTask implements Task {
+    @Test
+    public void testExpressionThrowUserDefinedError() throws Exception {
+        deploy("faultyExpression");
 
-        @Override
-        public TaskResult execute(Variables input) {
-            return TaskResult.success()
-                    .values(input.toMap());
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
         }
+        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. BOOM"));
     }
 
-    @Named("resultTask")
-    @SuppressWarnings("unused")
-    static class ResultTask implements Task {
+    @Test
+    public void testExpressionThrowException() throws Exception {
+        deploy("exceptionFromExpression");
 
-        @Override
-        public TaskResult execute(Variables input) {
-            return TaskResult.success()
-                    .value("result", input.get("result"));
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
         }
+
+        String expected = "[ERROR] (concord.yml): Error @ line: 3, col: 7. while evaluating expression '${faultyTask.exception('BOOM')}': javax.el.ELException: java.lang.Exception: BOOM";
+        assertLog(lastLog, ".*" + Pattern.quote(expected));
     }
 
-    @Named("loggingExample")
-    @SuppressWarnings("unused")
-    static class LoggingExampleTask implements Task {
+    @Test
+    public void testTaskThrowUserDefinedError() throws Exception {
+        deploy("faultyTask2");
 
-        private static final Logger log = LoggerFactory.getLogger(LoggingExampleTask.class);
-        private static final Logger processLog = LoggerFactory.getLogger("processLog");
+        save(ProcessConfiguration.builder()
+                .build());
 
-        @Override
-        public TaskResult execute(Variables input) throws Exception {
-            log.info("This goes into a regular log");
-            processLog.info("This is a processLog entry");
-            System.out.println("This goes directly into the stdout");
-
-            ExecutorService executor = Executors.newCachedThreadPool();
-
-            for (int i = 0; i < 5; i++) {
-                final int n = i;
-                executor.submit(() -> {
-                    Logger log = LoggerFactory.getLogger("taskThread" + n);
-                    log.info("Hey, I'm a task thread #" + n);
-                });
-            }
-
-            executor.shutdown();
-            executor.awaitTermination(100, TimeUnit.SECONDS);
-
-            return TaskResult.success();
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
         }
+        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!"));
     }
 
-    @Named("unknownMethod")
-    @SuppressWarnings("unused")
-    static class UnknownMethodTask implements Task {
+    @Test
+    public void testTaskThrowRuntimeException() throws Exception {
+        deploy("faultyTask3");
 
-        public String sayHello() {
-            return "Hello!";
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
         }
+        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. boom!"));
     }
 
-    @Named("faultyTask")
-    @SuppressWarnings("unused")
-    static class FaultyTask implements Task {
+    @Test
+    public void testTaskThrowException() throws Exception {
+        deploy("faultyTask4");
 
-        @Override
-        public TaskResult execute(Variables input) {
-            return TaskResult.fail("boom!")
-                    .value("key", "value");
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
         }
+        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. boom!"));
     }
 
-    @Named("faultyTask2")
-    @SuppressWarnings("unused")
-    static class FaultyTask2 implements Task {
+    @Test
+    public void testUnresolvedVarInStepName() throws Exception {
+        deploy("unresolvedVarInStepName");
 
-        @Override
-        public TaskResult execute(Variables input) {
-            throw new RuntimeException("boom!");
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (Exception e) {
         }
+
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 4, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
     }
 
-    @Named("faultyOnceTask")
-    @SuppressWarnings("unused")
-    static class FaultyOnceTask implements Task {
+    @Test
+    public void testUnresolvedVarInLoop() throws Exception {
+        deploy("unresolvedVarInLoop");
 
-        private static final Logger log = LoggerFactory.getLogger(FaultyOnceTask.class);
+        save(ProcessConfiguration.builder()
+                .build());
 
-        private static final AtomicBoolean toggle = new AtomicBoolean(false);
-
-        @Override
-        public TaskResult execute(Variables input) {
-            if (!toggle.getAndSet(true)) {
-                log.info("faultyOnceTask: fail");
-                throw new RuntimeException("boom!");
-            }
-
-            log.info("faultyOnceTask: ok");
-            return TaskResult.success();
+        try {
+            run();
+            fail("exception expected");
+        } catch (Exception e) {
         }
+
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
     }
 
-    @Named("neverFailTask")
-    @SuppressWarnings("unused")
-    static class NeverFailTask implements Task {
+    @Test
+    public void testUnresolvedVarInRetry() throws Exception {
+        deploy("unresolvedVarInRetry");
 
-        private static final Logger log = LoggerFactory.getLogger(NeverFailTask.class);
+        save(ProcessConfiguration.builder()
+                .build());
 
-        @Override
-        public TaskResult execute(Variables input) {
-            log.info("neverFailTask: ok");
-            return TaskResult.success();
+        try {
+            run();
+            fail("exception expected");
+        } catch (Exception e) {
         }
+
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
     }
 
-    @Named("conditionallyFailTask")
-    @SuppressWarnings("unused")
-    static class ConditionallyFailTask implements Task {
+    @Test
+    public void testArrayEvalSerialize() throws Exception {
+        deploy("lazyEvalMapInArgs");
 
-        private static final Logger log = LoggerFactory.getLogger(NeverFailTask.class);
+        save(ProcessConfiguration.builder()
+                .build());
 
-        @Override
-        public TaskResult execute(Variables input) {
-            if (input.getBoolean("fail", false)) {
-                log.info("ConditionallyFailTask: fail");
-                throw new RuntimeException("boom!");
-            }
-
-            log.info("ConditionallyFailTask: ok");
-
-            return TaskResult.success();
-        }
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("{dev=dev-cloud1}, {prod=prod-cloud1}, {test=test-cloud1}, {perf=perf-cloud2}, {ci=perf-ci}") + ".*");
     }
 
-    @Named("reentrantTask")
-    @SuppressWarnings("unused")
-    static class ReentrantTaskExample implements ReentrantTask {
+    @Test
+    public void testEntrySetSerialization() throws Exception {
+        deploy("entrySetSerialization");
 
-        private static final Logger log = LoggerFactory.getLogger(ReentrantTaskExample.class);
+        save(ProcessConfiguration.builder()
+                .build());
 
-        public static String EVENT_NAME = UUID.randomUUID().toString();
-
-        @Override
-        public TaskResult execute(Variables input) {
-            log.info("execute {}", input.toMap());
-
-            HashMap<String, Serializable> payload = new HashMap<>();
-            payload.put("k", "v");
-            payload.put("action", input.assertString("action"));
-            payload.put("errorOnResume", input.getBoolean("errorOnResume", false));
-
-            return TaskResult.reentrantSuspend(EVENT_NAME, payload);
-        }
-
-        @Override
-        public TaskResult resume(ResumeEvent event) {
-            log.info("RESUME: {}", event);
-            if ((boolean) event.state().get("errorOnResume")) {
-                throw new RuntimeException("Error on resume!");
-            }
-
-            return TaskResult.success()
-                    .values((Map) event.state());
-        }
+        byte[] log = run();
+        assertLog(log, ".*myList: \\[k=v\\].*");
     }
 
-    @Named("simpleMethodTask")
-    @SuppressWarnings("unused")
-    public static class SimpleMethodTask implements Task {
+    @Test
+    public void testHasFlow() throws Exception {
+        deploy("hasFlow");
 
-        public int getValue() {
-            return 42;
-        }
+        save(ProcessConfiguration.builder()
+                .build());
 
-        public int getDerivedValue(int value) {
-            return value + 42;
-        }
+        byte[] log = run();
+        assertLog(log, ".*123: false.*");
+        assertLog(log, ".*myFlow: true.*");
     }
 
-    @Singleton
-    static class TestLoggingClient implements LoggingClient {
+    @Test
+    public void testUuidFunc() throws Exception {
+        deploy("uuid");
 
-        private final AtomicLong id = new AtomicLong(1L);
+        save(ProcessConfiguration.builder()
+                .build());
 
-        @Override
-        public long createSegment(UUID correlationId, String name) {
-            return id.getAndIncrement();
-        }
+        byte[] log = run();
+        assertLog(log, ".*uuid: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}.*");
     }
 
-    @Named("injectorTestBean")
-    static class InjectorTestBean {
+    @Test
+    public void testExitFromParallelLoop() throws Exception {
+        deploy("parallelLoopExit");
 
-        private final Context ctx;
+        save(ProcessConfiguration.builder()
+                .build());
 
-        @Inject
-        public InjectorTestBean(Context ctx) {
-            this.ctx = ctx;
-        }
+        byte[] log = run();
+
+        assertNoLog(log, ".*should not reach here.*");
     }
 
-    @Named("injectorTestTask")
-    static class InjectorTestTask implements Task {
+    @Test
+    public void testExitFromSerialLoop() throws Exception {
+        deploy("serialLoopExit");
 
-        private final Map<String, InjectorTestBean> testBeans;
+        save(ProcessConfiguration.builder()
+                .build());
 
-        @Inject
-        public InjectorTestTask(Map<String, InjectorTestBean> testBeans) {
-            this.testBeans = testBeans;
-        }
+        byte[] log = run();
 
-        @Override
-        public TaskResult execute(Variables input) {
-            testBeans.forEach((k, v) -> v.ctx.workingDirectory());
-            return TaskResult.success()
-                    .value("x", testBeans.size());
-        }
+        assertNoLog(log, ".*should not reach here.*");
+
+        assertLog(log, ".*inner start: one.*");
+        assertLog(log, ".*inner end: one.*");
+        assertLog(log, ".*inner start: two.*");
+
+        assertNoLog(log, ".*inner end: two.*");
+        assertNoLog(log, ".*inner start: three.*");
+        assertNoLog(log, ".*inner start: four.*");
+    }
+
+    @Test
+    public void testStringIfExpression() throws Exception {
+        deploy("ifExpressionAsString");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("myVar", Collections.singletonMap("str", "true"))
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*it's true.*");
+    }
+
+    @Test
+    public void testParallelLoopItemIndex() throws Exception {
+        deploy("parallelLoopItemIndex");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*serial: five==5.*");
+        assertLog(log, ".*serial: four==4.*");
+        assertLog(log, ".*serial: three==3.*");
+        assertLog(log, ".*serial: two==2.*");
+        assertLog(log, ".*serial: one==1.*");
+
+        assertLog(log, ".*parallel: five==5.*");
+        assertLog(log, ".*parallel: four==4.*");
+        assertLog(log, ".*parallel: three==3.*");
+        assertLog(log, ".*parallel: two==2.*");
+        assertLog(log, ".*parallel: one==1.*");
+    }
+
+    @Test
+    public void testDoubleValues() throws Exception {
+        deploy("doubleValues");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*PI1=3.14159264.*");
+        assertLog(log, ".*PI2=3.14159264.*");
+    }
+
+    @Test
+    @IgnoreSerializationAssert
+    public void testThreadLocals() throws Exception {
+        deploy("threadLocals");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*value: myValue1.*");
+        assertLog(log, ".*value: myValue2.*");
+        assertLog(log, ".*value: myValue3.*");
     }
 }

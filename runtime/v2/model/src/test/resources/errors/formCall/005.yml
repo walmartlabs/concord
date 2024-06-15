@@ -3,4 +3,4 @@ flows:
     - form: "boo"
       yield: true
       saveSubmittedBy: true
-      runAs: "one"
+      runAs: [ "one" ]

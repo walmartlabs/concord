@@ -24,6 +24,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.forms.ValidationError;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
@@ -39,18 +41,18 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.model.form.FormField;
 import io.takari.bpm.model.form.FormField.Cardinality;
+import org.immutables.value.Value;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.Validate;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.PathParam;
@@ -68,8 +70,6 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 
-@Named
-@Singleton
 public class CustomFormServiceV1 {
 
     private static final Logger log = LoggerFactory.getLogger(CustomFormServiceV1.class);
@@ -80,7 +80,7 @@ public class CustomFormServiceV1 {
     private static final String FORMS_PATH_TEMPLATE = FORMS_PATH_PREFIX + "%s/%s/" + FORM_DIR_NAME + "/";
     private static final String DATA_FILE_TEMPLATE = "data = %s;";
 
-    private static final String NON_BRANDED_FORM_URL_TEMPLATE = "/#/process/%s/form/%s?fullScreen=true&wizard=true";
+    private static final String NON_BRANDED_FORM_URL_TEMPLATE = "/#/process/%s/form/%s/wizard?fullScreen=true";
     private static final String FORM_WIZARD_CONTINUE_URL_TEMPLATE = "/api/service/custom_form/%s/%s/continue";
 
     private static final long STATUS_REFRESH_DELAY = 250;
@@ -338,7 +338,17 @@ public class CustomFormServiceV1 {
             }
         }
 
-        return new FormData(success, processFailed, submitUrl, fields, _definitions, _values, _errors);
+        return FormData.builder()
+                .txId(processInstanceId)
+                .formName(formName)
+                .success(success)
+                .processFailed(processFailed)
+                .submitUrl(submitUrl)
+                .fields(fields)
+                .definitions(_definitions)
+                .values(_values)
+                .errors(_errors)
+                .build();
     }
 
     private void writeData(Path baseDir, Object data) throws IOException {
@@ -400,56 +410,36 @@ public class CustomFormServiceV1 {
         return String.format(FORMS_PATH_TEMPLATE, processKey, formName);
     }
 
-    @JsonInclude(Include.NON_EMPTY)
-    public static class FormData implements Serializable {
+    @Value.Immutable
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableFormData.class)
+    @JsonDeserialize(as = ImmutableFormData.class)
+    public interface FormData extends Serializable {
 
-        private static final long serialVersionUID = -1591440785695774602L;
+        long serialVersionUID = -1591440785695774602L;
 
-        private final boolean success;
-        private final boolean processFailed;
-        private final String submitUrl;
-        private final List<String> fields;
-        private final Map<String, FormDataDefinition> definitions;
-        private final Map<String, Object> values;
-        private final Map<String, String> errors;
+        String txId();
 
-        public FormData(boolean success, boolean processFailed, String submitUrl,
-                        List<String> fields, Map<String, FormDataDefinition> definitions, Map<String, Object> values,
-                        Map<String, String> errors) {
+        String formName();
 
-            this.success = success;
-            this.processFailed = processFailed;
-            this.submitUrl = submitUrl;
-            this.fields = fields;
-            this.definitions = definitions;
-            this.values = values;
-            this.errors = errors;
-        }
+        boolean success();
 
-        public boolean isSuccess() {
-            return success;
-        }
+        boolean processFailed();
 
-        public boolean isProcessFailed() {
-            return processFailed;
-        }
+        String submitUrl();
 
-        public String getSubmitUrl() {
-            return submitUrl;
-        }
+        List<String> fields();
 
-        public List<String> getFields() { return fields; }
+        Map<String, FormDataDefinition> definitions();
 
-        public Map<String, FormDataDefinition> getDefinitions() {
-            return definitions;
-        }
+        @Nullable
+        Map<String, Object> values();
 
-        public Map<String, Object> getValues() {
-            return values;
-        }
+        @Nullable
+        Map<String, String> errors();
 
-        public Map<String, String> getErrors() {
-            return errors;
+        static ImmutableFormData.Builder builder() {
+            return ImmutableFormData.builder();
         }
     }
 

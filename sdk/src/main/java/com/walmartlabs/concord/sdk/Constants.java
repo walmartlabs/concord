@@ -395,6 +395,12 @@ public class Constants {
         public static final String JOB_CHECKPOINTS_DIR_NAME = "_checkpoints";
 
         /**
+         * Directory which contains job "session files":
+         *  files that can be downloaded only with session key.
+         */
+        public static final String JOB_SESSION_FILES_DIR_NAME = "_session_files";
+
+        /**
          * Directory which contains process' state.
          */
         public static final String JOB_STATE_DIR_NAME = "_state";
@@ -478,6 +484,11 @@ public class Constants {
          */
         @Deprecated
         public static final String DEPENDENCY_VERSIONS_FILE_NAME = "dependencyversions.properties";
+
+        /**
+         * File which contains sensitive data of process.
+         */
+        public static final String SENSITIVE_DATA_FILE_NAME = "sensitive_data.json";
     }
 
     public static class Flows {
@@ -543,6 +554,11 @@ public class Constants {
 
         public static final String PROJECT_ID = "projectId";
 
+        // Contains list of project ids
+        public static final String PROJECT_IDS = "projectIds";
+
+        public static final String PROJECT_NAMES = "projects";
+
         public static final String PROJECT_NAME = "project";
 
         public static final String STORE_TYPE = "storeType";
@@ -564,6 +580,8 @@ public class Constants {
         public static final String GENERATE_PASSWORD = "generatePassword"; // NOSONAR
 
         public static final String STORE_PASSWORD = "storePassword"; // NOSONAR
+
+        public static final String NEW_STORE_PASSWORD = "newStorePassword";
 
         public static final String VISIBILITY = "visibility";
 

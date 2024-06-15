@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ interface Props {
     initial: FormValues;
     submitting: boolean;
     editMode?: boolean;
-    onSubmit: (values: FormValues) => void;
+    onSubmit: (values: FormValues, setSubmitting: (isSubmitting: boolean) => void) => void;
     testRepository: (values: FormValues) => Promise<void>;
 }
 
@@ -262,7 +262,8 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                     <Button
                         primary={true}
                         type="submit"
-                        disabled={!dirty || hasErrors || this.state.testRunning}>
+                        disabled={!dirty || hasErrors || this.state.testRunning || this.props.isSubmitting}
+                        loading={this.props.isSubmitting}>
                         {editMode ? 'Save' : 'Add'}
                     </Button>
 
@@ -365,7 +366,7 @@ const validator = async (values: FormValues, props: Props) => {
 
 export default withFormik<Props, FormValues>({
     handleSubmit: (values, bag) => {
-        bag.props.onSubmit(sanitize(values));
+        bag.props.onSubmit(sanitize(values), bag.setSubmitting);
     },
     mapPropsToValues: (props) => ({
         ...props.initial,

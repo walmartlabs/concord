@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -47,12 +47,11 @@ public class JsonStoreTaskIT extends AbstractServerIT {
 
                 StartProcessResponse spr = start(input);
 
-                ProcessApi processApi = new ProcessApi(getApiClient());
-                ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+                ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
                 // ---
 
-                byte[] ab = getLog(pir.getLogFileName());
+                byte[] ab = getLog(pir.getInstanceId());
                 assertLog(".*the store doesn't exist.*", ab);
                 assertLog(".*the item doesn't exist.*", ab);
                 assertLog(".*the store exists now.*", ab);
@@ -78,12 +77,11 @@ public class JsonStoreTaskIT extends AbstractServerIT {
 
                     StartProcessResponse spr = start(input);
 
-                    ProcessApi processApi = new ProcessApi(getApiClient());
-                    ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+                    ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
                     // ---
 
-                    byte[] ab = getLog(pir.getLogFileName());
+                    byte[] ab = getLog(pir.getInstanceId());
                     assertLog(".*empty: $", ab);
                     assertLog(".*get: \\{x=1}*", ab);
                 });
@@ -92,45 +90,16 @@ public class JsonStoreTaskIT extends AbstractServerIT {
 
     }
 
-    private void withOrg(Consumer<String> consumer) throws Exception {
-        String orgName = "org_" + randomString();
-        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        try {
-            orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
-            consumer.accept(orgName);
-        } finally {
-            orgApi.delete(orgName, "yes");
-        }
-    }
-
-    private void withProject(String orgName, Consumer<String> consumer) throws Exception {
-        String projectName = "project_" + randomString();
-        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        try {
-            projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                    .setName(projectName)
-                    .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
-            consumer.accept(projectName);
-        } finally {
-            projectsApi.delete(orgName, projectName);
-        }
-    }
-
     private void withStore(String orgName, Consumer<String> consumer) throws Exception {
         String storageName = "storage_" + randomString();
         JsonStoreApi storageApi = new JsonStoreApi(getApiClient());
         try {
-            storageApi.createOrUpdate(orgName, new JsonStoreRequest()
-                    .setName(storageName)
-                    .setVisibility(JsonStoreRequest.VisibilityEnum.PUBLIC));
+            storageApi.createOrUpdateJsonStore(orgName, new JsonStoreRequest()
+                    .name(storageName)
+                    .visibility(JsonStoreRequest.VisibilityEnum.PUBLIC));
             consumer.accept(storageName);
         } finally {
-            storageApi.delete(orgName, storageName);
+            storageApi.deleteJsonStore(orgName, storageName);
         }
-    }
-
-    @FunctionalInterface
-    public interface Consumer<T> {
-        void accept(T t) throws Exception;
     }
 }

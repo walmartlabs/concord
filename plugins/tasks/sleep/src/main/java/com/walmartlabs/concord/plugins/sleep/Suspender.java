@@ -20,10 +20,10 @@ package com.walmartlabs.concord.plugins.sleep;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ApiException;
+import com.walmartlabs.concord.client2.ClientUtils;
+import com.walmartlabs.concord.client2.ProcessApi;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 
 import java.time.Instant;

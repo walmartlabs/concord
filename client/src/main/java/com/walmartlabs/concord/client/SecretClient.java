@@ -35,10 +35,8 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class SecretClient {
 
@@ -159,10 +157,25 @@ public class SecretClient {
         throw new ApiException("Error encrypting string. Status code:" + r.getStatusCode() + " Data: " + r.getData());
     }
 
+    public SecretOperationResponse createSecret(CreateSecretRequest secretRequest) throws ApiException {
+        Set<String> projectNames = secretRequest.project() == null ? Collections.emptySet() : Collections.singleton(secretRequest.project());
+        CreateSecretRequestV2 secretRequestv2 = CreateSecretRequestV2.builder().org(secretRequest.org())
+                .name(secretRequest.name())
+                .generatePassword(secretRequest.generatePassword())
+                .storePassword(secretRequest.storePassword())
+                .visibility(secretRequest.visibility())
+                .data(secretRequest.data())
+                .keyPair(secretRequest.keyPair())
+                .usernamePassword(secretRequest.usernamePassword())
+                .addAllProjectNames(projectNames)
+                .build();
+        return createSecret(secretRequestv2);
+    }
+
     /**
      * Creates a new Concord secret.
      */
-    public SecretOperationResponse createSecret(CreateSecretRequest secretRequest) throws ApiException {
+    public SecretOperationResponse createSecret(CreateSecretRequestV2 secretRequest) throws ApiException {
         String path = "/api/v1/org/" + secretRequest.org() + "/secret";
 
         Map<String, Object> params = new HashMap<>();
@@ -177,13 +190,16 @@ public class SecretClient {
             params.put(Constants.Multipart.VISIBILITY, visibility.getValue());
         }
 
-        if (secretRequest.project() != null) {
-            params.put(Constants.Multipart.PROJECT_NAME, secretRequest.project());
+        if (secretRequest.projectIds() != null) {
+            params.put(Constants.Multipart.PROJECT_IDS, secretRequest.projectIds().stream().map(UUID::toString).collect(Collectors.joining(",")));
+        } else if (secretRequest.projectNames() != null) {
+            params.put(Constants.Multipart.PROJECT_NAMES, String.join(",", secretRequest.projectNames()));
         }
 
+
         byte[] data = secretRequest.data();
-        CreateSecretRequest.KeyPair keyPair = secretRequest.keyPair();
-        CreateSecretRequest.UsernamePassword usernamePassword = secretRequest.usernamePassword();
+        CreateSecretRequestV2.KeyPair keyPair = secretRequest.keyPair();
+        CreateSecretRequestV2.UsernamePassword usernamePassword = secretRequest.usernamePassword();
 
         if (data != null) {
             params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.DATA.getValue());
@@ -203,6 +219,67 @@ public class SecretClient {
         ApiResponse<SecretOperationResponse> response = ClientUtils.withRetry(retryCount, retryInterval,
                 () -> ClientUtils.postData(apiClient, path, params, SecretOperationResponse.class));
         return response.getData();
+    }
+
+    public void updateSecret(String orgName, String secretName, UpdateSecretRequest request) throws ApiException {
+        Set<UUID> projectIds = (request.newProjectId() != null) ? Collections.singleton(request.newProjectId()):null;
+        Set<String> projectNames = (request.newProjectName() != null && !request.newProjectName().isEmpty()) ? Collections.singleton(request.newProjectName()) : null;
+        UpdateSecretRequestV2 requestV2 = UpdateSecretRequestV2.builder()
+                .newOrgId(request.newOrgId())
+                .newOrgName(request.newOrgName())
+                .newProjectIds(projectIds)
+                .newProjectNames(projectNames)
+                .removeProjectLink(request.removeProjectLink())
+                .newOwnerId(request.newOwnerId())
+                .currentPassword(request.currentPassword())
+                .newPassword(request.newPassword())
+                .newName(request.newName())
+                .newVisibility(request.newVisibility())
+                .data(request.data()).keyPair(request.keyPair())
+                .usernamePassword(request.usernamePassword())
+                .build();
+        updateSecret(orgName, secretName, requestV2);
+    }
+
+    public void updateSecret(String orgName, String secretName, UpdateSecretRequestV2 request) throws ApiException {
+        String path = "/api/v2/org/" + orgName + "/secret/" + secretName;
+
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.Multipart.ORG_ID, request.newOrgId());
+        params.put(Constants.Multipart.ORG_NAME, request.newOrgName());
+        params.put("removeProjectLink", request.removeProjectLink());
+        params.put("ownerId", request.newOwnerId());
+        params.put(Constants.Multipart.STORE_PASSWORD, request.currentPassword());
+        params.put("newStorePassword", request.newPassword());
+        params.put(Constants.Multipart.NAME, request.newName());
+        params.put(Constants.Multipart.VISIBILITY, request.newVisibility());
+        if (request.newProjectIds() != null) {
+            params.put(Constants.Multipart.PROJECT_IDS, request.newProjectIds().stream().map(UUID::toString).collect(Collectors.joining(",")));
+        } else if (request.newProjectNames() != null) {
+            params.put(Constants.Multipart.PROJECT_NAMES, String.join(",", request.newProjectNames()));
+        }
+
+        byte[] data = request.data();
+        CreateSecretRequest.KeyPair keyPair = request.keyPair();
+        CreateSecretRequest.UsernamePassword usernamePassword = request.usernamePassword();
+
+        if (data != null) {
+            params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.DATA.getValue());
+            params.put(Constants.Multipart.DATA, data);
+        } else if (keyPair != null) {
+            params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.KEY_PAIR.getValue());
+            params.put(Constants.Multipart.PUBLIC, readFile(keyPair.publicKey()));
+            params.put(Constants.Multipart.PRIVATE, readFile(keyPair.privateKey()));
+        } else if (usernamePassword != null) {
+            params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.USERNAME_PASSWORD.getValue());
+            params.put(Constants.Multipart.USERNAME, usernamePassword.username());
+            params.put(Constants.Multipart.PASSWORD, usernamePassword.password());
+        }
+
+        params.values().removeIf(Objects::isNull);
+
+        ClientUtils.withRetry(retryCount, retryInterval,
+                () -> ClientUtils.postData(apiClient, path, params, null));
     }
 
     private static byte[] readFile(Path file) {

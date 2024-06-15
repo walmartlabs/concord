@@ -27,7 +27,7 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import org.apache.shiro.authc.AuthenticationException;
+import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAccount;
@@ -40,10 +40,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Set;
 
-@Named
 public class SessionKeyRealm extends AuthorizingRealm {
 
     private static final Logger log = LoggerFactory.getLogger(SessionKeyRealm.class);

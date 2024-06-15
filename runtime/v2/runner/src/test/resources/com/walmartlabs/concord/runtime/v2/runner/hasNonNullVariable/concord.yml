@@ -1,0 +1,8 @@
+flows:
+  default:
+    - set:
+        k: v
+        k2: ${null}
+
+    - log: "true == ${hasNonNullVariable('k')}"
+    - log: "false == ${hasNonNullVariable('k2')}"

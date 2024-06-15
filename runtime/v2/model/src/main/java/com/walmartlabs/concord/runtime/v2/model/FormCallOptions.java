@@ -37,7 +37,7 @@ public interface FormCallOptions extends StepOptions {
     long serialVersionUID = 1L;
 
     @Value.Default
-    default boolean yield() {
+    default boolean isYield() {
         return false;
     }
 
@@ -68,6 +68,18 @@ public interface FormCallOptions extends StepOptions {
      */
     @Nullable
     String fieldsExpression();
+
+    /**
+     * Support for expressions in {@code values}.
+     */
+    @Nullable
+    String valuesExpression();
+
+    /**
+     * Support for expressions in {@code runAs}.
+     */
+    @Nullable
+    String runAsExpression();
 
     static ImmutableFormCallOptions.Builder builder() {
         return ImmutableFormCallOptions.builder();

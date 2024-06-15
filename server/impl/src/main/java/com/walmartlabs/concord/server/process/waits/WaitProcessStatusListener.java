@@ -25,11 +25,9 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 
-import javax.inject.Named;
-
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
+import static org.jooq.impl.DSL.*;
 
-@Named
 public class WaitProcessStatusListener implements ProcessStatusListener {
 
     @Override
@@ -55,9 +53,16 @@ public class WaitProcessStatusListener implements ProcessStatusListener {
     }
 
     private static void init(DSLContext tx, ProcessKey processKey) {
-        tx.insertInto(PROCESS_WAIT_CONDITIONS)
-                .columns(PROCESS_WAIT_CONDITIONS.INSTANCE_ID, PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT)
-                .values(processKey.getInstanceId(), processKey.getCreatedAt())
+        tx.insertInto(PROCESS_WAIT_CONDITIONS, PROCESS_WAIT_CONDITIONS.INSTANCE_ID, PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT)
+                .select(
+                        select(value(processKey.getInstanceId()), value(processKey.getCreatedAt()))
+                                .whereNotExists(
+                                        selectOne()
+                                                .from(PROCESS_WAIT_CONDITIONS)
+                                                .where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.eq(processKey.getInstanceId())
+                                                        .and(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
+                                )
+                )
                 .execute();
     }
 

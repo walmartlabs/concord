@@ -6,12 +6,12 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>2.12.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>concord-compati-it</artifactId>
-    <packaging>takari-jar</packaging>
+    <artifactId>concord-compat-it</artifactId>
+    <packaging>jar</packaging>
 
     <properties>
         <!-- version of Agent to use in tests -->
@@ -21,7 +21,7 @@
         <server.image>walmartlabs/concord-server</server.image>
         <prev.agent.image>walmartlabs/concord-agent:${prev.concord.version}</prev.agent.image>
 
-        <ryuk.image>quay.io/testcontainers/ryuk:0.2.3</ryuk.image>
+        <ryuk.image>testcontainers/ryuk:0.6.0</ryuk.image>
     </properties>
 
     <dependencies>
@@ -52,7 +52,7 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-client</artifactId>
+            <artifactId>concord-client2</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -92,14 +92,6 @@
             </resource>
         </resources>
         <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <proc>proc</proc>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>

@@ -21,7 +21,7 @@ package com.walmartlabs.concord.client;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.*;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -30,8 +30,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import javax.xml.bind.DatatypeConverter;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -164,8 +164,7 @@ public class ConcordTask extends AbstractConcordTask {
         return withClient(ctx, client -> {
             ProcessApi api = new ProcessApi(client);
 
-            List<String> tl = tags != null ? new ArrayList<>(tags) : null;
-            List<ProcessEntry> result = api.listSubprocesses(instanceId, tl);
+            List<ProcessEntry> result = api.listSubprocesses(instanceId, tags);
 
             return result.stream()
                     .map(ProcessEntry::getInstanceId)
@@ -187,7 +186,7 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     public <T> Map<String, T> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids, long timeout, Function<ProcessEntry, T> processor) {
-        Map<String, T> result = new HashMap<>();
+        Map<String, T> result = new ConcurrentHashMap<>();
 
         ids.parallelStream().map(UUID::fromString).forEach(id -> {
             log.info("Waiting for {}, URL: {}", id, getProcessUrl(ctx, id));
@@ -196,8 +195,8 @@ public class ConcordTask extends AbstractConcordTask {
             while (true) {
                 try {
                     ProcessEntry e = ClientUtils.withRetry(3, 1000, () -> withClient(ctx, client -> {
-                        ProcessApi api = new ProcessApi(client);
-                        return api.get(id);
+                        ProcessV2Api api = new ProcessV2Api(client);
+                        return api.getProcess(id, Collections.singleton("childrenIds"));
                     }));
 
                     ProcessEntry.StatusEnum s = e.getStatus();
@@ -284,7 +283,7 @@ public class ConcordTask extends AbstractConcordTask {
             cfg.put(SUSPEND_KEY, false);
         }
 
-        start(ctx, cfg,null);
+        start(ctx, cfg, null);
     }
 
     private void startChildProcess(Context ctx) throws Exception {
@@ -357,7 +356,7 @@ public class ConcordTask extends AbstractConcordTask {
             }
         }
 
-        StartProcessResponse resp = request(ctx, "/api/v1/process", "POST", input, StartProcessResponse.class);
+        StartProcessResponse resp = withClient(ctx, apiClient -> new ProcessApi(apiClient).startProcess(input));
 
         UUID processId = resp.getInstanceId();
 
@@ -430,8 +429,8 @@ public class ConcordTask extends AbstractConcordTask {
 
     private Result continueAfterSuspend(Context ctx, Map<String, Object> cfg, UUID processId) throws Exception {
         ProcessEntry e = ClientUtils.withRetry(3, 1000, () -> withClient(ctx, client -> {
-            ProcessApi api = new ProcessApi(client);
-            return api.get(processId);
+            ProcessV2Api api = new ProcessV2Api(client);
+            return api.getProcess(processId, Collections.singleton("childrenIds"));
         }));
 
         ProcessEntry.StatusEnum s = e.getStatus();
@@ -458,6 +457,10 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     private void suspend(Context ctx, List<String> jobs, boolean resumeFromSameStep) throws ApiException {
+        if (jobs.isEmpty()) {
+            return;
+        }
+
         Map<String, Object> condition = new HashMap<>();
         condition.put("type", "PROCESS_COMPLETION");
         condition.put("reason", "Waiting for a child process to end");
@@ -527,19 +530,15 @@ public class ConcordTask extends AbstractConcordTask {
         return withClient(ctx, client -> {
             ProcessApi api = new ProcessApi(client);
 
-            File f = null;
-            try {
-                f = api.downloadAttachment(processId, "out.json");
+            try (InputStream is = api.downloadAttachment(processId, "out.json")){
                 ObjectMapper om = new ObjectMapper();
-                return om.readValue(f, Map.class);
+                return om.readValue(is, Map.class);
             } catch (ApiException e) {
                 if (e.getCode() == 404) {
                     return null;
                 }
                 log.error("Error while reading the out variables", e);
                 throw e;
-            } finally {
-                IOUtils.delete(f);
             }
         });
     }
@@ -616,7 +615,7 @@ public class ConcordTask extends AbstractConcordTask {
 
         return executor.submit(() -> withClient(ctx, client -> {
             ProcessApi api = new ProcessApi(client);
-            StartProcessResponse resp = api.fork(instanceId, req, false, null);
+            StartProcessResponse resp = api.fork(instanceId, false, null, req);
             log.info("Forked a child process: {} url: {}", resp.getInstanceId(), getProcessUrl(ctx, resp.getInstanceId()));
             return resp.getInstanceId();
         }));
@@ -842,7 +841,7 @@ public class ConcordTask extends AbstractConcordTask {
 
         if (v instanceof String) {
             return Arrays.stream(((String) v)
-                    .split(","))
+                            .split(","))
                     .map(String::trim)
                     .collect(Collectors.toSet());
         } else if (v instanceof String[]) {

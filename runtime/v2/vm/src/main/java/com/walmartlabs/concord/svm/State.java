@@ -4,7 +4,7 @@ package com.walmartlabs.concord.svm;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,8 @@ public interface State extends Serializable {
     /**
      * Removes the current frame of the specified thread. The next frame becomes the current frame
      * of the thread.
+     * @apiNote Prefer using {@link PopFrameCommand} instead of calling this method
+     * directly -- the command supports proper "finally" semantics.
      */
     void popFrame(ThreadId threadId);
 
@@ -105,15 +107,50 @@ public interface State extends Serializable {
     Map<ThreadId, String> getEventRefs();
 
     /**
+     * @return the error for the specified thread. Returns {@code null} if no error was set.
+     */
+    Exception getThreadError(ThreadId threadId);
+
+    /**
      * Sets an error for the specified thread. Those errors are used to propagate unhandled
      * exceptions from child threads to the parent thread with a {@link com.walmartlabs.concord.svm.commands.Join}.
      */
     void setThreadError(ThreadId threadId, Exception error);
 
     /**
-     * Clears the thread's error returning it.
+     * Clears and returns the thread's error. Null if no error was set.
      */
     Exception clearThreadError(ThreadId threadId);
+
+    /**
+     * Returns call stack trace for thread id.
+     */
+    List<StackTraceItem> getStackTrace(ThreadId threadId);
+
+    /**
+     * Adds a stack trace item to the specified thread.
+     */
+    void pushStackTraceItem(ThreadId threadId, StackTraceItem item);
+
+    /**
+     * Clears stack trace for the specific thread.
+     */
+    void clearStackTrace(ThreadId threadId);
+
+    /**
+     * Sets a thread-local variable for the specified thread.
+     */
+    void setThreadLocal(ThreadId threadId, String key, Serializable value);
+
+    /**
+     * Retrieves the value of a thread-local variable for the specified thread.
+     */
+    <T extends Serializable> T getThreadLocal(ThreadId threadId, String key);
+
+    /**
+     * Removes a thread-local variable for the specified thread.
+     */
+    void removeThreadLocal(ThreadId threadId, String key);
 
     /**
      * Performs state maintenance and cleanup.

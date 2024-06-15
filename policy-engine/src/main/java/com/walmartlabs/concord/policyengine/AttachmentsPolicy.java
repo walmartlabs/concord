@@ -29,6 +29,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class AttachmentsPolicy {
 
@@ -39,7 +40,7 @@ public class AttachmentsPolicy {
     }
 
     public CheckResult<AttachmentsRule, Long> check(Path p) throws IOException {
-        if (rule == null || rule.getMaxSizeInBytes() == null || !Files.exists(p) || !Files.isDirectory(p)) {
+        if (rule == null || !Files.exists(p) || !Files.isDirectory(p)) {
             return CheckResult.success();
         }
 
@@ -57,7 +58,7 @@ public class AttachmentsPolicy {
             }
         });
 
-        if (size[0] > rule.getMaxSizeInBytes()) {
+        if (size[0] > Objects.requireNonNull(rule.maxSizeInBytes())) {
             deny.add(new CheckResult.Item<>(rule, size[0], null));
         }
 

@@ -35,7 +35,7 @@ public class RepositoryValidationException extends RuntimeException {
         this(message, cause, Response.Status.INTERNAL_SERVER_ERROR);
     }
 
-    public RepositoryValidationException(String message, Throwable cause, Response.StatusType status) {
+    public RepositoryValidationException(String message, Throwable cause, StatusType status) {
         super(message, cause);
         this.status = status;
     }

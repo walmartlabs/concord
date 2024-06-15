@@ -1,0 +1,14 @@
+flows:
+  default:
+    - set:
+        items:
+          - name: one
+          - name: two
+        filteredItems: ${items.stream().filter(i -> i.name.equals('one')).toList()}
+
+    - call: test
+      loop:
+        items: ${filteredItems}
+
+  test:
+    - log: ${item}

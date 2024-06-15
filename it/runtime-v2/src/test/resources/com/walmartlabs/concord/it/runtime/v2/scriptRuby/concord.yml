@@ -1,0 +1,28 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+    - "mvn://org.jruby:jruby:9.1.13.0"
+
+flows:
+  default:
+    - parallel:
+        - call: scriptTask
+          in:
+            var1: "A1"
+            var2: "A2"
+
+        - call: scriptTask
+          in:
+            var1: "B1"
+            var2: "B2"
+
+  scriptTask:
+    - log: "scriptTask: ${var1}:${var2}"
+
+    - script: ruby
+      body: |
+        v = $execution.variables().get('var1')
+        v = v + "-Ruby"
+        $execution.variables().set("result", v)
+
+    - log: "scriptTask: result: ${result}"

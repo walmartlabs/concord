@@ -1,0 +1,35 @@
+flows:
+  default:
+    - call: flow0
+
+  flow0:
+    - call: flowA
+
+  flowA:
+    - log: "in A"
+    - try:
+        - call: flowB
+          in:
+            flowBInput: ${item}
+      loop:
+        items:
+          - first
+          - second
+        mode: parallel
+
+  flowB:
+    - call: flowC
+      in:
+        sa: ${flowBInput}-${item}
+      loop:
+        items:
+          - first
+          - second
+        mode: parallel
+
+  flowC:
+    - log: "in C"
+    - log: ${item}
+    - if: ${sa == 'second-second'}
+      then:
+        - throw: "BOOM"

@@ -20,21 +20,21 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
-import org.apache.shiro.web.util.WebUtils;
+import org.apache.shiro.authz.AuthorizationException;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.JEEContext;
+import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.engine.CallbackLogic;
+import org.pac4j.core.exception.TechnicalException;
+import org.pac4j.core.util.Pac4jConstants;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@Named
-@Singleton
 public class OidcCallbackFilter implements Filter {
 
     public static final String URL = "/api/service/oidc/callback";
@@ -52,9 +52,9 @@ public class OidcCallbackFilter implements Filter {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        HttpServletRequest req = WebUtils.toHttp(request);
-        HttpServletResponse resp = WebUtils.toHttp(response);
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException {
+        HttpServletRequest req = (HttpServletRequest) request;
+        HttpServletResponse resp = (HttpServletResponse) response;
 
         if (!cfg.isEnabled()) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "OIDC disabled");
@@ -63,15 +63,37 @@ public class OidcCallbackFilter implements Filter {
 
         JEEContext context = new JEEContext(req, resp, pac4jConfig.getSessionStore());
 
-        CallbackLogic<?, JEEContext> callback = pac4jConfig.getCallbackLogic();
-        callback.perform(context, pac4jConfig, pac4jConfig.getHttpActionAdapter(), cfg.getAfterLoginUrl(), true, false, true, PluginModule.CLIENT_NAME);
+        String postLoginUrl = removeRequestedUrl(context);
+        if (postLoginUrl == null || postLoginUrl.trim().isEmpty()) {
+            postLoginUrl = cfg.getAfterLoginUrl();
+        }
+
+        try {
+            CallbackLogic<?, JEEContext> callback = pac4jConfig.getCallbackLogic();
+            callback.perform(context, pac4jConfig, pac4jConfig.getHttpActionAdapter(), postLoginUrl, true, false, true, OidcPluginModule.CLIENT_NAME);
+        } catch (TechnicalException e) {
+            throw new AuthorizationException("OIDC callback error: " + e.getMessage());
+        }
     }
 
     @Override
     public void init(FilterConfig filterConfig) {
+        // do nothing
     }
 
     @Override
     public void destroy() {
+        // do nothing
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String removeRequestedUrl(JEEContext context) {
+        SessionStore<JEEContext> sessionStore = context.getSessionStore();
+        Object result = sessionStore.get(context, Pac4jConstants.REQUESTED_URL).orElse(null);
+        sessionStore.set(context, Pac4jConstants.REQUESTED_URL, "");
+        if (result instanceof String) {
+            return (String) result;
+        }
+        return null;
     }
 }

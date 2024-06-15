@@ -24,11 +24,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.UUID;
 
 /**
  * Composite key of a process. Identifies process resources in partitioned tables.
+ * @apiNote the "createdAt" portion of the key must be truncated to microseconds.
  */
 public class ProcessKey extends PartialProcessKey {
 
@@ -36,11 +38,8 @@ public class ProcessKey extends PartialProcessKey {
 
     private final OffsetDateTime createdAt;
 
-    /**
-     * Creates a new process key using a random UUID and the current timestamp.
-     */
-    public ProcessKey() {
-        this(UUID.randomUUID(), OffsetDateTime.now());
+    public static ProcessKey random() {
+        return new ProcessKey(UUID.randomUUID(), OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS));
     }
 
     public ProcessKey(PartialProcessKey part, OffsetDateTime createdAt) {
@@ -52,6 +51,11 @@ public class ProcessKey extends PartialProcessKey {
                       @JsonProperty("createdAt") OffsetDateTime createdAt) {
 
         super(instanceId);
+
+        if (createdAt.getNano() != createdAt.truncatedTo(ChronoUnit.MICROS).getNano()) {
+            throw new IllegalArgumentException("The process' createdAt must be truncated to microseconds: " + createdAt);
+        }
+
         this.createdAt = createdAt;
     }
 

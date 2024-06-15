@@ -39,21 +39,18 @@ import com.walmartlabs.concord.server.repository.InvalidRepositoryPathException;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
+import com.walmartlabs.concord.server.security.SecurityUtils;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authz.UnauthorizedException;
-import org.apache.shiro.subject.Subject;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.HttpHeaders;
@@ -62,8 +59,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.util.*;
 
-@Named
-@Singleton
 @Path("/api/service/console")
 public class ConsoleService implements Resource {
 
@@ -114,7 +109,7 @@ public class ConsoleService implements Resource {
     public UserResponse whoami() {
         UserPrincipal p = UserPrincipal.getCurrent();
         if (p == null) {
-            throw new ConcordApplicationException("Can't determine current user: pricipal not found",
+            throw new ConcordApplicationException("Can't determine current user: principal not found",
                     Status.INTERNAL_SERVER_ERROR);
         }
 
@@ -146,8 +141,7 @@ public class ConsoleService implements Resource {
     @POST
     @Path("/logout")
     public void logout() {
-        Subject subject = SecurityUtils.getSubject();
-        subject.logout();
+        SecurityUtils.logout();
     }
 
     @GET

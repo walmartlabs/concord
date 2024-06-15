@@ -20,8 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -41,28 +40,28 @@ public class ProcessRbacIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // add the user A
 
         UsersApi usersApi = new UsersApi(getApiClient());
 
         String userAName = "userA_" + randomString();
-        usersApi.createOrUpdate(new CreateUserRequest().setUsername(userAName).setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest().username(userAName).type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userAName));
+        CreateApiKeyResponse apiKeyA = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
 
         // create the user A's team
 
         String teamName = "team_" + randomString();
 
         TeamsApi teamsApi = new TeamsApi(getApiClient());
-        CreateTeamResponse ctr = teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
+        CreateTeamResponse ctr = teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name(teamName));
 
-        teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .setUsername(userAName)
-                .setRole(TeamUserEntry.RoleEnum.MEMBER)));
+        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
+                .username(userAName)
+                .role(TeamUserEntry.RoleEnum.MEMBER)));
 
         // switch to the user A and create a new private project
 
@@ -71,18 +70,18 @@ public class ProcessRbacIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PRIVATE)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PRIVATE)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // grant the team access to the project
 
-        projectsApi.updateAccessLevel(orgName, projectName, new ResourceAccessEntry()
-                .setTeamId(ctr.getId())
-                .setOrgName(orgName)
-                .setTeamName(teamName)
-                .setLevel(ResourceAccessEntry.LevelEnum.READER));
+        projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
+                .teamId(ctr.getId())
+                .orgName(orgName)
+                .teamName(teamName)
+                .level(ResourceAccessEntry.LevelEnum.READER));
 
         // start a new process using the project as the user A
 
@@ -94,19 +93,18 @@ public class ProcessRbacIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
+        waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
 
         // switch to admin and add the user B
 
         resetApiKey();
 
         String userBName = "userB_" + randomString();
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userBName)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userBName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
-        CreateApiKeyResponse apiKeyB = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userBName));
+        CreateApiKeyResponse apiKeyB = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userBName));
 
         // switch to the user B and try starting a process using the project
 
@@ -122,15 +120,15 @@ public class ProcessRbacIT extends AbstractServerIT {
 
         resetApiKey();
 
-        teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .setUsername(userBName)
-                .setRole(TeamUserEntry.RoleEnum.MEMBER)));
+        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
+                .username(userBName)
+                .role(TeamUserEntry.RoleEnum.MEMBER)));
 
         // switch to the user B and start a process using the project
 
         setApiKey(apiKeyB.getKey());
 
         spr = start(input);
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
+        waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
     }
 }

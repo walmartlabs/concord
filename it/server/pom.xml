@@ -6,12 +6,12 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>2.12.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-server-it</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <properties>
         <agent.image>walmartlabs/concord-agent</agent.image>
@@ -42,17 +42,17 @@
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-client</artifactId>
+            <artifactId>concord-client2</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
-            <artifactId>concord-ansible-plugin-client</artifactId>
+            <artifactId>concord-ansible-plugin-client2</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
-            <artifactId>concord-noderoster-plugin-client</artifactId>
+            <artifactId>concord-noderoster-plugin-client2</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -72,8 +72,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock-jre8</artifactId>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-jetty12</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -157,13 +157,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.junit-toolbox</groupId>
-            <artifactId>junit-toolbox</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <version>2.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -187,8 +183,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.squareup.okhttp</groupId>
-            <artifactId>okhttp</artifactId>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -240,10 +236,6 @@
             </resource>
         </resources>
         <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -309,7 +301,7 @@
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
-                                    <artifactId>concord-noderoster-plugin-client</artifactId>
+                                    <artifactId>concord-noderoster-plugin-client2</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>
 
@@ -452,6 +444,7 @@
                                         </volumes>
                                         <labels>
                                             <concordTxId>${txId}</concordTxId>
+                                            <com.walmartlabs.concord.it.name>socat</com.walmartlabs.concord.it.name>
                                         </labels>
                                         <cmd> TCP-LISTEN:${it.docker.port},fork UNIX-CONNECT:/var/run/docker.sock</cmd>
                                     </run>
@@ -472,6 +465,9 @@
                                             <log>(?s).*slapd starting*</log>
                                             <time>60000</time>
                                         </wait>
+                                        <labels>
+                                            <com.walmartlabs.concord.it.name>oldap</com.walmartlabs.concord.it.name>
+                                        </labels>
                                     </run>
                                 </image>
                                 <image>
@@ -488,6 +484,7 @@
                                         </network>
                                         <env>
                                             <POSTGRES_PASSWORD>it</POSTGRES_PASSWORD>
+                                            <POSTGRES_INITDB_ARGS>--no-sync</POSTGRES_INITDB_ARGS>
                                         </env>
                                         <wait>
                                             <log>(?s).*ready for start up.*ready to accept connections.*</log>
@@ -495,6 +492,7 @@
                                         </wait>
                                         <labels>
                                             <concordTxId>${txId}</concordTxId>
+                                            <com.walmartlabs.concord.it.name>db</com.walmartlabs.concord.it.name>
                                         </labels>
                                     </run>
                                 </image>
@@ -544,7 +542,12 @@
                                         </wait>
                                         <labels>
                                             <concordTxId>${txId}</concordTxId>
+                                            <com.walmartlabs.concord.it.name>server</com.walmartlabs.concord.it.name>
                                         </labels>
+                                        <log>
+                                            <prefix>SERVER </prefix>
+                                            <color>cyan</color>
+                                        </log>
                                     </run>
                                 </image>
                                 <!-- TODO start DIND? -->
@@ -580,6 +583,7 @@
                                         </env>
                                         <labels>
                                             <concordTxId>${txId}</concordTxId>
+                                            <com.walmartlabs.concord.it.name>agent</com.walmartlabs.concord.it.name>
                                         </labels>
                                     </run>
                                 </image>

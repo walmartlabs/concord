@@ -25,9 +25,11 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.security.SecurityUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -51,9 +53,11 @@ public class PayloadStoreProcessor implements PayloadProcessor {
 
     private final ObjectMapper objectMapper;
     private final ProcessStateManager stateManager;
+    private final ProcessSecurityContext securityContext;
 
     @Inject
-    public PayloadStoreProcessor(ProcessStateManager stateManager) {
+    public PayloadStoreProcessor(ProcessStateManager stateManager,
+                                 ProcessSecurityContext securityContext) {
         this.objectMapper = new ObjectMapper()
                 .enableDefaultTyping(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT)
                 .registerModule(new GuavaModule())
@@ -61,6 +65,7 @@ public class PayloadStoreProcessor implements PayloadProcessor {
                 .registerModule(new JavaTimeModule());
 
         this.stateManager = stateManager;
+        this.securityContext = securityContext;
     }
 
     @Override
@@ -77,8 +82,9 @@ public class PayloadStoreProcessor implements PayloadProcessor {
         String serializedHeaders = serialize(headers);
 
         stateManager.tx(tx -> {
-            stateManager.insert(tx, processKey, "_initial/payload.json", serializedHeaders.getBytes());
-            stateManager.importPath(tx, processKey, "_initial/attachments/", payload.getHeader(Payload.BASE_DIR), (path, basicFileAttributes) -> payload.getAttachments().containsValue(path));
+            stateManager.insertInitial(tx, processKey, "payload.json", serializedHeaders.getBytes());
+            stateManager.insertInitial(tx, processKey, "initiator", securityContext.serializePrincipals(SecurityUtils.getSubject().getPrincipals()));
+            stateManager.importPathInitial(tx, processKey, "attachments/", payload.getHeader(Payload.BASE_DIR), (path, basicFileAttributes) -> payload.getAttachments().containsValue(path));
         });
 
         return chain.process(payload);

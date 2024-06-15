@@ -9,9 +9,9 @@ package com.walmartlabs.concord.dependencymanager;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTimeout;
 
 @Disabled
 public class DependencyManagerTest {
@@ -69,6 +70,64 @@ public class DependencyManagerTest {
 
             DependencyManager m = new DependencyManager(DependencyManagerConfiguration.of(tmpDir, repositories));
             m.resolveSingle(new URI("mvn://com.walmartlabs.concord:concord-sdk:1.54.0"));
+        });
+    }
+
+    @Disabled
+    @Test
+    public void testOfflineMode() {
+        assertTimeout(Duration.ofMillis(30000), () -> {
+            Path tmpDir = Files.createTempDirectory("test");
+
+            List<MavenRepository> repositories = Collections.singletonList(
+                    MavenRepository.builder()
+                            .id("test")
+                            .url("https://repo.maven.apache.org/maven2/")
+                            .proxy(MavenProxy.builder()
+                                    .host("localhost")
+                                    .port(3128)
+                                    .build())
+                            .build()
+            );
+
+            DependencyManager m = new DependencyManager(DependencyManagerConfiguration.builder()
+                    .cacheDir(tmpDir)
+                    .repositories(repositories)
+                    .offlineMode(true)
+                    .build());
+            m.resolveSingle(new URI("mvn://com.walmartlabs.concord:concord-sdk:1.54.0"));
+        });
+    }
+
+    @Test
+    @Disabled
+    public void testLatest() {
+        assertTimeout(Duration.ofMillis(30000), () -> {
+            Path tmpDir = Files.createTempDirectory("test");
+            URI uriA = new URI("mvn://com.walmartlabs.concord:concord-sdk:2.8.0");
+            URI uriB = new URI("mvn://com.walmartlabs.concord:concord-policy-engine:LATEST");
+            URI uriC = new URI("mvn://com.walmartlabs.concord:concord-agent:LATEST");
+            List<MavenRepository> repositories = Collections.singletonList(
+                    MavenRepository.builder()
+                            .id("test")
+                            .url("https://repo.maven.apache.org/maven2/")
+                            .build()
+            );
+
+            DependencyManager m = new DependencyManager(DependencyManagerConfiguration
+                    .builder()
+                    .repositories(repositories)
+                    .cacheDir(tmpDir)
+                    .build());
+            Collection<DependencyEntity> paths = m.resolve(Arrays.asList(uriA, uriB));
+
+            assertEquals("2.11.1", paths.stream()
+                    .filter(a -> a.getArtifact().getGroupId().equals("com.walmartlabs.concord")
+                            && a.getArtifact().getArtifactId().equals("concord-policy-engine"))
+                    .findFirst().get().getArtifact().getVersion());
+
+            DependencyEntity deps = m.resolveSingle(uriC);
+            assertEquals("2.11.1", deps.getArtifact().getVersion());
         });
     }
 }

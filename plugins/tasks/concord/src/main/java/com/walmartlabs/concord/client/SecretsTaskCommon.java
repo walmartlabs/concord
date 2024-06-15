@@ -20,18 +20,16 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.ApiResponse;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.walmartlabs.concord.client.SecretsTaskParams.*;
 
@@ -89,15 +87,12 @@ public class SecretsTaskCommon {
 
         addIfPresent(params, Constants.Multipart.STORE_PASSWORD, in.storePassword());
 
-        try {
-            ApiResponse<String> r = postWithRetry( "/api/v1/org/" + orgName + "/secret/" + secretName + "/data", params);
-
-            String data = r.getData();
-            if (data == null) {
-                return Result.ok();
-            }
-
-            return Result.ok(r.getData());
+        SecretsApi api = new SecretsApi(apiClient);
+        try (InputStream is = ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> api.getSecretData(orgName, secretName, params))) {
+            String data = new String(is.readAllBytes());
+            return Result.ok(data);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         } catch (ApiException e) {
             return handleErrors(in, secretName, e);
         }
@@ -112,7 +107,7 @@ public class SecretsTaskCommon {
         String secretName = in.secretName();
         m.put(Constants.Multipart.NAME, secretName);
 
-        SecretEntry.TypeEnum secretType = in.secretType();
+        SecretEntryV2.TypeEnum secretType = in.secretType();
         m.put(Constants.Multipart.TYPE, secretType.toString());
 
         switch (secretType) {
@@ -144,12 +139,8 @@ public class SecretsTaskCommon {
 
     private TaskResult.SimpleResult create(CreateParams in, Map<String, Object> params) throws Exception {
         String orgName = in.orgName(defaultOrg);
-        String secretName = in.secretName();
 
-        ApiResponse<SecretOperationResponse> r = post( "/api/v1/org/" + orgName + "/secret", params, SecretOperationResponse.class);
-        if (r.getStatusCode() >= 400) {
-            return handleErrors(in, secretName, r.getStatusCode(), r.getData().toString());
-        }
+        new SecretsApi(apiClient).createSecret(orgName, params);
 
         log.info("New secret was successfully created: {}", params.get(Constants.Multipart.NAME));
         return Result.ok();
@@ -183,13 +174,20 @@ public class SecretsTaskCommon {
 
         String orgName = in.orgName(defaultOrg);
         String secretName = in.secretName();
+        List<String> projectNames = in.projectNames();
+        List<UUID> projectIds = in.projectIds();
 
         try {
-            SecretsApi api = new SecretsApi(apiClient);
-            api.update(orgName, secretName, new SecretUpdateRequest()
-                    .setData(newData)
-                    .setStorePassword(storePassword)
-                    .setNewStorePassword(newStorePassword));
+            Map<String,Object> params = new HashMap<>();
+            addIfPresent(params, Constants.Multipart.DATA, data);
+            addIfPresent(params, Constants.Multipart.STORE_PASSWORD, storePassword);
+            addIfPresent(params, Constants.Multipart.NEW_STORE_PASSWORD, newStorePassword);
+            addIfPresent(params, Constants.Multipart.PROJECT_IDS, projectIds);
+            addIfPresent(params, Constants.Multipart.PROJECT_NAMES, projectNames);
+            if(data != null){
+                addIfPresent(params, Constants.Multipart.TYPE, in.secretType());
+            }
+            new SecretsV2Api(apiClient).updateSecret(orgName, secretName, params);
 
             log.info("The secret was successfully updated: {}", secretName);
             return Result.ok();
@@ -227,15 +225,6 @@ public class SecretsTaskCommon {
         } catch (ApiException e) {
             return handleErrors(in, secretName, e.getCode(), e.getResponseBody());
         }
-    }
-
-    private <T> ApiResponse<T> post(String path, Map<String, Object> params, Class<T> type) throws ApiException {
-        return ClientUtils.postData(apiClient, path, params, type);
-    }
-
-    private ApiResponse<String> postWithRetry(String path, Map<String, Object> params) throws ApiException {
-        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL,
-                () -> ClientUtils.postData(apiClient, path, params, String.class));
     }
 
     private static void addIfPresent(Map<String, Object> m, String key, Object value) {

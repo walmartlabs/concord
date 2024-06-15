@@ -52,8 +52,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -88,6 +90,8 @@ public class RunnerJobExecutor implements JobExecutor {
 
     private final ObjectMapper objectMapper;
 
+    private final int majorJavaVersion;
+
     public RunnerJobExecutor(RunnerJobExecutorConfiguration cfg,
                              DependencyManager dependencyManager,
                              DefaultDependencies defaultDependencies,
@@ -107,6 +111,42 @@ public class RunnerJobExecutor implements JobExecutor {
         // sort JSON keys for consistency
         this.objectMapper = new ObjectMapper()
                 .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+
+        this.majorJavaVersion = getMajorJavaVersion(cfg.javaCmd());
+    }
+
+    private static int getMajorJavaVersion(String javaCmd) {
+        try {
+            Process process = new ProcessBuilder(javaCmd, "-version")
+                    .start();
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                throw new RuntimeException("`java -version` exited with " + exitCode);
+            }
+
+            String version;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                version = reader.readLine();
+            }
+
+            int start = version.indexOf("\"");
+            int end = version.indexOf(".", start + 1);
+            if (start < 0 || start + 1 >= version.length() || end < 0) {
+                throw new RuntimeException("Unknown version string: " + version);
+            }
+
+            int major;
+            try {
+                major = Integer.parseInt(version.substring(start + 1, end));
+            } catch (NumberFormatException e) {
+                throw new RuntimeException("Unknown version string: " + version);
+            }
+
+            return major;
+        } catch (Exception e) {
+            throw new RuntimeException("Can't determine the target Java runtime version", e);
+        }
     }
 
     @Override
@@ -139,9 +179,9 @@ public class RunnerJobExecutor implements JobExecutor {
 
             pe = buildProcessEntry(job);
         } catch (Throwable e) {
-            log.warn("exec ['{}'] -> process error: {}", job.getInstanceId(), e.getMessage());
+            log.warn("exec ['{}'] -> process error: {}", job.getInstanceId(), e.getMessage(), e);
 
-            job.getLog().error("Process startup error: {}", e.getMessage());
+            job.getLog().error("Process startup error: {}", e.getMessage(), e);
 
             cleanup(job);
 
@@ -176,7 +216,7 @@ public class RunnerJobExecutor implements JobExecutor {
         });
 
         // return a handle that can be used to cancel the process or wait for its completion
-        return new JobInstanceImpl(f, pe.getProcess());
+        return new JobInstanceImpl(f, pe.getProcess(), cfg.cleanRunnerDescendants());
     }
 
     private void persistWorkDir(UUID instanceId, Path src) {
@@ -203,17 +243,19 @@ public class RunnerJobExecutor implements JobExecutor {
             // therefore, we need to make all files readable by all users
             // and that's why runner.persistentWorkDir shouldn't be used in prod
 
-            Files.walk(dst).forEach(f -> {
-                try {
-                    if (Files.isDirectory(f)) {
-                        Files.setPosixFilePermissions(f, Posix.posix(0755));
-                    } else if (Files.isRegularFile(f)) {
-                        Files.setPosixFilePermissions(f, Posix.posix(0644));
+            try(Stream<Path> walk = Files.walk(dst)) {
+                walk.forEach(f -> {
+                    try {
+                        if (Files.isDirectory(f)) {
+                            Files.setPosixFilePermissions(f, Posix.posix(0755));
+                        } else if (Files.isRegularFile(f)) {
+                            Files.setPosixFilePermissions(f, Posix.posix(0644));
+                        }
+                    } catch (IOException e) {
+                        log.warn("persistWorkDir -> can't update permissions for {}: {}", f, e.getMessage());
                     }
-                } catch (IOException e) {
-                    log.warn("persistWorkDir -> can't update permissions for {}: {}", f, e.getMessage());
-                }
-            });
+                });
+            }
         } catch (IOException e) {
             log.warn("persistWorkDir -> failed to copy {} into {}: {}", src, dst, e.getMessage());
         }
@@ -314,15 +356,28 @@ public class RunnerJobExecutor implements JobExecutor {
         uris = rewriteDependencies(job, uris);
 
         Collection<DependencyEntity> deps = dependencyManager.resolve(uris, new ProgressListener() {
+
+            private final List<String> errors = Collections.synchronizedList(new ArrayList<>());
+
             @Override
             public void onRetry(int retryCount, int maxRetry, long interval, String cause) {
+                synchronized (errors) {
+                    for (String error : errors) {
+                        job.getLog().warn(error);
+                    }
+                }
+
                 job.getLog().warn("Error while downloading dependencies: {}", cause);
                 job.getLog().info("Retrying in {}ms", interval);
             }
 
             @Override
             public void onTransferFailed(String error) {
-                job.getLog().error(error);
+                if (job.isDebugMode()) {
+                    job.getLog().warn(error);
+                } else {
+                    errors.add(error);
+                }
             }
         });
 
@@ -375,9 +430,9 @@ public class RunnerJobExecutor implements JobExecutor {
 
         CheckResult<DependencyRule, DependencyEntity> result = policyEngine.getDependencyPolicy().check(resolvedDepEntities);
         result.getWarn().forEach(d ->
-                processLog.warn("Potentially restricted artifact '{}' (dependency policy: {})", d.getEntity(), d.getRule().getMsg()));
+                processLog.warn("Potentially restricted artifact '{}' (dependency policy: {})", d.getEntity(), d.getRule().msg()));
         result.getDeny().forEach(d ->
-                processLog.warn("Artifact '{}' is forbidden by the dependency policy {}", d.getEntity(), d.getRule().getMsg()));
+                processLog.warn("Artifact '{}' is forbidden by the dependency policy {}", d.getEntity(), d.getRule().msg()));
 
         if (!result.getDeny().isEmpty()) {
             throw new ExecutionException("Found restricted dependencies");
@@ -413,6 +468,7 @@ public class RunnerJobExecutor implements JobExecutor {
                 .runnerCfgPath(runnerCfgFile.toAbsolutePath())
                 .mainClass(cfg.runnerMainClass())
                 .jvmParams(jvmParams)
+                .majorJavaVersion(this.majorJavaVersion)
                 .build();
     }
 
@@ -720,6 +776,8 @@ public class RunnerJobExecutor implements JobExecutor {
 
         boolean preforkEnabled();
 
+        boolean cleanRunnerDescendants();
+
         static ImmutableRunnerJobExecutorConfiguration.Builder builder() {
             return ImmutableRunnerJobExecutorConfiguration.builder();
         }
@@ -729,12 +787,14 @@ public class RunnerJobExecutor implements JobExecutor {
 
         private final Future<?> f;
         private final Process proc;
+        private final boolean cleanRunnerDescendants;
 
         private transient boolean cancelled = false;
 
-        private JobInstanceImpl(Future<?> f, Process proc) {
+        private JobInstanceImpl(Future<?> f, Process proc, boolean cleanRunnerDescendants) {
             this.f = f;
             this.proc = proc;
+            this.cleanRunnerDescendants = cleanRunnerDescendants;
         }
 
         @Override
@@ -750,7 +810,7 @@ public class RunnerJobExecutor implements JobExecutor {
 
             cancelled = true;
 
-            Utils.kill(proc);
+            Utils.kill(proc, cleanRunnerDescendants);
         }
 
         @Override

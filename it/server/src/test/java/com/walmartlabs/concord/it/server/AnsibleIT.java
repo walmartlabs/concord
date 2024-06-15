@@ -21,7 +21,8 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.google.common.io.Files;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -30,10 +31,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
@@ -51,17 +49,16 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*\"msg\":.*Hello, world.*", ab);
     }
 
@@ -72,17 +69,16 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*\"msg\":.*Hello2, world.*", ab);
         assertEquals(0, grep(".*Hello, world.*", ab).size(), "unexpected 'Hello, world' log");
     }
@@ -94,17 +90,16 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Hello, Concord.*", ab);
     }
 
@@ -115,17 +110,16 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Hello, Concord.*", ab);
     }
 
@@ -136,21 +130,21 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Hello, Concord.*", ab);
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testTwoAnsibleRuns() throws Exception {
         URI dir = AnsibleIT.class.getResource("twoAnsible").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -164,14 +158,30 @@ public class AnsibleIT extends AbstractServerIT {
         // ---
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*\"msg\":.*Hello!.*", ab);
         assertLog(".*\"msg\":.*Bye-bye!.*", ab);
+
+        // ---
+
+        try (InputStream resp = processApi.downloadAttachment(spr.getInstanceId(), "ansible_stats_v2.json")) {
+            assertNotNull(resp);
+
+            List<Map<String, Object>> stats = fromJson(resp, List.class);
+
+            assertEquals(2, stats.size());
+
+            assertEquals("playbook/hello.yml", stats.get(0).get("playbook"));
+            Collection<String> oks = (Collection<String>)ConfigurationUtils.get(stats.get(0), "stats", "ok");
+            assertNotNull(oks);
+            assertEquals(1, oks.size());
+            assertEquals("127.0.0.1", oks.iterator().next());
+        }
     }
 
     @Test
@@ -187,25 +197,24 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         // ---
 
         ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
-        List<FormListEntry> forms = formsApi.list(pir.getInstanceId());
+        List<FormListEntry> forms = formsApi.listProcessForms(pir.getInstanceId());
         assertEquals(1, forms.size());
 
-        formsApi.submit(pir.getInstanceId(), forms.get(0).getName(), Collections.singletonMap("msg", "Hello!"));
+        formsApi.submitForm(pir.getInstanceId(), forms.get(0).getName(), Collections.singletonMap("msg", "Hello!"));
 
         // ---
 
-        pir = waitForCompletion(processApi, spr.getInstanceId());
+        pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*\"msg\":.*Hello!.*", ab);
     }
 
@@ -229,25 +238,24 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         // ---
 
         ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
-        List<FormListEntry> forms = formsApi.list(pir.getInstanceId());
+        List<FormListEntry> forms = formsApi.listProcessForms(pir.getInstanceId());
         assertEquals(1, forms.size());
 
-        formsApi.submit(pir.getInstanceId(), forms.get(0).getName(), Collections.singletonMap("msg", "Hello!"));
+        formsApi.submitForm(pir.getInstanceId(), forms.get(0).getName(), Collections.singletonMap("msg", "Hello!"));
 
         // ---
 
-        pir = waitForCompletion(processApi, spr.getInstanceId());
+        pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Hello!.*", ab);
     }
 
@@ -268,10 +276,7 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
-
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
     }
 
@@ -288,15 +293,12 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
-
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*_callbacks:myCallbackDir.*", ab);
     }
 
@@ -304,7 +306,7 @@ public class AnsibleIT extends AbstractServerIT {
     public void testGroupVars() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // ---
 
@@ -326,13 +328,12 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*\"msg\":.*Hi there!.*", ab);
     }
 
@@ -343,17 +344,16 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*\"msg\":.*First hello from ansible.*", ab);
         assertLog(".*\"msg\":.*Second message.*", ab);
     }
@@ -365,17 +365,16 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*OK:.*127.0.0.1.*", ab);
     }
 
@@ -386,17 +385,16 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*THIS TASK CONTAINS SENSITIVE INFORMATION.*", ab);
     }
 
@@ -407,17 +405,16 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*" + Pattern.quote("message '{{.lalala}}'") + ".*", ab);
         assertLog(".*" + Pattern.quote("message {{.unsafe}}") + ".*", ab);
     }
@@ -430,22 +427,21 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*message iddqd.*", ab);
 
         // ---
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> events = eventsApi.list(pir.getInstanceId(), "ANSIBLE", null, null, null, null, null, null);
+        List<ProcessEventEntry> events = eventsApi.listProcessEvents(pir.getInstanceId(), "ANSIBLE", null, null, null, null, null, null);
         assertNotNull(events);
         // one pre and one post event
         assertEquals(2, events.size());
@@ -464,15 +460,14 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Hello from a JSON file!.*", ab);
         assertLog(".*Hello from a YAML file!.*", ab);
     }
@@ -484,15 +479,14 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Hello aaa.*", ab);
         assertLog(".*Hello bbb.*", ab);
     }
@@ -504,15 +498,14 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Hello aaa.*", ab);
         assertLog(".*Hello bbb.*", ab);
     }
@@ -524,15 +517,14 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLogAtLeast(".*Hello aaa.*", 2, ab);
         assertLogAtLeast(".*Hello ccc.*", 2, ab);
         assertNoLog(".*Hello bbb.*", ab);
@@ -549,13 +541,12 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Hello!.*", ab);
     }
 
@@ -570,13 +561,12 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Hello!.*", ab);
     }
 
@@ -597,10 +587,9 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Hello! my_password=.*", ab);
 
         // and then run with the filtering enabled
@@ -613,9 +602,9 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        pir = waitForCompletion(processApi, spr.getInstanceId());
+        pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        ab = getLog(pir.getLogFileName());
+        ab = getLog(pir.getInstanceId());
         assertNoLog(".*Hello! my_password=.*", ab);
         assertLog(".*SENSITIVE INFORMATION.*", ab);
     }

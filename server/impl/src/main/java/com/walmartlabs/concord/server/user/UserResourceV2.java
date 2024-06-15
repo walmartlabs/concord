@@ -21,12 +21,10 @@ package com.walmartlabs.concord.server.user;
  */
 
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.ValidationErrorsException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -38,8 +36,8 @@ import java.util.UUID;
 
 @Named
 @Singleton
-@Api(value = "UserV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v2/user")
+@Tag(name = "UserV2")
 public class UserResourceV2 implements Resource {
 
     private final UserDao userDao;
@@ -50,12 +48,12 @@ public class UserResourceV2 implements Resource {
     }
 
     @GET
-    @ApiOperation("Returns a list of existing active users matching the supplied filter")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<UserEntry> list(@ApiParam @QueryParam("offset") @DefaultValue("0") int offset,
-                                @ApiParam @QueryParam("limit") @DefaultValue("10") int limit,
-                                @ApiParam @QueryParam("filter") String filter) {
+    @Operation(description = "Returns a list of existing active users matching the supplied filter", operationId = "listUsersWithFilter")
+    public List<UserEntry> list(@QueryParam("offset") @DefaultValue("0") int offset,
+                                @QueryParam("limit") @DefaultValue("10") int limit,
+                                @QueryParam("filter") String filter) {
 
         if (offset < 0) {
             throw new ValidationErrorsException("'offset' must be a positive number or zero");
@@ -69,10 +67,10 @@ public class UserResourceV2 implements Resource {
     }
 
     @GET
-    @ApiOperation("Get an existing user")
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
+    @Operation(description = "Get an existing user", operationId = "getUser")
     public UserEntry get(@PathParam("id") UUID id) {
         return userDao.get(id);
     }

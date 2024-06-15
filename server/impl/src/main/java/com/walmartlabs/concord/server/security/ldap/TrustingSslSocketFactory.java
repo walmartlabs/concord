@@ -88,7 +88,7 @@ public class TrustingSslSocketFactory extends SocketFactory {
         }
 
         public X509Certificate[] getAcceptedIssuers() {
-            return new java.security.cert.X509Certificate[0];
+            return new X509Certificate[0];
         }
     }
 }

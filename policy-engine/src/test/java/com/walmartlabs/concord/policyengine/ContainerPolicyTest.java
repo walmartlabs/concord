@@ -32,8 +32,8 @@ public class ContainerPolicyTest {
 
     @Test
     public void testCpu() {
-        ContainerPolicy oneCpu = new ContainerPolicy(new ContainerRule("1 CPU", null, 1));
-        ContainerPolicy twoCpu = new ContainerPolicy(new ContainerRule("1 CPU", null, 2));
+        ContainerPolicy oneCpu = new ContainerPolicy(ContainerRule.of("1 CPU", null, 1));
+        ContainerPolicy twoCpu = new ContainerPolicy(ContainerRule.of("1 CPU", null, 2));
 
         Map<String, Object> containerParams = new HashMap<>();
         containerParams.put("cpu", 2);
@@ -46,8 +46,8 @@ public class ContainerPolicyTest {
 
     @Test
     public void testRam() {
-        ContainerPolicy ram1 = new ContainerPolicy(new ContainerRule("128 RAM", "128m", null));
-        ContainerPolicy ram2 = new ContainerPolicy(new ContainerRule("256 RAM", "256m", null));
+        ContainerPolicy ram1 = new ContainerPolicy(ContainerRule.of("128 RAM", "128m", null));
+        ContainerPolicy ram2 = new ContainerPolicy(ContainerRule.of("256 RAM", "256m", null));
 
         Map<String, Object> containerParams = new HashMap<>();
         containerParams.put("ram", "256m");

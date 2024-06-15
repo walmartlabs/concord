@@ -28,7 +28,6 @@ import org.jooq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -36,14 +35,12 @@ import java.util.*;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENTS;
 import static org.jooq.impl.DSL.*;
 
-@Named("ansible-event-processor")
-@Singleton
 public class EventFetcher extends AbstractEventProcessor<EventProcessor.Event> {
 
     private static final String PROCESSOR_NAME = "ansible-event-processor";
 
     private final AnsibleEventsConfiguration cfg;
-    private final EventFetcher.AnsibleEventDao dao;
+    private final AnsibleEventDao dao;
     private final List<EventProcessor> processors;
 
     @Inject
@@ -55,6 +52,11 @@ public class EventFetcher extends AbstractEventProcessor<EventProcessor.Event> {
         this.cfg = cfg;
         this.dao = dao;
         this.processors = processors;
+    }
+
+    @Override
+    public String getId() {
+        return "ansible-event-processor";
     }
 
     @Override
@@ -102,14 +104,14 @@ public class EventFetcher extends AbstractEventProcessor<EventProcessor.Event> {
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
 
             SelectConditionStep<Record6<UUID, OffsetDateTime, Long, OffsetDateTime, String, JSONB>> q = tx.select(
-                    pe.INSTANCE_ID,
-                    pe.INSTANCE_CREATED_AT,
-                    pe.EVENT_SEQ,
-                    pe.EVENT_DATE,
-                    pe.EVENT_TYPE,
-                    when(pe.EVENT_TYPE.eq(Constants.ANSIBLE_EVENT_TYPE), payloadField(tx, "host", "hostGroup", "status", "duration", "ignore_errors", "currentRetryCount", "hostStatus", "playId", "playbookId", "parentCorrelationId", "action", "isHandler", "taskId", "task"))
-                            .when(pe.EVENT_TYPE.eq(Constants.ANSIBLE_PLAYBOOK_INFO), payloadField(tx, "plays", "playbookId", "playbook", "uniqueHosts", "totalWork", "parentCorrelationId", "currentRetryCount"))
-                            .when(pe.EVENT_TYPE.eq(Constants.ANSIBLE_PLAYBOOK_RESULT), payloadField(tx, "playbookId", "status", "parentCorrelationId")))
+                            pe.INSTANCE_ID,
+                            pe.INSTANCE_CREATED_AT,
+                            pe.EVENT_SEQ,
+                            pe.EVENT_DATE,
+                            pe.EVENT_TYPE,
+                            when(pe.EVENT_TYPE.eq(Constants.ANSIBLE_EVENT_TYPE), payloadField(tx, "host", "hostGroup", "status", "duration", "ignore_errors", "currentRetryCount", "hostStatus", "playId", "playbookId", "parentCorrelationId", "action", "isHandler", "taskId", "task"))
+                                    .when(pe.EVENT_TYPE.eq(Constants.ANSIBLE_PLAYBOOK_INFO), payloadField(tx, "plays", "playbookId", "playbook", "uniqueHosts", "totalWork", "parentCorrelationId", "currentRetryCount"))
+                                    .when(pe.EVENT_TYPE.eq(Constants.ANSIBLE_PLAYBOOK_RESULT), payloadField(tx, "playbookId", "status", "parentCorrelationId")))
                     .from(pe)
                     .where(pe.EVENT_TYPE.in(Constants.ANSIBLE_EVENT_TYPE, Constants.ANSIBLE_PLAYBOOK_INFO, Constants.ANSIBLE_PLAYBOOK_RESULT)
                             .and(pe.EVENT_SEQ.greaterThan(marker.eventSeq())));

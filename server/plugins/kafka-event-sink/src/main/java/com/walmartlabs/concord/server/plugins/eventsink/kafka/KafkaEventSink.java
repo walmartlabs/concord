@@ -31,11 +31,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Collections;
 import java.util.List;
 
-@Named
 public class KafkaEventSink implements ProcessEventListener, ProcessLogListener, AuditLogListener {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaEventSink.class);

@@ -32,6 +32,7 @@ import com.walmartlabs.concord.server.user.UserManager;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.core.Response.Status;
+import java.util.Set;
 import java.util.UUID;
 
 @Named
@@ -53,7 +54,9 @@ public class AssertOutVariablesProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        if (payload.getHeader(Payload.OUT_EXPRESSIONS) == null) {
+        Set<String> outVars = payload.getHeader(Payload.OUT_EXPRESSIONS);
+
+        if (outVars == null || outVars.isEmpty()) {
             return chain.process(payload);
         }
 

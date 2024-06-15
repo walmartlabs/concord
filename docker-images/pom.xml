@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>2.12.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -18,19 +18,16 @@
         <module>ansible</module>
         <module>agent</module>
         <module>server</module>
+        <module>agent-operator</module>
     </modules>
 
     <properties>
         <docker.skip>true</docker.skip>
         <docker.maintainer>ibodrov@gmail.com</docker.maintainer>
         <docker.namespace>walmartlabs</docker.namespace>
+        <docker.allowPull>true</docker.allowPull>
         <concord.baseDir>/opt/concord</concord.baseDir>
-
-        <!--
-            JDK to use in the base image and all its derivatives.
-            Must be a .tar.gz archive for Linux x64
-         -->
-        <jdk.url>https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jdk_x64_linux_hotspot_8u292b10.tar.gz</jdk.url>
+        <image.platforms>linux/amd64</image.platforms>
     </properties>
 
     <build>
@@ -50,6 +47,7 @@
                                 <executable>docker</executable>
                                 <workingDirectory>${project.basedir}</workingDirectory>
                                 <arguments>
+                                    <argument>buildx</argument>
                                     <argument>build</argument>
 
                                     <argument>-t</argument>
@@ -62,11 +60,15 @@
 
                                     <argument>--build-arg=docker_namespace=${docker.namespace}</argument>
                                     <argument>--build-arg=concord_version=${project.version}</argument>
-
-                                    <argument>--build-arg=jdk_url=${jdk.url}</argument>
+                                    <argument>--build-arg=jdk_version=${jdk.version}</argument>
 
                                     <argument>--network</argument>
                                     <argument>host</argument>
+
+                                    <argument>--platform=${image.platforms}</argument>
+
+                                    <argument>--load</argument>
+                                    <argument>--pull=${docker.allowPull}</argument>
 
                                     <argument>.</argument>
                                 </arguments>
@@ -86,21 +88,9 @@
             </properties>
         </profile>
         <profile>
-            <id>jdk11</id>
+            <id>jdk17-aarch64</id>
             <properties>
-                <jdk.url>https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.11%2B9/OpenJDK11U-jdk_x64_linux_hotspot_11.0.11_9.tar.gz</jdk.url>
-            </properties>
-        </profile>
-        <profile>
-            <id>jdk16</id>
-            <properties>
-                <jdk.url>https://github.com/AdoptOpenJDK/openjdk16-binaries/releases/download/jdk-16.0.1%2B9/OpenJDK16U-jdk_x64_linux_hotspot_16.0.1_9.tar.gz</jdk.url>
-            </properties>
-        </profile>
-        <profile>
-            <id>jdk8-aarch64</id>
-            <properties>
-                <jdk.url>https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jdk_aarch64_linux_hotspot_8u292b10.tar.gz</jdk.url>
+                <image.platforms>linux/aarch64</image.platforms>
             </properties>
         </profile>
     </profiles>

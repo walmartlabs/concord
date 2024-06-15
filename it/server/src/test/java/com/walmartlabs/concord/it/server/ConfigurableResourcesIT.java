@@ -20,10 +20,8 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.client2.StartProcessResponse;
 import org.junit.jupiter.api.Test;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
@@ -38,17 +36,16 @@ public class ConfigurableResourcesIT extends AbstractServerIT {
     public void testProfiles() throws Exception {
         // prepare the payload
 
-        byte[] payload = archive(ProcessIT.class.getResource("configurableProfilesDirectory").toURI());
+        byte[] payload = archive(ConfigurableResourcesIT.class.getResource("configurableProfilesDirectory").toURI());
 
         // start the process
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // get the name of the agent's log file
 
@@ -56,7 +53,7 @@ public class ConfigurableResourcesIT extends AbstractServerIT {
 
         // check the logs
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello, world.*", ab);
     }
@@ -65,17 +62,16 @@ public class ConfigurableResourcesIT extends AbstractServerIT {
     public void testFlows() throws Exception {
         // prepare the payload
 
-        byte[] payload = archive(ProcessIT.class.getResource("configurableFlowsDirectory").toURI());
+        byte[] payload = archive(ConfigurableResourcesIT.class.getResource("configurableFlowsDirectory").toURI());
 
         // start the process
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // get the name of the agent's log file
 
@@ -83,7 +79,7 @@ public class ConfigurableResourcesIT extends AbstractServerIT {
 
         // check the logs
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*External flow!.*", ab);
     }
@@ -92,17 +88,16 @@ public class ConfigurableResourcesIT extends AbstractServerIT {
     public void testDisabledProfiles() throws Exception {
         // prepare the payload
 
-        byte[] payload = archive(ProcessIT.class.getResource("disableProfilesDirectory").toURI());
+        byte[] payload = archive(ConfigurableResourcesIT.class.getResource("disableProfilesDirectory").toURI());
 
         // start the process
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // get the name of the agent's log file
 
@@ -110,14 +105,14 @@ public class ConfigurableResourcesIT extends AbstractServerIT {
 
         // check the logs
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello, stranger.*", ab);
     }
 
     @Test
     public void testInvalidDir() throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource("invalidResourcesPath").toURI());
+        byte[] payload = archive(ConfigurableResourcesIT.class.getResource("invalidResourcesPath").toURI());
 
         // ---
 

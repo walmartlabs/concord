@@ -20,11 +20,9 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.LockResult;
-import com.walmartlabs.concord.client.ProcessLocksApi;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.client2.LockResult;
+import com.walmartlabs.concord.client2.ProcessLocksApi;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.sdk.LockService;
 import org.slf4j.Logger;
@@ -57,7 +55,7 @@ public class DefaultLockService implements LockService {
         // TODO: timeout
         while (!Thread.currentThread().isInterrupted()) {
             LockResult lock = withRetry(() -> api.tryLock(instanceId.getValue(), lockName, LockScope.PROJECT.name()));
-            if (lock.isAcquired()) {
+            if (lock.getAcquired()) {
                 log.info("successfully acquired lock '{}' in '{}' scope...", lockName, LockScope.PROJECT);
                 return;
             }

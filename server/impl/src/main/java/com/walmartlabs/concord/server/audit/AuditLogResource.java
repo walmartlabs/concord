@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.audit;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,19 +34,15 @@ import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.user.UserDao;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
-import org.apache.shiro.authz.UnauthorizedException;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.ValidationErrorsException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.time.Duration;
@@ -59,10 +55,8 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.Utils.unwrap;
 
-@Named
-@Singleton
-@Api(value = "Audit Log", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/audit")
+@Tag(name = "Audit Log")
 public class AuditLogResource implements Resource {
 
     private static final String DETAILS_QUERY_PARAMETER_PREFIX = "details.";
@@ -125,17 +119,17 @@ public class AuditLogResource implements Resource {
      * are allowed.
      */
     @GET
-    @ApiOperation(value = "List audit log entries for the specified organization", responseContainer = "list", response = AuditLogEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<AuditLogEntry> list(@ApiParam @QueryParam("object") AuditObject object,
-                                    @ApiParam @QueryParam("action") AuditAction action,
-                                    @ApiParam @QueryParam("userId") UUID userId,
-                                    @ApiParam @QueryParam("username") String username,
-                                    @ApiParam @QueryParam("after") OffsetDateTimeParam afterTimestamp,
-                                    @ApiParam @QueryParam("before") OffsetDateTimeParam beforeTimestamp,
-                                    @ApiParam @QueryParam("offset") @DefaultValue("0") int offset,
-                                    @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
+    @Operation(description = "List audit log entries for the specified organization")
+    public List<AuditLogEntry> list(@QueryParam("object") AuditObject object,
+                                    @QueryParam("action") AuditAction action,
+                                    @QueryParam("userId") UUID userId,
+                                    @QueryParam("username") String username,
+                                    @QueryParam("after") OffsetDateTimeParam afterTimestamp,
+                                    @QueryParam("before") OffsetDateTimeParam beforeTimestamp,
+                                    @QueryParam("offset") @DefaultValue("0") int offset,
+                                    @QueryParam("limit") @DefaultValue("30") int limit,
                                     @Context UriInfo uriInfo) {
 
         Map<String, String> details = getDetails(uriInfo);

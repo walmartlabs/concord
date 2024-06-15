@@ -23,30 +23,48 @@ package com.walmartlabs.concord.agent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Field;
+import java.util.List;
 
 public final class Utils {
 
     private static final Logger log = LoggerFactory.getLogger(Utils.class);
 
     public static boolean kill(Process proc) {
-        if (!proc.isAlive()) {
+        return kill(proc.toHandle());
+    }
+
+    public static boolean kill(Process proc, boolean killDescendants) {
+        List<ProcessHandle> children = killDescendants ? proc.children().toList() : List.of();
+
+        // kill parent first which may gracefully clean up all descendents
+        boolean killed = kill(proc.toHandle());
+
+        // clean up orphaned processes that are still running
+        children.stream()
+                .flatMap(ProcessHandle::descendants)
+                .forEach(Utils::kill);
+
+        return killed;
+    }
+
+    private static boolean kill(ProcessHandle handle) {
+        if (!handle.isAlive()) {
             return false;
         }
 
-        String p = toString(proc);
+        String p = toString(handle);
 
         log.info("kill ['{}'] -> attempting to stop...", p);
-        proc.destroy();
+        handle.destroy();
 
-        if (proc.isAlive()) {
+        if (handle.isAlive()) {
             sleep(1000);
         }
 
-        while (proc.isAlive()) {
+        while (handle.isAlive()) {
             log.warn("kill ['{}'] -> waiting for the process to die...", p);
             sleep(3000);
-            proc.destroyForcibly();
+            handle.destroyForcibly();
         }
 
         return true;
@@ -60,13 +78,10 @@ public final class Utils {
         }
     }
 
-    private static String toString(Process proc) {
+    private static String toString(ProcessHandle proc) {
         try {
-            Field f = proc.getClass().getDeclaredField("pid");
-            f.setAccessible(true);
-
-            return "pid=" + f.get(proc);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return "pid=" + proc.pid();
+        } catch (UnsupportedOperationException e) {
             return proc.toString();
         }
     }

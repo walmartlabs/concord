@@ -20,9 +20,11 @@ package com.walmartlabs.concord.runtime.v2.runner.el.resolvers;
  * =====
  */
 
+import com.sun.el.util.ReflectionUtil;
 import com.walmartlabs.concord.runtime.v2.runner.el.MethodNotFoundException;
 
 import javax.el.ELContext;
+import java.lang.reflect.Method;
 
 /**
  * Same as {@link javax.el.BeanELResolver}, but throws more detailed "method is not found" exceptions.
@@ -32,7 +34,12 @@ public class BeanELResolver extends javax.el.BeanELResolver {
     @Override
     public Object invoke(ELContext context, Object base, Object method, Class<?>[] paramTypes, Object[] params) {
         try {
-            return super.invoke(context, base, method, paramTypes, params);
+            Object value = super.invoke(context, base, method, paramTypes, params);
+            if (base != null && method != null) {
+                Method m = ReflectionUtil.findMethod(base.getClass(), method.toString(), paramTypes, params);
+                SensitiveDataProcessor.process(value, m);
+            }
+            return value;
         } catch (javax.el.MethodNotFoundException e) {
             throw new MethodNotFoundException(base, method, paramTypes);
         }

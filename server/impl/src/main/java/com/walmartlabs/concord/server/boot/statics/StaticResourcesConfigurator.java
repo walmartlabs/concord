@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.boot.statics;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,15 +25,11 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.util.resource.Resource;
-
-import javax.inject.Named;
-import javax.inject.Singleton;
+import org.eclipse.jetty.util.resource.ResourceFactory;
 
 /**
  * Configures Jetty's {@link org.eclipse.jetty.server.Handler} to serve Concord's static resources.
  */
-@Named
-@Singleton
 public class StaticResourcesConfigurator implements ContextHandlerConfigurator {
 
     @Override
@@ -45,9 +41,9 @@ public class StaticResourcesConfigurator implements ContextHandlerConfigurator {
         ContextHandler handler = new ContextHandler();
 
         ResourceHandler resourceHandler = new ResourceHandler();
-        resourceHandler.setDirectoriesListed(false);
+        resourceHandler.setDirAllowed(false);
 
-        Resource resource = Resource.newClassPathResource(path);
+        Resource resource = ResourceFactory.root().newClassLoaderResource(path);
         handler.setBaseResource(resource);
         handler.setHandler(resourceHandler);
         handler.setContextPath(context);

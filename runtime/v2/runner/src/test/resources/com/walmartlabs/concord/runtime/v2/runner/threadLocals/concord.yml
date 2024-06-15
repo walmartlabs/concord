@@ -1,0 +1,10 @@
+flows:
+  default:
+    - block:
+      - expr: "${threadLocals.put('myKey', 'myValue' += item)}"
+      - log: "value: ${threadLocals.get('myKey')}"
+      - expr: "${threadLocals.remove('myKey')}"
+      loop:
+        items: [1, 2, 3]
+        mode: parallel
+        parallelism: 3

@@ -20,10 +20,10 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ProcessEventRequest;
-import com.walmartlabs.concord.client.ProcessEventsApi;
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ApiException;
+import com.walmartlabs.concord.client2.ProcessEventRequest;
+import com.walmartlabs.concord.client2.ProcessEventsApi;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.*;
@@ -82,6 +82,9 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         m.put("column", loc.column());
         m.put("description", getDescription(s.getStep()));
         m.put("correlationId", s.getCorrelationId());
+        if (threadId.id() != 0) {
+            m.put("threadId", threadId.id());
+        }
 
         ProcessEventRequest req = new ProcessEventRequest();
         req.setEventType("ELEMENT"); // TODO constants

@@ -27,13 +27,11 @@ import org.jooq.DSLContext;
 import org.jooq.Record2;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 import java.util.Optional;
 
 import static com.walmartlabs.concord.server.jooq.tables.TemplateAliases.TEMPLATE_ALIASES;
 
-@Named
 public class TemplateAliasDao extends AbstractDao {
 
     @Inject

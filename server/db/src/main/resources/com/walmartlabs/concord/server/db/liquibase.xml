@@ -104,5 +104,15 @@
     <include file="v1.91.0.xml" relativeToChangelogFile="true"/>
     <include file="v1.94.0.xml" relativeToChangelogFile="true"/>
     <include file="v1.95.0.xml" relativeToChangelogFile="true"/>
+    <include file="v1.96.0.xml" relativeToChangelogFile="true"/>
+    <include file="v1.98.1.xml" relativeToChangelogFile="true"/>
+    <include file="v1.99.0.xml" relativeToChangelogFile="true"/>
+    <include file="v1.102.0.xml" relativeToChangelogFile="true"/>
+    <include file="v1.103.0.xml" relativeToChangelogFile="true"/>
+    <include file="v1.104.0.xml" relativeToChangelogFile="true"/>
+    <include file="v2.8.0.xml" relativeToChangelogFile="true"/>
+    <include file="v2.9.0.xml" relativeToChangelogFile="true"/>
+    <include file="v2.10.0.xml" relativeToChangelogFile="true"/>
+    <include file="v2.12.0.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

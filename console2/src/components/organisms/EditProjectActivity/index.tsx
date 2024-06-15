@@ -19,31 +19,21 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
 
-import { ConcordKey, RequestError } from '../../../api/common';
-import { actions, State } from '../../../state/data/projects';
-import { EditProjectForm } from '../../molecules';
+import {ConcordKey, GenericOperationResult} from '../../../api/common';
+import {EditProjectForm, FormValues} from '../../molecules';
 import { UpdateProjectEntry, ProjectEntry } from '../../../api/org/project';
 import { RequestErrorActivity } from '../index';
+import {useCallback, useState} from "react";
+import {createOrUpdate as apiUpdate} from "../../../api/org/project";
+import {useApi} from "../../../hooks/useApi";
+import {LoadingDispatch} from "../../../App";
 
 interface ExternalProps {
     orgName: ConcordKey;
     projectName: ConcordKey;
     initial?: ProjectEntry;
 }
-
-interface StateProps {
-    submitting: boolean;
-    error: RequestError;
-}
-
-interface DispatchProps {
-    update: (orgName: ConcordKey, projectEntry: UpdateProjectEntry) => void;
-}
-
-type Props = ExternalProps & StateProps & DispatchProps;
 
 const toUpdateProjectEntry = (p?: ProjectEntry): UpdateProjectEntry => {
     return {
@@ -54,38 +44,45 @@ const toUpdateProjectEntry = (p?: ProjectEntry): UpdateProjectEntry => {
     };
 };
 
-class EditProjectActivity extends React.PureComponent<Props> {
-    render() {
-        const { error, submitting, update, orgName, initial } = this.props;
+const EditProjectActivity = (props: ExternalProps) => {
+    const {orgName, initial} = props;
 
-        if (!initial) {
-            return <></>;
-        }
+    const dispatch = React.useContext(LoadingDispatch);
+    const [updateEntry, setUpdateEntry] = useState(toUpdateProjectEntry(initial));
 
-        return (
-            <>
-                {error && <RequestErrorActivity error={error} />}
+    const postData = useCallback(() => {
+        return apiUpdate(orgName, updateEntry);
+    }, [orgName, updateEntry]);
 
-                <EditProjectForm
-                    submitting={submitting}
-                    data={toUpdateProjectEntry(initial)}
-                    onSubmit={(values) => update(orgName, values.data)}
-                />
-            </>
-        );
+    const { error, isLoading, fetch } = useApi<GenericOperationResult>(postData, {
+        fetchOnMount: false,
+        requestByFetch: true,
+        dispatch
+    });
+
+    const handleSubmit = useCallback(
+        (values: FormValues) => {
+            setUpdateEntry(values.data);
+            fetch();
+        },
+        [fetch]
+    );
+
+    if (!initial) {
+        return <></>;
     }
-}
 
-const mapStateToProps = (
-    { projects }: { projects: State },
-    { orgName, projectName }: ExternalProps
-): StateProps => ({
-    submitting: projects.updateProject.running,
-    error: projects.error
-});
+    return (
+        <>
+            {error && <RequestErrorActivity error={error} />}
 
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    update: (orgName, projectEntity) => dispatch(actions.updateProject(orgName, projectEntity))
-});
+            <EditProjectForm
+                submitting={isLoading}
+                data={toUpdateProjectEntry(initial)}
+                onSubmit={handleSubmit}
+            />
+        </>
+    );
+};
 
-export default connect(mapStateToProps, mapDispatchToProps)(EditProjectActivity);
+export default EditProjectActivity;

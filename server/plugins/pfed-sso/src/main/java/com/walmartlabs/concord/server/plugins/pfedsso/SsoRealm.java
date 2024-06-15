@@ -24,13 +24,13 @@ import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import com.walmartlabs.concord.server.security.PrincipalUtils;
+import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
+import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
-import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAccount;
@@ -39,11 +39,9 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Arrays;
 import java.util.Collections;
 
-@Named
 public class SsoRealm extends AuthorizingRealm {
 
     public static final String REALM_NAME = "sso";
@@ -77,6 +75,10 @@ public class SsoRealm extends AuthorizingRealm {
             u = userManager.create(t.getUsername(), t.getDomain(), t.getDisplayName(), t.getMail(), UserType.SSO, null);
         }
 
+        if (!u.isPermanentlyDisabled()) {
+            return null;
+        }
+
         // we consider the account active if the authentication was successful
         userManager.enable(u.getId());
 
@@ -101,6 +103,6 @@ public class SsoRealm extends AuthorizingRealm {
             return null;
         }
 
-        return PrincipalUtils.toAuthorizationInfo(principals);
+        return SecurityUtils.toAuthorizationInfo(principals);
     }
 }

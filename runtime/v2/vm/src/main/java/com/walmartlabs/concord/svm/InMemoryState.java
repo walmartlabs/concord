@@ -4,7 +4,7 @@ package com.walmartlabs.concord.svm;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,8 @@ public class InMemoryState implements Serializable, State {
     private final Map<ThreadId, Set<ThreadId>> children = new HashMap<>();
     private final Map<ThreadId, String> eventRefs = new HashMap<>();
     private final Map<ThreadId, Exception> threadErrors = new HashMap<>();
+    private final Map<ThreadId, List<StackTraceItem>> stackTrace = new HashMap<>();
+    private final Map<ThreadId, Map<String, Serializable>> threadLocals = new HashMap<>();
 
     private final ThreadId rootThreadId;
 
@@ -91,7 +93,8 @@ public class InMemoryState implements Serializable, State {
                 throw new IllegalStateException("Call frame doesn't exist: " + threadId);
             }
 
-            l.remove(0);
+            Frame removed = l.remove(0);
+            unwindStackTrace(threadId, removed);
         }
     }
 
@@ -203,6 +206,13 @@ public class InMemoryState implements Serializable, State {
     }
 
     @Override
+    public Exception getThreadError(ThreadId threadId) {
+        synchronized (this) {
+            return threadErrors.get(threadId);
+        }
+    }
+
+    @Override
     public void setThreadError(ThreadId threadId, Exception error) {
         synchronized (this) {
             threadErrors.put(threadId, error);
@@ -213,6 +223,92 @@ public class InMemoryState implements Serializable, State {
     public Exception clearThreadError(ThreadId threadId) {
         synchronized (this) {
             return threadErrors.remove(threadId);
+        }
+    }
+
+    @Override
+    public List<StackTraceItem> getStackTrace(ThreadId threadId) {
+        synchronized (this) {
+            // for backward compatibility
+            if (stackTrace == null) {
+                return Collections.emptyList();
+            }
+            List<ThreadId> threads = collectParents(threadId);
+            threads.add(0, threadId);
+
+            List<StackTraceItem> result = new ArrayList<>();
+            threads.forEach(tid -> result.addAll(stackTrace.getOrDefault(tid, Collections.emptyList())));
+            return result;
+        }
+    }
+
+    @Override
+    public void pushStackTraceItem(ThreadId threadId, StackTraceItem item) {
+        synchronized (this) {
+            // for backward compatibility
+            if (stackTrace == null) {
+                return;
+            }
+
+            List<StackTraceItem> l = stackTrace.computeIfAbsent(threadId, key -> new LinkedList<>());
+            l.add(0, item);
+        }
+    }
+
+    @Override
+    public void clearStackTrace(ThreadId threadId) {
+        synchronized (this) {
+            // for backward compatibility
+            if (stackTrace == null) {
+                return;
+            }
+
+            stackTrace.remove(threadId);
+        }
+    }
+
+    @Override
+    public void setThreadLocal(ThreadId threadId, String key, Serializable value) {
+        synchronized (this) {
+            // for backward compatibility
+            if (threadLocals == null) {
+                return;
+            }
+
+            Map<String, Serializable> locals = threadLocals.computeIfAbsent(threadId, v -> new HashMap<>());
+            locals.put(key, value);
+        }
+    }
+
+    @Override
+    public <T extends Serializable> T getThreadLocal(ThreadId threadId, String key) {
+        synchronized (this) {
+            // for backward compatibility
+            if (threadLocals == null) {
+                return null;
+            }
+
+            Map<String, Serializable> locals = threadLocals.get(threadId);
+            if (locals == null) {
+                return null;
+            }
+            return (T) locals.get(key);
+        }
+    }
+
+    @Override
+    public void removeThreadLocal(ThreadId threadId, String key) {
+        synchronized (this) {
+            // for backward compatibility
+            if (threadLocals == null) {
+                return;
+            }
+
+            Map<String, Serializable> locals = threadLocals.get(threadId);
+            locals.remove(key);
+            if (locals.isEmpty()) {
+                threadLocals.remove(threadId);
+            }
         }
     }
 
@@ -236,7 +332,63 @@ public class InMemoryState implements Serializable, State {
                         frames.remove(k);
                         eventRefs.remove(k);
                         children.remove(k);
+                        if (stackTrace != null) {
+                            stackTrace.remove(k);
+                        }
+                        if (threadLocals != null) {
+                            threadLocals.remove(k);
+                        }
                     });
+        }
+    }
+
+    private List<ThreadId> collectParents(ThreadId threadId) {
+        List<ThreadId> result = new ArrayList<>();
+        ThreadId current = threadId;
+        while (true) {
+            ThreadId parent = findParent(current);
+            if (parent != null) {
+                result.add(parent);
+                current = parent;
+            } else {
+                break;
+            }
+        }
+        return result;
+    }
+
+    private ThreadId findParent(ThreadId threadId) {
+        return children.entrySet().stream()
+                .filter(e -> e.getValue().contains(threadId))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void unwindStackTrace(ThreadId threadId, Frame removed) {
+        // for backward compatibility
+        if (stackTrace == null || removed.id() == null) {
+            return;
+        }
+        List<StackTraceItem> items = stackTrace.get(threadId);
+        if (items == null) {
+            return;
+        }
+
+        int itemIndex = -1;
+        for (int i = 0; i < items.size(); i++) {
+            StackTraceItem item = items.get(i);
+            if (removed.id().equals(item.getFrameId())) {
+                itemIndex = i;
+            }
+        }
+
+        if (itemIndex >= 0) {
+            if (itemIndex + 1 == items.size()) {
+                stackTrace.remove(threadId);
+            } else {
+                stackTrace.put(threadId, new LinkedList<>(items.subList(itemIndex + 1, items.size())));
+            }
         }
     }
 }

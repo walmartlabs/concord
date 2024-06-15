@@ -78,7 +78,7 @@ public class WebDriverRule implements BeforeEachCallback, TestExecutionException
 
         LoggingPreferences logPrefs = new LoggingPreferences();
         logPrefs.enable(LogType.BROWSER, Level.ALL);
-        opts.setCapability(CapabilityType.LOGGING_PREFS, logPrefs);
+        opts.setCapability("goog:loggingPrefs", logPrefs);
 
         opts.addArguments("--dns-prefetch-disable");
 

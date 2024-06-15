@@ -20,7 +20,21 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
+
+import java.util.UUID;
+
 public class SimpleLogger implements RunnerLogger {
+
+    @Override
+    public Long createSegment(String segmentName, UUID correlationId) {
+        return null;
+    }
+
+    @Override
+    public void setSegmentStatus(long segmentId, LogSegmentStatus segmentStatus) {
+        // do nothing
+    }
 
     @Override
     public void withContext(LogContext context, Runnable runnable) {

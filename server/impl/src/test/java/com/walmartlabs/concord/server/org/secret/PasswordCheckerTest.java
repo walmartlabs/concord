@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.org.secret;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class PasswordCheckerTest {
 
@@ -46,7 +47,7 @@ public class PasswordCheckerTest {
         SecurityManager securityManager = new DefaultSecurityManager();
         ThreadContext.bind(securityManager);
 
-        UserPrincipal p = new UserPrincipal("test", new UserEntry(UUID.randomUUID(), USERNAME, null, null, null, null, null, null, false));
+        UserPrincipal p = new UserPrincipal("test", new UserEntry(UUID.randomUUID(), USERNAME, null, null, null, null, null, null, false, null, false));
         SubjectContext ctx = new DefaultSubjectContext();
         ctx.setAuthenticated(true);
         ctx.setPrincipals(new SimplePrincipalCollection(p, p.getRealm()));

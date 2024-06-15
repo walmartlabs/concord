@@ -36,8 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -46,8 +44,6 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
-@Named
-@Singleton
 public class RepositoryManager {
 
     private static final Logger log = LoggerFactory.getLogger(RepositoryManager.class);
@@ -106,7 +102,7 @@ public class RepositoryManager {
                             .version(FetchRequest.Version.commitWithBranch(commitId, branch))
                             .secret(secret)
                             .destination(tmpDir)
-                    .build(), path);
+                            .build(), path);
 
             if (repoCfg.isConcordFileValidationEnabled()) {
                 if (!ProjectLoader.isConcordFileExists(repo.path())) {
@@ -127,6 +123,20 @@ public class RepositoryManager {
         }
     }
 
+    public Repository fetch(String url, FetchRequest.Version version, String path, Secret secret, boolean withCommitInfo) {
+        Path dest = repositoryCache.getPath(url);
+        return providers.fetch(
+                FetchRequest.builder()
+                        .url(url)
+                        .shallow(gitCfg.isShallowClone())
+                        .checkAlreadyFetched(gitCfg.isCheckAlreadyFetched())
+                        .version(version)
+                        .secret(secret)
+                        .destination(dest)
+                        .withCommitInfo(withCommitInfo)
+                        .build(), path);
+    }
+
     public Repository fetch(String url, String branch, String commitId, String path, Secret secret, boolean withCommitInfo) {
         String fetchedCommitId = commitId;
         long start = System.currentTimeMillis();
@@ -142,7 +152,7 @@ public class RepositoryManager {
                             .secret(secret)
                             .destination(dest)
                             .withCommitInfo(withCommitInfo)
-                    .build(), path);
+                            .build(), path);
             fetchedCommitId = result.fetchResult() != null ? Objects.requireNonNull(result.fetchResult()).head() : null;
             return result;
         } finally {

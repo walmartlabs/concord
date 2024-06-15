@@ -97,6 +97,12 @@ export const canBeCancelled = (s: ProcessStatus) =>
     s === ProcessStatus.WAITING ||
     s === ProcessStatus.SUSPENDED;
 
+export const canBeRestarted = (s: ProcessStatus) =>
+    s === ProcessStatus.CANCELLED ||
+    s === ProcessStatus.FAILED ||
+    s === ProcessStatus.FINISHED ||
+    s === ProcessStatus.TIMED_OUT;
+
 export interface ProcessCheckpointEntry {
     id: string;
     name: string;
@@ -129,7 +135,7 @@ export interface AbstractWaitCondition {
 }
 
 export interface ProcessWaitCondition extends AbstractWaitCondition {
-    processes: ConcordId[];
+    processes?: ConcordId[];
 }
 
 export interface ProcessLockCondition extends AbstractWaitCondition {
@@ -186,7 +192,6 @@ export interface ProcessEntry {
     repoUrl?: string;
     repoPath?: string;
     commitId?: string;
-    commitMsg?: string;
     initiator: string;
     createdAt: string;
     startAt?: string;
@@ -259,11 +264,20 @@ export const get = (
     return fetchJson(`/api/v2/process/${instanceId}?${params.toString()}`);
 };
 
+export const getRoot = (
+    instanceId: ConcordId
+): Promise<ProcessEntry> => {
+    return fetchJson(`/api/v1/process/${instanceId}/root`);
+};
+
 export const disable = (instanceId: ConcordId, disabled: boolean): Promise<{}> =>
     managedFetch(`/api/v1/process/${instanceId}/disable/${disabled}`, { method: 'POST' });
 
 export const kill = (instanceId: ConcordId): Promise<{}> =>
     managedFetch(`/api/v1/process/${instanceId}`, { method: 'DELETE' });
+
+export const restart = (instanceId: ConcordId): Promise<{}> =>
+    managedFetch(`/api/v1/process/${instanceId}/restart`, { method: 'POST' });
 
 export const killBulk = (instanceIds: ConcordId[]): Promise<{}> => {
     const opts = {

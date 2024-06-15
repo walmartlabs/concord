@@ -21,6 +21,8 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  */
 
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import org.immutables.value.Value;
 import org.junit.jupiter.api.Test;
 
@@ -38,11 +40,12 @@ public class ImmutablesTest {
                 .foo("foo")
                 .build();
 
+        EvalContextFactory ecf = new EvalContextFactoryImpl();
         ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
         Map<String, Object> vars = Collections.singletonMap("testBean", testBean);
 
         // ---
-        String str = ee.eval(EvalContextFactory.global(new SingleFrameContext(vars)), "Hello ${testBean.foo}", String.class);
+        String str = ee.eval(ecf.global(new SingleFrameContext(vars)), "Hello ${testBean.foo}", String.class);
         assertEquals("Hello foo", str);
     }
 

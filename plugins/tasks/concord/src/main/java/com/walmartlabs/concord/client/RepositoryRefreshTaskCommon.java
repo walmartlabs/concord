@@ -20,28 +20,64 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.walmartlabs.concord.client.model.EventRepository;
+import com.walmartlabs.concord.client.model.RefreshEvent;
+import com.walmartlabs.concord.client2.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class RepositoryRefreshTaskCommon {
 
-    private final RepositoriesV2Api api;
-
     private static final Logger log = LoggerFactory.getLogger(RepositoryRefreshTaskCommon.class);
 
+    private final RepositoriesV2Api apiV2;
+    private final ObjectMapper mapper;
+
     public RepositoryRefreshTaskCommon(ApiClient client) {
-        this.api = new RepositoriesV2Api(client);
+        this.apiV2 = new RepositoriesV2Api(client);
+        this.mapper = new ObjectMapper()
+                .registerModule(new Jdk8Module()); // for Optional usage
     }
 
     public void execute(RepositoryRefreshTaskParams in) throws ApiException {
-        List<UUID> repositoriesUUIDs = in.repositories();
-        log.info("Repository ids to refresh: {}",repositoriesUUIDs);
-        api.refreshRepository(repositoriesUUIDs);
+        Map<String, Object> rawEvent = in.event();
+        if (!"push".equals(rawEvent.get("type"))) {
+            // very odd, but glad we checked
+            log.warn("Non-push event received: {}", rawEvent.get("type"));
+            return;
+        }
+
+        RefreshEvent event = mapper.convertValue(rawEvent, RefreshEvent.class);
+
+        if (event.payload().deleted()) {
+            log.warn("Event ref was deleted. Skip refresh.");
+            return;
+        }
+
+        List<UUID> repositoriesUUIDs = event.repositoryInfo().stream()
+                .filter(EventRepository::enabled)
+                // TODO validate: is always branch? event if configured for commit id? tag?
+                .filter(repo -> event.branch().equals(repo.branch().orElse(null)))
+                .map(EventRepository::repositoryId)
+                .toList();
+
+        refresh(repositoriesUUIDs);
+    }
+
+    void refresh(List<UUID> repositoriesUUIDs) throws ApiException {
+        if (repositoriesUUIDs.isEmpty()) {
+            log.warn("No applicable repository IDs. Skip refresh.");
+            return;
+        }
+
+        log.info("Repository ids to refresh: {}", repositoriesUUIDs);
+        apiV2.refreshRepositoryV2(repositoriesUUIDs);
         log.info("Repository refresh completed");
     }
 }

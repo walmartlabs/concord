@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.org.inventory;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,10 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.tables.JsonStoreData;
 import com.walmartlabs.concord.server.jooq.tables.JsonStores;
-import org.jooq.*;
 import org.jooq.Record;
+import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +38,6 @@ import static com.walmartlabs.concord.server.jooq.Tables.JSON_STORES;
 import static com.walmartlabs.concord.server.jooq.Tables.JSON_STORE_DATA;
 import static org.jooq.impl.DSL.*;
 
-@Named
 @Deprecated
 public class InventoryDataDao extends AbstractDao {
 

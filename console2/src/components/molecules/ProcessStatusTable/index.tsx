@@ -19,18 +19,13 @@
  */
 
 import * as React from 'react';
-import { Link } from 'react-router-dom';
-import { Grid, Label, Popup, Table } from 'semantic-ui-react';
+import {Link} from 'react-router-dom';
+import {Grid, Label, Popup, Table} from 'semantic-ui-react';
 
-import {
-    getStatusSemanticColor,
-    ProcessEntry,
-    ProcessKind,
-    ProcessStatus
-} from '../../../api/process';
-import { formatDuration } from '../../../utils';
-import { GitHubLink, LocalTimestamp, ProcessLastErrorModal } from '../../molecules';
-import { TriggeredByPopup } from '../../organisms';
+import {getStatusSemanticColor, ProcessEntry, ProcessKind, ProcessStatus} from '../../../api/process';
+import {formatDuration} from '../../../utils';
+import {GitHubLink, LocalTimestamp, ProcessLastErrorModal} from '../../molecules';
+import {TriggeredByPopup} from '../../organisms';
 
 interface Props {
     process?: ProcessEntry;
@@ -53,22 +48,17 @@ const kindToDescription = (k: ProcessKind): string => {
 
 class ProcessStatusTable extends React.PureComponent<Props> {
     static renderCommitId(process?: ProcessEntry) {
-        if (!process || !process.commitId) {
+        if (!process || !process.commitId || !process.repoUrl) {
             return ' - ';
         }
 
-        const link = (
+        return (
             <GitHubLink
-                url={process.repoUrl!}
+                url={process.repoUrl}
                 commitId={process.commitId}
                 text={process.commitId}
             />
         );
-        if (!process.commitMsg) {
-            return link;
-        }
-
-        return <Popup trigger={<span>{link}</span>} content={process.commitMsg} />;
     }
 
     static renderProcessKind(process?: ProcessEntry) {
@@ -227,7 +217,7 @@ class ProcessStatusTable extends React.PureComponent<Props> {
     }
 
     static renderRepoPath(process?: ProcessEntry) {
-        if (!process || !process.commitId) {
+        if (!process || !process.commitId || !process.repoUrl) {
             return '-';
         }
 

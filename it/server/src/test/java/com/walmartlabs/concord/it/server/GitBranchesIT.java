@@ -20,11 +20,10 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.it.common.MockGitSshServer;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.transport.RefSpec;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,31 +47,33 @@ public class GitBranchesIT extends AbstractServerIT {
     @BeforeEach
     public void setUp() throws Exception {
         Path bareRepo = createTempDir();
-        Git.init().setInitialBranch("master").setBare(true).setDirectory(bareRepo.toFile()).call();
+        try (Git git = Git.init().setInitialBranch("master").setBare(true).setDirectory(bareRepo.toFile()).call()) {
+        }
 
         Path workdir = createTempDir();
-        Git git = Git.cloneRepository()
+        try (Git git = Git.cloneRepository()
                 .setDirectory(workdir.toFile())
                 .setURI("file://" + bareRepo)
-                .call();
+                .call()) {
 
-        Path initialData = Paths.get(PortalIT.class.getResource("gitBranches/qa").toURI());
-        IOUtils.copy(initialData, workdir);
+            Path initialData = Paths.get(GitBranchesIT.class.getResource("gitBranches/qa").toURI());
+            IOUtils.copy(initialData, workdir);
 
-        git.add().addFilepattern(".").call();
-        git.commit().setMessage("initial commit").call();
+            git.add().addFilepattern(".").call();
+            git.commit().setMessage("initial commit").call();
 
-        git.checkout().setCreateBranch(true).setName("qa").call();
-        git.push().setRefSpecs(new RefSpec("qa:qa")).call();
+            git.checkout().setCreateBranch(true).setName("qa").call();
+            git.push().setRefSpecs(new RefSpec("qa:qa")).call();
 
-        git.checkout().setCreateBranch(true).setName("dev").call();
+            git.checkout().setCreateBranch(true).setName("dev").call();
 
-        Path devData = Paths.get(PortalIT.class.getResource("gitBranches/dev").toURI());
-        IOUtils.copy(devData, workdir, StandardCopyOption.REPLACE_EXISTING);
+            Path devData = Paths.get(GitBranchesIT.class.getResource("gitBranches/dev").toURI());
+            IOUtils.copy(devData, workdir, StandardCopyOption.REPLACE_EXISTING);
 
-        git.add().addFilepattern(".").call();
-        git.commit().setMessage("dev commit").call();
-        git.push().setRefSpecs(new RefSpec("dev:dev")).call();
+            git.add().addFilepattern(".").call();
+            git.commit().setMessage("dev commit").call();
+            git.push().setRefSpecs(new RefSpec("dev:dev")).call();
+        }
 
         gitServer = new MockGitSshServer(0, bareRepo);
         gitServer.start();
@@ -95,12 +96,12 @@ public class GitBranchesIT extends AbstractServerIT {
         assertEquals(SecretOperationResponse.ResultEnum.CREATED, sor.getResult());
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(repoUrl)
-                        .setSecretId(sor.getId())
-                        .setBranch("qa"))));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(repoUrl)
+                        .secretId(sor.getId())
+                        .branch("qa"))));
 
         // ---
 
@@ -113,20 +114,20 @@ public class GitBranchesIT extends AbstractServerIT {
         // ---
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*running qa.*", ab);
 
         // ---
 
         RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
-        repositoriesApi.createOrUpdate(orgName, projectName, new RepositoryEntry()
-                .setName(repoName)
-                .setUrl(repoUrl)
-                .setSecretId(sor.getId())
-                .setBranch("dev"));
+        repositoriesApi.createOrUpdateRepository(orgName, projectName, new RepositoryEntry()
+                .name(repoName)
+                .url(repoUrl)
+                .secretId(sor.getId())
+                .branch("dev"));
 
         // ---
 
@@ -138,10 +139,10 @@ public class GitBranchesIT extends AbstractServerIT {
 
         // ---
 
-        pe = waitForCompletion(processApi, spr.getInstanceId());
+        pe = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
-        ab = getLog(pe.getLogFileName());
+        ab = getLog(pe.getInstanceId());
         assertLog(".*running dev.*", ab);
     }
 }

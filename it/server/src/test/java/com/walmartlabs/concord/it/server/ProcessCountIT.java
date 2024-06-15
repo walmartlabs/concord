@@ -20,8 +20,8 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.client2.ProcessListFilter;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
@@ -46,9 +46,10 @@ public class ProcessCountIT extends AbstractServerIT {
         File src = new File(TriggersRefreshIT.class.getResource("processCount").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
+        try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
+        }
 
         String gitUrl = tmpDir.toAbsolutePath().toString();
 
@@ -57,7 +58,7 @@ public class ProcessCountIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
         String repoName = "repo_" + randomString();
@@ -65,11 +66,11 @@ public class ProcessCountIT extends AbstractServerIT {
         System.out.println(">>>" + orgName + "/" + projectName);
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setBranch("master")
-                        .setUrl(gitUrl))));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .branch("master")
+                        .url(gitUrl))));
 
         // ---
 
@@ -81,35 +82,46 @@ public class ProcessCountIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*Hello!.*", ab);
 
         // ---
 
         ProcessV2Api processV2Api = new ProcessV2Api(getApiClient());
-        List<ProcessEntry> l = processV2Api.list(null, orgName, null, projectName, null, repoName, null, null, null, null, null, null, null, null, null);
+        ProcessListFilter filter = ProcessListFilter.builder()
+                .orgName(orgName)
+                .projectName(projectName)
+                .repoName(repoName)
+                .build();
+
+        List<ProcessEntry> l = processV2Api.listProcesses(filter);
         assertEquals(1, l.size());
         assertEquals(pe.getInstanceId(), l.get(0).getInstanceId());
 
+        filter = ProcessListFilter.builder()
+                .orgName(orgName)
+                .projectName(projectName)
+                .repoName(repoName + randomString())
+                .build();
+
         // specifying an invalid repository name should return a 404 response
         try {
-            processV2Api.list(null, orgName, null, projectName, null, repoName + randomString(), null, null, null, null, null, null, null, null, null);
+            processV2Api.listProcesses(filter);
         } catch (ApiException e) {
             assertEquals(404, e.getCode());
         }
 
         // ---
 
-        int i = processV2Api.count(null, orgName, null, projectName, null, repoName, null, null, null, null, null, null);
+        int i = processV2Api.countProcesses(null, orgName, null, projectName, null, repoName, null, null, null, null, null, null);
         assertEquals(1, i);
 
         // specifying an invalid repository name should return a 404 response
         try {
-            processV2Api.count(null, orgName, null, projectName, null, repoName + randomString(), null, null, null, null, null, null);
+            processV2Api.countProcesses(null, orgName, null, projectName, null, repoName + randomString(), null, null, null, null, null, null);
         } catch (ApiException e) {
             assertEquals(404, e.getCode());
         }

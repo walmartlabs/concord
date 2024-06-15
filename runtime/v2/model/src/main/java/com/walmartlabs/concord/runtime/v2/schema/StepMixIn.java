@@ -36,6 +36,7 @@ import com.walmartlabs.concord.runtime.v2.model.Step;
         @JsonSubTypes.Type(value = ExpressionShortMixIn.class, name = "Expression (short form)"),
         @JsonSubTypes.Type(value = ExpressionFullMixIn.class, name = "Expression (full form)"),
         @JsonSubTypes.Type(value = LogStepMixIn.class, name = "Log"),
+        @JsonSubTypes.Type(value = LogYamlStepMixIn.class, name = "LogYaml"),
         @JsonSubTypes.Type(value = FlowCallStepMixIn.class, name = "Flow call"),
         @JsonSubTypes.Type(value = FormCallStepMixIn.class, name = "Form call"),
         @JsonSubTypes.Type(value = IfStepMixIn.class, name = "IF step"),

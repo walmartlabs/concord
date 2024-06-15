@@ -23,12 +23,12 @@ package com.walmartlabs.concord.db;
 import com.codahale.metrics.MetricRegistry;
 import com.zaxxer.hikari.HikariDataSource;
 import liquibase.Liquibase;
+import liquibase.Scope;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
-import liquibase.logging.LogFactory;
-import liquibase.logging.LogLevel;
 import liquibase.resource.ClassLoaderResourceAccessor;
+import liquibase.ui.LoggerUIService;
 import org.jooq.Configuration;
 import org.jooq.SQLDialect;
 import org.jooq.conf.RenderNameStyle;
@@ -88,6 +88,7 @@ public final class DataSourceUtils {
                 String logTable = changeLogProvider.getChangeLogTable();
                 String lockTable = changeLogProvider.getLockTable();
                 migrateDb(c, logPath, logTable, lockTable, changeLogParams);
+                log.info("migrateDb -> completed '{}' migration..", changeLogProvider);
                 break;
             } catch (Exception e) {
                 if (i + 1 >= retries) {
@@ -122,9 +123,9 @@ public final class DataSourceUtils {
                                   String lockTable,
                                   Map<String, Object> params) throws Exception {
 
-        LogFactory.getInstance().setDefaultLoggingLevel(LogLevel.WARNING);
+        Database db = DatabaseFactory.getInstance()
+                .findCorrectDatabaseImplementation(new JdbcConnection(conn));
 
-        Database db = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(conn));
         db.setDatabaseChangeLogTableName(logTable);
         db.setDatabaseChangeLogLockTableName(lockTable);
 
@@ -134,6 +135,7 @@ public final class DataSourceUtils {
             params.forEach(lb::setChangeLogParameter);
         }
 
+        Scope.enter(Map.of(Scope.Attr.ui.name(), new LoggerUIService()));
         lb.update((String) null);
     }
 

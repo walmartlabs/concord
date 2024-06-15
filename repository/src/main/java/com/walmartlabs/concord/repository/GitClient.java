@@ -184,6 +184,7 @@ public class GitClient {
         } else if (isShallowRepo(workDir)){
             args.add("--unshallow");
         }
+        args.add("--quiet");
         args.add("origin");
 
         execWithCredentials(Command.builder()

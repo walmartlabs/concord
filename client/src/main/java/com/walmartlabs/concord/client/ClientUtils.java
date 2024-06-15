@@ -175,6 +175,8 @@ public final class ClientUtils {
                 b.addFormDataPart(k, null, RequestBody.create(TEXT_PLAIN_TYPE, String.join(",", (String[]) v)));
             } else if (v instanceof UUID) {
                 b.addFormDataPart(k, v.toString());
+            } else if (v instanceof Enum<?>) {
+                b.addFormDataPart(k, ((Enum<?>)v).name());
             } else {
                 throw new IllegalArgumentException("Unknown input type: " + k + "=" + v + (v != null ? " (" + v.getClass() + ")" : ""));
             }

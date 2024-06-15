@@ -29,11 +29,16 @@ import java.util.stream.Collectors;
 public class RepositoryRefreshTaskParams {
 
     private static final String REPOSITORY_INFO = "repositoryInfo";
+    private static final String EVENT = "event";
 
-    private Variables variables;
+    private final Variables variables;
 
     public RepositoryRefreshTaskParams(Variables variables) {
         this.variables = variables;
+    }
+
+    public Map<String, Object> event() {
+        return variables.getMap(EVENT, Collections.emptyMap());
     }
 
     public List<UUID> repositories() {

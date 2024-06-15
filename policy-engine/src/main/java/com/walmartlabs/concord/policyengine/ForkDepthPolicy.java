@@ -36,7 +36,7 @@ public class ForkDepthPolicy {
         }
 
         int depth = c.call();
-        if (depth >= rule.getMax()) {
+        if (depth >= rule.max()) {
             return CheckResult.error(new CheckResult.Item<>(rule, depth));
         }
         return CheckResult.success();

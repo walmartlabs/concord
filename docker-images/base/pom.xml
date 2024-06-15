@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>com.walmartlabs.concord.docker</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>2.12.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -15,7 +16,8 @@
     <properties>
         <base.image>${docker.namespace}/concord-base</base.image>
         <docker.tagbase>${base.image}</docker.tagbase>
-        <docker.file>oss/Dockerfile</docker.file>
+        <docker.file>oss/debian/Dockerfile</docker.file>
+        <docker.allowPull>false</docker.allowPull>
     </properties>
 
     <build>

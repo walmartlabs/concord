@@ -49,6 +49,11 @@ public class TaskSuspendCommand implements Command {
     }
 
     @Override
+    public Command copy() {
+        return new TaskSuspendCommand(correlationId, logContext, eventName, step, taskState);
+    }
+
+    @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();

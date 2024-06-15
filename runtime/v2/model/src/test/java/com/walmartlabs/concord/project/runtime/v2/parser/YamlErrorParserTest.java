@@ -4,7 +4,7 @@ package com.walmartlabs.concord.project.runtime.v2.parser;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -589,18 +589,6 @@ public class YamlErrorParserTest extends AbstractParserTest {
     }
 
     @Test
-    public void test136() throws Exception {
-        String msg = "(036.yml): Error @ line: 6, col: 18. Invalid value: test, expected: [branch]\n" +
-                "\twhile processing steps:\n" +
-                "\t'groupBy' @ line: 6, col: 9\n" +
-                "\t\t'exclusive' @ line: 5, col: 7\n" +
-                "\t\t\t'github' @ line: 2, col: 5\n" +
-                "\t\t\t\t'triggers' @ line: 1, col: 1";
-
-        assertErrorMessage("errors/triggers/036.yml", msg);
-    }
-
-    @Test
     public void test137() throws Exception {
         String msg = "(037.yml): Error @ n/a. One of mandatory parameters 'group, groupBy' not found\n" +
                 "\twhile processing steps:\n" +
@@ -874,7 +862,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test221() throws Exception {
         String msg =
-                "(021.yml): Error @ line: 7, col: 22. Invalid value type, expected: INT, got: STRING\n" +
+                "(021.yml): Error @ line: 7, col: 22. Invalid value type, expected: int or expression, got: STRING\n" +
                         "\twhile processing steps:\n" +
                         "\t'parallelism' @ line: 7, col: 9\n" +
                         "\t\t'loop' @ line: 5, col: 7\n" +
@@ -1706,7 +1694,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test1005() throws Exception {
         String msg =
-                "(005.yml): Error @ line: 6, col: 14. Invalid value type, expected: OBJECT, got: STRING\n" +
+                "(005.yml): Error @ line: 6, col: 14. Invalid value type, expected: OBJECT or EXPRESSION, got: ARRAY\n" +
                         "\twhile processing steps:\n" +
                         "\t'runAs' @ line: 6, col: 7\n" +
                         "\t\t'form' @ line: 3, col: 7\n" +
@@ -1719,7 +1707,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test1006() throws Exception {
         String msg =
-                "(006.yml): Error @ line: 10, col: 15. Invalid value type, expected: OBJECT, got: STRING\n" +
+                "(006.yml): Error @ line: 10, col: 15. Invalid value type, expected: OBJECT or EXPRESSION, got: ARRAY\n" +
                         "\twhile processing steps:\n" +
                         "\t'values' @ line: 10, col: 7\n" +
                         "\t\t'form' @ line: 3, col: 7\n" +

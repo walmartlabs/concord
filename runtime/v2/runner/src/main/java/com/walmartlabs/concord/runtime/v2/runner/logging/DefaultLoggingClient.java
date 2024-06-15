@@ -20,12 +20,12 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.LogSegmentOperationResponse;
-import com.walmartlabs.concord.client.LogSegmentRequest;
-import com.walmartlabs.concord.client.ProcessLogV2Api;
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ApiException;
+import com.walmartlabs.concord.client2.ClientUtils;
+import com.walmartlabs.concord.client2.LogSegmentOperationResponse;
+import com.walmartlabs.concord.client2.LogSegmentRequest;
+import com.walmartlabs.concord.client2.ProcessLogV2Api;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 
@@ -51,12 +51,12 @@ public class DefaultLoggingClient implements LoggingClient {
 
     public long createSegment(UUID correlationId, String name) {
         LogSegmentRequest request = new LogSegmentRequest()
-                .setCorrelationId(correlationId)
-                .setCreatedAt(OffsetDateTime.now(ZoneId.of("UTC")))
-                .setName(name);
+                .correlationId(correlationId)
+                .createdAt(OffsetDateTime.now(ZoneId.of("UTC")))
+                .name(name);
 
         try {
-            LogSegmentOperationResponse result = ClientUtils.withRetry(cfg.api().retryCount(), cfg.api().retryInterval(), () -> api.segment(instanceId, request));
+            LogSegmentOperationResponse result = ClientUtils.withRetry(cfg.api().retryCount(), cfg.api().retryInterval(), () -> api.createProcessLogSegment(instanceId, request));
             return result.getId();
         } catch (ApiException e) {
             throw new RuntimeException(e);

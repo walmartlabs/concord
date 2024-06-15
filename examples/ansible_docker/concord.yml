@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.76.1"
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:2.10.1"
 
 flows:
   default:
@@ -11,8 +11,6 @@ flows:
       dockerImage: "walmartlabs/concord-ansible:latest"
       # rest of the parameters are the usual
       playbook: playbook/hello.yml
-      debug: true
-      verbose: 3
       inventory:
         local:
           hosts:

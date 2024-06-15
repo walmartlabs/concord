@@ -26,7 +26,7 @@ import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import com.walmartlabs.concord.server.security.PrincipalUtils;
+import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -41,13 +41,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.naming.ldap.LdapContext;
 import java.util.Arrays;
 import java.util.UUID;
 
-@Named
 public class LdapRealm extends AbstractLdapRealm {
 
     private static final String REALM_NAME = "ldap";
@@ -63,20 +61,22 @@ public class LdapRealm extends AbstractLdapRealm {
     @Inject
     public LdapRealm(LdapConfiguration cfg,
                      UserManager userManager,
-                     ConcordLdapContextFactory ldapContextFactory,
+                     LdapContextFactory ldapContextFactory,
                      LdapManager ldapManager,
                      LdapGroupManager ldapGroupManager,
-                     AuditLog auditLog) {
+                     AuditLog auditLog) throws NamingException {
 
         this.userManager = userManager;
         this.ldapManager = ldapManager;
         this.ldapGroupManager = ldapGroupManager;
         this.auditLog = auditLog;
-
-        this.url = ldapContextFactory.getCurrentLdapUrl();
         this.searchBase = cfg.getSearchBase();
         this.systemUsername = cfg.getSystemUsername();
         this.systemPassword = cfg.getSystemPassword();
+
+        setUrl(cfg.getSystemPassword() != null 
+                ? (String) ldapContextFactory.getSystemLdapContext().getEnvironment().get("java.naming.provider.url") 
+                : cfg.getUrl());
 
         setCachingEnabled(false);
 
@@ -196,6 +196,6 @@ public class LdapRealm extends AbstractLdapRealm {
             return null;
         }
 
-        return PrincipalUtils.toAuthorizationInfo(principals);
+        return SecurityUtils.toAuthorizationInfo(principals);
     }
 }

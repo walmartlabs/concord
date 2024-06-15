@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.plugins.ansible;
  * =====
  */
 
+import com.walmartlabs.concord.common.StringUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsiblePlayStats;
@@ -77,7 +78,7 @@ public class PlayInfoProcessor implements EventProcessor {
                         .build();
                 Long finishedCount = finishedTasks.remove(key);
 
-                String playName = play.getName();
+                String playName = StringUtils.abbreviate(play.getName(), ANSIBLE_PLAY_STATS.PLAY_NAME.getDataType().length());
                 if (playName == null) {
                     // ignore invalid data (i.e. data produced by old ansible-task versions)
                     continue;

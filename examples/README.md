@@ -1,5 +1,20 @@
 # Examples
 
+## Running
+
+Generally, examples can be executed using
+[Concord Command-Line Interface](./../cli). Examples that use Concord Forms
+require a running concord-server. Some examples may require external
+dependencies such as Ansible, JIRA and others to be installed:
+
+```
+$ cd ansible
+$ concord run
+Starting...
+16:20:00.000 [main] Using a playbook: playbook/hello.yml
+16:20:00.020 [main] ANSIBLE: Can't find ansible-playbook binary in $PATH. Install a local copy or use 'dockerImage' or 'virtualenv' options.
+```
+
 ## Basic
 
 * [ansible](ansible) - running an Ansible playbook from a workflow process;
@@ -52,6 +67,8 @@
 * [imports](imports) - how to use external GIT/http/mvn resources as project files;
 * [juel_java_steams](juel_java_steams) - using expressions, Groovy and Java Streams;
 * [profiles](profiles) - how to use profiles;
+* [process_card_htmx](process_card_htmx) - how to use "process cards" and [HTMX](https://htmx.org/) to implement custom forms to start processes;
+* [process_card_jquery](process_card_jquery) - how to use "process cards" and [jQuery](https://jquery.com/) to implement custom forms to start processes;
 * [python_script](python_script) - running a Python script from a flow;
 * [ruby](ruby) - running a Ruby snippet from a flow;
 * [script_url](script_url) - running an external script file;

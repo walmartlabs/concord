@@ -20,8 +20,8 @@ package com.walmartlabs.concord.runtime.common;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.ProcessHeartbeatApi;
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ProcessHeartbeatApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +57,7 @@ public class ProcessHeartbeat {
             long lastSuccessPing = System.currentTimeMillis();
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    processHeartbeatApi.ping(instanceId);
+                    processHeartbeatApi.pingProcess(instanceId);
                     lastSuccessPing = System.currentTimeMillis();
                     if (prevPingFailed) {
                         log.info("heartbeat: ok");

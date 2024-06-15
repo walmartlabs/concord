@@ -35,25 +35,28 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.immutables.value.Value;
-import org.jooq.*;
+import org.jooq.Configuration;
+import org.jooq.JSONB;
+import org.jooq.Record5;
+import org.jooq.SelectConditionStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
+import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.WaitConditionItem;
+import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.Result;
+import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.Action;
 
 /**
  * Takes care of processes with wait conditions.
  * E.g. waiting for other processes to finish, locking, etc.
  */
-@Named("process-wait-watchdog")
-@Singleton
 public class ProcessWaitWatchdog implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessWaitWatchdog.class);
@@ -69,7 +72,8 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     @Inject
     @SuppressWarnings({"unchecked", "rawtypes"})
     public ProcessWaitWatchdog(ProcessWaitWatchdogConfiguration cfg,
-                               WatchdogDao dao,
+                               @MainDB Configuration dbCfg,
+                               ConcordObjectMapper objectMapper,
                                ProcessWaitManager processWaitManager,
                                ProcessManager processManager,
                                PayloadManager payloadManager,
@@ -77,14 +81,19 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                                MetricRegistry metricRegistry) {
 
         this.cfg = cfg;
-        this.dao = dao;
+        this.dao = new WatchdogDao(dbCfg, objectMapper);
         this.processWaitManager = processWaitManager;
         this.processManager = processManager;
         this.payloadManager = payloadManager;
-        this.processWaitHandlers = new HashMap<>();
+        this.processWaitHandlers = new EnumMap<>(WaitType.class);
 
         handlers.forEach(h -> this.processWaitHandlers.put(h.getType(), h));
         this.waitItemsHistogram = metricRegistry.histogram("process-wait-watchdog-items");
+    }
+
+    @Override
+    public String getId() {
+        return "process-wait-watchdog";
     }
 
     @Override
@@ -104,68 +113,84 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                 return;
             }
 
-            for (WaitingProcess p : processes) {
-                processWaits(p);
-                lastId = p.id();
+            processWaits(processes);
+
+            lastId = processes.get(processes.size() - 1).id();
+
+            if (processes.size() < cfg.getPollLimit()) {
+                return;
             }
         }
     }
 
     @WithTimer
-    void processWaits(WaitingProcess p) {
-        Set<String> resumeEvents = new HashSet<>();
-        List<AbstractWaitCondition> resultWaits = new ArrayList<>();
-        List<ProcessWaitHandler.Action> resultActions = new ArrayList<>();
+    void processWaits(List<WaitingProcess> processes) {
+        Map<WaitType, List<WaitConditionItem<AbstractWaitCondition>>> batches = toBatches(processes);
 
-        for (AbstractWaitCondition w : p.waits()) {
-            ProcessWaitHandler.Result<AbstractWaitCondition> result = processWait(w, p);
-            if (result != null) {
-                if (result.waitCondition() != null){
-                    resultWaits.add(result.waitCondition());
-                } else if (result.resumeEvent() != null) {
-                    resumeEvents.add(result.resumeEvent());
-                }
-
-                if (result.action() != null) {
-                    resultActions.add(result.action());
-                }
+        Map<UUID, List<Result<AbstractWaitCondition>>> results = new HashMap<>();
+        for (var e : batches.entrySet()) {
+            List<Result<AbstractWaitCondition>> batchResult = processBatch(e.getKey(), e.getValue());
+            for (var r : batchResult) {
+                var resultsForProcess = results.computeIfAbsent(r.processKey().getInstanceId(), k -> new ArrayList<>());
+                resultsForProcess.add(r);
             }
         }
 
-        if (p.waits().equals(resultWaits)) {
-            return;
-        }
-
-        try {
-            boolean isWaiting = !resultWaits.isEmpty() && resumeEvents.isEmpty();
-            if (!resumeEvents.isEmpty()) {
-                resumeProcess(p.processKey(), resumeEvents);
+        for (WaitingProcess p : processes) {
+            List<Result<AbstractWaitCondition>> resultForProcess = results.get(p.processKey().getInstanceId());
+            if (resultForProcess == null) {
+                continue;
             }
 
-            processWaitManager.tx(tx -> {
-                boolean updated = processWaitManager.setWait(tx, p.processKey(), resultWaits, isWaiting, p.version());
-                if (updated) {
-                    resultActions.forEach(a -> a.execute(tx));
+            Set<String> resumeEvents = resultForProcess.stream()
+                    .map(Result::resumeEvent)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            List<Action> resultActions = resultForProcess.stream()
+                    .map(Result::action)
+                    .filter(Objects::nonNull)
+                    .toList();
+            List<AbstractWaitCondition> resultWaits = buildWaitConditions(p.waits(), resultForProcess);
+
+            if (p.waits().equals(resultWaits)) {
+                continue;
+            }
+
+            try {
+                boolean updated = processWaitManager.txResult(tx -> {
+                    boolean isWaiting = !resultWaits.isEmpty() && resumeEvents.isEmpty();
+                    boolean up = processWaitManager.setWait(tx, p.processKey(), resultWaits, isWaiting, p.version());
+                    if (up) {
+                        resultActions.forEach(a -> a.execute(tx));
+                    }
+                    return up;
+                });
+
+                if (updated && !resumeEvents.isEmpty()) {
+                    log.info("processWaits ['{}', '{}', {}] -> resume", p.processKey(), resultWaits, p.version());
+                    resumeProcess(p.processKey(), resumeEvents);
                 }
-            });
-        } catch (Exception e) {
-            log.info("processWaits ['{}'] -> error", p, e);
+            } catch (Exception e) {
+                log.info("processWaits ['{}'] -> error", p, e);
+            }
         }
     }
 
     @WithTimer
-    ProcessWaitHandler.Result<AbstractWaitCondition> processWait(AbstractWaitCondition w, WaitingProcess p) {
-        ProcessWaitHandler<AbstractWaitCondition> handler = processWaitHandlers.get(w.type());
+    List<Result<AbstractWaitCondition>> processBatch(WaitType type, List<WaitConditionItem<AbstractWaitCondition>> waitConditions) {
+        ProcessWaitHandler<AbstractWaitCondition> handler = processWaitHandlers.get(type);
         if (handler == null) {
-            log.warn("processHandler ['{}'] -> handler '{}' not found", p.processKey(), w.type());
-            return null;
+            log.warn("processBatch ['{}'] -> handler not found", type);
+            return waitConditions.stream()
+                    .map(w -> Result.of(w.processKey(), w.waitConditionId(), null))
+                    .collect(Collectors.toList());
         }
 
         try {
-            return handler.process(p.processKey(), w);
+            return handler.processBatch(waitConditions);
         } catch (Exception e) {
-            log.info("processHandler ['{}', '{}'] -> error", w.type(), p, e);
-            return ProcessWaitHandler.Result.of(w);
+            log.info("processHandler ['{}'] -> error",type, e);
+            return List.of();
         }
     }
 
@@ -180,6 +205,35 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
         processManager.resume(payload);
         log.info("resumeProcess ['{}', '{}'] -> done", key, events);
+    }
+
+    private static Map<WaitType, List<WaitConditionItem<AbstractWaitCondition>>> toBatches(List<WaitingProcess> processes) {
+        Map<WaitType, List<WaitConditionItem<AbstractWaitCondition>>> result = new HashMap<>();
+
+        for (WaitingProcess p : processes) {
+            boolean hasExclusive = p.waits().stream().anyMatch(AbstractWaitCondition::exclusive);
+            List<AbstractWaitCondition> waits = p.waits();
+            for (int i = 0; i < waits.size(); i++) {
+                AbstractWaitCondition w = waits.get(i);
+                if (!hasExclusive || w.exclusive()) {
+                    var r = result.computeIfAbsent(w.type(), k -> new ArrayList<>());
+                    r.add(WaitConditionItem.of(p.processKey(), i, w));
+                }
+            }
+        }
+        return result;
+    }
+
+    private static List<AbstractWaitCondition> buildWaitConditions(List<AbstractWaitCondition> originalWaits,
+                                                                   List<Result<AbstractWaitCondition>> newWaits) {
+
+        List<AbstractWaitCondition> result = new ArrayList<>(originalWaits);
+        for (Result<AbstractWaitCondition> w : newWaits) {
+            result.set(w.waitConditionId(), w.waitCondition());
+        }
+        return result.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Value.Immutable
@@ -198,16 +252,14 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         }
     }
 
-    @Named
-    static class WatchdogDao extends AbstractDao {
+    private static class WatchdogDao extends AbstractDao {
 
         private static final TypeReference<List<AbstractWaitCondition>> WAIT_LIST = new TypeReference<List<AbstractWaitCondition>>() {
         };
 
         private final ConcordObjectMapper objectMapper;
 
-        @Inject
-        public WatchdogDao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
+        private WatchdogDao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
             super(cfg);
 
             this.objectMapper = objectMapper;
@@ -219,11 +271,11 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                 ProcessWaitConditions w = PROCESS_WAIT_CONDITIONS.as("w");
 
                 SelectConditionStep<Record5<UUID, OffsetDateTime, Long, JSONB, Long>> s = tx.select(
-                        w.INSTANCE_ID,
-                        w.INSTANCE_CREATED_AT,
-                        w.ID_SEQ,
-                        w.WAIT_CONDITIONS,
-                        w.VERSION)
+                                w.INSTANCE_ID,
+                                w.INSTANCE_CREATED_AT,
+                                w.ID_SEQ,
+                                w.WAIT_CONDITIONS,
+                                w.VERSION)
                         .from(w)
                         .where(w.IS_WAITING.eq(true));
 

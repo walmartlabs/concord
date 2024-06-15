@@ -28,25 +28,21 @@ import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.cfg.ApiKeyConfiguration;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
-import org.apache.shiro.authz.UnauthorizedException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jooq.exception.DataAccessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -55,10 +51,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
-@Named
-@Singleton
-@Api(value = "API keys", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/apikey")
+@Tag(name = "API keys")
 public class ApiKeyResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ApiKeyResource.class);
@@ -77,10 +71,10 @@ public class ApiKeyResource implements Resource {
     }
 
     @GET
-    @ApiOperation(value = "List user api keys", responseContainer = "list", response = ApiKeyEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public List<ApiKeyEntry> list(@ApiParam @QueryParam("userId") UUID requestUserId) {
+    @Operation(description = "List user api keys", operationId = "listUserApiKeys")
+    public List<ApiKeyEntry> list(@QueryParam("userId") UUID requestUserId) {
         UUID userId = requestUserId;
         if (userId == null) {
             userId = UserPrincipal.assertCurrent().getId();
@@ -92,11 +86,11 @@ public class ApiKeyResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Create a new API key")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public CreateApiKeyResponse create(@ApiParam @Valid CreateApiKeyRequest req) {
+    @Operation(description = "Create a new API key", operationId = "createUserApiKey")
+    public CreateApiKeyResponse create(@Valid CreateApiKeyRequest req) {
         UUID userId = assertUserId(req.getUserId());
         if (userId == null) {
             userId = assertUsername(req.getUsername(), req.getUserDomain(), req.getUserType());
@@ -148,11 +142,11 @@ public class ApiKeyResource implements Resource {
     }
 
     @DELETE
-    @ApiOperation("Delete an existing API key")
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult delete(@ApiParam @PathParam("id") UUID id) {
+    @Operation(description = "Delete an existing API key", operationId = "deleteUserApiKeyById")
+    public GenericOperationResult deleteKeyById(@PathParam("id") UUID id) {
         UUID userId = apiKeyDao.getUserId(id);
         if (userId == null) {
             throw new ValidationErrorsException("API key not found: " + id);

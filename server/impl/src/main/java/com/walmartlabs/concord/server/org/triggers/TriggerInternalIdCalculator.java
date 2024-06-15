@@ -21,13 +21,14 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public final class TriggerInternalIdCalculator {
 
@@ -35,64 +36,50 @@ public final class TriggerInternalIdCalculator {
     public static String getId(String name, List<String> activeProfiles, Map<String, Object> arguments, Map<String, Object> conditions, Map<String, Object> cfg) {
         HashFunction hf = Hashing.sha256();
         return hf.newHasher()
-                .putString(name, StandardCharsets.UTF_8)
+                .putUnencodedChars(name)
                 .putObject(ensureList(activeProfiles), (from, into) -> from.stream().sorted().forEach(p -> into.putString(p, StandardCharsets.UTF_8)))
-                .putBytes(serialize(toSortedMap(arguments)))
-                .putBytes(serialize(toSortedMap(conditions)))
-                .putBytes(serialize(toSortedMap(cfg)))
+                .putUnencodedChars(objectToString(arguments))
+                .putUnencodedChars(objectToString(conditions))
+                .putUnencodedChars(objectToString(cfg))
                 .hash()
                 .toString();
     }
 
     @SuppressWarnings("unchecked")
-    private static Object toSorted(Object o) {
+    private static String objectToString(Object o) {
+        if (o == null) {
+            return "";
+        }
+
         if (o instanceof Collection) {
-            return toSortedCollection((Collection<Object>) o);
+            return hashCollection((Collection<Object>) o);
         } else if (o instanceof Map) {
-            return toSortedMap((Map<String, Object>) o);
+            return hashMap((Map<String, Object>) o);
         }
-        return o;
+
+        return o.toString();
     }
 
-    private static Collection<Object> toSortedCollection(Collection<Object> collection) {
-        if (collection == null) {
-            return Collections.emptyList();
-        }
-
-        List<Object> result = new ArrayList<>();
-        collection.stream().sorted().forEach(c -> result.add(toSorted(c)));
-        return result;
+    @SuppressWarnings("UnstableApiUsage")
+    private static String hashCollection(Collection<Object> collection) {
+        Hasher hasher = Hashing.sha256().newHasher();
+        collection.stream()
+                .map(TriggerInternalIdCalculator::objectToString)
+                .sorted()
+                .forEach(hasher::putUnencodedChars);
+        return hasher.hash().toString();
     }
 
-    // use LinkedHashMap instead of Map, because LinkedHashMap is serializable
-    private static LinkedHashMap<String, Object> toSortedMap(Map<String, Object> map) {
-        if (map == null) {
-            return new LinkedHashMap<>();
-        }
+    @SuppressWarnings("UnstableApiUsage")
+    private static String hashMap(Map<String, Object> map) {
+        Hasher hasher = Hashing.sha256().newHasher();
 
-        LinkedHashMap<String, Object> result = new LinkedHashMap<>();
         map.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
-                .forEach(e -> result.put(e.getKey(), toSorted(e.getValue())));
+                .forEach(e -> hasher.putUnencodedChars(e.getKey())
+                        .putUnencodedChars(objectToString(e.getValue())));
 
-        return result;
-    }
-
-    private static byte[] serialize(LinkedHashMap<String, Object> map) {
-        if (map == null) {
-            return new byte[0];
-        }
-
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-             ObjectOutputStream out = new ObjectOutputStream(bos)) {
-
-            out.writeObject(map);
-            out.flush();
-
-            return bos.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return hasher.hash().toString();
     }
 
     private static <E> List<E> ensureList(List<E> list) {

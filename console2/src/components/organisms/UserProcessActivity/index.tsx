@@ -20,19 +20,13 @@
 
 import * as React from 'react';
 
-import { ConcordKey } from '../../../api/common';
-import { UserProcessStats, UserProcessByOrgCards } from '../../molecules';
 import {
     getActivity as apiGetActivity,
-    ProjectProcesses,
-    UserActivity
+    listProcessCards as apiListProcessCards, ProcessCardEntry
 } from '../../../api/service/console/user';
-import { Header } from 'semantic-ui-react';
-import { MAX_CARD_ITEMS, OrgProjects } from '../../molecules/UserProcessByOrgCards';
+import { Button, Card, CardGroup, Header, Icon, Image, Modal } from 'semantic-ui-react';
 import { ProcessList } from '../../molecules/index';
-import { StatusCount } from '../../molecules/UserProcessStats';
-import { ProcessEntry, ProcessStatus } from '../../../api/process';
-import { comparators } from '../../../utils';
+import { ProcessEntry } from '../../../api/process';
 import {
     CREATED_AT_COLUMN,
     INITIATOR_COLUMN,
@@ -45,6 +39,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useApi } from '../../../hooks/useApi';
 import { LoadingDispatch } from '../../../App';
 import RequestErrorActivity from '../RequestErrorActivity';
+import {Link} from "react-router-dom";
+import './styles.css';
 
 export interface ExternalProps {
     forceRefresh: any;
@@ -52,33 +48,81 @@ export interface ExternalProps {
 
 const MAX_OWN_PROCESSES = 10;
 
-const DEFAULT_STATS: StatusCount[] = [
-    { status: ProcessStatus.ENQUEUED, count: -1 },
-    { status: ProcessStatus.RUNNING, count: -1 },
-    { status: ProcessStatus.SUSPENDED, count: -1 },
-    { status: ProcessStatus.FINISHED, count: -1 },
-    { status: ProcessStatus.FAILED, count: -1 }
-];
+const renderCard = (card: ProcessCardEntry) => {
+    return (
+        <Card key={card.id}>
+            <Card.Content>
+                {card.icon && <Image floated='right' size='mini' src={`data:image/png;base64, ${card.icon}`}/>}
+                <Card.Header>{card.name}</Card.Header>
 
-const statusOrder = [
-    ProcessStatus.RUNNING,
-    ProcessStatus.SUSPENDED,
-    ProcessStatus.FINISHED,
-    ProcessStatus.FAILED
-];
+                <Card.Meta>
+                    Project: <Link to={`/org/${card.orgName}/project/${card.projectName}`}>{card.projectName}</Link>
+                </Card.Meta>
+
+                <Card.Description>{card.description}</Card.Description>
+            </Card.Content>
+
+            <Card.Content extra>
+                <div className='ui two buttons'>
+                    {card.isCustomForm &&
+                        <Modal trigger={<Button basic color='green'>Start process</Button>}>
+                            <Modal.Content>
+                                <div className={"ui active embed"}>
+                                    <iframe title={card.id}
+                                            src={`/api/v1/processcard/${card.id}/form`}
+                                            height={"100%"}
+                                            width={"100%"}
+                                            frameBorder={0}
+                                            allowFullScreen={true}/>
+                                </div>
+                            </Modal.Content>
+                        </Modal>
+                    }
+
+                    {!card.isCustomForm &&
+                        <Button basic color='green' href={`/api/v1/org/${card.orgName}/project/${card.projectName}/repo/${card.repoName}/start/${card.entryPoint}`} target="_blank" rel="noopener noreferrer">Start process</Button>
+                    }
+                </div>
+            </Card.Content>
+        </Card>
+    );
+};
+
+const renderCards = (cards: ProcessCardEntry[]) => {
+    if (cards.length === 0) {
+        return;
+    }
+
+    return (
+        <CardGroup>
+            {cards.map((card) => renderCard(card))}
+        </CardGroup>
+    );
+};
+
+interface ActivityEntry {
+    processes?: ProcessEntry[];
+    cards?: ProcessCardEntry[];
+}
 
 const UserProcesses = ({ forceRefresh }: ExternalProps) => {
     const dispatch = React.useContext(LoadingDispatch);
 
-    const [processStats, setProcessStats] = useState<StatusCount[]>(DEFAULT_STATS);
-    const [processByOrg, setProcessByOrg] = useState<OrgProjects[]>();
     const [processes, setProcesses] = useState<ProcessEntry[]>();
+    const [processCards, setProcessCards] = useState<ProcessCardEntry[]>();
+    const [processCardsShow, toggleProcessCardsShow] = useState<boolean>(true);
 
-    const fetchData = useCallback(() => {
-        return apiGetActivity(MAX_CARD_ITEMS + 1, MAX_OWN_PROCESSES);
+    const processCardsShowHandler = useCallback(() => {
+        toggleProcessCardsShow((prevState) => !prevState);
     }, []);
 
-    const { data, error } = useApi<UserActivity>(fetchData, {
+    const fetchData = useCallback(async () => {
+        const activity = await apiGetActivity(MAX_OWN_PROCESSES);
+        const cards = await apiListProcessCards();
+        return { processes: activity.processes, cards}
+    }, []);
+
+    const { data, error } = useApi<ActivityEntry>(fetchData, {
         fetchOnMount: true,
         forceRequest: forceRefresh,
         dispatch: dispatch
@@ -89,27 +133,25 @@ const UserProcesses = ({ forceRefresh }: ExternalProps) => {
             return;
         }
 
-        setProcessStats(makeProcessStatsList(data?.processStats));
-        setProcessByOrg(makeProcessByOrgList(data?.orgProcesses));
-        setProcesses(data?.processes);
+        setProcesses(data.processes);
+        setProcessCards(data.cards)
     }, [data]);
 
     return (
         <>
             {error && <RequestErrorActivity error={error} />}
 
-            <Header dividing={true} as="h3" style={{ marginTop: 0 }}>
-                Your processes:
-            </Header>
-            <UserProcessStats items={processStats} />
+            {processCards && processCards.length > 0 &&
+                <Header dividing={true} as="h3" className={"no-margin-top"}>
+                    Actions
+                    <Icon link={true} name={processCardsShow ? "angle down" : "angle left"} onClick={processCardsShowHandler} style={{fontSize: '1em', verticalAlign: 'top'}}></Icon>
+                </Header>
+            }
+
+            {processCardsShow && processCards && renderCards(processCards)}
 
             <Header dividing={true} as="h3">
-                Running projects:
-            </Header>
-            <UserProcessByOrgCards items={processByOrg} />
-
-            <Header dividing={true} as="h3">
-                Your last {MAX_OWN_PROCESSES} processes:
+                Your last {MAX_OWN_PROCESSES} processes
             </Header>
             <ProcessList
                 data={processes}
@@ -126,51 +168,4 @@ const UserProcesses = ({ forceRefresh }: ExternalProps) => {
     );
 };
 
-const sort = (orgProcess: ProjectProcesses[]): ProjectProcesses[] =>
-    orgProcess.sort(comparators.byProperty((i) => i.projectName));
-
-const makeProcessByOrgList = (orgProcesses?: {
-    orgName: ConcordKey;
-    processes: ProjectProcesses[];
-}): OrgProjects[] => {
-    if (orgProcesses) {
-        return Object.keys(orgProcesses)
-            .map((k) => ({ orgName: k, projects: sort(orgProcesses[k]) }))
-            .sort((a, b) => b.projects.length - a.projects.length);
-    } else {
-        return [];
-    }
-};
-
-const makeProcessStatsList = (processStats?: {
-    status: ProcessStatus;
-    count: number;
-}): StatusCount[] => {
-    if (processStats === undefined) {
-        return DEFAULT_STATS;
-    }
-
-    return Object.keys(processStats)
-        .map((k) => ({ status: k as ProcessStatus, count: processStats[k] }))
-        .sort((a, b) => {
-            const i1 = statusOrder.indexOf(a.status);
-            const i2 = statusOrder.indexOf(b.status);
-            return i1 - i2;
-        });
-};
-
 export default UserProcesses;
-//
-// const mapStateToProps = ({ userActivity }: { userActivity: State }): StateProps => ({
-//     loading: userActivity.loading,
-//     error: userActivity.error,
-//     userActivity: userActivity.getUserActivity.response
-//         ? userActivity.getUserActivity.response.activity
-//             ? userActivity.getUserActivity.response.activity
-//             : undefined
-//         : undefined
-// });
-//
-// const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-//     load: () => dispatch(actions.getUserActivity(MAX_CARD_ITEMS + 1, MAX_OWN_PROCESSES))
-// });

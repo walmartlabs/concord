@@ -40,6 +40,11 @@ public class ErrorWrapper implements Command {
     }
 
     @Override
+    public Command copy() {
+        return new ErrorWrapper(cmd, errorSteps.copy());
+    }
+
+    @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();

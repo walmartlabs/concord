@@ -37,8 +37,14 @@ JAVA_VERSION=$(java -version 2>&1 \
 JDK_SPECIFIC_OPTS=""
 if (( $JAVA_VERSION > 8 )); then
   echo "Applying JDK 9+ specific options..."
-  JDK_SPECIFIC_OPTS="--add-opens java.base/java.lang=ALL-UNNAMED"
+  JDK_SPECIFIC_OPTS="--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED"
 fi
+
+if [[ -z "${EXTRA_CLASSPATH}" ]]; then
+  EXTRA_CLASSPATH=""
+fi
+
+echo "EXTRA_CLASSPATH: ${EXTRA_CLASSPATH}"
 
 exec java \
 ${CONCORD_JAVA_OPTS} \
@@ -47,5 +53,5 @@ ${JDK_SPECIFIC_OPTS} \
 -Djava.net.preferIPv4Stack=true \
 -Djava.security.egd=file:/dev/./urandom \
 -Dollie.conf=${CONCORD_CFG_FILE} \
--cp "${BASE_DIR}/lib/*:${BASE_DIR}/ext/*:${BASE_DIR}/classes" \
+-cp "${BASE_DIR}/lib/*:${BASE_DIR}/ext/*:${BASE_DIR}/classes:${EXTRA_CLASSPATH}" \
 "${MAIN_CLASS}"

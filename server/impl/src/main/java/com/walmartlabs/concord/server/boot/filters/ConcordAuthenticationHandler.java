@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.boot.filters;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,22 +20,18 @@ package com.walmartlabs.concord.server.boot.filters;
  * =====
  */
 
+import com.walmartlabs.concord.common.secret.SecretUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
-import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyEntry;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKey;
-import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
-import org.apache.shiro.web.util.WebUtils;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -49,8 +45,6 @@ import static com.walmartlabs.concord.sdk.Constants.Headers.ENABLE_HTTP_SESSION;
  * Default authentication handler. Handles basic authentication (username/password),
  * API keys and session tokens.
  */
-@Named
-@Singleton
 public class ConcordAuthenticationHandler implements AuthenticationHandler {
 
     private static final String REMEMBER_ME_HEADER = "X-Concord-RememberMe";
@@ -69,7 +63,7 @@ public class ConcordAuthenticationHandler implements AuthenticationHandler {
 
     @Override
     public AuthenticationToken createToken(ServletRequest request, ServletResponse response) {
-        HttpServletRequest req = WebUtils.toHttp(request);
+        HttpServletRequest req = (HttpServletRequest) request;
 
         // check for a session token next
         if (req.getHeader(Constants.Headers.SESSION_TOKEN) != null) {
@@ -102,7 +96,9 @@ public class ConcordAuthenticationHandler implements AuthenticationHandler {
                 h = h.substring(BEARER_AUTH_PREFIX.length());
             }
 
-            validateApiKey(h);
+            if (!isApiKeyValid(h)) {
+                return null;
+            }
 
             ApiKeyEntry apiKey = apiKeyDao.find(h);
             if (apiKey == null) {
@@ -133,11 +129,12 @@ public class ConcordAuthenticationHandler implements AuthenticationHandler {
         return UUID.fromString(new String(ab));
     }
 
-    private static void validateApiKey(String s) {
+    private static boolean isApiKeyValid(String s) {
         try {
             Base64.getDecoder().decode(s);
+            return true;
         } catch (IllegalArgumentException e) {
-            throw new AuthenticationException("Invalid API token: " + e.getMessage());
+            return false;
         }
     }
 

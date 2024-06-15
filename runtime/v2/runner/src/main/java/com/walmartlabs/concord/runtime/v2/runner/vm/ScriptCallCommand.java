@@ -23,11 +23,12 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.ScriptCall;
 import com.walmartlabs.concord.runtime.v2.model.ScriptCallOptions;
 import com.walmartlabs.concord.runtime.v2.runner.ResourceResolver;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.script.ScriptEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.script.ScriptResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
+import com.walmartlabs.concord.svm.Command;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -52,21 +53,27 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
     }
 
     @Override
+    public Command copy() {
+        return new ScriptCallCommand(getStep());
+    }
+
+    @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
         state.peekFrame(threadId).pop();
 
         Context ctx = runtime.getService(Context.class);
 
+        EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
         ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
         ScriptEvaluator scriptEvaluator = runtime.getService(ScriptEvaluator.class);
         ResourceResolver resourceResolver = runtime.getService(ResourceResolver.class);
 
         ScriptCall call = getStep();
         ScriptCallOptions opts = Objects.requireNonNull(call.getOptions());
-        Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input(), opts.inputExpression());
+        Map<String, Object> input = VMUtils.prepareInput(ecf, expressionEvaluator, ctx, opts.input(), opts.inputExpression());
 
-        String language = getLanguage(expressionEvaluator, scriptEvaluator, ctx, call);
-        Reader content = getContent(expressionEvaluator, resourceResolver, ctx, call);
+        String language = getLanguage(ecf, expressionEvaluator, scriptEvaluator, ctx, call);
+        Reader content = getContent(ecf, expressionEvaluator, resourceResolver, ctx, call);
 
         ScriptResult scriptResult;
         try {
@@ -88,8 +95,8 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
         return "script: " + getStep().getLanguageOrRef();
     }
 
-    private static String getLanguage(ExpressionEvaluator expressionEvaluator, ScriptEvaluator scriptEvaluator, Context ctx, ScriptCall call) {
-        String languageOrRef = expressionEvaluator.eval(EvalContextFactory.global(ctx), call.getLanguageOrRef(), String.class);
+    private static String getLanguage(EvalContextFactory ecf, ExpressionEvaluator expressionEvaluator, ScriptEvaluator scriptEvaluator, Context ctx, ScriptCall call) {
+        String languageOrRef = expressionEvaluator.eval(ecf.global(ctx), call.getLanguageOrRef(), String.class);
 
         // if we have body then languageOrRef is language
         if (Objects.requireNonNull(call.getOptions()).body() != null) {
@@ -128,12 +135,12 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
         return s.substring(i + 1);
     }
 
-    private static Reader getContent(ExpressionEvaluator expressionEvaluator, ResourceResolver resourceResolver, Context ctx, ScriptCall call) {
+    private static Reader getContent(EvalContextFactory ecf, ExpressionEvaluator expressionEvaluator, ResourceResolver resourceResolver, Context ctx, ScriptCall call) {
         if (call.getOptions().body() != null) {
             return new StringReader(Objects.requireNonNull(call.getOptions().body()));
         }
 
-        String ref = expressionEvaluator.eval(EvalContextFactory.global(ctx), call.getLanguageOrRef(), String.class);
+        String ref = expressionEvaluator.eval(ecf.global(ctx), call.getLanguageOrRef(), String.class);
         try {
             InputStream in = resourceResolver.resolve(ref);
             if (in == null) {

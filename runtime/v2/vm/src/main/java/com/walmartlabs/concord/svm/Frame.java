@@ -4,7 +4,7 @@ package com.walmartlabs.concord.svm;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,13 +40,16 @@ public class Frame implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    private final FrameId id;
     private final FrameType type;
     private final List<Command> commandStack;
     private final Map<String, Serializable> locals;
+    private final Command finallyHandler;
 
     private Command exceptionHandler;
 
     private Frame(Builder b) {
+        this.id = new FrameId(UUID.randomUUID());
         this.type = b.type;
 
         this.commandStack = new LinkedList<>();
@@ -59,6 +62,11 @@ public class Frame implements Serializable {
         this.locals = Collections.synchronizedMap(new LinkedHashMap<>(b.locals != null ? b.locals : Collections.emptyMap()));
 
         this.exceptionHandler = b.exceptionHandler;
+        this.finallyHandler = b.finallyHandler;
+    }
+
+    public FrameId id() {
+        return id;
     }
 
     public Command peek() {
@@ -83,6 +91,10 @@ public class Frame implements Serializable {
 
     public Command getExceptionHandler() {
         return exceptionHandler;
+    }
+
+    public Command getFinallyHandler() {
+        return finallyHandler;
     }
 
     public void setExceptionHandler(Command exceptionHandler) {
@@ -113,6 +125,7 @@ public class Frame implements Serializable {
 
         private FrameType type = FrameType.ROOT;
         private Command exceptionHandler;
+        private Command finallyHandler;
         private List<Command> commands;
         private Map<String, Serializable> locals;
 
@@ -134,6 +147,11 @@ public class Frame implements Serializable {
             return this;
         }
 
+        public Builder finallyHandler(Command finallyHandler) {
+            this.finallyHandler = finallyHandler;
+            return this;
+        }
+
         public Builder locals(Map<String, Object> locals) {
             if (locals == null || locals.isEmpty()) {
                 return this;
@@ -144,7 +162,7 @@ public class Frame implements Serializable {
             }
 
             locals.forEach((k, v) -> {
-                if (v instanceof Serializable) {
+                if (v == null || v instanceof Serializable) {
                     this.locals.put(k, (Serializable) v);
                 } else {
                     throw new IllegalStateException("Can't set a non-serializable local variable: " + k + " -> " + v.getClass());

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.websocket;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,16 +21,15 @@ package com.walmartlabs.concord.server.websocket;
  */
 
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
-import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
-import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
+import org.eclipse.jetty.ee8.websocket.server.JettyWebSocketServlet;
+import org.eclipse.jetty.ee8.websocket.server.JettyWebSocketServletFactory;
+
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.servlet.annotation.WebServlet;
 
-@Named
 @WebServlet("/websocket")
-public class ConcordWebSocketServlet extends WebSocketServlet {
+public class ConcordWebSocketServlet extends JettyWebSocketServlet {
 
     private static final long serialVersionUID = 1L;
 
@@ -44,7 +43,7 @@ public class ConcordWebSocketServlet extends WebSocketServlet {
     }
 
     @Override
-    public void configure(WebSocketServletFactory factory) {
+    public void configure(JettyWebSocketServletFactory factory) {
         factory.setCreator(new WebSocketCreator(channelManager, apiKeyDao));
     }
 }

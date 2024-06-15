@@ -19,13 +19,13 @@
  */
 
 import * as React from 'react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 
 import { Link, Redirect, Route, Switch } from 'react-router-dom';
 import { Icon, Menu } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
-import { get as apiGet, isFinal, ProcessEntry } from '../../../api/process';
+import { get as apiGet, getRoot as apiGetRoot, isFinal, ProcessEntry } from '../../../api/process';
 import { NotFoundPage } from '../../pages';
 import {
     ProcessAnsibleActivity,
@@ -43,6 +43,7 @@ import { usePolling } from '../../../api/usePolling';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { useStatusFavicon } from './favicon';
 import { gitUrlParse } from '../../molecules/GitHubLink';
+import { useIdleTimer } from 'react-idle-timer';
 
 export type TabLink =
     | 'status'
@@ -60,7 +61,9 @@ interface ExternalProps {
     activeTab: TabLink;
 }
 
-const DATA_FETCH_INTERVAL = 5000;
+const DATA_FETCH_INTERVAL_ACTIVE = 5_000;
+const DATA_FETCH_INTERVAL_IDLE = 60_000;
+const IDLE_TIMEOUT = 1_000 * 60 * 10;
 
 const normalizePath = (p: string) => {
     let result = p;
@@ -109,6 +112,11 @@ const ProcessActivity = (props: ExternalProps) => {
     const [loading, setLoading] = useState<boolean>(false);
     const loadingCounter = useRef<number>(0);
     const [refresh, toggleRefresh] = useState<boolean>(false);
+    const [dataFetchInterval, setDataFetchInterval] = useState(
+        document.visibilityState === 'visible'
+            ? DATA_FETCH_INTERVAL_ACTIVE
+            : DATA_FETCH_INTERVAL_IDLE
+    );
 
     const loadingHandler = useCallback((inc: number) => {
         loadingCounter.current += inc;
@@ -116,11 +124,21 @@ const ProcessActivity = (props: ExternalProps) => {
     }, []);
 
     const [process, setProcess] = useState<ProcessEntry>();
+    const rootProcessRef = useRef<ProcessEntry | null>(null);
 
     const fetchData = useCallback(async () => {
         const process = await apiGet(props.instanceId, []);
         setProcess(process);
+
+        if (process.parentInstanceId && !rootProcessRef.current) {
+            rootProcessRef.current = await apiGetRoot(process.parentInstanceId);
+        }
+
         return !isFinal(process.status);
+    }, [props.instanceId]);
+
+    useEffect(() => {
+        rootProcessRef.current = null;
     }, [props.instanceId]);
 
     useStatusFavicon(process);
@@ -129,7 +147,21 @@ const ProcessActivity = (props: ExternalProps) => {
         toggleRefresh((prevState) => !prevState);
     }, []);
 
-    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, refresh);
+    useIdleTimer({
+        timeout: IDLE_TIMEOUT,
+        immediateEvents: ['visibilitychange'],
+        onActive: (event?: Event) => {
+            // this essentially prevents a data fetch on processes we already know are "final"
+            if (process !== undefined && !isFinal(process.status)) {
+                setDataFetchInterval(DATA_FETCH_INTERVAL_ACTIVE);
+            }
+        },
+        onIdle: () => {
+            setDataFetchInterval(DATA_FETCH_INTERVAL_IDLE);
+        }
+    });
+
+    const error = usePolling(fetchData, dataFetchInterval, loadingHandler, refresh);
 
     if (error) {
         return <RequestErrorActivity error={error} />;
@@ -145,6 +177,7 @@ const ProcessActivity = (props: ExternalProps) => {
                 loading={loading}
                 instanceId={instanceId}
                 process={process}
+                rootInstanceId={rootProcessRef.current?.instanceId}
                 refresh={refreshHandler}
                 stickyRef={stickyRef}
             />
@@ -194,6 +227,7 @@ const ProcessActivity = (props: ExternalProps) => {
                         loadingHandler={loadingHandler}
                         forceRefresh={refresh}
                         refreshHandler={refreshHandler}
+                        dataFetchInterval={dataFetchInterval}
                     />
                 </Route>
 
@@ -204,6 +238,7 @@ const ProcessActivity = (props: ExternalProps) => {
                         loadingHandler={loadingHandler}
                         forceRefresh={refresh}
                         definitionLinkBase={buildDefinitionLinkBase(process)}
+                        dataFetchInterval={dataFetchInterval}
                     />
                 </Route>
                 <Route path={`${baseUrl}/ansible`}>
@@ -211,6 +246,7 @@ const ProcessActivity = (props: ExternalProps) => {
                         instanceId={instanceId}
                         loadingHandler={loadingHandler}
                         forceRefresh={refresh}
+                        dataFetchInterval={dataFetchInterval}
                     />
                 </Route>
                 <Route path={`${baseUrl}/log`} exact={true}>
@@ -221,6 +257,7 @@ const ProcessActivity = (props: ExternalProps) => {
                                 processStatus={process ? process.status : undefined}
                                 loadingHandler={loadingHandler}
                                 forceRefresh={refresh}
+                                dataFetchInterval={dataFetchInterval}
                             />
                         )}
                     {process && process.runtime === 'concord-v2' && (
@@ -229,6 +266,7 @@ const ProcessActivity = (props: ExternalProps) => {
                             processStatus={process ? process.status : undefined}
                             loadingHandler={loadingHandler}
                             forceRefresh={refresh}
+                            dataFetchInterval={dataFetchInterval}
                         />
                     )}
                 </Route>
@@ -237,6 +275,7 @@ const ProcessActivity = (props: ExternalProps) => {
                         instanceId={instanceId}
                         loadingHandler={loadingHandler}
                         forceRefresh={refresh}
+                        dataFetchInterval={dataFetchInterval}
                     />
                 </Route>
                 <Route path={`${baseUrl}/wait`} exact={true}>
@@ -245,6 +284,7 @@ const ProcessActivity = (props: ExternalProps) => {
                         processStatus={process ? process.status : undefined}
                         loadingHandler={loadingHandler}
                         forceRefresh={refresh}
+                        dataFetchInterval={dataFetchInterval}
                     />
                 </Route>
                 <Route path={`${baseUrl}/children`} exact={true}>
@@ -253,6 +293,7 @@ const ProcessActivity = (props: ExternalProps) => {
                         processStatus={process ? process.status : undefined}
                         loadingHandler={loadingHandler}
                         forceRefresh={refresh}
+                        dataFetchInterval={dataFetchInterval}
                     />
                 </Route>
                 <Route path={`${baseUrl}/attachments`} exact={true}>
@@ -261,6 +302,7 @@ const ProcessActivity = (props: ExternalProps) => {
                         processStatus={process ? process.status : undefined}
                         loadingHandler={loadingHandler}
                         forceRefresh={refresh}
+                        dataFetchInterval={dataFetchInterval}
                     />
                 </Route>
                 <Route component={NotFoundPage} />

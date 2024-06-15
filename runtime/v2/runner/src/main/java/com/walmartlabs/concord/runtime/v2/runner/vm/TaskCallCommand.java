@@ -22,15 +22,12 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskException;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
+import com.walmartlabs.concord.svm.*;
 
 import java.util.Collections;
 import java.util.Objects;
@@ -51,6 +48,11 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
     }
 
     @Override
+    public Command copy() {
+        return new TaskCallCommand(getStep());
+    }
+
+    @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
@@ -58,18 +60,20 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         Context ctx = runtime.getService(Context.class);
 
         TaskProviders taskProviders = runtime.getService(TaskProviders.class);
+        EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
         ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
 
         TaskCall call = getStep();
         String taskName = call.getName();
         Task t = taskProviders.createTask(ctx, taskName);
         if (t == null) {
-            throw new IllegalStateException("Task not found: '" + taskName + "'");
+            throw new UserDefinedException("Task not found: '" + taskName + "'");
         }
 
         TaskCallInterceptor interceptor = runtime.getService(TaskCallInterceptor.class);
 
         CallContext callContext = CallContext.builder()
+                .threadId(threadId)
                 .taskName(taskName)
                 .correlationId(ctx.execution().correlationId())
                 .currentStep(getStep())
@@ -77,7 +81,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
                 .build();
 
         TaskCallOptions opts = Objects.requireNonNull(call.getOptions());
-        Variables input = new MapBackedVariables(VMUtils.prepareInput(expressionEvaluator, ctx, opts.input(), opts.inputExpression()));
+        Variables input = new MapBackedVariables(VMUtils.prepareInput(ecf, expressionEvaluator, ctx, opts.input(), opts.inputExpression()));
 
         TaskResult result;
         try {

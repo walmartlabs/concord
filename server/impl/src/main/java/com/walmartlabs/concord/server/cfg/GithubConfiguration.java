@@ -24,11 +24,7 @@ import com.walmartlabs.ollie.config.Config;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
-@Named
-@Singleton
 public class GithubConfiguration {
 
     @Inject
@@ -44,6 +40,10 @@ public class GithubConfiguration {
     @Config("github.logEvents")
     private boolean logEvents;
 
+    @Inject
+    @Config("github.disableReposOnDeletedRef")
+    private boolean disableReposOnDeletedRef;
+
     public String getSecret() {
         return secret;
     }
@@ -54,5 +54,9 @@ public class GithubConfiguration {
 
     public boolean isLogEvents() {
         return logEvents;
+    }
+
+    public boolean isDisableReposOnDeletedRef() {
+        return disableReposOnDeletedRef;
     }
 }

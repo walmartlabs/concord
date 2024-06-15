@@ -22,9 +22,11 @@ package com.walmartlabs.concord.server.org.triggers;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -51,5 +53,12 @@ public class CronUtilsTest {
         // next minute
         next = CronUtils.nextExecution(now, spec, zoneId);
         assertEquals("2020-07-17T14:01:00Z", DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(next));
+
+        // next after next
+        next = CronUtils.nextExecution(next, spec, zoneId);
+        assertEquals("2020-07-17T14:02:00Z", DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(next));
+
+        Duration interval = Duration.between(next, CronUtils.nextExecution(next, spec, zoneId));
+        assertEquals(TimeUnit.MINUTES.toMillis(1), interval.toMillis());
     }
 }

@@ -1,4 +1,5 @@
-package com.walmartlabs.concord.it.server;/*-
+package com.walmartlabs.concord.it.server;
+/*-
  * *****
  * Concord
  * -----
@@ -18,7 +19,7 @@ package com.walmartlabs.concord.it.server;/*-
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +32,9 @@ import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class LdapIT extends AbstractServerIT {
@@ -64,30 +67,29 @@ public class LdapIT extends AbstractServerIT {
         createLdapGroupWithUser(groupName, username);
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LDAP));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LDAP));
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest()
-                .setUsername(username)
-                .setUserType(CreateApiKeyRequest.UserTypeEnum.LDAP));
+        CreateApiKeyResponse cakr = apiKeyResource.createUserApiKey(new CreateApiKeyRequest()
+                .username(username)
+                .userType(CreateApiKeyRequest.UserTypeEnum.LDAP));
 
         setApiKey(cakr.getKey());
 
         // ---
 
         byte[] payload = archive(LdapIT.class.getResource("ldapInitiator").toURI());
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         String groupDn = "cn=" + groupName + "," + GROUP_OU;
         assertLog(".*" + groupDn + ".*", ab);
 
@@ -99,13 +101,39 @@ public class LdapIT extends AbstractServerIT {
         createLdapUser(username);
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LDAP));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LDAP));
 
         UserEntry ue = usersApi.findByUsername(username.toLowerCase());
         assertNotNull(ue);
         assertEquals(ue.getName(), username.toLowerCase());
+    }
+
+    @Test
+    void testDisableLdapUser() throws Exception {
+        String username = "tester_" + randomString();
+        createLdapUser(username);
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LDAP));
+
+        UserEntry ue = usersApi.findByUsername(username);
+        assertNotNull(ue);
+        assertFalse(ue.getDisabled());
+        assertFalse(ue.getPermanentlyDisabled());
+
+        ue = usersApi.disableUser(ue.getId(), false);
+        assertNotNull(ue);
+        assertTrue(ue.getDisabled());
+        assertFalse(ue.getPermanentlyDisabled());
+
+        ue = usersApi.disableUser(ue.getId(), true);
+        assertNotNull(ue);
+        assertTrue(ue.getDisabled());
+        assertTrue(ue.getPermanentlyDisabled());
     }
 
     public static DirContext createContext() throws Exception {

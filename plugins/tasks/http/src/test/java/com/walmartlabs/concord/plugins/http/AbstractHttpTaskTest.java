@@ -105,15 +105,15 @@ public abstract class AbstractHttpTaskTest {
                         .withHeader("Content-Type", "application/json")
                         .withHeader("Accept", "application/json")
                         .withBody("[\n" +
-                                "    {\n" +
-                                "        \"id\": 1,\n" +
-                                "        \"version\": \"1.0\"\n" +
-                                "    },\n" +
-                                "    {\n" +
-                                "        \"id\": 2,\n" +
-                                "        \"test\": \"1.1\"\n" +
-                                "    }\n" +
-                                "]"))
+                                  "    {\n" +
+                                  "        \"id\": 1,\n" +
+                                  "        \"version\": \"1.0\"\n" +
+                                  "    },\n" +
+                                  "    {\n" +
+                                  "        \"id\": 2,\n" +
+                                  "        \"test\": \"1.1\"\n" +
+                                  "    }\n" +
+                                  "]"))
         );
     }
 
@@ -153,8 +153,8 @@ public abstract class AbstractHttpTaskTest {
                         .withHeader("Content-Type", "application/json")
                         .withHeader("Accept", "application/json")
                         .withBody("{\n" +
-                                "  \"message\": \"Success\"\n" +
-                                "}"))
+                                  "  \"message\": \"Success\"\n" +
+                                  "}"))
         );
     }
 
@@ -192,11 +192,11 @@ public abstract class AbstractHttpTaskTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody("{\n" +
-                                "  \"testObject\": {\n" +
-                                "    \"testString\": \"hello\",\n" +
-                                "    \"testInteger\": \"2\"\n" +
-                                "  }\n" +
-                                "}"))
+                                  "  \"testObject\": {\n" +
+                                  "    \"testString\": \"hello\",\n" +
+                                  "    \"testInteger\": \"2\"\n" +
+                                  "  }\n" +
+                                  "}"))
         );
     }
 
@@ -247,8 +247,8 @@ public abstract class AbstractHttpTaskTest {
                         .withHeader("Content-Type", "application/json")
                         .withHeader("Accept", "application/json")
                         .withBody("{\n" +
-                                "  \"message\": \"Success\"\n" +
-                                "}"))
+                                  "  \"message\": \"Success\"\n" +
+                                  "}"))
         );
     }
 
@@ -259,8 +259,8 @@ public abstract class AbstractHttpTaskTest {
                         .withHeader("Content-Type", "application/json")
                         .withHeader("Accept", "application/json")
                         .withBody("{\n" +
-                                "  \"message\": \"Success\"\n" +
-                                "}"))
+                                  "  \"message\": \"Success\"\n" +
+                                  "}"))
         );
     }
 

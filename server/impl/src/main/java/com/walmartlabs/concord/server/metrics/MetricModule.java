@@ -20,19 +20,53 @@ package com.walmartlabs.concord.server.metrics;
  * =====
  */
 
-import com.google.inject.AbstractModule;
+import com.codahale.metrics.MetricRegistry;
+import com.google.inject.Binder;
+import com.google.inject.Module;
 import com.google.inject.matcher.Matchers;
+import com.walmartlabs.concord.server.sdk.metrics.GaugeProvider;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
-public class MetricModule extends AbstractModule {
+import static com.google.inject.Scopes.SINGLETON;
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
+import static com.walmartlabs.concord.server.Utils.bindServletHolder;
+import static com.walmartlabs.concord.server.Utils.bindSingletonBackgroundTask;
+import static com.walmartlabs.concord.server.metrics.NoSyntheticMethodMatcher.INSTANCE;
+
+public class MetricModule implements Module {
 
     @Override
-    protected void configure() {
-        MetricInterceptor i = new MetricInterceptor();
-        requestInjection(i);
-        bindInterceptor(Matchers.any(), NoSyntheticMethodMatcher.INSTANCE
-                .and(Matchers.annotatedWith(WithTimer.class)), i);
+    public void configure(Binder binder) {
+        // common
 
-        bindListener(Matchers.any(), new MetricTypeListener());
+        newSetBinder(binder, GaugeProvider.class);
+
+        // registry
+
+        binder.bind(MetricRegistry.class).toProvider(MetricRegistryProvider.class).in(SINGLETON);
+
+        // @WithTimer stuff
+
+        MetricInterceptor i = new MetricInterceptor();
+        binder.requestInjection(i);
+
+        binder.bindInterceptor(Matchers.any(), INSTANCE.and(Matchers.annotatedWith(WithTimer.class)), i);
+
+        binder.bindListener(Matchers.any(), new MetricTypeListener());
+
+        // tasks
+
+        bindSingletonBackgroundTask(binder, FailedTaskMetrics.class);
+        bindSingletonBackgroundTask(binder, WorkerMetrics.class);
+        bindSingletonBackgroundTask(binder, MetricsRegistrator.class);
+
+        // the /metrics endpoint
+
+        bindServletHolder(binder, MetricsServletHolder.class);
+
+        // Jetty stuff
+
+        binder.install(new JettyStatisticsModule());
+        binder.install(new JettySessionMetricsModule());
     }
 }

@@ -1,0 +1,53 @@
+configuration:
+  runtime: concord-v2
+
+flows:
+  default:
+    - script: js
+      body: |
+        var persistenceServiceType = Java.type('com.walmartlabs.concord.runtime.v2.runner.PersistenceService');
+
+        var w  = new persistenceServiceType.Writer() {
+          write: function(out) {
+            out.write('top-secret-value'.getBytes());
+          }
+        };
+
+        var persistenceService = context.execution().runtime().getService(persistenceServiceType)
+        persistenceService.persistSessionFile('sensitive_data.txt', w);
+
+    - form: myForm
+      fields:
+        - firstName: { type: "string?" }
+
+    - task: http
+      in:
+        method: GET
+        url: ${baseUrl}/api/v1/process/${txId}/state/snapshot/_attachments/_session_files/sensitive_data.txt
+        headers:
+          X-Concord-SessionToken: ${processInfo.sessionToken}
+      out: result
+
+    - if: ${result.statusCode != 200}
+      then:
+        - throw: "Can't load file from snapshot: ${result}"
+
+    - script: js
+      body: |
+        var persistenceServiceType = Java.type('com.walmartlabs.concord.runtime.v2.runner.PersistenceService');
+
+        var r  = new persistenceServiceType.Converter() {
+          apply: function() {
+            var String = Java.type('java.lang.String');
+            var IOUtils = Java.type('com.walmartlabs.concord.common.IOUtils');
+            var bytes = IOUtils.toByteArray(arguments[0]);
+            var result = new String(bytes);
+            return result;
+          }
+        };
+
+        var persistenceService = context.execution().runtime().getService(persistenceServiceType)
+        var topSecretValue = persistenceService.loadPersistedSessionFile('sensitive_data.txt', r);
+        context.variables().set('topSecret', topSecretValue);
+
+    - log: "Secret: ${topSecret}"

@@ -50,14 +50,14 @@ public class WorkspacePolicy {
             deny.add(new CheckResult.Item<>(rule, p, "File not found: " + p));
         } else if (!Files.isDirectory(p)) {
             deny.add(new CheckResult.Item<>(rule, p, "Not a directory: " + p));
-        } else if (rule.getMaxSizeInBytes() != null) {
+        } else if (rule.maxSizeInBytes() != null) {
             Long[] size = { 0L };
 
             Files.walkFileTree(p, new SimpleFileVisitor<Path>() {
 
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    if (isIgnored(file, rule.getIgnoredFiles())) {
+                    if (isIgnored(file, rule.ignoredFiles())) {
                         return FileVisitResult.CONTINUE;
                     }
 
@@ -67,7 +67,7 @@ public class WorkspacePolicy {
                 }
             });
 
-            if (size[0] > rule.getMaxSizeInBytes()) {
+            if (size[0] > rule.maxSizeInBytes()) {
                 deny.add(new CheckResult.Item<>(rule, p, "Workspace too big: " + size[0] + " byte(s)"));
             }
         }

@@ -34,8 +34,16 @@ public class App implements Runnable {
     @Option(names = {"-h", "--help"}, usageHelp = true, description = "display a help message")
     boolean helpRequested = false;
 
+    @Option(names = {"--version"}, description = "display version")
+    boolean versionRequested = false;
+
     @Override
     public void run() {
+        if (versionRequested) {
+            System.out.println(Version.getVersion());
+            return;
+        }
+
         spec.commandLine().usage(System.out);
     }
 }

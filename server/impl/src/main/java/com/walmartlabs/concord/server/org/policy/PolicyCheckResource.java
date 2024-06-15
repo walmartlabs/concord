@@ -28,27 +28,21 @@ import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.policy.PolicyUtils;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
-import org.sonatype.siesta.ValidationErrorsException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.UUID;
 
-@Named
-@Singleton
-@Api(value = "PolicyCheck", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1")
+@Tag(name = "PolicyCheck")
 public class PolicyCheckResource implements Resource {
 
     private final OrganizationManager orgManager;
@@ -66,12 +60,12 @@ public class PolicyCheckResource implements Resource {
     }
 
     @GET
-    @ApiOperation("Check for new entity creation")
     @Path("/{entityType}/canCreate")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public boolean canCreate(@ApiParam @PathParam("entityType") EntityType type,
-                             @ApiParam @QueryParam("orgName") String orgName) {
+    @Operation(description = "Check for new entity creation")
+    public boolean canCreate(@PathParam("entityType") EntityType type,
+                             @QueryParam("orgName") String orgName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         return isCreateEnabled(org.getId(), orgName, type);

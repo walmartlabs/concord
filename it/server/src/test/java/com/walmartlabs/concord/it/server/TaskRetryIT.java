@@ -20,9 +20,9 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client2.ProcessApi;
+import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.client2.StartProcessResponse;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -38,32 +38,30 @@ public class TaskRetryIT extends AbstractServerIT {
 
     @Test
     public void testAnsibleRetry() throws Exception {
-        URI uri = ProcessIT.class.getResource("taskRetry").toURI();
+        URI uri = TaskRetryIT.class.getResource("taskRetry").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
 
         // start the process
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // check logs
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*msg\": \"Hi retry!\".*", ab);
     }
 
     @Test
     public void testAnsibleRetryWithExpression() throws Exception {
-        URI uri = ProcessIT.class.getResource("taskRetryWithExpression").toURI();
+        URI uri = TaskRetryIT.class.getResource("taskRetryWithExpression").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
 
         // start the process
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.retryCount", "1");
@@ -72,11 +70,11 @@ public class TaskRetryIT extends AbstractServerIT {
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // check logs
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*msg\": \"Hi retry!\".*", ab);
     }
 }

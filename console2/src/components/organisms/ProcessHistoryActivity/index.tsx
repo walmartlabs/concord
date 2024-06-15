@@ -31,11 +31,10 @@ interface ExternalProps {
     instanceId: ConcordId;
     loadingHandler: (inc: number) => void;
     forceRefresh: boolean;
+    dataFetchInterval: number;
 }
 
-const DATA_FETCH_INTERVAL = 5000;
-
-const ProcessHistoryActivity = ({ instanceId, loadingHandler, forceRefresh }: ExternalProps) => {
+const ProcessHistoryActivity = ({ instanceId, loadingHandler, forceRefresh, dataFetchInterval }: ExternalProps) => {
     const [data, setData] = useState<ProcessHistoryEntry[]>();
 
     const fetchData = useCallback(async () => {
@@ -46,7 +45,7 @@ const ProcessHistoryActivity = ({ instanceId, loadingHandler, forceRefresh }: Ex
         return !isFinal(process.status);
     }, [instanceId]);
 
-    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, forceRefresh);
+    const error = usePolling(fetchData, dataFetchInterval, loadingHandler, forceRefresh);
 
     if (error) {
         return <RequestErrorActivity error={error} />;

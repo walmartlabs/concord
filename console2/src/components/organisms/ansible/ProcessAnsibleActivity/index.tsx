@@ -59,13 +59,13 @@ interface ExternalProps {
     instanceId: ConcordId;
     loadingHandler: (inc: number) => void;
     forceRefresh: boolean;
+    dataFetchInterval: number;
 }
 
-const DATA_FETCH_INTERVAL = 5000;
 const ANSIBLE_HOST_LIMIT = 10;
 
 const ProcessAnsibleActivity = (props: ExternalProps) => {
-    const { instanceId, loadingHandler, forceRefresh } = props;
+    const { instanceId, loadingHandler, forceRefresh, dataFetchInterval } = props;
 
     const [process, setProcess] = useState<ProcessEntry>();
     const [playbooks, setPlaybooks] = useState<PlaybookInfo[]>();
@@ -219,7 +219,7 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
         setTaskStats(undefined);
     }, [selectedPlayId]);
 
-    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, forceRefresh);
+    const error = usePolling(fetchData, dataFetchInterval, loadingHandler, forceRefresh);
 
     if (error) {
         return <RequestErrorActivity error={error} />;

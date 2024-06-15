@@ -23,10 +23,10 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.Retry;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Constants;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
@@ -59,7 +59,21 @@ public class RetryWrapper implements Command {
     }
 
     @Override
+    public Command copy() {
+        return new RetryWrapper(cmd.copy(), retry);
+    }
+
+    @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
+        execute(runtime, state, threadId);
+    }
+
+    @Override
+    public void onException(Runtime runtime, Exception e, State state, ThreadId threadId) {
+        cmd.onException(runtime, e, state, threadId);
+    }
+
+    private void execute(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
@@ -74,11 +88,12 @@ public class RetryWrapper implements Command {
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
         Context ctx = contextFactory.create(runtime, state, threadId, getCurrentStep());
 
+        EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
 
         int times = retry.times();
         if (retry.timesExpression() != null) {
-            Number n = ee.eval(EvalContextFactory.global(ctx), retry.timesExpression(), Number.class);
+            Number n = ee.eval(ecf.global(ctx), retry.timesExpression(), Number.class);
             if (n != null) {
                 times = n.intValue();
             }
@@ -86,7 +101,7 @@ public class RetryWrapper implements Command {
 
         Duration delay = retry.delay();
         if (retry.delayExpression() != null) {
-            Number n = ee.eval(EvalContextFactory.global(ctx), retry.delayExpression(), Number.class);
+            Number n = ee.eval(ecf.global(ctx), retry.delayExpression(), Number.class);
             if (n != null) {
                 delay = Duration.ofSeconds(n.longValue());
             }
@@ -116,6 +131,11 @@ public class RetryWrapper implements Command {
 
         public NextRetry(Command cmd) {
             this.cmd = cmd;
+        }
+
+        @Override
+        public Command copy() {
+            return new NextRetry(cmd.copy());
         }
 
         @Override

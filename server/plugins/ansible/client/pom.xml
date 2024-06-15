@@ -6,42 +6,57 @@
     <parent>
         <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>2.12.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-ansible-plugin-client</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
+
+    <properties>
+        <swagger.version>1.5.20</swagger.version>
+        <gson.version>2.10</gson.version>
+        <gson.fire.version>1.8.3</gson.fire.version>
+        <okhttp.version>2.7.5</okhttp.version>
+        <okio.version>1.17.2</okio.version>
+    </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-client</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.squareup.okhttp</groupId>
             <artifactId>okhttp</artifactId>
+            <version>${okhttp.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.okhttp</groupId>
             <artifactId>logging-interceptor</artifactId>
+            <version>${okhttp.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.okio</groupId>
             <artifactId>okio</artifactId>
+            <version>${okio.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
+            <version>${gson.version}</version>
         </dependency>
         <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-annotations</artifactId>
+            <version>${swagger.version}</version>
         </dependency>
         <dependency>
             <groupId>io.gsonfire</groupId>
             <artifactId>gson-fire</artifactId>
+            <version>${gson.fire.version}</version>
         </dependency>
 
         <!-- JDK9+ compatibility -->
@@ -54,23 +69,16 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-                <configuration>
-                    <privatePackageReference>ignore</privatePackageReference>
-                    <proc>proc</proc>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>io.swagger</groupId>
                 <artifactId>swagger-codegen-maven-plugin</artifactId>
+                <version>2.3.1</version>
                 <executions>
                     <execution>
                         <goals>
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/../impl/target/classes/com/walmartlabs/concord/server/plugins/ansible/swagger/swagger.json</inputSpec>
+                            <inputSpec>${project.basedir}/swagger.json</inputSpec>
                             <language>java</language>
                             <languageSpecificPrimitives>
                                 <supportJava6>false</supportJava6>

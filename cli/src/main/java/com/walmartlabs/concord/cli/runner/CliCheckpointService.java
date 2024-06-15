@@ -4,7 +4,7 @@ package com.walmartlabs.concord.cli.runner;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,25 @@ package com.walmartlabs.concord.cli.runner;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.common.SerializationUtils;
 import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.ThreadId;
 
+import java.io.ByteArrayOutputStream;
 import java.util.UUID;
 
 public class CliCheckpointService implements CheckpointService {
 
     @Override
     public void create(ThreadId threadId, UUID correlationId, String name, Runtime runtime, ProcessSnapshot snapshot) {
-        throw new UnsupportedOperationException("not implemented yet");
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            SerializationUtils.serialize(baos, snapshot.vmState());
+        } catch (Exception e) {
+            throw new RuntimeException("Checkpoint create error", e);
+        }
+
+        System.out.println("Checkpoint '" +  name +  "' ignored");
     }
 }

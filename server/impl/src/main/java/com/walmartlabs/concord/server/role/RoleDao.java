@@ -22,24 +22,27 @@ package com.walmartlabs.concord.server.role;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.server.jooq.tables.RoleLdapGroups;
 import com.walmartlabs.concord.server.user.RoleEntry;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.*;
 
-import static com.walmartlabs.concord.server.jooq.Tables.PERMISSIONS;
-import static com.walmartlabs.concord.server.jooq.Tables.ROLE_PERMISSIONS;
+import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Roles.ROLES;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class RoleDao extends AbstractDao {
 
     @Inject
     protected RoleDao(@MainDB Configuration cfg) {
         super(cfg);
+    }
+
+    @Override
+    public void tx(Tx t) {
+        super.tx(t);
     }
 
     public RoleEntry get(UUID id) {
@@ -124,6 +127,30 @@ public class RoleDao extends AbstractDao {
                 .fetch(RoleDao::toEntry);
     }
 
+    public void upsertLdapGroup(DSLContext tx, UUID roleId, String ldapGroup) {
+        tx.insertInto(ROLE_LDAP_GROUPS)
+                .columns(ROLE_LDAP_GROUPS.ROLE_ID, ROLE_LDAP_GROUPS.LDAP_GROUP)
+                .values(roleId, ldapGroup)
+                .onConflict(ROLE_LDAP_GROUPS.ROLE_ID, ROLE_LDAP_GROUPS.LDAP_GROUP)
+                .doNothing()
+                .execute();
+    }
+    
+    public void removeLdapGroups(DSLContext tx, UUID roleId) {
+        tx.deleteFrom(ROLE_LDAP_GROUPS)
+                .where(ROLE_LDAP_GROUPS.ROLE_ID.eq(roleId))
+                .execute();
+    }
+
+    public List<String> listLdapGroups(UUID roleId) {
+        RoleLdapGroups r = ROLE_LDAP_GROUPS.as("r");
+        return txResult(tx -> tx.select(r.LDAP_GROUP)
+                .from(r)
+                .where(r.ROLE_ID.eq(roleId))
+                .orderBy(r.LDAP_GROUP)
+                .fetch(r.LDAP_GROUP));
+    }
+    
     private static RoleEntry toEntry(Record3<UUID, String, String[]> e) {
         return new RoleEntry(e.value1(), e.value2(), new HashSet<>(Arrays.asList(e.value3())));
     }

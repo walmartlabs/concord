@@ -126,6 +126,7 @@ public class JobExecutorFactory {
                     .segmentedLogs(segmentedLogs)
                     .persistentWorkDir(runnerCfg.getPersistentWorkDir())
                     .preforkEnabled(preForkCfg.isEnabled())
+                    .cleanRunnerDescendants(runnerCfg.getCleanRunnerDescendants())
                     .build();
 
             JobExecutor delegate = new RunnerJobExecutor(runnerExecutorCfg, dependencyManager, defaultDependencies, attachmentsUploader, processPool, processLogFactory, executor);

@@ -22,7 +22,6 @@ export { default as AboutPage } from './AboutPage';
 export { default as AddRepositoryPage } from './AddRepositoryPage';
 export { default as APITokensListPage } from './APITokensListPage';
 export { default as CustomResourcePage } from './CustomResourcePage';
-export { default as EditRepositoryPage } from './EditRepositoryPage';
 export { default as LoginPage } from './LoginPage';
 export { default as LogoutPage } from './LogoutPage';
 export { default as NewAPITokenPage } from './NewAPITokenPage';

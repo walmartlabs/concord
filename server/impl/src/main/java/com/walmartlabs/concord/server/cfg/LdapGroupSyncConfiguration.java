@@ -22,14 +22,11 @@ package com.walmartlabs.concord.server.cfg;
 
 import com.walmartlabs.ollie.config.Config;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.Serializable;
 import java.time.Duration;
 
-@Named
-@Singleton
 public class LdapGroupSyncConfiguration  implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -50,6 +47,11 @@ public class LdapGroupSyncConfiguration  implements Serializable {
     @Config("ldapGroupSync.minAgeSync")
     private Duration minAgeSync;
 
+    @Inject
+    @Nullable
+    @Config("ldapGroupSync.disabledAge")
+    private Duration disabledAge;
+
     public Duration getInterval() {
         return interval;
     }
@@ -64,5 +66,9 @@ public class LdapGroupSyncConfiguration  implements Serializable {
 
     public Duration getMinAgeSync() {
         return minAgeSync;
+    }
+
+    public Duration getDisabledAge() {
+        return disabledAge;
     }
 }

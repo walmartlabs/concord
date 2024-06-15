@@ -66,13 +66,14 @@ export interface DeleteSecretRequest extends Action {
 
 export interface RenameSecretRequest extends Action {
     orgName: ConcordKey;
-    secretId: ConcordId;
     secretName: ConcordKey;
+    newSecretName: ConcordKey;
 }
 
 export interface UpdateSecretVisibilityRequest extends Action {
     orgName: ConcordKey;
     secretId: ConcordId;
+    secretName: ConcordKey;
     visibility: SecretVisibility;
 }
 
@@ -118,7 +119,6 @@ export interface State {
     secretById: PaginatedSecrets;
 
     listSecrets: ListSecretsState;
-    createSecret: CreateSecretState;
     deleteSecret: DeleteSecretState;
     renameSecret: RenameSecretState;
     secretTeamAccess: SecretTeamAccessState;

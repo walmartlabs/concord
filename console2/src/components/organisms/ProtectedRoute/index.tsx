@@ -24,6 +24,7 @@ import { Redirect, Route, RouteComponentProps, RouteProps, withRouter } from 're
 import { Dimmer, Loader } from 'semantic-ui-react';
 
 import { UserSession, UserSessionContext } from '../../../session';
+import {setQueryParam} from "../../../utils";
 
 interface ProtectedRouteStateProps {
     component?: React.ComponentType<RouteComponentProps<{}>>;
@@ -50,9 +51,10 @@ const renderRoute = (
     if (!loggedIn) {
         const loginUrl = window.concord?.loginUrl;
         if (loginUrl) {
+            const requested = new URL(window.location.href).hash;
             // delay the redirect to avoid layout issues
             setTimeout(() => {
-                window.location.href = loginUrl + props.location.pathname;
+                window.location.href = setQueryParam(loginUrl, 'from', '/' + requested)
             }, 1000);
 
             return (

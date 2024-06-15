@@ -29,14 +29,10 @@ import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.core.Response.Status;
 import java.io.Serializable;
 import java.util.*;
 
-@Named
-@Singleton
 public class FormResourceV2 {
 
     private static final String FORMS_RESOURCES_PATH = "forms";
@@ -76,7 +72,7 @@ public class FormResourceV2 {
         }
 
         String name = form.name();
-        boolean yield = form.options().yield();
+        boolean yield = form.options().isYield();
         String resourcePath = FORMS_RESOURCES_PATH + "/" + name;
         boolean isCustomForm = formService.exists(processKey, resourcePath);
 

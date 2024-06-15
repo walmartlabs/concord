@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -137,12 +138,47 @@ public class SingleFrameContext extends DummyContext {
                     }
 
                     @Override
+                    public Exception getThreadError(ThreadId threadId) {
+                        throw new IllegalStateException("Not implemented");
+                    }
+
+                    @Override
                     public void setThreadError(ThreadId threadId, Exception error) {
                         throw new IllegalStateException("Not implemented");
                     }
 
                     @Override
                     public Exception clearThreadError(ThreadId threadId) {
+                        throw new IllegalStateException("Not implemented");
+                    }
+
+                    @Override
+                    public List<StackTraceItem> getStackTrace(ThreadId threadId) {
+                        throw new IllegalStateException("Not implemented");
+                    }
+
+                    @Override
+                    public void pushStackTraceItem(ThreadId threadId, StackTraceItem item) {
+                        throw new IllegalStateException("Not implemented");
+                    }
+
+                    @Override
+                    public void clearStackTrace(ThreadId threadId) {
+                        throw new IllegalStateException("Not implemented");
+                    }
+
+                    @Override
+                    public void setThreadLocal(ThreadId threadId, String key, Serializable value) {
+                        throw new IllegalStateException("Not implemented");
+                    }
+
+                    @Override
+                    public <T extends Serializable> T getThreadLocal(ThreadId threadId, String key) {
+                        throw new IllegalStateException("Not implemented");
+                    }
+
+                    @Override
+                    public void removeThreadLocal(ThreadId threadId, String key) {
                         throw new IllegalStateException("Not implemented");
                     }
 

@@ -34,7 +34,9 @@ import org.junit.jupiter.api.BeforeEach;
 import javax.sql.DataSource;
 import java.lang.reflect.Method;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.Collections;
+import java.util.Map;
 
 public abstract class AbstractDaoTest {
 
@@ -115,6 +117,18 @@ public abstract class AbstractDaoTest {
         @Override
         public Duration maxLifetime() {
             return Duration.ofSeconds(30);
+        }
+
+        @Override
+        public Map<String, Object> changeLogParameters() {
+            String fakeSecret = Base64.getEncoder().encodeToString("test".getBytes());
+            return Map.of("createExtensionAvailable", "true",
+                    "defaultAdminToken", fakeSecret,
+                    "skipAdminTokenGeneration", "true",
+                    "defaultAgentToken", fakeSecret,
+                    "skipAgentTokenGeneration", "true",
+                    "secretStoreSalt", fakeSecret,
+                    "serverPassword", fakeSecret);
         }
     }
 }

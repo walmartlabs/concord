@@ -27,8 +27,6 @@ import {
     OperationResult
 } from '../../../common';
 
-import { get as getProject } from '../index';
-
 export interface RepositoryMeta {
     profiles?: string[];
     entryPoints?: string[];
@@ -49,6 +47,11 @@ export interface RepositoryEntry {
     triggersDisabled: boolean;
 }
 
+export interface PaginatedRepositoryEntries {
+    items: RepositoryEntry[];
+    next: boolean;
+}
+
 export interface EditRepositoryEntry {
     id?: ConcordId;
     name: ConcordKey;
@@ -67,11 +70,16 @@ export interface TriggerCfg {
     name?: string;
 }
 
+export interface TriggerConditions {
+    spec?: string;
+    version?: string;
+}
+
 export interface TriggerEntry {
     id: ConcordId;
     eventSource: ConcordKey;
     arguments?: object;
-    conditions?: object;
+    conditions?: TriggerConditions;
     activeProfiles?: string[];
     cfg: TriggerCfg;
 }
@@ -88,12 +96,39 @@ export const get = async (
     projectName: ConcordKey,
     repoName: ConcordKey
 ): Promise<RepositoryEntry> => {
-    const project = await getProject(orgName, projectName);
-    const repo = project.repositories === undefined ? undefined : project.repositories[repoName];
-    if (repo === undefined) {
-        return Promise.reject({ message: 'Repository not found' });
+    return fetchJson<RepositoryEntry>(
+        `/api/v1/org/${orgName}/project/${projectName}/repository/${repoName}`
+    );
+};
+
+export const list = async (
+    orgName: ConcordKey,
+    projectName: ConcordKey,
+    offset: number,
+    limit: number,
+    filter?: string
+): Promise<PaginatedRepositoryEntries> => {
+    const offsetParam = offset > 0 && limit > 0 ? offset * limit : offset;
+    const limitParam = limit > 0 ? limit + 1 : limit;
+
+    const data: RepositoryEntry[] = await fetchJson(
+        `/api/v1/org/${orgName}/project/${projectName}/repository?${queryParams({
+            offset: offsetParam,
+            limit: limitParam,
+            filter,
+        })}`
+    );
+
+    const hasMoreElements: boolean = !!limit && data.length > limit;
+
+    if (limit > 0 && hasMoreElements) {
+        data.pop();
     }
-    return repo;
+
+    return {
+        items: data,
+        next: hasMoreElements,
+    };
 };
 
 export const createOrUpdate = (

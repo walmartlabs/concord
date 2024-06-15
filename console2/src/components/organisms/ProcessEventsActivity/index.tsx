@@ -40,12 +40,12 @@ interface ExternalProps {
     forceRefresh: boolean;
     processStatus?: ProcessStatus;
     definitionLinkBase?: string;
+    dataFetchInterval: number;
 }
 
-const DATA_FETCH_INTERVAL = 5000;
 
 const ProcessEventsActivity = (props: ExternalProps) => {
-    const { instanceId, processStatus, loadingHandler, forceRefresh, definitionLinkBase } = props;
+    const { instanceId, processStatus, loadingHandler, forceRefresh, definitionLinkBase, dataFetchInterval } = props;
 
     const lastEventId = useRef<number>();
 
@@ -71,7 +71,7 @@ const ProcessEventsActivity = (props: ExternalProps) => {
         return !(events.length === 0 && isFinal(processStatus));
     }, [instanceId, processStatus]);
 
-    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, forceRefresh);
+    const error = usePolling(fetchData, dataFetchInterval, loadingHandler, forceRefresh);
 
     if (error) {
         return <RequestErrorActivity error={error} />;

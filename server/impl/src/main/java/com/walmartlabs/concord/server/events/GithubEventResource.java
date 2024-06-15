@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.events;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.v2.model.GithubTriggerExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
@@ -37,17 +38,21 @@ import com.walmartlabs.concord.server.org.triggers.TriggerUtils;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -72,8 +77,8 @@ import static com.walmartlabs.concord.server.events.github.Constants.EVENT_SOURC
  */
 @Named
 @Singleton
-@Api(value = "GitHub Events", authorizations = {})
 @Path("/events/github")
+@Tag(name = "GitHub Events")
 public class GithubEventResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(GithubEventResource.class);
@@ -108,12 +113,15 @@ public class GithubEventResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Handles GitHub repository level events")
     @Path("/webhook")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
     @WithTimer
-    public String onEvent(@ApiParam Map<String, Object> data,
+    @Operation(description = "Handles GitHub repository level events")
+    @Parameter(name = "query", in = ParameterIn.QUERY,
+            schema = @Schema(implementation = Map.class),
+            extensions = @Extension(name = "concord", properties = @ExtensionProperty(name = "customQueryParams", value = "true")))
+    public String onEvent(Map<String, Object> data,
                           @HeaderParam("X-GitHub-Delivery") String deliveryId,
                           @HeaderParam("X-GitHub-Event") String eventName,
                           @Context UriInfo uriInfo) {
@@ -193,18 +201,30 @@ public class GithubEventResource implements Resource {
             }
 
             GithubTriggerExclusiveMode e = objectMapper.convertValue(exclusive, GithubTriggerExclusiveMode.class);
-            if (e.groupBy() == null) {
+            String groupBy = e.groupByProperty();
+            if (groupBy== null) {
                 return exclusive;
             }
 
             String group;
-            switch (Objects.requireNonNull(e.groupBy())) {
-                case branch: {
-                    group = payload.getBranch();
-                    break;
+            if ("branch".equals(groupBy)) {
+                group = payload.getBranch();
+            } else if (groupBy.startsWith("event")) {
+                String[] payloadPath = groupBy.split("\\.");
+                if (payloadPath.length == 1) {
+                    throw new IllegalArgumentException("Invalid groupBy: '" + groupBy + "'");
                 }
-                default:
-                    throw new IllegalArgumentException("Unknown groupBy: '" + e.groupBy() + "'");
+
+                payloadPath = Arrays.copyOfRange(payloadPath, 1, payloadPath.length);
+                Object maybeString = ConfigurationUtils.get(payload.raw(), payloadPath);
+                if (maybeString == null || (maybeString instanceof String)) {
+                    group = (String) maybeString;
+                } else {
+                    String value = maybeString + " (class: " + maybeString.getClass() + ")";
+                    throw new IllegalArgumentException("Expected string value for groupBy: '" + groupBy + "', got " + value);
+                }
+            } else {
+                throw new IllegalArgumentException("Unknown groupBy: '" + groupBy + "'");
             }
 
             if (group == null) {

@@ -20,122 +20,71 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Objects;
 
-public class JsonStoreRule implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableJsonStoreRule.class)
+@JsonDeserialize(as = ImmutableJsonStoreRule.class)
+public interface JsonStoreRule extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final StoreRule store;
-    private final StoreDataRule data;
+    @Nullable
+    @Value.Parameter
+    StoreRule store();
 
-    @JsonCreator
-    public JsonStoreRule(@JsonProperty("store") StoreRule store,
-                         @JsonProperty("data") StoreDataRule data) {
+    @Nullable
+    @Value.Parameter
+    StoreDataRule data();
 
-        this.store = store;
-        this.data = data;
+    static JsonStoreRule of(StoreRule store, StoreDataRule data) {
+        return ImmutableJsonStoreRule.of(store, data);
     }
 
-    public StoreRule getStore() {
-        return store;
-    }
+    @Value.Immutable
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableStoreRule.class)
+    @JsonDeserialize(as = ImmutableStoreRule.class)
+    interface StoreRule extends Serializable {
 
-    public StoreDataRule getData() {
-        return data;
-    }
+        long serialVersionUID = 1L;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        JsonStoreRule that = (JsonStoreRule) o;
-        return Objects.equals(store, that.store) &&
-                Objects.equals(data, that.data);
-    }
+        @Value.Parameter
+        @Nullable
+        String msg();
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(store, data);
-    }
+        @Value.Parameter
+        int maxNumberPerOrg();
 
-    public static class StoreRule implements Serializable {
-
-        private static final long serialVersionUID = 1L;
-
-        private final int maxNumberPerOrg;
-        private final String msg;
-
-        @JsonCreator
-        public StoreRule(@JsonProperty("maxNumberPerOrg") int maxNumberPerOrg,
-                         @JsonProperty("msg") String msg) {
-
-            this.maxNumberPerOrg = maxNumberPerOrg;
-            this.msg = msg;
-        }
-
-        public int getMaxNumberPerOrg() {
-            return maxNumberPerOrg;
-        }
-
-        public String getMsg() {
-            return msg;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            StoreRule that = (StoreRule) o;
-            return maxNumberPerOrg == that.maxNumberPerOrg &&
-                    Objects.equals(msg, that.msg);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(maxNumberPerOrg, msg);
+        static StoreRule of(String msg, int maxNumberPerOrg) {
+            return ImmutableStoreRule.of(msg, maxNumberPerOrg);
         }
     }
 
-    public static class StoreDataRule implements Serializable {
+    @Value.Immutable
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableStoreDataRule.class)
+    @JsonDeserialize(as = ImmutableStoreDataRule.class)
+    interface StoreDataRule extends Serializable {
 
-        private static final long serialVersionUID = 1L;
+        long serialVersionUID = 1L;
 
-        private final Long maxSizeInBytes;
-        private final String msg;
+        @Nullable
+        @Value.Parameter
+        String msg();
 
-        @JsonCreator
-        public StoreDataRule(@JsonProperty("maxSizeInBytes") Long maxSizeInBytes,
-                             @JsonProperty("msg") String msg) {
+        @Value.Parameter
+        long maxSizeInBytes();
 
-            this.maxSizeInBytes = maxSizeInBytes;
-            this.msg = msg;
-        }
-
-        public Long getMaxSizeInBytes() {
-            return maxSizeInBytes;
-        }
-
-        public String getMsg() {
-            return msg;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            StoreDataRule that = (StoreDataRule) o;
-            return Objects.equals(maxSizeInBytes, that.maxSizeInBytes) &&
-                    Objects.equals(msg, that.msg);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(maxSizeInBytes, msg);
+        static StoreDataRule of(String msg, long maxSizeInBytes) {
+            return ImmutableStoreDataRule.of(msg, maxSizeInBytes);
         }
     }
 }

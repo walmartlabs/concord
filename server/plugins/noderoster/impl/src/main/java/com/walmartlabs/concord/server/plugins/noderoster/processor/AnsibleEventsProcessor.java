@@ -45,7 +45,6 @@ import static org.jooq.impl.DSL.function;
  * Scans the process_events table for new Ansible events and hands
  * the data off to individual processors.
  */
-@Named("noderoster/ansible-events-processor")
 public class AnsibleEventsProcessor extends AbstractEventProcessor<AnsibleEvent> {
 
     private static final String NAME = "noderoster/ansible-events-processor";
@@ -71,6 +70,11 @@ public class AnsibleEventsProcessor extends AbstractEventProcessor<AnsibleEvent>
 
         Instant startTimestamp = eventsCfg.getStartTimestamp();
         this.startTimestamp = startTimestamp != null ? OffsetDateTime.ofInstant(startTimestamp, ZoneId.systemDefault()) : null;
+    }
+
+    @Override
+    public String getId() {
+        return "noderoster/ansible-events-processor";
     }
 
     @Override

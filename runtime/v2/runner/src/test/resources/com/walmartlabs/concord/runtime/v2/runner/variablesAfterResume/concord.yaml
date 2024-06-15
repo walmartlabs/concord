@@ -1,0 +1,19 @@
+configuration:
+  runtime: concord-v2
+
+flows:
+  default:
+    - log: "workDir1: ${workDir}"
+
+    - call: inner
+
+    - log: "workDir2: ${workDir}"
+
+  inner:
+    - log: "workDir3: ${workDir}"
+    - form: myForm
+    - log: "workDir4: ${workDir}"
+
+forms:
+  myForm:
+    - fullName: { label: "Name", type: "string", placeholder: "Place name here" }

@@ -20,9 +20,8 @@ package com.walmartlabs.concord.agent.remote;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.agent.AgentConstants;
-import com.walmartlabs.concord.client.ClientUtils;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Constants;
@@ -53,10 +52,9 @@ public class AttachmentsUploader {
                 IOUtils.zip(zip, attachmentsDir);
             }
 
-            String path = "/api/v1/process/" + instanceId + "/attachment";
-
+            ProcessApi api = new ProcessApi(apiClient);
             ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY, () -> {
-                ClientUtils.postData(apiClient, path, tmp.path().toFile());
+                api.uploadProcessAttachments(instanceId, Files.newInputStream(tmp.path()));
                 return null;
             });
         }
