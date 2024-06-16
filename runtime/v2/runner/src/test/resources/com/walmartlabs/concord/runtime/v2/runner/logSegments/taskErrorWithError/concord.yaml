@@ -1,0 +1,5 @@
+flows:
+  default:
+    - task: "faultyTask"
+      error:
+        - log: "in error block"

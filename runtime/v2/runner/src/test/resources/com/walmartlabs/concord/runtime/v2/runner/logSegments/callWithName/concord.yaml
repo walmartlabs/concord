@@ -1,0 +1,7 @@
+flows:
+  default:
+    - name: "My segment"
+      call: "inner"
+
+  inner:
+    - log: "in inner flow"

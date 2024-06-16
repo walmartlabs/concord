@@ -1,0 +1,4 @@
+flows:
+  default:
+    - name: "${undefined}"
+      task: "faultyTask"

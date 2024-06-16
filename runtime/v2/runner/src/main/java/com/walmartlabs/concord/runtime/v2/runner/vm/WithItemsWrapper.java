@@ -160,11 +160,6 @@ public abstract class WithItemsWrapper implements Command {
         }
 
         @Override
-        public Command copy() {
-            return new ParallelWithItems(cmd.copy(), withItems, outVariables);
-        }
-
-        @Override
         protected void eval(State state, ThreadId threadId, ArrayList<Serializable> items) {
             Frame frame = state.peekFrame(threadId);
 
@@ -219,11 +214,6 @@ public abstract class WithItemsWrapper implements Command {
         }
 
         @Override
-        public Command copy() {
-            return new SerialWithItems(cmd.copy(), withItems, outVariables);
-        }
-
-        @Override
         protected void eval(State state, ThreadId threadId, ArrayList<Serializable> items) {
             Frame loop = Frame.builder()
                     .nonRoot()
@@ -259,11 +249,6 @@ public abstract class WithItemsWrapper implements Command {
         public WithItemsNext(Collection<String> outVariables, Command cmd) {
             this.outVariables = outVariables;
             this.cmd = cmd;
-        }
-
-        @Override
-        public Command copy() {
-            return new WithItemsNext(outVariables, cmd);
         }
 
         @Override
@@ -311,11 +296,6 @@ public abstract class WithItemsWrapper implements Command {
         }
 
         @Override
-        public Command copy() {
-            return new PrepareOutVariables(outVars, targetFrame);
-        }
-
-        @Override
         public void eval(Runtime runtime, State state, ThreadId threadId) {
             Frame frame = state.peekFrame(threadId);
             frame.pop();
@@ -346,11 +326,6 @@ public abstract class WithItemsWrapper implements Command {
             this.variables = variables;
             this.sourceFrame = sourceFrame;
             this.targetFrame = targetFrame;
-        }
-
-        @Override
-        public Command copy() {
-            return new AppendVariablesCommand(variables, sourceFrame, targetFrame);
         }
 
         @Override

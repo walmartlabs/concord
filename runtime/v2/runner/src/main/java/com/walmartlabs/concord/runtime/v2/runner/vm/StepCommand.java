@@ -20,16 +20,12 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
-import ch.qos.logback.classic.Level;
 import com.walmartlabs.concord.common.ExceptionUtils;
-import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
-import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
-import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.ContextProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
@@ -61,24 +57,13 @@ public abstract class StepCommand<T extends Step> implements Command {
 
     private final UUID correlationId;
 
-    private LogContext logContext;
-
     protected StepCommand(T step) {
         this(UUID.randomUUID(), step);
     }
 
-    protected StepCommand(T step, LogContext logContext) {
-        this(UUID.randomUUID(), step, logContext);
-    }
-
     protected StepCommand(UUID correlationId, T step) {
-        this(correlationId, step, null);
-    }
-
-    protected StepCommand(UUID correlationId, T step, LogContext logContext) {
         this.step = step;
         this.correlationId = correlationId;
-        this.logContext = logContext;
     }
 
     public T getStep() {
@@ -93,7 +78,7 @@ public abstract class StepCommand<T extends Step> implements Command {
         UUID correlationId = getCorrelationId();
         Context ctx = contextFactory.create(runtime, state, threadId, step, correlationId);
 
-        logContext = getLogContext(runtime, ctx, correlationId);
+        LogContext logContext = isSegmented() ? LogSegmentUtils.getLogContext(threadId, state) : null;
         if (logContext == null) {
             executeWithContext(ctx, runtime, state, threadId);
         } else {
@@ -106,25 +91,22 @@ public abstract class StepCommand<T extends Step> implements Command {
         return correlationId;
     }
 
+    protected boolean isSegmented() {
+        return true;
+    }
+
     private void executeWithContext(Context ctx, Runtime runtime, State state, ThreadId threadId) {
-        ContextProvider.withContext(ctx, () -> execute(runtime, state, threadId));
+        ContextProvider.withContext(ctx, () -> {
+            try {
+                execute(runtime, state, threadId);
+            } catch (Exception e) {
+                logException(step, state, threadId, e);
+                throw new LoggedException(e);
+            }
+        });
     }
 
-    @Override
-    public void onException(Runtime runtime, Exception e, State state, ThreadId threadId) {
-        if (step.getLocation() == null) {
-            return;
-        }
-
-        if (logContext == null) {
-            logException(e, state, threadId);
-        } else {
-            runtime.getService(RunnerLogger.class).withContext(logContext,
-                    () -> logException(e, state, threadId));
-        }
-    }
-
-    private void logException(Exception e, State state, ThreadId threadId) {
+    public static void logException(Step step, State state, ThreadId threadId, Exception e) {
         log.error("{} {}", Location.toErrorPrefix(step.getLocation()), getExceptionMessage(e));
         List<StackTraceItem> stackTrace = state.getStackTrace(threadId);
         if (!stackTrace.isEmpty()) {
@@ -134,60 +116,6 @@ public abstract class StepCommand<T extends Step> implements Command {
 
     protected abstract void execute(Runtime runtime, State state, ThreadId threadId);
 
-    protected LogContext getLogContext() {
-        return logContext;
-    }
-
-    private LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
-        if (logContext != null) {
-            return logContext;
-        }
-
-        String segmentName = getSegmentName(ctx, getStep());
-        if (segmentName == null) {
-            return null;
-        }
-
-        return buildLogContext(runtime, segmentName, correlationId);
-    }
-
-    private LogContext buildLogContext(Runtime runtime, String segmentName, UUID correlationId) {
-        RunnerConfiguration runnerCfg = runtime.getService(RunnerConfiguration.class);
-        boolean redirectSystemOutAndErr = runnerCfg.logging().sendSystemOutAndErrToSLF4J();
-
-        return LogContext.builder()
-                .segmentName(segmentName)
-                .correlationId(correlationId)
-                .redirectSystemOutAndErr(redirectSystemOutAndErr)
-                .logLevel(getLogLevel(step))
-                .segmentId(runtime.getService(RunnerLogger.class).createSegment(segmentName, correlationId))
-                .build();
-    }
-
-    protected String getSegmentName(Context ctx, T step) {
-        if (step instanceof AbstractStep) {
-            String rawSegmentName = SegmentedLogger.getSegmentName((AbstractStep<?>) step);
-            String segmentName = ctx.eval(rawSegmentName, String.class);
-            if (segmentName != null) {
-                return segmentName;
-            }
-        }
-
-        return getDefaultSegmentName();
-    }
-
-    protected String getDefaultSegmentName() {
-        return null;
-    }
-
-    protected Level getLogLevel(T step) {
-        if (step instanceof AbstractStep) {
-            return SegmentedLogger.getLogLevel((AbstractStep<?>) step);
-        }
-
-        return Level.INFO;
-    }
-
     private static String getExceptionMessage(Exception e) {
         UserDefinedException u = ExceptionUtils.filterException(e, UserDefinedException.class);
         if (u != null) {
@@ -196,9 +124,9 @@ public abstract class StepCommand<T extends Step> implements Command {
 
         if (e instanceof ELException) {
             return
-                ExceptionUtils.getExceptionList(e).stream()
-                .map(Throwable::getMessage)
-                .collect(Collectors.joining(". "));
+                    ExceptionUtils.getExceptionList(e).stream()
+                            .map(Throwable::getMessage)
+                            .collect(Collectors.joining(". "));
         }
 
         List<Throwable> exceptions = ExceptionUtils.getExceptionList(e);

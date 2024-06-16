@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
-import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskException;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
@@ -38,15 +37,10 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
 
     private final ResumeEvent event;
 
-    protected TaskResumeCommand(UUID correlationId, LogContext logContext, TaskCall step, ResumeEvent event) {
-        super(correlationId, step, logContext);
+    protected TaskResumeCommand(UUID correlationId, TaskCall step, ResumeEvent event) {
+        super(correlationId, step);
 
         this.event = event;
-    }
-
-    @Override
-    public Command copy() {
-        return new TaskResumeCommand(null, null, getStep(), event);
     }
 
     @Override

@@ -93,12 +93,7 @@ public class VM {
 
         Runtime rt = runtimeFactory.create(this);
         ThreadId threadId = state.getRootThreadId();
-        try {
-            cmd.eval(rt, state, threadId);
-        } catch (Exception e) {
-            cmd.onException(rt, e, state, threadId);
-            throw e;
-        }
+        cmd.eval(rt, state, threadId);
 
         log.debug("run ['{}'] -> done", cmd);
     }
@@ -153,12 +148,10 @@ public class VM {
                         frame.setLocal(Frame.LAST_EXCEPTION_KEY, cause);
 
                         // remove the current frame after the error handling code is done
-                        frame.push(new PopFrameCommand());
+//                        frame.push(new PopFrameCommand());
 
                         // and run the error handler next
                         frame.push(handler);
-                    } else {
-                        frame.push(new PopFrameCommand());
                     }
                 }
 
@@ -168,9 +161,7 @@ public class VM {
 
                 if (cmd == null) {
                     log.trace("eval [{}] -> the frame is complete", threadId);
-                    if (status != ThreadStatus.UNWINDING) {
-                        frame.push(new PopFrameCommand());
-                    }
+                    frame.push(new PopFrameCommand());
                     continue;
                 }
 
@@ -188,8 +179,7 @@ public class VM {
                         stop = true;
                     }
                 } catch (Exception e) {
-                    cmd.onException(runtime, e, state, threadId);
-
+                    frame.push(new PopFrameCommand());
                     state.setStatus(threadId, ThreadStatus.UNWINDING);
                     state.setThreadError(threadId, e);
                 }

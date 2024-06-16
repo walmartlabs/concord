@@ -1,0 +1,11 @@
+flows:
+  default:
+    - name: "My segment"
+      call: "inner"
+      in:
+        item: "${item}"
+      loop:
+        items: [1, 2, 3]
+
+  inner:
+    - log: "in inner flow, item: ${item}"

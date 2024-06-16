@@ -22,7 +22,6 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlock;
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlockOptions;
-import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
@@ -46,11 +45,6 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
     }
 
     @Override
-    public Command copy() {
-        return new ParallelCommand(getStep(), commands.stream().map(Command::copy).collect(Collectors.toList()));
-    }
-
-    @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
@@ -69,7 +63,7 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
             Map<String, Object> accumulator = new ConcurrentHashMap<>();
             outVarsCommand = new CollectVariablesCommand(accumulator);
 
-            frame.push(new EvalVariablesCommand(getStep(), accumulator, opts.outExpr(), frame, getLogContext()));
+            frame.push(new EvalVariablesCommand(getStep(), accumulator, opts.outExpr(), frame));
         } else {
             outVarsCommand = new CopyVariablesCommand(opts.out(), State::peekFrame, frame);
         }
@@ -96,11 +90,6 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
         }
 
         @Override
-        public Command copy() {
-            return new CollectVariablesCommand(new ConcurrentHashMap<>(accumulator));
-        }
-
-        @Override
         public void eval(Runtime runtime, State state, ThreadId threadId) {
             Frame frame = state.peekFrame(threadId);
             frame.pop();
@@ -118,17 +107,12 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
         private final Map<String, Serializable> variables;
         private final Frame target;
 
-        public EvalVariablesCommand(ParallelBlock step, Map<String, Object> allVars, Map<String, Serializable> variables, Frame target, LogContext logContext) {
-            super(step, logContext);
+        public EvalVariablesCommand(ParallelBlock step, Map<String, Object> allVars, Map<String, Serializable> variables, Frame target) {
+            super(step);
 
             this.allVars = allVars;
             this.variables = variables;
             this.target = target;
-        }
-
-        @Override
-        public Command copy() {
-            return new EvalVariablesCommand(getStep(), allVars, new HashMap<>(variables), target, getLogContext());
         }
 
         @Override

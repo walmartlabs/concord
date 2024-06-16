@@ -53,7 +53,7 @@ public final class GroupOfStepsCompiler implements StepCompiler<GroupOfSteps> {
 
         Loop loop = options.loop();
         if (loop != null) {
-            cmd = LoopWrapper.of(context, cmd, loop, options.out(), Collections.emptyMap());
+            cmd = LoopWrapper.of(context, cmd, loop, options.out(), Collections.emptyMap(), step);
         }
 
         List<Step> errorSteps = options.errorSteps();
