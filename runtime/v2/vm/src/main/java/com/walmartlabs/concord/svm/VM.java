@@ -147,9 +147,6 @@ public class VM {
                         // by the error handling command
                         frame.setLocal(Frame.LAST_EXCEPTION_KEY, cause);
 
-                        // remove the current frame after the error handling code is done
-//                        frame.push(new PopFrameCommand());
-
                         // and run the error handler next
                         frame.push(handler);
                     }

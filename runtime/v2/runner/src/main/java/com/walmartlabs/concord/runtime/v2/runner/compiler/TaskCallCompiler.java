@@ -38,9 +38,7 @@ public final class TaskCallCompiler implements StepCompiler<TaskCall> {
     @Override
     public Command compile(CompilerContext context, TaskCall step) {
         UUID correlationId = UUID.randomUUID();
-        Command cmd =
-                new LogSegmentScopeCommand<>(correlationId,
-                        new TaskCallCommand(correlationId, step), step);
+        Command cmd = new LogSegmentScopeCommand<>(correlationId, new TaskCallCommand(correlationId, step), step);
 
         TaskCallOptions options = Objects.requireNonNull(step.getOptions());
 

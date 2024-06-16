@@ -78,7 +78,7 @@ public abstract class StepCommand<T extends Step> implements Command {
         UUID correlationId = getCorrelationId();
         Context ctx = contextFactory.create(runtime, state, threadId, step, correlationId);
 
-        LogContext logContext = isSegmented() ? LogSegmentUtils.getLogContext(threadId, state) : null;
+        LogContext logContext = LogSegmentUtils.getLogContext(threadId, state);
         if (logContext == null) {
             executeWithContext(ctx, runtime, state, threadId);
         } else {
@@ -89,10 +89,6 @@ public abstract class StepCommand<T extends Step> implements Command {
 
     public UUID getCorrelationId() {
         return correlationId;
-    }
-
-    protected boolean isSegmented() {
-        return true;
     }
 
     private void executeWithContext(Context ctx, Runtime runtime, State state, ThreadId threadId) {
