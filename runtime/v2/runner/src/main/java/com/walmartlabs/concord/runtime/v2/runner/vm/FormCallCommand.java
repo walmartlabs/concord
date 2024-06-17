@@ -41,11 +41,6 @@ public class FormCallCommand extends StepCommand<FormCall> {
     }
 
     @Override
-    public Command copy() {
-        return new FormCallCommand(getStep());
-    }
-
-    @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
         String eventRef = UUID.randomUUID().toString();
 

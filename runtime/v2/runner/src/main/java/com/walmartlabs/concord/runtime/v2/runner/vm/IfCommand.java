@@ -42,11 +42,6 @@ public class IfCommand extends StepCommand<IfStep> {
     }
 
     @Override
-    public Command copy() {
-        return new IfCommand(getStep(), thenCommand.copy(), elseCommand.copy());
-    }
-
-    @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
