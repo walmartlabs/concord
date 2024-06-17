@@ -69,7 +69,7 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
         }
 
         Collection<ThreadId> forkIds = forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet());
-        frame.push(new JoinCommand(forkIds));
+        frame.push(new JoinCommand(forkIds, getStep()));
 
         Collections.reverse(forks);
         forks.forEach(f -> {

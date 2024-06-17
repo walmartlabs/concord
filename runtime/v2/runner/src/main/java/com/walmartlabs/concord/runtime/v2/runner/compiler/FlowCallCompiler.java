@@ -52,7 +52,7 @@ public class FlowCallCompiler implements StepCompiler<FlowCall> {
 
         WithItems withItems = options.withItems();
         if (withItems != null) {
-            cmd = WithItemsWrapper.of(cmd, withItems, options.out(), options.outExpr());
+            cmd = WithItemsWrapper.of(cmd, withItems, options.out(), options.outExpr(), step);
         }
 
         Loop loop = options.loop();

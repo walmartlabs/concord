@@ -52,7 +52,7 @@ public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
 
         WithItems withItems = options.withItems();
         if (withItems != null) {
-            cmd = WithItemsWrapper.of(cmd, withItems, Collections.emptyList(), Collections.emptyMap());
+            cmd = WithItemsWrapper.of(cmd, withItems, Collections.emptyList(), Collections.emptyMap(), step);
         }
 
         Loop loop = options.loop();

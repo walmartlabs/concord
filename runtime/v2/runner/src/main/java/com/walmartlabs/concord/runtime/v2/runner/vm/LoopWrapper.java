@@ -77,6 +77,10 @@ public abstract class LoopWrapper implements Command {
         this.step = step;
     }
 
+    public Step getStep() {
+        return step;
+    }
+
     @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         try {
@@ -203,7 +207,7 @@ public abstract class LoopWrapper implements Command {
                 state.pushFrame(threadId, cmdFrame);
             }
 
-            frame.push(new JoinCommand(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet())));
+            frame.push(new JoinCommand(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet()), getStep()));
         }
 
         private static List<ArrayList<Serializable>> batches(ArrayList<Serializable> items, int batchSize) {

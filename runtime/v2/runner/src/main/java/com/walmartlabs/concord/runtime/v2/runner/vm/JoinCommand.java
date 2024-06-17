@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
@@ -29,20 +30,21 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// BRIG: TODO: pass step and log exception with step info?
-public class JoinCommand implements Command {
+public class JoinCommand<T extends Step> extends StepCommand<T> {
 
     private static final Logger log = LoggerFactory.getLogger(JoinCommand.class);
     private static final long serialVersionUID = 1L;
 
     private final Collection<ThreadId> ids;
 
-    public JoinCommand(Collection<ThreadId> ids) {
+    public JoinCommand(Collection<ThreadId> ids, T step) {
+        super(step);
+
         this.ids = ids;
     }
 
     @Override
-    public void eval(Runtime runtime, State state, ThreadId threadId) {
+    protected void execute(Runtime runtime, State state, ThreadId threadId) {
         // Here's a very dumb but working solution to the problem
         // of monitoring the child "threads" state - just a loop
         // waiting on a monitor . On each iteration it decides whether
