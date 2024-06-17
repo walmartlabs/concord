@@ -4,6 +4,8 @@
 
 ### Added
 
+- runtime-v2: "suspend" status support for log segments
+([#927](https://github.com/walmartlabs/concord/pull/927));
 - mocks: examples, support for storing the input, add
 `throwError`
 ([#928](https://github.com/walmartlabs/concord/pull/928)).
