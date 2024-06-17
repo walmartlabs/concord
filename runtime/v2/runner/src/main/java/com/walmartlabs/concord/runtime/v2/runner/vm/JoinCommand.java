@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 // BRIG: TODO: pass step and log exception with step info?
 public class JoinCommand implements Command {
@@ -44,7 +43,7 @@ public class JoinCommand implements Command {
     @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         // Here's a very dumb but working solution to the problem
-        // of monitoring the child "threads" state - just a loop
+        // of monitoring child thread state - just a loop
         // waiting on a monitor . On each iteration it decides whether
         // the join command can be removed from the stack (and thus
         // continuing the execution) or not.
@@ -74,17 +73,17 @@ public class JoinCommand implements Command {
                 return;
             }
 
-            // find if some of the threads are failed with an unhandled exception
+            // find if some of the threads has failed with an unhandled exception
             Collection<ThreadId> failed = status.entrySet().stream()
                     .filter(e -> e.getValue() == ThreadStatus.FAILED)
                     .map(Map.Entry::getKey)
-                    .collect(Collectors.toList());
+                    .toList();
 
             // nothing left to run and we got some unhandled exceptions
             if (!failed.isEmpty() && !anyReady) {
                 throw new MultiException(failed.stream()
                         .map(state::clearThreadError)
-                        .collect(Collectors.toList()));
+                        .toList());
             }
 
             // some children are still running, wait for a bit and then check again
