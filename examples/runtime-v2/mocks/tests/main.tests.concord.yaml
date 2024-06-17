@@ -1,0 +1,47 @@
+profiles:
+  testCheckServiceUnavailable:
+    configuration:
+      arguments:
+        mocks:
+          - name: "http"
+            in:
+              url: ".*"
+              method: "GET"
+            out:
+              ok: false
+              statusCode: 500
+
+  testCheckServiceResponseTypeArg:
+    configuration:
+      arguments:
+        mocks:
+          - name: "http"
+            in:
+              url: ".*"
+              method: "GET"
+            out:
+              ok: true
+              content:
+                ok: true
+            inputStoreId: "httpTaskInput"   # should be unique for flow run
+
+flows:
+  testCheckServiceUnavailable:
+    - try:
+        - call: checkService
+
+        - throw: "Exception expected"
+      error:
+        - name: "Assert error message"
+          expr: "${asserts.assertEquals('Service unavailable', lastError.message)}"
+
+  # how to capture and assert task input args
+  testCheckServiceResponseTypeArg:
+    - call: checkService
+
+    - set:
+        capturedInput: "${mockInputs.get('httpTaskInput')}" # inputStoreId
+
+    - name: "Assert http task response type"
+      expr: "${asserts.assertEquals('json', capturedInput.response)}"
+
