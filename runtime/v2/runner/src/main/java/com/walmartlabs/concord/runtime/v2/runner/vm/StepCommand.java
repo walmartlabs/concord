@@ -109,7 +109,7 @@ public abstract class StepCommand<T extends Step> implements Command {
         } else {
             log.error("{}", getExceptionMessage(e));
         }
-        
+
         List<StackTraceItem> stackTrace = state.getStackTrace(threadId);
         if (!stackTrace.isEmpty()) {
             log.error("Call stack:\n{}", stackTrace.stream().map(StackTraceItem::toString).collect(Collectors.joining("\n")));

@@ -528,6 +528,24 @@ public class LogSegmentsTest extends AbstractTest {
     }
 
     @Test
+    public void scriptInvalidBodyTest() throws Exception {
+        deploy("logSegments/scriptInvalidBody");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            runWithSegments();
+            fail("exception expected");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        assertSegmentLogPattern(lastLog, 1, null, Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. TypeError: invokeMember (unknownMethod) on") + ".*");
+        assertSegmentStatusError(lastLog, 1);
+    }
+
+    @Test
     public void callTest() throws Exception {
         deploy("logSegments/call");
 
@@ -659,9 +677,14 @@ public class LogSegmentsTest extends AbstractTest {
         assertSegmentLog(log, 0, message);
     }
 
-    private static void assertSegmentLogPattern(byte[] log, int segmentId, int len, String messagePattern) throws IOException {
+    private static void assertSegmentLogPattern(byte[] log, int segmentId, Integer len, String messagePattern) throws IOException {
         // RUNNING
-        String segmentLog = Pattern.quote("|%d|%d|%d|".formatted(len, segmentId, LogSegmentStatus.RUNNING.id())) + "\\d+\\|\\d+\\|" + ".*" + messagePattern;
+        String segmentLog;
+        if (len != null) {
+            segmentLog = Pattern.quote("|%d|%d|%d|".formatted(len, segmentId, LogSegmentStatus.RUNNING.id())) + "\\d+\\|\\d+\\|" + ".*" + messagePattern;
+        } else {
+            segmentLog = "\\|.*\\|%d\\|%d\\|".formatted(segmentId, LogSegmentStatus.RUNNING.id()) + "\\d+\\|\\d+\\|" + ".*" + messagePattern;
+        }
         assertLog(log, ".*" + segmentLog);
 
         byte[] logWithoutSegments = removePattern(logWithoutSegmentsHolder.get(), segmentLog + "\n");
