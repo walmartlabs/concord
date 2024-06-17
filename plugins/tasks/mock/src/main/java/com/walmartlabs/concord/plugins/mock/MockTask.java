@@ -54,6 +54,10 @@ public class MockTask implements Task {
 
         log.info("The actual task is not being executed; this is a mock");
 
+        if (mockDefinition.throwError() != null) {
+            throw new UserDefinedException(mockDefinition.throwError());
+        }
+
         boolean success = MapUtils.getBoolean(mockDefinition.out(), "ok", true);
         return TaskResult.of(success)
                 .values(mockDefinition.out());

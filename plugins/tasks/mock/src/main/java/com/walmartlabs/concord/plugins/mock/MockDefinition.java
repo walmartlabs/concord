@@ -59,4 +59,7 @@ public interface MockDefinition {
 
     @Nullable
     String inputStoreId();
+
+    @Nullable
+    String throwError();
 }

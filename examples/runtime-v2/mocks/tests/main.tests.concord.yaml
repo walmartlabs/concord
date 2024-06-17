@@ -25,6 +25,16 @@ profiles:
                 ok: true
             inputStoreId: "httpTaskInput"   # should be unique for flow run
 
+  testCheckServiceHttpException:
+    configuration:
+      arguments:
+        mocks:
+          - name: "http"
+            in:
+              url: ".*"
+              method: "GET"
+            throwError: "BOOM"
+
 flows:
   testCheckServiceUnavailable:
     - try:
@@ -45,3 +55,11 @@ flows:
     - name: "Assert http task response type"
       expr: "${asserts.assertEquals('json', capturedInput.response)}"
 
+  testCheckServiceHttpException:
+    - try:
+        - call: checkService
+
+        - throw: "Exception expected"
+      error:
+        - name: "Assert error message"
+          expr: "${asserts.assertEquals('BOOM', lastError.message)}"
