@@ -30,7 +30,7 @@ flows:
     - try:
         - call: checkService
 
-        - throw: "Exception expected"
+        - throw: "Exception expected"   # TODO: implement `asserts.fail('')` so that this exception is not caught in the error block...
       error:
         - name: "Assert error message"
           expr: "${asserts.assertEquals('Service unavailable', lastError.message)}"
