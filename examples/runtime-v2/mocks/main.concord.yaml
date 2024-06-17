@@ -1,0 +1,23 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  # flow that we will test
+  checkService:
+    - task: "http"
+      in:
+        method: GET
+        url: "http://localhost:8001/api/v1/server/ping"
+        response: json
+      out: response
+
+    - if: "${!response.ok}"
+      then:
+        - name: "Service unavailable"
+          throw: "Service unavailable"
+
+    - if: "${!response.content.ok}"
+      then:
+        - throw: "Service not ok"
+
+
