@@ -5,7 +5,7 @@ configuration:
     recordTaskInVars: true
     recordTaskOutVars: true
   dependencies:
-    - "mvn://com.walmartlabs.concord.plugins.basic:mock-tasks:2.12.1-SNAPSHOT"
+    - "mvn://com.walmartlabs.concord.plugins.basic:mock-tasks:2.13.0"
     - "mvn://com.walmartlabs.concord.plugins.basic:asserts-tasks:2.12.0"
 
 resources:
