@@ -1,5 +1,15 @@
 # Change log
 
+## [2.13.0] - Unreleased
+
+### Added
+
+- mocks: examples, support for storing the input, add
+`throwError`
+([#928](https://github.com/walmartlabs/concord/pull/928)).
+
+
+
 ## [2.12.0] - 2024-06-12
 
 ### Added
