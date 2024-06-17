@@ -27,6 +27,7 @@ import com.walmartlabs.concord.client2.ProcessEventsApi;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.runner.vm.LogSegmentScopeCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.StepCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.svm.Runtime;
@@ -68,7 +69,8 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         }
 
         StepCommand<?> s = (StepCommand<?>) cmd;
-        if (s.getStep() instanceof TaskCall || s.getStep() instanceof Expression) {
+        // TODO: add interface for step/task
+        if (s.getStep() instanceof TaskCall || s.getStep() instanceof Expression || s instanceof LogSegmentScopeCommand) {
             return Result.CONTINUE;
         }
 

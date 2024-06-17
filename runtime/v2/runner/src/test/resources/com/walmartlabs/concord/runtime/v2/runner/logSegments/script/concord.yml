@@ -1,0 +1,5 @@
+flows:
+  default:
+    - script: js
+      body: |
+        log.info('log message');

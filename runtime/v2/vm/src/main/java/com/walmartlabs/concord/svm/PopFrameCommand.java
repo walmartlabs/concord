@@ -35,23 +35,22 @@ public class PopFrameCommand implements Command {
     }
 
     @Override
-    public Command copy() {
-        return new PopFrameCommand();
-    }
-
-    @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         if (skipFinallyHandler) {
-            state.popFrame(threadId);
+            popFrame(state, threadId);
+
             return;
         }
 
         Frame frame = state.peekFrame(threadId);
+        frame.pop();
+
         Command finallyHandler = frame.getFinallyHandler();
 
         if (finallyHandler == null) {
             // no 'finally' block, just pop the frame
-            state.popFrame(threadId);
+            popFrame(state, threadId);
+
             return;
         }
 
@@ -60,5 +59,16 @@ public class PopFrameCommand implements Command {
 
         // execute the 'finally' block
         frame.push(finallyHandler);
+    }
+
+    private static void popFrame(State state, ThreadId threadId) {
+        state.popFrame(threadId);
+
+        if (state.getStatus(threadId) == ThreadStatus.UNWINDING) {
+            Frame f = state.peekFrame(threadId);
+            if (f != null) {
+                f.push(new PopFrameCommand());
+            }
+        }
     }
 }

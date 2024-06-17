@@ -1,0 +1,5 @@
+flows:
+  default:
+    - script: js
+      body: |
+        context.unknownMethod();

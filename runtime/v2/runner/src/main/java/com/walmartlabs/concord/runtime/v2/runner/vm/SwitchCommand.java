@@ -29,7 +29,6 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
 import javax.annotation.Nullable;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -45,15 +44,6 @@ public class SwitchCommand extends StepCommand<SwitchStep> {
         super(step);
         this.caseCommands = caseCommands;
         this.defaultCommand = defaultCommand;
-    }
-
-    @Override
-    public Command copy() {
-        List<Map.Entry<String, Command>> newCaseCommands = caseCommands.stream()
-                .map(kv -> (Map.Entry<String, Command>) new SimpleEntry<>(kv.getKey(), kv.getValue().copy()))
-                .toList();
-        Command newDefaultCommand = defaultCommand != null ? defaultCommand.copy() : null;
-        return new SwitchCommand(getStep(), newCaseCommands, newDefaultCommand);
     }
 
     @Override
