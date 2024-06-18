@@ -20,6 +20,7 @@ package com.walmartlabs.concord.svm;
  * =====
  */
 
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collection;
@@ -28,9 +29,10 @@ import java.util.stream.Collectors;
 public class MultiException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
+    private static final int MAX_STACK_TRACE_ELEMENTS = 3;
 
     public MultiException(Collection<Exception> causes) {
-        super("Errors: \n" + toMessage(causes));
+        super("Parallel execution errors: \n" + toMessage(causes));
     }
 
     private static String toMessage(Collection<Exception> causes) {
@@ -39,9 +41,28 @@ public class MultiException extends RuntimeException {
                 .collect(Collectors.joining("\n"));
     }
 
+    @Override
+    public void printStackTrace(PrintStream s) {
+        s.println(getMessage());
+    }
+
+    @Override
+    public void printStackTrace(PrintWriter s) {
+        s.println(getMessage());
+    }
+
     private static String stacktraceToString(Exception e) {
         StringWriter sw = new StringWriter();
-        e.printStackTrace(new PrintWriter(sw));
+        sw.append(e.toString()).append("\n");
+        StackTraceElement[] elements = e.getStackTrace();
+        int maxElements = Math.min(elements.length, MAX_STACK_TRACE_ELEMENTS);
+        for (int i = 0; i < maxElements; i++) {
+            StackTraceElement element = elements[i];
+            sw.append("\tat ").append(element.toString()).append("\n");
+        }
+        if (maxElements != elements.length) {
+            sw.append("\t...").append(String.valueOf(elements.length - maxElements)).append(" more\n");
+        }
         return sw.toString();
     }
 }
