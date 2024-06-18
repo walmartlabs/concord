@@ -26,18 +26,22 @@ import java.io.StringWriter;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-public class MultiException extends RuntimeException {
+/**
+ * An exception that is thrown when multiple exceptions are thrown
+ * in {@code parallel} blocks.
+ */
+public class ParallelExecutionException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
     private static final int MAX_STACK_TRACE_ELEMENTS = 3;
 
-    public MultiException(Collection<Exception> causes) {
+    public ParallelExecutionException(Collection<Exception> causes) {
         super("Parallel execution errors: \n" + toMessage(causes));
     }
 
     private static String toMessage(Collection<Exception> causes) {
         return causes.stream()
-                .map(MultiException::stacktraceToString)
+                .map(ParallelExecutionException::stacktraceToString)
                 .collect(Collectors.joining("\n"));
     }
 

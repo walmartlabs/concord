@@ -51,7 +51,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.runner.vm.LoggedException;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.svm.MultiException;
+import com.walmartlabs.concord.svm.ParallelExecutionException;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -274,7 +274,7 @@ public class Run implements Callable<Integer> {
             runner.start(cfg, processDefinition, args);
         } catch (LoggedException e) {
             return -1;
-        } catch (MultiException e) {
+        } catch (ParallelExecutionException e) {
             System.err.println(e.getMessage());
             return -1;
         } catch (Exception e) {

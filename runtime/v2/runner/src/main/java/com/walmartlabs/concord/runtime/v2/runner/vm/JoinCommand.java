@@ -83,7 +83,7 @@ public class JoinCommand<T extends Step> extends StepCommand<T> {
 
             // nothing left to run and we got some unhandled exceptions
             if (!failed.isEmpty() && !anyReady) {
-                throw new MultiException(failed.stream()
+                throw new ParallelExecutionException(failed.stream()
                         .map(state::clearThreadError)
                         .toList());
             }
