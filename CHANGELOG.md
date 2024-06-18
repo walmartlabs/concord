@@ -10,6 +10,11 @@
 `throwError`
 ([#928](https://github.com/walmartlabs/concord/pull/928)).
 
+### Changed
+
+- runtime-v2: rename MultiException and limit stack trace depth
+([#930](https://github.com/walmartlabs/concord/pull/930)).
+
 
 
 ## [2.12.0] - 2024-06-12
