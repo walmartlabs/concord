@@ -62,6 +62,20 @@ public class ExecutionListenerHolder {
         return result;
     }
 
+    public ExecutionListener.Result fireAfterCommandWithError(Runtime runtime, State state, ThreadId threadId, Command cmd, Exception e) {
+        ExecutionListener.Result result = CONTINUE;
+
+        for (ExecutionListener l : listeners) {
+            ExecutionListener.Result r = l.afterCommandWithError(runtime, vm, state, threadId, cmd, e);
+            if (r == BREAK && result != BREAK) {
+                result = BREAK;
+            }
+        }
+
+        return result;
+    }
+
+
     public ExecutionListener.Result fireAfterEval(Runtime runtime, State state) {
         ExecutionListener.Result result = CONTINUE;
 
@@ -88,21 +102,27 @@ public class ExecutionListenerHolder {
         return result;
     }
 
-    public void fireBeforeProcessStart() {
+    public void fireBeforeProcessStart(Runtime runtime, State state) {
         for (ExecutionListener l : listeners) {
-            l.beforeProcessStart();
+            l.beforeProcessStart(runtime, state);
         }
     }
 
-    public void fireBeforeProcessResume() {
+    public void fireBeforeProcessResume(Runtime runtime, State state) {
         for (ExecutionListener l : listeners) {
-            l.beforeProcessResume();
+            l.beforeProcessResume(runtime, state);
         }
     }
 
     public void fireAfterProcessEnds(Runtime runtime, State state, Frame lastFrame) {
         for (ExecutionListener l : listeners) {
             l.afterProcessEnds(runtime, state, lastFrame);
+        }
+    }
+
+    public void fireAfterProcessEndsWithError(Runtime runtime, State state, Exception e) {
+        for (ExecutionListener l : listeners) {
+            l.afterProcessEndsWithError(runtime, state, e);
         }
     }
 }

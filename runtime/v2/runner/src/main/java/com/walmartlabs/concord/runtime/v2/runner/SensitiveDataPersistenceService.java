@@ -53,7 +53,7 @@ public class SensitiveDataPersistenceService implements ExecutionListener {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void beforeProcessResume() {
+    public void beforeProcessResume(Runtime runtime, State state) {
         Set<String> sensitiveData = persistenceService.loadPersistedSessionFile(Constants.Files.SENSITIVE_DATA_FILE_NAME, is -> objectMapper.readValue(is, Set.class));
         if (sensitiveData != null) {
             SensitiveDataHolder.getInstance().addAll(sensitiveData);
