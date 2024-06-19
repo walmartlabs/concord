@@ -44,7 +44,7 @@ public interface ExecutionListener {
     /**
      *  Called after the command execution ended with exception/error.
      */
-    default Result afterCommandWithError(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd, Exception e) {
+    default Result onCommandError(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd, Exception e) {
         return Result.CONTINUE;
     }
 
@@ -83,7 +83,7 @@ public interface ExecutionListener {
     /**
      * Called after process ends with error.
      */
-    default void afterProcessEndsWithError(Runtime runtime, State state, Exception e) {
+    default void onProcessError(Runtime runtime, State state, Exception e) {
     }
 
     enum Result {

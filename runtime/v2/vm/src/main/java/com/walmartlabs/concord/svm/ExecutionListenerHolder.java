@@ -66,7 +66,7 @@ public class ExecutionListenerHolder {
         ExecutionListener.Result result = CONTINUE;
 
         for (ExecutionListener l : listeners) {
-            ExecutionListener.Result r = l.afterCommandWithError(runtime, vm, state, threadId, cmd, e);
+            ExecutionListener.Result r = l.onCommandError(runtime, vm, state, threadId, cmd, e);
             if (r == BREAK && result != BREAK) {
                 result = BREAK;
             }
@@ -120,9 +120,9 @@ public class ExecutionListenerHolder {
         }
     }
 
-    public void fireAfterProcessEndsWithError(Runtime runtime, State state, Exception e) {
+    public void fireOnProcessError(Runtime runtime, State state, Exception e) {
         for (ExecutionListener l : listeners) {
-            l.afterProcessEndsWithError(runtime, state, e);
+            l.onProcessError(runtime, state, e);
         }
     }
 }

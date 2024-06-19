@@ -56,7 +56,7 @@ public class VM {
         try {
             result = execute(runtime, state);
         } catch (Exception e) {
-            listeners.fireAfterProcessEndsWithError(runtime, state, e);
+            listeners.fireOnProcessError(runtime, state, e);
             throw e;
         }
 
@@ -88,7 +88,7 @@ public class VM {
         try {
             result = execute(runtime, state);
         } catch (Exception e) {
-            listeners.fireAfterProcessEndsWithError(runtime, state, e);
+            listeners.fireOnProcessError(runtime, state, e);
             throw e;
         }
 
