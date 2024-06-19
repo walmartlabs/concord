@@ -42,7 +42,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Frame;
-import com.walmartlabs.concord.svm.MultiException;
+import com.walmartlabs.concord.svm.ParallelExecutionException;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadStatus;
 import org.slf4j.Logger;
@@ -111,7 +111,7 @@ public class Main {
         } catch (UserDefinedException e) {
             log.error(e.getMessage());
             System.exit(1);
-        } catch (MultiException e) {
+        } catch (ParallelExecutionException e) {
             log.error("{}", e.getMessage());
             System.exit(1);
         } catch (Throwable t) {
