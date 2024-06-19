@@ -25,7 +25,7 @@ import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.vm.LoggedException;
-import com.walmartlabs.concord.runtime.v2.sdk.*;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
@@ -662,6 +662,17 @@ public class MainTest extends AbstractTest {
         byte[] log = run();
         assertLog(log, ".*result: \\[10, 20, 30\\].*");
         assertLog(log, ".*threadIds: \\[1, 2, 3].*");
+    }
+
+    @Test
+    public void testParallelWithError() throws Exception {
+        deploy("parallelWithError");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        LoggedException exception = assertThrows(LoggedException.class, this::run);
+        assertTrue(exception.getMessage().matches("(?s)Parallel execution errors:.*faultyTask.*\n.*faultyTask.*"));
     }
 
     @Test
