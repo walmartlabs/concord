@@ -1,5 +1,24 @@
 # Change log
 
+## [2.13.0] - Unreleased
+
+### Added
+
+- runtime-v2: "suspend" status support for log segments
+([#927](https://github.com/walmartlabs/concord/pull/927));
+- mocks: examples, support for storing the input, add
+`throwError`
+([#928](https://github.com/walmartlabs/concord/pull/928));
+- runtime-v2: add more events to execution listeners
+([#931](https://github.com/walmartlabs/concord/pull/931)).
+
+### Changed
+
+- runtime-v2: rename MultiException and limit stack trace depth
+([#930](https://github.com/walmartlabs/concord/pull/930)).
+
+
+
 ## [2.12.0] - 2024-06-12
 
 ### Added
