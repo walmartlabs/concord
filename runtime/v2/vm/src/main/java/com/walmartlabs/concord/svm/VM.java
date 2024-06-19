@@ -48,10 +48,17 @@ public class VM {
     public void start(State state) throws Exception {
         log.debug("start -> start");
 
-        listeners.fireBeforeProcessStart();
-
         Runtime runtime = runtimeFactory.create(this);
-        EvalResult result = execute(runtime, state);
+
+        listeners.fireBeforeProcessStart(runtime, state);
+
+        EvalResult result;
+        try {
+            result = execute(runtime, state);
+        } catch (Exception e) {
+            listeners.fireOnProcessError(runtime, state, e);
+            throw e;
+        }
 
         listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
 
@@ -73,10 +80,17 @@ public class VM {
 
         wakeSuspended(state);
 
-        listeners.fireBeforeProcessResume();
-
         Runtime runtime = runtimeFactory.create(this);
-        EvalResult result = execute(runtime, state);
+
+        listeners.fireBeforeProcessResume(runtime, state);
+
+        EvalResult result;
+        try {
+            result = execute(runtime, state);
+        } catch (Exception e) {
+            listeners.fireOnProcessError(runtime, state, e);
+            throw e;
+        }
 
         listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
 
@@ -170,7 +184,14 @@ public class VM {
                         stop = true;
                     }
 
-                    cmd.eval(runtime, state, threadId);
+                    try {
+                        cmd.eval(runtime, state, threadId);
+                    } catch (Exception e) {
+                        if (callListeners && listeners.fireAfterCommandWithError(runtime, state, threadId, cmd, e) == BREAK) {
+                            stop = true;
+                        }
+                        throw e;
+                    }
 
                     if (callListeners && listeners.fireAfterCommand(runtime, state, threadId, cmd) == BREAK) {
                         stop = true;
