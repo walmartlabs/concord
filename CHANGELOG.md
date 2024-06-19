@@ -8,7 +8,9 @@
 ([#927](https://github.com/walmartlabs/concord/pull/927));
 - mocks: examples, support for storing the input, add
 `throwError`
-([#928](https://github.com/walmartlabs/concord/pull/928)).
+([#928](https://github.com/walmartlabs/concord/pull/928));
+- runtime-v2: add more events to execution listeners
+([#931](https://github.com/walmartlabs/concord/pull/931)).
 
 ### Changed
 
