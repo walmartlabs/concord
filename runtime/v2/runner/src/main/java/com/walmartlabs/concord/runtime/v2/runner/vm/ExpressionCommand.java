@@ -23,9 +23,9 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.Expression;
 import com.walmartlabs.concord.runtime.v2.model.ExpressionOptions;
 import com.walmartlabs.concord.runtime.v2.runner.script.VariablesSanitizer;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -34,6 +34,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Evaluates the specified {@link Expression} step and (optionally) saves
@@ -43,8 +44,8 @@ public class ExpressionCommand extends StepCommand<Expression> {
 
     private static final long serialVersionUID = 1L;
 
-    public ExpressionCommand(Expression step) {
-        super(step);
+    public ExpressionCommand(UUID correlationId, Expression step) {
+        super(correlationId, step);
     }
 
     @Override

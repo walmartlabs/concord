@@ -35,9 +35,16 @@ public interface ExecutionListener {
     }
 
     /**
-     * Called after the last command in the stack was executed.
+     * Called after the command in the stack was executed.
      */
     default Result afterCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
+        return Result.CONTINUE;
+    }
+
+    /**
+     *  Called after the command execution ended with exception/error.
+     */
+    default Result onCommandError(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd, Exception e) {
         return Result.CONTINUE;
     }
 
@@ -58,23 +65,25 @@ public interface ExecutionListener {
     /**
      * Called before the process executes its first step.
      */
-    default void beforeProcessStart() {
+    default void beforeProcessStart(Runtime runtime, State state) {
     }
 
     /**
      * Called before the process resumes the execution.
      */
-    default void beforeProcessResume() {
+    default void beforeProcessResume(Runtime runtime, State state) {
     }
 
     /**
      * Called after the process calls the last step.
-     *
-     * @param runtime
-     * @param state
-     * @param lastFrame
      */
     default void afterProcessEnds(Runtime runtime, State state, Frame lastFrame) {
+    }
+
+    /**
+     * Called after process ends with error.
+     */
+    default void onProcessError(Runtime runtime, State state, Exception e) {
     }
 
     enum Result {
