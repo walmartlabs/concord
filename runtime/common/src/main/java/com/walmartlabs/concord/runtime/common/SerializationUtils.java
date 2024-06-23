@@ -46,16 +46,6 @@ public final class SerializationUtils {
         }
     }
 
-    public static boolean isSerializable(Object o) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new ByteArrayOutputStream())) {
-            oos.writeObject(o);
-        } catch (IOException e) {
-            return false;
-        }
-
-        return true;
-    }
-
     private SerializationUtils() {
     }
 }

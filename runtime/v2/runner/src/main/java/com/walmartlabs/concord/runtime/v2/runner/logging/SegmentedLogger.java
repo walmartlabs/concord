@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  */
 
 import ch.qos.logback.classic.Level;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
 import com.walmartlabs.concord.runtime.v2.Constants;
 import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
@@ -35,9 +36,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
 
-import static ch.qos.logback.classic.ClassicConstants.FINALIZE_SESSION_MARKER;
-
 public class SegmentedLogger implements RunnerLogger {
+
+    private static final long SYSTEM_SEGMENT_ID = 0;
+    public static final String SYSTEM_SEGMENT_NAME = "system";
 
     private static final Logger log = LoggerFactory.getLogger(SegmentedLogger.class);
 
@@ -49,7 +51,20 @@ public class SegmentedLogger implements RunnerLogger {
 
     @Override
     public Long createSegment(String segmentName, UUID correlationId, Long parentSegmentId, Map<String, Object> meta) {
+        if (SYSTEM_SEGMENT_NAME.equals(segmentName)) {
+            return SYSTEM_SEGMENT_ID;
+        }
         return loggingClient.createSegment(correlationId, segmentName, parentSegmentId, meta);
+    }
+
+    @Override
+    public void setSegmentStatus(long segmentId, LogSegmentStatus segmentStatus) {
+        // now the system segment never closes...
+        if (SYSTEM_SEGMENT_ID == segmentId) {
+            return;
+        }
+
+        log.info(new SegmentStatusMarker(segmentId, segmentStatus), segmentStatus.name());
     }
 
     @Override
@@ -61,19 +76,7 @@ public class SegmentedLogger implements RunnerLogger {
                 SysOutOverSLF4J.sendSystemOutAndErrToSLF4J(LogLevel.INFO, LogLevel.ERROR);
             }
 
-            boolean exceptionOccurred = false;
-            try {
-                runnable.run();
-            } catch (Exception e) {
-                exceptionOccurred = true;
-                throw e;
-            } finally {
-                if (exceptionOccurred) {
-                    log.error(FINALIZE_SESSION_MARKER, "<<finalize>>");
-                } else {
-                    log.info(FINALIZE_SESSION_MARKER, "<<finalize>>");
-                }
-            }
+            runnable.run();
         });
     }
 

@@ -30,9 +30,9 @@ import com.walmartlabs.concord.server.jooq.tables.records.UiProcessCardsRecord;
 import com.walmartlabs.concord.server.org.EntityOwner;
 import com.walmartlabs.concord.server.org.ResourceAccessUtils;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserType;
-import org.apache.shiro.authz.UnauthorizedException;
 import org.jooq.*;
 
 import javax.inject.Inject;

@@ -24,10 +24,10 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import io.takari.bpm.form.Form;
-import org.apache.shiro.authz.UnauthorizedException;
 
 import javax.inject.Inject;
 import java.io.IOException;

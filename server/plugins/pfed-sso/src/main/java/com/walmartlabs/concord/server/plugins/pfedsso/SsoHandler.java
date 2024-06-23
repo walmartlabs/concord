@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
 
 import com.walmartlabs.concord.server.boot.filters.AuthenticationHandler;
 import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.web.util.WebUtils;
 
 import javax.inject.Inject;
 import javax.servlet.ServletRequest;
@@ -54,7 +53,7 @@ public class SsoHandler implements AuthenticationHandler {
             return null;
         }
 
-        HttpServletRequest req = WebUtils.toHttp(request);
+        HttpServletRequest req = (HttpServletRequest) request;
 
         String bearerToken = cfg.getEnableBearerTokens() ? extractTokenFromRequest(req) : null;
         String token = bearerToken != null ? bearerToken : SsoCookies.getTokenCookie(req);
@@ -92,8 +91,8 @@ public class SsoHandler implements AuthenticationHandler {
             return false;
         }
 
-        HttpServletRequest req = WebUtils.toHttp(request);
-        HttpServletResponse resp = WebUtils.toHttp(response);
+        HttpServletRequest req = (HttpServletRequest) request;
+        HttpServletResponse resp = (HttpServletResponse) response;
 
         String p = req.getRequestURI();
         if (p.matches(FORM_URL_PATTERN)) {

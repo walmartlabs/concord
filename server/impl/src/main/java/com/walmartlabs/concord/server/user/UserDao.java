@@ -253,7 +253,7 @@ public class UserDao extends AbstractDao {
 
     // TODO add "include" option
     public List<UserEntry> list(String filter, int offset, int limit) {
-        return dsl().select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.USER_TYPE, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED, USERS.DISABLED_DATE)
+        return dsl().select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.USER_TYPE, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED, USERS.DISABLED_DATE, USERS.IS_PERMANENTLY_DISABLED)
                 .from(USERS)
                 .where(USERS.IS_DISABLED.isFalse())
                 .and(value(filter).isNotNull()

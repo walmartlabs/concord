@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.plugins.oidc;
 
 import com.walmartlabs.concord.server.boot.filters.AuthenticationHandler;
 import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.web.util.WebUtils;
 import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.credentials.TokenCredentials;
 import org.pac4j.core.profile.ProfileManager;
@@ -60,8 +59,8 @@ public class OidcAuthenticationHandler implements AuthenticationHandler {
             return null;
         }
 
-        HttpServletRequest req = WebUtils.toHttp(request);
-        HttpServletResponse resp = WebUtils.toHttp(response);
+        HttpServletRequest req = (HttpServletRequest) request;
+        HttpServletResponse resp = (HttpServletResponse) response;
         JEEContext context = new JEEContext(req, resp);
 
         Optional<OidcProfile> profile;
@@ -95,8 +94,8 @@ public class OidcAuthenticationHandler implements AuthenticationHandler {
             return false;
         }
 
-        HttpServletRequest req = WebUtils.toHttp(request);
-        HttpServletResponse resp = WebUtils.toHttp(response);
+        HttpServletRequest req = (HttpServletRequest) request;
+        HttpServletResponse resp = (HttpServletResponse) response;
 
         if (req.getRequestURI().matches(FORM_URL_PATTERN)) {
             resp.sendRedirect(resp.encodeRedirectURL(OidcAuthFilter.URL + "?from=" + req.getRequestURL()));

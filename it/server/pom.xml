@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>2.9.1-SNAPSHOT</version>
+        <version>2.13.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -29,7 +29,6 @@
         <it.ldap.addr>ldap-node:389</it.ldap.addr>
         <it.server.network.mode>custom</it.server.network.mode>
         <it.server.port>8001</it.server.port>
-        <it.skipDocker>false</it.skipDocker>
         <local.repository.src.mount>${settings.localRepository}</local.repository.src.mount>
         <network>net-server-it</network>
         <oldap.image>osixia/openldap</oldap.image>
@@ -73,8 +72,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock-jre8</artifactId>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-jetty12</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -155,11 +154,6 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.googlecode.junit-toolbox</groupId>
-            <artifactId>junit-toolbox</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -257,7 +251,6 @@
                         <IT_LDAP_URL>ldap://localhost:${it.ldap.port}</IT_LDAP_URL>
                         <IT_PROJECT_VERSION>${project.version}</IT_PROJECT_VERSION>
                         <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
-                        <IT_SKIP_DOCKER_TESTS>${it.skipDocker}</IT_SKIP_DOCKER_TESTS>
                     </environmentVariables>
                     <systemProperties>
                         <java.io.tmpdir>${tmp.dir}</java.io.tmpdir>
@@ -552,7 +545,7 @@
                                             <com.walmartlabs.concord.it.name>server</com.walmartlabs.concord.it.name>
                                         </labels>
                                         <log>
-                                            <prefix>SERVER</prefix>
+                                            <prefix>SERVER </prefix>
                                             <color>cyan</color>
                                         </log>
                                     </run>

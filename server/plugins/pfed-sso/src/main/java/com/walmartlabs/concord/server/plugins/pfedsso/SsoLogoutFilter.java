@@ -20,7 +20,8 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
  * =====
  */
 
-import org.apache.shiro.SecurityUtils;
+
+import com.walmartlabs.concord.server.security.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

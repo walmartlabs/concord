@@ -1,0 +1,17 @@
+flows:
+  default:
+    - call: "inner"
+      in:
+        fail: true
+      retry:
+        times: 2
+        delay: 1
+        in:
+          fail: false
+
+  inner:
+    - if: "${fail}"
+      then:
+        - throw: "FAIL"
+
+    - log: "in inner flow"

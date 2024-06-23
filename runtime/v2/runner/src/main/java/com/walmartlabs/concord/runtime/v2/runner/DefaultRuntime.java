@@ -22,14 +22,19 @@ package com.walmartlabs.concord.runtime.v2.runner;
 
 import com.google.inject.Injector;
 import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.runtime.v2.runner.vm.LoggedException;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 import com.walmartlabs.concord.svm.VM;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class DefaultRuntime implements Runtime {
+
+    private static final Logger log = LoggerFactory.getLogger(DefaultRuntime.class);
 
     private final VM vm;
     private final Injector injector;
@@ -45,7 +50,14 @@ public class DefaultRuntime implements Runtime {
     @Override
     public void spawn(State state, ThreadId threadId) {
         executor.submit(() -> {
-            vm.eval(this, state, threadId);
+            try {
+                vm.eval(this, state, threadId);
+            } catch (LoggedException e) {
+                throw e.getCause();
+            } catch (Exception e) {
+                log.error("Error while evaluating commands for thread {}", threadId, e);
+                throw e;
+            }
             return null;
         });
     }

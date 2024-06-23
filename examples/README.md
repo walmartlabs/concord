@@ -1,5 +1,20 @@
 # Examples
 
+## Running
+
+Generally, examples can be executed using
+[Concord Command-Line Interface](./../cli). Examples that use Concord Forms
+require a running concord-server. Some examples may require external
+dependencies such as Ansible, JIRA and others to be installed:
+
+```
+$ cd ansible
+$ concord run
+Starting...
+16:20:00.000 [main] Using a playbook: playbook/hello.yml
+16:20:00.020 [main] ANSIBLE: Can't find ansible-playbook binary in $PATH. Install a local copy or use 'dockerImage' or 'virtualenv' options.
+```
+
 ## Basic
 
 * [ansible](ansible) - running an Ansible playbook from a workflow process;

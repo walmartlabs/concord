@@ -7,6 +7,7 @@
     <!-- AGENT_COMMANDS -->
 
     <changeSet id="21000" author="ibodrov@gmail.com">
+        <validCheckSum>7:8bbd692e592acdfe7fb37e647589a978</validCheckSum>
         <createTable tableName="AGENT_COMMANDS">
             <column name="COMMAND_ID" type="varchar(36)">
                 <constraints primaryKey="true" nullable="false"/>
@@ -20,7 +21,7 @@
             <column name="CREATED_AT" type="timestamp">
                 <constraints nullable="false"/>
             </column>
-            <column name="COMMAND_DATA" type="blob">
+            <column name="COMMAND_DATA" type="longblob">
                 <constraints nullable="false"/>
             </column>
         </createTable>

@@ -48,10 +48,17 @@ public class VM {
     public void start(State state) throws Exception {
         log.debug("start -> start");
 
-        listeners.fireBeforeProcessStart();
-
         Runtime runtime = runtimeFactory.create(this);
-        EvalResult result = execute(runtime, state);
+
+        listeners.fireBeforeProcessStart(runtime, state);
+
+        EvalResult result;
+        try {
+            result = execute(runtime, state);
+        } catch (Exception e) {
+            listeners.fireOnProcessError(runtime, state, e);
+            throw e;
+        }
 
         listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
 
@@ -73,10 +80,17 @@ public class VM {
 
         wakeSuspended(state);
 
-        listeners.fireBeforeProcessResume();
-
         Runtime runtime = runtimeFactory.create(this);
-        EvalResult result = execute(runtime, state);
+
+        listeners.fireBeforeProcessResume(runtime, state);
+
+        EvalResult result;
+        try {
+            result = execute(runtime, state);
+        } catch (Exception e) {
+            listeners.fireOnProcessError(runtime, state, e);
+            throw e;
+        }
 
         listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
 
@@ -93,12 +107,7 @@ public class VM {
 
         Runtime rt = runtimeFactory.create(this);
         ThreadId threadId = state.getRootThreadId();
-        try {
-            cmd.eval(rt, state, threadId);
-        } catch (Exception e) {
-            cmd.onException(rt, e, state, threadId);
-            throw e;
-        }
+        cmd.eval(rt, state, threadId);
 
         log.debug("run ['{}'] -> done", cmd);
     }
@@ -115,40 +124,82 @@ public class VM {
                     log.trace("eval [{}] -> the thread is suspended, stopping the execution", threadId);
                     break;
                 } else if (status == ThreadStatus.FAILED) {
-                    throw new IllegalStateException("The thread has failed, can't continue the exection: " + threadId);
+                    throw new IllegalStateException("The thread has failed, can't continue the execution: " + threadId);
                 }
 
                 Frame frame = state.peekFrame(threadId);
                 if (frame == null) {
+                    if (status == ThreadStatus.UNWINDING) {
+                        // no more frames to unwind, looks like there is no exception handler
+                        state.setStatus(threadId, ThreadStatus.FAILED);
+                        Exception cause = state.getThreadError(threadId);
+                        if (cause == null) {
+                            throw new IllegalStateException("The thread is unwinding the stack but no error was set: " + threadId);
+                        }
+                        throw cause;
+                    }
+
                     log.trace("eval [{}] -> the thread is done, stopping the execution", threadId);
                     state.setStatus(threadId, ThreadStatus.DONE);
                     break;
                 }
 
+                if (status == ThreadStatus.UNWINDING) {
+                    Command handler = frame.getExceptionHandler();
+                    if (handler != null) {
+                        Exception cause = state.clearThreadError(threadId);
+                        if (cause == null) {
+                            throw new IllegalStateException("The thread is unwinding the stack but no error was set: " + threadId);
+                        }
+
+                        state.setStatus(threadId, ThreadStatus.READY);
+
+                        // avoid issues with exceptions thrown in exception handlers
+                        frame.clearExceptionHandler();
+
+                        // save the exception as a local frame variable, so it can be retrieved
+                        // by the error handling command
+                        frame.setLocal(Frame.LAST_EXCEPTION_KEY, cause);
+
+                        // and run the error handler next
+                        frame.push(handler);
+                    }
+                }
+
                 lastFrame = frame;
 
                 Command cmd = frame.peek();
+
                 if (cmd == null) {
                     log.trace("eval [{}] -> the frame is complete", threadId);
-                    state.popFrame(threadId);
+                    frame.push(new PopFrameCommand());
                     continue;
                 }
 
                 boolean stop = false;
+                boolean callListeners = status != ThreadStatus.UNWINDING;
+
                 try {
-                    if (listeners.fireBeforeCommand(runtime, state, threadId, cmd) == BREAK) {
+                    if (callListeners && listeners.fireBeforeCommand(runtime, state, threadId, cmd) == BREAK) {
                         stop = true;
                     }
 
-                    cmd.eval(runtime, state, threadId);
+                    try {
+                        cmd.eval(runtime, state, threadId);
+                    } catch (Exception e) {
+                        if (callListeners && listeners.fireAfterCommandWithError(runtime, state, threadId, cmd, e) == BREAK) {
+                            stop = true;
+                        }
+                        throw e;
+                    }
 
-                    if (listeners.fireAfterCommand(runtime, state, threadId, cmd) == BREAK) {
+                    if (callListeners && listeners.fireAfterCommand(runtime, state, threadId, cmd) == BREAK) {
                         stop = true;
                     }
                 } catch (Exception e) {
-                    cmd.onException(runtime, e, state, threadId);
-
-                    unwind(state, threadId, e);
+                    frame.push(new PopFrameCommand());
+                    state.setStatus(threadId, ThreadStatus.UNWINDING);
+                    state.setThreadError(threadId, e);
                 }
 
                 if (stop) {
@@ -188,39 +239,6 @@ public class VM {
         }
 
         return result;
-    }
-
-    private void unwind(State state, ThreadId threadId, Exception cause) throws Exception {
-        while (true) {
-            Frame frame = state.peekFrame(threadId);
-            if (frame == null) {
-                // no more frames to unwind, looks like there was no exception handler
-                state.setStatus(threadId, ThreadStatus.FAILED);
-                state.setThreadError(threadId, cause);
-                throw cause;
-            }
-
-            Command handler = frame.getExceptionHandler();
-            if (handler != null) {
-                // avoid issues with exceptions throws in exception handlers
-                frame.clearExceptionHandler();
-
-                // save the exception as a local frame variable, so it can be retrieved
-                // by the error handling core
-                frame.setLocal(Frame.LAST_EXCEPTION_KEY, cause);
-
-                // remove the current frame after the error handling code is done
-                frame.push(new PopFrameCommand());
-
-                // and run the error handler next
-                frame.push(handler);
-
-                break;
-            }
-
-            // unwinding
-            state.popFrame(threadId);
-        }
     }
 
     private static void wakeSuspended(State state) {

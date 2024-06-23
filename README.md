@@ -28,7 +28,7 @@ Dependencies:
 - [Java 17](https://adoptium.net/)
 - [Docker Community Edition](https://www.docker.com/community-edition)
 - [Docker Buildx](https://docs.docker.com/build/buildx/install/)
-- (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 16 or greater)
+- (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 20 or greater)
 
 ```shell
 git clone https://github.com/walmartlabs/concord.git

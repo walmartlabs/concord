@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.boot.filters;
  */
 
 import com.walmartlabs.concord.server.cfg.QosConfiguration;
-import org.apache.shiro.web.util.WebUtils;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
@@ -110,7 +109,7 @@ public class QoSFilter implements Filter {
     }
 
     private boolean needProcessRequest(ServletRequest request) {
-        HttpServletRequest req = WebUtils.toHttp(request);
+        HttpServletRequest req = (HttpServletRequest) request;
 
         String uri = req.getRequestURI();
         if (uri == null) {

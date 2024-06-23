@@ -23,10 +23,10 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.Retry;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
-import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Constants;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
@@ -52,20 +52,22 @@ public class RetryWrapper implements Command {
 
     private final Command cmd;
     private final Retry retry;
+    private final Step step;
 
-    public RetryWrapper(Command cmd, Retry retry) {
+    public RetryWrapper(Command cmd, Retry retry, Step step) {
         this.cmd = cmd;
         this.retry = retry;
+        this.step = step;
     }
 
     @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
-        execute(runtime, state, threadId);
-    }
-
-    @Override
-    public void onException(Runtime runtime, Exception e, State state, ThreadId threadId) {
-        cmd.onException(runtime, e, state, threadId);
+        try {
+            execute(runtime, state, threadId);
+        } catch (Exception e) {
+            StepCommand.logException(step, state, threadId, e);
+            throw new LoggedException(e);
+        }
     }
 
     private void execute(Runtime runtime, State state, ThreadId threadId) {

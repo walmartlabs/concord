@@ -1,0 +1,5 @@
+flows:
+  default:
+    - task: suspendTask
+      in:
+        eventName: "sleepingBeauty"

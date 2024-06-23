@@ -34,9 +34,8 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.user.UserEntry;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,7 +113,7 @@ public class TriggerProcessExecutor {
         return triggers.stream()
                 .filter(t -> !isRepositoryDisabled(t))
                 .map(t -> submitProcess(event, t, initiatorResolver, cfgEnricher, exclusiveResolver))
-                .collect(Collectors.toList()) // collect all "futures"
+                .toList() // collect all "futures"
                 .stream()
                 .map(TriggerProcessExecutor::resolve)
                 .filter(Objects::nonNull)
@@ -132,10 +131,8 @@ public class TriggerProcessExecutor {
             return;
         }
 
-        Subject s = SecurityUtils.getSubject();
-
         requiredRoles.forEach((k, v) -> {
-            if (eventName.matches(k) && !s.hasRole(v)) {
+            if (eventName.matches(k) && !SecurityUtils.hasRole(v)) {
                 throw new ConcordApplicationException("'" + v + "' role is required", Response.Status.FORBIDDEN);
             }
         });

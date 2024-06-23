@@ -28,6 +28,6 @@ public class CliDockerService implements DockerService {
 
     @Override
     public int start(DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) {
-        throw new UnsupportedOperationException("Not supported yet");
+        throw new UnsupportedOperationException("Running Docker containers is not supported by the concord-cli yet");
     }
 }

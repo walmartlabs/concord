@@ -1,0 +1,9 @@
+flows:
+  default:
+    - task: faultyTask
+      loop:
+        mode: parallel
+        parallelism: 2
+        items:
+          - "foo"
+          - "bar"

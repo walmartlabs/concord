@@ -21,10 +21,8 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.SuspendStep;
-import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
+import com.walmartlabs.concord.svm.*;
 
 public class SuspendStepCommand extends StepCommand<SuspendStep> {
 

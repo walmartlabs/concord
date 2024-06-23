@@ -310,6 +310,9 @@ const StatusIcon = ({ status, processStatus, warnings = 0, errors = 0 }: StatusI
         color = 'teal';
         icon = 'spinner';
         spinning = true;
+    } else if (status === SegmentStatus.SUSPENDED) {
+        color = 'blue';
+        icon = 'hourglass half';
     } else if (status === SegmentStatus.FAILED) {
         color = 'red';
         icon = 'close';

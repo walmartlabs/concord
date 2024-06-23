@@ -48,12 +48,12 @@ public final class GroupOfStepsCompiler implements StepCompiler<GroupOfSteps> {
         GroupOfStepsOptions options = Objects.requireNonNull(step.getOptions());
         WithItems withItems = options.withItems();
         if (withItems != null) {
-            return WithItemsWrapper.of(cmd, withItems, options.out(), Collections.emptyMap());
+            return WithItemsWrapper.of(cmd, withItems, options.out(), Collections.emptyMap(), step);
         }
 
         Loop loop = options.loop();
         if (loop != null) {
-            cmd = LoopWrapper.of(context, cmd, loop, options.out(), Collections.emptyMap());
+            cmd = LoopWrapper.of(context, cmd, loop, options.out(), Collections.emptyMap(), step);
         }
 
         List<Step> errorSteps = options.errorSteps();

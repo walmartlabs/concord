@@ -63,7 +63,7 @@ public class JettySessionMetricsModule extends AbstractModule {
     private static Object getAttribute(String attribute) {
         try {
             MBeanServer mBeans = ManagementFactory.getPlatformMBeanServer();
-            return mBeans.getAttribute(new ObjectName("org.eclipse.jetty.server.session:context=ROOT,id=0,type=defaultsessioncache"), attribute);
+            return mBeans.getAttribute(new ObjectName("org.eclipse.jetty.session:context=ROOT,id=0,type=defaultsessioncache"), attribute);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

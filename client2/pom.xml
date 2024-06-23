@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>2.9.1-SNAPSHOT</version>
+        <version>2.13.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -22,6 +22,10 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
         </dependency>
 
         <!-- JSON processing: jackson -->
@@ -66,8 +70,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock-jre8</artifactId>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-jetty12</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -133,55 +137,15 @@
                     </execution>
                 </executions>
             </plugin>
-
             <plugin>
                 <groupId>org.revapi</groupId>
                 <artifactId>revapi-maven-plugin</artifactId>
                 <configuration>
-                    <analysisConfiguration>
-                        <revapi.differences>
-                            <differences>
-                                <item>
-                                    <ignore>true</ignore>
-                                    <code>java.annotation.attributeValueChanged</code>
-                                    <old>class com.walmartlabs.concord.client2.UserEntry</old>
-                                    <justification>Adding field to json-serializable class</justification>
-                                </item>
-                                <item>
-                                    <ignore>true</ignore>
-                                    <code>java.field.serialVersionUIDUnchanged</code>
-                                    <old>field com.walmartlabs.concord.client2.UserEntry.serialVersionUID</old>
-                                    <justification>Adding field to json-serializable class</justification>
-                                </item>
-                            </differences>
-                        </revapi.differences>
-                        <revapi.ignore>
-                            <item>
-                                <code>java.field.serialVersionUIDUnchanged</code>
-                            </item>
-                            <item>
-                                <code>java.method.parameterTypeParameterChanged</code>
-                            </item>
-                            <item>
-                                <code>java.method.returnTypeTypeParametersChanged</code>
-                            </item>
-                            <item>
-                                <code>java.class.externalClassExposedInAPI</code>
-                            </item>
-                            <item>
-                                <code>java.annotation.attributeValueChanged</code>
-                            </item>
-                            <item>
-                                <code>java.method.numberOfParametersChanged</code>
-                            </item>
-                            <item>
-                                <code>java.class.nonPublicPartOfAPI</code>
-                            </item>
-                        </revapi.ignore>
-                    </analysisConfiguration>
+                    <!-- lots of incompatible changes due to breaking changes in dependencies -->
+                    <!-- re-enable after release -->
+                    <skip>true</skip>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
 </project>
