@@ -268,6 +268,7 @@ public abstract class LoopWrapper implements Command {
             Frame cmdFrame = Frame.builder()
                     .commands(cmd)
                     .root()
+                    .locals(Map.of(CURRENT_INDEX, 0))
                     .build();
 
             loop.push(new CollectVariablesCommand(outVariables, cmdFrame, variablesAccumulator));
@@ -314,6 +315,7 @@ public abstract class LoopWrapper implements Command {
             Frame cmdFrame = Frame.builder()
                     .commands(cmd)
                     .root()
+                    .locals(Map.of(CURRENT_INDEX, newIndex))
                     .build();
 
             loop.push(new CollectVariablesCommand(outVariables, cmdFrame, variablesAccumulator));
