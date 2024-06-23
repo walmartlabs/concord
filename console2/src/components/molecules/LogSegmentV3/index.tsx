@@ -143,6 +143,9 @@ const LogSegmentV3 = ({
 
                 <span className="Caption">{name}</span>
 
+                {meta && meta['loopIndex'] !== undefined &&
+                    <span className="RunningFor"># {meta['loopIndex']}</span>}
+
                 {/*{beenRunningFor && <span className="RunningFor">running for {beenRunningFor}</span>}*/}
                 {/*{wasRunningFor && <span className="RunningFor">{wasRunningFor}</span>}*/}
 

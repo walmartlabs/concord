@@ -37,7 +37,6 @@ export { default as HumanizedDuration } from './HumanizedDuration';
 export { default as LocalTimestamp } from './LocalTimestamp';
 export { default as LogSegment } from './LogSegment';
 export { default as LogSegmentV3 } from './LogSegmentV3';
-export { default as LogSegmentV4 } from './LogSegmentV4';
 export { default as MainToolbar } from './MainToolbar';
 export { default as NewAPITokenForm } from './NewAPITokenForm';
 export { default as NewProjectForm } from './NewProjectForm';

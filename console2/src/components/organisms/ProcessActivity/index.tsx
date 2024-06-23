@@ -36,7 +36,6 @@ import {
     ProcessLogActivity,
     ProcessLogActivityV2,
     ProcessLogActivityV3,
-    ProcessLogActivityV4,
     ProcessStatusActivity,
     ProcessWaitActivity
 } from '../index';
@@ -276,14 +275,6 @@ const ProcessActivity = (props: ExternalProps) => {
                 </Route>
                 <Route path={`${baseUrl}/log2`} exact={true}>
                     <ProcessLogActivityV3
-                        instanceId={instanceId}
-                        processStatus={process ? process.status : undefined}
-                        loadingHandler={loadingHandler}
-                        forceRefresh={refresh}
-                    />
-                </Route>
-                <Route path={`${baseUrl}/log3`} exact={true}>
-                    <ProcessLogActivityV4
                         instanceId={instanceId}
                         processStatus={process ? process.status : undefined}
                         loadingHandler={loadingHandler}

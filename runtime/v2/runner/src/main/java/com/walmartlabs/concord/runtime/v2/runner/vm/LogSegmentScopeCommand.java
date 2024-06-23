@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger.SYSTEM_SEGMENT_NAME;
+import static com.walmartlabs.concord.runtime.v2.runner.vm.LoopWrapper.CURRENT_INDEX;
 
 public class LogSegmentScopeCommand<T extends AbstractStep<?>> extends StepCommand<T> {
 
@@ -55,7 +56,7 @@ public class LogSegmentScopeCommand<T extends AbstractStep<?>> extends StepComma
         frame.pop();
 
         Context ctx = runtime.getService(Context.class);
-        LogContext logContext = getLogContext(runtime, ctx, getCorrelationId());
+        LogContext logContext = getLogContext(runtime, state, threadId, ctx, getCorrelationId());
         if (logContext == null || logContext.segmentId() == null) {
             frame.push(cmd);
             return;
@@ -73,16 +74,16 @@ public class LogSegmentScopeCommand<T extends AbstractStep<?>> extends StepComma
         state.pushFrame(threadId, scopeFrame);
     }
 
-    private LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
+    private LogContext getLogContext(Runtime runtime, State state, ThreadId threadId, Context ctx, UUID correlationId) {
         String segmentName = getSegmentName(ctx, getStep());
         if (segmentName == null) {
             return null;
         }
 
-        return buildLogContext(ctx, runtime, segmentName, correlationId);
+        return buildLogContext(ctx, runtime, state, threadId, segmentName, correlationId);
     }
 
-    private LogContext buildLogContext(Context ctx, Runtime runtime, String segmentName, UUID correlationId) {
+    private LogContext buildLogContext(Context ctx, Runtime runtime, State state, ThreadId threadId, String segmentName, UUID correlationId) {
         RunnerConfiguration runnerCfg = runtime.getService(RunnerConfiguration.class);
         boolean redirectSystemOutAndErr = runnerCfg.logging().sendSystemOutAndErrToSLF4J();
 
@@ -91,7 +92,7 @@ public class LogSegmentScopeCommand<T extends AbstractStep<?>> extends StepComma
                 .correlationId(correlationId)
                 .redirectSystemOutAndErr(redirectSystemOutAndErr)
                 .logLevel(getLogLevel(getStep()))
-                .segmentId(runtime.getService(RunnerLogger.class).createSegment(segmentName, correlationId, (Long)ctx.variables().get("parentSegmentId"), getSegmentMeta(getStep())))
+                .segmentId(runtime.getService(RunnerLogger.class).createSegment(segmentName, correlationId, (Long)ctx.variables().get("parentSegmentId"), getSegmentMeta(state, threadId, getStep())))
                 .build();
     }
 
@@ -116,21 +117,26 @@ public class LogSegmentScopeCommand<T extends AbstractStep<?>> extends StepComma
         return null;
     }
 
-    private static Map<String, Object> getSegmentMeta(AbstractStep<?> step) {
+    private static Map<String, Object> getSegmentMeta(State state, ThreadId threadId, AbstractStep<?> step) {
+        Map<String, Object> result = new HashMap<>();
+
+        Object index = state.peekFrame(threadId).getLocal(CURRENT_INDEX);
+        if (index != null) {
+            result.put("loopIndex", index);
+        }
+
         if (step instanceof TaskCall) {
-            return Map.of("type", "task");
+            result.put("type", "task");
         } else if (step instanceof FlowCall) {
-            Map<String, Object> result = new HashMap<>();
             result.put("type", "call");
 
             String rawSegmentName = SegmentedLogger.getSegmentName(step);
             if (rawSegmentName == null) {
                 result.put("generated", true);
             }
-
-            return result;
         }
-        return Map.of();
+
+        return result;
     }
 
     private static Level getLogLevel(AbstractStep<?> step) {
