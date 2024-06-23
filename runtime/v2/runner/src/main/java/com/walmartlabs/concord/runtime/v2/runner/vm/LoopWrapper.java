@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 
 public abstract class LoopWrapper implements Command {
 
-    public static LoopWrapper of(CompilerContext ctx, Command cmd, Loop withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions) {
+    public static LoopWrapper of(CompilerContext ctx, Command cmd, Loop withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions, Step step) {
         Collection<String> out = Collections.emptyList();
         if (!outExpressions.isEmpty()) {
             // serializable
@@ -50,9 +50,9 @@ public abstract class LoopWrapper implements Command {
         Loop.Mode mode = withItems.mode();
         switch (mode) {
             case SERIAL:
-                return new SerialWithItems(cmd, withItems, out);
+                return new SerialWithItems(cmd, withItems, out, step);
             case PARALLEL:
-                return new ParallelWithItems(ctx, cmd, withItems, out);
+                return new ParallelWithItems(ctx, cmd, withItems, out, step);
             default:
                 throw new IllegalArgumentException("Unknown withItems mode: " + mode);
         }
@@ -68,21 +68,27 @@ public abstract class LoopWrapper implements Command {
     protected final Command cmd;
     protected final Serializable items;
     protected final Collection<String> outVariables;
+    private final Step step;
 
-    protected LoopWrapper(Command cmd, Serializable items, Collection<String> outVariables) {
+    protected LoopWrapper(Command cmd, Serializable items, Collection<String> outVariables, Step step) {
         this.cmd = cmd;
         this.items = items;
         this.outVariables = outVariables;
+        this.step = step;
+    }
+
+    public Step getStep() {
+        return step;
     }
 
     @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
-        execute(runtime, state, threadId);
-    }
-
-    @Override
-    public void onException(Runtime runtime, Exception e, State state, ThreadId threadId) {
-        cmd.onException(runtime, e, state, threadId);
+        try {
+            execute(runtime, state, threadId);
+        } catch (Exception e) {
+            StepCommand.logException(step, state, threadId, e);
+            throw new LoggedException(e);
+        }
     }
 
     private void execute(Runtime runtime, State state, ThreadId threadId) {
@@ -128,20 +134,15 @@ public abstract class LoopWrapper implements Command {
 
         private final Parallelism parallelism;
 
-        protected ParallelWithItems(CompilerContext ctx, Command cmd, Loop loop, Collection<String> outVariables) {
-            super(cmd, loop.items(), outVariables);
+        protected ParallelWithItems(CompilerContext ctx, Command cmd, Loop loop, Collection<String> outVariables, Step step) {
+            super(cmd, loop.items(), outVariables, step);
 
             this.parallelism = processParallelism(ctx, loop);
         }
 
-        private ParallelWithItems(Command cmd, Serializable items, Collection<String> outVariables, Parallelism parallelism) {
-            super(cmd, items, outVariables);
+        private ParallelWithItems(Command cmd, Serializable items, Collection<String> outVariables, Parallelism parallelism, Step step) {
+            super(cmd, items, outVariables, step);
             this.parallelism = parallelism;
-        }
-
-        @Override
-        public Command copy() {
-            return new ParallelWithItems(cmd.copy(), items, outVariables, parallelism);
         }
 
         private static Parallelism processParallelism(CompilerContext ctx, Loop loop) {
@@ -200,13 +201,13 @@ public abstract class LoopWrapper implements Command {
                 // fork will create rootFrame for forked commands
                 Command itemCmd = new ForkCommand(f.getKey(),
                         new CollectVariablesCommand(outVariables, null, outVarsAccumulator),
-                        cmd.copy());
+                        cmd);
                 cmdFrame.push(itemCmd);
 
                 state.pushFrame(threadId, cmdFrame);
             }
 
-            frame.push(new JoinCommand(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet())));
+            frame.push(new JoinCommand(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet()), getStep()));
         }
 
         private static List<ArrayList<Serializable>> batches(ArrayList<Serializable> items, int batchSize) {
@@ -243,16 +244,8 @@ public abstract class LoopWrapper implements Command {
 
         private static final long serialVersionUID = 1L;
 
-        private final Loop loop;
-
-        protected SerialWithItems(Command cmd, Loop loop, Collection<String> outVariables) {
-            super(cmd, loop.items(), outVariables);
-            this.loop = loop;
-        }
-
-        @Override
-        public Command copy() {
-            return new SerialWithItems(cmd, loop, outVariables);
+        protected SerialWithItems(Command cmd, Loop loop, Collection<String> outVariables, Step step) {
+            super(cmd, loop.items(), outVariables, step);
         }
 
         @Override
@@ -299,11 +292,6 @@ public abstract class LoopWrapper implements Command {
         }
 
         @Override
-        public Command copy() {
-            return new WithItemsNext(outVariables, new ConcurrentHashMap<>(variablesAccumulator), cmd);
-        }
-
-        @Override
         public void eval(Runtime runtime, State state, ThreadId threadId) {
             Frame loop = state.peekFrame(threadId);
             loop.pop();
@@ -347,11 +335,6 @@ public abstract class LoopWrapper implements Command {
         }
 
         @Override
-        public Command copy() {
-            return new SetVariablesCommand(new ConcurrentHashMap<>(variables), targetFrame);
-        }
-
-        @Override
         public void eval(Runtime runtime, State state, ThreadId threadId) throws Exception {
             Frame frame = state.peekFrame(threadId);
             frame.pop();
@@ -370,6 +353,7 @@ public abstract class LoopWrapper implements Command {
      * Collect values of the specified variables from the source frame or nearest root frame into
      * internal accumulator.
      */
+    // TODO: BRIG: step command, with handle error?
     static class CollectVariablesCommand implements Command {
 
         private static final long serialVersionUID = 1L;
@@ -383,11 +367,6 @@ public abstract class LoopWrapper implements Command {
             this.variables = variables;
             this.sourceFrame = sourceFrame;
             this.variablesAccumulator = variablesAccumulator;
-        }
-
-        @Override
-        public Command copy() {
-            return new CollectVariablesCommand(variables, sourceFrame, new ConcurrentHashMap<>(variablesAccumulator));
         }
 
         @Override

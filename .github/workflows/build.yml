@@ -14,10 +14,16 @@ jobs:
   build:
     strategy:
       matrix:
-        jdk_version: [ '17' ]
+        profile: [ 'jdk17', 'jdk17-aarch64' ]
+        include:
+          - jdk_version: '17'
+          - profile: 'jdk17'
+            runs_on: ubuntu-latest
+          - profile: 'jdk17-aarch64'
+            runs_on: [ linux, ARM64 ]
       fail-fast: false
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runs_on }}
 
     steps:
       - name: Set up Docker Buildx
@@ -43,4 +49,6 @@ jobs:
       - name: Build and test with Maven
         env:
           SKIP_DOCKER_TESTS: "true"
-        run: ./mvnw -s .github/settings.xml -B clean install -Pgha -Pdocker -Pit -Pjdk${{ matrix.jdk_version }}
+          # re-enable old agent tests once we are several versions ahead
+          SKIP_OLD_AGENT_TESTS: "true"
+        run: ./mvnw -s .github/settings.xml -B clean install -Pgha -Pdocker -Pit -P${{ matrix.profile }}

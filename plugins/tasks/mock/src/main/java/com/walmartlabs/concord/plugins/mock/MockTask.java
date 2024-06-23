@@ -26,12 +26,19 @@ import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.svm.State;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MockTask implements Task {
 
+    private static final Logger log = LoggerFactory.getLogger(MockTask.class);
+
+    private final State state;
     private final MockDefinition mockDefinition;
 
-    public MockTask(MockDefinition mockDefinition) {
+    public MockTask(State state, MockDefinition mockDefinition) {
+        this.state = state;
         this.mockDefinition = mockDefinition;
     }
 
@@ -39,6 +46,16 @@ public class MockTask implements Task {
     public TaskResult execute(Variables input) {
         if (!Matcher.matches(input.toMap(), mockDefinition.in())) {
             throw new UserDefinedException("Input variables for '" + mockDefinition.name() + "' not matched with actual input params: " + input.toMap());
+        }
+
+        if (mockDefinition.inputStoreId() != null) {
+            MockInputUtils.storeInput(state, mockDefinition.inputStoreId(), input.toMap());
+        }
+
+        log.info("The actual task is not being executed; this is a mock");
+
+        if (mockDefinition.throwError() != null) {
+            throw new UserDefinedException(mockDefinition.throwError());
         }
 
         boolean success = MapUtils.getBoolean(mockDefinition.out(), "ok", true);

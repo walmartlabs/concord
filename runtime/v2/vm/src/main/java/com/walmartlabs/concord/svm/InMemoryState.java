@@ -43,6 +43,7 @@ public class InMemoryState implements Serializable, State {
     private final Map<ThreadId, String> eventRefs = new HashMap<>();
     private final Map<ThreadId, Exception> threadErrors = new HashMap<>();
     private final Map<ThreadId, List<StackTraceItem>> stackTrace = new HashMap<>();
+    private final Map<ThreadId, Map<String, Serializable>> threadLocals = new HashMap<>();
 
     private final ThreadId rootThreadId;
 
@@ -205,6 +206,13 @@ public class InMemoryState implements Serializable, State {
     }
 
     @Override
+    public Exception getThreadError(ThreadId threadId) {
+        synchronized (this) {
+            return threadErrors.get(threadId);
+        }
+    }
+
+    @Override
     public void setThreadError(ThreadId threadId, Exception error) {
         synchronized (this) {
             threadErrors.put(threadId, error);
@@ -260,6 +268,51 @@ public class InMemoryState implements Serializable, State {
     }
 
     @Override
+    public void setThreadLocal(ThreadId threadId, String key, Serializable value) {
+        synchronized (this) {
+            // for backward compatibility
+            if (threadLocals == null) {
+                return;
+            }
+
+            Map<String, Serializable> locals = threadLocals.computeIfAbsent(threadId, v -> new HashMap<>());
+            locals.put(key, value);
+        }
+    }
+
+    @Override
+    public <T extends Serializable> T getThreadLocal(ThreadId threadId, String key) {
+        synchronized (this) {
+            // for backward compatibility
+            if (threadLocals == null) {
+                return null;
+            }
+
+            Map<String, Serializable> locals = threadLocals.get(threadId);
+            if (locals == null) {
+                return null;
+            }
+            return (T) locals.get(key);
+        }
+    }
+
+    @Override
+    public void removeThreadLocal(ThreadId threadId, String key) {
+        synchronized (this) {
+            // for backward compatibility
+            if (threadLocals == null) {
+                return;
+            }
+
+            Map<String, Serializable> locals = threadLocals.get(threadId);
+            locals.remove(key);
+            if (locals.isEmpty()) {
+                threadLocals.remove(threadId);
+            }
+        }
+    }
+
+    @Override
     public void gc() {
         synchronized (this) {
             Stream<ThreadId> done = threadStatus.entrySet().stream()
@@ -281,6 +334,9 @@ public class InMemoryState implements Serializable, State {
                         children.remove(k);
                         if (stackTrace != null) {
                             stackTrace.remove(k);
+                        }
+                        if (threadLocals != null) {
+                            threadLocals.remove(k);
                         }
                     });
         }

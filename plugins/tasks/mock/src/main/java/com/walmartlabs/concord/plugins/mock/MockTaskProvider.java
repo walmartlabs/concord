@@ -47,7 +47,7 @@ public class MockTaskProvider implements TaskProvider {
             return null;
         }
 
-        return new MockTask(def);
+        return new MockTask(ctx.execution().state(), def);
     }
 
     @Override

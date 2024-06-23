@@ -28,7 +28,6 @@ import com.walmartlabs.concord.runtime.v2.runner.script.ScriptResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
-import com.walmartlabs.concord.svm.Command;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -38,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Calls the specified script task. Responsible for preparing the script's input.
@@ -48,13 +48,8 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
 
     private static final long serialVersionUID = 1L;
 
-    public ScriptCallCommand(ScriptCall step) {
-        super(step);
-    }
-
-    @Override
-    public Command copy() {
-        return new ScriptCallCommand(getStep());
+    public ScriptCallCommand(UUID correlationId, ScriptCall step) {
+        super(correlationId, step);
     }
 
     @Override
@@ -88,11 +83,6 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
         }
 
         OutputUtils.process(runtime, ctx, scriptResult.items(), opts.out(), opts.outExpr());
-    }
-
-    @Override
-    protected String getDefaultSegmentName() {
-        return "script: " + getStep().getLanguageOrRef();
     }
 
     private static String getLanguage(EvalContextFactory ecf, ExpressionEvaluator expressionEvaluator, ScriptEvaluator scriptEvaluator, Context ctx, ScriptCall call) {

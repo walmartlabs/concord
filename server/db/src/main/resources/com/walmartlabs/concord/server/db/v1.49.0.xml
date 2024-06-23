@@ -13,6 +13,7 @@
     </changeSet>
 
     <changeSet id="1490010" author="ybrigo@gmail.com">
+        <validCheckSum>7:b70de8118884fd89025bb9ed8a8b0572</validCheckSum>
         <createTable tableName="PROCESS_LOG_SEGMENTS">
             <column name="INSTANCE_ID" type="uuid">
                 <constraints nullable="false"/>
@@ -20,7 +21,7 @@
             <column name="INSTANCE_CREATED_AT" type="timestamp">
                 <constraints nullable="false"/>
             </column>
-            <column name="SEGMENT_ID" type="bigserial">
+            <column name="SEGMENT_ID" type="bigserial" autoIncrement="true">
                 <constraints nullable="false"/>
             </column>
             <column name="SEGMENT_NAME" type="text">
@@ -52,6 +53,7 @@
     </changeSet>
 
     <changeSet id="1490020" author="ybrigo@gmail.com">
+        <validCheckSum>7:10ab12d5b908de504f897e6e2a773036</validCheckSum>
         <createTable tableName="PROCESS_LOG_DATA">
             <column name="INSTANCE_ID" type="uuid">
                 <constraints nullable="false"/>
@@ -59,7 +61,7 @@
             <column name="INSTANCE_CREATED_AT" type="timestamp">
                 <constraints nullable="false"/>
             </column>
-            <column name="SEGMENT_ID" type="bigserial">
+            <column name="SEGMENT_ID" type="bigserial" autoIncrement="true">
                 <constraints nullable="false"/>
             </column>
             <column name="LOG_RANGE" type="int4range">
@@ -68,10 +70,10 @@
             <column name="SEGMENT_RANGE" type="int4range">
                 <constraints nullable="false"/>
             </column>
-            <column name="CHUNK_DATA" type="blob">
+            <column name="CHUNK_DATA" type="longblob">
                 <constraints nullable="false"/>
             </column>
-            <column name="LOG_SEQ" type="bigserial">
+            <column name="LOG_SEQ" type="bigserial" autoIncrement="true">
                 <constraints nullable="false"/>
             </column>
         </createTable>

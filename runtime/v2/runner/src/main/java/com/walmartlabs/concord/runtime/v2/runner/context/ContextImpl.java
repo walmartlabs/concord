@@ -26,7 +26,6 @@ import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.logging.LogUtils;
 import com.walmartlabs.concord.runtime.v2.runner.vm.SuspendCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.TaskSuspendCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
@@ -215,6 +214,6 @@ public class ContextImpl implements Context {
         }
 
         state.peekFrame(currentThreadId)
-                .push(new TaskSuspendCommand(correlationId, LogUtils.getContext(), eventName, (TaskCall) step, taskState));
+                .push(new TaskSuspendCommand(correlationId, eventName, (TaskCall) step, taskState));
     }
 }
