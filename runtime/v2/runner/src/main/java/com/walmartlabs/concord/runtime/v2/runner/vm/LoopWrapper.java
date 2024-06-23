@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 
 public abstract class LoopWrapper implements Command {
 
-    public static LoopWrapper of(CompilerContext ctx, Command cmd, Loop withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions) {
+    public static LoopWrapper of(CompilerContext ctx, Command cmd, Loop withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions, Step step) {
         Collection<String> out = Collections.emptyList();
         if (!outExpressions.isEmpty()) {
             // serializable
@@ -50,9 +50,9 @@ public abstract class LoopWrapper implements Command {
         Loop.Mode mode = withItems.mode();
         switch (mode) {
             case SERIAL:
-                return new SerialWithItems(cmd, withItems, out);
+                return new SerialWithItems(cmd, withItems, out, step);
             case PARALLEL:
-                return new ParallelWithItems(ctx, cmd, withItems, out);
+                return new ParallelWithItems(ctx, cmd, withItems, out, step);
             default:
                 throw new IllegalArgumentException("Unknown withItems mode: " + mode);
         }
@@ -68,21 +68,27 @@ public abstract class LoopWrapper implements Command {
     protected final Command cmd;
     protected final Serializable items;
     protected final Collection<String> outVariables;
+    private final Step step;
 
-    protected LoopWrapper(Command cmd, Serializable items, Collection<String> outVariables) {
+    protected LoopWrapper(Command cmd, Serializable items, Collection<String> outVariables, Step step) {
         this.cmd = cmd;
         this.items = items;
         this.outVariables = outVariables;
+        this.step = step;
+    }
+
+    public Step getStep() {
+        return step;
     }
 
     @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
-        execute(runtime, state, threadId);
-    }
-
-    @Override
-    public void onException(Runtime runtime, Exception e, State state, ThreadId threadId) {
-        cmd.onException(runtime, e, state, threadId);
+        try {
+            execute(runtime, state, threadId);
+        } catch (Exception e) {
+            StepCommand.logException(step, state, threadId, e);
+            throw new LoggedException(e);
+        }
     }
 
     private void execute(Runtime runtime, State state, ThreadId threadId) {
@@ -128,10 +134,15 @@ public abstract class LoopWrapper implements Command {
 
         private final Parallelism parallelism;
 
-        protected ParallelWithItems(CompilerContext ctx, Command cmd, Loop loop, Collection<String> outVariables) {
-            super(cmd, loop.items(), outVariables);
+        protected ParallelWithItems(CompilerContext ctx, Command cmd, Loop loop, Collection<String> outVariables, Step step) {
+            super(cmd, loop.items(), outVariables, step);
 
             this.parallelism = processParallelism(ctx, loop);
+        }
+
+        private ParallelWithItems(Command cmd, Serializable items, Collection<String> outVariables, Parallelism parallelism, Step step) {
+            super(cmd, items, outVariables, step);
+            this.parallelism = parallelism;
         }
 
         private static Parallelism processParallelism(CompilerContext ctx, Loop loop) {
@@ -163,12 +174,14 @@ public abstract class LoopWrapper implements Command {
             int batchSize = toBatchSize(runtime, ctx, parallelism);
 
             List<ArrayList<Serializable>> batches = batches(items, batchSize);
+            int itemIndexStart = 0;
             for (ArrayList<Serializable> batch : batches) {
-                evalBatch(state, threadId, batch, outVarsAccumulator);
+                evalBatch(itemIndexStart, state, threadId, batch, outVarsAccumulator);
+                itemIndexStart += batch.size();
             }
         }
 
-        private void evalBatch(State state, ThreadId threadId, ArrayList<Serializable> items, Map<String, List<Serializable>> outVarsAccumulator) {
+        private void evalBatch(int itemIndexStart, State state, ThreadId threadId, ArrayList<Serializable> items, Map<String, List<Serializable>> outVarsAccumulator) {
             Frame frame = state.peekFrame(threadId);
 
             List<Map.Entry<ThreadId, Serializable>> forks = items.stream()
@@ -177,13 +190,12 @@ public abstract class LoopWrapper implements Command {
 
             for (int i = 0; i < forks.size(); i++) {
                 Map.Entry<ThreadId, Serializable> f = forks.get(i);
-
                 Frame cmdFrame = Frame.builder()
                         .nonRoot()
                         .build();
 
                 cmdFrame.setLocal(CURRENT_ITEMS, items);
-                cmdFrame.setLocal(CURRENT_INDEX, i);
+                cmdFrame.setLocal(CURRENT_INDEX, itemIndexStart + i);
                 cmdFrame.setLocal(CURRENT_ITEM, f.getValue());
 
                 // fork will create rootFrame for forked commands
@@ -195,7 +207,7 @@ public abstract class LoopWrapper implements Command {
                 state.pushFrame(threadId, cmdFrame);
             }
 
-            frame.push(new JoinCommand(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet())));
+            frame.push(new JoinCommand(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet()), getStep()));
         }
 
         private static List<ArrayList<Serializable>> batches(ArrayList<Serializable> items, int batchSize) {
@@ -232,8 +244,8 @@ public abstract class LoopWrapper implements Command {
 
         private static final long serialVersionUID = 1L;
 
-        protected SerialWithItems(Command cmd, Loop loop, Collection<String> outVariables) {
-            super(cmd, loop.items(), outVariables);
+        protected SerialWithItems(Command cmd, Loop loop, Collection<String> outVariables, Step step) {
+            super(cmd, loop.items(), outVariables, step);
         }
 
         @Override
@@ -341,6 +353,7 @@ public abstract class LoopWrapper implements Command {
      * Collect values of the specified variables from the source frame or nearest root frame into
      * internal accumulator.
      */
+    // TODO: BRIG: step command, with handle error?
     static class CollectVariablesCommand implements Command {
 
         private static final long serialVersionUID = 1L;

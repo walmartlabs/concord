@@ -45,6 +45,9 @@ public class Atom implements Serializable {
             case VALUE_NUMBER_INT:
                 value = p.getValueAsInt();
                 break;
+            case VALUE_NUMBER_FLOAT:
+                value = p.getValueAsDouble();
+                break;
             case VALUE_TRUE:
                 value = true;
                 break;

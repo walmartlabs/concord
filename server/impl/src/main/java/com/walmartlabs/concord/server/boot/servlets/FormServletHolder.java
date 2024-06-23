@@ -21,8 +21,8 @@ package com.walmartlabs.concord.server.boot.servlets;
  */
 
 import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
-import org.eclipse.jetty.servlet.DefaultServlet;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.servlet.DefaultServlet;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
 
 import javax.inject.Inject;
 import javax.servlet.annotation.WebServlet;

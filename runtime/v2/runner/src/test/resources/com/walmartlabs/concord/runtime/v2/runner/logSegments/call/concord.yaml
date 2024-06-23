@@ -1,0 +1,6 @@
+flows:
+  default:
+    - call: "inner"
+
+  inner:
+    - log: "in inner flow"

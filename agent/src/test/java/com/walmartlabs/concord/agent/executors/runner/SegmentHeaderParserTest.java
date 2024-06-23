@@ -22,6 +22,9 @@ package com.walmartlabs.concord.agent.executors.runner;
 
 import com.google.common.primitives.Bytes;
 import com.walmartlabs.concord.agent.logging.SegmentHeaderParser;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentHeader;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentSerializer;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -29,11 +32,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Header;
 import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Position;
 import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Segment;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SegmentHeaderParserTest {
 
@@ -203,7 +204,7 @@ public class SegmentHeaderParserTest {
         assertEquals(1, segments.size());
         Segment s = segments.get(0);
         assertEquals(0, s.header().length());
-        assertTrue(s.header().done());
+        assertEquals(LogSegmentStatus.OK, s.header().status());
     }
 
     private static String msg(byte[] ab, Segment segment) {
@@ -214,12 +215,12 @@ public class SegmentHeaderParserTest {
     private static byte[] bb(int segmentId, String msg) {
         byte[] ab = msg.getBytes();
 
-        byte[] header = SegmentHeaderParser.serialize(Header.builder()
+        byte[] header = LogSegmentSerializer.serializeHeader(LogSegmentHeader.builder()
                 .segmentId(segmentId)
                 .length(ab.length)
                 .warnCount(1)
                 .errorCount(2)
-                .done(false)
+                .status(LogSegmentStatus.RUNNING)
                 .build());
 
         return Bytes.concat(header, ab);

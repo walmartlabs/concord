@@ -540,5 +540,23 @@ public class ProcessIT extends AbstractTest {
         // 2 NEW events
         long eventsCount = events.stream().filter(e -> "NEW".equals(MapUtils.assertString(e.getData(), "status"))).count();
         assertEquals(2, eventsCount, "" + events);
+
+        // empty wait conditions
+        ProcessWaitEntry waitConditions = processApi.getWait(proc.instanceId());
+        assertFalse(waitConditions.getIsWaiting());
+        assertNull(waitConditions.getWaits());
+    }
+
+    @Test
+    public void metaAfterSuspend() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("metaAfterSuspend"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        ProcessEntry pe = expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
+
+        // ---
+        Object myMetaValue = pe.getMeta().get("myMetaVar");
+        assertEquals("myMetaVarValue", myMetaValue);
     }
 }

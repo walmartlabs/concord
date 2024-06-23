@@ -40,6 +40,8 @@
         </createTable>
     </changeSet>
 
+    <!-- replaced in 0.67.0 -->
+    <!--
     <changeSet id="64101" author="ibodrov@gmail.com">
         <createView viewName="V_AUDIT_LOG">
             select
@@ -53,6 +55,7 @@
             from AUDIT_LOG a
         </createView>
     </changeSet>
+    -->
 
     <changeSet id="64200" author="ibodrov@gmail.com">
         <addUniqueConstraint tableName="POLICIES" columnNames="POLICY_NAME"/>

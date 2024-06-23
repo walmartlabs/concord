@@ -57,6 +57,8 @@ public class UserActivityResourceV2 implements Resource {
                 .build();
         List<ProcessEntry> lastProcesses = processDao.list(filter);
 
-        return new UserActivityResponse(lastProcesses);
+        return ImmutableUserActivityResponse.builder()
+                .processes(lastProcesses)
+                .build();
     }
 }

@@ -70,6 +70,10 @@ public class TriggersDao extends AbstractDao {
                 .getTriggerId();
     }
 
+    public void delete(UUID projectId, UUID repositoryId) {
+        tx(tx -> delete(tx, projectId, repositoryId));
+    }
+
     public void delete(DSLContext tx, List<UUID> triggerIds) {
         tx.delete(TRIGGERS)
                 .where(TRIGGERS.TRIGGER_ID.in(triggerIds))

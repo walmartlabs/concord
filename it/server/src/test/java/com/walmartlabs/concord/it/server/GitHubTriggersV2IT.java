@@ -32,10 +32,8 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
 
@@ -362,6 +360,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
 
         // -- send GitHub event to trigger refresh
 
+        OffsetDateTime after = OffsetDateTime.now();
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_USER_LDAP_DN", "",
                 "_USER_NAME", username,
@@ -378,6 +377,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
                 .projectName("concordTriggers")
                 .limit(1)
                 .offset(0)
+                .afterCreatedAt(after)
                 .build();
         ProcessEntry refreshProc;
 
@@ -407,6 +407,146 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
 
         RepositoryEntry repo = repos.stream()
                 .filter(e -> e.getName().equals(repoNameShort))
+                .findFirst()
+                .orElseThrow(() -> new Exception("Unable to locate repository"));
+
+        assertLog(refreshProc, ".*Repository ids to refresh: \\[" + repo.getId().toString() + "\\].*");
+    }
+
+    @Test
+    public void testBranchDeleteRefresh() throws Exception {
+        String username = createUser();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+
+        String orgName = "org_" + randomString();
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
+
+        // -- create two projects to hold two similarly named repos
+
+        String projectNameMaster = "project_master" + randomString();
+        String projectNameDev = "project_dev_" + randomString();
+        String projectNameTmp = "project_tmp_" + randomString();
+        String repoMaster = "repo_master_" + randomString();
+        String repoDev = "repo_dev_" + randomString();
+        String repoTmp = "repo_tmp_" + randomString();
+        String devBranch = "dev";
+        String tmpBranch = "tmp";
+
+        Path repoPath = initRepo("githubTests/repos/v2/defaultTrigger", orgName + "/" + repoMaster);
+        // we only need the repo to exist enough to create the concord repo
+        createNewBranch(repoPath, devBranch, "githubTests/repos/v2/defaultTrigger");
+        createNewBranch(repoPath, tmpBranch, "githubTests/repos/v2/defaultTrigger");
+
+        Path projectRepoMain = initProjectAndRepo(orgName, projectNameMaster, repoMaster, null, repoPath);
+        Path projectRepoDev = initProjectAndRepo(orgName, projectNameDev, repoDev, devBranch, repoPath);
+        Path projectRepoTmp = initProjectAndRepo(orgName, projectNameTmp, repoTmp, tmpBranch, repoPath);
+        waitForProcessesToFinish();
+
+        // -- send GitHub event to trigger refresh
+
+        OffsetDateTime after = OffsetDateTime.now();
+        sendEvent("githubTests/events/direct_branch_push_delete.json", "push",
+                "_USER_LDAP_DN", "",
+                "_USER_NAME", username,
+                "_ORG_NAME", orgName,
+                "_FULL_REPO_NAME", toRepoName(projectRepoMain), // must be before _REPO_NAME
+                "_REPO_NAME", repoMaster,
+                "_REF", "refs/heads/tmp");
+
+        // -- locate and wait for repository refresh process
+        ProcessV2Api processApi = new ProcessV2Api(getApiClient());
+        ProcessListFilter filter = ProcessListFilter.builder()
+                .orgName("ConcordSystem")
+                .projectName("concordTriggers")
+                .limit(1)
+                .offset(0)
+                .afterCreatedAt(after)
+                .build();
+        ProcessEntry refreshProc;
+
+        // not great, but we need to ensure no processes were generated
+        Thread.sleep(3000);
+
+        refreshProc = processApi.listProcesses(filter).stream()
+                    .filter(e -> e.getInitiator().equals("github"))
+                    .findFirst()
+                    .orElse(null);
+
+        assertNull(refreshProc, "Must NOT find repository refresh process.");
+    }
+
+    @Test
+    public void testBranchRefreshMatchingOnly() throws Exception {
+        String username = createUser();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+
+        String orgName = "org_" + randomString();
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
+
+        // -- create two projects to hold two similarly named repos
+
+        String projectName1 = "project_master" + randomString();
+        String projectName2 = "project_dev_" + randomString();
+        String repoMaster = "repo_main_" + randomString();
+        String repoDev = "repo_dev_" + randomString();
+        String devBranch = "dev";
+
+        Path repoPath = initRepo("githubTests/repos/v2/defaultTrigger", orgName + "/" + repoMaster);
+        // we only need the repo to exist enough to create the concord repo
+        createNewBranch(repoPath, devBranch, "githubTests/repos/v2/defaultTrigger");
+
+        Path projectRepoMain = initProjectAndRepo(orgName, projectName1, repoMaster, null, repoPath);
+        Path projectRepoDev = initProjectAndRepo(orgName, projectName2, repoDev, devBranch, repoPath);
+        waitForProcessesToFinish();
+
+        // -- send GitHub event to trigger refresh
+
+        OffsetDateTime after = OffsetDateTime.now();
+        sendEvent("githubTests/events/direct_branch_push.json", "push",
+                "_USER_LDAP_DN", "",
+                "_USER_NAME", username,
+                "_ORG_NAME", orgName,
+                "_FULL_REPO_NAME", toRepoName(projectRepoMain), // must be before _REPO_NAME
+                "_REPO_NAME", repoMaster,
+                "_REF", "refs/heads/master");
+
+        // -- locate and wait for repository refresh process
+
+        ProcessV2Api processApi = new ProcessV2Api(getApiClient());
+        ProcessListFilter filter = ProcessListFilter.builder()
+                .orgName("ConcordSystem")
+                .projectName("concordTriggers")
+                .limit(1)
+                .offset(0)
+                .afterCreatedAt(after)
+                .build();
+        ProcessEntry refreshProc;
+
+        while (true) {
+            refreshProc = processApi.listProcesses(filter).stream()
+                    .filter(e -> e.getInitiator().equals("github"))
+                    .findFirst()
+                    .orElse(null);
+
+            if (refreshProc != null && refreshProc.getStatus() == ProcessEntry.StatusEnum.FINISHED) {
+                break;
+            }
+            Thread.sleep(500);
+        }
+
+        assertNotNull(refreshProc, "Must find repository refresh process.");
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, refreshProc.getStatus(),
+                "Repository refresh process must finish successfully.");
+
+        // -- process log should indicate only default repo was refreshed
+
+        RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
+        List<RepositoryEntry> repos = repositoriesApi.listRepositories(orgName, projectName1, null, null, null);
+
+        RepositoryEntry repo = repos.stream()
+                .filter(e -> e.getName().equals(repoMaster))
                 .findFirst()
                 .orElseThrow(() -> new Exception("Unable to locate repository"));
 

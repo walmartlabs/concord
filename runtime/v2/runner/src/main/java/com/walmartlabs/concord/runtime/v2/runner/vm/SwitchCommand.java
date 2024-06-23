@@ -21,13 +21,14 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.SwitchStep;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -39,7 +40,7 @@ public class SwitchCommand extends StepCommand<SwitchStep> {
     private final List<Map.Entry<String, Command>> caseCommands;
     private final Command defaultCommand;
 
-    public SwitchCommand(SwitchStep step, List<Map.Entry<String, Command>> caseCommands, Command defaultCommand) {
+    public SwitchCommand(SwitchStep step, List<Map.Entry<String, Command>> caseCommands, @Nullable Command defaultCommand) {
         super(step);
         this.caseCommands = caseCommands;
         this.defaultCommand = defaultCommand;

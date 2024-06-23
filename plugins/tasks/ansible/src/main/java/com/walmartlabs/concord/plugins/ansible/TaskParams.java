@@ -140,6 +140,8 @@ public enum TaskParams implements HasKey {
 
     VIRTUALENV_KEY("virtualenv"),
 
+    SKIP_CHECK_BINARY("skipCheckBinary"),
+
     WORK_DIR_KEY("workDir");
 
     private final String key;

@@ -22,19 +22,16 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
-import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskException;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
+import com.walmartlabs.concord.svm.*;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.CallContext;
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.Method;
@@ -47,8 +44,8 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
 
     private static final long serialVersionUID = 1L;
 
-    public TaskCallCommand(TaskCall step) {
-        super(step);
+    public TaskCallCommand(UUID correlationId, TaskCall step) {
+        super(correlationId, step);
     }
 
     @Override
@@ -95,15 +92,5 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         }
 
         TaskCallUtils.processTaskResult(runtime, ctx, taskName, opts, result);
-    }
-
-    @Override
-    public String getDefaultSegmentName() {
-        return "task: " + getStep().getName();
-    }
-
-    @Override
-    protected Map<String, Object> getLogMeta(Context ctx, TaskCall step) {
-        return Collections.singletonMap("type", "task");
     }
 }
