@@ -34,6 +34,7 @@ import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
 import com.walmartlabs.concord.imports.*;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
+import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
@@ -43,6 +44,7 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Profile;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
+import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.runtime.v2.runner.ProjectLoadListeners;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
@@ -52,6 +54,7 @@ import com.walmartlabs.concord.runtime.v2.runner.vm.LoggedException;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.svm.ParallelExecutionException;
+import com.walmartlabs.concord.svm.ThreadStatus;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -66,6 +69,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.Callable;
+
 
 @Command(name = "run", description = "Run the current directory as a Concord process")
 public class Run implements Callable<Integer> {
@@ -130,6 +134,9 @@ public class Run implements Callable<Integer> {
 
     @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")
     Path sourceDir = Paths.get(System.getProperty("user.dir"));
+
+    @Option(names = {"--resume-event"}, description = "resume event name")
+    String resumeEvent;
 
     @Override
     public Integer call() throws Exception {
@@ -271,7 +278,25 @@ public class Run implements Callable<Integer> {
         }
 
         try {
-            runner.start(cfg, processDefinition, args);
+            ProcessSnapshot snapshot;
+            if (resumeEvent != null) {
+                System.out.println("resuming with event: " + resumeEvent);
+                IOUtils.copy(Path.of("/tmp/123/_attachments"), Path.of("/Users/brig/prj/github/concord/examples/hello_world/target/_attachments"), StandardCopyOption.REPLACE_EXISTING);
+                ProcessSnapshot state = StateManager.readProcessState(Path.of("/tmp/123/"), getClass().getClassLoader());
+                snapshot = runner.resume(state, Set.of(resumeEvent), args);
+            } else {
+                snapshot = runner.start(cfg, processDefinition, args);
+            }
+
+            if (isSuspended(snapshot)) {
+                Set<String> events =  getEvents(snapshot);
+                StateManager.finalizeSuspendedState(Path.of("/tmp/123/"), snapshot, events);
+                IOUtils.copy(Path.of("/Users/brig/prj/github/concord/examples/hello_world/target/_attachments"), Path.of("/tmp/123/_attachments"), StandardCopyOption.REPLACE_EXISTING);
+
+                System.out.println("... suspended. Resume events: " + events);
+            } else {
+                System.out.println("...done!");
+            }
         } catch (LoggedException e) {
             return -1;
         } catch (ParallelExecutionException e) {
@@ -286,8 +311,6 @@ public class Run implements Callable<Integer> {
             }
             return 1;
         }
-
-        System.out.println("...done!");
 
         return 0;
     }
@@ -409,6 +432,15 @@ public class Run implements Callable<Integer> {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static boolean isSuspended(ProcessSnapshot snapshot) {
+        return snapshot.vmState().threadStatus().entrySet().stream()
+                .anyMatch(e -> e.getValue() == ThreadStatus.SUSPENDED);
+    }
+
+    private static Set<String> getEvents(ProcessSnapshot snapshot) {
+        return new HashSet<>(snapshot.vmState().getEventRefs().values());
     }
 
     private static class CopyNotifier implements FileVisitor {

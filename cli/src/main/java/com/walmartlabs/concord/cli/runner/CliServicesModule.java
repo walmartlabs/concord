@@ -122,6 +122,8 @@ public class CliServicesModule extends AbstractModule {
                 throw new IllegalStateException("Default variables input stream is null.");
             }
 
+            System.out.println(">>>>>>>");
+
             return new ObjectMapper().readValue(is, Map.class);
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
