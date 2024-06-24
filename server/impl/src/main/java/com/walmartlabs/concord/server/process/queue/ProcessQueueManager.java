@@ -171,7 +171,7 @@ public class ProcessQueueManager {
      * Updates status of multiple processes but only if their current status is
      * in the {@code expected} list of statuses.
      *
-     * @return {@code true} if every process was updated
+     * @return {@code true} if every processes was updated
      */
     public List<ProcessKey> updateExpectedStatus(DSLContext tx, List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
         if (processKeys.isEmpty()) {
@@ -179,9 +179,7 @@ public class ProcessQueueManager {
         }
 
         List<ProcessKey> updated = queueDao.updateStatus(processKeys, expected, status);
-        for (ProcessKey processKey : updated) {
-            statusListeners.forEach(l -> l.onStatusChange(tx, processKey, status));
-        }
+        updated.forEach(processKey -> statusListeners.forEach(l -> l.onStatusChange(tx, processKey, status)));
         return updated;
     }
 
