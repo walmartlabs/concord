@@ -31,7 +31,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 
 /**
- * Updates the total running time of a process when it transitions to a terminal state.
+ * Updates the total running time of a process when it transitions to a terminal (or suspended) state.
  */
 public class TotalRuntimeCalculator implements ProcessStatusListener {
 
@@ -44,6 +44,7 @@ public class TotalRuntimeCalculator implements ProcessStatusListener {
 
     @Override
     public void onStatusChange(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
+
         switch (status) {
             case FINISHED, FAILED, CANCELLED, SUSPENDED, TIMED_OUT -> dao.getLastRunAt(tx, processKey)
                     .ifPresent(lastRunAt -> {

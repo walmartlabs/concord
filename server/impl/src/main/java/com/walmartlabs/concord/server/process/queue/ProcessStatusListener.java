@@ -24,9 +24,6 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 
-import java.time.Instant;
-import java.time.OffsetDateTime;
-
 public interface ProcessStatusListener {
 
     void onStatusChange(DSLContext tx, ProcessKey processKey, ProcessStatus status);
