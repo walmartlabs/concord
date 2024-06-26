@@ -1,5 +1,14 @@
 # Change log
 
+## [2.14.0] - Unreleased
+
+### Added
+
+- concord-server: calculate total process RUNNING time
+([#933](https://github.com/walmartlabs/concord/pull/933)). 
+
+
+
 ## [2.13.0] - 2024-06-19
 
 ### Added
