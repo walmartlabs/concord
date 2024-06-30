@@ -5,7 +5,9 @@
 ### Added
 
 - concord-server: calculate total process RUNNING time
-([#933](https://github.com/walmartlabs/concord/pull/933)). 
+([#933](https://github.com/walmartlabs/concord/pull/933));
+- concord-server: expose websocket channels
+([#935](https://github.com/walmartlabs/concord/pull/935)).
 
 
 
