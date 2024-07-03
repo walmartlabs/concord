@@ -14,7 +14,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
-import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
@@ -64,7 +63,6 @@ public class ApiClient {
   private Consumer<HttpResponse<InputStream>> responseInterceptor;
   private Consumer<HttpResponse<String>> asyncResponseInterceptor;
   private Duration readTimeout;
-  private Duration connectTimeout;
   private Authentication auth;
   private final Map<String, String> defaultHeaderMap = new HashMap<String, String>();
 
@@ -183,7 +181,6 @@ public class ApiClient {
     updateBaseUri(getDefaultBaseUri());
     interceptor = null;
     readTimeout = null;
-    connectTimeout = null;
     responseInterceptor = null;
     asyncResponseInterceptor = null;
   }
