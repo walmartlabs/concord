@@ -20,7 +20,10 @@ package com.walmartlabs.concord.client2.impl;
  * =====
  */
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -29,9 +32,9 @@ import java.util.*;
 
 public class MultipartBuilder {
 
-    private static final byte[] COLONSPACE = { ':', ' ' };
-    private static final byte[] CRLF = { '\r', '\n' };
-    private static final byte[] DASHDASH = { '-', '-' };
+    private static final byte[] COLONSPACE = {':', ' '};
+    private static final byte[] CRLF = {'\r', '\n'};
+    private static final byte[] DASHDASH = {'-', '-'};
 
     private final List<Headers> partHeaders = new ArrayList<>();
     private final List<RequestBody> partBodies = new ArrayList<>();
@@ -81,9 +84,6 @@ public class MultipartBuilder {
     }
 
     public RequestBody build() {
-//        if (partHeaders.isEmpty()) {
-//            throw new IllegalStateException("Multipart body must have at least one part.");
-//        }
         return new MultipartRequestBody(type, boundary, partHeaders, partBodies);
     }
 
