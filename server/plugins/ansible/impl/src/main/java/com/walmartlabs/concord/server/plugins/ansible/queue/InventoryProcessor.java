@@ -55,7 +55,7 @@ public class InventoryProcessor implements CustomEnqueueProcessor {
     }
 
     @Override
-    public Payload process(Payload payload) {
+    public Payload handleAttachments(Payload payload) {
         if (!copy(payload, INVENTORY_FILE, INVENTORY_FILE_NAME)) {
             if (!copy(payload, DYNAMIC_INVENTORY_FILE, DYNAMIC_INVENTORY_FILE_NAME)) {
                 return payload;

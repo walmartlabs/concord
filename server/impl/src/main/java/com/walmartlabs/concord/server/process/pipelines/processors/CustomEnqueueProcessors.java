@@ -20,29 +20,39 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.sdk.process.CustomEnqueueProcessor;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 @Named
-public class CustomEnqueueProcessorExecutor implements PayloadProcessor {
+public class CustomEnqueueProcessors {
 
     private final Collection<CustomEnqueueProcessor> processors;
 
     @Inject
-    public CustomEnqueueProcessorExecutor(Set<CustomEnqueueProcessor> processors) {
-        this.processors = processors;
+    public CustomEnqueueProcessors(Set<CustomEnqueueProcessor> processors) {
+        this.processors = List.copyOf(processors);
     }
 
-    @Override
-    public Payload process(Chain chain, Payload payload) {
-        for (CustomEnqueueProcessor p : processors) {
-            payload = p.process(payload);
-        }
-        return chain.process(payload);
+    public PayloadProcessor handleAttachments() {
+        return (chain, payload) -> {
+            for (CustomEnqueueProcessor p : processors) {
+                payload = p.handleAttachments(payload);
+            }
+            return chain.process(payload);
+        };
+    }
+
+    public PayloadProcessor handleState() {
+        return (chain, payload) -> {
+            for (CustomEnqueueProcessor p : processors) {
+                payload = p.handleState(payload);
+            }
+            return chain.process(payload);
+        };
     }
 }

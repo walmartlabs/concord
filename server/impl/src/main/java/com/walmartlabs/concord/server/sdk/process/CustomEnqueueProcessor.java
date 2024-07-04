@@ -28,5 +28,17 @@ import com.walmartlabs.concord.server.process.Payload;
  */
 public interface CustomEnqueueProcessor {
 
-    Payload process(Payload payload);
+    /**
+     * Process any attachments before they are stored as files in the ${workDir}.
+     */
+    default Payload handleAttachments(Payload payload) {
+        return payload;
+    }
+
+    /**
+     * Process the process state before it is stored in the database.
+     */
+    default Payload handleState(Payload payload) {
+        return payload;
+    }
 }

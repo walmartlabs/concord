@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.process.pipelines.processors.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.List;
 
 /**
  * Handles NEW "regular" processes. Puts the processes into the ENQUEUED status.
@@ -37,38 +38,41 @@ public class EnqueueProcessPipeline extends Pipeline {
     private final FinalizerProcessor finalizerProcessor;
 
     @Inject
-    public EnqueueProcessPipeline(Injector injector) {
-        super(injector,
-                LoggingMDCProcessor.class,
-                PayloadRestoreProcessor.class,
-                RunAsCurrentProcessUserProcessor.class,
-                PolicyExportProcessor.class,
-                WorkspaceArchiveProcessor.class,
-                RepositoryProcessor.class,
-                RepositoryInfoUpdateProcessor.class,
-                AttachmentStoringProcessor.class,
-                ProcessDefinitionProcessor.class,
-                SessionTokenProcessor.class,
-                ConfigurationProcessor.class,
-                AssertOutVariablesProcessor.class,
-                ExclusiveGroupProcessor.class,
-                EntryPointProcessor.class,
-                TagsExtractingProcessor.class,
-                TemplateFilesProcessor.class,
-                TemplateScriptProcessor.class,
-                DependenciesProcessor.class,
-                InitiatorUserInfoProcessor.class,
-                OutVariablesSettingProcessor.class,
-                ResumeEventsProcessor.class,
-                ConfigurationStoringProcessor.class,
-                PolicyProcessor.class,
-                DependencyVersionsExportProcessor.class,
-                CustomEnqueueProcessorExecutor.class,
-                StateImportingProcessor.class,
-                ProcessHandlersProcessor.class,
-                EffectiveProcessDefinitionProcessor.class,
-                SecuritySubjectProcessor.class,
-                EnqueueingProcessor.class);
+    public EnqueueProcessPipeline(Injector injector,
+                                  CustomEnqueueProcessors customProcessors) {
+        super(List.of(
+                injector.getInstance(LoggingMDCProcessor.class),
+                injector.getInstance(PayloadRestoreProcessor.class),
+                injector.getInstance(RunAsCurrentProcessUserProcessor.class),
+                injector.getInstance(PolicyExportProcessor.class),
+                injector.getInstance(WorkspaceArchiveProcessor.class),
+                injector.getInstance(RepositoryProcessor.class),
+                injector.getInstance(RepositoryInfoUpdateProcessor.class),
+                customProcessors.handleAttachments(),
+                injector.getInstance(AttachmentStoringProcessor.class),
+                injector.getInstance(ProcessDefinitionProcessor.class),
+                injector.getInstance(SessionTokenProcessor.class),
+                injector.getInstance(ConfigurationProcessor.class),
+                injector.getInstance(AssertOutVariablesProcessor.class),
+                injector.getInstance(ExclusiveGroupProcessor.class),
+                injector.getInstance(EntryPointProcessor.class),
+                injector.getInstance(TagsExtractingProcessor.class),
+                injector.getInstance(TemplateFilesProcessor.class),
+                injector.getInstance(TemplateScriptProcessor.class),
+                injector.getInstance(DependenciesProcessor.class),
+                injector.getInstance(InitiatorUserInfoProcessor.class),
+                injector.getInstance(OutVariablesSettingProcessor.class),
+                injector.getInstance(ResumeEventsProcessor.class),
+                injector.getInstance(ConfigurationStoringProcessor.class),
+                injector.getInstance(PolicyProcessor.class),
+                injector.getInstance(DependencyVersionsExportProcessor.class),
+                customProcessors.handleState(),
+                injector.getInstance(StateImportingProcessor.class),
+                injector.getInstance(ProcessHandlersProcessor.class),
+                injector.getInstance(EffectiveProcessDefinitionProcessor.class),
+                injector.getInstance(SecuritySubjectProcessor.class),
+                injector.getInstance(EnqueueingProcessor.class)
+        ));
 
         this.exceptionProcessor = injector.getInstance(FailProcessor.class);
         this.finalizerProcessor = injector.getInstance(CleanupProcessor.class);

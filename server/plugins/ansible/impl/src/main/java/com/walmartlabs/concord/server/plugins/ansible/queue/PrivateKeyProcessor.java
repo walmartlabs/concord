@@ -63,7 +63,7 @@ public class PrivateKeyProcessor implements CustomEnqueueProcessor {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Payload process(Payload payload) {
+    public Payload handleState(Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
 
