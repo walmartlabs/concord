@@ -49,6 +49,7 @@ import org.jooq.util.postgres.PostgresDSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -153,6 +154,13 @@ public class ProcessQueueDao extends AbstractDao {
         if (i != 1) {
             throw new DataAccessException("Invalid number of rows updated: " + i);
         }
+    }
+
+    public Optional<OffsetDateTime> getLastRunAt(DSLContext tx, ProcessKey processKey) {
+        return tx.select(PROCESS_QUEUE.LAST_RUN_AT)
+                .from(PROCESS_QUEUE)
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .fetchOptional(PROCESS_QUEUE.LAST_RUN_AT);
     }
 
     private static Field<OffsetDateTime> createRunningAtValue(ProcessStatus status) {
@@ -434,13 +442,13 @@ public class ProcessQueueDao extends AbstractDao {
     public List<ProcessKey> getCascade(DSLContext tx, PartialProcessKey parentKey) {
         UUID parentInstanceId = parentKey.getInstanceId();
         return tx.withRecursive("children").as(
-                select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
-                        .where(PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
-                        .unionAll(
-                                select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
-                                        .join(name("children"))
-                                        .on(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(
-                                                field(name("children", "INSTANCE_ID"), UUID.class)))))
+                        select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
+                                .where(PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
+                                .unionAll(
+                                        select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
+                                                .join(name("children"))
+                                                .on(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(
+                                                        field(name("children", "INSTANCE_ID"), UUID.class)))))
                 .select()
                 .from(name("children"))
                 .fetch(r -> new ProcessKey(r.get(0, UUID.class), r.get(1, OffsetDateTime.class)));
@@ -627,6 +635,13 @@ public class ProcessQueueDao extends AbstractDao {
                 .execute();
     }
 
+    public void addToTotalRunningTime(DSLContext tx, ProcessKey processKey, Duration duration) {
+        tx.update(PROCESS_QUEUE)
+                .set(PROCESS_QUEUE.TOTAL_RUNTIME_MS, coalesce(PROCESS_QUEUE.TOTAL_RUNTIME_MS, 0L).plus(duration.toMillis()))
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .execute();
+    }
+
     private SelectQuery<Record> buildSelect(DSLContext tx, ProcessFilter filter) {
         return buildSelect(tx, null, filter);
     }
@@ -748,14 +763,14 @@ public class ProcessQueueDao extends AbstractDao {
         if (includes.contains(ProcessDataInclude.CHECKPOINTS)) {
             ProcessCheckpoints pc = PROCESS_CHECKPOINTS.as("pc");
             SelectJoinStep<Record1<JSONB>> checkpoints = tx.select(
-                    function("to_jsonb", JSONB.class,
-                            function("array_agg", Object.class,
-                                    jsonbStripNulls(
-                                            jsonbBuildObject(
-                                                    inline("id"), pc.CHECKPOINT_ID,
-                                                    inline("name"), pc.CHECKPOINT_NAME,
-                                                    inline("correlationId"), pc.CORRELATION_ID,
-                                                    inline("createdAt"), toJsonDate(pc.CHECKPOINT_DATE))))))
+                            function("to_jsonb", JSONB.class,
+                                    function("array_agg", Object.class,
+                                            jsonbStripNulls(
+                                                    jsonbBuildObject(
+                                                            inline("id"), pc.CHECKPOINT_ID,
+                                                            inline("name"), pc.CHECKPOINT_NAME,
+                                                            inline("correlationId"), pc.CORRELATION_ID,
+                                                            inline("createdAt"), toJsonDate(pc.CHECKPOINT_DATE))))))
                     .from(pc);
 
             if (key != null) {
@@ -773,7 +788,7 @@ public class ProcessQueueDao extends AbstractDao {
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
 
             SelectJoinStep<Record1<JSONB>> history = tx.select(function("to_jsonb", JSONB.class,
-                    function("array_agg", Object.class, checkpointHistoryEntryToJsonb(pe))))
+                            function("array_agg", Object.class, checkpointHistoryEntryToJsonb(pe))))
                     .from(pe);
 
             if (key != null) {
@@ -792,7 +807,7 @@ public class ProcessQueueDao extends AbstractDao {
         if (includes.contains(ProcessDataInclude.STATUS_HISTORY)) {
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
             SelectJoinStep<Record1<JSONB>> history = tx.select(function("to_jsonb", JSONB.class,
-                    function("array_agg", Object.class, statusHistoryEntryToJsonb(pe))))
+                            function("array_agg", Object.class, statusHistoryEntryToJsonb(pe))))
                     .from(pe);
 
             if (key != null) {
@@ -860,6 +875,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .startAt(r.get(PROCESS_QUEUE.START_AT))
                 .lastUpdatedAt(r.get(PROCESS_QUEUE.LAST_UPDATED_AT))
                 .lastRunAt(r.get(PROCESS_QUEUE.LAST_RUN_AT))
+                .totalRuntimeMs(r.get(PROCESS_QUEUE.TOTAL_RUNTIME_MS))
                 .createdAt(r.get(PROCESS_QUEUE.CREATED_AT))
                 .status(ProcessStatus.valueOf(r.get(PROCESS_QUEUE.CURRENT_STATUS)))
                 .lastAgentId(r.get(PROCESS_QUEUE.LAST_AGENT_ID))
