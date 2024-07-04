@@ -24,9 +24,11 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.sdk.process.CustomEnqueueProcessor;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.Collection;
 import java.util.Set;
 
+@Named
 public class CustomEnqueueProcessorExecutor implements PayloadProcessor {
 
     private final Collection<CustomEnqueueProcessor> processors;

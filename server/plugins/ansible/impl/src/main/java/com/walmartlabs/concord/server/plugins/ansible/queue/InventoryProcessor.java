@@ -24,11 +24,10 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
-import com.walmartlabs.concord.server.sdk.process.CustomEnqueueProcessor;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.process.CustomEnqueueProcessor;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,7 +38,6 @@ import java.nio.file.Path;
  * This processor takes an inventory file from a request and stores it in a request's workspace
  * for {@code com.walmartlabs.concord.plugins.ansible.RunPlaybookTask2} to pick it up later.
  */
-@Named
 @Deprecated
 public class InventoryProcessor implements CustomEnqueueProcessor {
 
