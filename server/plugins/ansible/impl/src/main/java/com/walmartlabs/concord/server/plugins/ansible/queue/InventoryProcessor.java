@@ -24,7 +24,7 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
-import com.walmartlabs.concord.server.process.pipelines.processors.CustomEnqueueProcessor;
+import com.walmartlabs.concord.server.sdk.process.CustomEnqueueProcessor;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
