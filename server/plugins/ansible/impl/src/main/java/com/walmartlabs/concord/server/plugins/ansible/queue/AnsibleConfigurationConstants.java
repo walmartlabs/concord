@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.ansible;
+package com.walmartlabs.concord.server.plugins.ansible.queue;
 
 /*-
  * *****
