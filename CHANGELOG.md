@@ -9,6 +9,11 @@
 - concord-server: expose websocket channels
 ([#935](https://github.com/walmartlabs/concord/pull/935)).
 
+### Changed
+
+- concord-server: move com.walmartlabs.concord.server.ansible.*
+into ansible plugin
+([#502](https://github.com/walmartlabs/concord/pull/502)).
 
 
 ## [2.13.0] - 2024-06-19
