@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.process.pipelines.processors;
+package com.walmartlabs.concord.server.sdk.process;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2021 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,16 +22,23 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.server.process.Payload;
 
-import java.util.function.Function;
+/**
+ * A custom processor that can be used to modify the payload before its state
+ * is imported into the database.
+ */
+public interface CustomEnqueueProcessor {
 
-public interface PayloadProcessor {
+    /**
+     * Process any attachments before they are stored as files in the ${workDir}.
+     */
+    default Payload handleAttachments(Payload payload) {
+        return payload;
+    }
 
-    Payload process(Chain chain, Payload payload);
-
-    static PayloadProcessor function(Function<Payload, Payload> f) {
-        return (chain, p1) -> {
-            Payload p2 = f.apply(p1);
-            return chain.process(p2);
-        };
+    /**
+     * Process the process state before it is stored in the database.
+     */
+    default Payload handleState(Payload payload) {
+        return payload;
     }
 }
