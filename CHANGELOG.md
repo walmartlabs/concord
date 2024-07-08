@@ -13,7 +13,10 @@
 
 - concord-server: move com.walmartlabs.concord.server.ansible.*
 into ansible plugin
-([#502](https://github.com/walmartlabs/concord/pull/502)).
+([#502](https://github.com/walmartlabs/concord/pull/502));
+- concord-server: migrate to PROCESS_META and
+PROCESS_TRIGGER_INFO tables
+([#669](https://github.com/walmartlabs/concord/pull/669)).
 
 
 ## [2.13.0] - 2024-06-19
