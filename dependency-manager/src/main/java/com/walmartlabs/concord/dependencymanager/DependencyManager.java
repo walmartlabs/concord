@@ -132,7 +132,7 @@ public class DependencyManager {
         }
 
         // ensure stable order
-        List<URI> uris = new ArrayList<>(items);
+        List<URI> uris = new ArrayList<>(new HashSet<>(items));
         Collections.sort(uris);
 
         DependencyList deps = categorize(uris);
