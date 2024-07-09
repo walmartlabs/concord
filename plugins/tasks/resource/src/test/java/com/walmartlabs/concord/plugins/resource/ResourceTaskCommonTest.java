@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -103,6 +104,48 @@ class ResourceTaskCommonTest {
         Map<String, Object> result = rsc.asProperties(resource("test.properties").toString());
 
         assertEquals("value2", result.get("param2"));
+    }
+
+    @Test
+    void testWriteToKnownPath(@TempDir Path workDir) throws Exception {
+        FileService unneededFileService = (prefix, suffix) -> {
+            throw new IllegalStateException();
+        };
+
+        ResourceTaskCommon task = new ResourceTaskCommon(workDir, unneededFileService, null);
+
+        String stringContent = "Hello, world!";
+        task.writeAsString(stringContent, "test.txt");
+
+        Object jsonContent = Map.of("key", "value");
+        task.writeAsJson(jsonContent, "test.json");
+
+        Object yamlContent = Map.of("key", "value", "but", "worse");
+        task.writeAsYaml(yamlContent, "test.yaml");
+
+        Path txt = workDir.resolve("test.txt");
+        assertTrue(Files.exists(txt));
+        assertEquals(stringContent, Files.readString(txt));
+
+        Path json = workDir.resolve("test.json");
+        assertTrue(Files.exists(json));
+        assertEquals("{\n  \"key\" : \"value\"\n}", Files.readString(json));
+
+        Path yaml = workDir.resolve("test.yaml");
+        assertTrue(Files.exists(yaml));
+        assertTrue(Files.readString(yaml).contains("but: \"worse\""));
+
+        // test bad paths
+
+        assertThrows(IllegalArgumentException.class, () -> task.writeAsString(stringContent, "../test.txt"));
+        assertThrows(IllegalArgumentException.class, () -> task.writeAsJson(jsonContent, workDir.toAbsolutePath() + "./../../../../test.json"));
+
+        // unicode paths
+
+        String path = "z̶̧̛͖̯̞͈̗̼̦̫̱͕̤̱͐̀̄́̋̊̂̂́̆́̚̕͘ͅā̸͓͍̣͂͋̓́̈͆͋̀̿͑́͗͘̚ļ̸̙̙͔̦̺̙̘̻̗̿̓̄̅̿̓̿̈̿̽̊̿̂́̚͝͝g̴̡͇͚̩̻̮̙̻͔͆́͆̀̈́́̎͋o̷̪̖̥̹̲̣͇̣͂̇͆͆́̓̇͑̌";
+        task.writeAsString("Hello!", path);
+        assertTrue(Files.exists(workDir.resolve(path)));
+        assertEquals("Hello!", Files.readString(workDir.resolve(path)));
     }
 
     private static void assertValidYaml(String s) throws IOException {
