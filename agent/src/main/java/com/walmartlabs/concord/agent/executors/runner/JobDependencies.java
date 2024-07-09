@@ -186,7 +186,7 @@ public final class JobDependencies {
     }
 
     private static boolean isLatestVersion(String v) {
-        return v.equalsIgnoreCase("latest");
+        return "latest".equalsIgnoreCase(v);
     }
 
     private static String assertVersion(String dep, Map<String, String> versions) {
