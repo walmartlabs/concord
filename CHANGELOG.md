@@ -11,6 +11,8 @@
 
 ### Changed
 
+- dependency-manager: resolve only unique dependencies 
+([#936](https://github.com/walmartlabs/concord/pull/936)); 
 - concord-server: move com.walmartlabs.concord.server.ansible.*
 into ansible plugin
 ([#502](https://github.com/walmartlabs/concord/pull/502));
