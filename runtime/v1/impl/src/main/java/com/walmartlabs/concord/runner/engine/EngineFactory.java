@@ -168,7 +168,8 @@ public class EngineFactory {
                 .withResourceResolver(new ResourceResolverImpl(baseDir))
                 .build();
 
-        engine.addInterceptor(new ProcessElementInterceptor(eventProcessor, new ProcessMetadataProcessor(apiClientFactory, metaVariables)));
+        //TODO onlySendOnTermination from runner config/policy
+        engine.addInterceptor(new ProcessElementInterceptor(eventProcessor, new ProcessMetadataProcessor(apiClientFactory, metaVariables, false)));
         return engine;
     }
 
