@@ -1,0 +1,22 @@
+configuration:
+  runtime: concord-v2
+  debug: true
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:input-params-assert:1.102.1-SNAPSHOT"
+  arguments:
+    param1: "global"
+
+flows:
+  default:
+    - call: test
+      in:
+        #        param2: true
+        additionalParam: "value"
+
+  ##
+  #  in:
+  #    param1: string, mandatory, param1 description
+  #    param2: boolean, mandatory, param2 description
+  ##
+  test:
+    - log: "in test"
