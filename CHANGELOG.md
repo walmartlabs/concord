@@ -7,7 +7,10 @@
 - concord-server: calculate total process RUNNING time
 ([#933](https://github.com/walmartlabs/concord/pull/933));
 - concord-server: expose websocket channels
-([#935](https://github.com/walmartlabs/concord/pull/935)).
+([#935](https://github.com/walmartlabs/concord/pull/935));
+- resource-tasks: add versions of writeAs* methods that
+accept destination
+([#937](https://github.com/walmartlabs/concord/pull/937)).
 
 ### Changed
 
@@ -19,6 +22,7 @@ into ansible plugin
 - concord-server: migrate to PROCESS_META and
 PROCESS_TRIGGER_INFO tables
 ([#669](https://github.com/walmartlabs/concord/pull/669)).
+
 
 
 ## [2.13.0] - 2024-06-19
