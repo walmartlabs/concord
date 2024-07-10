@@ -46,7 +46,7 @@ public class ProcessMetadataProcessor {
 
     private final ApiClientFactory apiClientFactory;
     private final Set<String> processMetaVariables;
-    private final boolean sendMetaOnAllEvents;
+    private final boolean updateMetaOnAllEvents;
 
     private Map<String, Object> currentProcessMeta = new HashMap<>();
     private String sessionToken;
@@ -56,10 +56,10 @@ public class ProcessMetadataProcessor {
         this(apiClientFactory, processMetaVariables, true);
     }
 
-    public ProcessMetadataProcessor(ApiClientFactory apiClientFactory, Set<String> processMetaVariables, boolean sendMetaOnAllEvents) {
+    public ProcessMetadataProcessor(ApiClientFactory apiClientFactory, Set<String> processMetaVariables, boolean updateMetaOnAllEvents) {
         this.apiClientFactory = apiClientFactory;
         this.processMetaVariables = processMetaVariables;
-        this.sendMetaOnAllEvents = sendMetaOnAllEvents;
+        this.updateMetaOnAllEvents = updateMetaOnAllEvents;
     }
 
     public void process(UUID instanceId, Variables variables) {
@@ -72,13 +72,13 @@ public class ProcessMetadataProcessor {
         }
         this.currentProcessMeta = meta;
 
-        if (sendMetaOnAllEvents) {
+        if (updateMetaOnAllEvents) {
             sendMeta(instanceId, sessionToken, meta);
         }
     }
 
     public void flush() {
-        if (!sendMetaOnAllEvents) {
+        if (!updateMetaOnAllEvents) {
             sendMeta(instanceId, sessionToken, currentProcessMeta);
         }
     }
