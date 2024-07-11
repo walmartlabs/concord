@@ -14,6 +14,8 @@ accept destination
 
 ### Changed
 
+- project: update Groovy to 2.5.23
+([#940](https://github.com/walmartlabs/concord/pull/940));
 - dependency-manager: resolve only unique dependencies 
 ([#936](https://github.com/walmartlabs/concord/pull/936)); 
 - concord-server: move com.walmartlabs.concord.server.ansible.*
