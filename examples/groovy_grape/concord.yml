@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.8"
+  - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.23"
   - "mvn://org.apache.ivy:ivy:2.4.0"
 
 flows:
