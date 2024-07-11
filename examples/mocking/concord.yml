@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-    - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.8"
+    - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.23"
     - "mvn://com.walmartlabs.concord.plugins.basic:dynamic-tasks:1.76.1"
     - "mvn://com.walmartlabs.concord.plugins:git:1.32.3"
 
@@ -31,6 +31,6 @@ profiles:
     configuration:
       # for testing purposes we omit the github plugin, which is replaced with a "mock" version loaded dynamically
       dependencies:
-        - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.8"
+        - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.23"
         - "mvn://com.walmartlabs.concord.plugins.basic:dynamic-tasks:1.76.1"
       entryPoint: test
