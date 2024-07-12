@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,20 +20,14 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.google.inject.Injector;
 import com.walmartlabs.concord.server.process.Payload;
 
-import java.util.stream.Stream;
+import java.util.List;
 
 public abstract class Pipeline extends Chain {
 
-    @SafeVarargs
-    public Pipeline(
-            Injector injector,
-            Class<? extends PayloadProcessor> ... processors) {
-        super(Stream.of(processors)
-                .map(injector::getInstance)
-                .toArray(PayloadProcessor[]::new));
+    public Pipeline(List<PayloadProcessor> processors) {
+        super(processors.toArray(PayloadProcessor[]::new));
     }
 
     @Override

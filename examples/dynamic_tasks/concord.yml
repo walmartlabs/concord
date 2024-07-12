@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.8"
+  - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.23"
   - "mvn://com.walmartlabs.concord.plugins.basic:dynamic-tasks:1.76.1"
 
 flows:
