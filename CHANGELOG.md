@@ -10,7 +10,10 @@
 ([#935](https://github.com/walmartlabs/concord/pull/935));
 - resource-tasks: add versions of writeAs* methods that
 accept destination
-([#937](https://github.com/walmartlabs/concord/pull/937)).
+([#937](https://github.com/walmartlabs/concord/pull/937));
+- runtime-v1: option to update meta only on termination
+or suspend
+([#938](https://github.com/walmartlabs/concord/pull/938)).
 
 ### Changed
 
