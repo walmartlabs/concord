@@ -13,7 +13,9 @@ accept destination
 ([#937](https://github.com/walmartlabs/concord/pull/937));
 - runtime-v1: option to update meta only on termination
 or suspend
-([#938](https://github.com/walmartlabs/concord/pull/938)).
+([#938](https://github.com/walmartlabs/concord/pull/938));
+- project: add JDK 21 profiles
+([#941](https://github.com/walmartlabs/concord/pull/941)).
 
 ### Changed
 
