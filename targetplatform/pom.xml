@@ -56,7 +56,7 @@
         <glassfish.el.version>3.0.1-b12</glassfish.el.version>
         <graalvm.version>22.0.0.2</graalvm.version>
         <greenmail.version>1.6.5</greenmail.version>
-        <groovy.version>2.5.17</groovy.version>
+        <groovy.version>2.5.23</groovy.version>
         <guava.version>33.1.0-jre</guava.version>
         <guice.version>5.1.0</guice.version>
         <hibernate.validator.version>6.1.5.Final</hibernate.validator.version>

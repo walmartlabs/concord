@@ -43,7 +43,7 @@ public class ConcordJsonSchemaGeneratorTest {
         JsonNode concordYml = new ObjectMapper(new YAMLFactory())
                 .readTree(ConcordJsonSchemaGeneratorTest.class.getResourceAsStream("/schema/concord.yml"));
 
-        JsonSchemaFactory schemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
+        JsonSchemaFactory schemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
         JsonSchema schema = schemaFactory.getSchema(ConcordJsonSchemaGenerator.generate());
 
         Set<ValidationMessage> validationResult = schema.validate(concordYml);

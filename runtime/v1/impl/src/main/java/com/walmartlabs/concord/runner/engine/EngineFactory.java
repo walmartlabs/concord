@@ -168,7 +168,9 @@ public class EngineFactory {
                 .withResourceResolver(new ResourceResolverImpl(baseDir))
                 .build();
 
-        engine.addInterceptor(new ProcessElementInterceptor(eventProcessor, new ProcessMetadataProcessor(apiClientFactory, metaVariables)));
+        ProcessMetadataProcessor metadataProcessor = new ProcessMetadataProcessor(apiClientFactory, metaVariables, eventCfg.isUpdateMetaOnAllEvents());
+        engine.addInterceptor(new ProcessElementInterceptor(eventProcessor,metadataProcessor));
+
         return engine;
     }
 

@@ -34,7 +34,7 @@ forms:
 
 configuration:
   dependencies:
-    - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.8"
+    - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.23"
   arguments:
     myForm3Fields:
     - firstName: {type: "string", label: "First Name"}
