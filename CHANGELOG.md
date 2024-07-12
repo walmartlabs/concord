@@ -26,7 +26,10 @@ into ansible plugin
 ([#502](https://github.com/walmartlabs/concord/pull/502));
 - concord-server: migrate to PROCESS_META and
 PROCESS_TRIGGER_INFO tables
-([#669](https://github.com/walmartlabs/concord/pull/669)).
+([#669](https://github.com/walmartlabs/concord/pull/669));
+- runtime-v2: use draft-07 of JSON Schema for better tool
+compatibility
+([#939](https://github.com/walmartlabs/concord/pull/939)).
 
 
 
