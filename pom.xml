@@ -60,7 +60,7 @@
     </modules>
 
     <properties>
-        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.release>${jdk.version}</maven.compiler.release>
         <maven.compiler.source>${maven.compiler.release}</maven.compiler.source>
         <maven.compiler.target>${maven.compiler.release}</maven.compiler.target>
 
@@ -443,6 +443,18 @@
     </distributionManagement>
 
     <profiles>
+        <profile>
+            <id>jdk21</id>
+            <properties>
+                <jdk.version>21</jdk.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>jdk21-aarch64</id>
+            <properties>
+                <jdk.version>21</jdk.version>
+            </properties>
+        </profile>
         <profile>
             <id>concord-release</id>
             <build>
