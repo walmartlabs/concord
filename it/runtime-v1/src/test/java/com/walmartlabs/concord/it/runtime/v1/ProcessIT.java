@@ -513,6 +513,20 @@ public class ProcessIT {
     }
 
     @Test
+    public void testMetadataUpdateOnlyOnEnd() throws Exception {
+        // Hard to validate the exact number of times POST /meta is called.
+        // This should only call it once, while testMetadataWithWithItems calls it 3 times.
+        // This at least validates the runner events config option is valid
+        // and doesn't break meta reporting
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .archive(resource("processMetadataAfterExecution")));
+
+        ProcessEntry pe = proc.expectStatus(StatusEnum.FINISHED);
+        assertNotNull(pe.getMeta());
+        assertEquals("c", pe.getMeta().get("var"));
+    }
+
+    @Test
     public void testEmptyExclusiveGroup() throws Exception {
         ConcordProcess proc = concord.processes().start(new Payload()
                 .archive(resource("emptyExclusiveGroup")));
