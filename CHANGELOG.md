@@ -31,7 +31,9 @@ PROCESS_TRIGGER_INFO tables
 ([#669](https://github.com/walmartlabs/concord/pull/669));
 - runtime-v2: use draft-07 of JSON Schema for better tool
 compatibility
-([#939](https://github.com/walmartlabs/concord/pull/939)).
+([#939](https://github.com/walmartlabs/concord/pull/939));
+- project: update dependency versions in the parent pom
+([#942](https://github.com/walmartlabs/concord/pull/942)).
 
 
 
