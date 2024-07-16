@@ -34,6 +34,8 @@ public interface ProcessQueueEntry {
 
     ProcessKey key();
 
+    int attemptNumber();
+
     @Nullable
     UUID projectId();
 

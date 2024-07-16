@@ -53,6 +53,11 @@ public interface LoggingConfiguration {
         return true;
     }
 
+    @Value.Default
+    default int systemSegmentId() {
+        return 0;
+    }
+
     static ImmutableLoggingConfiguration.Builder builder() {
         return ImmutableLoggingConfiguration.builder();
     }

@@ -104,7 +104,7 @@ public class MessageSerializerTest {
 
         Imports imports = Imports.of(Collections.singletonList(item));
 
-        ProcessResponse r = new ProcessResponse(123, "sesion-token", UUID.randomUUID(), "org-name", "repo-url", "repo-path", "commit-id", "repo-branch", "secret-name", imports);
+        ProcessResponse r = new ProcessResponse(123, "sesion-token", UUID.randomUUID(), 1, "org-name", "repo-url", "repo-path", "commit-id", "repo-branch", "secret-name", imports);
 
         // ---
         String rSerialized = MessageSerializer.serialize(r);

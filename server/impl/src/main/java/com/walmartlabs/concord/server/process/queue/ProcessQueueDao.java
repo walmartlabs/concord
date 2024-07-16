@@ -628,10 +628,10 @@ public class ProcessQueueDao extends AbstractDao {
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId)));
     }
 
-    public void updateExclusive(DSLContext tx, ProcessKey key, ExclusiveMode exclusive) {
+    public void updateExclusive(DSLContext tx, ProcessKey processKey, ExclusiveMode exclusive) {
         tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.EXCLUSIVE, objectMapper.toJSONB(exclusive))
-                .where(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()))
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
                 .execute();
     }
 
@@ -640,6 +640,22 @@ public class ProcessQueueDao extends AbstractDao {
                 .set(PROCESS_QUEUE.TOTAL_RUNTIME_MS, coalesce(PROCESS_QUEUE.TOTAL_RUNTIME_MS, 0L).plus(duration.toMillis()))
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
                 .execute();
+    }
+
+    public void incAttemptNumber(DSLContext tx, ProcessKey processKey) {
+        tx.update(PROCESS_QUEUE)
+                .set(PROCESS_QUEUE.LATEST_ATTEMPT_NUMBER, coalesce(PROCESS_QUEUE.LATEST_ATTEMPT_NUMBER, 1).plus(1))
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .execute();
+    }
+
+    public int getAttemptNumber(ProcessKey processKey) {
+        return txResult(tx ->
+                tx.select(coalesce(PROCESS_QUEUE.LATEST_ATTEMPT_NUMBER, 1))
+                .from(PROCESS_QUEUE)
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_QUEUE.CREATED_AT.eq(processKey.getCreatedAt())))
+                .fetchOne(Record1::value1));
     }
 
     private SelectQuery<Record> buildSelect(DSLContext tx, ProcessFilter filter) {
@@ -858,6 +874,7 @@ public class ProcessQueueDao extends AbstractDao {
 
         return ImmutableProcessEntry.builder()
                 .instanceId(r.get(PROCESS_QUEUE.INSTANCE_ID))
+                .latestAttemptNumber(r.get(PROCESS_QUEUE.LATEST_ATTEMPT_NUMBER))
                 .kind(kind)
                 .parentInstanceId(r.get(PROCESS_QUEUE.PARENT_INSTANCE_ID))
                 .orgId(r.get(Tables.PROJECTS.ORG_ID))

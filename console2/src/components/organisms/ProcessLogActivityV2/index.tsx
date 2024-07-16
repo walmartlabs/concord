@@ -21,19 +21,61 @@
 import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
-import { ConcordId } from '../../../api/common';
-import { isFinal, ProcessStatus } from '../../../api/process';
+import {ConcordId, GenericOperationResult} from '../../../api/common';
+import {isFinal, ProcessAttemptEntry, ProcessStatus} from '../../../api/process';
 
 import './styles.css';
 import { listLogSegments as apiListLogSegments, LogSegmentEntry } from '../../../api/process/log';
+import { listAttempts as apiListAttempts } from '../../../api/process/history';
 import { usePolling } from '../../../api/usePolling';
 import { RequestErrorActivity } from '../../organisms';
 import LogSegmentActivity from './LogSegmentActivity';
 import { FormWizardAction, ProcessToolbar } from '../../molecules';
-import { Button, Divider, Popup, Radio } from 'semantic-ui-react';
+import {
+    Button,
+    Divider,
+    Dropdown,
+    DropdownDivider,
+    DropdownHeader, DropdownItem,
+    DropdownMenu, DropdownProps, Header, Icon,
+    Menu,
+    Popup,
+    Radio
+} from 'semantic-ui-react';
 import { LogProcessorOptions } from '../../../state/data/processes/logs/processors';
 import { Route } from 'react-router';
 import { FormListEntry, list as apiListForms } from '../../../api/process/form';
+import {statusToIcon} from "../../molecules/ProcessStatusIcon";
+import {listAttempts} from "../../../api/process/history";
+import {createOrUpdate as apiUpdate} from "../../../api/org/project";
+import {useApi} from "../../../hooks/useApi";
+
+const options = [
+    {
+        key: 1,
+        text: 'Latest #5',
+        value: 1,
+        content: (
+            <DropdownItem icon={statusToIcon['FAILED']} text={`Attempt #${1}`} />
+        ),
+    },
+    {
+        key: 2,
+        text: 'Tablet',
+        value: 2,
+        content: (
+            <DropdownItem icon={statusToIcon['FAILED']} text={`Attempt #${2}`} />
+        ),
+    },
+    {
+        key: 3,
+        text: 'Desktop',
+        value: 3,
+        content: (
+            <DropdownItem icon={statusToIcon['FAILED']} text={`Attempt #${3}`} />
+        ),
+    },
+]
 
 const DEFAULT_SEGMENT_OPTS: LogProcessorOptions = {
     useLocalTime: true,
@@ -56,6 +98,7 @@ interface LogOptions {
 interface ExternalProps {
     instanceId: ConcordId;
     processStatus?: ProcessStatus;
+    latestAttemptNumber?: number;
     loadingHandler: (inc: number) => void;
     forceRefresh: boolean;
     dataFetchInterval: number;
@@ -64,6 +107,7 @@ interface ExternalProps {
 const ProcessLogActivityV2 = ({
     instanceId,
     processStatus,
+    latestAttemptNumber,
     loadingHandler,
     forceRefresh,
     dataFetchInterval
@@ -71,6 +115,7 @@ const ProcessLogActivityV2 = ({
     const [segments, setSegments] = useState<LogSegmentEntry[]>([]);
     const [logOpts, setLogOptions] = useState<LogOptions>(getStoredOpts());
     const [forms, setForms] = useState<FormListEntry[]>([]);
+    const [attemptNumber, setAttemptNumber] = useState(latestAttemptNumber);
 
     const segmentOptsHandler = useCallback((o: LogProcessorOptions) => {
         setLogOptions((prev) => {
@@ -86,11 +131,19 @@ const ProcessLogActivityV2 = ({
         storeOpts(logOpts);
     }, [logOpts]);
 
+    // useEffect(() => {
+    //     setAttemptNumber(latestAttemptNumber);
+    // }, [latestAttemptNumber]);
+
+    const attemptNumberChangeHandler = useCallback((ev: {}, { value }: DropdownProps) => {
+        setAttemptNumber(value as number);
+    }, []);
+
     const fetchSegments = useCallback(async () => {
         // TODO: real limit/offset
         const limit = -1;
         const offset = 0;
-        const segments = await apiListLogSegments(instanceId, offset, limit);
+        const segments = await apiListLogSegments(instanceId, offset, limit, attemptNumber);
 
         setSegments(segments.items);
 
@@ -104,6 +157,15 @@ const ProcessLogActivityV2 = ({
         return !isFinal(processStatus);
     }, [instanceId, processStatus]);
 
+    const fetchAttemptsHistory = useCallback(() => {
+        return apiListAttempts(instanceId);
+    }, [instanceId]);
+
+    const { error: fetchAttemptsError, isLoading: fetchAttemptsLoading, data: fetchAttemptsData } = useApi<ProcessAttemptEntry[]>(fetchAttemptsHistory, {
+        fetchOnMount: true,
+        forceRequest: forceRefresh
+    });
+
     const formError = usePolling(fetchForm, dataFetchInterval, loadingHandler, forceRefresh);
 
     const error = usePolling(fetchSegments, dataFetchInterval, loadingHandler, forceRefresh);
@@ -114,6 +176,10 @@ const ProcessLogActivityV2 = ({
 
     if (formError) {
         return <RequestErrorActivity error={formError} />;
+    }
+
+    if (fetchAttemptsError) {
+        return <RequestErrorActivity error={fetchAttemptsError} />;
     }
 
     return (
@@ -199,13 +265,38 @@ const ProcessLogActivityV2 = ({
                     </div>
                 </Popup>
 
-                <Button.Group>
-                    <Button
-                        disabled={process === undefined}
-                        onClick={() => window.open(`/api/v1/process/${instanceId}/log`, '_blank')}>
-                        Raw
-                    </Button>
-                </Button.Group>
+                {fetchAttemptsData && fetchAttemptsData.length > 1 &&
+                    <Dropdown
+                        icon='history'
+                        floating
+                        labeled
+                        basic
+                        button
+                        className='icon'
+                        loading={fetchAttemptsLoading}
+                        style={{ marginRight: 20, minWidth: 180 }}
+                        onChange={attemptNumberChangeHandler}
+                        options={
+                            // [{key: latestAttemptNumber, value: latestAttemptNumber, text: <span>{processStatus && <Icon name={statusToIcon[processStatus].name} color={statusToIcon[processStatus].color}/>}{`Latest #${latestAttemptNumber}`}</span>}].concat(
+                                fetchAttemptsData
+                                    // .slice(0, fetchAttemptsData.length - 1)
+                                    // .reverse()
+                                    .map((value) => ({
+                                        key: value.attemptNumber,
+                                        value: value.attemptNumber,
+                                        text: <span><Icon name={statusToIcon[value.status].name}
+                                                          color={statusToIcon[value.status].color}/>{`Attempt #${value.attemptNumber}`}</span>
+                                    }))}
+                        value={attemptNumber}
+                    />
+                }
+
+                <Button
+                    basic
+                    disabled={process === undefined}
+                    onClick={() => window.open(`/api/v1/process/${instanceId}/log`, '_blank')}>
+                    Raw
+                </Button>
             </ProcessToolbar>
 
             {segments

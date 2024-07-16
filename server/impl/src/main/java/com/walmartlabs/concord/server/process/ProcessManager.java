@@ -163,8 +163,6 @@ public class ProcessManager {
             throw new ProcessException(rootProcessKey, "Can't restart running process: " + processKey, Status.CONFLICT);
         }
 
-        // put new attemptNO somewhere
-
         queueDao.tx(tx -> {
             boolean updated = queueManager.updateExpectedStatus(tx, rootProcessKey, e.status(), ProcessStatus.NEW);
             if (updated) {
@@ -175,6 +173,8 @@ public class ProcessManager {
                 kill(tx, allProcesses);
 
                 stateManager.delete(tx, rootProcessKey);
+
+                queueManager.incAttemptNumber(tx, rootProcessKey);
             }
         });
     }

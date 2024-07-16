@@ -40,18 +40,21 @@ public class DefaultLoggingClient implements LoggingClient {
 
     private final ProcessLogV2Api api;
     private final UUID instanceId;
+    private final int attemptNumber;
     private final RunnerConfiguration cfg;
 
     @Inject
     public DefaultLoggingClient(ApiClient apiClient, ProcessConfiguration processCfg, RunnerConfiguration cfg) {
         this.api = new ProcessLogV2Api(apiClient);
         this.instanceId = processCfg.instanceId();
+        this.attemptNumber = processCfg.attemptNumber();
         this.cfg = cfg;
     }
 
     public long createSegment(UUID correlationId, String name) {
         LogSegmentRequest request = new LogSegmentRequest()
                 .correlationId(correlationId)
+                .attemptNumber(attemptNumber)
                 .createdAt(OffsetDateTime.now(ZoneId.of("UTC")))
                 .name(name);
 

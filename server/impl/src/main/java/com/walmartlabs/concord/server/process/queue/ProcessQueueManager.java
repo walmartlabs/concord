@@ -88,7 +88,7 @@ public class ProcessQueueManager {
         queueDao.tx(tx -> {
             queueDao.insert(tx, processKey, status, kind, parentInstanceId, projectId, repoId, branchOrTag, commitId, initiatorId, meta, triggeredBy);
             notifyStatusChange(tx, processKey, status);
-            processLogManager.createSystemSegment(tx, payload.getProcessKey());
+            processLogManager.createSystemSegment(tx, payload.getProcessKey(), 0);
         });
     }
 
@@ -242,6 +242,47 @@ public class ProcessQueueManager {
         });
     }
 
+    public void incAttemptNumber(DSLContext tx, ProcessKey processKey) {
+        queueDao.incAttemptNumber(tx, processKey);
+    }
+
+    public Optional<List<ProcessAttemptEntry>> listAttempts(PartialProcessKey processKey) {
+        return Optional.ofNullable(keyCache.get(processKey.getInstanceId()))
+                .map(this::getSortedStatusHistory)
+                .map(this::buildProcessAttempts);
+    }
+
+    private boolean isNewAttempt(ProcessStatus status) {
+        return status == ProcessStatus.NEW || status == ProcessStatus.PREPARING;
+    }
+
+    private List<ProcessAttemptEntry> buildProcessAttempts(List<ProcessEntry.ProcessStatusHistoryEntry> historyItems) {
+        List<ProcessAttemptEntry> result = new ArrayList<>();
+        ImmutableProcessAttemptEntry.Builder currentAttemptEntry = null;
+        int currentAttemptNumber = 0;
+        ProcessStatus prevStatus = null;
+
+        for (var item : historyItems) {
+            if (isNewAttempt(item.status())) {
+                if (currentAttemptEntry != null) {
+                    currentAttemptEntry.status(prevStatus);
+                    result.add(currentAttemptEntry.build());
+                }
+
+                currentAttemptNumber++;
+                currentAttemptEntry = ProcessAttemptEntry.builder()
+                        .attemptNumber(currentAttemptNumber)
+                        .startedAt(item.changeDate());
+            }
+            prevStatus = item.status();
+        }
+        if (currentAttemptEntry != null) {
+            currentAttemptEntry.status(prevStatus);
+            result.add(currentAttemptEntry.build());
+        }
+        return result;
+    }
+
     private static Map<String, Object> getCfg(Payload payload) {
         return payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
     }
@@ -287,5 +328,16 @@ public class ProcessQueueManager {
 
     private void notifyStatusChange(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
         statusListeners.forEach(l -> l.onStatusChange(tx, processKey, status));
+    }
+
+    private List<ProcessEntry.ProcessStatusHistoryEntry> getSortedStatusHistory(ProcessKey key) {
+        List<ProcessEntry.ProcessStatusHistoryEntry> statusHistory = queueDao.getStatusHistory(key);
+        if (statusHistory == null) {
+            return List.of();
+        }
+
+        var sortedHistory = new ArrayList<>(statusHistory);
+        sortedHistory.sort(Comparator.comparing(ProcessEntry.ProcessStatusHistoryEntry::changeDate));
+        return sortedHistory;
     }
 }

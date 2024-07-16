@@ -24,29 +24,26 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Value.Immutable
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonSerialize(as = ImmutableLogSegmentRequest.class)
-@JsonDeserialize(as = ImmutableLogSegmentRequest.class)
-public interface LogSegmentRequest {
+@JsonSerialize(as = ImmutableProcessAttemptEntry.class)
+@JsonDeserialize(as = ImmutableProcessAttemptEntry.class)
+public interface ProcessAttemptEntry extends Serializable {
 
-    @Nullable
-    UUID correlationId();
+    int attemptNumber();
 
-    String name();
+    ProcessStatus status();
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    @Nullable
-    OffsetDateTime createdAt();
+    OffsetDateTime startedAt();
 
-    @Value.Default
-    default int attemptNumber() {
-        return 0;
+    static ImmutableProcessAttemptEntry.Builder builder() {
+        return ImmutableProcessAttemptEntry.builder();
     }
 }

@@ -122,6 +122,12 @@ export interface ProcessHistoryEntry {
     changeDate: string;
 }
 
+export interface ProcessAttemptEntry {
+    attemptNumber: number;
+    status: ProcessStatus;
+    startedAt: string;
+}
+
 export enum WaitType {
     NONE = 'NONE',
     PROCESS_COMPLETION = 'PROCESS_COMPLETION',
@@ -184,6 +190,7 @@ export interface TriggerEntry {
 export interface ProcessEntry {
     instanceId: ConcordId;
     parentInstanceId?: ConcordId;
+    latestAttemptNumber?: number;
     status: ProcessStatus;
     kind: ProcessKind;
     orgName?: ConcordKey;

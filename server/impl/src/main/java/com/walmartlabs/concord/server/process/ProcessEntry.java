@@ -46,6 +46,9 @@ public interface ProcessEntry extends Serializable {
 
     UUID instanceId();
 
+    @Nullable
+    Integer latestAttemptNumber();
+
     ProcessKind kind();
 
     @Nullable
