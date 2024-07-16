@@ -49,6 +49,11 @@ public interface ProcessConfiguration extends Serializable {
     UUID instanceId();
 
     @Value.Default
+    default int attemptNumber() {
+        return 1;
+    }
+
+    @Value.Default
     default boolean debug() {
         return false;
     }

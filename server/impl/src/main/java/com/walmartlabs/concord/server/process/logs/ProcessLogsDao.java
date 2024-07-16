@@ -77,28 +77,32 @@ public class ProcessLogsDao extends AbstractDao {
         return PgIntRange.parse(r.getLogRange().toString());
     }
 
-    public long createSegment(ProcessKey processKey, UUID correlationId, String name, OffsetDateTime createdAt, String status) {
+    public long createSegment(ProcessKey processKey, UUID correlationId, String name, OffsetDateTime createdAt, int attemptNumber, String status) {
         return txResult(tx -> tx.insertInto(PROCESS_LOG_SEGMENTS)
                 .columns(PROCESS_LOG_SEGMENTS.INSTANCE_ID,
                         PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT,
                         PROCESS_LOG_SEGMENTS.CORRELATION_ID,
                         PROCESS_LOG_SEGMENTS.SEGMENT_NAME,
                         PROCESS_LOG_SEGMENTS.SEGMENT_TS,
-                        PROCESS_LOG_SEGMENTS.SEGMENT_STATUS)
+                        PROCESS_LOG_SEGMENTS.SEGMENT_STATUS,
+                        PROCESS_LOG_SEGMENTS.ATTEMPT_NUMBER)
                 .values(value(processKey.getInstanceId()),
                         value(processKey.getCreatedAt()),
                         value(correlationId), value(name),
                         createdAt != null ? value(createdAt) : currentOffsetDateTime(),
-                        value(status))
+                        value(status),
+                        value(attemptNumber))
                 .returning(PROCESS_LOG_SEGMENTS.SEGMENT_ID)
                 .fetchOne()
                 .getSegmentId());
     }
 
-    public void createSegment(DSLContext tx, long segmentId, ProcessKey processKey, UUID correlationId, String name, String status) {
+    public void createSegment(DSLContext tx, long segmentId, ProcessKey processKey, UUID correlationId, String name, int attemptNumber, String status) {
         tx.insertInto(PROCESS_LOG_SEGMENTS)
-                .columns(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.INSTANCE_ID, PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENTS.CORRELATION_ID, PROCESS_LOG_SEGMENTS.SEGMENT_NAME, PROCESS_LOG_SEGMENTS.SEGMENT_TS, PROCESS_LOG_SEGMENTS.SEGMENT_STATUS)
-                .values(value(segmentId), value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), currentOffsetDateTime(), value(status))
+                .columns(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.INSTANCE_ID, PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT,
+                        PROCESS_LOG_SEGMENTS.CORRELATION_ID, PROCESS_LOG_SEGMENTS.SEGMENT_NAME, PROCESS_LOG_SEGMENTS.SEGMENT_TS,
+                        PROCESS_LOG_SEGMENTS.SEGMENT_STATUS, PROCESS_LOG_SEGMENTS.ATTEMPT_NUMBER)
+                .values(value(segmentId), value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), currentOffsetDateTime(), value(status), value(attemptNumber))
                 .execute();
     }
 
@@ -129,11 +133,11 @@ public class ProcessLogsDao extends AbstractDao {
         q.execute();
     }
 
-    public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset) {
+    public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset, int attemptNumber) {
         UUID instanceId = processKey.getInstanceId();
         OffsetDateTime createdAt = processKey.getCreatedAt();
 
-        SelectSeekStep2<Record8<Long, UUID, String, OffsetDateTime, String, OffsetDateTime, Integer, Integer>, OffsetDateTime, Long> q = dsl()
+        var q = dsl()
                 .select(PROCESS_LOG_SEGMENTS.SEGMENT_ID,
                         PROCESS_LOG_SEGMENTS.CORRELATION_ID,
                         PROCESS_LOG_SEGMENTS.SEGMENT_NAME,
@@ -144,14 +148,18 @@ public class ProcessLogsDao extends AbstractDao {
                         PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS)
                 .from(PROCESS_LOG_SEGMENTS)
                 .where(PROCESS_LOG_SEGMENTS.INSTANCE_ID.eq(instanceId)
-                        .and(PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT.eq(createdAt)))
-                .orderBy(PROCESS_LOG_SEGMENTS.SEGMENT_TS, PROCESS_LOG_SEGMENTS.SEGMENT_ID);
+                        .and(PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT.eq(createdAt)));
 
         if (limit >= 0) {
             q.limit(limit);
         }
 
-        return q.offset(offset)
+        if (attemptNumber >= 0) {
+            q.and(PROCESS_LOG_SEGMENTS.ATTEMPT_NUMBER.eq(attemptNumber));
+        }
+
+        return q.orderBy(PROCESS_LOG_SEGMENTS.SEGMENT_TS, PROCESS_LOG_SEGMENTS.SEGMENT_ID)
+                .offset(offset)
                 .fetch(ProcessLogsDao::toSegment);
     }
 

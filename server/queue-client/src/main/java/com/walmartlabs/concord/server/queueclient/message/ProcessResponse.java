@@ -29,6 +29,7 @@ import java.util.UUID;
 public class ProcessResponse extends Message {
 
     private final String sessionToken;
+    private final int attemptNumber;
     private final UUID processId;
     private final String orgName; // TODO rename to secretOrgName
     private final String repoUrl;
@@ -43,6 +44,7 @@ public class ProcessResponse extends Message {
             @JsonProperty("correlationId") long correlationId,
             @JsonProperty("sessionToken") String sessionToken,
             @JsonProperty("processId") UUID processId,
+            @JsonProperty("attemptNumber") int attemptNumber,
             @JsonProperty("orgName") String orgName,
             @JsonProperty("repoUrl") String repoUrl,
             @JsonProperty("repoPath") String repoPath,
@@ -56,6 +58,7 @@ public class ProcessResponse extends Message {
         setCorrelationId(correlationId);
         this.sessionToken = sessionToken;
         this.processId = processId;
+        this.attemptNumber = attemptNumber;
         this.orgName = orgName;
         this.repoUrl = repoUrl;
         this.repoPath = repoPath;
@@ -71,6 +74,10 @@ public class ProcessResponse extends Message {
 
     public UUID getProcessId() {
         return processId;
+    }
+
+    public int getAttemptNumber() {
+        return attemptNumber;
     }
 
     public String getOrgName() {

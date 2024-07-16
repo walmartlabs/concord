@@ -189,6 +189,22 @@ public class ProcessResourceV2 implements Resource {
                 FilterUtils.parseJson("requirements", uriInfo));
     }
 
+    @GET
+    @Path("/{id}/attempts")
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    @Operation(description = "List process attempts")
+    public List<ProcessAttemptEntry> listAttempts(@PathParam("id") UUID instanceId) {
+        PartialProcessKey processKey = PartialProcessKey.from(instanceId);
+
+        var result = processQueueManager.listAttempts(processKey);
+
+        if (result.isEmpty()) {
+            throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
+        }
+        return result.get();
+    }
+
     /**
      * Counts processes applying the specified filters.
      */

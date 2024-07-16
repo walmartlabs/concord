@@ -264,6 +264,7 @@ const ProcessActivity = (props: ExternalProps) => {
                         <ProcessLogActivityV2
                             instanceId={instanceId}
                             processStatus={process ? process.status : undefined}
+                            latestAttemptNumber={process ? process.latestAttemptNumber : undefined}
                             loadingHandler={loadingHandler}
                             forceRefresh={refresh}
                             dataFetchInterval={dataFetchInterval}

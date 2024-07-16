@@ -267,6 +267,7 @@ public class Dispatcher extends PeriodicTask {
             ProcessResponse resp = new ProcessResponse(correlationId,
                     sessionTokenCreator.create(item.key()),
                     item.key().getInstanceId(),
+                    item.attemptNumber(),
                     secret != null ? secret.orgName : null,
                     item.repoUrl(),
                     item.repoPath(),
@@ -314,7 +315,7 @@ public class Dispatcher extends PeriodicTask {
 
             Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(q.PROJECT_ID)).asField();
 
-            SelectJoinStep<Record14<UUID, OffsetDateTime, UUID, UUID, UUID, UUID, String, String, String, UUID, JSONB, JSONB, JSONB, String>> s =
+            var s =
                     tx.select(
                             q.INSTANCE_ID,
                             q.CREATED_AT,
@@ -329,7 +330,8 @@ public class Dispatcher extends PeriodicTask {
                             q.IMPORTS,
                             q.REQUIREMENTS,
                             q.EXCLUSIVE,
-                            q.COMMIT_BRANCH)
+                            q.COMMIT_BRANCH,
+                            coalesce(q.LATEST_ATTEMPT_NUMBER, 1))
                             .from(q);
 
             s.where(q.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString())
@@ -356,6 +358,7 @@ public class Dispatcher extends PeriodicTask {
                             .imports(objectMapper.fromJSONB(r.value11(), Imports.class))
                             .requirements(objectMapper.fromJSONB(r.value12()))
                             .exclusive(objectMapper.fromJSONB(r.value13(), ExclusiveMode.class))
+                            .attemptNumber(r.value15())
                             .build());
         }
 

@@ -102,6 +102,8 @@ public class Main {
             ProcessHeartbeat heartbeat = new ProcessHeartbeat(apiClient, processCfg.instanceId(), runnerCfg.api().maxNoHeartbeatInterval());
             heartbeat.start();
 
+            System.out.println(">>>>>" + processCfg.attemptNumber());
+
             Main main = injector.getInstance(Main.class);
             main.execute();
 

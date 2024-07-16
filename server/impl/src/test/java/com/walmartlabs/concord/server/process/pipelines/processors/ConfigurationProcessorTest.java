@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,12 +51,14 @@ public class ConfigurationProcessorTest {
     private ConfigurationProcessor p;
     private ProjectDao projectDao;
     private OrganizationDao orgDao;
+    private ProcessQueueDao processQueueDao;
 
     @BeforeEach
     public void init() {
         projectDao = mock(ProjectDao.class);
         orgDao = mock(OrganizationDao.class);
-        p = new ConfigurationProcessor(projectDao, orgDao);
+        processQueueDao = mock(ProcessQueueDao.class);
+        p = new ConfigurationProcessor(projectDao, orgDao, processQueueDao);
     }
 
     @Test

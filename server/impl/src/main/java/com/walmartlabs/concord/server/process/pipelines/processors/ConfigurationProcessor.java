@@ -34,6 +34,7 @@ import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.pipelines.processors.cfg.ProcessConfigurationUtils;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -54,11 +55,13 @@ public class ConfigurationProcessor implements PayloadProcessor {
 
     private final ProjectDao projectDao;
     private final OrganizationDao orgDao;
+    private final ProcessQueueDao processQueueDao;
 
     @Inject
-    public ConfigurationProcessor(ProjectDao projectDao, OrganizationDao orgDao) {
+    public ConfigurationProcessor(ProjectDao projectDao, OrganizationDao orgDao, ProcessQueueDao processQueueDao) {
         this.projectDao = projectDao;
         this.orgDao = orgDao;
+        this.processQueueDao = processQueueDao;
     }
 
     @Override
@@ -103,6 +106,8 @@ public class ConfigurationProcessor implements PayloadProcessor {
         // create the resulting configuration
         Map<String, Object> m = ConfigurationUtils.deepMerge(policyDefCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, payloadCfg, providedCfg, policyCfg);
         m.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
+
+        m.put("attemptNumber", processQueueDao.getAttemptNumber(payload.getProcessKey()));
 
         // handle handlers special params
         processHandlersConfiguration(payload, m);

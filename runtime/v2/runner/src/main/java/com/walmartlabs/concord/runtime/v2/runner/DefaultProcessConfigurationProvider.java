@@ -52,6 +52,7 @@ public class DefaultProcessConfigurationProvider implements Provider<ProcessConf
     public ProcessConfiguration get() {
         try {
             UUID instanceId = waitForInstanceId(workDir);
+
             // TODO pass instanceId directly in _main.json?
             return readProcessConfiguration(instanceId, workDir);
         } catch (RuntimeException e) {

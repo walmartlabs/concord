@@ -78,19 +78,19 @@ public class ProcessLogManager {
         return log(processKey, SYSTEM_SEGMENT_ID, msg);
     }
 
-    public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset) {
-        return logsDao.listSegments(processKey, limit, offset);
+    public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset, int attemptNumber) {
+        return logsDao.listSegments(processKey, limit, offset, attemptNumber);
     }
 
-    public void createSystemSegment(DSLContext tx, ProcessKey processKey) {
-        logsDao.createSegment(tx, SYSTEM_SEGMENT_ID, processKey, null, SYSTEM_SEGMENT_NAME, null);
+    public void createSystemSegment(DSLContext tx, ProcessKey processKey, int attemptNumber) {
+        logsDao.createSegment(tx, SYSTEM_SEGMENT_ID, processKey, null, SYSTEM_SEGMENT_NAME, attemptNumber, null);
     }
 
-    public long createSegment(ProcessKey processKey, UUID correlationId, String name, OffsetDateTime createdAt) {
+    public long createSegment(ProcessKey processKey, UUID correlationId, String name, OffsetDateTime createdAt, int attemptNumber) {
         if (SYSTEM_SEGMENT_NAME.equals(name)) {
             return SYSTEM_SEGMENT_ID;
         }
-        return logsDao.createSegment(processKey, correlationId, name, createdAt, LogSegment.Status.RUNNING.name());
+        return logsDao.createSegment(processKey, correlationId, name, createdAt, attemptNumber, LogSegment.Status.RUNNING.name());
     }
 
     public void updateSegment(ProcessKey processKey, long segmentId, LogSegment.Status status, Integer warnings, Integer errors) {
