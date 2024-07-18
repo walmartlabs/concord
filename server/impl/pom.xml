@@ -280,6 +280,10 @@
             <groupId>org.javers</groupId>
             <artifactId>javers-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>gg.jte</groupId>
+            <artifactId>jte</artifactId>
+        </dependency>
 
         <!-- websockets -->
         <dependency>

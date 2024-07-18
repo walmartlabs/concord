@@ -88,6 +88,7 @@
         <json.schema.validator.version>1.4.0</json.schema.validator.version>
         <json.smart.version>2.5.0</json.smart.version>
         <jsr305.version>3.0.2</jsr305.version>
+        <jte.version>3.1.12</jte.version>
         <junit.version>5.9.1</junit.version>
         <kafka.client.version>2.4.0</kafka.client.version>
         <kerby.version>2.0.1</kerby.version>
@@ -1278,6 +1279,11 @@
                 <groupId>jakarta.activation</groupId>
                 <artifactId>jakarta.activation-api</artifactId>
                 <version>${activation.api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.jte</groupId>
+                <artifactId>jte</artifactId>
+                <version>${jte.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
