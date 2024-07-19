@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server;
  */
 
 import com.google.inject.Binder;
+import com.walmartlabs.concord.server.boot.resteasy.ApiDescriptor;
 import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
 import com.walmartlabs.concord.server.sdk.BackgroundTask;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
@@ -66,6 +67,11 @@ public final class Utils {
         }
 
         return v.getValue();
+    }
+
+    public static void bindApiDescriptor(Binder binder, Class<? extends ApiDescriptor> klass) {
+        binder.bind(klass).in(SINGLETON);
+        newSetBinder(binder, ApiDescriptor.class).addBinding().to(klass);
     }
 
     public static void bindServletFilter(Binder binder, Class<? extends Filter> klass) {
