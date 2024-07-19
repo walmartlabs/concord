@@ -2,6 +2,6 @@
 
 @template.layout(content = @`
     <main>
-        404 Page not found
+        401 Unauthorized
     </main>
 `)

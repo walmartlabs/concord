@@ -15,8 +15,6 @@ import java.util.Map;
 @Path("/console3")
 public class ConsoleResource implements Resource {
 
-    private static final PageContext DEFAULT_PAGE_CONTEXT = new PageContext("/console3");
-
     private final TemplateEngine templateEngine;
 
     public ConsoleResource() {
@@ -28,7 +26,7 @@ public class ConsoleResource implements Resource {
     @Produces(MediaType.TEXT_HTML)
     @Path("/clicked")
     public Response clicked() {
-        return render("clicked.jte");
+        return renderAuthenticated(Status.OK, "clicked.jte");
     }
 
     @GET
@@ -40,21 +38,34 @@ public class ConsoleResource implements Resource {
     @Path("{path:.*}")
     public Response get(@PathParam("path") String path) {
         if (path == null || path.isEmpty() || path.equals("/") || path.equals("/index.html")) {
-            return render("index.jte");
+            return renderAuthenticated(Status.OK, "index.jte");
         } else if (path.equals("htmx.min.js")) {
-            return render("htmx.min.js");
+            return renderAnon(Status.OK, "htmx.min.js");
         }
 
-        return render(Status.NOT_FOUND, "404.jte");
+        return renderAnon(Status.NOT_FOUND, "404.jte");
     }
 
-    private Response render(String template) {
-        return render(Status.OK, template);
+    private Response renderAuthenticated(Status status, String template) {
+        return UserContext.getCurrent().map(userContext -> {
+            var pageContext = new PageContext("/console3");
+            var params = Map.<String, Object>of(
+                    "pageContext", pageContext,
+                    "userContext", userContext
+            );
+            return html(status, template, params);
+        }).orElseGet(() -> renderAnon(Status.UNAUTHORIZED, "401.jte"));
     }
 
-    private Response render(Status status, String template) {
+    private Response renderAnon(Status status, String template) {
+        var pageContext = new PageContext("/console3");
+        var params = Map.<String, Object>of("pageContext", pageContext);
+        return html(status, template, params);
+    }
+
+    private Response html(Status status, String template, Map<String, Object> params) {
         var output = new StringOutput();
-        templateEngine.render(template, Map.of("pageContext", DEFAULT_PAGE_CONTEXT), output);
+        templateEngine.render(template, params, output);
         return Response.status(status)
                 .entity(output.toString())
                 .type(MediaType.TEXT_HTML)
