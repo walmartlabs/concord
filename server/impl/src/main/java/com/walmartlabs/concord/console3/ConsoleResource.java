@@ -53,22 +53,23 @@ public class ConsoleResource implements Resource {
                     "pageContext", pageContext,
                     "userContext", userContext
             );
-            return html(status, template, params);
+            return html(template, params)
+                    .status(status)
+                    .build();
         }).orElseGet(() -> renderAnon(Status.UNAUTHORIZED, "401.jte"));
     }
 
     private Response renderAnon(Status status, String template) {
         var pageContext = new PageContext("/console3");
         var params = Map.<String, Object>of("pageContext", pageContext);
-        return html(status, template, params);
+        return html(template, params)
+                .status(status)
+                .build();
     }
 
-    private Response html(Status status, String template, Map<String, Object> params) {
+    private Response.ResponseBuilder html(String template, Map<String, Object> params) {
         var output = new StringOutput();
         templateEngine.render(template, params, output);
-        return Response.status(status)
-                .entity(output.toString())
-                .type(MediaType.TEXT_HTML)
-                .build();
+        return Response.ok(output.toString(), MediaType.TEXT_HTML);
     }
 }
