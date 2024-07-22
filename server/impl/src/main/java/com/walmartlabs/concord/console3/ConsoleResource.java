@@ -55,18 +55,25 @@ public class ConsoleResource implements Resource {
         // TODO consider handling auth in a FilterChainConfigurator
         var principal = UserPrincipal.getCurrent();
         if (principal == null) {
-            return renderAnon(Status.UNAUTHORIZED, "login.jte");
+            return renderAnon(Status.UNAUTHORIZED, "index.jte");
         }
 
         var userContext = new UserContext(principal.getUsername(), principal.getUsername(), principal.getUsername());
 
         if (path == null || path.isEmpty() || path.equals("/") || path.equals("/index.html")) {
-            return render(Status.OK, userContext, "index.jte");
-        } else if (path.equals("htmx.min.js")) {
-            return serve(Status.OK, "/com/walmartlabs/concord/console3/htmx.min.js");
+            path = "/";
         }
 
-        return render(Status.NOT_FOUND, userContext, "404.jte");
+        switch (path) {
+            case "/":
+                return render(Status.OK, userContext, "index.jte");
+            case "htmx.min.js":
+                return serve(Status.OK, "text/javascript", "/com/walmartlabs/concord/console3/htmx.min.js");
+            case "modern-normalize.min.css":
+                return serve(Status.OK, "text/css", "/com/walmartlabs/concord/console3/modern-normalize.min.css");
+            default:
+                return render(Status.NOT_FOUND, userContext, "404.jte");
+        }
     }
 
     @POST
@@ -75,7 +82,7 @@ public class ConsoleResource implements Resource {
         // TODO consider handling auth in a FilterChainConfigurator
         var principal = UserPrincipal.getCurrent();
         if (principal == null) {
-            return renderAnon(Status.UNAUTHORIZED, "login.jte");
+            return renderAnon(Status.UNAUTHORIZED, "index.jte");
         }
 
         var userContext = new UserContext(principal.getUsername(), principal.getUsername(), principal.getUsername());
@@ -101,12 +108,12 @@ public class ConsoleResource implements Resource {
                 .build();
     }
 
-    private Response serve(Status status, String resourcePath) {
+    private Response serve(Status status, String mediaType, String resourcePath) {
         var resource = ConsoleResource.class.getResourceAsStream(resourcePath);
         if (resource == null) {
             return Response.status(Status.NOT_FOUND).build();
         }
-        return Response.ok(resource, MediaType.TEXT_HTML)
+        return Response.ok(resource, mediaType)
                 .status(status)
                 .build();
     }
