@@ -2,15 +2,18 @@
 @import gg.jte.Content
 @param UserContext userContext = null
 @param Content content
+<!DOCTYPE html>
+<html>
 <head>
     <title>Concord</title>
-    <script src="https://unpkg.com/htmx.org@2.0.1"></script>
+    <script src="/console3/htmx.min.js"></script>
 </head>
 <body>
 @if(userContext != null)
-Hi, ${userContext.displayName() != null ? userContext.displayName() : userContext.username()}!
+    Hi, ${userContext.displayName() != null ? userContext.displayName() : userContext.username()}!
 @else
-Hi, guest!
+    Hi, guest!
 @endif
 ${content}
 </body>
+</html>
