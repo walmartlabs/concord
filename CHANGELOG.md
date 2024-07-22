@@ -1,5 +1,12 @@
 # Change log
 
+## [2.15.0] - Unreleased
+
+### Added
+
+- concord-task: new method to wait and check that processes have finished
+([#943](https://github.com/walmartlabs/concord/pull/943)). 
+
 ## [2.14.0] - 2024-07-13
 
 ### Added
