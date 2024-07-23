@@ -46,16 +46,19 @@ public class ConsoleResource implements Resource {
     @GET
     @Path("{path:.*}")
     public Response get(@PathParam("path") String path) {
-        // normalize path
-        if (path == null || path.isEmpty() || path.equals("/") || path.equals("/index.html")) {
+        if (path == null) {
             path = "/";
         }
 
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
+
         return switch (path) {
-            case "/" -> render(Status.OK, "index.jte");
-            case "htmx.min.js" -> serve("text/javascript", "/com/walmartlabs/concord/console3/htmx.min.js");
-            case "semantic.min.css" -> serve("text/css", "/com/walmartlabs/concord/console3/semantic.min.css");
-            case "semantic.min.js" -> serve("text/javascript", "/com/walmartlabs/concord/console3/semantic.min.js");
+            case "/", "/index.html" -> render(Status.OK, "index.jte");
+            case "/htmx.min.js" -> serve("text/javascript", "/com/walmartlabs/concord/console3/htmx.min.js");
+            case "/semantic.min.css" -> serve("text/css", "/com/walmartlabs/concord/console3/semantic.min.css");
+            case "/semantic.min.js" -> serve("text/javascript", "/com/walmartlabs/concord/console3/semantic.min.js");
             default -> render(Status.NOT_FOUND, "404.jte");
         };
     }
@@ -69,7 +72,7 @@ public class ConsoleResource implements Resource {
     private Response serve(String mediaType, String resourcePath) {
         var resource = ConsoleResource.class.getResourceAsStream(resourcePath);
         if (resource == null) {
-            return Response.status(Status.NOT_FOUND).build();
+            throw new IllegalArgumentException("Resource not found, must be a bug: " + resourcePath);
         }
         return Response.ok(resource, mediaType)
                 .status(Status.OK)

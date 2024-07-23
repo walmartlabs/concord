@@ -20,6 +20,7 @@ package com.walmartlabs.concord.console3;
  * =====
  */
 
+import com.walmartlabs.concord.console3.model.UserContext;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -44,7 +45,7 @@ public class UserContextFilter extends HttpFilter {
 
         var principal = UserPrincipal.getCurrent();
         if (principal != null) {
-            var ctx = new UserContext(principal.getUsername(), principal.getUsername(), principal.getUsername());
+            var ctx = new UserContext(principal.getId(), principal.getUsername(), principal.getUsername(), principal.getUsername());
             ResteasyContext.pushContext(UserContext.class, ctx);
         }
 

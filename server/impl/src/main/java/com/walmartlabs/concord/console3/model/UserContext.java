@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.console3;
+package com.walmartlabs.concord.console3.model;
 
 /*-
  * *****
@@ -20,5 +20,7 @@ package com.walmartlabs.concord.console3;
  * =====
  */
 
-public record UserContext(String username, String displayName, String email) {
+import java.util.UUID;
+
+public record UserContext(UUID userId, String username, String displayName, String email) {
 }
