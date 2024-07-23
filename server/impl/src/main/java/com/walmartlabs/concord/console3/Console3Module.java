@@ -22,9 +22,15 @@ package com.walmartlabs.concord.console3;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.walmartlabs.concord.console3.resources.ConsoleResource;
+import com.walmartlabs.concord.console3.resources.UserProfileResource;
+import com.walmartlabs.concord.server.boot.FilterChainConfigurator;
+import com.walmartlabs.concord.server.sdk.rest.Component;
 
 import javax.inject.Named;
 
+import static com.google.inject.Scopes.SINGLETON;
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static com.walmartlabs.concord.server.Utils.bindApiDescriptor;
 import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
 
@@ -33,7 +39,13 @@ public class Console3Module implements Module {
 
     @Override
     public void configure(Binder binder) {
+        newSetBinder(binder, FilterChainConfigurator.class).addBinding().to(ConsoleFilterChainConfigurator.class);
+
+        binder.bind(TemplateWriter.class).in(SINGLETON);
+        newSetBinder(binder, Component.class).addBinding().to(TemplateWriter.class);
+
         bindJaxRsResource(binder, ConsoleResource.class);
+        bindJaxRsResource(binder, UserProfileResource.class);
         bindApiDescriptor(binder, Console3ApiDescriptor.class);
     }
 }

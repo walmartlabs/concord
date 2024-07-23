@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.console3;
+package com.walmartlabs.concord.console3.resources;
 
 /*-
  * *****
@@ -20,20 +20,21 @@ package com.walmartlabs.concord.console3;
  * =====
  */
 
-import static com.google.common.base.Preconditions.checkArgument;
+import com.walmartlabs.concord.console3.TemplateResponse;
+import com.walmartlabs.concord.console3.UserContext;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 
-/**
- *
- * @param base - the base path of the page, e.g. /console3. Without a trailing slash.
- */
-public record PageContext(String base) {
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Context;
+import java.util.Map;
 
-    public PageContext(String base) {
-        checkArgument(base != null && !base.isBlank(), "base is required");
-        if (base.endsWith("/")) {
-            this.base = base.substring(0, base.length() - 1);
-        } else {
-            this.base = base;
-        }
+@Path("/api/console3")
+public class UserProfileResource implements Resource {
+
+    @POST
+    @Path("/click")
+    public TemplateResponse click(@Context UserContext user) {
+        return new TemplateResponse("click.jte", Map.of("name", user.username()));
     }
 }
