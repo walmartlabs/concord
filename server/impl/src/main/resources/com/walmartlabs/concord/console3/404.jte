@@ -1,5 +1,3 @@
-@param com.walmartlabs.concord.console3.PageContext page
-
 @template.layout(content = @`
     <main>
         404 Page not found

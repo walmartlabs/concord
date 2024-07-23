@@ -1,12 +1,11 @@
-@import com.walmartlabs.concord.console3.PageContext
 @import com.walmartlabs.concord.console3.UserContext
+@import static com.walmartlabs.concord.console3.resources.ConsoleResource.API_PREFIX
 
-@param PageContext pageContext
 @param UserContext userContext
 
 @template.layout(userContext = userContext, content = @`
     <main>
-        <button hx-post="${pageContext.base()}/clicked" hx-swap="outerHTML">
+        <button class="ui button" hx-post="${API_PREFIX}/click" hx-swap="outerHTML">
             Click Me
         </button>
     </main>
