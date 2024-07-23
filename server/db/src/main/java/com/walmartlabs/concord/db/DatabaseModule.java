@@ -24,6 +24,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
 import org.jooq.Configuration;
+import org.jooq.DSLContext;
 
 import javax.inject.Singleton;
 import javax.sql.DataSource;
@@ -81,6 +82,12 @@ public class DatabaseModule implements com.google.inject.Module {
     @Singleton
     public Configuration appJooqConfiguration(@MainDB DataSource ds) {
         return DataSourceUtils.createJooqConfiguration(ds);
+    }
+
+    @Provides
+    @MainDB
+    public DSLContext appDsl(@MainDB Configuration cfg) {
+        return cfg.dsl();
     }
 
     @Provides

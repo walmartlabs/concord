@@ -1,4 +1,4 @@
-@import com.walmartlabs.concord.console3.UserContext
+@import com.walmartlabs.concord.console3.model.UserContext
 @import gg.jte.Content
 @param UserContext userContext = null
 @param Content content

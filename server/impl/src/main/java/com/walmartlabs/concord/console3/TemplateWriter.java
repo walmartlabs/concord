@@ -9,9 +9,9 @@ package com.walmartlabs.concord.console3;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ package com.walmartlabs.concord.console3;
  */
 
 import com.google.common.collect.ImmutableMap;
+import com.walmartlabs.concord.console3.model.UserContext;
 import com.walmartlabs.concord.console3.resources.ConsoleResource;
 import com.walmartlabs.concord.server.sdk.rest.Component;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -70,7 +71,7 @@ public class TemplateWriter implements MessageBodyWriter<TemplateResponse>, Comp
         var params = ImmutableMap.<String, Object>builder();
 
         var userContext = Optional.ofNullable(UserPrincipal.getCurrent())
-                .map(principal -> new UserContext(principal.getUsername(), principal.getUsername(), principal.getUsername()));
+                .map(principal -> new UserContext(principal.getId(), principal.getUsername(), principal.getUsername(), principal.getUsername()));
         userContext.ifPresent(ctx -> params.put("userContext", ctx));
 
         params.putAll(s.params());
