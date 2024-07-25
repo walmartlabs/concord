@@ -38,7 +38,7 @@ public class MaintenanceModeNotifier {
     private final HttpServer server;
 
     public MaintenanceModeNotifier(Integer port, MaintenanceModeListener listener) throws IOException {
-        this.server = HttpServer.create(new InetSocketAddress("localhost", port), 0);
+        this.server = HttpServer.create(new InetSocketAddress(port), 0);
         this.server.createContext("/maintenance-mode", new MaintenanceModeHandler(listener));
     }
 
