@@ -20,6 +20,8 @@ package com.walmartlabs.concord.agentoperator.planner;
  * =====
  */
 
+import com.walmartlabs.concord.agentoperator.agent.AgentClient;
+import com.walmartlabs.concord.agentoperator.agent.AgentClientFactory;
 import com.walmartlabs.concord.agentoperator.HashUtils;
 import com.walmartlabs.concord.agentoperator.resources.AgentConfigMap;
 import com.walmartlabs.concord.agentoperator.resources.AgentPod;
@@ -41,9 +43,11 @@ public class Planner {
     private static final Logger log = LoggerFactory.getLogger(Planner.class);
 
     private final KubernetesClient client;
+    private final AgentClientFactory agentClientFactory;
 
-    public Planner(KubernetesClient client) {
+    public Planner(KubernetesClient client, AgentClientFactory agentClientFactory) {
         this.client = client;
+        this.agentClientFactory = agentClientFactory;
     }
 
     public List<Change> plan(AgentPoolInstance poolInstance) throws IOException {
@@ -57,9 +61,7 @@ public class Planner {
                 .withLabel(AgentPod.POOL_NAME_LABEL, resourceName)
                 .list()
                 .getItems()
-                .stream()
-                .map(p -> p.getMetadata().getName())
-                .forEach(n -> changes.add(new TryToDeletePodChange(n)));
+                .forEach(n -> changes.add(new TryToDeletePodChange(n.getMetadata().getName(), agentClientFactory.create(n.getStatus().getPodIP()))));
 
         List<Pod> pods = AgentPod.list(client, resourceName);
         int currentSize = pods.size();
@@ -121,14 +123,14 @@ public class Planner {
         for (Pod p : pods) {
             String currentHash = p.getMetadata().getLabels().get(AgentPod.CONFIG_HASH_LABEL);
             if (!newHash.equals(currentHash)) {
-                changes.add(new TagForRemovalChange(p.getMetadata().getName()));
+                changes.add(new TagForRemovalChange(p.getMetadata().getName(), agentClientFactory.create(p.getStatus().getPodIP())));
             }
         }
 
         // recreate all pods if the configmap changed
 
         if (recreateAllPods) {
-            pods.forEach(p -> changes.add(new TagForRemovalChange(p.getMetadata().getName())));
+            pods.forEach(p -> changes.add(new TagForRemovalChange(p.getMetadata().getName(), agentClientFactory.create(p.getStatus().getPodIP()))));
         }
 
         // create or remove pods according to the configured pool size
@@ -149,8 +151,9 @@ public class Planner {
                 }
 
                 String podName = pod.getMetadata().getName();
-                changes.add(new TagForRemovalChange(podName));
-                changes.add(new TryToDeletePodChange(podName));
+                AgentClient agentClient = agentClientFactory.create(pod.getStatus().getPodIP());
+                changes.add(new TagForRemovalChange(podName, agentClient));
+                changes.add(new TryToDeletePodChange(podName, agentClient));
 
                 podsToDelete--;
                 if (podsToDelete == 0) {
@@ -175,10 +178,6 @@ public class Planner {
             }
         }
         throw new RuntimeException("Can't generate pod name for '" + resourceName + "', current pods: " + podNames);
-    }
-
-    private static boolean hasPod(List<Pod> pods, String podName) {
-        return pods.stream().anyMatch(p -> p.getMetadata().getName().equals(podName));
     }
 
     private static String configMapName(String resourceName) {
