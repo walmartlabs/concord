@@ -57,7 +57,7 @@ public class DefaultAgentClient implements AgentClient {
     }
 
     @Override
-    public boolean isNoWorkers() throws Exception {
+    public boolean hasBusyWorkers() throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(new URI(url))
                 .GET()
@@ -67,7 +67,7 @@ public class DefaultAgentClient implements AgentClient {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         MaintenanceMode entity = objectMapper.readValue(response.body(), MaintenanceMode.class);
-        return entity.maintenanceMode() && entity.workersAlive() == 0;
+        return entity.maintenanceMode() && entity.workersAlive() > 0;
     }
 
     @Value.Immutable

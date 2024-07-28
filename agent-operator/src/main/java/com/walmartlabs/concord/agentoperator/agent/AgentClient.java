@@ -24,5 +24,5 @@ public interface AgentClient {
 
     void enableMaintenanceMode() throws Exception;
 
-    boolean isNoWorkers() throws Exception;
+    boolean hasBusyWorkers() throws Exception;
 }

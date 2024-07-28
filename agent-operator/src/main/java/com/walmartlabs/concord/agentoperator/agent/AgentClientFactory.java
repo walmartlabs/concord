@@ -20,6 +20,8 @@ package com.walmartlabs.concord.agentoperator.agent;
  * =====
  */
 
+import io.fabric8.kubernetes.api.model.Pod;
+
 import java.net.http.HttpClient;
 import java.time.Duration;
 
@@ -45,9 +47,9 @@ public class AgentClientFactory {
         }
     }
 
-    public AgentClient create(String podIp) {
+    public AgentClient create(Pod pod) {
         if (useMaintenanceMode) {
-            return new DefaultAgentClient(httpClient, podIp);
+            return new DefaultAgentClient(httpClient, pod.getStatus().getPodIP());
         } else {
             return new NopAgentClient();
         }

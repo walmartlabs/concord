@@ -78,7 +78,7 @@ public class TryToDeletePodChange implements Change {
         }
 
         try {
-            if (!agentClient.isNoWorkers()) {
+            if (agentClient.hasBusyWorkers()) {
                 return;
             }
         } catch (Exception e) {

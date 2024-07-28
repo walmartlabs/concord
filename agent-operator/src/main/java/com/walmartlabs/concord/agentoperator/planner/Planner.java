@@ -61,7 +61,7 @@ public class Planner {
                 .withLabel(AgentPod.POOL_NAME_LABEL, resourceName)
                 .list()
                 .getItems()
-                .forEach(n -> changes.add(new TryToDeletePodChange(n.getMetadata().getName(), agentClientFactory.create(n.getStatus().getPodIP()))));
+                .forEach(n -> changes.add(new TryToDeletePodChange(n.getMetadata().getName(), agentClientFactory.create(n))));
 
         List<Pod> pods = AgentPod.list(client, resourceName);
         int currentSize = pods.size();
@@ -123,14 +123,14 @@ public class Planner {
         for (Pod p : pods) {
             String currentHash = p.getMetadata().getLabels().get(AgentPod.CONFIG_HASH_LABEL);
             if (!newHash.equals(currentHash)) {
-                changes.add(new TagForRemovalChange(p.getMetadata().getName(), agentClientFactory.create(p.getStatus().getPodIP())));
+                changes.add(new TagForRemovalChange(p.getMetadata().getName(), agentClientFactory.create(p)));
             }
         }
 
         // recreate all pods if the configmap changed
 
         if (recreateAllPods) {
-            pods.forEach(p -> changes.add(new TagForRemovalChange(p.getMetadata().getName(), agentClientFactory.create(p.getStatus().getPodIP()))));
+            pods.forEach(p -> changes.add(new TagForRemovalChange(p.getMetadata().getName(), agentClientFactory.create(p))));
         }
 
         // create or remove pods according to the configured pool size
@@ -151,7 +151,7 @@ public class Planner {
                 }
 
                 String podName = pod.getMetadata().getName();
-                AgentClient agentClient = agentClientFactory.create(pod.getStatus().getPodIP());
+                AgentClient agentClient = agentClientFactory.create(pod);
                 changes.add(new TagForRemovalChange(podName, agentClient));
                 changes.add(new TryToDeletePodChange(podName, agentClient));
 

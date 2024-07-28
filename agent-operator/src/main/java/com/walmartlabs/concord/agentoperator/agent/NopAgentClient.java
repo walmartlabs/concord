@@ -28,7 +28,7 @@ public class NopAgentClient implements AgentClient {
     }
 
     @Override
-    public boolean isNoWorkers() {
-        return true;
+    public boolean hasBusyWorkers() {
+        return false;
     }
 }
