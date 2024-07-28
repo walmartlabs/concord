@@ -4,6 +4,8 @@
 
 ### Added
 
+- agent: configure host/ip for maintenance-mode endpoint
+([#945](https://github.com/walmartlabs/concord/pull/945));
 - concord-task: new method to wait and check that processes have finished
 ([#943](https://github.com/walmartlabs/concord/pull/943)). 
 
