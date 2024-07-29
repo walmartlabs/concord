@@ -48,7 +48,7 @@ public class AgentClientFactory {
     }
 
     public AgentClient create(Pod pod) {
-        if (useMaintenanceMode) {
+        if (useMaintenanceMode && pod.getStatus() != null && pod.getStatus().getPodIP() != null) {
             return new DefaultAgentClient(httpClient, pod.getStatus().getPodIP());
         } else {
             return new NopAgentClient();
