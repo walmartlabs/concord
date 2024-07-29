@@ -21,6 +21,7 @@ package com.walmartlabs.concord.agentoperator;
  */
 
 
+import com.walmartlabs.concord.agentoperator.agent.AgentClientFactory;
 import com.walmartlabs.concord.agentoperator.crd.AgentPool;
 import com.walmartlabs.concord.agentoperator.crd.AgentPoolList;
 import com.walmartlabs.concord.agentoperator.scheduler.AutoScalerFactory;
@@ -52,11 +53,13 @@ public class Operator {
 
         String baseUrl = getEnv("CONCORD_BASE_URL", "http://192.168.99.1:8001"); // use minikube/vbox host's default address
         String apiToken = getEnv("CONCORD_API_TOKEN", null);
+        boolean useMaintenanceMode = Boolean.parseBoolean(getEnv("USE_AGENT_MAINTENANCE_MODE", "false"));
 
         // TODO use secrets for the token?
         Scheduler.Configuration cfg = new Scheduler.Configuration(baseUrl, apiToken);
         AutoScalerFactory autoScalerFactory = new AutoScalerFactory(cfg, client);
-        Scheduler scheduler = new Scheduler(autoScalerFactory, client);
+        AgentClientFactory agentClientFactory = new AgentClientFactory(useMaintenanceMode);
+        Scheduler scheduler = new Scheduler(autoScalerFactory, client, agentClientFactory);
         scheduler.start();
 
         // TODO retries
