@@ -11,7 +11,9 @@ have finished
 ([#943](https://github.com/walmartlabs/concord/pull/943));
 - agent-operator: use maintenance mode before terminating
 agent
-([#946](https://github.com/walmartlabs/concord/pull/946)).
+([#946](https://github.com/walmartlabs/concord/pull/946));
+- pfed-sso: fix to not return null for not permanently disabled users
+([#947](https://github.com/walmartlabs/concord/pull/947)).
 
 
 
