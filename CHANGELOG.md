@@ -1,5 +1,12 @@
 # Change log
 
+## [2.14.1] - 2024-08-01
+
+### Changed
+
+- pfed-sso: fix to return null for perm_disabled users
+([#947](https://github.com/walmartlabs/concord/pull/947));
+
 ## [2.14.0] - 2024-07-13
 
 ### Added
