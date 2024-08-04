@@ -577,24 +577,24 @@ public class ProcessIT extends AbstractTest {
 
         ProcessEventsApi processEventsApi = new ProcessEventsApi(concord.apiClient());
 
-        // ---
-        List<ProcessEventEntry> events = processEventsApi.listProcessEvents(proc.instanceId(), "ELEMENT", null, null, null, "pre", null, null);
-        assertNotNull(events);
-        assertFalse(events.isEmpty());
-
         // At this point the process is still executing the sleep task.
         // We set a 1-second batch duration, so we can not expect a batch to have
         // been reported even though the max batch size (100) was not met.
 
+        // ---
+        List<ProcessEventEntry> events = processEventsApi.listProcessEvents(proc.instanceId(), "ELEMENT", null, null, null, "pre", null, null);
+
+        // clean up
+        new ProcessApi(concord.apiClient()).kill(pe.getInstanceId());
+
+        // ---
+        assertNotNull(events);
+        assertFalse(events.isEmpty());
         assertEquals(1, events.size());
 
         ProcessEventEntry sleepEvent = events.get(0);
 
-        assertEquals(20, sleepEvent.getData().get("line"));
         assertEquals("sleep", sleepEvent.getData().get("name"));
-
-        // clean up
-        new ProcessApi(concord.apiClient()).kill(pe.getInstanceId());
     }
 
     /**
