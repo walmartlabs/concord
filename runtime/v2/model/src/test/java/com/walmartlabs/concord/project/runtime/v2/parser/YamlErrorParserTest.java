@@ -2044,7 +2044,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test1318() throws Exception {
         String msg =
-                "(018.yml): Error @ line: 26, col: 11. Unknown options: ['trash' [NULL] @ line: 26, col: 11], expected: [inVarsBlacklist, metaBlacklist, outVarsBlacklist, recordEvents, recordTaskInVars, recordTaskMeta, recordTaskOutVars, truncateInVars, truncateMaxArrayLength, truncateMaxDepth, truncateMaxStringLength, truncateMeta, truncateOutVars]. Remove invalid options and/or fix indentation\n" +
+                "(018.yml): Error @ line: 26, col: 11. Unknown options: ['trash' [NULL] @ line: 26, col: 11], expected: [batchFlushInterval, batchSize, inVarsBlacklist, metaBlacklist, outVarsBlacklist, recordEvents, recordTaskInVars, recordTaskMeta, recordTaskOutVars, truncateInVars, truncateMaxArrayLength, truncateMaxDepth, truncateMaxStringLength, truncateMeta, truncateOutVars]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'events' @ line: 14, col: 3\n" +
                         "\t\t'configuration' @ line: 1, col: 1";

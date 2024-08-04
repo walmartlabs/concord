@@ -559,4 +559,70 @@ public class ProcessIT extends AbstractTest {
         Object myMetaValue = pe.getMeta().get("myMetaVar");
         assertEquals("myMetaVarValue", myMetaValue);
     }
+
+    /**
+     * Tests process event batch flushing when a long-running task executes.
+     */
+    @Test
+    public void testEventBatchingShortTimer() throws Exception {
+        Payload payload = new Payload()
+                .activeProfiles("shortFlush")
+                .archive(resource("eventBatchingTimer"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        ProcessEntry pe = expectStatus(proc, ProcessEntry.StatusEnum.RUNNING);
+
+        // let it run at least long enough to report an event batch (1-second interval)
+        Thread.sleep(1_500);
+
+        ProcessEventsApi processEventsApi = new ProcessEventsApi(concord.apiClient());
+
+        // ---
+        List<ProcessEventEntry> events = processEventsApi.listProcessEvents(proc.instanceId(), "ELEMENT", null, null, null, "pre", null, null);
+        assertNotNull(events);
+        assertFalse(events.isEmpty());
+
+        // At this point the process is still executing the sleep task.
+        // We set a 1-second batch duration, so we can not expect a batch to have
+        // been reported even though the max batch size (100) was not met.
+
+        assertEquals(1, events.size());
+
+        ProcessEventEntry sleepEvent = events.get(0);
+
+        assertEquals(20, sleepEvent.getData().get("line"));
+        assertEquals("sleep", sleepEvent.getData().get("name"));
+
+        // clean up
+        new ProcessApi(concord.apiClient()).kill(pe.getInstanceId());
+    }
+
+    /**
+     * Demonstrates what happens if process event batching flush timer is too long,
+     * or effectively doesn't exist.
+     */
+    @Test
+    public void testEventBatchingLongTimer() throws Exception {
+        Payload payload = new Payload()
+                .activeProfiles("longFlush")
+                .archive(resource("eventBatchingTimer"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        ProcessEntry pe = expectStatus(proc, ProcessEntry.StatusEnum.RUNNING);
+
+        // let it run long enough to prove events aren't going to update any time soon
+        Thread.sleep(1_500);
+
+        ProcessEventsApi processEventsApi = new ProcessEventsApi(concord.apiClient());
+
+        // ---
+        List<ProcessEventEntry> events = processEventsApi.listProcessEvents(proc.instanceId(), "ELEMENT", null, null, null, "pre", null, null);
+        assertNotNull(events);
+        // No events because batch is still waiting to get large enough to report
+        assertTrue(events.isEmpty());
+
+        // clean up
+        new ProcessApi(concord.apiClient()).kill(pe.getInstanceId());
+    }
+
 }
