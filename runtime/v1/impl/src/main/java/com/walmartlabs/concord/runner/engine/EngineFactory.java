@@ -139,9 +139,10 @@ public class EngineFactory {
         cfg.setWrapAllExceptionsAsBpmnErrors(true);
         cfg.setCopyAllCallActivityOutVariables(true);
 
+        EventReportingService evs = new DefaultEventReportingService(apiClientFactory, eventCfg.getBatchSize(), eventCfg.getBatchFlushInterval());
         ElementEventProcessor eventProcessor;
         if (eventCfg.isRecordEvents()) {
-            eventProcessor = new DefaultElementEventProcessor(apiClientFactory, adapter.processes());
+            eventProcessor = new DefaultElementEventProcessor(adapter.processes(), evs);
         } else {
             eventProcessor = new NopElementEventProcessor();
         }
@@ -165,6 +166,7 @@ public class EngineFactory {
                 .withConfiguration(cfg)
                 .withListener(new ProcessOutVariablesListener(attachmentsDir, outVariables))
                 .withListener(new VariablesSnapshotListener(stateDir))
+                .withListener(evs)
                 .withResourceResolver(new ResourceResolverImpl(baseDir))
                 .build();
 
