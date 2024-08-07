@@ -12,9 +12,15 @@ have finished
 - agent-operator: use maintenance mode before terminating
 agent
 ([#946](https://github.com/walmartlabs/concord/pull/946));
-- pfed-sso: fix to not return null for not permanently disabled users
-([#947](https://github.com/walmartlabs/concord/pull/947)).
 
+### Changed
+
+- pfed-sso: fix to not return null for not permanently
+disabled users
+([#947](https://github.com/walmartlabs/concord/pull/947)).
+ - agent-operator: consider pods already marked for deletion
+during downscaling
+([#951](https://github.com/walmartlabs/concord/pull/951)).
 
 
 ## [2.14.0] - 2024-07-13
