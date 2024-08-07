@@ -5,7 +5,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>concord-targetplatform</artifactId>
-    <version>2.15.0</version>
+    <version>2.15.1-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -1315,7 +1315,7 @@
     <scm>
         <url>${scm.connection}</url>
         <developerConnection>${scm.connection}</developerConnection>
-        <tag>2.15.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
