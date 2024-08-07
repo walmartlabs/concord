@@ -458,6 +458,51 @@ public class ProcessIT extends AbstractTest {
     }
 
     @Test
+    public void testMetadataUpdateOnlyOnEnd() throws Exception {
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .activeProfiles("disableMetaUpdates")
+                .archive(resource("processMetadataSend")));
+
+        ProcessEntry pe = proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        assertNotNull(pe.getMeta());
+        assertEquals("c", pe.getMeta().get("var"));
+
+        // expect one update
+        int sendCount = proc.getLogLines(line -> line.matches(".*sending process meta.*")).size();
+        assertEquals(1, sendCount);
+    }
+
+    @Test
+    public void testMetadataUpdateSuspendAndEnd() throws Exception {
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .activeProfiles("disableMetaUpdates")
+                .arg("doSuspend", true)
+                .archive(resource("processMetadataSend")));
+
+        ProcessEntry pe = proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        assertNotNull(pe.getMeta());
+        assertEquals("c", pe.getMeta().get("var"));
+
+        // expect two updates (one on suspend, one on finish)
+        int sendCount = proc.getLogLines(line -> line.matches(".*sending process meta.*")).size();
+        assertEquals(2, sendCount);
+    }
+
+    @Test
+    public void testMetadataUpdateDefault() throws Exception {
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .archive(resource("processMetadataSend")));
+
+        ProcessEntry pe = proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        assertNotNull(pe.getMeta());
+        assertEquals("c", pe.getMeta().get("var"));
+
+        // expect five updates (three set calls in a loop, plus two more)
+        int sendCount = proc.getLogLines(line -> line.matches(".*sending process meta.*")).size();
+        assertEquals(5, sendCount);
+    }
+
+    @Test
     public void testEmptyExclusiveGroup() throws Exception {
         ConcordProcess proc = concord.processes().start(new Payload()
                 .archive(resource("emptyExclusiveGroup")));
