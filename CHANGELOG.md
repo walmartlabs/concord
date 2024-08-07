@@ -1,5 +1,29 @@
 # Change log
 
+## [2.15.0] - Unreleased
+
+### Added
+
+- agent: configure host/ip for maintenance-mode endpoint
+([#945](https://github.com/walmartlabs/concord/pull/945));
+- concord-task: new method to wait and check that processes
+have finished
+([#943](https://github.com/walmartlabs/concord/pull/943));
+- agent-operator: use maintenance mode before terminating
+agent
+([#946](https://github.com/walmartlabs/concord/pull/946));
+
+### Changed
+
+- pfed-sso: fix to not return null for not permanently
+disabled users
+([#947](https://github.com/walmartlabs/concord/pull/947)).
+ - agent-operator: consider pods already marked for deletion
+during downscaling
+([#951](https://github.com/walmartlabs/concord/pull/951)).
+
+
+
 ## [2.14.0] - 2024-07-13
 
 ### Added
