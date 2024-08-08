@@ -29,9 +29,8 @@ import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.process.loader.v1.ProcessDefinitionV1;
 import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
 import com.walmartlabs.concord.repository.Snapshot;
+import com.walmartlabs.concord.runtime.v2.model.ImmutableProcessDefinition;
 import com.walmartlabs.concord.sdk.Constants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -47,7 +46,8 @@ import java.util.List;
 @Named
 public class ProjectLoader {
 
-    private static final Logger log = LoggerFactory.getLogger(ProjectLoader.class);
+    public static final String DEFAULT_RUNTIME_TYPE = "concord-v1";
+    public static final String CONCORD_V2_RUNTIME_TYPE = "concord-v2";
 
     private final com.walmartlabs.concord.project.ProjectLoader v1;
     private final com.walmartlabs.concord.runtime.v2.ProjectLoaderV2 v2;
@@ -59,16 +59,22 @@ public class ProjectLoader {
     }
 
     public Result loadProject(Path workDir, ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception {
-        String runtime = getRuntimeType(workDir, "concord-v1"); // TODO constants
+        String runtime = getRuntimeType(workDir, DEFAULT_RUNTIME_TYPE); // TODO constants
         return loadProject(workDir, runtime, importsNormalizer, listener);
     }
 
     public Result loadProject(Path workDir, String runtime, ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception {
-        if ("concord-v2".equals(runtime)) { // TODO constants
-            return toResult(v2.load(workDir, importsNormalizer::normalize, listener));
+        if (runtime == null) {
+            runtime = DEFAULT_RUNTIME_TYPE;
         }
 
-        return toResult(v1.loadProject(workDir, importsNormalizer::normalize, listener));
+        if (CONCORD_V2_RUNTIME_TYPE.equals(runtime)) {
+            return toResult(v2.load(workDir, importsNormalizer::normalize, listener));
+        } else if (DEFAULT_RUNTIME_TYPE.equals(runtime)) {
+            return toResult(v1.loadProject(workDir, importsNormalizer::normalize, listener));
+        } else {
+            return unknownRuntime();
+        }
     }
 
     private static Result toResult(com.walmartlabs.concord.project.ProjectLoader.Result r) {
@@ -105,8 +111,24 @@ public class ProjectLoader {
         };
     }
 
+    private static Result unknownRuntime() {
+        return new Result() {
+            @Override
+            public List<Snapshot> snapshots() {
+                return List.of();
+            }
+
+            @Override
+            public ProcessDefinition projectDefinition() {
+                return new ProcessDefinitionV2(
+                        ImmutableProcessDefinition.builder()
+                                .build());
+            }
+        };
+    }
+
     public static boolean isConcordFileExists(Path path) {
-        // TODO v2
+
         return com.walmartlabs.concord.project.ProjectLoader.isConcordFileExists(path);
     }
 
@@ -128,7 +150,6 @@ public class ProjectLoader {
                         continue;
                     }
 
-                    // TODO constants
                     String s = n.textValue();
                     if (s != null) {
                         return s;
@@ -142,7 +163,7 @@ public class ProjectLoader {
 
     public interface Result {
 
-        List<Snapshot> snapshots(); // TODO can it be a collection?
+        List<Snapshot> snapshots();
 
         ProcessDefinition projectDefinition();
     }
