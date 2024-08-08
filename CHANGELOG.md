@@ -1,5 +1,15 @@
 # Change log
 
+## [2.16.0] - Unreleased
+
+### Added
+
+- policy-engine: allow rewriting with multiple values in
+`dependencyRewrite` policies
+([#952](https://github.com/walmartlabs/concord/pull/952)).
+
+
+
 ## [2.15.0] - 2024-08-07
 
 ### Added
