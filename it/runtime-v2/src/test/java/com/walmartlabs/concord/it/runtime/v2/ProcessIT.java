@@ -575,14 +575,12 @@ public class ProcessIT extends AbstractTest {
         // let it run at least long enough to report an event batch (1-second interval)
         Thread.sleep(1_500);
 
-        ProcessEventsApi processEventsApi = new ProcessEventsApi(concord.apiClient());
-
         // At this point the process is still executing the sleep task.
         // We set a 1-second batch duration, so we can not expect a batch to have
         // been reported even though the max batch size (100) was not met.
 
         // ---
-        List<ProcessEventEntry> events = processEventsApi.listProcessEvents(proc.instanceId(), "ELEMENT", null, null, null, "pre", null, null);
+        List<ProcessEventEntry> events = getProcessElementEvents(proc);
 
         // clean up
         new ProcessApi(concord.apiClient()).kill(pe.getInstanceId());
@@ -613,16 +611,36 @@ public class ProcessIT extends AbstractTest {
         // let it run long enough to prove events aren't going to update any time soon
         Thread.sleep(1_500);
 
-        ProcessEventsApi processEventsApi = new ProcessEventsApi(concord.apiClient());
-
         // ---
-        List<ProcessEventEntry> events = processEventsApi.listProcessEvents(proc.instanceId(), "ELEMENT", null, null, null, "pre", null, null);
+        List<ProcessEventEntry> events = getProcessElementEvents(proc);
         assertNotNull(events);
         // No events because batch is still waiting to get large enough to report
         assertTrue(events.isEmpty());
 
         // clean up
         new ProcessApi(concord.apiClient()).kill(pe.getInstanceId());
+    }
+
+    /**
+     * Executes a flow that will over-fill process event queue if not properly synchronized
+     */
+    @Test
+    public void testEventBatchingParallel() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("eventBatchingParallel"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+        List<ProcessEventEntry> events = getProcessElementEvents(proc);
+        assertNotNull(events);
+        assertFalse(events.isEmpty());
+    }
+
+    private List<ProcessEventEntry> getProcessElementEvents(ConcordProcess proc) throws Exception {
+        ProcessEventsApi processEventsApi = new ProcessEventsApi(concord.apiClient());
+        return processEventsApi.listProcessEvents(proc.instanceId(), "ELEMENT", null, null, null, "pre", null, null);
     }
 
 }

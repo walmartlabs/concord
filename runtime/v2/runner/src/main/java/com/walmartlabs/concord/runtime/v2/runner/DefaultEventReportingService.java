@@ -33,12 +33,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 import java.util.TimerTask;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -48,7 +48,7 @@ public class DefaultEventReportingService implements EventReportingService {
 
     private final InstanceId instanceId;
     private final ProcessEventsApi processEventsApi;
-    private final Queue<ProcessEventRequest> eventQueue;
+    private final BlockingQueue<ProcessEventRequest> eventQueue;
     private final int maxBatchSize;
     private final Object batchLock = new Object();
     private final ScheduledExecutorService flushScheduler;
@@ -60,19 +60,35 @@ public class DefaultEventReportingService implements EventReportingService {
         this.instanceId = instanceId;
         this.processEventsApi = new ProcessEventsApi(apiClient);
         this.maxBatchSize = processConfiguration.events().batchSize();
-        this.eventQueue = new ArrayDeque<>(maxBatchSize);
+        this.eventQueue = initializeQueue(maxBatchSize);
         this.flushScheduler = Executors.newSingleThreadScheduledExecutor();
 
         int period = processConfiguration.events().batchFlushInterval();
         flushScheduler.scheduleAtFixedRate(new FlushTimer(this), period, period, TimeUnit.SECONDS);
     }
 
+    private static BlockingQueue<ProcessEventRequest> initializeQueue(int maxBatchSize) {
+        if (maxBatchSize <= 0) {
+            throw new IllegalArgumentException("Invalid event batch size '" + maxBatchSize + "'. Must be greater than zero.");
+        }
+
+        return new LinkedBlockingQueue<>();
+    }
+
     @Override
-    public void report(ProcessEventRequest req) {
+    public synchronized void report(ProcessEventRequest req) {
+        if (req == null) {
+            return;
+        }
+
+        // avoid modification while a flush may be occurring from another thread
         synchronized (batchLock) {
             eventQueue.add(req);
         }
 
+        // Don't allow batch to grow larger than max batch size
+        // This is why the method is synchronized. If not, another thread may add
+        // one-too-many items to the batch before this flush finishes.
         if (eventQueue.size() >= maxBatchSize) {
             flush();
         }
@@ -88,17 +104,20 @@ public class DefaultEventReportingService implements EventReportingService {
         return processEventsApi;
     }
 
-    void flush() {
+    synchronized void flush() {
         List<ProcessEventRequest> eventBatch = takeBatch();
 
         while (!eventBatch.isEmpty()) {
-            if (eventBatch.size() == 1) {
-                sendSingle(eventBatch.get(0));
-            } else {
-                sendBatch(eventBatch);
-            }
-
+            send(eventBatch);
             eventBatch = takeBatch();
+        }
+    }
+
+    private void send(List<ProcessEventRequest> eventBatch) {
+        if (eventBatch.size() == 1) {
+            sendSingle(eventBatch.get(0));
+        } else {
+            sendBatch(eventBatch);
         }
     }
 
@@ -125,14 +144,8 @@ public class DefaultEventReportingService implements EventReportingService {
     private List<ProcessEventRequest> takeBatch() {
         List<ProcessEventRequest> batch = new ArrayList<>(maxBatchSize);
 
-        synchronized (batchLock) {
-            for (int i = 0; i < maxBatchSize; i++) {
-                if (this.eventQueue.isEmpty()) {
-                    break;
-                }
-
-                batch.add(this.eventQueue.poll());
-            }
+        synchronized (batchLock) { // avoid draining while an element may be added
+            eventQueue.drainTo(batch, maxBatchSize);
         }
 
         return batch;
