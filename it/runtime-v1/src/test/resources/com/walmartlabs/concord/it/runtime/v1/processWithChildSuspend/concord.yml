@@ -17,4 +17,4 @@ flows:
       out:
         myJobs: ${jobs}
 
-    - log: "Got ${jobs.size()} ids"
+    - log: "Got ${myJobs.size()} ids"
