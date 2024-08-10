@@ -287,6 +287,19 @@ public class ProcessIT {
     }
 
     @Test
+    public void testGetProcessForChildIdAfterSuspendWithoutOut() throws Exception {
+        byte[] archive = archive(ProcessIT.class.getResource("processWithChildSuspendWithoutOut").toURI());
+
+        ConcordProcess proc = concord.processes().start(new Payload().archive(archive));
+
+        // ---
+
+        proc.expectStatus(StatusEnum.FINISHED);
+
+        proc.assertLog(".*Got 1 ids.*");
+    }
+
+    @Test
     public void testKillCascade() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("killCascade").toURI());
 
