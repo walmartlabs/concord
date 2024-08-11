@@ -1,0 +1,16 @@
+flows:
+  default:
+    - task: concord
+      in:
+        action: start
+        payload: myPayload
+        sync: true
+        suspend: true
+        # disable the `onCancel` handler, because it's going to handle
+        # the parent's cancellation only
+        disableOnCancel: true
+        entryPoint: aJob
+        arguments:
+          color: "red"
+
+    - log: "Got ${jobs.size()} ids"
