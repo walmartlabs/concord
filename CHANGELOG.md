@@ -1,11 +1,18 @@
 # Change log
 
+## [2.14.2] - 2024-08-12
+
+### Changed
+
+- runtime-v1: update bpm library to fix saving variables before suspend
+([#955](https://github.com/walmartlabs/concord/pull/955)).
+
 ## [2.14.1] - 2024-08-01
 
 ### Changed
 
 - pfed-sso: fix to return null for perm_disabled users
-([#947](https://github.com/walmartlabs/concord/pull/947));
+([#947](https://github.com/walmartlabs/concord/pull/947)).
 
 ## [2.14.0] - 2024-07-13
 
