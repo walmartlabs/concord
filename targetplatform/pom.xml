@@ -5,7 +5,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>concord-targetplatform</artifactId>
-    <version>2.14.1-SNAPSHOT</version>
+    <version>2.15.1-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -39,7 +39,7 @@
         <aopalliance.version>1.0</aopalliance.version>
         <aws.version>1.11.475</aws.version>
         <bouncycastle.version>1.70</bouncycastle.version>
-        <bpm.version>1.0.2</bpm.version>
+        <bpm.version>1.0.3</bpm.version>
         <bytebuddy.version>1.14.9</bytebuddy.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <commons.codec.version>1.15</commons.codec.version>
