@@ -65,6 +65,9 @@ public class Planner {
 
         List<Pod> pods = AgentPod.list(client, resourceName);
         int currentSize = pods.size();
+        int currentNotMarkedForDeleteSize = (int) pods.stream()
+                .filter(p -> !p.getMetadata().getLabels().containsKey(AgentPod.TAGGED_FOR_REMOVAL_LABEL))
+                .count();
 
         // hash of the Agent Pod configuration, will be used to determine which resources should be updated
         String newHash = HashUtils.hashAsHexString(poolInstance.getResource().getSpec().getPod());
@@ -78,7 +81,7 @@ public class Planner {
 
         int targetSize = poolInstance.getTargetSize();
 
-        log.info("plan ['{}'] -> currentSize = {}, targetSize= {}, configMap = {}", resourceName, currentSize, targetSize, m != null);
+        log.info("plan ['{}'] -> currentSize = {}, currentNotMarkedForDeleteSize = {}, targetSize= {}, configMap = {}", resourceName, currentSize, currentNotMarkedForDeleteSize, targetSize, m != null);
 
         AgentPoolInstance.Status poolStatus = poolInstance.getStatus();
         if (poolStatus == AgentPoolInstance.Status.DELETED) {
@@ -143,8 +146,8 @@ public class Planner {
             }
         }
 
-        if (currentSize > targetSize) {
-            int podsToDelete = currentSize - targetSize;
+        if (currentNotMarkedForDeleteSize > targetSize) {
+            int podsToDelete = currentNotMarkedForDeleteSize - targetSize;
             for (Pod pod : pods) {
                 if (pod.getMetadata().getLabels().containsKey(AgentPod.TAGGED_FOR_REMOVAL_LABEL)) {
                     continue;
