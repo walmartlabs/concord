@@ -261,6 +261,45 @@ public class ProcessIT {
     }
 
     @Test
+    public void testGetProcessForChildIdsAfterSuspend() throws Exception {
+        byte[] archive = archive(ProcessIT.class.getResource("processWithChildrenSuspend").toURI());
+
+        ConcordProcess proc = concord.processes().start(new Payload().archive(archive));
+
+        // ---
+
+        proc.expectStatus(StatusEnum.FINISHED);
+
+        assertEquals(3, proc.getEntry("childrenIds").getChildrenIds().size());
+    }
+
+    @Test
+    public void testGetProcessForChildIdAfterSuspend() throws Exception {
+        byte[] archive = archive(ProcessIT.class.getResource("processWithChildSuspend").toURI());
+
+        ConcordProcess proc = concord.processes().start(new Payload().archive(archive));
+
+        // ---
+
+        proc.expectStatus(StatusEnum.FINISHED);
+
+        proc.assertLog(".*Got 1 ids.*");
+    }
+
+    @Test
+    public void testGetProcessForChildIdAfterSuspendWithoutOut() throws Exception {
+        byte[] archive = archive(ProcessIT.class.getResource("processWithChildSuspendWithoutOut").toURI());
+
+        ConcordProcess proc = concord.processes().start(new Payload().archive(archive));
+
+        // ---
+
+        proc.expectStatus(StatusEnum.FINISHED);
+
+        proc.assertLog(".*Got 1 ids.*");
+    }
+
+    @Test
     public void testKillCascade() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("killCascade").toURI());
 
