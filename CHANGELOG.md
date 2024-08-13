@@ -1,5 +1,66 @@
 # Change log
 
+## [2.15.0] - 2024-08-07
+
+### Added
+
+- agent: configure host/ip for maintenance-mode endpoint
+([#945](https://github.com/walmartlabs/concord/pull/945));
+- concord-task: new method to wait and check that processes
+have finished
+([#943](https://github.com/walmartlabs/concord/pull/943));
+- agent-operator: use maintenance mode before terminating
+agent
+([#946](https://github.com/walmartlabs/concord/pull/946));
+
+### Changed
+
+- pfed-sso: fix to not return null for not permanently
+disabled users
+([#947](https://github.com/walmartlabs/concord/pull/947)).
+ - agent-operator: consider pods already marked for deletion
+during downscaling
+([#951](https://github.com/walmartlabs/concord/pull/951)).
+
+
+
+## [2.14.0] - 2024-07-13
+
+### Added
+
+- concord-server: calculate total process RUNNING time
+([#933](https://github.com/walmartlabs/concord/pull/933));
+- concord-server: expose websocket channels
+([#935](https://github.com/walmartlabs/concord/pull/935));
+- resource-tasks: add versions of writeAs* methods that
+accept destination
+([#937](https://github.com/walmartlabs/concord/pull/937));
+- runtime-v1: option to update meta only on termination
+or suspend
+([#938](https://github.com/walmartlabs/concord/pull/938));
+- project: add JDK 21 profiles
+([#941](https://github.com/walmartlabs/concord/pull/941)).
+
+### Changed
+
+- project: update Groovy to 2.5.23
+([#940](https://github.com/walmartlabs/concord/pull/940));
+- dependency-manager: resolve only unique dependencies 
+([#936](https://github.com/walmartlabs/concord/pull/936)); 
+- concord-server: move com.walmartlabs.concord.server.ansible.*
+into ansible plugin
+([#502](https://github.com/walmartlabs/concord/pull/502));
+- concord-server: migrate to PROCESS_META and
+PROCESS_TRIGGER_INFO tables
+([#669](https://github.com/walmartlabs/concord/pull/669));
+- runtime-v2: use draft-07 of JSON Schema for better tool
+compatibility
+([#939](https://github.com/walmartlabs/concord/pull/939));
+- project: update dependency versions in the parent pom
+([#942](https://github.com/walmartlabs/concord/pull/942)).
+
+
+
 ## [2.13.0] - 2024-06-19
 
 ### Added

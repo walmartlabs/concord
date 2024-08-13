@@ -28,6 +28,7 @@ import org.immutables.value.Value;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.net.URI;
+import java.util.List;
 
 @Value.Immutable
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -54,6 +55,11 @@ public interface DependencyRewriteRule extends Serializable {
 
     @Nullable
     URI value();
+
+    @Value.Default
+    default List<URI> values() {
+        return List.of();
+    }
 
     static ImmutableDependencyRewriteRule.Builder builder() {
         return ImmutableDependencyRewriteRule.builder();

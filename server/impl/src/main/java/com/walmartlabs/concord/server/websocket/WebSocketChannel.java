@@ -62,6 +62,10 @@ public class WebSocketChannel {
         return userAgent;
     }
 
+    public Session getSession() {
+        return session;
+    }
+
     public void onRequest(Message request) {
         Message old = requests.put(request.getCorrelationId(), request);
         if (old != null) {

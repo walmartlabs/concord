@@ -75,7 +75,7 @@ public class SsoRealm extends AuthorizingRealm {
             u = userManager.create(t.getUsername(), t.getDomain(), t.getDisplayName(), t.getMail(), UserType.SSO, null);
         }
 
-        if (!u.isPermanentlyDisabled()) {
+        if (u.isPermanentlyDisabled()) {
             return null;
         }
 

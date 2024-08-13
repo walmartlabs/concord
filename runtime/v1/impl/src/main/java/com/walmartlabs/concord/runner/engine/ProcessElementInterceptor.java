@@ -51,4 +51,19 @@ public class ProcessElementInterceptor extends ExecutionInterceptorAdapter {
 
         processMetadataProcessor.process(UUID.fromString(ev.getProcessBusinessKey()), ev.getVariables());
     }
+
+    @Override
+    public void onFinish(String processBusinessKey) {
+        processMetadataProcessor.flush();
+    }
+
+    @Override
+    public void onFailure(String processBusinessKey, String errorRef) {
+        processMetadataProcessor.flush();
+    }
+
+    @Override
+    public void onSuspend() {
+        processMetadataProcessor.flush();
+    }
 }

@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.ansible;
+package com.walmartlabs.concord.agentoperator.agent;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2024 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,15 +20,9 @@ package com.walmartlabs.concord.server.ansible;
  * =====
  */
 
+public interface AgentClient {
 
-@Deprecated
-public final class AnsibleConfigurationConstants {
+    void enableMaintenanceMode() throws Exception;
 
-    public static final String GROUP_KEY = "ansible";
-    public static final String PRIVATE_KEYS = "privateKeys";
-    public static final String SECRET_KEY = "secret";
-    public static final String REPOSITORY_KEY = "repository";
-
-    private AnsibleConfigurationConstants() {
-    }
+    boolean hasBusyWorkers() throws Exception;
 }

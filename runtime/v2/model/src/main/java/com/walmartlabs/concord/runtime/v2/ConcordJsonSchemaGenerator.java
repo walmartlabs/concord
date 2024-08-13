@@ -26,10 +26,7 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrappe
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.kjetland.jackson.jsonSchema.JsonSchemaConfig;
-import com.kjetland.jackson.jsonSchema.JsonSchemaGenerator;
-import com.kjetland.jackson.jsonSchema.SubclassesResolver;
-import com.kjetland.jackson.jsonSchema.SubclassesResolverImpl;
+import com.kjetland.jackson.jsonSchema.*;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.schema.*;
@@ -51,7 +48,7 @@ public class ConcordJsonSchemaGenerator {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JsonSchemaModule());
 
-        JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(objectMapper, config());
+        JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(objectMapper, config().withJsonSchemaDraft(JsonSchemaDraft.DRAFT_07));
         JsonNode jsonSchema = jsonSchemaGenerator.generateJsonSchema(ProcessDefinition.class);
 
         // remove type attribute for entities with `@JsonTypeInfo`

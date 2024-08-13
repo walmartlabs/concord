@@ -22,6 +22,7 @@ package com.walmartlabs.concord.plugins.resource;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -33,7 +34,10 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 public class ResourceTaskCommon {
 
@@ -83,7 +87,7 @@ public class ResourceTaskCommon {
             props.load(in);
 
             HashMap<String, Object> result = new HashMap<>();
-            for (final String name: props.stringPropertyNames()) {
+            for (final String name : props.stringPropertyNames()) {
                 result.put(name, props.getProperty(name));
             }
 
@@ -125,30 +129,46 @@ public class ResourceTaskCommon {
 
     public String writeAsJson(Object content) throws IOException {
         Path tmpFile = fileService.createTempFile(RESOURCE_PREFIX, JSON_FILE_SUFFIX);
-        writeToFile(tmpFile, p -> {
-            try (OutputStream out = Files.newOutputStream(p)) {
-                createObjectMapper().writerWithDefaultPrettyPrinter().writeValue(out, content);
-            }
-        });
+        try (OutputStream out = Files.newOutputStream(tmpFile)) {
+            createObjectMapper().writerWithDefaultPrettyPrinter().writeValue(out, content);
+        }
         return workDir.relativize(tmpFile.toAbsolutePath()).toString();
+    }
+
+    public String writeAsJson(Object content, String path) throws IOException {
+        Path dst = assertWorkDirPath(path);
+        try (OutputStream out = Files.newOutputStream(dst)) {
+            createObjectMapper().writerWithDefaultPrettyPrinter().writeValue(out, content);
+        }
+        return workDir.relativize(dst.toAbsolutePath()).toString();
     }
 
     public String writeAsString(String content) throws IOException {
         Path tmpFile = fileService.createTempFile(RESOURCE_PREFIX, TEXT_FILE_SUFFIX);
-        writeToFile(tmpFile, p -> Files.write(p, content.getBytes()));
+        Files.write(tmpFile, content.getBytes());
         return workDir.relativize(tmpFile.toAbsolutePath()).toString();
+    }
+
+    public String writeAsString(String content, String path) throws IOException {
+        Path dst = assertWorkDirPath(path);
+        Files.write(dst, content.getBytes());
+        return workDir.relativize(dst.toAbsolutePath()).toString();
     }
 
     public String writeAsYaml(Object content) throws IOException {
         Path tmpFile = fileService.createTempFile(RESOURCE_PREFIX, YAML_FILE_SUFFIX);
-        writeToFile(tmpFile, p -> {
-            try (OutputStream out = Files.newOutputStream(p)) {
-                createObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.SPLIT_LINES))
-                        .writerWithDefaultPrettyPrinter()
-                        .writeValue(out, content);
-            }
-        });
+        try (OutputStream out = Files.newOutputStream(tmpFile)) {
+            createYamlWriter().writeValue(out, content);
+        }
         return workDir.relativize(tmpFile.toAbsolutePath()).toString();
+    }
+
+    public String writeAsYaml(Object content, String path) throws IOException {
+        Path dst = assertWorkDirPath(path);
+        try (OutputStream out = Files.newOutputStream(dst)) {
+            createYamlWriter().writeValue(out, content);
+        }
+        return workDir.relativize(dst.toAbsolutePath()).toString();
     }
 
     public static String printJson(Object value) throws IOException {
@@ -207,6 +227,26 @@ public class ResourceTaskCommon {
         return workDir.resolve(path);
     }
 
+    private Path assertWorkDirPath(String path) {
+        if (path == null) {
+            throw new IllegalArgumentException("Path cannot be null");
+        }
+        Path dst = Paths.get(path);
+        if (!dst.isAbsolute()) {
+            dst = workDir.resolve(path).normalize().toAbsolutePath();
+        }
+        if (!dst.startsWith(workDir)) {
+            throw new IllegalArgumentException("Invalid path: " + path);
+        }
+        return dst;
+    }
+
+    private static ObjectWriter createYamlWriter() {
+        return createObjectMapper(new YAMLFactory()
+                .disable(YAMLGenerator.Feature.SPLIT_LINES))
+                .writerWithDefaultPrettyPrinter();
+    }
+
     private static ObjectMapper createObjectMapper() {
         return createObjectMapper(null);
     }
@@ -216,14 +256,5 @@ public class ResourceTaskCommon {
         om.registerModule(new Jdk8Module());
         om.registerModule(new JavaTimeModule());
         return om;
-    }
-
-    static void writeToFile(Path file, PathHandler h) throws IOException {
-        h.handle(file);
-    }
-
-    private interface PathHandler {
-
-        void handle(Path path) throws IOException;
     }
 }

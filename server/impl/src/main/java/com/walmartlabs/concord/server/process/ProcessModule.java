@@ -50,6 +50,7 @@ import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.process.waits.*;
 import com.walmartlabs.concord.server.sdk.BackgroundTask;
 import com.walmartlabs.concord.server.sdk.log.ProcessLogListener;
+import com.walmartlabs.concord.server.sdk.process.CustomEnqueueProcessor;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
@@ -85,6 +86,7 @@ public class ProcessModule implements Module {
         newSetBinder(binder, ProcessStatusListener.class).addBinding().to(WaitProcessStatusListener.class);
         newSetBinder(binder, ProcessStatusListener.class).addBinding().to(ExternalProcessListenerHandler.class);
         newSetBinder(binder, ProcessStatusListener.class).addBinding().to(WaitConditionUpdater.class);
+        newSetBinder(binder, ProcessStatusListener.class).addBinding().to(TotalRuntimeCalculator.class);
 
         newSetBinder(binder, Filter.class).addBinding().to(ConcurrentProcessFilter.class);
         newSetBinder(binder, Filter.class).addBinding().to(ExclusiveProcessFilter.class);
@@ -100,6 +102,8 @@ public class ProcessModule implements Module {
         newSetBinder(binder, PolicyApplier.class).addBinding().to(ProcessRuntimePolicyApplier.class);
         newSetBinder(binder, PolicyApplier.class).addBinding().to(ProcessTimeoutPolicyApplier.class);
         newSetBinder(binder, PolicyApplier.class).addBinding().to(WorkspacePolicyApplier.class);
+
+        newSetBinder(binder, CustomEnqueueProcessor.class);
 
         bindJaxRsResource(binder, ProcessCheckpointResource.class);
         bindJaxRsResource(binder, ProcessCheckpointV2Resource.class);

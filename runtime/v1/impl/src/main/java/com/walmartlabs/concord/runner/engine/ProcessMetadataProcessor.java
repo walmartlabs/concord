@@ -46,24 +46,47 @@ public class ProcessMetadataProcessor {
 
     private final ApiClientFactory apiClientFactory;
     private final Set<String> processMetaVariables;
+    private final boolean updateMetaOnAllEvents;
 
     private Map<String, Object> currentProcessMeta = new HashMap<>();
+    private String sessionToken;
+    private UUID instanceId;
 
     public ProcessMetadataProcessor(ApiClientFactory apiClientFactory, Set<String> processMetaVariables) {
+        this(apiClientFactory, processMetaVariables, true);
+    }
+
+    public ProcessMetadataProcessor(ApiClientFactory apiClientFactory, Set<String> processMetaVariables, boolean updateMetaOnAllEvents) {
         this.apiClientFactory = apiClientFactory;
         this.processMetaVariables = processMetaVariables;
+        this.updateMetaOnAllEvents = updateMetaOnAllEvents;
     }
 
     public void process(UUID instanceId, Variables variables) {
+        this.sessionToken = ContextUtils.getSessionToken(variables);
+        this.instanceId = instanceId;
+
         Map<String, Object> meta = filter(variables.asMap());
         if (meta.isEmpty() || !changed(currentProcessMeta, meta)) {
             return;
         }
-        currentProcessMeta = meta;
+        this.currentProcessMeta = meta;
 
+        if (updateMetaOnAllEvents) {
+            sendMeta(instanceId, sessionToken, meta);
+        }
+    }
+
+    public void flush() {
+        if (!updateMetaOnAllEvents) {
+            sendMeta(instanceId, sessionToken, currentProcessMeta);
+        }
+    }
+
+    private void sendMeta(UUID instanceId, String sessionToken, Map<String, Object> meta) {
         ProcessApi client = new ProcessApi(apiClientFactory.create(
                 ApiClientConfiguration.builder()
-                        .sessionToken(ContextUtils.getSessionToken(variables))
+                        .sessionToken(sessionToken)
                         .build()));
         try {
             ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {

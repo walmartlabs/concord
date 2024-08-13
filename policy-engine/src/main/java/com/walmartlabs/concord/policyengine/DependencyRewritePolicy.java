@@ -47,26 +47,34 @@ public class DependencyRewritePolicy {
 
         List<URI> result = new ArrayList<>(dependencies.size());
         for (URI u : dependencies) {
-            result.add(rewrite(u, listener));
+            result.addAll(rewrite(u, listener));
         }
         return result;
     }
 
-    private URI rewrite(URI value, RewriteListener listener) {
+    private List<URI> rewrite(URI value, RewriteListener listener) {
         String scheme = value.getScheme();
         if (!MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
-            return value;
+            return List.of(value);
         }
 
+        List<URI> result = new ArrayList<>();
         Artifact artifact = new DefaultArtifact(value.getAuthority());
         for (DependencyRewriteRule rule : rules) {
             if (match(rule, artifact)) {
-                listener.onRewrite(rule.msg(), value, rule.value());
-                return rule.value();
+                if (rule.value() != null) {
+                    listener.onRewrite(rule.msg(), value, rule.value());
+                    result.add(rule.value());
+                }
+
+                for (URI u : rule.values()) {
+                    listener.onRewrite(rule.msg(), value, u);
+                }
+                result.addAll(rule.values());
             }
         }
 
-        return value;
+        return result.isEmpty() ? List.of(value) : result;
     }
 
     private static boolean match(DependencyRewriteRule r, Artifact a) {

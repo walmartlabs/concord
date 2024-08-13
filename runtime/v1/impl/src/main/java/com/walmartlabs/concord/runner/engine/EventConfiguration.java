@@ -38,6 +38,7 @@ public class EventConfiguration {
     private boolean recordTaskInVars = false;
     private boolean recordTaskOutVars = false;
     private boolean truncateOutVars = true;
+    private boolean updateMetaOnAllEvents = true;
     private Collection<String> inVarsBlacklist = DEFAULT_IN_VARS_BLACKLIST;
     private Collection<String> outVarsBlacklist = Collections.emptyList();
     private int truncateMaxStringLength = 1024;
@@ -90,6 +91,14 @@ public class EventConfiguration {
 
     public boolean isTruncateOutVars() {
         return truncateOutVars;
+    }
+
+    public boolean isUpdateMetaOnAllEvents() {
+        return updateMetaOnAllEvents;
+    }
+
+    public void setUpdateMetaOnAllEvents(boolean updateMetaOnAllEvents) {
+        this.updateMetaOnAllEvents = updateMetaOnAllEvents;
     }
 
     public int getTruncateMaxStringLength() {
