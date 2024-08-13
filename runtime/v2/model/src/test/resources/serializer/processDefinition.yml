@@ -11,6 +11,7 @@ configuration:
     truncateMaxDepth: 10
     recordTaskOutVars: false
     truncateOutVars: true
+    updateMetaOnAllEvents: true
     inVarsBlacklist:
     - "apiKey"
     - "apiToken"

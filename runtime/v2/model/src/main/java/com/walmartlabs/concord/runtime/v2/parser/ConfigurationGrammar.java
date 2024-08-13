@@ -56,6 +56,7 @@ public final class ConfigurationGrammar {
                                     optional("truncateMaxDepth", intVal.map(o::truncateMaxDepth)),
                                     optional("recordTaskOutVars", booleanVal.map(o::recordTaskOutVars)),
                                     optional("truncateOutVars", booleanVal.map(o::truncateOutVars)),
+                                    optional("updateMetaOnAllEvents", booleanVal.map(o::updateMetaOnAllEvents)),
                                     optional("inVarsBlacklist", stringArrayVal.map(o::inVarsBlacklist)),
                                     optional("outVarsBlacklist", stringArrayVal.map(o::outVarsBlacklist)),
                                     optional("recordTaskMeta", booleanVal.map(o::recordTaskMeta)),
