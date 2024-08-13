@@ -4,14 +4,19 @@
 
 ### Added
 
+- runtime-v2: option to update meta only on termination or
+suspend
+([#948](https://github.com/walmartlabs/concord/pull/948));
 - policy-engine: allow rewriting with multiple values in
 `dependencyRewrite` policies
 ([#952](https://github.com/walmartlabs/concord/pull/952)).
 
 ### Changed
 
-- runtime-v1: update bpm library to fix saving variables before suspend
-([#955](https://github.com/walmartlabs/concord/pull/955))
+- runtime-v1: update bpm library to fix saving variables
+before suspend
+([#955](https://github.com/walmartlabs/concord/pull/955)).
+
 
 
 ## [2.15.0] - 2024-08-07
