@@ -9,7 +9,9 @@ suspend
 ([#948](https://github.com/walmartlabs/concord/pull/948));
 - policy-engine: allow rewriting with multiple values in
 `dependencyRewrite` policies
-([#952](https://github.com/walmartlabs/concord/pull/952)).
+([#952](https://github.com/walmartlabs/concord/pull/952));
+- concord-server: allow non-standard runtimes
+([#954](https://github.com/walmartlabs/concord/pull/954)). 
 
 ### Changed
 
