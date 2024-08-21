@@ -24,12 +24,10 @@ import com.walmartlabs.concord.process.loader.ProjectLoader.ProjectLoaderConfigu
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
 import java.util.Optional;
 import java.util.Set;
 
-@Named
 public class ProjectLoaderConfigurationProvider implements Provider<ProjectLoaderConfiguration> {
 
     private final Set<String> extraRuntimes;
