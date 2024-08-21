@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.events.DefaultEventFilter;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
+import com.walmartlabs.concord.server.org.triggers.TriggerUtils;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.github.GithubKey;
@@ -74,7 +75,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         UUID projectId = githubKey.getProjectId();
 
         if (isDisableReposOnDeletedRef
-                && "push".equals(payload.eventName())
+                && PUSH_EVENT.equals(payload.eventName())
                 && isRefDeleted(payload)) {
 
             List<RepositoryEntry> repositories = dao.findRepos(payload.getFullRepoName());
@@ -87,8 +88,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
 
         List<TriggerEntry> triggers = listTriggers(projectId, payload.getOrg(), payload.getRepo());
         for (TriggerEntry t : triggers) {
-            // skip empty push events if the trigger's configuration says so
-            if (GithubUtils.ignoreEmptyPush(t) && GithubUtils.isEmptyPush(eventName, payload)) {
+            if (skipTrigger(t, eventName, payload)) {
                 continue;
             }
 
@@ -99,6 +99,26 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
                 result.add(Result.from(event, t));
             }
         }
+    }
+
+    private static boolean skipTrigger(TriggerEntry t, String eventName, Payload payload) {
+        // skip empty push events if the trigger's configuration says so
+        if (GithubUtils.ignoreEmptyPush(t) && GithubUtils.isEmptyPush(eventName, payload)) {
+            return true;
+        }
+
+        // process is destined to fail if attempted to start from commit in another repo
+        // on pull_request event
+        if (TriggerUtils.isUseEventCommitId(t)
+                && payload instanceof PullRequestPayload prp
+                && prp.isPullRequestFromSameRepo()) {
+
+            log.info("Skip start from pull_request event [{}, {}] -> Commit is in a different repository.",
+                    prp.getBaseRepoUrl(), prp.getHeadRepoUrl());
+            return true;
+        }
+
+        return false;
     }
 
     private void enrichEventConditions(Payload payload, TriggerEntry trigger, Map<String, Object> result) {

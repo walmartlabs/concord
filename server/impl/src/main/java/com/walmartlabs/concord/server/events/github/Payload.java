@@ -96,7 +96,11 @@ public class Payload {
             return null;
         }
 
-        return new Payload(eventName, fullRepoName, org, repo, data);
+        if (PULL_REQUEST_EVENT.equals(eventName)) {
+            return new PullRequestPayload(eventName, fullRepoName, org, repo, data);
+        } else {
+            return new Payload(eventName, fullRepoName, org, repo, data);
+        }
     }
 
     private final String eventName;
