@@ -101,20 +101,21 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         }
     }
 
-    private static boolean skipTrigger(TriggerEntry t, String eventName, Payload payload) {
+    static boolean skipTrigger(TriggerEntry t, String eventName, Payload payload) {
         // skip empty push events if the trigger's configuration says so
         if (GithubUtils.ignoreEmptyPush(t) && GithubUtils.isEmptyPush(eventName, payload)) {
             return true;
         }
 
         // process is destined to fail if attempted to start from commit in another repo
-        // on pull_request event
+        // on an event from a pull request.
         if (TriggerUtils.isUseEventCommitId(t)
-                && payload instanceof PullRequestPayload prp
-                && prp.isPullRequestFromSameRepo()) {
+                && payload.hasPullRequestEntry()
+                && payload.isPullRequestFromDifferentRepo()) {
 
-            log.info("Skip start from pull_request event [{}, {}] -> Commit is in a different repository.",
-                    prp.getBaseRepoUrl(), prp.getHeadRepoUrl());
+            log.info("Skip start from {} event [{}, {}] -> Commit is in a different repository.",
+                    eventName, payload.getPullRequestBaseUrl(), payload.getPullRequestHeadUrl());
+
             return true;
         }
 
