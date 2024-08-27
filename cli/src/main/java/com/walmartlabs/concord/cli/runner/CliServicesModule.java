@@ -30,8 +30,9 @@ import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.runtime.v2.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingClient;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
-import com.walmartlabs.concord.runtime.v2.runner.logging.SimpleLogger;
+import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.remote.ApiClientProvider;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
@@ -73,7 +74,9 @@ public class CliServicesModule extends AbstractModule {
     protected void configure() {
         install(new BaseRunnerModule());
 
-        bind(RunnerLogger.class).to(SimpleLogger.class);
+        LoggingClient loggingClient = new CliLoggingClient();
+        bind(RunnerLogger.class).toInstance(new SegmentedLogger(loggingClient));
+
         bind(SecretService.class).toInstance(new CliSecretService(workDir, secretStoreDir, vaultProvider));
         bind(DockerService.class).to(CliDockerService.class);
 
