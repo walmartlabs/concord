@@ -20,6 +20,8 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.common.logger.LogAppender;
+
 import java.io.InputStream;
 import java.util.UUID;
 

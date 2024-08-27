@@ -33,7 +33,7 @@ import com.walmartlabs.concord.agent.JobInstance;
 import com.walmartlabs.concord.agent.Utils;
 import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
-import com.walmartlabs.concord.agent.logging.ProcessLog;
+import com.walmartlabs.concord.runtime.common.logger.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
 import com.walmartlabs.concord.common.IOUtils;

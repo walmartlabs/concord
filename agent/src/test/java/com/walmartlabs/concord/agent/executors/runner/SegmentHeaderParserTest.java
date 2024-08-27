@@ -21,7 +21,7 @@ package com.walmartlabs.concord.agent.executors.runner;
  */
 
 import com.google.common.primitives.Bytes;
-import com.walmartlabs.concord.agent.logging.SegmentHeaderParser;
+import com.walmartlabs.concord.runtime.common.logger.SegmentHeaderParser;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentHeader;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentSerializer;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
@@ -32,8 +32,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Position;
-import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Segment;
+import static com.walmartlabs.concord.runtime.common.logger.SegmentHeaderParser.Position;
+import static com.walmartlabs.concord.runtime.common.logger.SegmentHeaderParser.Segment;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SegmentHeaderParserTest {

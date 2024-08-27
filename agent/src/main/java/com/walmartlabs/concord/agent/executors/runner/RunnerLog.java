@@ -20,9 +20,9 @@ package com.walmartlabs.concord.agent.executors.runner;
  * =====
  */
 
-import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.RedirectedProcessLog;
 import com.walmartlabs.concord.agent.logging.RemoteProcessLog;
+import com.walmartlabs.concord.runtime.common.logger.ProcessLog;
 
 import java.io.IOException;
 import java.io.InputStream;

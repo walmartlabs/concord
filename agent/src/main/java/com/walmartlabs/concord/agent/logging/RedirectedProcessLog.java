@@ -20,32 +20,32 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.common.logger.ProcessLog;
+import com.walmartlabs.concord.runtime.common.logger.ProcessLogStreamer;
+import com.walmartlabs.concord.runtime.common.logger.ProcessLogStreamer.Chunk;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Log that uses a local file as a buffer before sending the data into the specified {@link LogAppender}.
+ * Log that uses a local file as a buffer before sending the data into the specified {@link com.walmartlabs.concord.runtime.common.logger.LogAppender}.
  * Typically, {@link #run(Supplier)} method should be executed in a separate thread.
  */
 public class RedirectedProcessLog implements ProcessLog {
 
-    protected final long logSteamMaxDelay;
     private final LocalProcessLog localLog;
-    private final Consumer<Chunk> consumer;
+    private final ProcessLogStreamer streamer;
 
     public RedirectedProcessLog(Path baseDir, long logSteamMaxDelay, Consumer<Chunk> consumer) throws IOException {
         this.localLog = new LocalProcessLog(baseDir);
-        this.logSteamMaxDelay = logSteamMaxDelay;
-        this.consumer = consumer;
+        this.streamer = new ProcessLogStreamer(localLog.logFile(), logSteamMaxDelay, consumer);
     }
 
     public void run(Supplier<Boolean> stopCondition) throws Exception {
-        streamLog(localLog.logFile(), stopCondition, logSteamMaxDelay, consumer);
+        streamer.run(stopCondition);
     }
 
     @Override
@@ -71,55 +71,5 @@ public class RedirectedProcessLog implements ProcessLog {
     @Override
     public void error(String log, Object... args) {
         this.localLog.error(log, args);
-    }
-
-    private static void streamLog(Path p, Supplier<Boolean> stopCondition, long maxDelay, Consumer<Chunk> sink) throws IOException {
-        long total = 0;
-
-        byte[] ab = new byte[8192];
-
-        try (InputStream in = Files.newInputStream(p, StandardOpenOption.READ)) {
-            while (true) {
-                int read = in.read(ab, 0, ab.length);
-                if (read > 0) {
-                    sink.accept(new Chunk(ab, read));
-                    total += read;
-                }
-
-                if (read < ab.length) {
-                    if (stopCondition.get() && total >= Files.size(p)) {
-                        // the log and the job are finished
-                        break;
-                    }
-
-                    // job is still running, wait for more data
-                    try {
-                        Thread.sleep(maxDelay);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    public static class Chunk {
-
-        private final byte[] ab;
-        private final int len;
-
-        protected Chunk(byte[] ab, int len) { // NOSONAR
-            this.ab = ab;
-            this.len = len;
-        }
-
-        public byte[] bytes() {
-            return ab;
-        }
-
-        public int len() {
-            return len;
-        }
     }
 }

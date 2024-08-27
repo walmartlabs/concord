@@ -31,6 +31,8 @@ import com.walmartlabs.concord.agent.logging.*;
 import com.walmartlabs.concord.agent.remote.ApiClientFactory;
 import com.walmartlabs.concord.agent.remote.ProcessStatusUpdater;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
+import com.walmartlabs.concord.runtime.common.logger.LogAppender;
+import com.walmartlabs.concord.runtime.common.logger.ProcessLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent.logging;
+package com.walmartlabs.concord.runtime.common.logger;
 
 /*-
  * *****
@@ -20,13 +20,24 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
-import java.util.UUID;
+import java.io.IOException;
+import java.io.InputStream;
 
-public interface LogAppender {
+public interface ProcessLog {
 
-    void appendLog(UUID instanceId, byte[] ab);
+    /**
+     * Removed the associated resources.
+     */
+    void delete();
 
-    boolean appendLog(UUID instanceId, long segmentId, byte[] ab);
+    /**
+     * Copies the specified stream into the log.
+     */
+    void log(InputStream src) throws IOException;
 
-    boolean updateSegment(UUID instanceId, long segmentId, LogSegmentStats stats);
+    void info(String log, Object... args);
+
+    void warn(String log, Object... args);
+
+    void error(String log, Object... args);
 }

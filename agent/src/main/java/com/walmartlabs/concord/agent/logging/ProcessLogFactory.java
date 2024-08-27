@@ -21,6 +21,10 @@ package com.walmartlabs.concord.agent.logging;
  */
 
 import com.walmartlabs.concord.agent.cfg.AgentConfiguration;
+import com.walmartlabs.concord.runtime.common.logger.LogAppender;
+import com.walmartlabs.concord.runtime.common.logger.ProcessLogStreamer;
+import com.walmartlabs.concord.runtime.common.logger.ProcessLogStreamer.Chunk;
+import com.walmartlabs.concord.runtime.common.logger.SegmentedLogsConsumer;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -48,7 +52,7 @@ public class ProcessLogFactory {
             Files.createDirectories(dst);
         }
 
-        Consumer<RedirectedProcessLog.Chunk> logConsumer;
+        Consumer<Chunk> logConsumer;
         if (segmented) {
             logConsumer = new SegmentedLogsConsumer(instanceId, logAppender);
         } else {

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent.logging;
+package com.walmartlabs.concord.runtime.common.logger;
 
 /*-
  * *****
@@ -20,17 +20,15 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.common.logger.LogSegmentHeader;
-import com.walmartlabs.concord.runtime.common.logger.LogSegmentSerializer;
-import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
+import com.walmartlabs.concord.runtime.common.logger.ProcessLogStreamer.Chunk;
 
 import java.util.*;
 import java.util.function.Consumer;
 
-import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Position;
-import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Segment;
+import static com.walmartlabs.concord.runtime.common.logger.SegmentHeaderParser.Position;
+import static com.walmartlabs.concord.runtime.common.logger.SegmentHeaderParser.Segment;
 
-public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chunk> {
+public class SegmentedLogsConsumer implements Consumer<Chunk> {
 
     private static final byte[] EMPTY = new byte[0];
 
@@ -45,7 +43,7 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
     }
 
     @Override
-    public void accept(RedirectedProcessLog.Chunk chunk) {
+    public void accept(Chunk chunk) {
         byte[] ab = new byte[unparsed.length + chunk.len()];
         if (unparsed.length > 0) {
             System.arraycopy(unparsed, 0, ab, 0, unparsed.length);
