@@ -22,6 +22,8 @@ package com.walmartlabs.concord.agent.logging;
 
 import com.walmartlabs.concord.agent.AgentConstants;
 import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.runtime.common.logger.LogAppender;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentStats;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -26,7 +26,7 @@ import com.walmartlabs.concord.agent.cfg.*;
 import com.walmartlabs.concord.agent.executors.runner.DefaultDependencies;
 import com.walmartlabs.concord.agent.executors.runner.ProcessPool;
 import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor;
-import com.walmartlabs.concord.agent.logging.ProcessLog;
+import com.walmartlabs.concord.runtime.common.logger.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent.logging;
+package com.walmartlabs.concord.runtime.common.logger;
 
 /*-
  * *****
@@ -20,9 +20,6 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.common.logger.ImmutableLogSegmentHeader;
-import com.walmartlabs.concord.runtime.common.logger.LogSegmentDeserializer;
-import com.walmartlabs.concord.runtime.common.logger.LogSegmentHeader;
 import org.immutables.value.Value;
 
 import java.nio.ByteBuffer;

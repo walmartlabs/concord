@@ -23,7 +23,7 @@ package com.walmartlabs.concord.agent;
 import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.agent.executors.JobExecutorFactory;
 import com.walmartlabs.concord.agent.guice.AgentImportManager;
-import com.walmartlabs.concord.agent.logging.ProcessLog;
+import com.walmartlabs.concord.runtime.common.logger.ProcessLog;
 import com.walmartlabs.concord.agent.remote.ProcessStatusUpdater;
 
 import javax.inject.Inject;

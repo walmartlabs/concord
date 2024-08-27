@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent.logging;
+package com.walmartlabs.concord.runtime.common.logger;
 
 /*-
  * *****
@@ -23,7 +23,6 @@ package com.walmartlabs.concord.agent.logging;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;

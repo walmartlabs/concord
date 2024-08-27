@@ -21,19 +21,14 @@ package com.walmartlabs.concord.agent.executors.runner;
  */
 
 import com.google.common.primitives.Bytes;
-import com.walmartlabs.concord.agent.logging.LogAppender;
-import com.walmartlabs.concord.agent.logging.LogSegmentStats;
-import com.walmartlabs.concord.agent.logging.SegmentedLogsConsumer;
-import com.walmartlabs.concord.runtime.common.logger.LogSegmentHeader;
-import com.walmartlabs.concord.runtime.common.logger.LogSegmentSerializer;
-import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
+import com.walmartlabs.concord.runtime.common.logger.*;
+import com.walmartlabs.concord.runtime.common.logger.ProcessLogStreamer.Chunk;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.agent.logging.RedirectedProcessLog.Chunk;
 import static org.mockito.Mockito.*;
 
 public class SegmentedLogsConsumerTest {

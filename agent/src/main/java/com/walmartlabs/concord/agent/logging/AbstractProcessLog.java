@@ -21,6 +21,7 @@ package com.walmartlabs.concord.agent.logging;
  */
 
 import com.walmartlabs.concord.common.LogUtils;
+import com.walmartlabs.concord.runtime.common.logger.ProcessLog;
 
 public abstract class AbstractProcessLog implements ProcessLog {
 
