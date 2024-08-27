@@ -25,6 +25,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.cli.Verbosity;
+import com.walmartlabs.concord.cli.ui.Ui;
+import com.walmartlabs.concord.cli.ui.UiLoggingClient;
 import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.runtime.v2.runner.*;
@@ -74,7 +76,10 @@ public class CliServicesModule extends AbstractModule {
     protected void configure() {
         install(new BaseRunnerModule());
 
-        LoggingClient loggingClient = new CliLoggingClient();
+        Ui ui = new Ui();
+        bind(Ui.class).toInstance(ui);
+
+        LoggingClient loggingClient = new UiLoggingClient(ui);
         bind(RunnerLogger.class).toInstance(new SegmentedLogger(loggingClient));
 
         bind(SecretService.class).toInstance(new CliSecretService(workDir, secretStoreDir, vaultProvider));

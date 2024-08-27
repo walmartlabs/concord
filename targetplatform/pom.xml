@@ -92,6 +92,7 @@
         <kafka.client.version>2.4.0</kafka.client.version>
         <kerby.version>2.0.1</kerby.version>
         <kubernetes.client.version>5.7.0</kubernetes.client.version>
+        <lanterna.version>3.1.2</lanterna.version>
         <launcher.version>0.128</launcher.version>
         <liquibase.version>4.8.0</liquibase.version>
         <logback.version>1.4.14</logback.version>
@@ -1278,6 +1279,11 @@
                 <groupId>jakarta.activation</groupId>
                 <artifactId>jakarta.activation-api</artifactId>
                 <version>${activation.api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.googlecode.lanterna</groupId>
+                <artifactId>lanterna</artifactId>
+                <version>${lanterna.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
