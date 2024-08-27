@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.common.logger;
  * =====
  */
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,7 +33,7 @@ public class ProcessLogStreamer {
     private final long maxDelay;
     private final Consumer<Chunk> sink;
 
-    public ProcessLogStreamer(Path srcFile, long maxDelay, Consumer<Chunk> sink) throws IOException {
+    public ProcessLogStreamer(Path srcFile, long maxDelay, Consumer<Chunk> sink) {
         this.srcFile = srcFile;
         this.maxDelay = maxDelay;
         this.sink = sink;

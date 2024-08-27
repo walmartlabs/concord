@@ -23,8 +23,11 @@ package com.walmartlabs.concord.cli;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.cli.runner.*;
+import com.walmartlabs.concord.cli.ui.Ui;
+import com.walmartlabs.concord.cli.ui.UiLogAppender;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.FileVisitor;
 import com.walmartlabs.concord.common.IOUtils;
@@ -35,6 +38,10 @@ import com.walmartlabs.concord.imports.*;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.common.logger.LogAppender;
+import com.walmartlabs.concord.runtime.common.logger.ProcessLogStreamer;
+import com.walmartlabs.concord.runtime.common.logger.ProcessLogStreamer.Chunk;
+import com.walmartlabs.concord.runtime.common.logger.SegmentedLogsConsumer;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
@@ -67,6 +74,11 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 @Command(name = "run", description = "Run the current directory as a Concord process")
 public class Run implements Callable<Integer> {
@@ -128,6 +140,9 @@ public class Run implements Callable<Integer> {
 
     @Option(names = {"--no-default-cfg"}, description = "Do not load default configuration (including standard dependencies)")
     boolean noDefaultCfg = false;
+
+    @Option(names = {"-B"}, description = "\"Batch mode\": use flat log output")
+    boolean batchMode = false;
 
     @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")
     Path sourceDir = Paths.get(System.getProperty("user.dir"));
@@ -271,28 +286,63 @@ public class Run implements Callable<Integer> {
             System.out.println("Available tasks: " + injector.getInstance(TaskProviders.class).names());
         }
 
-        LoggingConfigurator.configure(runnerCfg.logging().segmentedLogs());
+        boolean useSegmentedLog = !batchMode;
+        LoggingConfigurator.configure(useSegmentedLog);
 
-        try {
-            runner.start(cfg, processDefinition, args);
-        } catch (LoggedException e) {
-            return -1;
-        } catch (ParallelExecutionException e) {
-            System.err.println(e.getMessage());
-            return -1;
-        } catch (Exception e) {
-            if (verbosity.verbose()) {
-                System.err.print("Error: ");
-                e.printStackTrace(System.err);
-            } else {
-                System.err.println("Error: " + e.getMessage());
+        AtomicBoolean stopCondition = new AtomicBoolean(false);
+
+        ExecutorService runnerExecutor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
+                .setNameFormat("runner-%s")
+                .build());
+
+        Future<Integer> exitCode = runnerExecutor.submit(() -> {
+            try {
+                try {
+                    runner.start(cfg, processDefinition, args);
+                } catch (LoggedException e) {
+                    return -1;
+                } catch (ParallelExecutionException e) {
+                    System.err.println(e.getMessage());
+                    return -1;
+                } catch (Exception e) {
+                    if (verbosity.verbose()) {
+                        System.err.print("Error: ");
+                        e.printStackTrace(System.err);
+                    } else {
+                        System.err.println("Error: " + e.getMessage());
+                    }
+                    return 1;
+                }
+                System.out.println("...done!");
+                return 0;
+            } finally {
+                stopCondition.set(true);
             }
-            return 1;
-        }
+        });
 
-        System.out.println("...done!");
+        Ui ui = new Ui();
 
-        return 0;
+        ExecutorService logExecutor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
+                .setNameFormat("log-%s")
+                .build());
+
+        logExecutor.submit(() -> {
+            // TODO use target dir
+            // TODO set path in logback cfg
+            Path path = Paths.get("/tmp/concord-cli.out");
+            LogAppender logAppender = new UiLogAppender(ui);
+            Consumer<Chunk> consumer = new SegmentedLogsConsumer(instanceId, logAppender);
+            ProcessLogStreamer streamer = new ProcessLogStreamer(path, 1000, consumer);
+            try {
+                streamer.run(stopCondition::get);
+            } catch (Exception e) {
+                System.err.println("Error while parsing process log: " + e.getMessage());
+            }
+        });
+
+        ui.run();
+
+        return exitCode.get();
     }
 
     @SuppressWarnings("unchecked")
