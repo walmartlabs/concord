@@ -17,6 +17,8 @@ suspend
 
 ### Changed
 
+- cli: fix duplicate step logs
+([#963](https://github.com/walmartlabs/concord/pull/963));
 - runtime-v1: update bpm library to fix saving variables
 before suspend
 ([#955](https://github.com/walmartlabs/concord/pull/955));
