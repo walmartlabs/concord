@@ -46,9 +46,10 @@ import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.ProjectLoadListeners;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.runner.vm.LoggedException;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.svm.ParallelExecutionException;
@@ -269,6 +270,8 @@ public class Run implements Callable<Integer> {
         if (cfg.debug()) {
             System.out.println("Available tasks: " + injector.getInstance(TaskProviders.class).names());
         }
+
+        LoggingConfigurator.configure(runnerCfg.logging().segmentedLogs());
 
         try {
             runner.start(cfg, processDefinition, args);

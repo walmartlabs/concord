@@ -1,14 +1,25 @@
 <configuration>
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %msg%n</pattern>
+    <appender name="PROCESS_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>/tmp/concord-cli.out</file>
+        <append>false</append>
+        <encoder class="com.walmartlabs.concord.runtime.v2.runner.logging.ConcordLogEncoder">
+            <layout class="com.walmartlabs.concord.runtime.v2.runner.logging.MaskingSensitiveDataLayout">
+                <pattern>%date{yyyy-MM-dd'T'HH:mm:ss.SSSZ, UTC} %msg%n</pattern>
+            </layout>
         </encoder>
     </appender>
+
+    <logger name="com.walmartlabs.concord.plugins.log" level="${logLevel:-INFO}"/>
+    <logger name="uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J" level="WARN"/>
 
     <logger name="com.walmartlabs.concord.dependencymanager" level="WARN"/>
     <logger name="com.walmartlabs.concord.repository" level="WARN"/>
 
+    <logger name="processLog" level="INFO">
+        <appender-ref ref="PROCESS_FILE"/>
+    </logger>
+
     <root level="INFO">
-        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="PROCESS_FILE"/>
     </root>
 </configuration>
