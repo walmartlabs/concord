@@ -24,7 +24,9 @@ before suspend
 ([#955](https://github.com/walmartlabs/concord/pull/955));
 - concord-server: fix DB change set 1580200-a when
 `superuserAvailable` is set to `false`
-([#957](https://github.com/walmartlabs/concord/pull/957)).
+([#957](https://github.com/walmartlabs/concord/pull/957));
+- docker-images: update ansible galaxy community.docker version
+([#960](https://github.com/walmartlabs/concord/pull/960)).
 
 
 
