@@ -251,7 +251,7 @@ const ProcessActivity = (props: ExternalProps) => {
                 </Route>
                 <Route path={`${baseUrl}/log`} exact={true}>
                     {process &&
-                        (process.runtime === 'concord-v1' || process.runtime === undefined) && (
+                        (process.runtime === 'concord-v1') && (
                             <ProcessLogActivity
                                 instanceId={instanceId}
                                 processStatus={process ? process.status : undefined}
@@ -260,7 +260,7 @@ const ProcessActivity = (props: ExternalProps) => {
                                 dataFetchInterval={dataFetchInterval}
                             />
                         )}
-                    {process && process.runtime === 'concord-v2' && (
+                    {process && (process.runtime === 'concord-v2' || process.runtime === undefined) && (
                         <ProcessLogActivityV2
                             instanceId={instanceId}
                             processStatus={process ? process.status : undefined}
