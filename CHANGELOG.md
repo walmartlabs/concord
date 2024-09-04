@@ -17,16 +17,19 @@ suspend
 
 ### Changed
 
-- cli: fix duplicate step logs
-([#963](https://github.com/walmartlabs/concord/pull/963));
 - runtime-v1: update bpm library to fix saving variables
 before suspend
 ([#955](https://github.com/walmartlabs/concord/pull/955));
 - concord-server: fix DB change set 1580200-a when
 `superuserAvailable` is set to `false`
 ([#957](https://github.com/walmartlabs/concord/pull/957));
+- concord-server: skip pull_request process start when
+useEventCommitId is enabled and event is from a different repo
+([#959](https://github.com/walmartlabs/concord/pull/959));
 - docker-images: update ansible galaxy community.docker version
-([#960](https://github.com/walmartlabs/concord/pull/960)).
+([#960](https://github.com/walmartlabs/concord/pull/960));
+- cli: fix duplicate step logs
+([#963](https://github.com/walmartlabs/concord/pull/963)).
 
 
 
