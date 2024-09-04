@@ -41,6 +41,9 @@ public final class Constants {
     public static final String VERSION_KEY = "version";
     public static final String FILES_KEY = "files";
     public static final String QUERY_PARAMS_KEY = "queryParams";
+    public static final String BASE_KEY = "base";
+    public static final String HEAD_KEY = "head";
+    public static final String REF_KEY = "ref";
 
     public static final String GITHUB_ORG_KEY = "githubOrg";
     public static final String GITHUB_REPO_KEY = "githubRepo";
