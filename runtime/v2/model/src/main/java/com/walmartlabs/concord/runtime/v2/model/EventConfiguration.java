@@ -142,6 +142,11 @@ public interface EventConfiguration extends Serializable {
         return true;
     }
 
+    @Value.Default
+    default boolean updateMetaOnAllEvents() {
+        return true;
+    }
+
     /**
      * IN variables in the blacklist won't be recorded.
      */

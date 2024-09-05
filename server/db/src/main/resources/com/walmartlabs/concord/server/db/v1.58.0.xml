@@ -223,11 +223,16 @@
     </changeSet>
 
     <changeSet id="1580200-a" author="ibodrov@gmail.com">
+        <validCheckSum>7:0415f1854d1f087f0e52563eddf066ef</validCheckSum>
+        <validCheckSum>8:7e38ae15657bf698e251a92f72916a83</validCheckSum>
+
         <preConditions onFail="MARK_RAN">
             <changeLogPropertyDefined property="superuserAvailable" value="false"/>
         </preConditions>
 
+        <!-- replaced below in 1580201
         <dropView viewName="V_AUDIT_LOG"/>
+        -->
 
         <sql>
             alter table AUDIT_LOG
