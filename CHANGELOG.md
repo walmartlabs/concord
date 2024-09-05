@@ -1,6 +1,6 @@
 # Change log
 
-## [2.16.0] - Unreleased
+## [2.16.0] - 2024-09-05
 
 ### Added
 
@@ -23,7 +23,7 @@ before suspend
 - concord-server: fix DB change set 1580200-a when
 `superuserAvailable` is set to `false`
 ([#957](https://github.com/walmartlabs/concord/pull/957));
-- concord-server: skip pull_request process start when
+- concord-server: skip pull\_request process start when
 useEventCommitId is enabled and event is from a different repo
 ([#959](https://github.com/walmartlabs/concord/pull/959));
 - docker-images: update ansible galaxy community.docker version
