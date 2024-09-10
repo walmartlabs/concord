@@ -31,6 +31,7 @@ export interface UserInfoEntry {
     displayName: string;
     teams?: UserInfoTeam[];
     roles?: string[];
+    ldapGroups?: string[];
 }
 
 export const get = (): Promise<UserInfoEntry> => fetchJson(`/api/service/console/userInfo`);

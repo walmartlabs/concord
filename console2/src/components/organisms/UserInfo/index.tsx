@@ -29,6 +29,7 @@ import {
 import { get as apiGet, UserInfoEntry } from '../../../api/profile/user';
 import { RequestErrorMessage } from '../../molecules';
 import { useApi } from '../../../hooks/useApi';
+import {Link} from "react-router-dom";
 
 export default () => {
     const { data, error, isLoading } = useApi<UserInfoEntry>(apiGet, {
@@ -61,7 +62,9 @@ export default () => {
 
             <h5>Roles</h5>
             <List divided={true} relaxed={true}>
-                {data.roles && data.roles.map((role, index) => (
+                {data.roles && data.roles
+                    .sort((a, b) => a.localeCompare(b))
+                    .map((role, index) => (
                     <ListItem key={index}>
                         <ListContent>
                             <ListDescription>{role}</ListDescription>
@@ -72,14 +75,37 @@ export default () => {
 
             <h5>Teams</h5>
             <List divided={true} relaxed={true}>
-                {data.teams && data.teams.map((team, index) => (
+                {data.teams && data.teams
+                    .sort((a, b) => {
+                        const aConcat = `${a.orgName}/${a.teamName}`;
+                        const bConcat = `${b.orgName}/${b.teamName}`;
+                        return aConcat.localeCompare(bConcat);
+                    })
+                    .map((team, index) => (
                     <ListItem key={index}>
                         <ListContent>
-                            <ListDescription>{team.orgName} / {team.teamName} ({team.role})</ListDescription>
+                            <ListDescription>
+                                <Link to={`/org/${team.orgName}/team/${team.teamName}`}>{team.orgName} / {team.teamName} ({team.role})</Link>
+                            </ListDescription>
                         </ListContent>
                     </ListItem>
                 ))}
             </List>
+
+            {data.ldapGroups && data.ldapGroups.length > 0 && (
+                <>
+                    <h5>LDAP Groups</h5>
+                    <List divided={true} relaxed={true}>
+                        {data.ldapGroups.map((group, index) => (
+                            <ListItem key={index}>
+                                <ListContent>
+                                    <ListDescription>{group}</ListDescription>
+                                </ListContent>
+                            </ListItem>
+                        ))}
+                    </List>
+                </>
+            )}
         </div>
     );
 };

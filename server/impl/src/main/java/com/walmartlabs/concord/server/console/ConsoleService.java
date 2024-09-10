@@ -53,6 +53,7 @@ import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.RoleEntry;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
+import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.Configuration;
 
 import javax.inject.Inject;
@@ -132,10 +133,18 @@ public class ConsoleService implements Resource {
                     Status.INTERNAL_SERVER_ERROR);
         }
 
+        Set<String> userLdapGroups = Set.of();
+        if (u.getType() == UserType.LDAP) {
+            userLdapGroups = Optional.ofNullable(LdapPrincipal.getCurrent())
+                    .map(LdapPrincipal::getGroups)
+                    .orElse(Set.of());
+        }
+
         return UserInfoResponse.builder()
                 .displayName(displayName(u, p))
                 .teams(consoleServiceDao.listTeams(p.getId()))
                 .roles(u.getRoles().stream().map(RoleEntry::getName).toList())
+                .ldapGroups(userLdapGroups)
                 .build();
     }
 
@@ -378,7 +387,7 @@ public class ConsoleService implements Resource {
         public List<UserInfoResponse.UserTeamInfo> listTeams(UUID userId) {
             return txResult(tx -> tx.select(ORGANIZATIONS.ORG_NAME, TEAMS.TEAM_NAME, USER_TEAMS.TEAM_ROLE)
                     .from(USER_TEAMS)
-                    .join(TEAMS).on(USER_TEAMS.TEAM_ID.eq(USER_TEAMS.TEAM_ID))
+                    .join(TEAMS).on(TEAMS.TEAM_ID.eq(USER_TEAMS.TEAM_ID))
                     .join(ORGANIZATIONS).on(ORGANIZATIONS.ORG_ID.eq(TEAMS.ORG_ID))
                     .where(USER_TEAMS.USER_ID.eq(userId))
                     .fetch(r -> UserInfoResponse.UserTeamInfo.of(r.get(ORGANIZATIONS.ORG_NAME), r.get(TEAMS.TEAM_NAME), TeamRole.valueOf(r.get(USER_TEAMS.TEAM_ROLE)))));

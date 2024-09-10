@@ -30,6 +30,7 @@ import org.immutables.value.Value;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Value.Immutable
@@ -66,6 +67,8 @@ public interface UserInfoResponse extends Serializable {
     List<UserTeamInfo> teams();
 
     List<String> roles();
+
+    Set<String> ldapGroups();
 
     static ImmutableUserInfoResponse.Builder builder() {
         return ImmutableUserInfoResponse.builder();
