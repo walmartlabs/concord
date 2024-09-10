@@ -5,7 +5,14 @@
 ### Added
 
 - console2, server: simple user info page
-([#952](https://github.com/walmartlabs/concord/pull/965)).
+([#952](https://github.com/walmartlabs/concord/pull/965));
+
+### Changed
+
+- project: update Maven wrapper
+([#967](https://github.com/walmartlabs/concord/pull/967)).
+
+
 
 ### Changed
 
