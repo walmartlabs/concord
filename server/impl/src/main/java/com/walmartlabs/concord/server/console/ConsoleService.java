@@ -53,7 +53,6 @@ import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.RoleEntry;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
-import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.Configuration;
 
 import javax.inject.Inject;
@@ -133,12 +132,9 @@ public class ConsoleService implements Resource {
                     Status.INTERNAL_SERVER_ERROR);
         }
 
-        Set<String> userLdapGroups = Set.of();
-        if (u.getType() == UserType.LDAP) {
-            userLdapGroups = Optional.ofNullable(LdapPrincipal.getCurrent())
+        Set<String> userLdapGroups = Optional.ofNullable(LdapPrincipal.getCurrent())
                     .map(LdapPrincipal::getGroups)
                     .orElse(Set.of());
-        }
 
         return UserInfoResponse.builder()
                 .displayName(displayName(u, p))
