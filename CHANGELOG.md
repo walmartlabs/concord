@@ -1,5 +1,14 @@
 # Change log
 
+## [2.17.0] - Unreleased
+
+### Added
+
+- console2, server: simple user info page
+([#952](https://github.com/walmartlabs/concord/pull/965)).
+
+### Changed
+
 ## [2.16.0] - 2024-09-05
 
 ### Added
