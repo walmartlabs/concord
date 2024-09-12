@@ -4,8 +4,10 @@
 
 ### Added
 
+- runtime-v2: option for event batching for runner events
+([#949](https://github.com/walmartlabs/concord/pull/949));
 - console2, server: simple user info page
-([#952](https://github.com/walmartlabs/concord/pull/965));
+([#952](https://github.com/walmartlabs/concord/pull/965)).
 
 ### Changed
 
