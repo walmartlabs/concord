@@ -10,7 +10,9 @@
 ### Changed
 
 - project: update Maven wrapper
-([#967](https://github.com/walmartlabs/concord/pull/967)).
+([#967](https://github.com/walmartlabs/concord/pull/967));
+- oidc: redirect back to auth in failed callbacks
+([#969](https://github.com/walmartlabs/concord/pull/969)).
 
 
 
