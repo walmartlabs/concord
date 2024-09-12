@@ -171,7 +171,7 @@ public class EngineFactory {
                 .build();
 
         ProcessMetadataProcessor metadataProcessor = new ProcessMetadataProcessor(apiClientFactory, metaVariables, eventCfg.isUpdateMetaOnAllEvents());
-        engine.addInterceptor(new ProcessElementInterceptor(eventProcessor,metadataProcessor));
+        engine.addInterceptor(new ProcessElementInterceptor(eventProcessor, metadataProcessor));
 
         return engine;
     }

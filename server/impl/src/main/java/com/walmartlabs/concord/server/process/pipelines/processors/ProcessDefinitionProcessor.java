@@ -46,6 +46,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
+import static com.walmartlabs.concord.process.loader.ProjectLoader.CONCORD_V1_RUNTIME_TYPE;
+
 /**
  * Loads the process definition using the working directory and configured {@code imports}.
  */
@@ -125,14 +127,14 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
     private static String getRuntimeType(Payload payload) throws IOException {
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
         if (cfg != null) {
-            String s = MapUtils.getString(cfg, Constants.Request.RUNTIME_KEY); // TODO constants
+            String s = MapUtils.getString(cfg, Constants.Request.RUNTIME_KEY);
             if (s != null) {
                 return s;
             }
         }
 
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
-        return ProjectLoader.getRuntimeType(workDir, "concord-v1"); // TODO constants or configuration
+        return ProjectLoader.getRuntimeType(workDir, CONCORD_V1_RUNTIME_TYPE);
     }
 
     class ProcessImportsListener implements ImportsListener {

@@ -1,5 +1,38 @@
 # Change log
 
+## [2.16.0] - 2024-09-05
+
+### Added
+
+- runtime-v2: option to update meta only on termination or
+suspend
+([#948](https://github.com/walmartlabs/concord/pull/948));
+- policy-engine: allow rewriting with multiple values in
+`dependencyRewrite` policies
+([#952](https://github.com/walmartlabs/concord/pull/952));
+- concord-server: allow non-standard runtimes
+([#954](https://github.com/walmartlabs/concord/pull/954));
+- oidc: support "from" when logging out
+([#958](https://github.com/walmartlabs/concord/pull/958)).
+
+### Changed
+
+- runtime-v1: update bpm library to fix saving variables
+before suspend
+([#955](https://github.com/walmartlabs/concord/pull/955));
+- concord-server: fix DB change set 1580200-a when
+`superuserAvailable` is set to `false`
+([#957](https://github.com/walmartlabs/concord/pull/957));
+- concord-server: skip pull\_request process start when
+useEventCommitId is enabled and event is from a different repo
+([#959](https://github.com/walmartlabs/concord/pull/959));
+- docker-images: update ansible galaxy community.docker version
+([#960](https://github.com/walmartlabs/concord/pull/960));
+- cli: fix duplicate step logs
+([#963](https://github.com/walmartlabs/concord/pull/963)).
+
+
+
 ## [2.15.0] - 2024-08-07
 
 ### Added
@@ -2961,7 +2994,7 @@ called in an expression.
 
 
 
-## [1.37.1] - 2010-01-06
+## [1.37.1] - 2020-01-06
 
 ### Changed
 
