@@ -6,6 +6,8 @@
 
 - runtime-v2: option for event batching for runner events
 ([#949](https://github.com/walmartlabs/concord/pull/949));
+- runtime-v1: option for event batching for runner events
+([#950](https://github.com/walmartlabs/concord/pull/950));
 - console2, server: simple user info page
 ([#952](https://github.com/walmartlabs/concord/pull/965)).
 
