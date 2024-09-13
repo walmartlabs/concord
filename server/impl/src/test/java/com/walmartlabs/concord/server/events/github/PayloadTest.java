@@ -53,7 +53,7 @@ class PayloadTest {
     void testSkipTriggerSamePRRepo() {
         TriggerEntry t = generateTrigger(true);
 
-        boolean skip = GithubTriggerV2Processor.skipTrigger(t, "pull_request", createPRPayload("pull_request", BASE_REPO));
+        boolean skip = GithubTriggerProcessor.skipTrigger(t, "pull_request", createPRPayload("pull_request", BASE_REPO));
         assertFalse(skip);
     }
 
@@ -61,7 +61,7 @@ class PayloadTest {
     void testSkipTriggerDifferentPRRepo() {
         TriggerEntry t = generateTrigger(true);
 
-        boolean skip = GithubTriggerV2Processor.skipTrigger(t, "pull_request", createPRPayload("pull_request", FORK_REPO));
+        boolean skip = GithubTriggerProcessor.skipTrigger(t, "pull_request", createPRPayload("pull_request", FORK_REPO));
         assertTrue(skip);
     }
 
@@ -69,7 +69,7 @@ class PayloadTest {
     void testSkipTriggerDifferentPRRepoNoUseEventCommitId() {
         TriggerEntry t = generateTrigger(false);
 
-        boolean skip = GithubTriggerV2Processor.skipTrigger(t, "pull_request", createPRPayload("pull_request", FORK_REPO));
+        boolean skip = GithubTriggerProcessor.skipTrigger(t, "pull_request", createPRPayload("pull_request", FORK_REPO));
         assertFalse(skip);
     }
 
@@ -77,7 +77,7 @@ class PayloadTest {
     void testSkipTriggerPRReviewCommentDifferentPRRepo() {
         TriggerEntry t = generateTrigger(true);
 
-        boolean skip = GithubTriggerV2Processor.skipTrigger(t, "pull_request_review_comment", createPRPayload("pull_request_review_comment", FORK_REPO));
+        boolean skip = GithubTriggerProcessor.skipTrigger(t, "pull_request_review_comment", createPRPayload("pull_request_review_comment", FORK_REPO));
         assertTrue(skip);
     }
 
@@ -89,7 +89,7 @@ class PayloadTest {
                 "before", "456"
         ));
 
-        boolean skip = GithubTriggerV2Processor.skipTrigger(t, "push", p);
+        boolean skip = GithubTriggerProcessor.skipTrigger(t, "push", p);
         assertFalse(skip);
     }
 
