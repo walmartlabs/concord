@@ -28,7 +28,8 @@ public final class TestObjectMapper {
     public static final ObjectMapper INSTANCE = createObjectMapper();
 
     private static ObjectMapper createObjectMapper() {
-        return new ObjectMapperProvider().get();
+       System.exit(456);
+	    return new ObjectMapperProvider().get();
     }
 
     private TestObjectMapper() {
