@@ -19,7 +19,9 @@
 ([#969](https://github.com/walmartlabs/concord/pull/969));
 - agent-operator: create agent pod client only for
 Running pods
-([#973](https://github.com/walmartlabs/concord/pull/973)).
+([#973](https://github.com/walmartlabs/concord/pull/973));
+- docker: configure safe.directory for git 2.35+
+([#976](https://github.com/walmartlabs/concord/pull/976)).
 
 
 
