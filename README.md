@@ -103,15 +103,15 @@ See the [examples](examples) directory.
 
 ## How To Release New Versions
 
-- perform the regular Maven release:
+- perform a regular Maven release:
   ```
   $ ./mvnw release:prepare release:perform
   ```
-- push the tags:
+- push the new tag:
   ```
-  $ git push --tags
+  $ git push origin RELEASE_TAG
   ```
-- sync to Central;
+- sync to [Central](https://central.sonatype.com/);
 - build and push the Docker images:
   ```
   $ git checkout RELEASE_TAG

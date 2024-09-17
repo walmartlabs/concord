@@ -4,6 +4,8 @@ configuration:
   entryPoint: "default"
   events:
     recordEvents: true
+    batchSize: 1
+    batchFlushInterval: 15
     recordTaskInVars: false
     truncateInVars: true
     truncateMaxStringLength: 1024

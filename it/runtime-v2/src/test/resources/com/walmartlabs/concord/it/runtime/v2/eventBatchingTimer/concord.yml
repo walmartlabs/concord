@@ -1,0 +1,21 @@
+configuration:
+  runtime: concord-v2
+
+profiles:
+  shortFlush:
+    configuration:
+      events:
+        batchSize: 100
+        batchFlushInterval: 1
+
+  longFlush:
+    configuration:
+      events:
+        batchSize: 100
+        batchFlushInterval: 120
+
+flows:
+  default:
+    - task: sleep
+      in:
+        duration: 120

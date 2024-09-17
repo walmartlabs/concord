@@ -20,20 +20,15 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
  * =====
  */
 
-import com.walmartlabs.concord.client2.ApiClient;
-import com.walmartlabs.concord.client2.ApiException;
 import com.walmartlabs.concord.client2.ProcessEventRequest;
-import com.walmartlabs.concord.client2.ProcessEventsApi;
-import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.runner.EventReportingService;
 import com.walmartlabs.concord.runtime.v2.runner.vm.LogSegmentScopeCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.StepCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.time.Instant;
@@ -43,17 +38,14 @@ import java.util.Map;
 
 public class EventRecordingExecutionListener implements ExecutionListener {
 
-    private static final Logger log = LoggerFactory.getLogger(EventRecordingExecutionListener.class);
-
-    private final ProcessEventsApi eventsApi;
-    private final InstanceId processInstanceId;
     private final EventConfiguration eventConfiguration;
+    private final EventReportingService eventReportingService;
 
     @Inject
-    public EventRecordingExecutionListener(ApiClient apiClient, InstanceId processInstanceId, ProcessConfiguration processConfiguration) {
-        this.eventsApi = new ProcessEventsApi(apiClient);
-        this.processInstanceId = processInstanceId;
+    public EventRecordingExecutionListener(ProcessConfiguration processConfiguration,
+                                           EventReportingService eventReportingService) {
         this.eventConfiguration = processConfiguration.events();
+        this.eventReportingService = eventReportingService;
     }
 
     @Override
@@ -64,11 +56,10 @@ public class EventRecordingExecutionListener implements ExecutionListener {
 
         // TODO consider using marker interfaces to determine which step/command should produce ELEMENT events
 
-        if (!(cmd instanceof StepCommand)) {
+        if (!(cmd instanceof StepCommand<?> s)) {
             return Result.CONTINUE;
         }
 
-        StepCommand<?> s = (StepCommand<?>) cmd;
         // TODO: add interface for step/task
         if (s.getStep() instanceof TaskCall || s.getStep() instanceof Expression || s instanceof LogSegmentScopeCommand) {
             return Result.CONTINUE;
@@ -93,11 +84,7 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         req.setData(m);
         req.setEventDate(Instant.now().atOffset(ZoneOffset.UTC));
 
-        try {
-            eventsApi.event(processInstanceId.getValue(), req);
-        } catch (ApiException e) {
-            log.warn("afterCommand [{}] -> error while sending an event to the server: {}", cmd, e.getMessage());
-        }
+        eventReportingService.report(req);
 
         return Result.CONTINUE;
     }
