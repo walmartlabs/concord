@@ -119,7 +119,6 @@
         <selenium.version>4.8.1</selenium.version>
         <servlet.version>4.0.1</servlet.version>
         <shiro.version>1.13.0</shiro.version>
-        <siesta.version>2.3.2</siesta.version>
         <sisu.version>0.9.0.M2</sisu.version>
         <slf4j.version>2.0.11</slf4j.version>
         <snakeyaml.version>2.2</snakeyaml.version>
