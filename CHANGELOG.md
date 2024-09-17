@@ -17,9 +17,15 @@
 ([#967](https://github.com/walmartlabs/concord/pull/967));
 - oidc: redirect back to auth in failed callbacks
 ([#969](https://github.com/walmartlabs/concord/pull/969));
+- project: miscellaneous fixes for build-time warnings,
+add missing @deprecated annotations, remove redundant
+dependencies
+([#970](https://github.com/walmartlabs/concord/pull/970));
 - agent-operator: create agent pod client only for
 Running pods
 ([#973](https://github.com/walmartlabs/concord/pull/973));
+- concord-server: remove GithubTriggerProcessor interface
+([#974](https://github.com/walmartlabs/concord/pull/974));
 - docker: configure safe.directory for git 2.35+
 ([#976](https://github.com/walmartlabs/concord/pull/976)).
 
