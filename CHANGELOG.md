@@ -1,4 +1,4 @@
-# Change log
+# Change Log
 
 ## [2.17.0] - Unreleased
 
