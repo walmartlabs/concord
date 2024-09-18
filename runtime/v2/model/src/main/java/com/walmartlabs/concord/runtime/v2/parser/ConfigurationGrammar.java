@@ -35,11 +35,11 @@ public final class ConfigurationGrammar {
 
     private static final Parser<Atom, ExclusiveMode> exclusive =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    with(ImmutableExclusiveMode::builder,
+                    with(ImmutableDefaultExclusiveMode::builder,
                             o -> options(
                                     mandatory("group", stringNotEmptyVal.map(o::group)),
                                     optional("mode", enumVal(ExclusiveMode.Mode.class).map(o::mode))))
-                            .map(ImmutableExclusiveMode.Builder::build));
+                            .map(ImmutableDefaultExclusiveMode.Builder::build));
 
     public static final Parser<Atom, ExclusiveMode> exclusiveVal =
             orError(exclusive, YamlValueType.EXCLUSIVE_MODE);

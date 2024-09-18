@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.model;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2024 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,48 +20,25 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
 import java.io.Serial;
-import java.io.Serializable;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonSerialize(as = ImmutableGithubTriggerExclusiveMode.class)
-@JsonDeserialize(as = ImmutableGithubTriggerExclusiveMode.class)
-public interface GithubTriggerExclusiveMode extends ExclusiveMode, Serializable {
+@JsonSerialize(as = ImmutableDefaultExclusiveMode.class)
+@JsonDeserialize(as = ImmutableDefaultExclusiveMode.class)
+public interface DefaultExclusiveMode extends ExclusiveMode {
 
     @Serial
     long serialVersionUID = 1L;
 
-    @Nullable
-    @Value.Parameter
-    @JsonProperty(value = "group")
-    String group();
-
-    // Unused, just for backward compatibility
-    @Nullable
-    @JsonIgnore
-    GroupBy groupBy();
-    enum GroupBy {
-        branch
+    static ExclusiveMode of(String group, Mode mode) {
+        return ImmutableDefaultExclusiveMode.of(group, mode);
     }
 
-    @Value.Parameter
-    @JsonProperty(value = "groupBy")
-    @Nullable
-    String groupByProperty();
-
-    @Value.Parameter
-    @Value.Default
-    default ExclusiveMode.Mode mode() {
-        return ExclusiveMode.Mode.wait;
-    }
 }

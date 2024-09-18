@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.DateTimeUtils;
 import com.walmartlabs.concord.repository.Snapshot;
+import com.walmartlabs.concord.runtime.v2.model.DefaultExclusiveMode;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
@@ -44,7 +45,7 @@ public final class PayloadUtils {
             throw new ProcessException(p.getProcessKey(), "Invalid exclusive mode: exclusive group not specified or empty");
         }
         ExclusiveMode.Mode mode = MapUtils.getEnum(exclusive, "mode", ExclusiveMode.Mode.class, ExclusiveMode.Mode.cancel);
-        return ExclusiveMode.of(group, mode);
+        return DefaultExclusiveMode.of(group, mode);
     }
 
     @SuppressWarnings("unchecked")
@@ -65,10 +66,10 @@ public final class PayloadUtils {
             return null;
         }
 
-        if (v instanceof String) {
+        if (v instanceof String iso) {
             OffsetDateTime t;
             try {
-                t = DateTimeUtils.fromIsoString((String) v);
+                t = DateTimeUtils.fromIsoString(iso);
             } catch (DateTimeParseException e) {
                 throw new ProcessException(p.getProcessKey(), "Invalid '" + k + "' format, expected an ISO-8601 value, got: " + v);
             }

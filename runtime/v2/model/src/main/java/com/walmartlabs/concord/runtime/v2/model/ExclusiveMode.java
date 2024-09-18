@@ -20,22 +20,12 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import java.io.Serializable;
 
-@Value.Immutable
-@Value.Style(jdkOnly = true)
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonSerialize(as = ImmutableExclusiveMode.class)
-@JsonDeserialize(as = ImmutableExclusiveMode.class)
 public interface ExclusiveMode extends Serializable {
-
-    long serialVersionUID = 1L;
 
     @Value.Parameter
     @JsonProperty(value = "group", required = true)
@@ -64,7 +54,4 @@ public interface ExclusiveMode extends Serializable {
         wait
     }
 
-    static ExclusiveMode of(String group, Mode mode) {
-        return ImmutableExclusiveMode.of(group, mode);
-    }
 }
