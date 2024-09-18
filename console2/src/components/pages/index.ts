@@ -42,4 +42,5 @@ export { default as SecretPage } from './SecretPage';
 export { default as JsonStorePage } from './JsonStorePage';
 export { default as TeamPage } from './TeamPage';
 export { default as UserActivityPage } from './UserActivityPage';
+export { default as UserInfoPage } from './UserInfoPage';
 export { default as UnauthorizedPage } from './UnauthorizedPage';

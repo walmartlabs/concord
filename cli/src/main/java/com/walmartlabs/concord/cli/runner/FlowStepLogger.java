@@ -9,9 +9,9 @@ package com.walmartlabs.concord.cli.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,7 @@ package com.walmartlabs.concord.cli.runner;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
+import com.walmartlabs.concord.runtime.v2.runner.vm.LogSegmentScopeCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.StepCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
@@ -33,6 +34,10 @@ public class FlowStepLogger implements ExecutionListener {
     @Override
     public Result beforeCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
         if (!(cmd instanceof StepCommand)) {
+            return Result.CONTINUE;
+        }
+
+        if (cmd instanceof LogSegmentScopeCommand) {
             return Result.CONTINUE;
         }
 

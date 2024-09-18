@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agentoperator.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,10 +48,18 @@ public class AgentClientFactory {
     }
 
     public AgentClient create(Pod pod) {
-        if (useMaintenanceMode && pod.getStatus() != null && pod.getStatus().getPodIP() != null) {
+        if (useMaintenanceMode && isRunning(pod) && hasIP(pod)) {
             return new DefaultAgentClient(httpClient, pod.getStatus().getPodIP());
         } else {
             return new NopAgentClient();
         }
+    }
+
+    private static boolean isRunning(Pod pod) {
+        return pod.getStatus() != null && "Running".equals(pod.getStatus().getPhase());
+    }
+
+    private static boolean hasIP(Pod pod) {
+        return pod.getStatus() != null && pod.getStatus().getPodIP() != null;
     }
 }

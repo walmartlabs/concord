@@ -20,22 +20,17 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
  * =====
  */
 
-import com.walmartlabs.concord.client2.ApiClient;
-import com.walmartlabs.concord.client2.ApiException;
 import com.walmartlabs.concord.client2.ProcessEventRequest;
-import com.walmartlabs.concord.client2.ProcessEventsApi;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.common.ObjectTruncater;
-import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.EventConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.runner.EventReportingService;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.lang.annotation.Annotation;
@@ -45,19 +40,16 @@ import java.util.*;
 
 public class TaskCallEventRecordingListener implements TaskCallListener {
 
-    private static final Logger log = LoggerFactory.getLogger(TaskCallEventRecordingListener.class);
-
     private static final String MASK = "***";
 
-    private final ProcessEventsApi eventsApi;
-    private final InstanceId processInstanceId;
     private final EventConfiguration eventConfiguration;
+    private final EventReportingService eventReportingService;
 
     @Inject
-    public TaskCallEventRecordingListener(ApiClient apiClient, InstanceId processInstanceId, ProcessConfiguration processConfiguration) {
-        this.eventsApi = new ProcessEventsApi(apiClient);
-        this.processInstanceId = processInstanceId;
+    public TaskCallEventRecordingListener(ProcessConfiguration processConfiguration,
+                                          EventReportingService eventReportingService) {
         this.eventConfiguration = processConfiguration.events();
+        this.eventReportingService = eventReportingService;
     }
 
     @Override
@@ -142,17 +134,13 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
         req.setData(event);
         req.setEventDate(Instant.now().atOffset(ZoneOffset.UTC));
 
-        try {
-            eventsApi.event(processInstanceId.getValue(), req);
-        } catch (ApiException e) {
-            log.warn("send [{}] -> error while sending an event to the server: {}", event, e.getMessage());
-        }
+        eventReportingService.report(req);
     }
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> asMapOrNull(Object v) {
-        if (v instanceof TaskResult.SimpleResult) {
-            return ((TaskResult.SimpleResult) v).toMap();
+        if (v instanceof TaskResult.SimpleResult simpleResult) {
+            return simpleResult.toMap();
         }
 
         if (v instanceof Map) {

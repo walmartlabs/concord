@@ -22,8 +22,10 @@ package com.walmartlabs.concord.server.events;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.walmartlabs.concord.server.events.github.GithubTriggerProcessor;
 import com.walmartlabs.concord.server.sdk.events.ProcessEventListener;
 
+import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
 
 public class EventModule implements Module {
@@ -31,5 +33,6 @@ public class EventModule implements Module {
     @Override
     public void configure(Binder binder) {
         newSetBinder(binder, ProcessEventListener.class);
+        binder.bind(GithubTriggerProcessor.class).in(SINGLETON);
     }
 }

@@ -4,6 +4,8 @@ configuration:
   entryPoint: "default"
   events:
     recordEvents: true
+    batchSize: 1
+    batchFlushInterval: 15
     recordTaskInVars: false
     truncateInVars: true
     truncateMaxStringLength: 1024
@@ -11,6 +13,7 @@ configuration:
     truncateMaxDepth: 10
     recordTaskOutVars: false
     truncateOutVars: true
+    updateMetaOnAllEvents: true
     inVarsBlacklist:
     - "apiKey"
     - "apiToken"

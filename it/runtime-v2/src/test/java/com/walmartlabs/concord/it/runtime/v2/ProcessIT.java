@@ -458,6 +458,51 @@ public class ProcessIT extends AbstractTest {
     }
 
     @Test
+    public void testMetadataUpdateOnlyOnEnd() throws Exception {
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .activeProfiles("disableMetaUpdates")
+                .archive(resource("processMetadataSend")));
+
+        ProcessEntry pe = proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        assertNotNull(pe.getMeta());
+        assertEquals("c", pe.getMeta().get("var"));
+
+        // expect one update
+        int sendCount = proc.getLogLines(line -> line.matches(".*sending process meta.*")).size();
+        assertEquals(1, sendCount);
+    }
+
+    @Test
+    public void testMetadataUpdateSuspendAndEnd() throws Exception {
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .activeProfiles("disableMetaUpdates")
+                .arg("doSuspend", true)
+                .archive(resource("processMetadataSend")));
+
+        ProcessEntry pe = proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        assertNotNull(pe.getMeta());
+        assertEquals("c", pe.getMeta().get("var"));
+
+        // expect two updates (one on suspend, one on finish)
+        int sendCount = proc.getLogLines(line -> line.matches(".*sending process meta.*")).size();
+        assertEquals(2, sendCount);
+    }
+
+    @Test
+    public void testMetadataUpdateDefault() throws Exception {
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .archive(resource("processMetadataSend")));
+
+        ProcessEntry pe = proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        assertNotNull(pe.getMeta());
+        assertEquals("c", pe.getMeta().get("var"));
+
+        // expect five updates (three set calls in a loop, plus two more)
+        int sendCount = proc.getLogLines(line -> line.matches(".*sending process meta.*")).size();
+        assertEquals(5, sendCount);
+    }
+
+    @Test
     public void testEmptyExclusiveGroup() throws Exception {
         ConcordProcess proc = concord.processes().start(new Payload()
                 .archive(resource("emptyExclusiveGroup")));
@@ -559,4 +604,88 @@ public class ProcessIT extends AbstractTest {
         Object myMetaValue = pe.getMeta().get("myMetaVar");
         assertEquals("myMetaVarValue", myMetaValue);
     }
+
+    /**
+     * Tests process event batch flushing when a long-running task executes.
+     */
+    @Test
+    public void testEventBatchingShortTimer() throws Exception {
+        Payload payload = new Payload()
+                .activeProfiles("shortFlush")
+                .archive(resource("eventBatchingTimer"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        ProcessEntry pe = expectStatus(proc, ProcessEntry.StatusEnum.RUNNING);
+
+        // let it run at least long enough to report an event batch (1-second interval)
+        Thread.sleep(1_500);
+
+        // At this point the process is still executing the sleep task.
+        // We set a 1-second batch duration, so we can not expect a batch to have
+        // been reported even though the max batch size (100) was not met.
+
+        // ---
+        List<ProcessEventEntry> events = getProcessElementEvents(proc);
+
+        // clean up
+        new ProcessApi(concord.apiClient()).kill(pe.getInstanceId());
+
+        // ---
+        assertNotNull(events);
+        assertFalse(events.isEmpty());
+        assertEquals(1, events.size());
+
+        ProcessEventEntry sleepEvent = events.get(0);
+
+        assertEquals("sleep", sleepEvent.getData().get("name"));
+    }
+
+    /**
+     * Demonstrates what happens if process event batching flush timer is too long,
+     * or effectively doesn't exist.
+     */
+    @Test
+    public void testEventBatchingLongTimer() throws Exception {
+        Payload payload = new Payload()
+                .activeProfiles("longFlush")
+                .archive(resource("eventBatchingTimer"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        ProcessEntry pe = expectStatus(proc, ProcessEntry.StatusEnum.RUNNING);
+
+        // let it run long enough to prove events aren't going to update any time soon
+        Thread.sleep(1_500);
+
+        // ---
+        List<ProcessEventEntry> events = getProcessElementEvents(proc);
+        assertNotNull(events);
+        // No events because batch is still waiting to get large enough to report
+        assertTrue(events.isEmpty());
+
+        // clean up
+        new ProcessApi(concord.apiClient()).kill(pe.getInstanceId());
+    }
+
+    /**
+     * Executes a flow that will over-fill process event queue if not properly synchronized
+     */
+    @Test
+    public void testEventBatchingParallel() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("eventBatchingParallel"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+        List<ProcessEventEntry> events = getProcessElementEvents(proc);
+        assertNotNull(events);
+        assertFalse(events.isEmpty());
+    }
+
+    private List<ProcessEventEntry> getProcessElementEvents(ConcordProcess proc) throws Exception {
+        ProcessEventsApi processEventsApi = new ProcessEventsApi(concord.apiClient());
+        return processEventsApi.listProcessEvents(proc.instanceId(), "ELEMENT", null, null, null, "pre", null, null);
+    }
+
 }

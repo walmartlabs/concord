@@ -32,7 +32,10 @@ ENV LANG en_US.UTF-8
 RUN virtualenv /usr/local/bin/concord_venv && \
     /usr/local/bin/concord_venv/bin/pip3 --no-cache-dir install dumb-init
 
-RUN groupadd -g 456 concord && useradd --no-log-init -u 456 -g concord -m -s /sbin/nologin concord
+RUN groupadd -g 456 concord && \
+    useradd --no-log-init -u 456 -g concord -m -s /sbin/nologin concord && \
+    echo "[safe]\n\tdirectory = *\n" > ~concord/.gitconfig && \
+    chown concord:concord ~concord/.gitconfig
 
 # Point /bin/sh to bash from dash
 RUN echo "dash dash/sh boolean false" | debconf-set-selections && \

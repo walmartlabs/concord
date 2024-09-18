@@ -206,6 +206,7 @@ public class Constants {
          * Container configuration.
          * @deprecated the container-per-process execution mode is deprecated.
          */
+        @Deprecated
         public static final String CONTAINER = "container";
 
         /**
@@ -242,6 +243,7 @@ public class Constants {
          * Resume event name. Filled in for processes resumed after being suspended.
          * @deprecated see {@link #RESUME_EVENTS_KEY}
          */
+        @Deprecated
         public static final String EVENT_NAME_KEY = "resumeEventName";
 
         /**
@@ -461,6 +463,7 @@ public class Constants {
          * File which contains process session token.
          * @deprecated use {@code ProcessConfiguration#sessionToken()}
          */
+        @Deprecated
         public static final String SESSION_TOKEN_FILE_NAME = ".session_token";
 
         /**
