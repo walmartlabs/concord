@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server.console;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -35,6 +37,7 @@ import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.secret.PasswordChecker;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.org.team.TeamDao;
+import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.repository.InvalidRepositoryPathException;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
@@ -47,10 +50,13 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
+import com.walmartlabs.concord.server.user.RoleEntry;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
+import org.jooq.Configuration;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.HttpHeaders;
@@ -58,6 +64,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.util.*;
+
+import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
+import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
+import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 
 @Path("/api/service/console")
 public class ConsoleService implements Resource {
@@ -74,6 +84,7 @@ public class ConsoleService implements Resource {
     private final JsonStoreDao storageDao;
     private final JsonStoreQueryDao storageQueryDao;
     private final JsonStoreAccessManager jsonStoreAccessManager;
+    private final ConsoleServiceDao consoleServiceDao;
 
     @Inject
     public ConsoleService(ProjectDao projectDao,
@@ -87,7 +98,8 @@ public class ConsoleService implements Resource {
                           ProjectAccessManager projectAccessManager,
                           JsonStoreDao storageDao,
                           JsonStoreQueryDao storageQueryDao,
-                          JsonStoreAccessManager jsonStoreAccessManager) {
+                          JsonStoreAccessManager jsonStoreAccessManager,
+                          ConsoleServiceDao consoleServiceDao) {
 
         this.projectDao = projectDao;
         this.repositoryManager = repositoryManager;
@@ -101,6 +113,35 @@ public class ConsoleService implements Resource {
         this.storageDao = storageDao;
         this.storageQueryDao = storageQueryDao;
         this.jsonStoreAccessManager = jsonStoreAccessManager;
+        this.consoleServiceDao = consoleServiceDao;
+    }
+
+    @GET
+    @Path("/userInfo")
+    @Produces(MediaType.APPLICATION_JSON)
+    public UserInfoResponse getUserInfo() {
+        UserPrincipal p = UserPrincipal.getCurrent();
+        if (p == null) {
+            throw new ConcordApplicationException("Can't determine current user: principal not found",
+                    Status.INTERNAL_SERVER_ERROR);
+        }
+
+        UserEntry u = p.getUser();
+        if (u == null) {
+            throw new ConcordApplicationException("Can't determine current user: user entry not found",
+                    Status.INTERNAL_SERVER_ERROR);
+        }
+
+        Set<String> userLdapGroups = Optional.ofNullable(LdapPrincipal.getCurrent())
+                    .map(LdapPrincipal::getGroups)
+                    .orElse(Set.of());
+
+        return UserInfoResponse.builder()
+                .displayName(displayName(u, p))
+                .teams(consoleServiceDao.listTeams(p.getId()))
+                .roles(u.getRoles().stream().map(RoleEntry::getName).toList())
+                .ldapGroups(userLdapGroups)
+                .build();
     }
 
     @GET
@@ -119,23 +160,10 @@ public class ConsoleService implements Resource {
                     Status.INTERNAL_SERVER_ERROR);
         }
 
-        String displayName = u.getDisplayName();
-
-        if (displayName == null) {
-            LdapPrincipal l = LdapPrincipal.getCurrent();
-            if (l != null) {
-                displayName = l.getDisplayName();
-            }
-        }
-
-        if (displayName == null) {
-            displayName = p.getUsername();
-        }
-
         UserEntry user = userManager.get(p.getId())
                 .orElseThrow(() -> new ConcordApplicationException("Unknown user: " + p.getId()));
 
-        return new UserResponse(p.getRealm(), user.getName(), user.getDomain(), displayName, user.getOrgs());
+        return new UserResponse(p.getRealm(), user.getName(), user.getDomain(), displayName(u, p), user.getOrgs());
     }
 
     @POST
@@ -320,5 +348,45 @@ public class ConsoleService implements Resource {
         }
 
         return true;
+    }
+
+    private static String displayName(UserEntry u, UserPrincipal p) {
+        String displayName = u.getDisplayName();
+
+        if (displayName == null) {
+            LdapPrincipal l = LdapPrincipal.getCurrent();
+            if (l != null) {
+                displayName = l.getDisplayName();
+            }
+        }
+
+        if (displayName == null) {
+            displayName = p.getUsername();
+        }
+
+        return displayName;
+    }
+
+    @Named
+    public static class ConsoleServiceDao extends AbstractDao {
+
+        @Inject
+        public ConsoleServiceDao(@MainDB Configuration cfg) {
+            super(cfg);
+        }
+
+        @Override
+        protected <T> T txResult(TxResult<T> t) {
+            return super.txResult(t);
+        }
+
+        public List<UserInfoResponse.UserTeamInfo> listTeams(UUID userId) {
+            return txResult(tx -> tx.select(ORGANIZATIONS.ORG_NAME, TEAMS.TEAM_NAME, USER_TEAMS.TEAM_ROLE)
+                    .from(USER_TEAMS)
+                    .join(TEAMS).on(TEAMS.TEAM_ID.eq(USER_TEAMS.TEAM_ID))
+                    .join(ORGANIZATIONS).on(ORGANIZATIONS.ORG_ID.eq(TEAMS.ORG_ID))
+                    .where(USER_TEAMS.USER_ID.eq(userId))
+                    .fetch(r -> UserInfoResponse.UserTeamInfo.of(r.get(ORGANIZATIONS.ORG_NAME), r.get(TEAMS.TEAM_NAME), TeamRole.valueOf(r.get(USER_TEAMS.TEAM_ROLE)))));
+        }
     }
 }

@@ -34,10 +34,13 @@ public class EventConfiguration {
             "vaultPassword");
 
     private boolean recordEvents = true;
+    private int batchFlushInterval = 15;
+    private int batchSize = 1;
     private boolean truncateInVars = true;
     private boolean recordTaskInVars = false;
     private boolean recordTaskOutVars = false;
     private boolean truncateOutVars = true;
+    private boolean updateMetaOnAllEvents = true;
     private Collection<String> inVarsBlacklist = DEFAULT_IN_VARS_BLACKLIST;
     private Collection<String> outVarsBlacklist = Collections.emptyList();
     private int truncateMaxStringLength = 1024;
@@ -50,6 +53,22 @@ public class EventConfiguration {
 
     public void setRecordEvents(boolean recordEvents) {
         this.recordEvents = recordEvents;
+    }
+
+    public int getBatchFlushInterval() {
+        return batchFlushInterval;
+    }
+
+    public void setBatchFlushInterval(int batchFlushInterval) {
+        this.batchFlushInterval = batchFlushInterval;
+    }
+
+    public int getBatchSize() {
+        return batchSize;
+    }
+
+    public void setBatchSize(int batchSize) {
+        this.batchSize = batchSize;
     }
 
     public boolean isRecordTaskInVars() {
@@ -90,6 +109,14 @@ public class EventConfiguration {
 
     public boolean isTruncateOutVars() {
         return truncateOutVars;
+    }
+
+    public boolean isUpdateMetaOnAllEvents() {
+        return updateMetaOnAllEvents;
+    }
+
+    public void setUpdateMetaOnAllEvents(boolean updateMetaOnAllEvents) {
+        this.updateMetaOnAllEvents = updateMetaOnAllEvents;
     }
 
     public int getTruncateMaxStringLength() {

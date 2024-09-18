@@ -6,7 +6,7 @@ configuration:
     recordTaskInVars: true
     recordTaskOutVars: true
   dependencies:
-    - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.2"
+    - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.23"
 
 # new directory structure
 # new SDK

@@ -1,0 +1,51 @@
+configuration:
+  debug: true
+  runtime: concord-v2
+  events:
+    recordTaskInVars: true
+    recordTaskOutVars: true
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:mock-tasks:2.13.0"
+    - "mvn://com.walmartlabs.concord.plugins.basic:asserts-tasks:2.12.0"
+
+resources:
+  concord:
+    - "glob:{*.,}concord.yaml"
+    - "glob:tests/{**/,}{*.,}concord.yaml"
+
+flows:
+  # tests runner
+  allTests:
+    - name: "Loading all test flows"
+      script: "js"
+      body: |
+        var testFlows = Java.from(context.execution().processDefinition().flows().entrySet().stream().toList())
+          .filter(e => !e.getValue().isEmpty())
+          .filter(e => e.getValue().get(0).getLocation().fileName().startsWith('tests/'))
+          .filter(e => e.getKey() != 'allTests')
+          .filter(e => e.getKey().startsWith('test'))
+          .map(e => e.getKey())
+
+        result.set("flows", testFlows);
+        result.set("processDefinition", context.execution().processDefinition());
+      out: tests
+
+    # tests as forks
+    - name: "Starting test ${item} as fork"
+      task: concord
+      in:
+        action: fork
+        entryPoint: "${item}"
+#        activeProfiles: "${item}"    # TODO: allow active profiles for forks?
+        arguments: "${tests.processDefinition.profiles().get(item).configuration.arguments}"
+      loop:
+        items: "${tests.flows}"
+        mode: parallel
+
+    # tests in a loop
+    - name: "Starting test ${item}"
+      call: "${item}"
+      in: "${tests.processDefinition.profiles().get(item).configuration.arguments}"
+      loop:
+        items: "${tests.flows}"
+        mode: parallel

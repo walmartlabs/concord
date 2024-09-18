@@ -179,7 +179,7 @@ public class ProcessQueueManager {
         }
 
         List<ProcessKey> updated = queueDao.updateStatus(processKeys, expected, status);
-        notifyStatusChange(tx, updated, status);
+        updated.forEach(processKey -> statusListeners.forEach(l -> l.onStatusChange(tx, processKey, status)));
         return updated;
     }
 
@@ -283,10 +283,6 @@ public class ProcessQueueManager {
         }
 
         throw new IllegalArgumentException("Invalid '" + paramName + "' value: expected an ISO-8601 value, got: " + processTimeout);
-    }
-
-    private void notifyStatusChange(DSLContext tx, List<ProcessKey> processKeys, ProcessStatus status) {
-        processKeys.forEach(processKey -> statusListeners.forEach(l -> l.onStatusChange(tx, processKey, status)));
     }
 
     private void notifyStatusChange(DSLContext tx, ProcessKey processKey, ProcessStatus status) {

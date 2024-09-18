@@ -31,6 +31,7 @@ import com.walmartlabs.concord.svm.*;
 
 import java.util.Collections;
 import java.util.Objects;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.CallContext;
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.Method;
@@ -43,13 +44,8 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
 
     private static final long serialVersionUID = 1L;
 
-    public TaskCallCommand(TaskCall step) {
-        super(step);
-    }
-
-    @Override
-    public Command copy() {
-        return new TaskCallCommand(getStep());
+    public TaskCallCommand(UUID correlationId, TaskCall step) {
+        super(correlationId, step);
     }
 
     @Override
@@ -96,10 +92,5 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         }
 
         TaskCallUtils.processTaskResult(runtime, ctx, taskName, opts, result);
-    }
-
-    @Override
-    public String getDefaultSegmentName() {
-        return "task: " + getStep().getName();
     }
 }

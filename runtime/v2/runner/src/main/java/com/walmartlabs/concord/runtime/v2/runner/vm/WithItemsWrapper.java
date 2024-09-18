@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 @Deprecated
 public abstract class WithItemsWrapper implements Command {
 
-    public static WithItemsWrapper of(Command cmd, WithItems withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions) {
+    public static WithItemsWrapper of(Command cmd, WithItems withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions, Step step) {
         Collection<String> out = Collections.emptyList();
         if (!outExpressions.isEmpty()) {
             out = new HashSet<>(outExpressions.keySet());
@@ -55,7 +55,7 @@ public abstract class WithItemsWrapper implements Command {
             case SERIAL:
                 return new SerialWithItems(cmd, withItems, out);
             case PARALLEL:
-                return new ParallelWithItems(cmd, withItems, out);
+                return new ParallelWithItems(cmd, withItems, out, step);
             default:
                 throw new IllegalArgumentException("Unknown withItems mode: " + mode);
         }
@@ -154,14 +154,11 @@ public abstract class WithItemsWrapper implements Command {
     static class ParallelWithItems extends WithItemsWrapper {
 
         private static final long serialVersionUID = 1L;
+        private final Step step;
 
-        protected ParallelWithItems(Command cmd, WithItems withItems, Collection<String> outVariables) {
+        protected ParallelWithItems(Command cmd, WithItems withItems, Collection<String> outVariables, Step step) {
             super(cmd, withItems, outVariables);
-        }
-
-        @Override
-        public Command copy() {
-            return new ParallelWithItems(cmd.copy(), withItems, outVariables);
+            this.step = step;
         }
 
         @Override
@@ -201,7 +198,7 @@ public abstract class WithItemsWrapper implements Command {
                     .nonRoot()
                     .build());
 
-            frame.push(new JoinCommand(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet())));
+            frame.push(new JoinCommand(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet()), step));
         }
     }
 
@@ -216,11 +213,6 @@ public abstract class WithItemsWrapper implements Command {
 
         protected SerialWithItems(Command cmd, WithItems withItems, Collection<String> outVariables) {
             super(cmd, withItems, outVariables);
-        }
-
-        @Override
-        public Command copy() {
-            return new SerialWithItems(cmd.copy(), withItems, outVariables);
         }
 
         @Override
@@ -259,11 +251,6 @@ public abstract class WithItemsWrapper implements Command {
         public WithItemsNext(Collection<String> outVariables, Command cmd) {
             this.outVariables = outVariables;
             this.cmd = cmd;
-        }
-
-        @Override
-        public Command copy() {
-            return new WithItemsNext(outVariables, cmd);
         }
 
         @Override
@@ -311,11 +298,6 @@ public abstract class WithItemsWrapper implements Command {
         }
 
         @Override
-        public Command copy() {
-            return new PrepareOutVariables(outVars, targetFrame);
-        }
-
-        @Override
         public void eval(Runtime runtime, State state, ThreadId threadId) {
             Frame frame = state.peekFrame(threadId);
             frame.pop();
@@ -346,11 +328,6 @@ public abstract class WithItemsWrapper implements Command {
             this.variables = variables;
             this.sourceFrame = sourceFrame;
             this.targetFrame = targetFrame;
-        }
-
-        @Override
-        public Command copy() {
-            return new AppendVariablesCommand(variables, sourceFrame, targetFrame);
         }
 
         @Override

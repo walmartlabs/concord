@@ -29,9 +29,8 @@ import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.process.loader.v1.ProcessDefinitionV1;
 import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
 import com.walmartlabs.concord.repository.Snapshot;
+import com.walmartlabs.concord.runtime.v2.model.ImmutableProcessDefinition;
 import com.walmartlabs.concord.sdk.Constants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -40,35 +39,48 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 /**
- * Handles loading of v1 and (future) v2 project definitions.
+ * Handles loading of supported Concord project files.
  */
 @Named
 public class ProjectLoader {
 
-    private static final Logger log = LoggerFactory.getLogger(ProjectLoader.class);
+    public static final String CONCORD_V1_RUNTIME_TYPE = "concord-v1";
+    public static final String CONCORD_V2_RUNTIME_TYPE = "concord-v2";
 
+    private final ProjectLoaderConfiguration cfg;
     private final com.walmartlabs.concord.project.ProjectLoader v1;
     private final com.walmartlabs.concord.runtime.v2.ProjectLoaderV2 v2;
 
     @Inject
-    public ProjectLoader(ImportManager importManager) {
+    public ProjectLoader(ProjectLoaderConfiguration cfg, ImportManager importManager) {
+        this.cfg = cfg;
         this.v1 = new com.walmartlabs.concord.project.ProjectLoader(importManager);
         this.v2 = new com.walmartlabs.concord.runtime.v2.ProjectLoaderV2(importManager);
     }
 
     public Result loadProject(Path workDir, ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception {
-        String runtime = getRuntimeType(workDir, "concord-v1"); // TODO constants
+        String runtime = getRuntimeType(workDir, CONCORD_V1_RUNTIME_TYPE); // TODO constants
         return loadProject(workDir, runtime, importsNormalizer, listener);
     }
 
     public Result loadProject(Path workDir, String runtime, ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception {
-        if ("concord-v2".equals(runtime)) { // TODO constants
-            return toResult(v2.load(workDir, importsNormalizer::normalize, listener));
+        if (runtime == null) {
+            runtime = CONCORD_V1_RUNTIME_TYPE;
         }
 
-        return toResult(v1.loadProject(workDir, importsNormalizer::normalize, listener));
+        if (CONCORD_V2_RUNTIME_TYPE.equals(runtime)) {
+            return toResult(v2.load(workDir, importsNormalizer::normalize, listener));
+        } else if (CONCORD_V1_RUNTIME_TYPE.equals(runtime)) {
+            return toResult(v1.loadProject(workDir, importsNormalizer::normalize, listener));
+        } else {
+            if (cfg.extraRuntimes().contains(runtime)) {
+                return basicRuntime();
+            }
+            throw new UnsupportedRuntimeTypeException(runtime);
+        }
     }
 
     private static Result toResult(com.walmartlabs.concord.project.ProjectLoader.Result r) {
@@ -105,8 +117,24 @@ public class ProjectLoader {
         };
     }
 
+    private static Result basicRuntime() {
+        return new Result() {
+            @Override
+            public List<Snapshot> snapshots() {
+                return List.of();
+            }
+
+            @Override
+            public ProcessDefinition projectDefinition() {
+                return new ProcessDefinitionV2(
+                        ImmutableProcessDefinition.builder()
+                                .build());
+            }
+        };
+    }
+
     public static boolean isConcordFileExists(Path path) {
-        // TODO v2
+
         return com.walmartlabs.concord.project.ProjectLoader.isConcordFileExists(path);
     }
 
@@ -128,7 +156,6 @@ public class ProjectLoader {
                         continue;
                     }
 
-                    // TODO constants
                     String s = n.textValue();
                     if (s != null) {
                         return s;
@@ -142,8 +169,15 @@ public class ProjectLoader {
 
     public interface Result {
 
-        List<Snapshot> snapshots(); // TODO can it be a collection?
+        List<Snapshot> snapshots();
 
         ProcessDefinition projectDefinition();
+    }
+
+    public record ProjectLoaderConfiguration(Set<String> extraRuntimes) {
+
+        public static ProjectLoaderConfiguration defaultConfiguration() {
+            return new ProjectLoaderConfiguration(Set.of());
+        }
     }
 }

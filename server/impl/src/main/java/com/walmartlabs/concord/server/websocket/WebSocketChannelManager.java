@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -116,5 +117,9 @@ public class WebSocketChannelManager {
 
     public int connectedClientsCount() {
         return channels.size();
+    }
+
+    public Map<UUID, WebSocketChannel> getChannels() {
+        return Collections.unmodifiableMap(channels);
     }
 }

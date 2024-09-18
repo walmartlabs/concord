@@ -56,13 +56,13 @@ public class TaskResultService implements ExecutionListener {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void beforeProcessStart() {
+    public void beforeProcessStart(Runtime runtime, State state) {
         taskResults = persistenceService.load("taskResults", HashMap.class);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public void beforeProcessResume() {
+    public void beforeProcessResume(Runtime runtime, State state) {
         taskResults = persistenceService.load("taskResults", HashMap.class);
     }
 

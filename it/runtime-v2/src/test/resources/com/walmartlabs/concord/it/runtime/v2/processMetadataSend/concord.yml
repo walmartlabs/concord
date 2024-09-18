@@ -1,0 +1,44 @@
+configuration:
+  runtime: concord-v2
+  requirements:
+    jvm:
+      extraArgs: # enable debug to capture metadata send log message
+        - "-Dlogback.configurationFile=debug_logback.xml"
+  meta:
+    var: default_value
+    tmpVar: default_value
+  arguments:
+    doSuspend: false # for ensuring meta is updated on SUSPENDED as well as FINISHED
+
+profiles:
+  disableMetaUpdates:
+    configuration:
+      events:
+        updateMetaOnAllEvents: false
+
+flows:
+  default:
+    - call: anotherFlow
+      out: tmpVar
+      loop:
+        items:
+          - a
+          - b
+          - c
+
+    - set:
+        var: "${tmpVar[1]}"
+
+    - if: "${doSuspend}"
+      then:
+        - task: sleep
+          in:
+            suspend: true
+            duration: 1
+
+    - set:
+        var: "${tmpVar[2]}"
+
+  anotherFlow:
+    - set:
+        tmpVar: ${item}

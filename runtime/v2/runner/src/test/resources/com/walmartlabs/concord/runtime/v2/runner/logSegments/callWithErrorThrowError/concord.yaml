@@ -1,0 +1,15 @@
+flows:
+  default:
+    - call: "inner"
+      in:
+        fail: true
+      error:
+        - log: "in error block"
+        - throw: "${lastError}"
+
+  inner:
+    - if: "${fail}"
+      then:
+        - throw: "FAIL"
+
+    - log: "in inner flow"

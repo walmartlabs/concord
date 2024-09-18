@@ -25,17 +25,19 @@ import { Breadcrumb, Grid, Menu } from 'semantic-ui-react';
 import { BreadcrumbSegment } from '../../molecules';
 import { Redirect, Route, RouteComponentProps, Switch, withRouter } from 'react-router';
 import { NotFoundPage } from '../index';
-import { APITokensListPage, NewAPITokenPage } from '../../../components/pages';
+import { APITokensListPage, NewAPITokenPage, UserInfoPage } from '../../../components/pages';
 
 interface RouteProps {
     orgName: string;
 }
 
-type TabLink = 'token' | null;
+type TabLink = 'user-info' |'token' | null;
 
 const pathToTab = (s: string): TabLink => {
     if (s.includes('/api-token')) {
         return 'token';
+    } else if (s.includes('/user-info')) {
+        return 'user-info'
     }
 
     return null;
@@ -56,6 +58,9 @@ class ProfilePage extends React.PureComponent<RouteComponentProps<RouteProps>> {
                 <Grid centered={true}>
                     <Grid.Column width={3}>
                         <Menu tabular={true} vertical={true} fluid={true}>
+                            <Menu.Item active={activeTab === 'user-info'}>
+                                <Link to={`${url}/user-info`}>User</Link>
+                            </Menu.Item>
                             <Menu.Item active={activeTab === 'token'}>
                                 <Link to={`${url}/api-token`}>API Tokens</Link>
                             </Menu.Item>
@@ -72,6 +77,9 @@ class ProfilePage extends React.PureComponent<RouteComponentProps<RouteProps>> {
                             </Route>
                             <Route path={`${url}/api-token`}>
                                 <APITokensListPage />
+                            </Route>
+                            <Route path={`${url}/user-info`}>
+                                <UserInfoPage />
                             </Route>
 
                             <Route component={NotFoundPage} />

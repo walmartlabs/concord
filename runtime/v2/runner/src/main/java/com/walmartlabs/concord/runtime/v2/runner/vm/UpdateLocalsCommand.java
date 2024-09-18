@@ -56,11 +56,6 @@ public class UpdateLocalsCommand implements Command {
     }
 
     @Override
-    public Command copy() {
-        return new UpdateLocalsCommand(input, threadIds);
-    }
-
-    @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         // don't "pop" the stack, this command is a special case and evaluated separately
 

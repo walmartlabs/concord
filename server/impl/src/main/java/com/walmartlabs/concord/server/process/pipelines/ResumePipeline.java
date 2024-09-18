@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.process.pipelines.processors.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.List;
 
 /**
  * Resumes the execution of previously suspended processes.
@@ -37,21 +38,22 @@ public class ResumePipeline extends Pipeline {
 
     @Inject
     public ResumePipeline(Injector injector) {
-        super(injector,
-                LoggingMDCProcessor.class,
-                ChangeUserProcessor.class,
-                ResumingProcessor.class,
-                ResumingHooksProcessor.class,
-                ResumeMarkerStoringProcessor.class,
-                FormFilesStoringProcessor.class,
-                ResumeConfigurationProcessor.class,
-                ResumeEventsProcessor.class,
-                ClearStartAtProcessor.class,
-                ConfigurationStoringProcessor.class,
-                DependencyVersionsExportProcessor.class,
-                PolicyExportProcessor.class,
-                StateImportingProcessor.class,
-                ResumeProcessor.class);
+        super(List.of(
+                injector.getInstance(LoggingMDCProcessor.class),
+                injector.getInstance(ChangeUserProcessor.class),
+                injector.getInstance(ResumingProcessor.class),
+                injector.getInstance(ResumingHooksProcessor.class),
+                injector.getInstance(ResumeMarkerStoringProcessor.class),
+                injector.getInstance(FormFilesStoringProcessor.class),
+                injector.getInstance(ResumeConfigurationProcessor.class),
+                injector.getInstance(ResumeEventsProcessor.class),
+                injector.getInstance(ClearStartAtProcessor.class),
+                injector.getInstance(ConfigurationStoringProcessor.class),
+                injector.getInstance(DependencyVersionsExportProcessor.class),
+                injector.getInstance(PolicyExportProcessor.class),
+                injector.getInstance(StateImportingProcessor.class),
+                injector.getInstance(ResumeProcessor.class)
+        ));
 
         this.exceptionProcessor = injector.getInstance(FailProcessor.class);
         this.finalizerProcessor = injector.getInstance(CleanupProcessor.class);

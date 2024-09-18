@@ -56,6 +56,7 @@ public class AgentConfiguration {
 
     private final int workersCount;
     private final long pollInterval;
+    private final String maintenanceModeListenerHost;
     private final int maintenanceModeListenerPort;
 
     private final boolean explicitlyResolveV1Client;
@@ -82,6 +83,7 @@ public class AgentConfiguration {
         this.logMaxDelay = cfg.getDuration("logMaxDelay", TimeUnit.MILLISECONDS);
 
         this.workersCount = cfg.getInt("workersCount");
+        this.maintenanceModeListenerHost = cfg.getString("maintenanceModeListenerHost");
         this.maintenanceModeListenerPort = cfg.getInt("maintenanceModeListenerPort");
 
         this.pollInterval = cfg.getDuration("pollInterval", TimeUnit.MILLISECONDS);
@@ -140,6 +142,10 @@ public class AgentConfiguration {
 
     public long getPollInterval() {
         return pollInterval;
+    }
+
+    public String getMaintenanceModeListenerHost() {
+        return maintenanceModeListenerHost;
     }
 
     public int getMaintenanceModeListenerPort() {

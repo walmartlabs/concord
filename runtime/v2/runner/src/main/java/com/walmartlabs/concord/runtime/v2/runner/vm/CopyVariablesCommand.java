@@ -55,11 +55,6 @@ public class CopyVariablesCommand implements Command {
     }
 
     @Override
-    public Command copy() {
-        return new CopyVariablesCommand(variables, sourceFrameProducer, targetFrameProducer);
-    }
-
-    @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();

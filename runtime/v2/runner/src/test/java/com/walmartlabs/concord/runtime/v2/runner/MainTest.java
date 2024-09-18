@@ -24,10 +24,9 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
-import com.walmartlabs.concord.runtime.v2.sdk.*;
+import com.walmartlabs.concord.runtime.v2.runner.vm.LoggedException;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,8 +39,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class MainTest extends AbstractTest {
-
-    private static final Logger log = LoggerFactory.getLogger(MainTest.class);
 
     @Test
     public void testVariablesAfterResume() throws Exception {
@@ -380,7 +377,7 @@ public class MainTest extends AbstractTest {
         try {
             run();
             fail("exception expected");
-        } catch (Exception e) {
+        } catch (LoggedException e) {
             assertEquals("Found forbidden tasks", e.getMessage());
         }
 
@@ -665,6 +662,17 @@ public class MainTest extends AbstractTest {
         byte[] log = run();
         assertLog(log, ".*result: \\[10, 20, 30\\].*");
         assertLog(log, ".*threadIds: \\[1, 2, 3].*");
+    }
+
+    @Test
+    public void testParallelWithError() throws Exception {
+        deploy("parallelWithError");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        LoggedException exception = assertThrows(LoggedException.class, this::run);
+        assertTrue(exception.getMessage().matches("(?s)Parallel execution errors:.*faultyTask.*\n.*faultyTask.*"));
     }
 
     @Test
@@ -1327,7 +1335,7 @@ public class MainTest extends AbstractTest {
         try {
             run();
             fail("exception expected");
-        } catch (UserDefinedException e) {
+        } catch (LoggedException e) {
             assertEquals("42 not found", e.getMessage());
         }
     }
@@ -1655,6 +1663,7 @@ public class MainTest extends AbstractTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelLoopItemIndex() throws Exception {
         deploy("parallelLoopItemIndex");
 

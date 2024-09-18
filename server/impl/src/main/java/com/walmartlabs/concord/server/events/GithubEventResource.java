@@ -86,7 +86,7 @@ public class GithubEventResource implements Resource {
     private final GithubConfiguration githubCfg;
     private final TriggerProcessExecutor executor;
     private final AuditLog auditLog;
-    private final List<GithubTriggerProcessor> processors;
+    private final GithubTriggerProcessor processor;
     private final UserManager userManager;
     private final LdapManager ldapManager;
     private final TriggerEventInitiatorResolver initiatorResolver;
@@ -96,7 +96,7 @@ public class GithubEventResource implements Resource {
     public GithubEventResource(GithubConfiguration githubCfg,
                                TriggerProcessExecutor executor,
                                AuditLog auditLog,
-                               List<GithubTriggerProcessor> processors,
+                               GithubTriggerProcessor processor,
                                UserManager userManager,
                                LdapManager ldapManager,
                                TriggerEventInitiatorResolver initiatorResolver,
@@ -105,7 +105,7 @@ public class GithubEventResource implements Resource {
         this.githubCfg = githubCfg;
         this.executor = executor;
         this.auditLog = auditLog;
-        this.processors = processors;
+        this.processor = processor;
         this.userManager = userManager;
         this.ldapManager = ldapManager;
         this.initiatorResolver = initiatorResolver;
@@ -153,7 +153,7 @@ public class GithubEventResource implements Resource {
         }
 
         List<GithubTriggerProcessor.Result> results = new ArrayList<>();
-        processors.forEach(p -> p.process(eventName, payload, uriInfo, results));
+        processor.process(eventName, payload, uriInfo, results);
 
         Supplier<UserEntry> initiatorSupplier = memo(new GithubEventInitiatorSupplier(userManager, ldapManager, payload));
 
@@ -202,7 +202,7 @@ public class GithubEventResource implements Resource {
 
             GithubTriggerExclusiveMode e = objectMapper.convertValue(exclusive, GithubTriggerExclusiveMode.class);
             String groupBy = e.groupByProperty();
-            if (groupBy== null) {
+            if (groupBy == null) {
                 return exclusive;
             }
 

@@ -23,6 +23,9 @@ package com.walmartlabs.concord.client.v2;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
+import com.walmartlabs.concord.sdk.LogTags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -39,6 +42,8 @@ import static com.walmartlabs.concord.client.ConcordTaskParams.ListSubProcesses;
 @Named("concord")
 @SuppressWarnings("unused")
 public class ConcordTaskV2 implements ReentrantTask {
+
+    private static final Logger log = LoggerFactory.getLogger(ConcordTaskV2.class);
 
     private final ApiClientFactory apiClientFactory;
     private final Context context;
@@ -100,6 +105,21 @@ public class ConcordTaskV2 implements ReentrantTask {
 
     public <T> Map<String, T> waitForCompletion(List<String> ids, long timeout, Function<ProcessEntry, T> processor) {
         return delegate().waitForCompletion(toUUIDs(ids), timeout, processor);
+    }
+
+    public void assertFinished(List<String> ids) {
+        var result = waitForCompletion(ids);
+        boolean hasFailed = false;
+        for (var p : result.values()) {
+            if (p.getStatus() == ProcessEntry.StatusEnum.FAILED) {
+                log.info("Failed process: {}", LogTags.instanceId(p.getInstanceId()));
+                hasFailed = true;
+            }
+        }
+
+        if (hasFailed) {
+            throw new UserDefinedException("Found failed processes");
+        }
     }
 
     public void kill(Map<String, Object> cfg) throws Exception {

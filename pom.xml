@@ -5,7 +5,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>parent</artifactId>
-    <version>2.12.1-SNAPSHOT</version>
+    <version>2.17.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -60,7 +60,7 @@
     </modules>
 
     <properties>
-        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.release>${jdk.version}</maven.compiler.release>
         <maven.compiler.source>${maven.compiler.release}</maven.compiler.source>
         <maven.compiler.target>${maven.compiler.release}</maven.compiler.target>
 
@@ -70,10 +70,9 @@
         <scm.connection>scm:git:https://github.com/walmartlabs/concord.git</scm.connection>
 
         <docker.plugin.version>0.38.1</docker.plugin.version>
-        <jooq.version>3.13.4</jooq.version>
-        <junit.version>5.8.2</junit.version>
-        <liquibase.version>3.5.1
-        </liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
+        <jooq.version>3.14.0</jooq.version>
+        <junit.version>5.9.1</junit.version>
+        <liquibase.version>4.8.0</liquibase.version>
         <node.version>20.12.2</node.version>
         <frontend.plugin.version>1.12.0</frontend.plugin.version>
 
@@ -443,6 +442,18 @@
     </distributionManagement>
 
     <profiles>
+        <profile>
+            <id>jdk21</id>
+            <properties>
+                <jdk.version>21</jdk.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>jdk21-aarch64</id>
+            <properties>
+                <jdk.version>21</jdk.version>
+            </properties>
+        </profile>
         <profile>
             <id>concord-release</id>
             <build>
