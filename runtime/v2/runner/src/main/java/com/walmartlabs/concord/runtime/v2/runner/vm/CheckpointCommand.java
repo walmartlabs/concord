@@ -28,7 +28,6 @@ import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
-import com.walmartlabs.concord.svm.Command;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -39,11 +38,6 @@ public class CheckpointCommand extends StepCommand<Checkpoint> {
 
     public CheckpointCommand(Checkpoint step) {
         super(step);
-    }
-
-    @Override
-    public Command copy() {
-        return new CheckpointCommand(getStep());
     }
 
     @Override

@@ -1,0 +1,5 @@
+flows:
+  default:
+    - task: "faultyTask"
+      retry:
+        times: "${undefined}"

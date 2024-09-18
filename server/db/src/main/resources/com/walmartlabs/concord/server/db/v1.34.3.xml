@@ -26,11 +26,13 @@
         </sql>
     </changeSet>
 
+    <!-- removed in 1.99.0+
     <changeSet id="1344030" author="ibodrov@gmail.com" runInTransaction="false">
         <sql>
             create index concurrently IDX_PROC_META on PROCESS_QUEUE using gin (META jsonb_path_ops)
         </sql>
     </changeSet>
+    -->
 
     <changeSet id="1344100" author="ybrigo@gmail.com">
         <preConditions onFail="MARK_RAN">

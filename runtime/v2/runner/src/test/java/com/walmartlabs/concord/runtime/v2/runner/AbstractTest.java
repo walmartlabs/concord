@@ -80,6 +80,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -147,7 +149,7 @@ public abstract class AbstractTest {
                 Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
                 executionListeners.addBinding().toInstance(new ExecutionListener(){
                     @Override
-                    public void beforeProcessStart() {
+                    public void beforeProcessStart(Runtime runtime, State state) {
                         SensitiveDataHolder.getInstance().get().clear();
                     }
                 });
@@ -301,8 +303,20 @@ public abstract class AbstractTest {
             fail("Log is empty");
         }
 
-        if (grep(ab, pattern) != 1) {
-            fail("Expected a single log line: " + pattern + ", got: \n" + new String(ab));
+        int cnt = grep(ab, pattern);
+        if (cnt != 1) {
+            fail("Expected a single log line: " + pattern + ", got (" + cnt + "): \n" + new String(ab));
+        }
+    }
+
+    protected static void assertMultiLineLog(byte[] ab, String pattern) throws IOException {
+        if (ab == null) {
+            fail("Log is empty");
+        }
+
+        int cnt = grepMultiLine(ab, pattern);
+        if (cnt != 1) {
+            fail("Expected a single log line: " + pattern + ", got (" + cnt + "): \n" + new String(ab));
         }
     }
 
@@ -323,6 +337,29 @@ public abstract class AbstractTest {
                 if (line.matches(pattern)) {
                     cnt++;
                 }
+            }
+        }
+
+        return cnt;
+    }
+
+    protected static int grepMultiLine(byte[] ab, String pattern) throws IOException {
+        int cnt = 0;
+
+        Pattern compiledPattern = Pattern.compile(pattern, Pattern.DOTALL);
+
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(ab);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(bais))) {
+
+            StringBuilder content = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+
+            Matcher matcher = compiledPattern.matcher(content.toString());
+            while (matcher.find()) {
+                cnt++;
             }
         }
 
@@ -407,10 +444,14 @@ public abstract class AbstractTest {
 
     @Named("loggingExample")
     @SuppressWarnings("unused")
-    static class LoggingExampleTask implements Task {
+    public static class LoggingExampleTask implements Task {
 
         private static final Logger log = LoggerFactory.getLogger(LoggingExampleTask.class);
         private static final Logger processLog = LoggerFactory.getLogger("processLog");
+
+        public void logString(String msg) {
+            System.out.println(msg);
+        }
 
         @Override
         public TaskResult execute(Variables input) throws Exception {
@@ -450,6 +491,7 @@ public abstract class AbstractTest {
 
         @Override
         public TaskResult execute(Variables input) {
+            log.info("will fail with error");
             return TaskResult.fail("boom!")
                     .value("key", "value");
         }
@@ -680,6 +722,17 @@ public abstract class AbstractTest {
 
         public void remove(String key) {
             ctx.execution().state().removeThreadLocal(ctx.execution().currentThreadId(), key);
+        }
+    }
+
+    @Named("suspendTask")
+    @SuppressWarnings("unused")
+    static class SuspendTask implements Task {
+        @Override
+        public TaskResult execute(Variables input) {
+            log.info("will suspend with event: '{}'", input.assertString("eventName"));
+
+            return TaskResult.suspend(input.assertString("eventName"));
         }
     }
 

@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.process.pipelines.processors.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.List;
 
 /**
  * Handles processes forked from a parent (including "handler"
@@ -38,25 +39,26 @@ public class ForkPipeline extends Pipeline {
 
     @Inject
     public ForkPipeline(Injector injector) {
-        super(injector,
-                LoggingMDCProcessor.class,
-                PolicyExportProcessor.class,
-                InitialQueueEntryProcessor.class,
-                ForkPolicyProcessor.class,
-                ForkCleanupProcessor.class,
-                SessionTokenProcessor.class,
-                ConfigurationProcessor.class,
-                TagsExtractingProcessor.class,
-                InitiatorUserInfoProcessor.class,
-                OutVariablesSettingProcessor.class,
-                ConfigurationStoringProcessor.class,
-                DependencyVersionsExportProcessor.class,
-                StateImportingProcessor.class,
-                ForkHandlersProcessor.class,
-                ForkRepositoryInfoProcessor.class,
-                RepositoryInfoUpdateProcessor.class,
-                ForkRuntimeProcessor.class,
-                EnqueueingProcessor.class);
+        super(List.of(
+                injector.getInstance(LoggingMDCProcessor.class),
+                injector.getInstance(PolicyExportProcessor.class),
+                injector.getInstance(InitialQueueEntryProcessor.class),
+                injector.getInstance(ForkPolicyProcessor.class),
+                injector.getInstance(ForkCleanupProcessor.class),
+                injector.getInstance(SessionTokenProcessor.class),
+                injector.getInstance(ConfigurationProcessor.class),
+                injector.getInstance(TagsExtractingProcessor.class),
+                injector.getInstance(InitiatorUserInfoProcessor.class),
+                injector.getInstance(OutVariablesSettingProcessor.class),
+                injector.getInstance(ConfigurationStoringProcessor.class),
+                injector.getInstance(DependencyVersionsExportProcessor.class),
+                injector.getInstance(StateImportingProcessor.class),
+                injector.getInstance(ForkHandlersProcessor.class),
+                injector.getInstance(ForkRepositoryInfoProcessor.class),
+                injector.getInstance(RepositoryInfoUpdateProcessor.class),
+                injector.getInstance(ForkRuntimeProcessor.class),
+                injector.getInstance(EnqueueingProcessor.class)
+        ));
 
         this.exceptionProcessor = injector.getInstance(FailProcessor.class);
         this.finalizerProcessor = injector.getInstance(CleanupProcessor.class);

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
@@ -27,28 +28,24 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-public class JoinCommand implements Command {
+public class JoinCommand<T extends Step> extends StepCommand<T> {
 
     private static final Logger log = LoggerFactory.getLogger(JoinCommand.class);
     private static final long serialVersionUID = 1L;
 
     private final Collection<ThreadId> ids;
 
-    public JoinCommand(Collection<ThreadId> ids) {
+    public JoinCommand(Collection<ThreadId> ids, T step) {
+        super(step);
+
         this.ids = ids;
     }
 
     @Override
-    public Command copy() {
-        return new JoinCommand(ids);
-    }
-
-    @Override
-    public void eval(Runtime runtime, State state, ThreadId threadId) {
+    protected void execute(Runtime runtime, State state, ThreadId threadId) {
         // Here's a very dumb but working solution to the problem
-        // of monitoring the child "threads" state - just a loop
+        // of monitoring child thread state - just a loop
         // waiting on a monitor . On each iteration it decides whether
         // the join command can be removed from the stack (and thus
         // continuing the execution) or not.
@@ -78,17 +75,17 @@ public class JoinCommand implements Command {
                 return;
             }
 
-            // find if some of the threads are failed with an unhandled exception
+            // find if some of the threads has failed with an unhandled exception
             Collection<ThreadId> failed = status.entrySet().stream()
                     .filter(e -> e.getValue() == ThreadStatus.FAILED)
                     .map(Map.Entry::getKey)
-                    .collect(Collectors.toList());
+                    .toList();
 
             // nothing left to run and we got some unhandled exceptions
             if (!failed.isEmpty() && !anyReady) {
-                throw new MultiException(failed.stream()
+                throw new ParallelExecutionException(failed.stream()
                         .map(state::clearThreadError)
-                        .collect(Collectors.toList()));
+                        .toList());
             }
 
             // some children are still running, wait for a bit and then check again

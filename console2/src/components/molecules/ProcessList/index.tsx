@@ -173,6 +173,36 @@ const getValue = (source: string, e: ProcessEntry) => {
     return result;
 };
 
+const renderDuration = (v: string, e: ProcessEntry) => {
+    // the correct way is to use the totalRuntimeMs field
+    if (e.totalRuntimeMs !== undefined) {
+        return (
+            <HumanizedDuration
+                value={e.totalRuntimeMs}
+                hint="Total RUNNING time"
+            />
+        );
+    }
+
+    // fallback to the old behavior
+    if (!v || !e.lastUpdatedAt) {
+        return '-';
+    }
+
+    try {
+        const start = parseISO(v);
+        const end = parseISO(e.lastUpdatedAt);
+        return (
+            <HumanizedDuration
+                value={end.getTime() - start.getTime()}
+                hint="since last RUNNING status"
+            />
+        );
+    } catch (e) {
+        return `Invalid value: ${v}`;
+    }
+}
+
 const renderColumnContent = (e: Entry, c: ColumnDefinition) => {
     const v = getValue(c.source, e);
 
@@ -201,22 +231,7 @@ const renderColumnContent = (e: Entry, c: ColumnDefinition) => {
             return v === undefined ? '' : v.join(', ');
         }
         case RenderType.DURATION: {
-            if (!v || !e.lastUpdatedAt) {
-                return '-';
-            }
-
-            try {
-                const start = parseISO(v);
-                const end = parseISO(e.lastUpdatedAt);
-                return (
-                    <HumanizedDuration
-                        value={end.getTime() - start.getTime()}
-                        hint="since last RUNNING status"
-                    />
-                );
-            } catch (e) {
-                return `Invalid value: ${v}`;
-            }
+            return renderDuration(v, e);
         }
         case RenderType.LINK: {
             if (!v || !v.link || !v.title) {

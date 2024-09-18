@@ -27,8 +27,11 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.walmartlabs.concord.client2.FormListEntry;
 import com.walmartlabs.concord.client2.FormSubmitResponse;
+import com.walmartlabs.concord.client2.ProcessApi;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.client2.ProcessEventEntry;
+import com.walmartlabs.concord.client2.ProcessEventsApi;
 import com.walmartlabs.concord.client2.ProcessListFilter;
 import com.walmartlabs.concord.it.common.JGitUtils;
 import com.walmartlabs.concord.sdk.Constants;
@@ -258,6 +261,45 @@ public class ProcessIT {
         proc.expectStatus(StatusEnum.FINISHED);
 
         assertEquals(3, proc.getEntry("childrenIds").getChildrenIds().size());
+    }
+
+    @Test
+    public void testGetProcessForChildIdsAfterSuspend() throws Exception {
+        byte[] archive = archive(ProcessIT.class.getResource("processWithChildrenSuspend").toURI());
+
+        ConcordProcess proc = concord.processes().start(new Payload().archive(archive));
+
+        // ---
+
+        proc.expectStatus(StatusEnum.FINISHED);
+
+        assertEquals(3, proc.getEntry("childrenIds").getChildrenIds().size());
+    }
+
+    @Test
+    public void testGetProcessForChildIdAfterSuspend() throws Exception {
+        byte[] archive = archive(ProcessIT.class.getResource("processWithChildSuspend").toURI());
+
+        ConcordProcess proc = concord.processes().start(new Payload().archive(archive));
+
+        // ---
+
+        proc.expectStatus(StatusEnum.FINISHED);
+
+        proc.assertLog(".*Got 1 ids.*");
+    }
+
+    @Test
+    public void testGetProcessForChildIdAfterSuspendWithoutOut() throws Exception {
+        byte[] archive = archive(ProcessIT.class.getResource("processWithChildSuspendWithoutOut").toURI());
+
+        ConcordProcess proc = concord.processes().start(new Payload().archive(archive));
+
+        // ---
+
+        proc.expectStatus(StatusEnum.FINISHED);
+
+        proc.assertLog(".*Got 1 ids.*");
     }
 
     @Test
@@ -513,6 +555,20 @@ public class ProcessIT {
     }
 
     @Test
+    public void testMetadataUpdateOnlyOnEnd() throws Exception {
+        // Hard to validate the exact number of times POST /meta is called.
+        // This should only call it once, while testMetadataWithWithItems calls it 3 times.
+        // This at least validates the runner events config option is valid
+        // and doesn't break meta reporting
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .archive(resource("processMetadataAfterExecution")));
+
+        ProcessEntry pe = proc.expectStatus(StatusEnum.FINISHED);
+        assertNotNull(pe.getMeta());
+        assertEquals("c", pe.getMeta().get("var"));
+    }
+
+    @Test
     public void testEmptyExclusiveGroup() throws Exception {
         ConcordProcess proc = concord.processes().start(new Payload()
                 .archive(resource("emptyExclusiveGroup")));
@@ -535,6 +591,71 @@ public class ProcessIT {
 
         proc.assertLog(".*process entry: RUNNING.*");
         proc.assertLog(".*Works!.*");
+    }
+
+    /**
+     * Tests process event batch flushing when a long-running task executes.
+     */
+    @Test
+    public void testEventBatchingShortTimer() throws Exception {
+        Payload payload = new Payload()
+                .activeProfiles("shortFlush")
+                .archive(resource("eventBatchingTimer"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        ProcessEntry pe = proc.expectStatus(StatusEnum.RUNNING);
+
+        // let it run at least long enough to report an event batch (1-second interval)
+        Thread.sleep(1_500);
+
+        ProcessEventsApi processEventsApi = new ProcessEventsApi(concord.apiClient());
+
+        // At this point the process is still executing the sleep task.
+        // We set a 1-second batch duration, so we can not expect a batch to have
+        // been reported even though the max batch size (100) was not met.
+
+        // ---
+        List<ProcessEventEntry> events = processEventsApi.listProcessEvents(proc.instanceId(), "ELEMENT", null, null, null, "pre", null, null);
+
+        // clean up
+        new ProcessApi(concord.apiClient()).kill(pe.getInstanceId());
+
+        // ---
+        assertNotNull(events);
+        assertFalse(events.isEmpty());
+        assertEquals(1, events.size());
+
+        ProcessEventEntry sleepEvent = events.get(0);
+
+        assertEquals("sleep", sleepEvent.getData().get("name"));
+    }
+
+    /**
+     * Demonstrates what happens if process event batching flush timer is too long,
+     * or effectively doesn't exist.
+     */
+    @Test
+    public void testEventBatchingLongTimer() throws Exception {
+        Payload payload = new Payload()
+                .activeProfiles("longFlush")
+                .archive(resource("eventBatchingTimer"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        ProcessEntry pe = proc.expectStatus(StatusEnum.RUNNING);
+
+        // let it run long enough to prove events aren't going to update any time soon
+        Thread.sleep(1_500);
+
+        ProcessEventsApi processEventsApi = new ProcessEventsApi(concord.apiClient());
+
+        // ---
+        List<ProcessEventEntry> events = processEventsApi.listProcessEvents(proc.instanceId(), "ELEMENT", null, null, null, "pre", null, null);
+        assertNotNull(events);
+        // No events because batch is still waiting to get large enough to report
+        assertTrue(events.isEmpty());
+
+        // clean up
+        new ProcessApi(concord.apiClient()).kill(pe.getInstanceId());
     }
 
     @SuppressWarnings("unchecked")

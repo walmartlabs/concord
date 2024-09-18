@@ -49,6 +49,7 @@ import org.jooq.util.postgres.PostgresDSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -122,8 +123,6 @@ public class ProcessQueueDao extends AbstractDao {
                 .set(PROCESS_QUEUE.INITIATOR_ID, initiatorId)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
                 .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
-                .set(PROCESS_QUEUE.META, objectMapper.toJSONB(meta))
-                .set(PROCESS_QUEUE.TRIGGERED_BY, objectMapper.toJSONB(triggeredBy))
                 .execute();
 
         tx.insertInto(PROCESS_META)
@@ -155,6 +154,13 @@ public class ProcessQueueDao extends AbstractDao {
         if (i != 1) {
             throw new DataAccessException("Invalid number of rows updated: " + i);
         }
+    }
+
+    public Optional<OffsetDateTime> getLastRunAt(DSLContext tx, ProcessKey processKey) {
+        return tx.select(PROCESS_QUEUE.LAST_RUN_AT)
+                .from(PROCESS_QUEUE)
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .fetchOptional(PROCESS_QUEUE.LAST_RUN_AT);
     }
 
     private static Field<OffsetDateTime> createRunningAtValue(ProcessStatus status) {
@@ -195,10 +201,6 @@ public class ProcessQueueDao extends AbstractDao {
 
         if (handlers != null) {
             q.set(PROCESS_QUEUE.HANDLERS, toArray(handlers));
-        }
-
-        if (meta != null) {
-            q.set(PROCESS_QUEUE.META, field(coalesce(PROCESS_QUEUE.META, field("?", JSONB.class, JSONB.valueOf("{}"))) + " || ?::jsonb", JSONB.class, objectMapper.toJSONB(meta)));
         }
 
         if (imports != null && !imports.isEmpty()) {
@@ -324,15 +326,8 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public boolean updateMeta(ProcessKey processKey, Map<String, Object> meta) {
-        UUID instanceId = processKey.getInstanceId();
-
         return txResult(tx -> {
-            int i = tx.update(PROCESS_QUEUE)
-                    .set(PROCESS_QUEUE.META, field(coalesce(PROCESS_QUEUE.META, field("?::jsonb", JSONB.class, JSONB.valueOf("{}"))) + " || ?::jsonb", JSONB.class, objectMapper.toJSONB(meta)))
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
-                    .execute();
-
-            tx.update(PROCESS_META)
+            int i = tx.update(PROCESS_META)
                     .set(PROCESS_META.META, field(coalesce(PROCESS_META.META, field("?::jsonb", JSONB.class, JSONB.valueOf("{}"))) + " || ?::jsonb", JSONB.class, objectMapper.toJSONB(meta)))
                     .where(PROCESS_META.INSTANCE_ID.eq(processKey.getInstanceId())
                             .and(PROCESS_META.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
@@ -343,17 +338,9 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public boolean removeMeta(ProcessKey processKey, String key) {
-        UUID instanceId = processKey.getInstanceId();
-
         return txResult(tx -> {
-            Field<JSONB> v = field("{0}", JSONB.class, PROCESS_QUEUE.META).minus(value(key));
-            int i = tx.update(PROCESS_QUEUE)
-                    .set(PROCESS_QUEUE.META, v)
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
-                    .execute();
-
-            v = field("{0}", JSONB.class, PROCESS_META.META).minus(value(key));
-            tx.update(PROCESS_META)
+            Field<JSONB> v = field("{0}", JSONB.class, PROCESS_META.META).minus(value(key));
+            int i = tx.update(PROCESS_META)
                     .set(PROCESS_META.META, v)
                     .where(PROCESS_META.INSTANCE_ID.eq(processKey.getInstanceId())
                             .and(PROCESS_META.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
@@ -455,13 +442,13 @@ public class ProcessQueueDao extends AbstractDao {
     public List<ProcessKey> getCascade(DSLContext tx, PartialProcessKey parentKey) {
         UUID parentInstanceId = parentKey.getInstanceId();
         return tx.withRecursive("children").as(
-                select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
-                        .where(PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
-                        .unionAll(
-                                select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
-                                        .join(name("children"))
-                                        .on(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(
-                                                field(name("children", "INSTANCE_ID"), UUID.class)))))
+                        select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
+                                .where(PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
+                                .unionAll(
+                                        select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
+                                                .join(name("children"))
+                                                .on(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(
+                                                        field(name("children", "INSTANCE_ID"), UUID.class)))))
                 .select()
                 .from(name("children"))
                 .fetch(r -> new ProcessKey(r.get(0, UUID.class), r.get(1, OffsetDateTime.class)));
@@ -648,6 +635,13 @@ public class ProcessQueueDao extends AbstractDao {
                 .execute();
     }
 
+    public void addToTotalRunningTime(DSLContext tx, ProcessKey processKey, Duration duration) {
+        tx.update(PROCESS_QUEUE)
+                .set(PROCESS_QUEUE.TOTAL_RUNTIME_MS, coalesce(PROCESS_QUEUE.TOTAL_RUNTIME_MS, 0L).plus(duration.toMillis()))
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .execute();
+    }
+
     private SelectQuery<Record> buildSelect(DSLContext tx, ProcessFilter filter) {
         return buildSelect(tx, null, filter);
     }
@@ -658,6 +652,16 @@ public class ProcessQueueDao extends AbstractDao {
         // process_queue
         query.addSelect(PROCESS_QUEUE_FIELDS);
         query.addFrom(PROCESS_QUEUE);
+
+        // triggered by
+        query.addSelect(PROCESS_TRIGGER_INFO.TRIGGERED_BY);
+        query.addJoin(PROCESS_TRIGGER_INFO, JoinType.LEFT_OUTER_JOIN, PROCESS_TRIGGER_INFO.INSTANCE_ID.eq(PROCESS_QUEUE.INSTANCE_ID)
+                .and(PROCESS_TRIGGER_INFO.INSTANCE_CREATED_AT.eq(PROCESS_QUEUE.CREATED_AT)));
+
+        // meta
+        query.addSelect(function("jsonb_strip_nulls", JSONB.class, PROCESS_META.META).as(PROCESS_META.META));
+        query.addJoin(PROCESS_META, JoinType.LEFT_OUTER_JOIN, PROCESS_META.INSTANCE_ID.eq(PROCESS_QUEUE.INSTANCE_ID)
+                .and(PROCESS_META.INSTANCE_CREATED_AT.eq(PROCESS_QUEUE.CREATED_AT)));
 
         // users
         query.addSelect(USERS.USERNAME);
@@ -735,7 +739,8 @@ public class ProcessQueueDao extends AbstractDao {
             query.addConditions(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(filter.parentId()));
         }
 
-        MetadataUtils.apply(query, PROCESS_QUEUE.META, filter.metaFilters());
+        // process meta
+        MetadataUtils.apply(query, PROCESS_META.META, filter.metaFilters());
 
         filterByTags(query, filter.tags());
 
@@ -758,14 +763,14 @@ public class ProcessQueueDao extends AbstractDao {
         if (includes.contains(ProcessDataInclude.CHECKPOINTS)) {
             ProcessCheckpoints pc = PROCESS_CHECKPOINTS.as("pc");
             SelectJoinStep<Record1<JSONB>> checkpoints = tx.select(
-                    function("to_jsonb", JSONB.class,
-                            function("array_agg", Object.class,
-                                    jsonbStripNulls(
-                                            jsonbBuildObject(
-                                                    inline("id"), pc.CHECKPOINT_ID,
-                                                    inline("name"), pc.CHECKPOINT_NAME,
-                                                    inline("correlationId"), pc.CORRELATION_ID,
-                                                    inline("createdAt"), toJsonDate(pc.CHECKPOINT_DATE))))))
+                            function("to_jsonb", JSONB.class,
+                                    function("array_agg", Object.class,
+                                            jsonbStripNulls(
+                                                    jsonbBuildObject(
+                                                            inline("id"), pc.CHECKPOINT_ID,
+                                                            inline("name"), pc.CHECKPOINT_NAME,
+                                                            inline("correlationId"), pc.CORRELATION_ID,
+                                                            inline("createdAt"), toJsonDate(pc.CHECKPOINT_DATE))))))
                     .from(pc);
 
             if (key != null) {
@@ -783,7 +788,7 @@ public class ProcessQueueDao extends AbstractDao {
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
 
             SelectJoinStep<Record1<JSONB>> history = tx.select(function("to_jsonb", JSONB.class,
-                    function("array_agg", Object.class, checkpointHistoryEntryToJsonb(pe))))
+                            function("array_agg", Object.class, checkpointHistoryEntryToJsonb(pe))))
                     .from(pe);
 
             if (key != null) {
@@ -802,7 +807,7 @@ public class ProcessQueueDao extends AbstractDao {
         if (includes.contains(ProcessDataInclude.STATUS_HISTORY)) {
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
             SelectJoinStep<Record1<JSONB>> history = tx.select(function("to_jsonb", JSONB.class,
-                    function("array_agg", Object.class, statusHistoryEntryToJsonb(pe))))
+                            function("array_agg", Object.class, statusHistoryEntryToJsonb(pe))))
                     .from(pe);
 
             if (key != null) {
@@ -870,12 +875,13 @@ public class ProcessQueueDao extends AbstractDao {
                 .startAt(r.get(PROCESS_QUEUE.START_AT))
                 .lastUpdatedAt(r.get(PROCESS_QUEUE.LAST_UPDATED_AT))
                 .lastRunAt(r.get(PROCESS_QUEUE.LAST_RUN_AT))
+                .totalRuntimeMs(r.get(PROCESS_QUEUE.TOTAL_RUNTIME_MS))
                 .createdAt(r.get(PROCESS_QUEUE.CREATED_AT))
                 .status(ProcessStatus.valueOf(r.get(PROCESS_QUEUE.CURRENT_STATUS)))
                 .lastAgentId(r.get(PROCESS_QUEUE.LAST_AGENT_ID))
                 .tags(tags)
                 .childrenIds(toSet(getOrNull(r, "children_ids")))
-                .meta(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.META)))
+                .meta(objectMapper.fromJSONB(r.get(PROCESS_META.META)))
                 .handlers(toSet(r.get(PROCESS_QUEUE.HANDLERS)))
                 .requirements(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.REQUIREMENTS)))
                 .disabled(r.get(PROCESS_QUEUE.IS_DISABLED))
@@ -883,7 +889,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .checkpoints(objectMapper.fromJSONB(getOrNull(r, "checkpoints"), LIST_OF_CHECKPOINTS))
                 .statusHistory(objectMapper.fromJSONB(getOrNull(r, "status_history"), LIST_OF_STATUS_HISTORY))
                 .checkpointRestoreHistory(objectMapper.fromJSONB(getOrNull(r, "checkpoints_history"), LIST_OF_CHECKPOINTS_HISTORY))
-                .triggeredBy(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.TRIGGERED_BY), TriggeredByEntry.class))
+                .triggeredBy(objectMapper.fromJSONB(r.get(PROCESS_TRIGGER_INFO.TRIGGERED_BY), TriggeredByEntry.class))
                 .timeout(r.get(PROCESS_QUEUE.TIMEOUT))
                 .suspendTimeout(r.get(PROCESS_QUEUE.SUSPEND_TIMEOUT))
                 .runtime(r.get(PROCESS_QUEUE.RUNTIME))
@@ -928,11 +934,7 @@ public class ProcessQueueDao extends AbstractDao {
                 continue;
             }
 
-            if (f == PROCESS_QUEUE.META) {
-                l.add(function("jsonb_strip_nulls", JSONB.class, f).as(f));
-            } else {
-                l.add(f);
-            }
+            l.add(f);
         }
 
         return l.toArray(new Field[0]);

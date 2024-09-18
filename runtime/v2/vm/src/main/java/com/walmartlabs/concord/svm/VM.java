@@ -48,10 +48,17 @@ public class VM {
     public void start(State state) throws Exception {
         log.debug("start -> start");
 
-        listeners.fireBeforeProcessStart();
-
         Runtime runtime = runtimeFactory.create(this);
-        EvalResult result = execute(runtime, state);
+
+        listeners.fireBeforeProcessStart(runtime, state);
+
+        EvalResult result;
+        try {
+            result = execute(runtime, state);
+        } catch (Exception e) {
+            listeners.fireOnProcessError(runtime, state, e);
+            throw e;
+        }
 
         listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
 
@@ -73,10 +80,17 @@ public class VM {
 
         wakeSuspended(state);
 
-        listeners.fireBeforeProcessResume();
-
         Runtime runtime = runtimeFactory.create(this);
-        EvalResult result = execute(runtime, state);
+
+        listeners.fireBeforeProcessResume(runtime, state);
+
+        EvalResult result;
+        try {
+            result = execute(runtime, state);
+        } catch (Exception e) {
+            listeners.fireOnProcessError(runtime, state, e);
+            throw e;
+        }
 
         listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
 
@@ -93,12 +107,7 @@ public class VM {
 
         Runtime rt = runtimeFactory.create(this);
         ThreadId threadId = state.getRootThreadId();
-        try {
-            cmd.eval(rt, state, threadId);
-        } catch (Exception e) {
-            cmd.onException(rt, e, state, threadId);
-            throw e;
-        }
+        cmd.eval(rt, state, threadId);
 
         log.debug("run ['{}'] -> done", cmd);
     }
@@ -152,13 +161,8 @@ public class VM {
                         // by the error handling command
                         frame.setLocal(Frame.LAST_EXCEPTION_KEY, cause);
 
-                        // remove the current frame after the error handling code is done
-                        frame.push(new PopFrameCommand());
-
                         // and run the error handler next
                         frame.push(handler);
-                    } else {
-                        frame.push(new PopFrameCommand());
                     }
                 }
 
@@ -168,9 +172,7 @@ public class VM {
 
                 if (cmd == null) {
                     log.trace("eval [{}] -> the frame is complete", threadId);
-                    if (status != ThreadStatus.UNWINDING) {
-                        frame.push(new PopFrameCommand());
-                    }
+                    frame.push(new PopFrameCommand());
                     continue;
                 }
 
@@ -182,14 +184,20 @@ public class VM {
                         stop = true;
                     }
 
-                    cmd.eval(runtime, state, threadId);
+                    try {
+                        cmd.eval(runtime, state, threadId);
+                    } catch (Exception e) {
+                        if (callListeners && listeners.fireAfterCommandWithError(runtime, state, threadId, cmd, e) == BREAK) {
+                            stop = true;
+                        }
+                        throw e;
+                    }
 
                     if (callListeners && listeners.fireAfterCommand(runtime, state, threadId, cmd) == BREAK) {
                         stop = true;
                     }
                 } catch (Exception e) {
-                    cmd.onException(runtime, e, state, threadId);
-
+                    frame.push(new PopFrameCommand());
                     state.setStatus(threadId, ThreadStatus.UNWINDING);
                     state.setThreadError(threadId, e);
                 }

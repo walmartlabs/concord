@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.process.pipelines.processors.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.List;
 
 /**
  * Initial handling of processes. Creates queue entries in the NEW status.
@@ -37,16 +38,17 @@ public class NewProcessPipeline extends Pipeline {
 
     @Inject
     public NewProcessPipeline(Injector injector) {
-        super(injector,
-                LoggingMDCProcessor.class,
-                AuthorizationProcessor.class,
-                AssertWorkspaceArchiveProcessor.class,
-                RawPayloadPolicyProcessor.class,
-                AssertOutVariablesProcessor.class,
-                RequestParametersProcessor.class,
-                PayloadStoreProcessor.class,
-                SecuritySubjectProcessor.class,
-                NewQueueEntryProcessor.class);
+        super(List.of(
+                injector.getInstance(LoggingMDCProcessor.class),
+                injector.getInstance(AuthorizationProcessor.class),
+                injector.getInstance(AssertWorkspaceArchiveProcessor.class),
+                injector.getInstance(RawPayloadPolicyProcessor.class),
+                injector.getInstance(AssertOutVariablesProcessor.class),
+                injector.getInstance(RequestParametersProcessor.class),
+                injector.getInstance(PayloadStoreProcessor.class),
+                injector.getInstance(SecuritySubjectProcessor.class),
+                injector.getInstance(NewQueueEntryProcessor.class)
+        ));
 
         this.exceptionProcessor = injector.getInstance(FailProcessor.class);
         this.finalizerProcessor = injector.getInstance(CleanupProcessor.class);

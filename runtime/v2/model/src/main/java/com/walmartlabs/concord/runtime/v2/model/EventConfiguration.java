@@ -58,6 +58,26 @@ public interface EventConfiguration extends Serializable {
     }
 
     /**
+     * Maximum number of process events to report per batch.
+     */
+    @Value.Default
+    default int batchSize() {
+        return 1;
+    }
+
+    /**
+     * Interval, in seconds after which any queued process events will be reported.
+     * <p>
+     * Typically, batched events are reported on process termination or when
+     * the queued number equals {@link #batchSize()}. A long-running task call
+     * holds up event recording if a scheduled flush is not performed.
+     */
+    @Value.Default
+    default int batchFlushInterval() {
+        return 15;
+    }
+
+    /**
      * Enable/disable recording of IN variables in task calls.
      */
     @Value.Default
@@ -119,6 +139,11 @@ public interface EventConfiguration extends Serializable {
      */
     @Value.Default
     default boolean truncateOutVars() {
+        return true;
+    }
+
+    @Value.Default
+    default boolean updateMetaOnAllEvents() {
         return true;
     }
 
