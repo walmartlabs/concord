@@ -11,6 +11,9 @@
     <logger name="org.javers.core" level="WARN"/>
     <logger name="org.jooq" level="WARN"/>
 
+    <logger name="org.pac4j.core" level="TRACE"/>
+    <logger name="org.pac4j.oidc" level="TRACE"/>
+
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
