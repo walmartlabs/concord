@@ -190,25 +190,9 @@
                 <groupId>org.revapi</groupId>
                 <artifactId>revapi-maven-plugin</artifactId>
                 <configuration>
-                    <analysisConfiguration>
-                        <revapi.ignore>
-                            <item>
-                                <code>java.field.serialVersionUIDUnchanged</code>
-                            </item>
-                            <item>
-                                <code>java.method.parameterTypeParameterChanged</code>
-                            </item>
-                            <item>
-                                <code>java.method.returnTypeTypeParametersChanged</code>
-                            </item>
-                            <item>
-                                <code>java.class.externalClassExposedInAPI</code>
-                            </item>
-                            <item>
-                                <code>java.method.numberOfParametersChanged</code>
-                            </item>
-                        </revapi.ignore>
-                    </analysisConfiguration>
+                    <!-- lots of incompatible changes due to breaking changes in dependencies -->
+                    <!-- re-enable after release -->
+                    <skip>true</skip>
                 </configuration>
             </plugin>
         </plugins>
