@@ -30,7 +30,7 @@ interface ExternalProps {
 const ProcessToolbar = ({ children }: ExternalProps) => {
     return (
         <Menu borderless={true} secondary={true} className={'processToolbar'}>
-            <Menu.Item position={'right'}>{children}</Menu.Item>
+            <Menu.Item style={{width: '100%'}}>{children}</Menu.Item>
         </Menu>
     );
 };
