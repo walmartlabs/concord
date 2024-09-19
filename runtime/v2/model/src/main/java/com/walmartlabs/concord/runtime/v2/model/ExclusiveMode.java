@@ -21,10 +21,12 @@ package com.walmartlabs.concord.runtime.v2.model;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.immutables.value.Value;
 
 import java.io.Serializable;
 
+@JsonDeserialize(as = DefaultExclusiveMode.class)
 public interface ExclusiveMode extends Serializable {
 
     @Value.Parameter
