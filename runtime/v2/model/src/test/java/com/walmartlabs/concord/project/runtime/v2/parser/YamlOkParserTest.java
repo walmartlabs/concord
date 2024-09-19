@@ -351,7 +351,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertEquals(Collections.singletonMap("k", "v"), cfg.arguments());
         assertEquals(Collections.singletonMap("k", "v1"), cfg.requirements());
         assertEquals(Duration.parse("PT1H"), cfg.processTimeout());
-        assertEquals(DefaultExclusiveMode.of("X", ExclusiveMode.Mode.cancel), cfg.exclusive());
+        assertEquals(ExclusiveMode.of("X", ExclusiveMode.Mode.cancel), cfg.exclusive());
         assertEquals(EventConfiguration.builder()
                 .recordTaskInVars(true)
                 .inVarsBlacklist(Collections.singletonList("pass"))

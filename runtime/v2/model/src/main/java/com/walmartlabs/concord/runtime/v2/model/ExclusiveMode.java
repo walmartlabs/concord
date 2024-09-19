@@ -20,13 +20,16 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
+import java.io.Serial;
 import java.io.Serializable;
 
-@JsonDeserialize(as = DefaultExclusiveMode.class)
+@JsonDeserialize(as = ImmutableDefaultExclusiveMode.class)
 public interface ExclusiveMode extends Serializable {
 
     @Value.Parameter
@@ -54,6 +57,22 @@ public interface ExclusiveMode extends Serializable {
          * Wait in the queue if there's already a running process with the same {@link #group()} value.
          */
         wait
+    }
+
+    static ExclusiveMode of(String group, Mode mode) {
+        return ImmutableDefaultExclusiveMode.of(group, mode);
+    }
+
+    @Value.Immutable
+    @Value.Style(jdkOnly = true)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableDefaultExclusiveMode.class)
+    @JsonDeserialize(as = ImmutableDefaultExclusiveMode.class)
+    interface DefaultExclusiveMode extends ExclusiveMode {
+
+        @Serial
+        long serialVersionUID = 1L;
+
     }
 
 }

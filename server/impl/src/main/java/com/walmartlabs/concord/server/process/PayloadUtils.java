@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.DateTimeUtils;
 import com.walmartlabs.concord.repository.Snapshot;
-import com.walmartlabs.concord.runtime.v2.model.DefaultExclusiveMode;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
@@ -45,7 +44,7 @@ public final class PayloadUtils {
             throw new ProcessException(p.getProcessKey(), "Invalid exclusive mode: exclusive group not specified or empty");
         }
         ExclusiveMode.Mode mode = MapUtils.getEnum(exclusive, "mode", ExclusiveMode.Mode.class, ExclusiveMode.Mode.cancel);
-        return DefaultExclusiveMode.of(group, mode);
+        return ExclusiveMode.of(group, mode);
     }
 
     @SuppressWarnings("unchecked")
