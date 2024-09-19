@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.18.0] - Unreleased
+
+### Changed
+
+- concord-server: bind EventEnrichers explicitly
+([#978](https://github.com/walmartlabs/concord/pull/978)).
+
+
+
 ## [2.17.0] - 2024-09-18
 
 ### Added
