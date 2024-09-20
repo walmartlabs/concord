@@ -73,12 +73,9 @@ jobs:
       - name: Build and test with Maven
         env:
           SKIP_DOCKER_TESTS: "true"
-          # re-enable old agent tests once we are several versions ahead
-          SKIP_OLD_AGENT_TESTS: "true"
         run: |
           if [[ "${{ needs.check-labels.outputs.skip_tests }}" == "true" ]]; then
             ./mvnw -s .github/settings.xml -B clean install -Pgha -Pdocker -P${{ matrix.profile }} -DskipTests
           else
             ./mvnw -s .github/settings.xml -B clean install -Pgha -Pdocker -Pit -P${{ matrix.profile }}
           fi
-

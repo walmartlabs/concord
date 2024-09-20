@@ -1,4 +1,37 @@
-# Change log
+# Change Log
+
+## [2.17.0] - 2024-09-18
+
+### Added
+
+- runtime-v2: option for event batching for runner events
+([#949](https://github.com/walmartlabs/concord/pull/949));
+- runtime-v1: option for event batching for runner events
+([#950](https://github.com/walmartlabs/concord/pull/950));
+- console2, server: simple user info page
+([#952](https://github.com/walmartlabs/concord/pull/952)).
+
+### Changed
+
+- project: update Maven wrapper
+([#967](https://github.com/walmartlabs/concord/pull/967));
+- oidc: redirect back to auth in failed callbacks
+([#969](https://github.com/walmartlabs/concord/pull/969));
+- project: miscellaneous fixes for build-time warnings,
+add missing @deprecated annotations, remove redundant
+dependencies
+([#970](https://github.com/walmartlabs/concord/pull/970));
+- agent-operator: create agent pod client only for
+Running pods
+([#973](https://github.com/walmartlabs/concord/pull/973));
+- concord-server: remove GithubTriggerProcessor interface
+([#974](https://github.com/walmartlabs/concord/pull/974));
+- docker: configure safe.directory for git 2.35+
+([#976](https://github.com/walmartlabs/concord/pull/976)).
+
+
+
+### Changed
 
 ## [2.16.0] - 2024-09-05
 

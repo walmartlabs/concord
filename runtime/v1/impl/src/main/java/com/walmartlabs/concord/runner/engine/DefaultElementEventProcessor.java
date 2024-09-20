@@ -20,10 +20,7 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-import com.walmartlabs.concord.client2.ApiClientConfiguration;
-import com.walmartlabs.concord.client2.ApiClientFactory;
 import com.walmartlabs.concord.client2.ProcessEventRequest;
-import com.walmartlabs.concord.client2.ProcessEventsApi;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.ProcessDefinitionUtils;
 import io.takari.bpm.api.ExecutionException;
@@ -45,12 +42,13 @@ public class DefaultElementEventProcessor implements ElementEventProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultElementEventProcessor.class);
 
-    private final ApiClientFactory apiClientFactory;
     private final ProcessDefinitionProvider processDefinitionProvider;
+    private final EventReportingService eventReportingService;
 
-    public DefaultElementEventProcessor(ApiClientFactory apiClientFactory, ProcessDefinitionProvider processDefinitionProvider) {
-        this.apiClientFactory = apiClientFactory;
+    public DefaultElementEventProcessor(ProcessDefinitionProvider processDefinitionProvider,
+                                        EventReportingService eventReportingService) {
         this.processDefinitionProvider = processDefinitionProvider;
+        this.eventReportingService = eventReportingService;
     }
 
     @Override
@@ -96,11 +94,7 @@ public class DefaultElementEventProcessor implements ElementEventProcessor {
             req.setData(e);
             req.setEventDate(Instant.now().atOffset(ZoneOffset.UTC));
 
-            ProcessEventsApi client = new ProcessEventsApi(apiClientFactory.create(
-                    ApiClientConfiguration.builder()
-                            .sessionToken(event.getSessionToken())
-                            .build()));
-            client.event(UUID.fromString(event.getInstanceId()), req);
+            eventReportingService.report(req, UUID.fromString(event.getInstanceId()), event.getSessionToken());
         } catch (Exception e) {
             log.warn("process ['{}'] -> transfer error: {}", event.getInstanceId(), e.getMessage());
         }
