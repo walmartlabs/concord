@@ -4,6 +4,8 @@
 
 ### Changed
 
+- it: re-enable OldAgentIT
+([#962](https://github.com/walmartlabs/concord/pull/962));
 - concord-server: bind EventEnrichers explicitly
 ([#978](https://github.com/walmartlabs/concord/pull/978)).
 
