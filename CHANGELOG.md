@@ -4,6 +4,8 @@
 
 ### Changed
 
+- project: respect PR labels
+([#961](https://github.com/walmartlabs/concord/pull/961));
 - it: re-enable OldAgentIT
 ([#962](https://github.com/walmartlabs/concord/pull/962));
 - concord-server: bind EventEnrichers explicitly
