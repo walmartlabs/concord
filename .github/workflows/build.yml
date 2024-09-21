@@ -11,7 +11,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check-labels:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+
+    steps:
+      - name: Check PR labels
+        id: check
+        run: |
+          labels=$(jq -r '.pull_request.labels | map(.name) | join(",")' $GITHUB_EVENT_PATH)
+          if [[ "$labels" == *"[no ci]"* ]]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+          if [[ "$labels" == *"don't test"* ]]; then
+            echo "skip_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip_tests=false" >> $GITHUB_OUTPUT
+          fi
+
   build:
+    needs: check-labels
+    if: needs.check-labels.outputs.skip == 'false'
+
     strategy:
       matrix:
         profile: [ 'jdk17', 'jdk17-aarch64' ]
@@ -49,6 +73,9 @@ jobs:
       - name: Build and test with Maven
         env:
           SKIP_DOCKER_TESTS: "true"
-          # re-enable old agent tests once we are several versions ahead
-          SKIP_OLD_AGENT_TESTS: "true"
-        run: ./mvnw -s .github/settings.xml -B clean install -Pgha -Pdocker -Pit -P${{ matrix.profile }}
+        run: |
+          if [[ "${{ needs.check-labels.outputs.skip_tests }}" == "true" ]]; then
+            ./mvnw -s .github/settings.xml -B clean install -Pgha -Pdocker -P${{ matrix.profile }} -DskipTests
+          else
+            ./mvnw -s .github/settings.xml -B clean install -Pgha -Pdocker -Pit -P${{ matrix.profile }}
+          fi
