@@ -2,6 +2,11 @@
 
 ## [2.18.0] - Unreleased
 
+### Added
+
+- concord-console2: status filter for log segments
+([#980](https://github.com/walmartlabs/concord/pull/980)).
+
 ### Changed
 
 - project: respect PR labels
