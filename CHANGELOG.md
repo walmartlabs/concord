@@ -9,7 +9,10 @@
 - it: re-enable OldAgentIT
 ([#962](https://github.com/walmartlabs/concord/pull/962));
 - concord-server: bind EventEnrichers explicitly
-([#978](https://github.com/walmartlabs/concord/pull/978)).
+([#978](https://github.com/walmartlabs/concord/pull/978));
+- runtime-v2: fix the issue when old agents can't parse
+process configuration with new attributes
+([#981](https://github.com/walmartlabs/concord/pull/981)).
 
 
 
