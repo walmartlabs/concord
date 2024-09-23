@@ -15,6 +15,8 @@
 ([#962](https://github.com/walmartlabs/concord/pull/962));
 - concord-server: bind EventEnrichers explicitly
 ([#978](https://github.com/walmartlabs/concord/pull/978));
+- oidc, concord-console2: improve error handling
+([#979](https://github.com/walmartlabs/concord/pull/979));
 - runtime-v2: fix the issue when old agents can't parse
 process configuration with new attributes
 ([#981](https://github.com/walmartlabs/concord/pull/981)).
