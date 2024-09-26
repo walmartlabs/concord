@@ -20,7 +20,8 @@
 - runtime-v2: fix the issue when old agents can't parse
 process configuration with new attributes
 ([#981](https://github.com/walmartlabs/concord/pull/981)).
-
+- agent-operator: save cookies received from API
+([#984](https://github.com/walmartlabs/concord/pull/984)).
 
 
 ## [2.17.0] - 2024-09-18
