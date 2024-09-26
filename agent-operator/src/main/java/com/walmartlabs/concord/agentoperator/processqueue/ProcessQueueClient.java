@@ -26,6 +26,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.escape.Escaper;
 import com.google.common.net.UrlEscapers;
 import com.walmartlabs.concord.agentoperator.scheduler.QueueSelector;
+import com.walmartlabs.concord.sdk.Constants;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -77,6 +78,7 @@ public class ProcessQueueClient {
                 .uri(URI.create(queryUrl.toString()))
                 .header("Authorization", apiToken)
                 .header("User-Agent", "k8s-agent-operator")
+                .header(Constants.Headers.ENABLE_HTTP_SESSION, "true")
                 .GET()
                 .build();
 
