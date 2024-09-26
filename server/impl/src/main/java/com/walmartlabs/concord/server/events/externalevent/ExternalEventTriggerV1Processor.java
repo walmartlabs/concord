@@ -23,11 +23,7 @@ package com.walmartlabs.concord.server.events.externalevent;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
-@Named
-@Singleton
 @Deprecated
 public class ExternalEventTriggerV1Processor extends ExternalEventTriggerProcessor {
 
