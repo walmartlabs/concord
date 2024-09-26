@@ -56,7 +56,6 @@ import com.walmartlabs.concord.server.user.UserManager;
 import org.jooq.Configuration;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.HttpHeaders;
@@ -133,8 +132,8 @@ public class ConsoleService implements Resource {
         }
 
         Set<String> userLdapGroups = Optional.ofNullable(LdapPrincipal.getCurrent())
-                    .map(LdapPrincipal::getGroups)
-                    .orElse(Set.of());
+                .map(LdapPrincipal::getGroups)
+                .orElse(Set.of());
 
         return UserInfoResponse.builder()
                 .displayName(displayName(u, p))
@@ -367,7 +366,6 @@ public class ConsoleService implements Resource {
         return displayName;
     }
 
-    @Named
     public static class ConsoleServiceDao extends AbstractDao {
 
         @Inject
