@@ -55,8 +55,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -75,8 +73,6 @@ import static com.walmartlabs.concord.server.events.github.Constants.EVENT_SOURC
  * <p>
  * See also https://developer.github.com/webhooks/
  */
-@Named
-@Singleton
 @Path("/events/github")
 @Tag(name = "GitHub Events")
 public class GithubEventResource implements Resource {
