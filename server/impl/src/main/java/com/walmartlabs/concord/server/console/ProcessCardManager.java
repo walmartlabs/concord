@@ -36,7 +36,6 @@ import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -49,7 +48,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class ProcessCardManager {
 
     private final Dao dao;
