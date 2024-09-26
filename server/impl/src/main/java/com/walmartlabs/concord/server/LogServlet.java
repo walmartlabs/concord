@@ -33,6 +33,7 @@ import java.util.UUID;
  * @deprecated left for backward compatibility. Redirects all requests to
  * {@link com.walmartlabs.concord.server.process.ProcessResource#getLog(UUID, String)}
  */
+@Deprecated
 @WebServlet("/logs/*")
 public class LogServlet extends HttpServlet {
 
