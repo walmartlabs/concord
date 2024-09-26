@@ -27,13 +27,18 @@ import com.walmartlabs.concord.server.sdk.events.ProcessEventListener;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
+import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
 
 public class EventModule implements Module {
 
     @Override
     public void configure(Binder binder) {
         newSetBinder(binder, ProcessEventListener.class);
+
         binder.bind(GithubTriggerProcessor.class).in(SINGLETON);
         newSetBinder(binder, GithubTriggerProcessor.EventEnricher.class).addBinding().to(GithubTriggerProcessor.RepositoryInfoEnricher.class);
+
+        bindJaxRsResource(binder, ExternalEventResource.class);
+        bindJaxRsResource(binder, GithubEventResource.class);
     }
 }
