@@ -22,6 +22,9 @@ package com.walmartlabs.concord.server.events;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.walmartlabs.concord.server.events.externalevent.ExternalEventTriggerProcessor;
+import com.walmartlabs.concord.server.events.externalevent.ExternalEventTriggerV1Processor;
+import com.walmartlabs.concord.server.events.externalevent.ExternalEventTriggerV2Processor;
 import com.walmartlabs.concord.server.events.github.GithubTriggerProcessor;
 import com.walmartlabs.concord.server.sdk.events.ProcessEventListener;
 
@@ -33,6 +36,11 @@ public class EventModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        newSetBinder(binder, ExternalEventTriggerProcessor.class).addBinding().to(ExternalEventTriggerV1Processor.class);
+        newSetBinder(binder, ExternalEventTriggerProcessor.class).addBinding().to(ExternalEventTriggerV2Processor.class);
+
+        binder.bind(TriggerProcessExecutor.class).in(SINGLETON);
+
         newSetBinder(binder, ProcessEventListener.class);
 
         binder.bind(GithubTriggerProcessor.class).in(SINGLETON);
