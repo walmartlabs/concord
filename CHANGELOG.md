@@ -21,7 +21,10 @@
 process configuration with new attributes
 ([#981](https://github.com/walmartlabs/concord/pull/981)).
 - agent-operator: save cookies received from API
-([#984](https://github.com/walmartlabs/concord/pull/984)).
+([#984](https://github.com/walmartlabs/concord/pull/984));
+- project: fixes for build-time warnings
+([#985](https://github.com/walmartlabs/concord/pull/985)).
+
 
 
 ## [2.17.0] - 2024-09-18
