@@ -23,6 +23,23 @@ concord-server {
 }
 ```
 
+For running in development mode (i.e. on `localhost`), callback URLs must be
+in the form of
+
+```
+http://localhost:8001/api/service/oidc/callback?client_name=oidc
+```
+
+Note the `client_name=oidc` query parameter, it is required by the plugin and
+must be present in the provider's configuration.
+
+The plugin uses the following scopes: `openid`, `profile`, `email`, `groups`.
+Which may or may not be enabled by default in the provider's configuration.
+
+Okta, for example, does not provide the `groups` scope by default. You can
+add it in the "Security" -> "API" -> "Authorization Servers" -> your_server ->
+"Scope" section.
+
 ### Interactive Login
 
 Configure the Concord Console to use custom logout/login URLs:

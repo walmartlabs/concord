@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -37,6 +38,7 @@ import java.util.Map;
 @Value.Immutable
 @Value.Style(jdkOnly = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSerialize(as = ImmutableProcessDefinitionConfiguration.class)
 @JsonDeserialize(as = ImmutableProcessDefinitionConfiguration.class)
 public interface ProcessDefinitionConfiguration extends Serializable {
