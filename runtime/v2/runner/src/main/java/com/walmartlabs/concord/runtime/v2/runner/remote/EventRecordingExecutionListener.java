@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,9 +24,10 @@ import com.walmartlabs.concord.client2.ProcessEventRequest;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.EventReportingService;
+import com.walmartlabs.concord.runtime.v2.runner.vm.FlowCallCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.LogSegmentScopeCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.StepCommand;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
@@ -73,7 +74,7 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         m.put("fileName", loc.fileName());
         m.put("line", loc.lineNum());
         m.put("column", loc.column());
-        m.put("description", getDescription(s.getStep()));
+        m.put("description", getDescription(state, threadId, cmd, s.getStep()));
         m.put("correlationId", s.getCorrelationId());
         if (threadId.id() != 0) {
             m.put("threadId", threadId.id());
@@ -89,10 +90,17 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         return Result.CONTINUE;
     }
 
-    private static String getDescription(Step step) {
+    private static String getDescription( State state, ThreadId threadId, Command cmd, Step step) {
         // TODO: add 'description' into step? so we will not miss description for new steps...
         if (step instanceof FlowCall) {
-            return "Flow call: " + ((FlowCall) step).getFlowName();
+            String flowName = null;
+            if (cmd instanceof FlowCallCommand) {
+                flowName = FlowCallCommand.getFlowName(state, threadId);
+            }
+            if (flowName == null) {
+                flowName = ((FlowCall) step).getFlowName();
+            }
+            return "Flow call: " + flowName;
         } else if (step instanceof Expression) {
             return "Expression: " + ((Expression) step).getExpr();
         } else if (step instanceof ScriptCall) {
