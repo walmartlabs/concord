@@ -34,5 +34,6 @@ public class EventModule implements Module {
     public void configure(Binder binder) {
         newSetBinder(binder, ProcessEventListener.class);
         binder.bind(GithubTriggerProcessor.class).in(SINGLETON);
+        newSetBinder(binder, GithubTriggerProcessor.EventEnricher.class).addBinding().to(GithubTriggerProcessor.RepositoryInfoEnricher.class);
     }
 }

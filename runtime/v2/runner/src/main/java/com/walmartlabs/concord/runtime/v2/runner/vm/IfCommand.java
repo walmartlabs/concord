@@ -28,7 +28,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
-public class IfCommand extends StepCommand<IfStep> {
+public class IfCommand extends StepCommand<IfStep> implements ElementEventProducer {
 
     private static final long serialVersionUID = 1L;
 
@@ -39,6 +39,12 @@ public class IfCommand extends StepCommand<IfStep> {
         super(step);
         this.thenCommand = thenCommand;
         this.elseCommand = elseCommand;
+    }
+
+
+    @Override
+    public String getDescription(State state, ThreadId threadId) {
+        return "Check: " + getStep().getExpression();
     }
 
     @Override

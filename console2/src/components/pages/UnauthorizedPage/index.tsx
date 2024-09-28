@@ -23,17 +23,11 @@ import * as React from 'react';
 import { RedirectButton } from '../../organisms';
 
 import './styles.css';
-import { Card, CardContent, CardHeader, Divider, Image } from 'semantic-ui-react';
-import { useContext, useEffect } from 'react';
-import { UserSessionContext } from '../../../session';
+import {Card, CardContent, CardDescription, CardHeader, Divider, Image} from 'semantic-ui-react';
+import {withRouter} from "react-router";
 
-export default () => {
-    const session = useContext(UserSessionContext);
-
-    useEffect(() => {
-        session.setUserInfo(undefined);
-    }, [session]);
-
+export default withRouter((props) => {
+    const error = new URLSearchParams(props.location.search).get('error');
     return (
         <div className="flexbox-container">
             <Card centered={true}>
@@ -41,6 +35,8 @@ export default () => {
                     <Image id="concord-logo" src="/images/concord.svg" size="medium" />
 
                     <CardHeader>You are not authorized.</CardHeader>
+
+                    {error && <CardDescription>Error: {error}</CardDescription>}
 
                     <Divider />
 
@@ -51,4 +47,4 @@ export default () => {
             </Card>
         </div>
     );
-};
+});

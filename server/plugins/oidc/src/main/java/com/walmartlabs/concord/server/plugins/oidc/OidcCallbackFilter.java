@@ -72,6 +72,16 @@ public class OidcCallbackFilter implements Filter {
             postLoginUrl = cfg.getAfterLoginUrl();
         }
 
+        String error = req.getParameter("error");
+        if (error != null) {
+            String derivedError = "unknown";
+            if ("access_denied".equals(error)) {
+                derivedError = "oidc_access_denied";
+            }
+            resp.sendRedirect(resp.encodeRedirectURL(cfg.getOnErrorUrl() + "?from=" + postLoginUrl + "&error=" + derivedError));
+            return;
+        }
+
         try {
             CallbackLogic<?, JEEContext> callback = pac4jConfig.getCallbackLogic();
             callback.perform(context, pac4jConfig, pac4jConfig.getHttpActionAdapter(), postLoginUrl, true, false, true, OidcPluginModule.CLIENT_NAME);

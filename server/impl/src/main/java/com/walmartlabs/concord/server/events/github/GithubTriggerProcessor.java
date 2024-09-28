@@ -54,12 +54,12 @@ public class GithubTriggerProcessor {
     private static final Logger log = LoggerFactory.getLogger(GithubTriggerProcessor.class);
 
     private final Dao dao;
-    private final List<EventEnricher> eventEnrichers;
+    private final Set<EventEnricher> eventEnrichers;
     private final boolean isDisableReposOnDeletedRef;
 
     @Inject
     public GithubTriggerProcessor(Dao dao,
-                                  List<EventEnricher> eventEnrichers,
+                                  Set<EventEnricher> eventEnrichers,
                                   GithubConfiguration githubCfg) {
         this.dao = dao;
         this.eventEnrichers = eventEnrichers;
@@ -203,8 +203,7 @@ public class GithubTriggerProcessor {
      * Adds {@link Trigger#REPOSITORY_INFO} property to the event, but only if
      * the trigger's conditions contained the clause with the same key.
      */
-    @Named
-    private static class RepositoryInfoEnricher implements EventEnricher {
+    public static class RepositoryInfoEnricher implements EventEnricher {
 
         private final Dao dao;
 

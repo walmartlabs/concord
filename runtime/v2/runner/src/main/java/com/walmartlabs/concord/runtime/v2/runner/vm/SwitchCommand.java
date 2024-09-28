@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class SwitchCommand extends StepCommand<SwitchStep> {
+public class SwitchCommand extends StepCommand<SwitchStep> implements ElementEventProducer {
 
     private static final long serialVersionUID = 1L;
 
@@ -44,6 +44,11 @@ public class SwitchCommand extends StepCommand<SwitchStep> {
         super(step);
         this.caseCommands = caseCommands;
         this.defaultCommand = defaultCommand;
+    }
+
+    @Override
+    public String getDescription(State state, ThreadId threadId) {
+        return "Switch: " + getStep().getExpression();
     }
 
     @Override

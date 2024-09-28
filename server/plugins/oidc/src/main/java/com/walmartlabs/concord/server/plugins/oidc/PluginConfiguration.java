@@ -59,6 +59,10 @@ public class PluginConfiguration {
     private String afterLogoutUrl;
 
     @Inject
+    @Config("oidc.onErrorUrl")
+    private String onErrorUrl;
+
+    @Inject
     @Nullable
     @Config("oidc.scopes")
     private List<String> scopes;
@@ -100,6 +104,10 @@ public class PluginConfiguration {
 
     public String getAfterLogoutUrl() {
         return afterLogoutUrl;
+    }
+
+    public String getOnErrorUrl() {
+        return onErrorUrl;
     }
 
     public List<String> getScopes() {

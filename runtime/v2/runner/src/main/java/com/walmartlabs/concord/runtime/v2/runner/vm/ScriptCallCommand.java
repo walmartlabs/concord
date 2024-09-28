@@ -42,7 +42,7 @@ import java.util.UUID;
 /**
  * Calls the specified script task. Responsible for preparing the script's input.
  */
-public class ScriptCallCommand extends StepCommand<ScriptCall> {
+public class ScriptCallCommand extends StepCommand<ScriptCall> implements ElementEventProducer {
 
     private static final Logger log = LoggerFactory.getLogger(ScriptCallCommand.class);
 
@@ -50,6 +50,11 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
 
     public ScriptCallCommand(UUID correlationId, ScriptCall step) {
         super(correlationId, step);
+    }
+
+    @Override
+    public String getDescription(State state, ThreadId threadId) {
+        return "Script: " + getStep().getLanguageOrRef();
     }
 
     @Override

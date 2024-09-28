@@ -16,7 +16,8 @@
     <properties>
         <!-- version of Agent to use in tests -->
         <!-- should be one or more release versions behind the current version -->
-        <prev.concord.version>1.55.0</prev.concord.version>
+        <!-- must be a multi-arch image to pass tests on both x86 and arm64 -->
+        <prev.concord.version>2.14.2</prev.concord.version>
 
         <server.image>walmartlabs/concord-server</server.image>
         <prev.agent.image>walmartlabs/concord-agent:${prev.concord.version}</prev.agent.image>
