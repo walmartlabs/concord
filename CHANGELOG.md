@@ -23,7 +23,9 @@ process configuration with new attributes
 - agent-operator: save cookies received from API
 ([#984](https://github.com/walmartlabs/concord/pull/984));
 - project: fixes for build-time warnings
-([#985](https://github.com/walmartlabs/concord/pull/985)).
+([#985](https://github.com/walmartlabs/concord/pull/985));
+- concord-server: explicitly bind more classes
+([#986](https://github.com/walmartlabs/concord/pull/986)).
 
 
 
