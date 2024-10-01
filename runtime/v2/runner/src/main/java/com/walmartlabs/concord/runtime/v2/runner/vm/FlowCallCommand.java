@@ -20,9 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.model.FlowCall;
-import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
-import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
@@ -34,7 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-public class FlowCallCommand extends StepCommand<FlowCall> {
+public class FlowCallCommand extends StepCommand<FlowCall> implements ElementEventProducer {
 
     private static final String FLOW_NAME_VARIABLE = "__flowName__b6bc6c58-c2bc-434c-9a6b-b0092237720b";
 
@@ -95,6 +93,11 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
 
     public static String getFlowName(State state, ThreadId threadId) {
         return VMUtils.getLocal(state, threadId, FLOW_NAME_VARIABLE);
+    }
+
+    @Override
+    public String getDescription(State state, ThreadId threadId) {
+        return "Flow call: " + getFlowName(state, threadId);
     }
 
     private static class EvalVariablesCommand extends StepCommand<FlowCall> {
