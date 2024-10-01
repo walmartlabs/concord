@@ -28,7 +28,10 @@ process configuration with new attributes
 - project: fixes for build-time warnings
 ([#985](https://github.com/walmartlabs/concord/pull/985));
 - concord-server: explicitly bind more classes
-([#986](https://github.com/walmartlabs/concord/pull/986)).
+([#986](https://github.com/walmartlabs/concord/pull/986));
+- concord-server: more fixes for non auto-wiring
+environments
+([#988](https://github.com/walmartlabs/concord/pull/988)).
 
 
 
