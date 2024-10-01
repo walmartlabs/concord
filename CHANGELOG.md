@@ -5,7 +5,10 @@
 ### Added
 
 - concord-console2: status filter for log segments
-([#980](https://github.com/walmartlabs/concord/pull/980)).
+([#980](https://github.com/walmartlabs/concord/pull/980));
+- runtime-v2: interface for steps that generate element
+events
+([#987](https://github.com/walmartlabs/concord/pull/987)).
 
 ### Changed
 
