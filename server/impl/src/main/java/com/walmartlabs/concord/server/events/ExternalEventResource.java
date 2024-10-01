@@ -60,7 +60,7 @@ public class ExternalEventResource implements Resource {
     private final TriggerProcessExecutor executor;
     private final UserManager userManager;
     private final TriggerEventInitiatorResolver initiatorResolver;
-    private final List<ExternalEventTriggerProcessor> processors;
+    private final Set<ExternalEventTriggerProcessor> processors;
     private final AuditLog auditLog;
 
     @Inject
@@ -68,7 +68,7 @@ public class ExternalEventResource implements Resource {
                                  TriggerProcessExecutor executor,
                                  UserManager userManager,
                                  TriggerEventInitiatorResolver initiatorResolver,
-                                 List<ExternalEventTriggerProcessor> processors,
+                                 Set<ExternalEventTriggerProcessor> processors,
                                  AuditLog auditLog) {
 
         this.cfg = cfg;
