@@ -52,6 +52,6 @@ ${JDK_SPECIFIC_OPTS} \
 -Dfile.encoding=UTF-8 \
 -Djava.net.preferIPv4Stack=true \
 -Djava.security.egd=file:/dev/./urandom \
--Dollie.conf=${CONCORD_CFG_FILE} \
+-Dconcord.conf=${CONCORD_CFG_FILE} \
 -cp "${BASE_DIR}/lib/*:${BASE_DIR}/ext/*:${BASE_DIR}/classes:${EXTRA_CLASSPATH}" \
 "${MAIN_CLASS}"

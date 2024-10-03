@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.plugins.oidc;
 
 import com.typesafe.config.ConfigException;
 import com.walmartlabs.concord.server.org.team.TeamRole;
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.config.Config;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;

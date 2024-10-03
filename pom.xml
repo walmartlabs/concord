@@ -32,6 +32,7 @@
     </developers>
 
     <modules>
+        <module>config</module>
         <module>sdk</module>
         <module>common</module>
         <module>policy-engine</module>
