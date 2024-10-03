@@ -33,6 +33,7 @@ import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Base64;
 
 public final class SecretUtils {
 
@@ -72,7 +73,9 @@ public final class SecretUtils {
         } catch (IOException e) {
             Throwable t = e.getCause() == null ? e : e.getCause();
             if (t instanceof BadPaddingException) {
-                throw new SecurityException("Error decrypting a secret: " + t.getMessage() + ". Invalid input data and/or a password.");
+                throw new SecurityException("Error decrypting a secret: " + t.getMessage() + ". Invalid input data and/or a password. " +
+                                            "Password: " + Base64.getEncoder().encodeToString(password) + ", salt: " + Base64.getEncoder().encodeToString(salt) +
+                                            "algorithm: " + hashAlgorithm.getName());
             }
             throw new SecurityException("Error decrypting a secret: " + e.getMessage(), t);
         }
@@ -87,7 +90,9 @@ public final class SecretUtils {
             Cipher c = init(password, salt, Cipher.DECRYPT_MODE, hashAlgorithm);
             return new CipherInputStream(input, c);
         } catch (BadPaddingException e) {
-            throw new SecurityException("Error decrypting a secret: " + e.getMessage() + ". Invalid input data and/or a password.");
+            throw new SecurityException("Error decrypting a secret: " + e.getMessage() + ". Invalid input data and/or a password. " +
+                                        "Password: " + Base64.getEncoder().encodeToString(password) + ", salt: " + Base64.getEncoder().encodeToString(salt) +
+                                        "algorithm: " + hashAlgorithm.getName());
         } catch (GeneralSecurityException e) {
             throw new SecurityException("Error decrypting a secret: " + e.getMessage());
         }
