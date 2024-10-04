@@ -46,9 +46,9 @@
         <commons.collections.version>3.2.2</commons.collections.version>
         <commons.compress.version>1.24.0</commons.compress.version>
         <commons.email.version>1.5</commons.email.version>
-        <commons.io.version>2.16.0</commons.io.version>
-        <commons.lang.version>3.13.0</commons.lang.version>
-        <commons.text.version>1.9</commons.text.version>
+        <commons.io.version>2.16.1</commons.io.version>
+        <commons.lang.version>3.15.0</commons.lang.version>
+        <commons.text.version>1.12.0</commons.text.version>
         <commons.validator.version>1.7</commons.validator.version>
         <config.version>1.4.2</config.version>
         <cronutils.version>9.2.0</cronutils.version>
@@ -93,7 +93,7 @@
         <kerby.version>2.0.1</kerby.version>
         <kubernetes.client.version>5.7.0</kubernetes.client.version>
         <launcher.version>0.128</launcher.version>
-        <liquibase.version>4.8.0</liquibase.version>
+        <liquibase.version>4.29.2</liquibase.version>
         <logback.version>1.4.14</logback.version>
         <maven.annotation.version>3.5</maven.annotation.version>
         <maven.api.version>3.0.5</maven.api.version>
@@ -107,7 +107,6 @@
         <mockito.version>4.9.0</mockito.version>
         <mustache.version>0.9.10</mustache.version>
         <nimbus.jwt.version>8.8</nimbus.jwt.version>
-        <ollie.version>0.0.37</ollie.version>
         <pac4j.version>4.0.0-RC3</pac4j.version>
         <parc.version>0.1.2</parc.version>
         <picocli.version>4.7.0</picocli.version>
@@ -143,6 +142,11 @@
             <dependency>
                 <groupId>com.walmartlabs.concord</groupId>
                 <artifactId>concord-client2</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord</groupId>
+                <artifactId>concord-config</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -390,11 +394,6 @@
                 <groupId>com.walmartlabs.concord.server.plugins</groupId>
                 <artifactId>oidc</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.walmartlabs.ollie</groupId>
-                <artifactId>ollie-config</artifactId>
-                <version>${ollie.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
@@ -983,11 +982,6 @@
                 <groupId>javax.xml.bind</groupId>
                 <artifactId>jaxb-api</artifactId>
                 <version>2.3.1</version>
-            </dependency>
-            <dependency>
-                <groupId>com.sun.xml.bind</groupId>
-                <artifactId>jaxb-core</artifactId>
-                <version>2.3.0.1</version>
             </dependency>
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>

@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.plugins.oidc;
 
 import com.typesafe.config.ConfigException;
 import com.walmartlabs.concord.server.org.team.TeamRole;
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.config.Config;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
@@ -57,6 +57,10 @@ public class PluginConfiguration {
     @Inject
     @Config("oidc.afterLogoutUrl")
     private String afterLogoutUrl;
+
+    @Inject
+    @Config("oidc.onErrorUrl")
+    private String onErrorUrl;
 
     @Inject
     @Nullable
@@ -100,6 +104,10 @@ public class PluginConfiguration {
 
     public String getAfterLogoutUrl() {
         return afterLogoutUrl;
+    }
+
+    public String getOnErrorUrl() {
+        return onErrorUrl;
     }
 
     public List<String> getScopes() {

@@ -56,8 +56,8 @@
         </dependency>
 
         <dependency>
-            <groupId>com.walmartlabs.ollie</groupId>
-            <artifactId>ollie-config</artifactId>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-config</artifactId>
         </dependency>
 
         <dependency>
@@ -311,10 +311,6 @@
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.xml.bind</groupId>
-            <artifactId>jaxb-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.sun.xml.bind</groupId>

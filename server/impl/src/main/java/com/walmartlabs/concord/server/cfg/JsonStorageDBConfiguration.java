@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.cfg;
 
 import com.walmartlabs.concord.db.DatabaseConfiguration;
 import com.walmartlabs.concord.db.JsonStorageDB;
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.config.Config;
 
 import javax.inject.Inject;
 import java.time.Duration;
