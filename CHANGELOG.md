@@ -33,6 +33,14 @@ process configuration with new attributes
 environments
 ([#988](https://github.com/walmartlabs/concord/pull/988)).
 
+### Breaking
+
+- project: fork ollie-config and make it a submodule.
+Server plugins must be updated to use the new package
+`com.walmartlabs.concord.config` instead of
+`com.walmartlabs.ollie.config`
+([#989](https://github.com/walmartlabs/concord/pull/989)). 
+
 
 
 ## [2.17.0] - 2024-09-18
