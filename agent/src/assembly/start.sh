@@ -41,6 +41,6 @@ ${JDK_SPECIFIC_OPTS} \
 -Djava.net.preferIPv4Stack=true \
 -Djava.security.egd=file:/dev/./urandom \
 -Dlogback.configurationFile=com/walmartlabs/concord/agent/logback.xml \
--Dollie.conf=${CONCORD_CFG_FILE} \
+-Dconcord.conf=${CONCORD_CFG_FILE} \
 -cp "${BASE_DIR}/lib/*" \
 com.walmartlabs.concord.agent.Main

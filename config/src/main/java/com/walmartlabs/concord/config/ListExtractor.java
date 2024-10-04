@@ -1,10 +1,11 @@
-package com.walmartlabs.concord.server.plugins.oneops;
+package com.walmartlabs.concord.config;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2018 Takari
+ * Copyright (C) 2017 - 2024 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,20 +21,12 @@ package com.walmartlabs.concord.server.plugins.oneops;
  * =====
  */
 
-import com.walmartlabs.concord.config.Config;
+import java.lang.reflect.Type;
+import java.util.List;
 
-import javax.inject.Inject;
-import java.io.Serializable;
+public interface ListExtractor {
 
-public class OneOpsConfiguration implements Serializable {
+    List<?> extractListValue(com.typesafe.config.Config config, String path);
 
-    private static final long serialVersionUID = 1L;
-
-    @Inject
-    @Config("oneops.logEvents")
-    private boolean logEvents;
-
-    public boolean isLogEvents() {
-        return logEvents;
-    }
+    Type getMatchingParameterizedType();
 }
