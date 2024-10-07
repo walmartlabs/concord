@@ -45,9 +45,6 @@ public interface TriggerMixIn extends Trigger {
     @JsonTypeName("ManualTrigger")
     interface ManualTriggerMixIn extends TriggerMixIn {
 
-        @JsonProperty("exclusive")
-        ExclusiveMode exclusive();
-
         @JsonProperty("manual")
         ManualTriggerParams params();
 
@@ -55,6 +52,9 @@ public interface TriggerMixIn extends Trigger {
 
             @JsonProperty("name")
             String name();
+
+            @JsonProperty("exclusive")
+            ExclusiveMode exclusive();
         }
     }
 
