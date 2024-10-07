@@ -75,7 +75,7 @@
         <junit.version>5.9.1</junit.version>
         <liquibase.version>4.29.2</liquibase.version>
         <node.version>20.12.2</node.version>
-        <frontend.plugin.version>1.12.0</frontend.plugin.version>
+        <frontend.plugin.version>1.15.1</frontend.plugin.version>
 
         <jdk.version>17</jdk.version>
         <failsafe.args>
