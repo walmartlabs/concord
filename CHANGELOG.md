@@ -33,7 +33,9 @@ process configuration with new attributes
 environments
 ([#988](https://github.com/walmartlabs/concord/pull/988));
 - project: update frontend-maven-plugin
-([#992](https://github.com/walmartlabs/concord/pull/992)).
+([#992](https://github.com/walmartlabs/concord/pull/992));
+- runtime-v2: fix manual trigger exclusive schema
+([#993](https://github.com/walmartlabs/concord/pull/993)).
 
 ### Breaking
 
