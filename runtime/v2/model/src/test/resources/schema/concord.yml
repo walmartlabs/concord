@@ -130,6 +130,9 @@ triggers:
         k: "v"
       activeProfiles:
         - "profile-1"
+      exclusive:
+        mode: "cancel"
+        group: "manual-group"
   - cron:
       spec: "* 12 * * *"
       entryPoint: eventOutput
