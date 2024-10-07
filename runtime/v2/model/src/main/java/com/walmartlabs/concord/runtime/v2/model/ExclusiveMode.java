@@ -27,14 +27,17 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
-import java.io.Serial;
 import java.io.Serializable;
 
+@Value.Immutable
+@Value.Style(jdkOnly = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonSerialize(as = ImmutableDefaultExclusiveMode.class)
-@JsonDeserialize(as = ImmutableDefaultExclusiveMode.class)
+@JsonSerialize(as = ImmutableExclusiveMode.class)
+@JsonDeserialize(as = ImmutableExclusiveMode.class)
 public interface ExclusiveMode extends Serializable {
+
+    long serialVersionUID = 1L;
 
     @Value.Parameter
     @JsonProperty(value = "group", required = true)
@@ -64,19 +67,6 @@ public interface ExclusiveMode extends Serializable {
     }
 
     static ExclusiveMode of(String group, Mode mode) {
-        return ImmutableDefaultExclusiveMode.of(group, mode);
+        return ImmutableExclusiveMode.of(group, mode);
     }
-
-    @Value.Immutable
-    @Value.Style(jdkOnly = true)
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @JsonSerialize(as = ImmutableDefaultExclusiveMode.class)
-    @JsonDeserialize(as = ImmutableDefaultExclusiveMode.class)
-    interface DefaultExclusiveMode extends ExclusiveMode {
-
-        @Serial
-        long serialVersionUID = 1L;
-
-    }
-
 }

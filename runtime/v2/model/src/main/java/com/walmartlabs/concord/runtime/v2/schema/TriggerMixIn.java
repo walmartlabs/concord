@@ -175,6 +175,9 @@ public interface TriggerMixIn extends Trigger {
 
             @JsonProperty("conditions")
             Map<String, Object> conditions();
+
+            @JsonProperty("exclusive")
+            ExclusiveMode exclusive();
         }
     }
 
@@ -188,8 +191,5 @@ public interface TriggerMixIn extends Trigger {
 
         @JsonProperty("arguments")
         Map<String, Object> arguments();
-
-        @JsonProperty("exclusive")
-        ExclusiveMode exclusive();
     }
 }

@@ -36,7 +36,7 @@ import java.io.Serializable;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonSerialize(as = ImmutableGithubTriggerExclusiveMode.class)
 @JsonDeserialize(as = ImmutableGithubTriggerExclusiveMode.class)
-public interface GithubTriggerExclusiveMode extends ExclusiveMode, Serializable {
+public interface GithubTriggerExclusiveMode extends Serializable {
 
     @Serial
     long serialVersionUID = 1L;
