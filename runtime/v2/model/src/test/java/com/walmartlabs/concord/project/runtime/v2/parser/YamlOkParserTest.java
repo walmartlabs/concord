@@ -591,6 +591,22 @@ public class YamlOkParserTest extends AbstractParserTest {
     }
 
     @Test
+    void test021() throws Exception {
+        ProcessDefinition pd = load("021.yml");
+
+        List<Trigger> triggers = pd.triggers();
+        assertNotNull(triggers);
+
+        assertEquals(1, triggers.size());
+
+        Trigger t = triggers.get(0);
+        assertEquals("manual", t.name());
+        var exclusive = assertInstanceOf(ExclusiveMode.class, t.configuration().get("exclusive"));
+        assertEquals("manual-group", exclusive.group());
+        assertEquals(ExclusiveMode.Mode.cancel, exclusive.mode());
+    }
+
+    @Test
     public void testArgsOrder() throws Exception {
         ProcessDefinition pd = load("args-order.concord.yml");
         Map.Entry<String, Object> e = pd.configuration().arguments().entrySet().iterator().next();
