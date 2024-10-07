@@ -31,7 +31,9 @@ process configuration with new attributes
 ([#986](https://github.com/walmartlabs/concord/pull/986));
 - concord-server: more fixes for non auto-wiring
 environments
-([#988](https://github.com/walmartlabs/concord/pull/988)).
+([#988](https://github.com/walmartlabs/concord/pull/988));
+- project: update frontend-maven-plugin
+([#992](https://github.com/walmartlabs/concord/pull/992)).
 
 ### Breaking
 
