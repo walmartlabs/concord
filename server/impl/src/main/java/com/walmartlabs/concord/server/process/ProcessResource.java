@@ -1028,6 +1028,9 @@ public class ProcessResource implements Resource {
     public Response setWaitCondition(@PathParam("id") UUID instanceId, Map<String, Object> waitCondition) {
         ProcessKey processKey = assertProcessKey(instanceId);
         AbstractWaitCondition condition = objectMapper.convertValue(waitCondition, AbstractWaitCondition.class);
+        if (condition == null) {
+            throw new ConcordApplicationException("Wait condition is required", Status.BAD_REQUEST);
+        }
         processWaitManager.addWait(processKey, condition);
         return Response.ok().build();
     }
