@@ -36,9 +36,10 @@ public class ConsoleModule implements Module {
         binder.bind(CustomFormServiceV1.class).in(SINGLETON);
         binder.bind(CustomFormServiceV2.class).in(SINGLETON);
 
-        bindJaxRsResource(binder, UserActivityResourceV2.class);
-        bindJaxRsResource(binder, CustomFormService.class);
         bindJaxRsResource(binder, ConsoleService.class);
+        bindJaxRsResource(binder, CustomFormService.class);
+        bindJaxRsResource(binder, ProcessCardResource.class);
+        bindJaxRsResource(binder, UserActivityResourceV2.class);
 
         binder.bind(ResponseTemplates.class).in(SINGLETON);
     }

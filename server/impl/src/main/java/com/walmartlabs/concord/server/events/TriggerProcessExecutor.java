@@ -39,13 +39,11 @@ import com.walmartlabs.concord.server.user.UserEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
 import javax.ws.rs.core.Response;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-@Named
 public class TriggerProcessExecutor {
 
     public interface ProcessConfigurationEnricher {

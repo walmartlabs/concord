@@ -114,8 +114,8 @@
             <artifactId>config</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.ollie</groupId>
-            <artifactId>ollie-config</artifactId>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-config</artifactId>
         </dependency>
 
         <!-- Immutables -->
