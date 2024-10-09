@@ -37,7 +37,10 @@ environments
 - project: update frontend-maven-plugin
 ([#992](https://github.com/walmartlabs/concord/pull/992));
 - runtime-v2: fix manual trigger exclusive schema
-([#993](https://github.com/walmartlabs/concord/pull/993)).
+([#993](https://github.com/walmartlabs/concord/pull/993));
+- concord-server: fix updateWaitConditions when wait
+condition without processes
+([#994](https://github.com/walmartlabs/concord/pull/994)).
 
 ### Breaking
 
