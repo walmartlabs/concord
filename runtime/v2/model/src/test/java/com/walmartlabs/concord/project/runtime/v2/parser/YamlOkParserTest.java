@@ -570,6 +570,26 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertTrue(p1.configuration().debug());
     }
 
+    @Test // GitHub trigger exclusive grouping
+    void test020() throws Exception {
+        ProcessDefinition pd = load("020.yml");
+
+        List<Trigger> triggers = pd.triggers();
+        assertNotNull(triggers);
+
+        assertEquals(2, triggers.size());
+
+        Trigger t = triggers.get(0);
+        assertEquals("github", t.name());
+        var exclusive = assertInstanceOf(GithubTriggerExclusiveMode.class, t.configuration().get("exclusive"));
+        assertEquals("branch", exclusive.groupByProperty());
+
+        t = triggers.get(1);
+        assertEquals("github", t.name());
+        exclusive = assertInstanceOf(GithubTriggerExclusiveMode.class, t.configuration().get("exclusive"));
+        assertEquals("event.pull_request.html_url", exclusive.groupByProperty());
+    }
+
     @Test
     void test021() throws Exception {
         ProcessDefinition pd = load("021.yml");
