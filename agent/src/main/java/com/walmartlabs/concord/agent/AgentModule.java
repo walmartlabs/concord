@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,8 +30,10 @@ import com.walmartlabs.concord.agent.executors.runner.ProcessPool;
 import com.walmartlabs.concord.agent.remote.ApiClientFactory;
 import com.walmartlabs.concord.agent.remote.QueueClientProvider;
 import com.walmartlabs.concord.common.ObjectMapperProvider;
-import com.walmartlabs.concord.config.ConfigModule;
 import com.walmartlabs.concord.server.queueclient.QueueClient;
+import com.walmartlabs.ollie.config.ConfigurationProcessor;
+import com.walmartlabs.ollie.config.Environment;
+import com.walmartlabs.ollie.config.EnvironmentSelector;
 
 import javax.inject.Named;
 
@@ -74,6 +76,7 @@ public class AgentModule implements Module {
     }
 
     private static Config loadDefaultConfig() {
-        return ConfigModule.load("concord-agent");
+        Environment env = new EnvironmentSelector().select();
+        return new ConfigurationProcessor("concord-agent", env, null, null).process();
     }
 }

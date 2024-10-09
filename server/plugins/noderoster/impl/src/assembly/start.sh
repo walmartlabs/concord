@@ -37,6 +37,6 @@ ${CONCORD_JAVA_OPTS} \
 -server \
 -Djava.net.preferIPv4Stack=true \
 -Djava.security.egd=file:/dev/./urandom \
--Dconcord.conf=${CONCORD_CFG_FILE} \
+-Dollie.conf=${CONCORD_CFG_FILE} \
 -cp "${BASE_DIR}/lib/*" \
 "${MAIN_CLASS}"

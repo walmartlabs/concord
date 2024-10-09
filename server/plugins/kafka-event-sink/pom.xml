@@ -42,9 +42,8 @@
         </dependency>
 
         <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-config</artifactId>
-            <scope>provided</scope>
+            <groupId>com.walmartlabs.ollie</groupId>
+            <artifactId>ollie-config</artifactId>
         </dependency>
     </dependencies>
 

@@ -25,7 +25,6 @@ import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.typesafe.config.Config;
 import com.walmartlabs.concord.common.ObjectMapperProvider;
-import com.walmartlabs.concord.config.ConfigModule;
 import com.walmartlabs.concord.db.DatabaseModule;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.server.agent.AgentModule;
@@ -45,6 +44,9 @@ import com.walmartlabs.concord.server.security.SecurityModule;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyModule;
 import com.walmartlabs.concord.server.task.TaskSchedulerModule;
 import com.walmartlabs.concord.server.template.TemplateModule;
+import com.walmartlabs.ollie.config.ConfigurationProcessor;
+import com.walmartlabs.ollie.config.Environment;
+import com.walmartlabs.ollie.config.EnvironmentSelector;
 
 import javax.inject.Named;
 
@@ -101,6 +103,7 @@ public class ConcordServerModule implements Module {
     }
 
     private static Config loadDefaultConfig() {
-        return ConfigModule.load("concord-server");
+        Environment env = new EnvironmentSelector().select();
+        return new ConfigurationProcessor("concord-server", env, null, null).process();
     }
 }
