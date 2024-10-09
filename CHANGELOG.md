@@ -16,6 +16,8 @@ events
 ([#961](https://github.com/walmartlabs/concord/pull/961));
 - it: re-enable OldAgentIT
 ([#962](https://github.com/walmartlabs/concord/pull/962));
+- runtime-v2: add github exclusive trigger to schema
+([#977](https://github.com/walmartlabs/concord/pull/977));
 - concord-server: bind EventEnrichers explicitly
 ([#978](https://github.com/walmartlabs/concord/pull/978));
 - oidc, concord-console2: improve error handling
