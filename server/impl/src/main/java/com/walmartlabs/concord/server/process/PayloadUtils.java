@@ -65,10 +65,10 @@ public final class PayloadUtils {
             return null;
         }
 
-        if (v instanceof String) {
+        if (v instanceof String iso) {
             OffsetDateTime t;
             try {
-                t = DateTimeUtils.fromIsoString((String) v);
+                t = DateTimeUtils.fromIsoString(iso);
             } catch (DateTimeParseException e) {
                 throw new ProcessException(p.getProcessKey(), "Invalid '" + k + "' format, expected an ISO-8601 value, got: " + v);
             }
