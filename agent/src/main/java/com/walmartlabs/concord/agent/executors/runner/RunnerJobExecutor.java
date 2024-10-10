@@ -35,6 +35,7 @@ import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
+import com.walmartlabs.concord.agent.logging.RedirectedProcessLog;
 import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.Posix;
@@ -47,6 +48,7 @@ import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.immutables.value.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -196,10 +198,14 @@ public class RunnerJobExecutor implements JobExecutor {
             try {
                 exec(_job, pe);
 
+                saveLogsAsAttachment(_job.getLog().getRedirectedLog(), pe);
+
                 uploadAttachmentsOnError = false;
                 uploadAttachments(_job.getInstanceId(), pe);
             } catch (Throwable t) {
                 if (uploadAttachmentsOnError) {
+                    saveLogsAsAttachment(_job.getLog().getRedirectedLog(), pe);
+
                     try {
                         uploadAttachments(_job.getInstanceId(), pe);
                     } catch (Exception e) {
@@ -217,6 +223,23 @@ public class RunnerJobExecutor implements JobExecutor {
 
         // return a handle that can be used to cancel the process or wait for its completion
         return new JobInstanceImpl(f, pe.getProcess(), cfg.cleanRunnerDescendants());
+    }
+
+    private void saveLogsAsAttachment(RedirectedProcessLog redirectedLog, ProcessEntry pe) {
+        if (redirectedLog == null) {
+            return;
+        }
+
+        try {
+            Path attachmentsDir = pe.getWorkDir().resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
+            Files.createDirectories(attachmentsDir);
+
+            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(attachmentsDir.resolve("logs.zip")))) {
+                IOUtils.zip(zip, redirectedLog.getLogFile().getParent());
+            }
+        } catch (Exception e) {
+            log.error("saveLogsAsAttachment -> error", e);
+        }
     }
 
     private void persistWorkDir(UUID instanceId, Path src) {
@@ -704,6 +727,8 @@ public class RunnerJobExecutor implements JobExecutor {
                 try {
                     processLog.run(() -> doStop);
                 } catch (Exception e) {
+                    log.error("processLog run -> error", e);
+
                     handleError(job, proc, e.getMessage());
                 }
             });

@@ -48,6 +48,10 @@ public class RedirectedProcessLog implements ProcessLog {
         streamLog(localLog.logFile(), stopCondition, logSteamMaxDelay, consumer);
     }
 
+    public Path getLogFile() {
+        return localLog.logFile();
+    }
+
     @Override
     public void delete() {
         this.localLog.delete();
