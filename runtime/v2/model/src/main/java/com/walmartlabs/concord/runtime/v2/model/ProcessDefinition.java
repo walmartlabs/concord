@@ -46,6 +46,11 @@ public interface ProcessDefinition extends Serializable {
     }
 
     @Value.Default
+    default Map<String, Flow> flowsDefinition() {
+        return Collections.emptyMap();
+    }
+
+    @Value.Default
     default Set<String> publicFlows() {
         return Collections.emptySet();
     }

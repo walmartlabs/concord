@@ -176,6 +176,7 @@ public class ProjectLoaderV2 {
         }
 
         Map<String, List<Step>> flows = new LinkedHashMap<>();
+        Map<String, Flow> flowsDefinition = new LinkedHashMap<>();
         Map<String, Profile> profiles = new LinkedHashMap<>();
         List<Trigger> triggers = new ArrayList<>();
         List<Import> imports = new ArrayList<>();
@@ -186,6 +187,7 @@ public class ProjectLoaderV2 {
 
         for (ProcessDefinition pd : definitions) {
             flows.putAll(pd.flows());
+            flowsDefinition.putAll(pd.flowsDefinition());
             profiles.putAll(pd.profiles());
             triggers.addAll(pd.triggers());
             imports.addAll(pd.imports().items());
@@ -203,6 +205,7 @@ public class ProjectLoaderV2 {
                         .arguments(arguments)
                         .build())
                 .flows(flows)
+                .flowsDefinition(flowsDefinition)
                 .profiles(profiles)
                 .triggers(triggers)
                 .imports(Imports.of(imports))

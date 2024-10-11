@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,9 +21,13 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.fasterxml.jackson.core.JsonToken;
-import com.walmartlabs.concord.runtime.v2.model.ImmutableProcessDefinition;
-import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import io.takari.parc.Parser;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import static com.walmartlabs.concord.runtime.v2.parser.ConfigurationGrammar.processCfgVal;
 import static com.walmartlabs.concord.runtime.v2.parser.FlowsGrammar.flowsVal;
@@ -42,7 +46,14 @@ public final class ProcessDefinitionGrammar {
                     with(ImmutableProcessDefinition::builder,
                             o -> options(
                                     optional("configuration", processCfgVal.map(o::configuration)),
-                                    optional("flows", flowsVal.map(o::flows)),
+                                    optional("flows", flowsVal.map(f -> {
+                                        Map<String, List<Step>> flows = new LinkedHashMap<>(f.size());
+                                        for (Map.Entry<String, Flow> e : f.entrySet()) {
+                                            flows.put(e.getKey(), e.getValue().steps());
+                                        }
+                                        return o.flows(flows)
+                                                .flowsDefinition(f);
+                                    })),
                                     optional("publicFlows", publicFlowsVal.map(o::publicFlows)),
                                     optional("profiles", profilesVal.map(o::profiles)),
                                     optional("triggers", triggersVal.map(o::triggers)),
