@@ -61,6 +61,7 @@ public class MetadataProcessor implements ExecutionListener {
     private final ProcessApi processApi;
     private final int retryCount;
     private final int retryInterval;
+    private final boolean updateMetaOnAllEvents;
 
     private final AtomicReference<Map<String, Object>> currentMeta = new AtomicReference<>(new HashMap<>());
 
@@ -75,6 +76,7 @@ public class MetadataProcessor implements ExecutionListener {
         this.processApi = new ProcessApi(apiClient);
         this.retryCount = runnerConfiguration.api().retryCount();
         this.retryInterval = runnerConfiguration.api().retryInterval();
+        this.updateMetaOnAllEvents = processConfiguration.events().updateMetaOnAllEvents();
     }
 
     @Override
@@ -96,12 +98,36 @@ public class MetadataProcessor implements ExecutionListener {
 
         currentMeta.set(meta);
 
+        if (updateMetaOnAllEvents) {
+            sendMeta(meta);
+        }
+
+        return Result.CONTINUE;
+    }
+
+    @Override
+    public void onProcessError(Runtime runtime, State state, Exception e) {
+        flush();
+    }
+
+    @Override
+    public void afterProcessEnds(Runtime runtime, State state, Frame lastFrame) {
+        flush();
+    }
+
+    private void flush() {
+        if (!updateMetaOnAllEvents) {
+            sendMeta(currentMeta.get());
+        }
+    }
+
+    private void sendMeta(Map<String, Object> meta) {
         try {
+            log.debug("sending process meta");
             ClientUtils.withRetry(retryCount, retryInterval, () -> {
                 processApi.updateMetadata(processInstanceId.getValue(), meta);
                 return null;
             });
-            return Result.CONTINUE;
         } catch (ApiException e) {
             throw new RuntimeException(e);
         }

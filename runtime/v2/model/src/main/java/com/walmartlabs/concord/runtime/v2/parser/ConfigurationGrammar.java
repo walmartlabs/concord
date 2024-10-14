@@ -48,6 +48,8 @@ public final class ConfigurationGrammar {
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                     with(ImmutableEventConfiguration::builder,
                             o -> options(
+                                    optional("batchFlushInterval", intVal.map(o::batchFlushInterval)),
+                                    optional("batchSize", intVal.map(o::batchSize)),
                                     optional("recordEvents", booleanVal.map(o::recordEvents)),
                                     optional("recordTaskInVars", booleanVal.map(o::recordTaskInVars)),
                                     optional("truncateInVars", booleanVal.map(o::truncateInVars)),
@@ -56,6 +58,7 @@ public final class ConfigurationGrammar {
                                     optional("truncateMaxDepth", intVal.map(o::truncateMaxDepth)),
                                     optional("recordTaskOutVars", booleanVal.map(o::recordTaskOutVars)),
                                     optional("truncateOutVars", booleanVal.map(o::truncateOutVars)),
+                                    optional("updateMetaOnAllEvents", booleanVal.map(o::updateMetaOnAllEvents)),
                                     optional("inVarsBlacklist", stringArrayVal.map(o::inVarsBlacklist)),
                                     optional("outVarsBlacklist", stringArrayVal.map(o::outVarsBlacklist)),
                                     optional("recordTaskMeta", booleanVal.map(o::recordTaskMeta)),

@@ -30,12 +30,17 @@ import com.walmartlabs.concord.svm.ThreadId;
 
 import java.util.Map;
 
-public class SetVariablesCommand extends StepCommand<SetVariablesStep> {
+public class SetVariablesCommand extends StepCommand<SetVariablesStep> implements ElementEventProducer {
 
     private static final long serialVersionUID = 1L;
 
     public SetVariablesCommand(SetVariablesStep step) {
         super(step);
+    }
+
+    @Override
+    public String getDescription(State state, ThreadId threadId) {
+        return "Set variables";
     }
 
     @Override

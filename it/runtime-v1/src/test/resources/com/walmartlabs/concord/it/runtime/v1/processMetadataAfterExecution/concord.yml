@@ -1,0 +1,20 @@
+configuration:
+  runner:
+    events:
+      updateMetaOnAllEvents: false
+  meta:
+    var: value
+
+flows:
+  default:
+    - call: anotherFlow
+      withItems:
+        - a
+        - b
+        - c
+
+    - log: ${var}
+
+  anotherFlow:
+    - set:
+        var: ${item}

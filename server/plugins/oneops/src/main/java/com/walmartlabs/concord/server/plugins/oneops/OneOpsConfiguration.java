@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.plugins.oneops;
  * =====
  */
 
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.config.Config;
 
 import javax.inject.Inject;
 import java.io.Serializable;

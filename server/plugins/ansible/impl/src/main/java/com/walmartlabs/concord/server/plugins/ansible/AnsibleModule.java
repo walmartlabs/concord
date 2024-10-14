@@ -25,7 +25,10 @@ import com.google.inject.Module;
 import com.walmartlabs.concord.db.DatabaseChangeLogProvider;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.plugins.ansible.db.AnsibleDBChangeLogProvider;
+import com.walmartlabs.concord.server.plugins.ansible.queue.InventoryProcessor;
+import com.walmartlabs.concord.server.plugins.ansible.queue.PrivateKeyProcessor;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
+import com.walmartlabs.concord.server.sdk.process.CustomEnqueueProcessor;
 
 import javax.inject.Named;
 
@@ -40,5 +43,7 @@ public class AnsibleModule implements Module {
         binder.bind(DatabaseChangeLogProvider.class).annotatedWith(MainDB.class).to(AnsibleDBChangeLogProvider.class);
         binder.bind(EventFetcher.class).in(SINGLETON);
         newSetBinder(binder, ScheduledTask.class).addBinding().to(EventFetcher.class);
+        newSetBinder(binder, CustomEnqueueProcessor.class).addBinding().to(PrivateKeyProcessor.class);
+        newSetBinder(binder, CustomEnqueueProcessor.class).addBinding().to(InventoryProcessor.class);
     }
 }
