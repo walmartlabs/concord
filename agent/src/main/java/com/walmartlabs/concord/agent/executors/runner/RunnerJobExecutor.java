@@ -744,6 +744,11 @@ public class RunnerJobExecutor implements JobExecutor {
                 f.get(1, TimeUnit.MINUTES);
             } catch (Exception e) {
                 log.warn("waitForCompletion -> timeout waiting for the log stream of {}", job.getInstanceId());
+
+                for (int i = 0; i < 5; i++) {
+                    Utils.threadDump(ProcessHandle.current().pid());
+                    Utils.sleep(500);
+                }
             }
         }
     }

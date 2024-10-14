@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,11 +23,24 @@ package com.walmartlabs.concord.agent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.List;
 
 public final class Utils {
 
     private static final Logger log = LoggerFactory.getLogger(Utils.class);
+
+    public static void threadDump(long pid) {
+        try {
+            String command = "kill -3 " + pid;
+
+            Process process = Runtime.getRuntime().exec(command);
+
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            log.info("threadDump ['{}'] -> error", pid, e);
+        }
+    }
 
     public static boolean kill(Process proc) {
         return kill(proc.toHandle());
