@@ -1,4 +1,183 @@
-# Change log
+# Change Log
+
+## [2.18.0] - 2024-10-13
+
+### Added
+
+- concord-console2: status filter for log segments
+([#980](https://github.com/walmartlabs/concord/pull/980));
+- runtime-v2: interface for steps that generate element
+events
+([#987](https://github.com/walmartlabs/concord/pull/987)).
+
+### Changed
+
+- project: respect PR labels
+([#961](https://github.com/walmartlabs/concord/pull/961));
+- it: re-enable OldAgentIT
+([#962](https://github.com/walmartlabs/concord/pull/962));
+- runtime-v2: add github exclusive trigger to schema
+([#977](https://github.com/walmartlabs/concord/pull/977));
+- concord-server: bind EventEnrichers explicitly
+([#978](https://github.com/walmartlabs/concord/pull/978));
+- oidc, concord-console2: improve error handling
+([#979](https://github.com/walmartlabs/concord/pull/979));
+- runtime-v2: fix the issue when old agents can't parse
+process configuration with new attributes
+([#981](https://github.com/walmartlabs/concord/pull/981)).
+- agent-operator: save cookies received from API
+([#984](https://github.com/walmartlabs/concord/pull/984));
+- project: fixes for build-time warnings
+([#985](https://github.com/walmartlabs/concord/pull/985));
+- concord-server: explicitly bind more classes
+([#986](https://github.com/walmartlabs/concord/pull/986));
+- concord-server: more fixes for non auto-wiring
+environments
+([#988](https://github.com/walmartlabs/concord/pull/988));
+- project: update frontend-maven-plugin
+([#992](https://github.com/walmartlabs/concord/pull/992));
+- runtime-v2: fix manual trigger exclusive schema
+([#993](https://github.com/walmartlabs/concord/pull/993));
+- concord-server: fix updateWaitConditions when wait
+condition without processes
+([#994](https://github.com/walmartlabs/concord/pull/994)).
+
+### Breaking
+
+- project: fork ollie-config and make it a submodule.
+Server plugins must be updated to use the new package
+`com.walmartlabs.concord.config` instead of
+`com.walmartlabs.ollie.config`
+([#989](https://github.com/walmartlabs/concord/pull/989)). 
+
+
+
+## [2.17.0] - 2024-09-18
+
+### Added
+
+- runtime-v2: option for event batching for runner events
+([#949](https://github.com/walmartlabs/concord/pull/949));
+- runtime-v1: option for event batching for runner events
+([#950](https://github.com/walmartlabs/concord/pull/950));
+- console2, server: simple user info page
+([#952](https://github.com/walmartlabs/concord/pull/952)).
+
+### Changed
+
+- project: update Maven wrapper
+([#967](https://github.com/walmartlabs/concord/pull/967));
+- oidc: redirect back to auth in failed callbacks
+([#969](https://github.com/walmartlabs/concord/pull/969));
+- project: miscellaneous fixes for build-time warnings,
+add missing @deprecated annotations, remove redundant
+dependencies
+([#970](https://github.com/walmartlabs/concord/pull/970));
+- agent-operator: create agent pod client only for
+Running pods
+([#973](https://github.com/walmartlabs/concord/pull/973));
+- concord-server: remove GithubTriggerProcessor interface
+([#974](https://github.com/walmartlabs/concord/pull/974));
+- docker: configure safe.directory for git 2.35+
+([#976](https://github.com/walmartlabs/concord/pull/976)).
+
+
+
+### Changed
+
+## [2.16.0] - 2024-09-05
+
+### Added
+
+- runtime-v2: option to update meta only on termination or
+suspend
+([#948](https://github.com/walmartlabs/concord/pull/948));
+- policy-engine: allow rewriting with multiple values in
+`dependencyRewrite` policies
+([#952](https://github.com/walmartlabs/concord/pull/952));
+- concord-server: allow non-standard runtimes
+([#954](https://github.com/walmartlabs/concord/pull/954));
+- oidc: support "from" when logging out
+([#958](https://github.com/walmartlabs/concord/pull/958)).
+
+### Changed
+
+- runtime-v1: update bpm library to fix saving variables
+before suspend
+([#955](https://github.com/walmartlabs/concord/pull/955));
+- concord-server: fix DB change set 1580200-a when
+`superuserAvailable` is set to `false`
+([#957](https://github.com/walmartlabs/concord/pull/957));
+- concord-server: skip pull\_request process start when
+useEventCommitId is enabled and event is from a different repo
+([#959](https://github.com/walmartlabs/concord/pull/959));
+- docker-images: update ansible galaxy community.docker version
+([#960](https://github.com/walmartlabs/concord/pull/960));
+- cli: fix duplicate step logs
+([#963](https://github.com/walmartlabs/concord/pull/963)).
+
+
+
+## [2.15.0] - 2024-08-07
+
+### Added
+
+- agent: configure host/ip for maintenance-mode endpoint
+([#945](https://github.com/walmartlabs/concord/pull/945));
+- concord-task: new method to wait and check that processes
+have finished
+([#943](https://github.com/walmartlabs/concord/pull/943));
+- agent-operator: use maintenance mode before terminating
+agent
+([#946](https://github.com/walmartlabs/concord/pull/946));
+
+### Changed
+
+- pfed-sso: fix to not return null for not permanently
+disabled users
+([#947](https://github.com/walmartlabs/concord/pull/947)).
+ - agent-operator: consider pods already marked for deletion
+during downscaling
+([#951](https://github.com/walmartlabs/concord/pull/951)).
+
+
+
+## [2.14.0] - 2024-07-13
+
+### Added
+
+- concord-server: calculate total process RUNNING time
+([#933](https://github.com/walmartlabs/concord/pull/933));
+- concord-server: expose websocket channels
+([#935](https://github.com/walmartlabs/concord/pull/935));
+- resource-tasks: add versions of writeAs* methods that
+accept destination
+([#937](https://github.com/walmartlabs/concord/pull/937));
+- runtime-v1: option to update meta only on termination
+or suspend
+([#938](https://github.com/walmartlabs/concord/pull/938));
+- project: add JDK 21 profiles
+([#941](https://github.com/walmartlabs/concord/pull/941)).
+
+### Changed
+
+- project: update Groovy to 2.5.23
+([#940](https://github.com/walmartlabs/concord/pull/940));
+- dependency-manager: resolve only unique dependencies 
+([#936](https://github.com/walmartlabs/concord/pull/936)); 
+- concord-server: move com.walmartlabs.concord.server.ansible.*
+into ansible plugin
+([#502](https://github.com/walmartlabs/concord/pull/502));
+- concord-server: migrate to PROCESS_META and
+PROCESS_TRIGGER_INFO tables
+([#669](https://github.com/walmartlabs/concord/pull/669));
+- runtime-v2: use draft-07 of JSON Schema for better tool
+compatibility
+([#939](https://github.com/walmartlabs/concord/pull/939));
+- project: update dependency versions in the parent pom
+([#942](https://github.com/walmartlabs/concord/pull/942)).
+
+
 
 ## [2.13.0] - 2024-06-19
 
@@ -2900,7 +3079,7 @@ called in an expression.
 
 
 
-## [1.37.1] - 2010-01-06
+## [1.37.1] - 2020-01-06
 
 ### Changed
 

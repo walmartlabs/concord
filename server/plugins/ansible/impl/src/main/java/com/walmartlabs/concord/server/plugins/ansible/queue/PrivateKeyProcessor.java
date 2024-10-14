@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.ansible;
+package com.walmartlabs.concord.server.plugins.ansible.queue;
 
 /*-
  * *****
@@ -27,16 +27,14 @@ import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
-import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
-import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.RepositoryInfo;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.process.CustomEnqueueProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,9 +43,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
-@Named
 @Deprecated
-public class PrivateKeyProcessor implements PayloadProcessor {
+public class PrivateKeyProcessor implements CustomEnqueueProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(PrivateKeyProcessor.class);
 
@@ -66,18 +63,18 @@ public class PrivateKeyProcessor implements PayloadProcessor {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Payload process(Chain chain, Payload payload) {
+    public Payload handleState(Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
 
         Map<String, Object> ansibleCfg = (Map<String, Object>) cfg.get(AnsibleConfigurationConstants.GROUP_KEY);
         if (ansibleCfg == null) {
-            return chain.process(payload);
+            return payload;
         }
 
         Collection<Map<String, Object>> keys = (Collection<Map<String, Object>>) ansibleCfg.get(AnsibleConfigurationConstants.PRIVATE_KEYS);
         if (keys == null) {
-            return chain.process(payload);
+            return payload;
         }
 
         deprecationWarning(processKey);
@@ -111,7 +108,7 @@ public class PrivateKeyProcessor implements PayloadProcessor {
         }
 
         log.info("process ['{}'] -> done", processKey);
-        return chain.process(payload);
+        return payload;
     }
 
     private UUID getOrgId(Payload p) {

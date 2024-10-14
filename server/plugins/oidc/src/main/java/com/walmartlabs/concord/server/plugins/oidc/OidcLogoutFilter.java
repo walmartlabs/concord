@@ -30,6 +30,7 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Optional;
 
 public class OidcLogoutFilter implements Filter {
 
@@ -55,7 +56,8 @@ public class OidcLogoutFilter implements Filter {
         JEEContext context = new JEEContext(req, resp, pac4jConfig.getSessionStore());
 
         LogoutLogic<?, JEEContext> logout = pac4jConfig.getLogoutLogic();
-        logout.perform(context, pac4jConfig, pac4jConfig.getHttpActionAdapter(), cfg.getAfterLogoutUrl(), null, true, true, true);
+        String afterLogoutUrl = Optional.ofNullable(req.getParameter("from")).orElse(cfg.getAfterLogoutUrl());
+        logout.perform(context, pac4jConfig, pac4jConfig.getHttpActionAdapter(), afterLogoutUrl, null, true, true, true);
     }
 
     @Override

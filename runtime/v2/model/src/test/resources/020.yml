@@ -1,0 +1,19 @@
+
+triggers:
+  - github:
+      version: 2
+      useInitiator: true
+      entryPoint: onPush
+      conditions:
+        type: "push"
+      exclusive:
+        groupBy: branch
+
+  - github:
+      version: 2
+      useInitiator: true
+      entryPoint: onPush2
+      conditions:
+        type: push2
+      exclusive:
+        groupBy: "event.pull_request.html_url"

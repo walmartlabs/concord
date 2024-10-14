@@ -226,7 +226,7 @@ public class PolicyEngineRulesTest {
         assertEquals(5, r.queueRules().forkDepthRule().max());
         assertEquals(Collections.singletonMap("__currentFlow", "n/a"), r.processCfg().get("meta"));
         assertEquals(Collections.singleton("gatekeeper"), r.protectedTasksRules().names());
-        assertEquals(2, r.dependencyRewriteRules().size());
+        assertEquals(3, r.dependencyRewriteRules().size());
 
         DependencyRewriteRule rw = r.dependencyRewriteRules().get(0);
         assertEquals("msg1", rw.msg());
@@ -243,6 +243,10 @@ public class PolicyEngineRulesTest {
         assertEquals("git", rw.artifactId());
         assertEquals("1.25.0", rw.fromVersion());
         assertEquals("1.32.3", rw.toVersion());
+
+        rw = r.dependencyRewriteRules().get(2);
+        assertEquals("msg3", rw.msg());
+        assertEquals(2, rw.values().size());
     }
 
     @Test

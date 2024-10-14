@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.config.Config;
 import org.eclipse.sisu.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -25,6 +25,7 @@ import com.walmartlabs.concord.cli.lint.LintResult.Type;
 import com.walmartlabs.concord.cli.runner.CliImportsListener;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
+import com.walmartlabs.concord.process.loader.ProjectLoader.ProjectLoaderConfiguration;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.process.loader.model.SourceMap;
 import picocli.CommandLine.Command;
@@ -65,7 +66,7 @@ public class Lint implements Callable<Integer> {
             throw new IllegalArgumentException("Not a directory: " + targetDir);
         }
 
-        ProjectLoader loader = new ProjectLoader(new NoopImportManager());
+        ProjectLoader loader = new ProjectLoader(ProjectLoaderConfiguration.defaultConfiguration(), new NoopImportManager());
         ProcessDefinition pd = loader.loadProject(targetDir, new DummyImportsNormalizer(), verbose ? new CliImportsListener() : null).projectDefinition();
 
         List<LintResult> lintResults = new ArrayList<>();

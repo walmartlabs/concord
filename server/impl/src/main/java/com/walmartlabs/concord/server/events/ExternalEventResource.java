@@ -35,8 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -52,8 +50,6 @@ import static com.walmartlabs.concord.common.MemoSupplier.memo;
  * Receives arbitrary JSON bodies and matches them with whatever is configured
  * in the trigger.
  */
-@Named
-@Singleton
 @Path("/api/v1/events")
 @Tag(name = "External Events")
 public class ExternalEventResource implements Resource {
@@ -64,7 +60,7 @@ public class ExternalEventResource implements Resource {
     private final TriggerProcessExecutor executor;
     private final UserManager userManager;
     private final TriggerEventInitiatorResolver initiatorResolver;
-    private final List<ExternalEventTriggerProcessor> processors;
+    private final Set<ExternalEventTriggerProcessor> processors;
     private final AuditLog auditLog;
 
     @Inject
@@ -72,7 +68,7 @@ public class ExternalEventResource implements Resource {
                                  TriggerProcessExecutor executor,
                                  UserManager userManager,
                                  TriggerEventInitiatorResolver initiatorResolver,
-                                 List<ExternalEventTriggerProcessor> processors,
+                                 Set<ExternalEventTriggerProcessor> processors,
                                  AuditLog auditLog) {
 
         this.cfg = cfg;

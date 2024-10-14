@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://org.jruby:jruby:9.1.13.0"
+  - "mvn://org.jruby:jruby:9.1.17.0"
 
 flows:
   default:

@@ -37,30 +37,42 @@ public class OidcAuthFilter implements Filter {
 
     public static final String URL = "/api/service/oidc/auth";
 
-    private final Config config;
+    private final PluginConfiguration pluginConfig;
+    private final Config oidcConfig;
     private final OidcClient<?> client;
 
     @Inject
-    public OidcAuthFilter(@Named("oidc") Config config, OidcClient<?> client) {
-        this.config = config;
+    public OidcAuthFilter(PluginConfiguration pluginConfig, @Named("oidc") Config oidcConfig, OidcClient<?> client) {
+        this.pluginConfig = pluginConfig;
+        this.oidcConfig = oidcConfig;
         this.client = client;
+
+        if (pluginConfig.isEnabled() && !client.isInitialized()) {
+            client.init();
+        }
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
+
+        if (!pluginConfig.isEnabled()) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "OIDC disabled");
+            return;
+        }
 
         JEEContext context = new JEEContext(req, resp);
 
         String redirectUrl = req.getParameter("from");
         context.getSessionStore().set(context, Pac4jConstants.REQUESTED_URL, redirectUrl);
 
-        RedirectionAction action = client.getRedirectionAction(context)
+        RedirectionAction action = client.getRedirectionActionBuilder()
+                .getRedirectionAction(context)
                 .orElseThrow(() -> new IllegalStateException("Can't get a redirection action for the request"));
 
-        config.getHttpActionAdapter().adapt(action, context);
+        oidcConfig.getHttpActionAdapter().adapt(action, context);
     }
 
     @Override

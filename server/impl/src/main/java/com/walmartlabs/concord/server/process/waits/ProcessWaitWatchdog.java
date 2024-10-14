@@ -158,7 +158,10 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
             try {
                 boolean updated = processWaitManager.txResult(tx -> {
-                    boolean isWaiting = !resultWaits.isEmpty() && resumeEvents.isEmpty();
+                    // TODO: better way
+                    // Right now, we have only one result action, and it moves the process to enqueued status. 
+                    // If the process moves to enqueued, it means it's no longer waiting for anything, so isWaiting should be false
+                    boolean isWaiting = !resultWaits.isEmpty() && resumeEvents.isEmpty() && resultActions.isEmpty();
                     boolean up = processWaitManager.setWait(tx, p.processKey(), resultWaits, isWaiting, p.version());
                     if (up) {
                         resultActions.forEach(a -> a.execute(tx));

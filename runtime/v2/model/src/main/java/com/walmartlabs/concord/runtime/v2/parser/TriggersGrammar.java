@@ -170,7 +170,8 @@ public final class TriggersGrammar {
                                     optional("name", stringVal.map(v -> o.putConfiguration("name", v))),
                                     mandatory("entryPoint", stringVal.map(v -> o.putConfiguration("entryPoint", v))),
                                     optional("activeProfiles", stringArrayVal.map(o::activeProfiles)),
-                                    optional("arguments", mapVal.map(o::arguments)))))
+                                    optional("arguments", mapVal.map(o::arguments)),
+                                    optional("exclusive", exclusiveVal.map(v -> o.putConfiguration("exclusive", v))))))
                     .map(t -> t.name("manual"))
                     .map(ImmutableTrigger.Builder::build);
 

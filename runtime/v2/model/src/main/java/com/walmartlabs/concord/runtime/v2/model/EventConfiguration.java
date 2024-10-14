@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.model;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -33,6 +34,7 @@ import java.util.Collections;
 @Value.Immutable
 @Value.Style(jdkOnly = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSerialize(as = ImmutableEventConfiguration.class)
 @JsonDeserialize(as = ImmutableEventConfiguration.class)
 public interface EventConfiguration extends Serializable {
@@ -55,6 +57,26 @@ public interface EventConfiguration extends Serializable {
     @Value.Default
     default boolean recordEvents() {
         return true;
+    }
+
+    /**
+     * Maximum number of process events to report per batch.
+     */
+    @Value.Default
+    default int batchSize() {
+        return 1;
+    }
+
+    /**
+     * Interval, in seconds after which any queued process events will be reported.
+     * <p>
+     * Typically, batched events are reported on process termination or when
+     * the queued number equals {@link #batchSize()}. A long-running task call
+     * holds up event recording if a scheduled flush is not performed.
+     */
+    @Value.Default
+    default int batchFlushInterval() {
+        return 15;
     }
 
     /**
@@ -122,6 +144,11 @@ public interface EventConfiguration extends Serializable {
         return true;
     }
 
+    @Value.Default
+    default boolean updateMetaOnAllEvents() {
+        return true;
+    }
+
     /**
      * IN variables in the blacklist won't be recorded.
      */
@@ -161,7 +188,7 @@ public interface EventConfiguration extends Serializable {
     default Collection<String> metaBlacklist() {
         return Collections.emptyList();
     }
-    
+
     static ImmutableEventConfiguration.Builder builder() {
         return ImmutableEventConfiguration.builder();
     }

@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.8"
+  - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.23"
   - "mvn://io.github.http-builder-ng:http-builder-ng-core:0.16.1"
   - "mvn://xml-resolver:xml-resolver:1.2"
 

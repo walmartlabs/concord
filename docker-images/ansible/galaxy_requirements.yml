@@ -19,7 +19,7 @@ collections:
   - name: community.postgresql
     version: "2.4.1"
   - name: community.docker
-    version: "3.4.6"
+    version: "3.12.1"
   - name: "ansible.netcommon"
     version: "5.1.1"
   - name: "google.cloud"

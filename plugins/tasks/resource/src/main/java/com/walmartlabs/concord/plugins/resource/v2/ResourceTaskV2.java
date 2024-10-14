@@ -80,12 +80,24 @@ public class ResourceTaskV2 implements Task {
         return delegate.writeAsJson(content);
     }
 
+    public String writeAsJson(Object content, String path) throws IOException {
+        return delegate.writeAsJson(content, path);
+    }
+
     public String writeAsString(String content) throws IOException {
         return delegate.writeAsString(content);
     }
 
+    public String writeAsString(String content, String path) throws IOException {
+        return delegate.writeAsString(content, path);
+    }
+
     public String writeAsYaml(Object content) throws IOException {
         return delegate.writeAsYaml(content);
+    }
+
+    public String writeAsYaml(Object content, String path) throws IOException {
+        return delegate.writeAsYaml(content, path);
     }
 
     public String printJson(Object value) throws IOException {

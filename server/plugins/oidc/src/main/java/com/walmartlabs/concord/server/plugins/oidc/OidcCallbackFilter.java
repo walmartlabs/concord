@@ -20,22 +20,26 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
-import org.apache.shiro.authz.AuthorizationException;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.engine.CallbackLogic;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.util.Pac4jConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 public class OidcCallbackFilter implements Filter {
+
+    private static final Logger log = LoggerFactory.getLogger(OidcCallbackFilter.class);
 
     public static final String URL = "/api/service/oidc/callback";
 
@@ -68,11 +72,26 @@ public class OidcCallbackFilter implements Filter {
             postLoginUrl = cfg.getAfterLoginUrl();
         }
 
+        String error = req.getParameter("error");
+        if (error != null) {
+            String derivedError = "unknown";
+            if ("access_denied".equals(error)) {
+                derivedError = "oidc_access_denied";
+            }
+            resp.sendRedirect(resp.encodeRedirectURL(cfg.getOnErrorUrl() + "?from=" + postLoginUrl + "&error=" + derivedError));
+            return;
+        }
+
         try {
             CallbackLogic<?, JEEContext> callback = pac4jConfig.getCallbackLogic();
             callback.perform(context, pac4jConfig, pac4jConfig.getHttpActionAdapter(), postLoginUrl, true, false, true, OidcPluginModule.CLIENT_NAME);
         } catch (TechnicalException e) {
-            throw new AuthorizationException("OIDC callback error: " + e.getMessage());
+            log.warn("OIDC callback error: {}", e.getMessage());
+            HttpSession session = req.getSession(false);
+            if (session != null) {
+                session.invalidate();
+            }
+            resp.sendRedirect(resp.encodeRedirectURL(OidcAuthFilter.URL + "?from=" + postLoginUrl));
         }
     }
 

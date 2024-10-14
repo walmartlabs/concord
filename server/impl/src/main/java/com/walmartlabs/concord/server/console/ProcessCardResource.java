@@ -41,8 +41,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -53,9 +51,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 
-@Named
-@Singleton
-@javax.ws.rs.Path("/api/v1/")
+@Path("/api/v1/")
 @Tag(name = "ProcessCards")
 public class ProcessCardResource implements Resource {
 

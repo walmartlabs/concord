@@ -112,6 +112,9 @@ public interface ProcessEntry extends Serializable {
     OffsetDateTime lastRunAt();
 
     @Nullable
+    Long totalRuntimeMs();
+
+    @Nullable
     String logFileName();
 
     @Nullable

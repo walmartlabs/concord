@@ -1,0 +1,20 @@
+profiles:
+  shortFlush:
+    configuration:
+      runner:
+        events:
+          batchSize: 100
+          batchFlushInterval: 1
+
+  longFlush:
+    configuration:
+      runner:
+        events:
+          batchSize: 100
+          batchFlushInterval: 120
+
+flows:
+  default:
+    - task: sleep
+      in:
+        duration: 120

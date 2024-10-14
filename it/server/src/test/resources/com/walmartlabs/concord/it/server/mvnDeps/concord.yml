@@ -6,4 +6,4 @@ flows:
 
 configuration:
   dependencies:
-  - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.17"
+  - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.23"

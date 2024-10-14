@@ -1,0 +1,31 @@
+configuration:
+  runtime: concord-v2
+  events:
+    batchSize: 5
+
+flows:
+  default:
+    - parallel:
+        - call: doALoop
+        - call: doALoop
+        - call: doALoop
+        - call: doALoop
+        - call: doALoop
+        - call: doALoop
+        - call: doALoop
+        - call: doALoop
+        - call: doALoop
+        - call: doALoop
+
+  doALoop:
+    - call: logSomething
+      in:
+        something: "${item}"
+      loop:
+        items:
+          - a
+          - b
+          - c
+
+  logSomething:
+    - log: "hello ${something}"
