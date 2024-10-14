@@ -355,7 +355,7 @@ public class ProcessLogsDao extends AbstractDao {
 
     private LogSegment toSegment(Record10<Long, UUID, String, OffsetDateTime, String, OffsetDateTime, Integer, Integer, JSONB, BigDecimal> r) {
         String status = r.get(PROCESS_LOG_SEGMENTS.SEGMENT_STATUS);
-        Map<String, Object> meta = objectMapper.fromJSONB(r.get(PROCESS_QUEUE.META));
+        Map<String, Object> meta = objectMapper.fromJSONB(r.get(PROCESS_LOG_SEGMENTS.META));
         if (meta == null) {
             meta = Collections.emptyMap();
         }
