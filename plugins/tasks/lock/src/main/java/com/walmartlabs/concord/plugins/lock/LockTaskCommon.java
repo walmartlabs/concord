@@ -82,8 +82,8 @@ public class LockTaskCommon {
             return null;
         }
 
-        if (!scope.equalsIgnoreCase("ORG")
-                && !scope.equalsIgnoreCase("PROJECT")) {
+        if (!"ORG".equalsIgnoreCase(scope)
+                && !"PROJECT".equalsIgnoreCase(scope)) {
 
             throw new IllegalArgumentException("Unknown scope '" + scope + "', expected: org or project");
         }

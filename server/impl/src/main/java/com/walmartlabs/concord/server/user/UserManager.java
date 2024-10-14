@@ -296,7 +296,7 @@ public class UserManager {
     }
 
     private UserType assertSsoUserType(UserPrincipal u, UserType type) {
-        if (u.getRealm().equals(SSO_REALM_NAME)) {
+        if (SSO_REALM_NAME.equals(u.getRealm())) {
             if (userInfoProviders.get(UserType.SSO) != null) {
                 return UserType.SSO;
             }

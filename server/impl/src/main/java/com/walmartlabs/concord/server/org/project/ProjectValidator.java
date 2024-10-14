@@ -95,7 +95,7 @@ public class ProjectValidator {
 
     private static void validateSpec(Trigger t, List<String> errors) {
         String triggerName = t.name();
-        if (!triggerName.equals("cron")) {
+        if (!"cron".equals(triggerName)) {
             return;
         }
 
@@ -121,7 +121,7 @@ public class ProjectValidator {
 
     private static void validateTimezone(Trigger t, List<String> errors) {
         String triggerName = t.name();
-        if (!triggerName.equals("cron")) {
+        if (!"cron".equals(triggerName)) {
             return;
         }
 
