@@ -1,0 +1,12 @@
+{
+  "default" : {
+    "type" : "object",
+    "required" : [ "param1" ],
+    "properties" : {
+      "param1" : {
+        "type" : "string",
+        "description" : "param1 description"
+      }
+    }
+  }
+}

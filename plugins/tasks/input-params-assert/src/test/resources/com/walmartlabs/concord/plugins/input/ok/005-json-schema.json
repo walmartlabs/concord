@@ -1,0 +1,40 @@
+{
+  "default" : {
+    "type" : "object",
+    "required" : [ "param1", "param2" ],
+    "properties" : {
+      "param1" : {
+        "type" : "string",
+        "description" : "param1 description"
+      },
+      "param2" : {
+        "type" : "object",
+        "description" : "param2 description",
+        "required" : [ "arr" ],
+        "properties" : {
+          "arr" : {
+            "type" : "array",
+            "description" : "arr description",
+            "items" : {
+              "type" : "object",
+              "required" : [ "key" ],
+              "properties" : {
+                "key" : {
+                  "type" : "object",
+                  "description" : "object in arr description",
+                  "required" : [ "key2" ],
+                  "properties" : {
+                    "key2" : {
+                      "type" : "string",
+                      "description" : "object object in arr description"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
