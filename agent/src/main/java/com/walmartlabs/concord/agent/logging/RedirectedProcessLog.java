@@ -20,6 +20,9 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -33,6 +36,8 @@ import java.util.function.Supplier;
  * Typically, {@link #run(Supplier)} method should be executed in a separate thread.
  */
 public class RedirectedProcessLog implements ProcessLog {
+
+    private static final Logger log = LoggerFactory.getLogger(RedirectedProcessLog.class);
 
     protected final long logSteamMaxDelay;
     private final LocalProcessLog localLog;
@@ -106,6 +111,8 @@ public class RedirectedProcessLog implements ProcessLog {
                 }
             }
         }
+
+        log.info("streamLog -> ended, total: {}", total);
     }
 
     public static class Chunk {
