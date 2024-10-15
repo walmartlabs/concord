@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.io.Serial;
 import java.io.Serializable;
 
 @Value.Immutable
@@ -37,6 +38,7 @@ import java.io.Serializable;
 @JsonDeserialize(as = ImmutableGithubTriggerExclusiveMode.class)
 public interface GithubTriggerExclusiveMode extends Serializable {
 
+    @Serial
     long serialVersionUID = 1L;
 
     @Nullable
