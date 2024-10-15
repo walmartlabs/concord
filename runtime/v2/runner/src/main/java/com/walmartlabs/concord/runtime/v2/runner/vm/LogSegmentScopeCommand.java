@@ -27,6 +27,7 @@ import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.svm.*;
 import com.walmartlabs.concord.svm.Runtime;
 
@@ -87,12 +88,15 @@ public class LogSegmentScopeCommand<T extends AbstractStep<?>> extends StepComma
         RunnerConfiguration runnerCfg = runtime.getService(RunnerConfiguration.class);
         boolean redirectSystemOutAndErr = runnerCfg.logging().sendSystemOutAndErrToSLF4J();
 
+        var meta = getSegmentMeta(state, threadId, getStep());
+
         return LogContext.builder()
                 .segmentName(segmentName)
                 .correlationId(correlationId)
                 .redirectSystemOutAndErr(redirectSystemOutAndErr)
                 .logLevel(getLogLevel(getStep()))
-                .segmentId(runtime.getService(RunnerLogger.class).createSegment(segmentName, correlationId, (Long)ctx.variables().get("parentSegmentId"), getSegmentMeta(state, threadId, getStep())))
+                .segmentId(runtime.getService(RunnerLogger.class).createSegment(segmentName, correlationId, (Long)ctx.variables().get("parentSegmentId"), meta))
+                .duplicateToSystemSegment(MapUtils.getBoolean(meta, "generated", false))
                 .build();
     }
 
