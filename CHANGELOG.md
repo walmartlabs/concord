@@ -1,5 +1,57 @@
 # Change Log
 
+## [2.18.0] - 2024-10-13
+
+### Added
+
+- concord-console2: status filter for log segments
+([#980](https://github.com/walmartlabs/concord/pull/980));
+- runtime-v2: interface for steps that generate element
+events
+([#987](https://github.com/walmartlabs/concord/pull/987)).
+
+### Changed
+
+- project: respect PR labels
+([#961](https://github.com/walmartlabs/concord/pull/961));
+- it: re-enable OldAgentIT
+([#962](https://github.com/walmartlabs/concord/pull/962));
+- runtime-v2: add github exclusive trigger to schema
+([#977](https://github.com/walmartlabs/concord/pull/977));
+- concord-server: bind EventEnrichers explicitly
+([#978](https://github.com/walmartlabs/concord/pull/978));
+- oidc, concord-console2: improve error handling
+([#979](https://github.com/walmartlabs/concord/pull/979));
+- runtime-v2: fix the issue when old agents can't parse
+process configuration with new attributes
+([#981](https://github.com/walmartlabs/concord/pull/981)).
+- agent-operator: save cookies received from API
+([#984](https://github.com/walmartlabs/concord/pull/984));
+- project: fixes for build-time warnings
+([#985](https://github.com/walmartlabs/concord/pull/985));
+- concord-server: explicitly bind more classes
+([#986](https://github.com/walmartlabs/concord/pull/986));
+- concord-server: more fixes for non auto-wiring
+environments
+([#988](https://github.com/walmartlabs/concord/pull/988));
+- project: update frontend-maven-plugin
+([#992](https://github.com/walmartlabs/concord/pull/992));
+- runtime-v2: fix manual trigger exclusive schema
+([#993](https://github.com/walmartlabs/concord/pull/993));
+- concord-server: fix updateWaitConditions when wait
+condition without processes
+([#994](https://github.com/walmartlabs/concord/pull/994)).
+
+### Breaking
+
+- project: fork ollie-config and make it a submodule.
+Server plugins must be updated to use the new package
+`com.walmartlabs.concord.config` instead of
+`com.walmartlabs.ollie.config`
+([#989](https://github.com/walmartlabs/concord/pull/989)). 
+
+
+
 ## [2.17.0] - 2024-09-18
 
 ### Added
