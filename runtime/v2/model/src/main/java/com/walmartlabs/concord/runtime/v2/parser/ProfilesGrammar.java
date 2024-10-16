@@ -21,7 +21,8 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.fasterxml.jackson.core.JsonToken;
-import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.model.ImmutableProfile;
+import com.walmartlabs.concord.runtime.v2.model.Profile;
 import io.takari.parc.Parser;
 
 import java.util.Map;

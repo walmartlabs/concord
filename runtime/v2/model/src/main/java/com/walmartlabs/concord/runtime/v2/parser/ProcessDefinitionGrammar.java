@@ -21,7 +21,8 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.fasterxml.jackson.core.JsonToken;
-import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.model.ImmutableProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import io.takari.parc.Parser;
 
 import static com.walmartlabs.concord.runtime.v2.parser.ConfigurationGrammar.processCfgVal;
