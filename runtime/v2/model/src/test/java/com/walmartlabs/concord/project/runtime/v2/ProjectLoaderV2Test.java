@@ -112,9 +112,9 @@ public class ProjectLoaderV2Test {
         // flows: should be collected from ALL *.concord.yml
         // if flow has same name then most recent used
         assertEquals(new HashSet<>(Arrays.asList("default", "flowN3")), pd.flows().keySet());
-        assertEquals(1, pd.flows().get("default").size());
-        assertTrue(pd.flows().get("default").get(0) instanceof Checkpoint);
-        assertEquals("root", ((Checkpoint) pd.flows().get("default").get(0)).getName());
+        assertEquals(1, pd.flows().get("default").steps().size());
+        assertInstanceOf(Checkpoint.class, pd.flows().get("default").steps().get(0));
+        assertEquals("root", ((Checkpoint) pd.flows().get("default").steps().get(0)).getName());
 
         // publicFlows: should be collected from ROOT concord.yml
         assertEquals(Collections.singleton("root"), pd.publicFlows());

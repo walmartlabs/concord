@@ -80,8 +80,8 @@ public final class YamlValueType<T> {
     public static final YamlValueType<Import.MvnDefinition> MVN_IMPORT = type("MVN_IMPORT");
     public static final YamlValueType<Import.DirectoryDefinition> DIR_IMPORT = type("DIR_IMPORT");
     public static final YamlValueType<Import.SecretDefinition> IMPORT_SECRET = type("IMPORT_SECRET");
-    public static final YamlValueType<Map<String, List<Step>>> FLOWS = type("FLOWS");
-    public static final YamlValueType<KV<String, List<Step>>> FLOW = type("FLOW");
+    public static final YamlValueType<Map<String, Flow>> FLOWS = type("FLOWS");
+    public static final YamlValueType<KV<String, Flow>> FLOW = type("FLOW");
     public static final YamlValueType<FlowCall> FLOW_CALL = type("FLOW_CALL");
     public static final YamlValueType<ImmutableFlowCallOptions.Builder> FLOW_CALL_INPUT = type("OBJECT or EXPRESSION");
     public static final YamlValueType<ImmutableFlowCallOptions.Builder> FLOW_CALL_OUT = type("STRING or ARRAY_OF_STRING or OBJECT");
