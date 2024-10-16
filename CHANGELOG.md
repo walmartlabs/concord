@@ -1,5 +1,22 @@
 # Change Log
 
+## [2.19.0] - Unreleased
+
+## Changed
+
+- concord-server: remove resteasy-guice dependency
+([#997](https://github.com/walmartlabs/concord/pull/997)).
+
+### Breaking
+
+- runtime-v2: store flow location in process definition.
+Note, this changes the type of
+`context.execution().processDefinition().flows()` object
+available in runtime-v2 processes.
+([#995](https://github.com/walmartlabs/concord/pull/995)).
+
+
+
 ## [2.18.0] - 2024-10-13
 
 ### Added
