@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.Flow;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Profile;
 import com.walmartlabs.concord.runtime.v2.model.Step;
@@ -34,18 +35,18 @@ import java.util.stream.Collectors;
 public final class CompilerUtils {
 
     public static Command compile(Compiler compiler, ProcessConfiguration processConfiguration, ProcessDefinition pd, String flowName) {
-        List<Step> steps = pd.flows().get(flowName);
+        Flow flow = pd.flows().get(flowName);
         for (String activeProfile : processConfiguration.processInfo().activeProfiles()) {
-            List<Step> maybeSteps = pd.profiles().getOrDefault(activeProfile, Profile.builder().build()).flows().get(flowName);
-            if (maybeSteps != null) {
-                steps = maybeSteps;
+            Flow maybeFlow = pd.profiles().getOrDefault(activeProfile, Profile.builder().build()).flows().get(flowName);
+            if (maybeFlow != null) {
+                flow = maybeFlow;
             }
         }
-        if (steps == null) {
+        if (flow == null) {
             throw new IllegalArgumentException("Flow not found: " + flowName);
         }
 
-        List<Command> commands = steps.stream().map(s -> compiler.compile(pd, s)).collect(Collectors.toList());
+        List<Command> commands = flow.steps().stream().map(s -> compiler.compile(pd, s)).collect(Collectors.toList());
         return new BlockCommand(commands);
     }
 

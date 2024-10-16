@@ -38,10 +38,7 @@ import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
-import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
-import com.walmartlabs.concord.runtime.v2.model.Profile;
-import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.ProjectLoadListeners;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
@@ -222,7 +219,7 @@ public class Run implements Callable<Integer> {
         }
 
         if (effectiveYaml) {
-            Map<String, List<Step>> flows = new HashMap<>(processDefinition.flows());
+            Map<String, Flow> flows = new HashMap<>(processDefinition.flows());
             for (String ap : profiles) {
                 Profile p = processDefinition.profiles().get(ap);
                 if (p != null) {
