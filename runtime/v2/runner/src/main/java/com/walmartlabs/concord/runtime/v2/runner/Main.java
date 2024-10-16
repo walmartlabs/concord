@@ -151,6 +151,7 @@ public class Main {
         //  - resuming after suspend
 
         ProcessSnapshot snapshot = StateManager.readProcessState(workDir, classLoader);
+        snapshot = StateBackwardCompatibility.apply(snapshot);
         Set<String> events = StateManager.readResumeEvents(workDir); // TODO make it an interface?
 
         Action action = currentAction(events);

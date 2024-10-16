@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@Value.Immutable
 @Value.Style(jdkOnly = true)
+@Value.Immutable
 public interface ProcessDefinition extends Serializable {
 
     long serialVersionUID = 1L;
@@ -41,12 +41,7 @@ public interface ProcessDefinition extends Serializable {
     }
 
     @Value.Default
-    default Map<String, List<Step>> flows() {
-        return Collections.emptyMap();
-    }
-
-    @Value.Default
-    default Map<String, Flow> flowsDefinition() {
+    default Map<String, Flow> flows() {
         return Collections.emptyMap();
     }
 

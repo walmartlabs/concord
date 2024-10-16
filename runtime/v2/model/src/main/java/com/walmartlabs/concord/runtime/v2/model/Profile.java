@@ -27,7 +27,6 @@ import org.immutables.value.Value;
 
 import java.io.Serializable;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -51,12 +50,7 @@ public interface Profile extends Serializable {
     }
 
     @Value.Default
-    default Map<String, List<Step>> flows() {
-        return Collections.emptyMap();
-    }
-
-    @Value.Default
-    default Map<String, Flow> flowsDefinition() {
+    default Map<String, Flow> flows() {
         return Collections.emptyMap();
     }
 

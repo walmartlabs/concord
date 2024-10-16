@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
 
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.svm.State;
+import org.immutables.serial.Serial;
 import org.immutables.value.Value;
 
 import java.io.Serializable;

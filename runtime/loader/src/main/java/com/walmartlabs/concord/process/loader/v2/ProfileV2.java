@@ -42,7 +42,7 @@ public class ProfileV2 implements Profile, Serializable {
 
         this.flows = new HashMap<>();
         if (delegate.flows() != null) {
-            delegate.flows().forEach((k, v) -> flows.put(k, new FlowDefinitionV2(k, v)));
+            delegate.flows().forEach((k, v) -> flows.put(k, new FlowDefinitionV2(k, v.steps())));
         }
     }
 

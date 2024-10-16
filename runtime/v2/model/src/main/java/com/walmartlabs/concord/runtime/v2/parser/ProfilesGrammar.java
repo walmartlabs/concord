@@ -24,8 +24,6 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import io.takari.parc.Parser;
 
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import static com.walmartlabs.concord.runtime.v2.parser.ConfigurationGrammar.processCfgVal;
@@ -43,14 +41,7 @@ public final class ProfilesGrammar {
                     with(ImmutableProfile::builder,
                             o -> options(
                                     optional("configuration", processCfgVal.map(o::configuration)),
-                                    optional("flows", flowsVal.map(f -> {
-                                        Map<String, List<Step>> flows = new LinkedHashMap<>(f.size());
-                                        for (Map.Entry<String, Flow> e : f.entrySet()) {
-                                            flows.put(e.getKey(), e.getValue().steps());
-                                        }
-                                        return o.flows(flows)
-                                                .flowsDefinition(f);
-                                    })),
+                                    optional("flows", flowsVal.map(o::flows)),
                                     optional("forms", formsVal.map(o::forms))))
                             .map(ImmutableProfile.Builder::build));
 

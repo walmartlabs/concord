@@ -42,7 +42,7 @@ public class EffectiveProcessDefinitionProviderV2 implements EffectiveProcessDef
 
     @Override
     public void serialize(Options options, OutputStream out) throws Exception {
-        Map<String, List<Step>> flows = new HashMap<>(delegate.flows());
+        Map<String, Flow> flows = new HashMap<>(delegate.flows());
         for (String ap : options.activeProfiles()) {
             Profile p = delegate.profiles().get(ap);
             if (p != null) {
