@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
  */
 
 
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.config.Config;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;

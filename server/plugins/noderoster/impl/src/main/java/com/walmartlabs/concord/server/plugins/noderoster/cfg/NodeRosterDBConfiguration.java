@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.plugins.noderoster.cfg;
 
 import com.walmartlabs.concord.db.DatabaseConfiguration;
 import com.walmartlabs.concord.server.plugins.noderoster.db.NodeRosterDB;
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.config.Config;
 
 import javax.inject.Inject;
 import javax.inject.Named;

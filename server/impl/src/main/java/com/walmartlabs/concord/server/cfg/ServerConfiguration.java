@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.config.Config;
 import org.eclipse.jetty.server.CustomRequestLog;
 
 import javax.annotation.Nullable;

@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.org.secret.provider;
  */
 
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.config.Config;
 
 import javax.inject.Inject;
 import java.util.ArrayList;

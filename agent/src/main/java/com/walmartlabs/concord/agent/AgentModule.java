@@ -31,9 +31,7 @@ import com.walmartlabs.concord.agent.remote.ApiClientFactory;
 import com.walmartlabs.concord.agent.remote.QueueClientProvider;
 import com.walmartlabs.concord.common.ObjectMapperProvider;
 import com.walmartlabs.concord.server.queueclient.QueueClient;
-import com.walmartlabs.ollie.config.ConfigurationProcessor;
-import com.walmartlabs.ollie.config.Environment;
-import com.walmartlabs.ollie.config.EnvironmentSelector;
+import com.walmartlabs.concord.config.ConfigModule;
 
 import javax.inject.Named;
 
@@ -76,7 +74,6 @@ public class AgentModule implements Module {
     }
 
     private static Config loadDefaultConfig() {
-        Environment env = new EnvironmentSelector().select();
-        return new ConfigurationProcessor("concord-agent", env, null, null).process();
+        return ConfigModule.load("concord-agent");
     }
 }

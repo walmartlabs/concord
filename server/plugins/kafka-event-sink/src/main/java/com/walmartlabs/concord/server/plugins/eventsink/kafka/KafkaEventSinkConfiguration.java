@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.plugins.eventsink.kafka;
  * =====
  */
 
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.config.Config;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
