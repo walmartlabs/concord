@@ -48,7 +48,7 @@ import static org.mockito.Mockito.mock;
 
 public abstract class AbstractYamlParserTest {
 
-    private final TestWorkflowProvider workflowProvider = new TestWorkflowProvider();
+    private TestWorkflowProvider workflowProvider;
     private TestServiceTaskRegistry taskRegistry;
     private Engine engine;
     private Map<UUID, Form> forms;
@@ -57,6 +57,8 @@ public abstract class AbstractYamlParserTest {
     @BeforeEach
     @SuppressWarnings("unchecked")
     public void setUp() {
+        workflowProvider = new TestWorkflowProvider();
+
         taskRegistry = new TestServiceTaskRegistry();
 
         forms = new HashMap<>();
