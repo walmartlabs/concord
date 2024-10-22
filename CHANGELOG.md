@@ -1,5 +1,26 @@
 # Change Log
 
+## [2.19.0] - Unreleased
+
+## Changed
+
+- runtime-v2: flush events on process error 
+([#1001](https://github.com/walmartlabs/concord/pull/1001));
+- concord-server: remove resteasy-guice dependency
+([#997](https://github.com/walmartlabs/concord/pull/997));
+- project: update HikariCP version
+([#1000](https://github.com/walmartlabs/concord/pull/1000)).
+
+### Breaking
+
+- runtime-v2: store flow location in process definition.
+Note, this changes the type of
+`context.execution().processDefinition().flows()` object
+available in runtime-v2 processes.
+([#995](https://github.com/walmartlabs/concord/pull/995)).
+
+
+
 ## [2.18.0] - 2024-10-13
 
 ### Added
