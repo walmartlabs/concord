@@ -57,6 +57,7 @@ public class DefaultRunnerModule extends AbstractModule {
         bind(DependencyManager.class).to(DefaultDependencyManager.class).in(Singleton.class);
         bind(DockerService.class).to(DefaultDockerService.class).in(Singleton.class);
         bind(FileService.class).to(DefaultFileService.class).in(Singleton.class);
+        bind(ProcessEventWriter.class).to(DefaultProcessEventWriter.class).in(Singleton.class);
         bind(EventReportingService.class).to(DefaultEventReportingService.class).in(Singleton.class);
         bind(LockService.class).to(DefaultLockService.class).in(Singleton.class);
         bind(PersistenceService.class).to(DefaultPersistenceService.class).in(Singleton.class);
