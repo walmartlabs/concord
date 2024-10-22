@@ -4,6 +4,8 @@
 
 ## Changed
 
+- runtime-v2: flush events on process error 
+([#1001](https://github.com/walmartlabs/concord/pull/1001));
 - concord-server: remove resteasy-guice dependency
 ([#997](https://github.com/walmartlabs/concord/pull/997));
 - project: update HikariCP version
