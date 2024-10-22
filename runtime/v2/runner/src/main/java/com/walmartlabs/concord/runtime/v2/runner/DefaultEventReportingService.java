@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,17 +20,11 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.client2.ApiClient;
-import com.walmartlabs.concord.client2.ApiException;
 import com.walmartlabs.concord.client2.ProcessEventRequest;
-import com.walmartlabs.concord.client2.ProcessEventsApi;
-import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -44,27 +38,23 @@ import java.util.concurrent.TimeUnit;
 
 public class DefaultEventReportingService implements EventReportingService {
 
-    private static final Logger log = LoggerFactory.getLogger(DefaultEventReportingService.class);
-
-    private final InstanceId instanceId;
-    private final ProcessEventsApi processEventsApi;
     private final BlockingQueue<ProcessEventRequest> eventQueue;
     private final int maxBatchSize;
     private final Object batchLock = new Object();
     private final ScheduledExecutorService flushScheduler;
+    private final ProcessEventWriter eventWriter;
 
     @Inject
-    public DefaultEventReportingService(InstanceId instanceId,
-                                        ProcessConfiguration processConfiguration,
-                                        ApiClient apiClient) {
-        this.instanceId = instanceId;
-        this.processEventsApi = new ProcessEventsApi(apiClient);
+    public DefaultEventReportingService(ProcessConfiguration processConfiguration,
+                                        ProcessEventWriter eventWriter) {
         this.maxBatchSize = processConfiguration.events().batchSize();
         this.eventQueue = initializeQueue(maxBatchSize);
         this.flushScheduler = Executors.newSingleThreadScheduledExecutor();
 
         int period = processConfiguration.events().batchFlushInterval();
         flushScheduler.scheduleAtFixedRate(new FlushTimer(this), period, period, TimeUnit.SECONDS);
+
+        this.eventWriter = eventWriter;
     }
 
     private static BlockingQueue<ProcessEventRequest> initializeQueue(int maxBatchSize) {
@@ -100,10 +90,6 @@ public class DefaultEventReportingService implements EventReportingService {
         flush();
     }
 
-    ProcessEventsApi getProcessEventsApi() {
-        return processEventsApi;
-    }
-
     synchronized void flush() {
         List<ProcessEventRequest> eventBatch = takeBatch();
 
@@ -115,26 +101,9 @@ public class DefaultEventReportingService implements EventReportingService {
 
     private void send(List<ProcessEventRequest> eventBatch) {
         if (eventBatch.size() == 1) {
-            sendSingle(eventBatch.get(0));
+            eventWriter.write(eventBatch.get(0));
         } else {
-            sendBatch(eventBatch);
-        }
-    }
-
-    private void sendBatch(List<ProcessEventRequest> eventBatch) {
-        try {
-            getProcessEventsApi().batchEvent(instanceId.getValue(), eventBatch);
-        } catch (ApiException e) {
-            log.warn("Error while sending batch of {} event{} to the server: {}",
-                    eventBatch.size(), eventBatch.isEmpty() ? "" : "s", e.getMessage());
-        }
-    }
-
-    private void sendSingle(ProcessEventRequest req) {
-        try {
-            getProcessEventsApi().event(instanceId.getValue(), req);
-        } catch (ApiException e) {
-            log.warn("error while sending an event to the server: {}", e.getMessage());
+            eventWriter.write(eventBatch);
         }
     }
 
@@ -163,5 +132,4 @@ public class DefaultEventReportingService implements EventReportingService {
             reportingService.flush();
         }
     }
-
 }
