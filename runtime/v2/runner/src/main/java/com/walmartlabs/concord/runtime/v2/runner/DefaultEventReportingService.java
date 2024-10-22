@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
 
 import com.walmartlabs.concord.client2.ProcessEventRequest;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
+import com.walmartlabs.concord.svm.ExecutionListener;
 import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
@@ -36,7 +37,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class DefaultEventReportingService implements EventReportingService {
+public class DefaultEventReportingService implements EventReportingService, ExecutionListener {
 
     private final BlockingQueue<ProcessEventRequest> eventQueue;
     private final int maxBatchSize;
@@ -86,6 +87,12 @@ public class DefaultEventReportingService implements EventReportingService {
 
     @Override
     public void afterProcessEnds(Runtime runtime, State state, Frame lastFrame) {
+        flushScheduler.shutdown();
+        flush();
+    }
+
+    @Override
+    public void onProcessError(Runtime runtime, State state, Exception e) {
         flushScheduler.shutdown();
         flush();
     }
