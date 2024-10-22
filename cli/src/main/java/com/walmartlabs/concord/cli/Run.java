@@ -128,6 +128,9 @@ public class Run implements Callable<Integer> {
     @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")
     Path sourceDir = Paths.get(System.getProperty("user.dir"));
 
+    @Option(names = {"--with-code-coverage"}, description = "Generate code coverage for process")
+    boolean withCodeCoverage = false;
+
     @Override
     public Integer call() throws Exception {
         Verbosity verbosity = new Verbosity(this.verbosity);
@@ -231,6 +234,7 @@ public class Run implements Callable<Integer> {
                     .configuration(ProcessDefinitionConfiguration.builder().from(processDefinition.configuration())
                             .arguments(args)
                             .dependencies(overlayDeps)
+                            .events(EventConfiguration.builder().from(processDefinition.configuration().events()).recordEvents(withCodeCoverage).build())
                             .build())
                     .flows(flows)
                     .imports(Imports.builder().build())
@@ -253,7 +257,8 @@ public class Run implements Callable<Integer> {
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(secretStoreDir, targetDir, defaultTaskVars, new VaultProvider(vaultDir, vaultId), dependencyManager, verbosity))
+                new CliServicesModule(secretStoreDir, targetDir, defaultTaskVars, new VaultProvider(vaultDir, vaultId), dependencyManager, verbosity),
+                new CodeCoverageModule(withCodeCoverage))
                 .create();
 
         // Just to notify listeners
