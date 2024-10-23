@@ -24,9 +24,7 @@ import com.google.inject.Binding;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.jboss.resteasy.plugins.server.servlet.ListenerBootstrap;
-import org.jboss.resteasy.spi.Registry;
 import org.jboss.resteasy.spi.ResteasyDeployment;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.GetRestful;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,32 +55,32 @@ public class ResteasyBootstrapListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent event) {
-        var servletContext = event.getServletContext();
-
         var config = new ListenerBootstrap(event.getServletContext());
+
         deployment = config.createDeployment();
+
+        var servletContext = event.getServletContext();
         servletContext.setAttribute(ResteasyDeployment.class.getName(), deployment);
+
         deployment.start();
 
-        var registry = deployment.getRegistry();
-        var providerFactory = deployment.getProviderFactory();
-        processInjector(providerFactory, registry, injector);
-
-        var currentInjector = injector;
-        while (currentInjector.getParent() != null) {
-            currentInjector = currentInjector.getParent();
-            processInjector(providerFactory, registry, currentInjector);
+        for (var injector = this.injector; injector != null; injector = injector.getParent()) {
+            processInjector(deployment, injector);
         }
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
+        if (deployment == null) {
+            return;
+        }
         deployment.stop();
     }
 
-    private static void processInjector(ResteasyProviderFactory providerFactory, Registry registry, Injector injector) {
+    private static void processInjector(ResteasyDeployment deployment, Injector injector) {
         var rootResourceBindings = new ArrayList<Binding<?>>();
 
+        var providerFactory = deployment.getProviderFactory();
         for (var binding : injector.getBindings().values()) {
             var type = (Object) binding.getKey().getTypeLiteral().getRawType();
             if (type instanceof Class<?> beanClass) {
@@ -96,6 +94,7 @@ public class ResteasyBootstrapListener implements ServletContextListener {
             }
         }
 
+        var registry = deployment.getRegistry();
         for (var binding : rootResourceBindings) {
             var beanClass = (Class<?>) binding.getKey().getTypeLiteral().getType();
             var resourceFactory = new GuiceResourceFactory(binding.getProvider(), beanClass);
