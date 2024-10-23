@@ -102,32 +102,33 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     @Override
     protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
+        HttpServletResponse resp = (HttpServletResponse) response;
+
         try {
             boolean loggedIn = executeLogin(request, response);
+            if (loggedIn) {
+                return true;
+            }
 
-            if (!loggedIn) {
-                boolean processed = false;
-                for (AuthenticationHandler handler : authenticationHandlers) {
-                    processed = handler.onAccessDenied(request, response);
-                    if (processed) {
-                        break;
-                    }
-                }
-
-                if (!processed) {
-                    HttpServletResponse resp = (HttpServletResponse) response;
-                    resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-
-                    reportAuthSchemes(request, response);
+            boolean handled = false;
+            for (AuthenticationHandler handler : authenticationHandlers) {
+                handled = handler.onAccessDenied(request, response);
+                if (handled) {
+                    break;
                 }
             }
 
-            return loggedIn;
+            if (handled) {
+                return true;
+            }
+
+            sendUnauthorized(resp);
+            reportAuthSchemes(request, response);
         } catch (Exception e) {
-            HttpServletResponse resp = (HttpServletResponse) response;
             sendUnauthorized(resp, e);
-            return false;
         }
+
+        return false;
     }
 
     @Override
@@ -147,6 +148,11 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         }
 
         return super.onLoginFailure(token, e, request, response);
+    }
+
+    private static void sendUnauthorized(HttpServletResponse resp) {
+        resp.setContentType(MediaType.APPLICATION_JSON);
+        resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     }
 
     private static void sendUnauthorized(HttpServletResponse resp, Throwable t) throws IOException {
