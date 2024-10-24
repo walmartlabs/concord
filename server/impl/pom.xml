@@ -15,6 +15,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.thymeleaf</groupId>
+            <artifactId>thymeleaf</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server-sdk</artifactId>
         </dependency>
