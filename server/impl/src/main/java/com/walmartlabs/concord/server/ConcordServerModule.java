@@ -88,6 +88,7 @@ public class ConcordServerModule implements Module {
         binder.install(new ApiKeyModule());
         binder.install(new AuditLogModule());
         binder.install(new ConsoleModule());
+        binder.install(new com.walmartlabs.concord.server.console3.ConsoleModule());
         binder.install(new EventModule());
         binder.install(new OrganizationModule());
         binder.install(new PolicyModule());
