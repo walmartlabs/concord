@@ -175,7 +175,7 @@ public class ProjectLoaderV2 {
             throw new IllegalArgumentException("Definitions is empty");
         }
 
-        Map<String, List<Step>> flows = new LinkedHashMap<>();
+        Map<String, Flow> flows = new LinkedHashMap<>();
         Map<String, Profile> profiles = new LinkedHashMap<>();
         List<Trigger> triggers = new ArrayList<>();
         List<Import> imports = new ArrayList<>();

@@ -41,12 +41,12 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test000() throws Exception {
         ProcessDefinition pd = load("000.yml");
 
-        List<Step> main = pd.flows().get("main");
+        Flow main = pd.flows().get("main");
 
-        assertEquals(1, main.size());
+        assertEquals(1, main.steps().size());
 
-        assertTrue(main.get(0) instanceof TaskCall);
-        TaskCall t = (TaskCall) main.get(0);
+        assertTrue(main.steps().get(0) instanceof TaskCall);
+        TaskCall t = (TaskCall) main.steps().get(0);
         assertEquals("boo", t.getName());
 
         // options
@@ -85,12 +85,12 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test000_1() throws Exception {
         ProcessDefinition pd = load("000.1.yml");
 
-        List<Step> main = pd.flows().get("main");
+        Flow main = pd.flows().get("main");
 
-        assertEquals(1, main.size());
+        assertEquals(1, main.steps().size());
 
-        assertTrue(main.get(0) instanceof TaskCall);
-        TaskCall t = (TaskCall) main.get(0);
+        assertTrue(main.steps().get(0) instanceof TaskCall);
+        TaskCall t = (TaskCall) main.steps().get(0);
         assertEquals("boo", t.getName());
 
         // options
@@ -105,7 +105,7 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test000_2() throws Exception {
         ProcessDefinition pd = load("000.2.yml");
 
-        List<Step> main = pd.flows().get("main");
+        List<Step> main = pd.flows().get("main").steps();
 
         assertEquals(1, main.size());
 
@@ -132,7 +132,7 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test002() throws Exception {
         ProcessDefinition pd = load("002.yml");
 
-        List<Step> main = pd.flows().get("main");
+        List<Step> main = pd.flows().get("main").steps();
 
         assertEquals(1, main.size());
 
@@ -172,7 +172,7 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test002_1() throws Exception {
         ProcessDefinition pd = load("002.1.yml");
 
-        List<Step> main = pd.flows().get("main");
+        List<Step> main = pd.flows().get("main").steps();
 
         assertEquals(1, main.size());
 
@@ -192,7 +192,7 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test003() throws Exception {
         ProcessDefinition pd = load("003.yml");
 
-        List<Step> main = pd.flows().get("main");
+        List<Step> main = pd.flows().get("main").steps();
 
         assertEquals(1, main.size());
 
@@ -209,7 +209,7 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test004() throws Exception {
         ProcessDefinition pd = load("004.yml");
 
-        List<Step> main = pd.flows().get("main");
+        List<Step> main = pd.flows().get("main").steps();
 
         assertEquals(1, main.size());
 
@@ -239,7 +239,7 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test005() throws Exception {
         ProcessDefinition pd = load("005.yml");
 
-        List<Step> main = pd.flows().get("main");
+        List<Step> main = pd.flows().get("main").steps();
 
         assertEquals(1, main.size());
 
@@ -266,7 +266,7 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test006() throws Exception {
         ProcessDefinition pd = load("006.yml");
 
-        List<Step> main = pd.flows().get("main");
+        List<Step> main = pd.flows().get("main").steps();
 
         assertEquals(2, main.size());
 
@@ -400,7 +400,7 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test010() throws Exception {
         ProcessDefinition pd = load("010.yml");
 
-        List<Step> main = pd.flows().get("default");
+        List<Step> main = pd.flows().get("default").steps();
         assertEquals(1, main.size());
 
         IfStep ifStep = (IfStep) main.get(0);
@@ -414,7 +414,7 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test011() throws Exception {
         ProcessDefinition pd = load("012.yml");
 
-        List<Step> main = pd.flows().get("default");
+        List<Step> main = pd.flows().get("default").steps();
         assertEquals(1, main.size());
 
         SwitchStep switchStep = (SwitchStep) main.get(0);
@@ -443,7 +443,7 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test014() throws Exception {
         ProcessDefinition pd = load("014.yml");
 
-        List<Step> main = pd.flows().get("default");
+        List<Step> main = pd.flows().get("default").steps();
         assertEquals(1, main.size());
 
         assertTrue(main.get(0) instanceof ScriptCall);
@@ -479,7 +479,7 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test014_1() throws Exception {
         ProcessDefinition pd = load("014.1.yml");
 
-        List<Step> main = pd.flows().get("default");
+        List<Step> main = pd.flows().get("default").steps();
         assertEquals(1, main.size());
 
         assertTrue(main.get(0) instanceof ScriptCall);
@@ -509,7 +509,7 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test016() throws Exception {
         ProcessDefinition pd = load("016.yml");
 
-        List<Step> main = pd.flows().get("default");
+        List<Step> main = pd.flows().get("default").steps();
         assertEquals(1, main.size());
 
         assertTrue(main.get(0) instanceof SetVariablesStep);
@@ -527,7 +527,7 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test017() throws Exception {
         ProcessDefinition pd = load("017.yml");
 
-        List<Step> main = pd.flows().get("default");
+        List<Step> main = pd.flows().get("default").steps();
         assertEquals(1, main.size());
 
         assertTrue(main.get(0) instanceof ExitStep);
@@ -540,7 +540,7 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test018() throws Exception {
         ProcessDefinition pd = load("018.yml");
 
-        List<Step> main = pd.flows().get("default");
+        List<Step> main = pd.flows().get("default").steps();
         assertEquals(1, main.size());
 
         assertTrue(main.get(0) instanceof ReturnStep);
@@ -561,7 +561,7 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         // flows
         assertEquals(1, p1.flows().size());
-        assertTrue(p1.flows().get("default").get(0) instanceof ReturnStep);
+        assertTrue(p1.flows().get("default").steps().get(0) instanceof ReturnStep);
 
         assertEquals(1, p1.forms().size());
         assertNotNull(p1.forms().get("myForm"));

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner;
+package com.walmartlabs.concord.runtime.v2.model;
 
 /*-
  * *****
@@ -20,13 +20,29 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.client2.ProcessEventRequest;
-import com.walmartlabs.concord.svm.ExecutionListener;
+import org.immutables.value.Value;
 
-public interface EventReportingService {
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.List;
 
-    /**
-     * Report a process event to the server.
-     */
-    void report(ProcessEventRequest req);
+@Value.Immutable
+@Value.Style(jdkOnly = true)
+public interface Flow extends Serializable {
+
+    @Serial
+    long serialVersionUID = 1L;
+
+    @Value.Parameter
+    Location location();
+
+    @Value.Default
+    @Value.Parameter
+    default List<Step> steps() {
+        return List.of();
+    }
+
+    static Flow of(Location location, List<Step> steps) {
+        return ImmutableFlow.of(location, steps);
+    }
 }

@@ -324,7 +324,7 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
         ProcessDefinition pd = ProcessDefinition.builder()
                 .configuration(cfg)
                 .forms(forms)
-                .putFlows("flow1", steps())
+                .putFlows("flow1", Flow.of(Location.builder().build(), steps()))
                 .addPublicFlows("flow1")
                 .addTriggers(trigger)
                 .imports(imports)

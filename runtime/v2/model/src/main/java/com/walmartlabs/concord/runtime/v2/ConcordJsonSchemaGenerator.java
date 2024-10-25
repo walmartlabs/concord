@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,6 +33,7 @@ import com.walmartlabs.concord.runtime.v2.schema.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serial;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -117,6 +118,7 @@ public class ConcordJsonSchemaGenerator {
         Map<Class<?>, Class<?>> classTypeReMapping = new HashMap<>();
         classTypeReMapping.put(Imports.class, ImportsMixIn.class);
         classTypeReMapping.put(Form.class, Object.class);
+        classTypeReMapping.put(Flow.class, FlowsMixIn.class);
         Map<String, Supplier<JsonNode>> jsonSuppliers = Collections.emptyMap();
         SubclassesResolver subclassesResolver = new SubclassesResolverImpl();
         boolean failOnUnknownProperties = true;
@@ -198,7 +200,7 @@ public class ConcordJsonSchemaGenerator {
             setMixInAnnotation(Trigger.class, TriggerMixIn.class);
             setMixInAnnotation(Step.class, StepMixIn.class);
 
-            addSerializer(Duration.class, new StdSerializer<Duration>(Duration.class) {
+            addSerializer(Duration.class, new StdSerializer<>(Duration.class) {
                 private static final long serialVersionUID = 1L;
 
                 @Override

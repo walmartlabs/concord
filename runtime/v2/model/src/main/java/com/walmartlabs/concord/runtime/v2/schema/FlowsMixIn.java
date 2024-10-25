@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.runtime.v2.runner;
+package com.walmartlabs.concord.runtime.v2.schema;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2024 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,9 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.client2.ProcessEventRequest;
-import com.walmartlabs.concord.svm.ExecutionListener;
+import com.walmartlabs.concord.runtime.v2.model.Step;
 
-public interface EventReportingService {
+import java.util.List;
 
-    /**
-     * Report a process event to the server.
-     */
-    void report(ProcessEventRequest req);
+public interface FlowsMixIn extends List<Step> {
 }
