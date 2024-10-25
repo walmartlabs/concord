@@ -9,7 +9,9 @@
 - concord-server: remove resteasy-guice dependency
 ([#997](https://github.com/walmartlabs/concord/pull/997));
 - project: update HikariCP version
-([#1000](https://github.com/walmartlabs/concord/pull/1000)).
+([#1000](https://github.com/walmartlabs/concord/pull/1000));
+- project: update docker-login action in build flow
+([#1005](https://github.com/walmartlabs/concord/pull/1005)).
 
 ### Breaking
 
