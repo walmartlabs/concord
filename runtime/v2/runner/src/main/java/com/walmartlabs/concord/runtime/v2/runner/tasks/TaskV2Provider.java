@@ -53,7 +53,7 @@ public class TaskV2Provider implements TaskProvider {
             return null;
         }
 
-        boolean dryRun = ctx.execution().processDefinition().configuration().dryRunMode();
+        boolean dryRun = ctx.processConfiguration().dryRunMode();
         if (dryRun && klass.getAnnotation(DryRunReady.class) == null) {
             throw new IllegalStateException("Dry run mode not supported for '" + key + "' task");
         }
