@@ -42,10 +42,16 @@ public class SecretsTaskCommon {
 
     private final ApiClient apiClient;
     private final String defaultOrg;
+    private final boolean dryRunMode;
 
     public SecretsTaskCommon(ApiClient apiClient, String defaultOrg) {
+        this(apiClient, defaultOrg, false);
+    }
+
+    public SecretsTaskCommon(ApiClient apiClient, String defaultOrg, boolean dryRunMode) {
         this.apiClient = apiClient;
         this.defaultOrg = defaultOrg;
+        this.dryRunMode = dryRunMode;
     }
 
     public TaskResult.SimpleResult execute(SecretsTaskParams in) throws Exception {
@@ -140,6 +146,11 @@ public class SecretsTaskCommon {
     private TaskResult.SimpleResult create(CreateParams in, Map<String, Object> params) throws Exception {
         String orgName = in.orgName(defaultOrg);
 
+        if (dryRunMode) {
+            log.info("Dry-run mode enabled: Skipping creation of secret '{}'", params.get(Constants.Multipart.NAME));
+            return Result.ok();
+        }
+
         new SecretsApi(apiClient).createSecret(orgName, params);
 
         log.info("New secret was successfully created: {}", params.get(Constants.Multipart.NAME));
@@ -187,6 +198,12 @@ public class SecretsTaskCommon {
             if(data != null){
                 addIfPresent(params, Constants.Multipart.TYPE, in.secretType());
             }
+
+            if (dryRunMode) {
+                log.info("Dry-run mode enabled: Skipping updating of secret '{}'", secretName);
+                return Result.ok();
+            }
+
             new SecretsV2Api(apiClient).updateSecret(orgName, secretName, params);
 
             log.info("The secret was successfully updated: {}", secretName);
@@ -205,6 +222,12 @@ public class SecretsTaskCommon {
 
     private TaskResult.SimpleResult delete(SecretsTaskParams in) {
         String secretName = in.secretName();
+
+        if (dryRunMode) {
+            log.info("Dry-run mode enabled: Skipping deleting of secret '{}'", secretName);
+            // TODO: check secret exists?
+            return Result.ok();
+        }
 
         try {
             SecretsApi api = new SecretsApi(apiClient);

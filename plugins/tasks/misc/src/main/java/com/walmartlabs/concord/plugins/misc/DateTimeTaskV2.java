@@ -20,6 +20,7 @@ package com.walmartlabs.concord.plugins.misc;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.DryRunReady;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
 import javax.inject.Named;
@@ -31,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 @Named("datetime")
+@DryRunReady
 public class DateTimeTaskV2 implements Task {
 
     public Date current() {

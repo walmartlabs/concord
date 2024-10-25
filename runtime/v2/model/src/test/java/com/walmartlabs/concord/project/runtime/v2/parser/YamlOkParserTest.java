@@ -346,6 +346,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertNotNull(cfg);
 
         assertTrue(cfg.debug());
+        assertTrue(cfg.dryRunMode());
         assertEquals("main-test", cfg.entryPoint());
         assertEquals(Arrays.asList("d1", "d2"), cfg.dependencies());
         assertEquals(Collections.singletonMap("k", "v"), cfg.arguments());

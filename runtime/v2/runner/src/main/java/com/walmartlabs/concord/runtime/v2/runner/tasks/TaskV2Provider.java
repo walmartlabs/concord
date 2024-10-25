@@ -24,10 +24,7 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.runtime.common.injector.TaskHolder;
 import com.walmartlabs.concord.runtime.v2.runner.DefaultTaskVariablesService;
 import com.walmartlabs.concord.runtime.v2.runner.context.TaskContext;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Inject;
 import java.util.Map;
@@ -54,6 +51,11 @@ public class TaskV2Provider implements TaskProvider {
         Class<? extends Task> klass = holder.get(key);
         if (klass == null) {
             return null;
+        }
+
+        boolean dryRun = ctx.execution().processDefinition().configuration().dryRunMode();
+        if (dryRun && klass.getAnnotation(DryRunReady.class) == null) {
+            throw new IllegalStateException("Dry run mode not supported for '" + key + "' task");
         }
 
         Map<String, Object> defaultVariables = defaultTaskVariables.get(key);
