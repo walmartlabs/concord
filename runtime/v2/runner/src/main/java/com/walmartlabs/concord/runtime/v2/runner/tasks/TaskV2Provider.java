@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
 
 import com.google.inject.Injector;
 import com.walmartlabs.concord.runtime.common.injector.TaskHolder;
+import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.runner.DefaultTaskVariablesService;
 import com.walmartlabs.concord.runtime.v2.runner.context.TaskContext;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
@@ -54,7 +55,7 @@ public class TaskV2Provider implements TaskProvider {
         }
 
         boolean dryRun = ctx.processConfiguration().dryRunMode();
-        if (dryRun && klass.getAnnotation(DryRunReady.class) == null) {
+        if (dryRun && !(isStepDryRunReady(ctx) || klass.getAnnotation(DryRunReady.class) != null)) {
             throw new IllegalStateException("Dry run mode not supported for '" + key + "' task");
         }
 
@@ -71,5 +72,23 @@ public class TaskV2Provider implements TaskProvider {
     @Override
     public Set<String> names() {
         return holder.keys();
+    }
+
+    private static boolean isStepDryRunReady(Context ctx) {
+        var step = ctx.execution().currentStep();
+        if (step == null) {
+            return false;
+        }
+
+        if (!(step instanceof AbstractStep)) {
+            return false;
+        }
+
+        var options = ((AbstractStep<?>) step).getOptions();
+        if (options == null) {
+            return false;
+        }
+
+        return (boolean) options.meta().getOrDefault("dryRunReady", false);
     }
 }
