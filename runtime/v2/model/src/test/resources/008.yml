@@ -1,5 +1,6 @@
 configuration:
   debug: true
+  dryRunMode: true
   entryPoint: "main-test"
   dependencies:
     - "d1"

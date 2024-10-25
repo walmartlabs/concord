@@ -318,6 +318,8 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
                 .build()));
 
         ProcessDefinitionConfiguration cfg = ProcessDefinitionConfiguration.builder()
+                .debug(true)
+                .dryRunMode(true)
                 .parallelLoopParallelism(123)
                 .build();
 

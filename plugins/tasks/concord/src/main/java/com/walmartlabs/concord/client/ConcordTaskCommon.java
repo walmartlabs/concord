@@ -42,6 +42,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.client.ConcordTaskParams.*;
+import static com.walmartlabs.concord.sdk.MapUtils.get;
 
 public class ConcordTaskCommon {
 
@@ -618,6 +619,10 @@ public class ConcordTaskCommon {
         Map<String, Object> requirements = in.requirements();
         if (!requirements.isEmpty()) {
             req.put(Constants.Request.REQUIREMENTS, new HashMap<>(requirements));
+        }
+
+        if (in.dryRunMode() != null) {
+            req.put(Constants.Request.DRY_RUN_MODE_KEY, in.dryRunMode());
         }
 
         return req;

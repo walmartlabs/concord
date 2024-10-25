@@ -63,6 +63,9 @@ public class ProjectLoaderV2Test {
         // configuration.debug: should be collected from ROOT concord.yml
         assertTrue(cfg.debug());
 
+        // configuration.dryRunMode: should be collected from ROOT concord.yml
+        assertTrue(cfg.dryRunMode());
+
         // configuration.activeProfiles: should be collected from ROOT concord.yml
         assertEquals(Collections.singletonList("concord.yml"), cfg.activeProfiles());
 

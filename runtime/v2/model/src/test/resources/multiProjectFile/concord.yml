@@ -18,6 +18,7 @@ configuration:
   meta:
     k: "concord.yml"
   debug: true
+  dryRunMode: true
   entryPoint: "root"
   events:
     recordTaskInVars: true

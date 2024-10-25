@@ -56,6 +56,11 @@ public interface ProcessDefinitionConfiguration extends Serializable {
     }
 
     @Value.Default
+    default boolean dryRunMode() {
+        return false;
+    }
+
+    @Value.Default
     default List<String> activeProfiles() {
         return Collections.emptyList();
     }

@@ -33,6 +33,7 @@ import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoadListener;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
@@ -219,6 +220,11 @@ public class Main {
         // assume all imports were processed by the agent
         ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
         ProcessDefinition processDefinition = loader.load(workDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, projectLoadListener).getProjectDefinition();
+        processDefinition = ProcessDefinition.builder().from(processDefinition)
+                .configuration(ProcessDefinitionConfiguration.builder().from(processDefinition.configuration())
+                        .dryRunMode(cfg.dryRunMode())
+                        .build())
+                .build();
 
         Map<String, Object> initiator = cfg.initiator();
         if (initiator != null) {

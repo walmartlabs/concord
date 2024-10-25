@@ -24,15 +24,13 @@ import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.plugins.sleep.SleepTaskCommon;
 import com.walmartlabs.concord.plugins.sleep.Suspender;
 import com.walmartlabs.concord.plugins.sleep.TaskParams;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
 @Named("sleep")
+@DryRunReady
 public class SleepTaskV2 implements Task {
 
     private final SleepTaskCommon delegate;
