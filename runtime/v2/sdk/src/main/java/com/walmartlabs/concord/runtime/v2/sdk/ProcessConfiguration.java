@@ -54,6 +54,11 @@ public interface ProcessConfiguration extends Serializable {
     }
 
     @Value.Default
+    default boolean dryRunMode() {
+        return false;
+    }
+
+    @Value.Default
     default String entryPoint() {
         return Constants.Request.DEFAULT_ENTRY_POINT_NAME;
     }

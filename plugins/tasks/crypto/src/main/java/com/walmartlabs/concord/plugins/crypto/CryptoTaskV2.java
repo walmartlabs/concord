@@ -52,6 +52,7 @@ public class CryptoTaskV2 implements Task {
     private final Path workDir;
     private final ProcessConfiguration processCfg;
     private final String processOrg;
+    private final boolean dryRunMode;
 
     @Inject
     public CryptoTaskV2(Context context) {
@@ -61,6 +62,7 @@ public class CryptoTaskV2 implements Task {
 
         ProjectInfo projectInfo = processCfg.projectInfo();
         this.processOrg = projectInfo != null ? projectInfo.orgName() : null;
+        this.dryRunMode = processCfg.dryRunMode();
     }
 
     @SensitiveData
@@ -130,6 +132,10 @@ public class CryptoTaskV2 implements Task {
         switch (action) {
             case CREATE: {
                 SecretCreationResult result = createSecret(params);
+                if (result == null) {
+                    return TaskResult.success();
+                }
+
                 log.info("The secret '{}/{}' was created successfully", params.orgOrDefault(processOrg), params.secretName());
                 return TaskResult.success()
                         .value("password", result.password());
@@ -154,18 +160,35 @@ public class CryptoTaskV2 implements Task {
         TaskParams.UsernamePassword up = in.usernamePassword();
 
         if (data != null) {
+            if (dryRunMode) {
+                log.info("Dry-run mode enabled: Skipping creating of data secret '{}'", in.secretName());
+                return null;
+            }
+
             return secretService.createData(secret, readFile(toPath(data)));
         } else if (kp != null) {
+            Path publicKey = toPath(kp.publicKey());
+            Path privateKey = toPath(kp.privateKey());
+
+            if (dryRunMode) {
+                log.info("Dry-run mode enabled: Skipping creating of key-pair secret '{}'", in.secretName());
+                return null;
+            }
+
             return secretService.createKeyPair(secret, KeyPair.builder()
-                    .publicKey(toPath(kp.publicKey()))
-                    .privateKey(toPath(kp.privateKey()))
+                    .publicKey(publicKey)
+                    .privateKey(privateKey)
                     .build());
         } else if (up != null) {
+            if (dryRunMode) {
+                log.info("Dry-run mode enabled: Skipping creating of username secret '{}'", in.secretName());
+                return null;
+            }
+
             return secretService.createUsernamePassword(secret, UsernamePassword.of(up.username(), up.password()));
         } else {
             throw new IllegalArgumentException("A path to the secret's data, a key pair or a username/password pair must be specified.");
         }
-
     }
 
     private Path toPath(String value) {
