@@ -62,6 +62,7 @@ public class FlowEventsIT extends AbstractTest {
                 .location(9, 7, "concord.yml")
                 .flow("default")
                 .name("log")
+                .method("info")
                 .description("Task: log"));
 
         assertEvent(events, 1, new EventData()
@@ -261,6 +262,11 @@ public class FlowEventsIT extends AbstractTest {
                     return true;
                 }
             });
+            return this;
+        }
+
+        public EventData method(String name) {
+            put("method", name);
             return this;
         }
     }
