@@ -1,0 +1,12 @@
+flows:
+  default:
+    - task: http
+      in:
+        method: "DELETE"
+        url: "http://localhost"
+      out: result
+
+    - log: "result: ${result}"
+
+configuration:
+  runtime: concord-v2

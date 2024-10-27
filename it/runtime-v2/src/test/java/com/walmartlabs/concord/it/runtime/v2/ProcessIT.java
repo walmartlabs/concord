@@ -24,6 +24,7 @@ import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -681,6 +682,32 @@ public class ProcessIT extends AbstractTest {
         List<ProcessEventEntry> events = getProcessElementEvents(proc);
         assertNotNull(events);
         assertFalse(events.isEmpty());
+    }
+
+    @Test
+    public void testSimpleDryRun() throws Exception {
+        Payload payload = new Payload()
+                .parameter(Constants.Request.DRY_RUN_MODE_KEY, true)
+                .archive(resource("dryRun"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        proc.assertLog(".* Running in dry-run mode: Skipping sending request.*");
+    }
+
+    @Test
+    public void testDryRunModeNotSupportedByScript() throws Exception {
+        Payload payload = new Payload()
+                .parameter(Constants.Request.DRY_RUN_MODE_KEY, true)
+                .archive(resource("scriptJs"))
+                .arg("arg", "12345")
+                .arg("pattern", ".234.");
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
+
+        proc.assertLog(".*Error @ line: 6, col: 7. Dry run mode not supported for this 'script' step.*");
     }
 
     private List<ProcessEventEntry> getProcessElementEvents(ConcordProcess proc) throws Exception {
