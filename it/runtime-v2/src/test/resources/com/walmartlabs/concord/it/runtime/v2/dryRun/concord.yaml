@@ -8,5 +8,7 @@ flows:
 
     - log: "result: ${result}"
 
+    - log: "isDryRun: ${isDryRun()}"
+
 configuration:
   runtime: concord-v2

@@ -694,6 +694,7 @@ public class ProcessIT extends AbstractTest {
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLog(".* Running in dry-run mode: Skipping sending request.*");
+        proc.assertLog(".* isDryRun: true.*");
     }
 
     @Test
