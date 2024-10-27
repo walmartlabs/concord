@@ -128,6 +128,9 @@ public class Run implements Callable<Integer> {
     @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")
     Path sourceDir = Paths.get(System.getProperty("user.dir"));
 
+    @Option(names = {"--dry-run"}, description = "execute process in dry run mode?")
+    boolean dryRunMode = false;
+
     @Override
     public Integer call() throws Exception {
         Verbosity verbosity = new Verbosity(this.verbosity);
@@ -247,6 +250,7 @@ public class Run implements Callable<Integer> {
         ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(args, profiles), projectInfo(args))
                 .entryPoint(entryPoint)
                 .instanceId(instanceId)
+                .dryRunMode(dryRunMode)
                 .build();
 
         Injector injector = new InjectorFactory(new WorkingDirectory(targetDir),
