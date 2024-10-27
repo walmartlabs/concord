@@ -160,6 +160,11 @@ public class Main {
         // event recording processCfg
         EventConfiguration eventCfg = getEventCfg(processCfg);
 
+        boolean dryRunMode = MapUtils.getBoolean(processCfg, Constants.Request.DRY_RUN_MODE_KEY, false);
+        if (dryRunMode) {
+            throw new IllegalArgumentException("Dry run mode is not supported in runtime-v1");
+        }
+
         Engine engine = engineFactory.create(project, baseDir, activeProfiles, metaVariables, eventCfg);
 
         Map<String, Object> resumeCheckpointReq = null;

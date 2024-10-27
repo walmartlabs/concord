@@ -26,6 +26,7 @@ import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
@@ -33,6 +34,7 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.cfg.ProcessConfigurationUtils;
 
 import javax.inject.Inject;
@@ -54,11 +56,13 @@ public class ConfigurationProcessor implements PayloadProcessor {
 
     private final ProjectDao projectDao;
     private final OrganizationDao orgDao;
+    private final ProcessLogManager logManager;
 
     @Inject
-    public ConfigurationProcessor(ProjectDao projectDao, OrganizationDao orgDao) {
+    public ConfigurationProcessor(ProjectDao projectDao, OrganizationDao orgDao, ProcessLogManager logManager) {
         this.projectDao = projectDao;
         this.orgDao = orgDao;
+        this.logManager = logManager;
     }
 
     @Override
@@ -106,6 +110,8 @@ public class ConfigurationProcessor implements PayloadProcessor {
 
         // handle handlers special params
         processHandlersConfiguration(payload, m);
+
+        processDryRunModeConfiguration(payload, m);
 
         payload = payload.putHeader(Payload.CONFIGURATION, m);
 
@@ -222,5 +228,15 @@ public class ConfigurationProcessor implements PayloadProcessor {
         if (handlerTimeout != null) {
             m.put(Constants.Request.PROCESS_TIMEOUT, handlerTimeout);
         }
+    }
+
+    private void processDryRunModeConfiguration(Payload payload, Map<String, Object> m) {
+        Object dryRunMode = m.get(Constants.Request.DRY_RUN_MODE_KEY);
+        if (dryRunMode instanceof String) {
+            dryRunMode = Boolean.parseBoolean((String) dryRunMode);
+            m.put(Constants.Request.DRY_RUN_MODE_KEY, dryRunMode);
+        }
+
+        logManager.info(payload.getProcessKey(), "Dry run mode: {}", MapUtils.getBoolean(m, Constants.Request.DRY_RUN_MODE_KEY, false));
     }
 }
