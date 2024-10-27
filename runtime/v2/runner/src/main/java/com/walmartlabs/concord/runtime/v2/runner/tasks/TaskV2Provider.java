@@ -25,6 +25,7 @@ import com.walmartlabs.concord.runtime.common.injector.TaskHolder;
 import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.runner.DefaultTaskVariablesService;
 import com.walmartlabs.concord.runtime.v2.runner.context.TaskContext;
+import com.walmartlabs.concord.runtime.v2.runner.vm.StepOptionsUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Inject;
@@ -84,15 +85,6 @@ public class TaskV2Provider implements TaskProvider {
             return false;
         }
 
-        var options = ((AbstractStep<?>) step).getOptions();
-        if (options == null) {
-            return false;
-        }
-
-        Object result = options.meta().get("dryRunReady");
-        if (result == null) {
-            return false;
-        }
-        return Boolean.parseBoolean(result.toString());
+        return StepOptionsUtils.isDryRunReady(((AbstractStep<?>) step).getOptions());
     }
 }

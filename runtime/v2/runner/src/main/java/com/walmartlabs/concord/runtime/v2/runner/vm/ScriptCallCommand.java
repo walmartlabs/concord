@@ -70,6 +70,9 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> implements Elemen
 
         ScriptCall call = getStep();
         ScriptCallOptions opts = Objects.requireNonNull(call.getOptions());
+
+        assertScriptDryRunReady(ctx, opts);
+
         Map<String, Object> input = VMUtils.prepareInput(ecf, expressionEvaluator, ctx, opts.input(), opts.inputExpression());
 
         String language = getLanguage(ecf, expressionEvaluator, scriptEvaluator, ctx, call);
@@ -145,5 +148,17 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> implements Elemen
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static void assertScriptDryRunReady(Context ctx, ScriptCallOptions opts) {
+        if (!ctx.processConfiguration().dryRunMode()) {
+            return;
+        }
+
+        if (StepOptionsUtils.isDryRunReady(opts)) {
+            return;
+        }
+
+        throw new IllegalStateException("Dry run mode not supported for this 'script' step");
     }
 }
