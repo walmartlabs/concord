@@ -72,6 +72,7 @@ public class FlowEventsIT extends AbstractTest {
                 .location(9, 7, "concord.yml")
                 .flow("default")
                 .name("log")
+                .method("info")
                 .description("Task: log"));
 
         // task full form:
