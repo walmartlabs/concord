@@ -117,6 +117,7 @@ public class ProcessCardManager {
         return dao.getFormData(cardId);
     }
 
+    @SuppressWarnings("resource")
     public static class Dao extends AbstractDao {
 
         private final ConcordObjectMapper objectMapper;
