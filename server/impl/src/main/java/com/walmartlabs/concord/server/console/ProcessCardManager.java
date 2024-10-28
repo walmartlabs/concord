@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.console;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.jooq.tables.UiProcessCards;
@@ -92,19 +93,19 @@ public class ProcessCardManager {
         return dao.listCards(userId);
     }
 
-    public ProcessCardOperationResponse createOrUpdate(UUID id, UUID projectId, UUID repoId, String name, String entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data) {
+    public ProcessCardOperationResponse createOrUpdate(UUID id, UUID projectId, UUID repoId, String name, Optional<String> entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data) {
         boolean exists = false;
         if (id != null) {
             exists = dao.exists(id);
         }
 
         if (!exists) {
-            UUID resultId = dao.insert(id, projectId, repoId, name, entryPoint, description, icon, form, data);
+            UUID resultId = dao.insert(id, projectId, repoId, name, entryPoint.orElse(Constants.Request.DEFAULT_ENTRY_POINT_NAME), description, icon, form, data);
             return new ProcessCardOperationResponse(resultId, OperationResult.CREATED);
         } else {
             assertAccess(id);
 
-            dao.update(id, projectId, repoId, name, entryPoint, description, icon, form, data);
+            dao.update(id, projectId, repoId, name, entryPoint.orElse(null), description, icon, form, data);
             return new ProcessCardOperationResponse(id, OperationResult.UPDATED);
         }
     }
@@ -143,46 +144,44 @@ public class ProcessCardManager {
         }
 
         public UUID insert(UUID cardId, UUID projectId, UUID repoId, String name, String entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data) {
-            return txResult(tx -> insert(tx, cardId, projectId, repoId, name, entryPoint, description, icon, form, data));
-        }
+            return txResult(tx -> {
+                String sql = tx.insertInto(UI_PROCESS_CARDS)
+                        .columns(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID,
+                                UI_PROCESS_CARDS.PROJECT_ID,
+                                UI_PROCESS_CARDS.REPO_ID,
+                                UI_PROCESS_CARDS.NAME,
+                                UI_PROCESS_CARDS.ENTRY_POINT,
+                                UI_PROCESS_CARDS.DESCRIPTION,
+                                UI_PROCESS_CARDS.ICON,
+                                UI_PROCESS_CARDS.FORM,
+                                UI_PROCESS_CARDS.DATA,
+                                UI_PROCESS_CARDS.OWNER_ID)
+                        .values((UUID)null, null, null, null, null, null, null, null, null, null)
+                        .returning(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
+                        .getSQL();
 
-        private UUID insert(DSLContext tx, UUID cardId, UUID projectId, UUID repoId, String name, String entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data) {
-            String sql = tx.insertInto(UI_PROCESS_CARDS)
-                    .columns(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID,
-                            UI_PROCESS_CARDS.PROJECT_ID,
-                            UI_PROCESS_CARDS.REPO_ID,
-                            UI_PROCESS_CARDS.NAME,
-                            UI_PROCESS_CARDS.ENTRY_POINT,
-                            UI_PROCESS_CARDS.DESCRIPTION,
-                            UI_PROCESS_CARDS.ICON,
-                            UI_PROCESS_CARDS.FORM,
-                            UI_PROCESS_CARDS.DATA,
-                            UI_PROCESS_CARDS.OWNER_ID)
-                    .values((UUID)null, null, null, null, null, null, null, null, null, null)
-                    .returning(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
-                    .getSQL();
+                return tx.connectionResult(conn -> {
+                    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                        ps.setObject(1, cardId == null ? UUID.randomUUID() : cardId);
+                        ps.setObject(2, projectId);
+                        ps.setObject(3, repoId);
+                        ps.setString(4, name);
+                        ps.setString(5, entryPoint);
+                        ps.setString(6, description);
+                        ps.setBinaryStream(7, icon);
+                        ps.setBinaryStream(8, form);
+                        ps.setObject(9, data != null ? objectMapper.toJSONB(data).data() : null);
+                        ps.setObject(10, UserPrincipal.assertCurrent().getId());
 
-            return tx.connectionResult(conn -> {
-                try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setObject(1, cardId == null ? UUID.randomUUID() : cardId);
-                    ps.setObject(2, projectId);
-                    ps.setObject(3, repoId);
-                    ps.setString(4, name);
-                    ps.setString(5, entryPoint);
-                    ps.setString(6, description);
-                    ps.setBinaryStream(7, icon);
-                    ps.setBinaryStream(8, form);
-                    ps.setObject(9, data != null ? objectMapper.toJSONB(data).data() : null);
-                    ps.setObject(10, UserPrincipal.assertCurrent().getId());
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (!rs.next()) {
+                                throw new RuntimeException("Can't insert process card");
+                            }
 
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (!rs.next()) {
-                            throw new RuntimeException("Can't insert process card");
+                            return UUID.fromString(rs.getString(1));
                         }
-
-                        return UUID.fromString(rs.getString(1));
                     }
-                }
+                });
             });
         }
 
