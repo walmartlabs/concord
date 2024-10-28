@@ -4,6 +4,8 @@
 
 ## Changed
 
+- runtime-v2: log task method name in event
+([#1006](https://github.com/walmartlabs/concord/pull/1006));
 - runtime-v2: flush events on process error 
 ([#1001](https://github.com/walmartlabs/concord/pull/1001));
 - concord-server: remove resteasy-guice dependency
