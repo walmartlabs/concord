@@ -19,5 +19,6 @@
         <module>sdk</module>
         <module>model</module>
         <module>runner</module>
+        <module>runner-test</module>
     </modules>
 </project>

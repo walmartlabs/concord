@@ -235,6 +235,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.walmartlabs.concord.runtime.v2</groupId>
+                <artifactId>concord-runner-v2-test</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.walmartlabs.concord.it</groupId>
                 <artifactId>concord-common-it</artifactId>
                 <version>${project.version}</version>
