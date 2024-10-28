@@ -401,7 +401,7 @@ public class ProcessManager {
             throw e;
         } catch (Exception e) {
             log.error("start ['{}'] -> error starting the process", processKey, e);
-            throw new ProcessException(processKey, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
+            throw new ProcessException(processKey, "Error starting the process: " + e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
         }
 
         UUID instanceId = processKey.getInstanceId();
