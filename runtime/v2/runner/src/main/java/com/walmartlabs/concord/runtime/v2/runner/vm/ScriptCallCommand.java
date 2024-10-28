@@ -155,7 +155,7 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> implements Elemen
             return;
         }
 
-        if (StepOptionsUtils.isDryRunReady(opts)) {
+        if (StepOptionsUtils.isDryRunReady(ctx, opts)) {
             return;
         }
 

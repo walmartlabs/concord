@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,10 +21,11 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 
 public final class StepOptionsUtils {
 
-    public static boolean isDryRunReady(StepOptions options) {
+    public static boolean isDryRunReady(Context ctx, StepOptions options) {
         if (options == null) {
             return false;
         }
@@ -33,7 +34,19 @@ public final class StepOptionsUtils {
         if (result == null) {
             return false;
         }
-        return Boolean.parseBoolean(result.toString());
+        if (result instanceof Boolean) {
+            return (Boolean) result;
+        }
+
+        Object evalResult = ctx.eval(result.toString(), Object.class);
+        if (evalResult == null) {
+            return false;
+        }
+        if (evalResult instanceof Boolean) {
+            return (Boolean) evalResult;
+        }
+
+        return Boolean.parseBoolean(evalResult.toString());
     }
 
     private StepOptionsUtils() {

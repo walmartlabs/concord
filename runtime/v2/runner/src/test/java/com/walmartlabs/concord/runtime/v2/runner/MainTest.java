@@ -1709,4 +1709,16 @@ public class MainTest extends AbstractTest {
         assertLog(log, ".*value: myValue2.*");
         assertLog(log, ".*value: myValue3.*");
     }
+
+    @Test
+    public void dryRunReadyAsExpression() throws Exception {
+        deploy("dryRunReadyAsExpression");
+
+        save(ProcessConfiguration.builder()
+                .dryRunMode(true)
+                .build());
+
+        byte[] log = run();
+
+    }
 }

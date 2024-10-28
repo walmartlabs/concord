@@ -85,6 +85,6 @@ public class TaskV2Provider implements TaskProvider {
             return false;
         }
 
-        return StepOptionsUtils.isDryRunReady(((AbstractStep<?>) step).getOptions());
+        return StepOptionsUtils.isDryRunReady(ctx, ((AbstractStep<?>) step).getOptions());
     }
 }
