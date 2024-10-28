@@ -188,79 +188,74 @@ public class ProcessCardManager {
         public void update(UUID cardId, UUID projectId, UUID repoId, String name,
                            String entryPoint, String description, InputStream icon, InputStream form,
                            Map<String, Object> data) {
-            tx(tx -> update(tx, cardId, projectId, repoId, name, entryPoint, description, icon, form, data));
-        }
+            tx(tx -> {
+                List<Object> params = new ArrayList<>();
+                UpdateSetStep<UiProcessCardsRecord> q = tx.update(UI_PROCESS_CARDS);
 
-        public void update(DSLContext tx, UUID cardId, UUID projectId, UUID repoId, String name,
-                           String entryPoint, String description, InputStream icon, InputStream form,
-                           Map<String, Object> data) {
-
-            List<Object> params = new ArrayList<>();
-            UpdateSetStep<UiProcessCardsRecord> q = tx.update(UI_PROCESS_CARDS);
-
-            if (projectId != null) {
-                q.set(UI_PROCESS_CARDS.PROJECT_ID, (UUID)null);
-                params.add(projectId);
-            }
-
-            if (repoId != null) {
-                q.set(UI_PROCESS_CARDS.REPO_ID, (UUID)null);
-                params.add(repoId);
-            }
-
-            if (name != null) {
-                q.set(UI_PROCESS_CARDS.NAME, (String)null);
-                params.add(name);
-            }
-
-            if (entryPoint != null) {
-                q.set(UI_PROCESS_CARDS.ENTRY_POINT, (String)null);
-                params.add(entryPoint);
-            }
-
-            if (description != null) {
-                q.set(UI_PROCESS_CARDS.DESCRIPTION, (String)null);
-                params.add(description);
-            }
-
-            if (icon != null) {
-                q.set(UI_PROCESS_CARDS.ICON, (byte[]) null);
-                params.add(icon);
-            }
-
-            if (form != null) {
-                q.set(UI_PROCESS_CARDS.FORM, (byte[])null);
-                params.add(form);
-            }
-
-            if (data != null) {
-                q.set(UI_PROCESS_CARDS.DATA, (JSONB)null);
-                params.add(objectMapper.toJSONB(data).data());
-            }
-
-            if (params.isEmpty()) {
-                return;
-            }
-
-            String sql = q.set(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID, cardId)
-                    .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(cardId))
-                    .getSQL();
-            params.add(cardId);
-            params.add(cardId);
-
-            tx.connection(conn -> {
-                try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    for (int i = 0; i < params.size(); i++) {
-                        Object p = params.get(i);
-                        if (p instanceof InputStream) {
-                            ps.setBinaryStream(i + 1, (InputStream) p);
-                        } else {
-                            ps.setObject(i + 1, p);
-                        }
-                    }
-
-                    ps.executeUpdate();
+                if (projectId != null) {
+                    q.set(UI_PROCESS_CARDS.PROJECT_ID, (UUID) null);
+                    params.add(projectId);
                 }
+
+                if (repoId != null) {
+                    q.set(UI_PROCESS_CARDS.REPO_ID, (UUID) null);
+                    params.add(repoId);
+                }
+
+                if (name != null) {
+                    q.set(UI_PROCESS_CARDS.NAME, (String) null);
+                    params.add(name);
+                }
+
+                if (entryPoint != null) {
+                    q.set(UI_PROCESS_CARDS.ENTRY_POINT, (String) null);
+                    params.add(entryPoint);
+                }
+
+                if (description != null) {
+                    q.set(UI_PROCESS_CARDS.DESCRIPTION, (String) null);
+                    params.add(description);
+                }
+
+                if (icon != null) {
+                    q.set(UI_PROCESS_CARDS.ICON, (byte[]) null);
+                    params.add(icon);
+                }
+
+                if (form != null) {
+                    q.set(UI_PROCESS_CARDS.FORM, (byte[]) null);
+                    params.add(form);
+                }
+
+                if (data != null) {
+                    q.set(UI_PROCESS_CARDS.DATA, (JSONB) null);
+                    params.add(objectMapper.toJSONB(data).data());
+                }
+
+                if (params.isEmpty()) {
+                    return;
+                }
+
+                String sql = q.set(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID, cardId)
+                        .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(cardId))
+                        .getSQL();
+                params.add(cardId);
+                params.add(cardId);
+
+                tx.connection(conn -> {
+                    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                        for (int i = 0; i < params.size(); i++) {
+                            Object p = params.get(i);
+                            if (p instanceof InputStream) {
+                                ps.setBinaryStream(i + 1, (InputStream) p);
+                            } else {
+                                ps.setObject(i + 1, p);
+                            }
+                        }
+
+                        ps.executeUpdate();
+                    }
+                });
             });
         }
 
