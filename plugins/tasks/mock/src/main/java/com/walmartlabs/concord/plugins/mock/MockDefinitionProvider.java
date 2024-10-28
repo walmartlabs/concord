@@ -22,36 +22,55 @@ package com.walmartlabs.concord.plugins.mock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import com.walmartlabs.concord.sdk.MapUtils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Singleton
 public class MockDefinitionProvider {
 
+    private final ObjectMapper objectMapper;
+
     @Inject
-    public MockDefinitionProvider() {
+    public MockDefinitionProvider(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
-    public synchronized MockDefinition get(Context ctx, String taskName) {
-        List<Map<String, Object>> mocks = ctx.variables().getList("mocks", Collections.emptyList());
-        for (Iterator<Map<String, Object>> iterator = mocks.iterator(); iterator.hasNext(); ) {
-            Map<String, Object> mock = iterator.next();
+    public MockDefinition find(Context ctx, String taskName, Variables input) {
+        List<Map<String, Object>> mocks = mocks(ctx);
+        List<MockDefinition> candidates = new ArrayList<>();
+        for (Map<String, Object> mock : mocks) {
             String name = MapUtils.assertString(mock, "name");
-            boolean permanent = MapUtils.getBoolean(mock, "permanent", false);
-            if (name.equals(taskName)) {
-                if (!permanent) {
-                    iterator.remove();
-                }
-
-                return new ObjectMapper().convertValue(mock, MockDefinition.class);
+            Map<String, Object> in = MapUtils.getMap(mock, "in", Map.of());
+            if (taskName.equals(name) && ArgsMatcher.match(input.toMap(), in)) {
+                candidates.add(objectMapper.convertValue(mock, MockDefinition.class));
             }
         }
-        return null;
+
+        if (candidates.isEmpty()) {
+            return null;
+        } else if (candidates.size() == 1) {
+            return candidates.get(0);
+        }
+
+        throw new UserDefinedException("Too many mocks: " + candidates);
+    }
+
+    public boolean isTaskMocked(Context ctx, String taskName) {
+        for (Map<String, Object> mock : mocks(ctx)) {
+            String name = MapUtils.assertString(mock, "name");
+            if (taskName.equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<Map<String, Object>> mocks(Context ctx) {
+        return ctx.variables().getList("mocks", Collections.emptyList());
     }
 }

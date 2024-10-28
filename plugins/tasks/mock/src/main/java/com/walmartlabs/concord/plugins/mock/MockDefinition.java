@@ -28,18 +28,6 @@ import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Map;
 
-/**
-    mocks:
-      - name: "http"
-        permanent: true
-        in:
-          url: ".*"
-          method: "POST"
-        out:
-          ok: true
-          statusCode: 200
- */
-
 @Value.Immutable
 @Value.Style(jdkOnly = true)
 @JsonSerialize(as = ImmutableMockDefinition.class)
@@ -56,11 +44,6 @@ public interface MockDefinition {
     @Value.Default
     default Map<String, Object> out() {
         return Collections.emptyMap();
-    }
-
-    @Value.Default
-    default boolean permanent() {
-        return false;
     }
 
     @Nullable
