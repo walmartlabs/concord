@@ -26,7 +26,6 @@ import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
@@ -231,12 +230,29 @@ public class ConfigurationProcessor implements PayloadProcessor {
     }
 
     private void processDryRunModeConfiguration(Payload payload, Map<String, Object> m) {
-        Object dryRunMode = m.get(Constants.Request.DRY_RUN_MODE_KEY);
-        if (dryRunMode instanceof String) {
-            dryRunMode = Boolean.parseBoolean((String) dryRunMode);
-            m.put(Constants.Request.DRY_RUN_MODE_KEY, dryRunMode);
+        Boolean dryRunMode = getBoolean(payload, m, Constants.Request.DRY_RUN_MODE_KEY);
+        if (dryRunMode == null) {
+            return;
         }
+        m.put(Constants.Request.DRY_RUN_MODE_KEY, dryRunMode);
+        if (dryRunMode) {
+            logManager.info(payload.getProcessKey(), "Dry-run mode: true");
+        }
+    }
 
-        logManager.info(payload.getProcessKey(), "Dry run mode: {}", MapUtils.getBoolean(m, Constants.Request.DRY_RUN_MODE_KEY, false));
+    private Boolean getBoolean(Payload payload, Map<String, Object> m, String key) {
+        Object value = m.get(key);
+        if (value == null) {
+            return null;
+        } else if (value instanceof Boolean booleanValue) {
+            return booleanValue;
+        } else if (value instanceof String stringValue) {
+            if ("true".equalsIgnoreCase(stringValue)) {
+                return true;
+            } else if ("false".equalsIgnoreCase(stringValue)) {
+                return false;
+            }
+        }
+        throw new ProcessException(payload.getProcessKey(), String.format("Invalid '%s' mode value type. Expected 'true|false', got: '%s'", key, value), Status.BAD_REQUEST);
     }
 }
