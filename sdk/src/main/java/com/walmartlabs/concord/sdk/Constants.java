@@ -118,7 +118,7 @@ public class Constants {
         public static final String DEFAULT_ENTRY_POINT_NAME = "default";
 
         /**
-         * Run process in dry run mode?.
+         * Run process in dry-run mode?.
          */
         public static final String DRY_RUN_MODE_KEY = "dryRunMode";
 

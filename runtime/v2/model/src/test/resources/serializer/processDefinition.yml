@@ -1,6 +1,6 @@
 configuration:
   runtime: "concord-v2"
-  debug: true
+  debug: false
   entryPoint: "default"
   events:
     recordEvents: true

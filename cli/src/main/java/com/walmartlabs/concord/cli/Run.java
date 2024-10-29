@@ -128,7 +128,7 @@ public class Run implements Callable<Integer> {
     @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")
     Path sourceDir = Paths.get(System.getProperty("user.dir"));
 
-    @Option(names = {"--dry-run"}, description = "execute process in dry run mode?")
+    @Option(names = {"--dry-run"}, description = "execute process in dry-run mode?")
     boolean dryRunMode = false;
 
     @Override
