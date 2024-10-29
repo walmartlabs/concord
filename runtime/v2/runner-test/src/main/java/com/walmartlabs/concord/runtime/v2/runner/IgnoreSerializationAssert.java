@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.boot.filters;
+package com.walmartlabs.concord.runtime.v2.runner;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2024 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,19 +20,12 @@ package com.walmartlabs.concord.server.boot.filters;
  * =====
  */
 
-import org.apache.shiro.authc.AuthenticationToken;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import java.io.IOException;
-
-public interface AuthenticationHandler {
-
-    default AuthenticationToken createToken(ServletRequest request, ServletResponse response) {
-        return null;
-    }
-
-    default boolean onAccessDenied(ServletRequest request, ServletResponse response) throws IOException {
-        return false;
-    }
+@Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface IgnoreSerializationAssert {
 }

@@ -24,21 +24,29 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.ReentrantTaskExample;
 import com.walmartlabs.concord.runtime.v2.runner.vm.LoggedException;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import static com.walmartlabs.concord.runtime.v2.runner.TestRuntimeV2.*;
 import static java.util.regex.Pattern.quote;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class MainTest extends AbstractTest {
+public class MainTest  {
+
+    @RegisterExtension
+    private static final TestRuntimeV2 runtime = new TestRuntimeV2();
 
     @Test
     public void testVariablesAfterResume() throws Exception {
@@ -48,10 +56,10 @@ public class MainTest extends AbstractTest {
                 .build());
 
         byte[] log = run();
-        assertLog(log, ".*workDir1: " + workDir.toAbsolutePath() + ".*");
-        assertLog(log, ".*workDir3: " + workDir.toAbsolutePath() + ".*");
+        assertLog(log, ".*workDir1: " + runtime.workDir().toAbsolutePath() + ".*");
+        assertLog(log, ".*workDir3: " + runtime.workDir().toAbsolutePath() + ".*");
 
-        List<Form> forms = formService.list();
+        List<Form> forms = runtime.formService().list();
         assertEquals(1, forms.size());
 
         Form myForm = forms.get(0);
@@ -63,12 +71,12 @@ public class MainTest extends AbstractTest {
         data.put("fullName", "John Smith");
 
         Path newWorkDir = Files.createTempDirectory("test-new");
-        IOUtils.copy(workDir, newWorkDir);
-        workDir = newWorkDir;
+        IOUtils.copy(runtime.workDir(), newWorkDir);
+        runtime.setWorkDir(newWorkDir);
 
         log = resume(myForm.eventName(), ProcessConfiguration.builder().arguments(Collections.singletonMap("myForm", data)).build());
-        assertLog(log, ".*workDir4: " + workDir.toAbsolutePath() + ".*");
-        assertLog(log, ".*workDir2: " + workDir.toAbsolutePath() + ".*");
+        assertLog(log, ".*workDir4: " + runtime.workDir().toAbsolutePath() + ".*");
+        assertLog(log, ".*workDir2: " + runtime.workDir().toAbsolutePath() + ".*");
     }
 
     @Test
@@ -85,7 +93,7 @@ public class MainTest extends AbstractTest {
         assertLog(log, ".*" + Pattern.quote("defaultsMap:{a=a-value}") + ".*");
         assertLog(log, ".*k: \"value\".*");
 
-        verify(processStatusCallback, times(1)).onRunning(instanceId);
+        verify(runtime.processStatusCallback(), times(1)).onRunning(runtime.instanceId());
     }
 
     @Test
@@ -98,7 +106,7 @@ public class MainTest extends AbstractTest {
         byte[] log = run();
         assertLog(log, ".*flowName in inner flow: 'This is MY variable'.*");
 
-        verify(processStatusCallback, times(1)).onRunning(instanceId);
+        verify(runtime.processStatusCallback(), times(1)).onRunning(runtime.instanceId());
     }
 
     @Test
@@ -114,8 +122,8 @@ public class MainTest extends AbstractTest {
         } catch (Exception e) {
             // ignore
         }
-        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 9, col: 7, thread: 0, flow: flowB") + ".*");
-        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA") + ".*");
+        assertLog(runtime.lastLog(), ".*" + Pattern.quote("(concord.yml) @ line: 9, col: 7, thread: 0, flow: flowB") + ".*");
+        assertLog(runtime.lastLog(), ".*" + Pattern.quote("(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA") + ".*");
     }
 
     @Test
@@ -131,10 +139,10 @@ public class MainTest extends AbstractTest {
         } catch (Exception e) {
             // ignore
         }
-        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 10, col: 7, thread: 1, flow: flowB") + ".*");
-        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 4, col: 11, thread: 1, flow: flowA") + ".*");
 
-        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 5, col: 11, thread: 2, flow: flowB") + ".*");
+        assertLog(runtime.lastLog(), ".*" + Pattern.quote("(concord.yml) @ line: 10, col: 7, thread: 1, flow: flowB") + ".*");
+        assertLog(runtime.lastLog(), ".*" + Pattern.quote("(concord.yml) @ line: 4, col: 11, thread: 1, flow: flowA") + ".*");
+        assertLog(runtime.lastLog(), ".*" + Pattern.quote("(concord.yml) @ line: 5, col: 11, thread: 2, flow: flowB") + ".*");
     }
 
     @Test
@@ -150,13 +158,13 @@ public class MainTest extends AbstractTest {
         } catch (Exception e) {
             // ignore
         }
-        assertLog(lastLog, ".*" + Pattern.quote("in flowA") + ".*");
+        assertLog(runtime.lastLog(), ".*" + Pattern.quote("in flowA") + ".*");
 
         String expected = "Call stack:\n" +
                 "(concord.yml) @ line: 13, col: 7, thread: 2, flow: flowB\n" +
                 "(concord.yml) @ line: 3, col: 7, thread: 2, flow: flowA";
 
-        String logString = new String(lastLog);
+        String logString = new String(runtime.lastLog());
         assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
     }
 
@@ -183,7 +191,7 @@ public class MainTest extends AbstractTest {
                 "(concord.yml) @ line: 8, col: 7, thread: 0, flow: flowB\n" +
                 "(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA";
 
-        String logString = new String(lastLog);
+        String logString = new String(runtime.lastLog());
         assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
         assertTrue(logString.contains(expected1), "expected log contains: " + expected1 + ", actual: " + logString);
     }
@@ -209,7 +217,7 @@ public class MainTest extends AbstractTest {
                 "\\(concord.yml\\) @ line: 3, col: 7, thread: 0, flow: flow0.*";
         Pattern expectedPattern = Pattern.compile(expected, Pattern.MULTILINE|Pattern.DOTALL|Pattern.UNIX_LINES);
 
-        String logString = new String(lastLog);
+        String logString = new String(runtime.lastLog());
         assertTrue(expectedPattern.matcher(logString).matches(), "expected log contains: " + expected + ", actual: " + logString);
     }
 
@@ -227,7 +235,7 @@ public class MainTest extends AbstractTest {
             // ignore
         }
 
-        assertNoLog(lastLog, ".*" + Pattern.quote("[ERROR] Call stack:") + ".*");
+        assertNoLog(runtime.lastLog(), ".*" + Pattern.quote("[ERROR] Call stack:") + ".*");
     }
 
     @Test
@@ -243,7 +251,7 @@ public class MainTest extends AbstractTest {
         } catch (Exception e) {
             // ignore
         }
-        assertNoLog(lastLog, ".*" + Pattern.quote("[ERROR] Call stack:") + ".*");
+        assertNoLog(runtime.lastLog(), ".*" + Pattern.quote("[ERROR] Call stack:") + ".*");
     }
 
     @Test
@@ -255,7 +263,7 @@ public class MainTest extends AbstractTest {
         byte[] log = run();
         assertLog(log, ".*Before.*");
 
-        List<Form> forms = formService.list();
+        List<Form> forms = runtime.formService().list();
         assertEquals(1, forms.size());
 
         Form myForm = forms.get(0);
@@ -350,7 +358,7 @@ public class MainTest extends AbstractTest {
             assertTrue(e.getMessage().contains("boom!"));
         }
 
-        assertLog(lastLog, ".*error occurred:.*boom!.*");
+        assertLog(runtime.lastLog(), ".*error occurred:.*boom!.*");
     }
 
     @Test
@@ -364,8 +372,8 @@ public class MainTest extends AbstractTest {
         byte[] log = run();
         assertLog(log, ".*Hello, Concord!.*");
 
-        verify(processStatusCallback, times(1)).onRunning(eq(instanceId));
-        verify(checkpointService, times(1)).upload(any(), any(), eq("A"), any());
+        verify(runtime.processStatusCallback(), times(1)).onRunning(eq(runtime.instanceId()));
+        verify(runtime.checkpointService(), times(1)).upload(any(), any(), eq("A"), any());
     }
 
     @Test
@@ -381,7 +389,7 @@ public class MainTest extends AbstractTest {
             assertEquals("Found forbidden tasks", e.getMessage());
         }
 
-        assertLog(lastLog, ".*forbidden by the task policy.*");
+        assertLog(runtime.lastLog(), ".*forbidden by the task policy.*");
     }
 
     @Test
@@ -406,7 +414,7 @@ public class MainTest extends AbstractTest {
         byte[] log = run();
         assertLog(log, ".*it's clearly non-zero.*");
 
-        verify(processStatusCallback, times(1)).onRunning(eq(instanceId));
+        verify(runtime.processStatusCallback(), times(1)).onRunning(eq(runtime.instanceId()));
     }
 
     @Test
@@ -864,7 +872,7 @@ public class MainTest extends AbstractTest {
         assertLog(log, ".*" + quote("expression out a=a-value, xx=123, zz=10000") + ".*");
         assertLog(log, ".*" + quote("out after suspend: a=aaa-value") + ".*");
 
-        verify(checkpointService, times(1)).upload(any(), any(), eq("A"), any());
+        verify(runtime.checkpointService(), times(1)).upload(any(), any(), eq("A"), any());
     }
 
     @Test
@@ -1068,7 +1076,7 @@ public class MainTest extends AbstractTest {
                 .build());
 
         run();
-        verify(checkpointService, times(1)).upload(any(), any(), eq("test_123"), any());
+        verify(runtime.checkpointService(), times(1)).upload(any(), any(), eq("test_123"), any());
     }
 
     @Test
@@ -1081,17 +1089,17 @@ public class MainTest extends AbstractTest {
 
         run();
 
-        verify(checkpointService, times(1)).upload(any(), any(), eq("first"), any());
-        verify(checkpointService, times(1)).upload(any(), any(), eq("second"), any());
+        verify(runtime.checkpointService(), times(1)).upload(any(), any(), eq("first"), any());
+        verify(runtime.checkpointService(), times(1)).upload(any(), any(), eq("second"), any());
 
-        checkpointService.restore("first", workDir);
+        runtime.checkpointService().restore("first", runtime.workDir());
 
         run();
 
-        assertLogAtLeast(allLogs, 2, ".*#3.*x=124.*");
-        assertLogAtLeast(allLogs, 2, ".*#3.*y=345.*");
+        assertLogAtLeast(runtime.allLogs(), 2, ".*#3.*x=124.*");
+        assertLogAtLeast(runtime.allLogs(), 2, ".*#3.*y=345.*");
 
-        assertLog(allLogs, ".*Event Name: first.*");
+        assertLog(runtime.allLogs(), ".*Event Name: first.*");
     }
 
     @Test
@@ -1101,13 +1109,13 @@ public class MainTest extends AbstractTest {
         save(ProcessConfiguration.builder()
                 .build());
 
-        checkpointService.put("first", Paths.get(MainTest.class.getResource("checkpointRestore2/first_1.103.1.zip").toURI()));
-        checkpointService.restore("first", workDir);
+        runtime.checkpointService().put("first", Paths.get(MainTest.class.getResource("checkpointRestore2/first_1.103.1.zip").toURI()));
+        runtime.checkpointService().restore("first", runtime.workDir());
 
         run();
 
-        assertLog(allLogs, ".*item: one.*");
-        assertLog(allLogs, ".*item: two.*");
+        assertLog(runtime.allLogs(), ".*item: one.*");
+        assertLog(runtime.allLogs(), ".*item: two.*");
     }
 
     @Test
@@ -1168,7 +1176,7 @@ public class MainTest extends AbstractTest {
         byte[] log = run();
         assertLog(log, ".*Before parallel.*");
 
-        List<Form> forms = formService.list();
+        List<Form> forms = runtime.formService().list();
         assertEquals(2, forms.size());
 
         Form form1 = forms.stream()
@@ -1184,7 +1192,7 @@ public class MainTest extends AbstractTest {
 
         // resume the process using the saved form
 
-        Form form2 = formService.list().stream()
+        Form form2 = runtime.formService().list().stream()
                 .filter(f -> "form2".equals(f.name())).findFirst()
                 .orElseThrow(() -> new RuntimeException("form not found"));
         log = resume(form2.eventName(), ProcessConfiguration.builder()
@@ -1234,12 +1242,12 @@ public class MainTest extends AbstractTest {
         assertLog(log, ".*default: default.*");
         assertLog(log, ".*myFlow: myFlow.*");
 
-        checkpointService.restore("first", workDir);
+        runtime.checkpointService().restore("first", runtime.workDir());
 
         run();
 
-        assertLogAtLeast(allLogs, 2, ".*after checkpoint: default.*");
-        assertLogAtLeast(allLogs, 2, ".*current flow name in error block: default.*");
+        assertLogAtLeast(runtime.allLogs(), 2, ".*after checkpoint: default.*");
+        assertLogAtLeast(runtime.allLogs(), 2, ".*current flow name in error block: default.*");
     }
 
     @Test
@@ -1401,7 +1409,7 @@ public class MainTest extends AbstractTest {
             // ignore
         }
 
-        String logString = new String(lastLog);
+        String logString = new String(runtime.lastLog());
         String expected = "[ERROR] (concord.yml): Error @ line: 9, col: 7. Error Parsing: ${str.split('\\n')}. Encountered \"\\'\\\\n\" at line 1, column 13.\n" +
                 "Was expecting one of:\n" +
                 "    \"{\" ...\n" +
@@ -1437,7 +1445,7 @@ public class MainTest extends AbstractTest {
             // ignore
         }
 
-        String logString = new String(lastLog);
+        String logString = new String(runtime.lastLog());
         String expected = "[ERROR] (concord.yml): Error @ line: 7, col: 7. while evaluating expression '${'a' += m.n += 'b'}': ";
 
         assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
@@ -1456,7 +1464,7 @@ public class MainTest extends AbstractTest {
         } catch (Exception e) {
             // ignore
         }
-        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. BOOM"));
+        assertLog(runtime.lastLog(), ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. BOOM"));
     }
 
     @Test
@@ -1474,7 +1482,7 @@ public class MainTest extends AbstractTest {
         }
 
         String expected = "[ERROR] (concord.yml): Error @ line: 3, col: 7. while evaluating expression '${faultyTask.exception('BOOM')}': javax.el.ELException: java.lang.Exception: BOOM";
-        assertLog(lastLog, ".*" + Pattern.quote(expected));
+        assertLog(runtime.lastLog(), ".*" + Pattern.quote(expected));
     }
 
     @Test
@@ -1490,7 +1498,7 @@ public class MainTest extends AbstractTest {
         } catch (Exception e) {
             // ignore
         }
-        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!"));
+        assertLog(runtime.lastLog(), ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!"));
     }
 
     @Test
@@ -1506,7 +1514,7 @@ public class MainTest extends AbstractTest {
         } catch (Exception e) {
             // ignore
         }
-        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. boom!"));
+        assertLog(runtime.lastLog(), ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. boom!"));
     }
 
     @Test
@@ -1522,7 +1530,7 @@ public class MainTest extends AbstractTest {
         } catch (Exception e) {
             // ignore
         }
-        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. boom!"));
+        assertLog(runtime.lastLog(), ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. boom!"));
     }
 
     @Test
@@ -1538,7 +1546,7 @@ public class MainTest extends AbstractTest {
         } catch (Exception e) {
         }
 
-        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 4, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+        assertLog(runtime.lastLog(), ".*" + quote("(concord.yml): Error @ line: 4, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
     }
 
     @Test
@@ -1554,7 +1562,7 @@ public class MainTest extends AbstractTest {
         } catch (Exception e) {
         }
 
-        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+        assertLog(runtime.lastLog(), ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
     }
 
     @Test
@@ -1570,7 +1578,7 @@ public class MainTest extends AbstractTest {
         } catch (Exception e) {
         }
 
-        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+        assertLog(runtime.lastLog(), ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
     }
 
     @Test
@@ -1708,5 +1716,25 @@ public class MainTest extends AbstractTest {
         assertLog(log, ".*value: myValue1.*");
         assertLog(log, ".*value: myValue2.*");
         assertLog(log, ".*value: myValue3.*");
+    }
+
+    private void deploy(String name) throws URISyntaxException, IOException {
+        runtime.deploy(name);
+    }
+
+    private void save(ProcessConfiguration cfg) {
+        runtime.save(cfg);
+    }
+
+    private byte[] run() throws Exception {
+        return runtime.run();
+    }
+
+    private byte[] run(RunnerConfiguration baseCfg) throws Exception {
+        return runtime.run(baseCfg);
+    }
+
+    private byte[] resume(String eventName, ProcessConfiguration cfg) throws Exception {
+        return runtime.resume(eventName, cfg);
     }
 }
