@@ -17,7 +17,9 @@
 - project: update docker-login action in build flow
 ([#1005](https://github.com/walmartlabs/concord/pull/1005));
 - runtime-v2: move tests to separate module
-([#1008](https://github.com/walmartlabs/concord/pull/1008)).
+([#1008](https://github.com/walmartlabs/concord/pull/1008));
+- server: fix ConcordKey validation regex to 128 character limit
+([#1004](https://github.com/walmartlabs/concord/pull/1004)).
 
 ### Breaking
 
