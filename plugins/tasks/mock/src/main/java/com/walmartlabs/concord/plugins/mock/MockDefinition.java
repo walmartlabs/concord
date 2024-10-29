@@ -22,6 +22,8 @@ package com.walmartlabs.concord.plugins.mock;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.walmartlabs.concord.common.AllowNulls;
+import com.walmartlabs.concord.sdk.MapUtils;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
@@ -30,34 +32,39 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-@Value.Immutable
-@Value.Style(jdkOnly = true)
-@JsonSerialize(as = ImmutableMockDefinition.class)
-@JsonDeserialize(as = ImmutableMockDefinition.class)
-public interface MockDefinition {
+public class MockDefinition {
 
-    String name();
+    private final Map<String, Object> definition;
 
-    @Value.Default
-    default Map<String, Object> in() {
-        return Collections.emptyMap();
+    public MockDefinition(Map<String, Object> definition) {
+        this.definition = definition;
     }
 
-    @Value.Default
-    default Map<String, Object> out() {
-        return Collections.emptyMap();
-    }
-    @Nullable
-    String method();
-
-    @Value.Default
-    default List<Object> args() {
-        return List.of();
+    public String name() {
+        return MapUtils.assertString(definition, "name");
     }
 
-    @Nullable
-    Serializable result();
+    public Map<String, Object> input() {
+        return MapUtils.getMap(definition, "in", Map.of());
+    }
 
-    @Nullable
-    String throwError();
+    public Map<String, Object> out() {
+        return MapUtils.getMap(definition, "out", Map.of());
+    }
+
+    public String method() {
+        return MapUtils.getString(definition, "method");
+    }
+
+    public List<Object> args() {
+        return MapUtils.getList(definition, "args", List.of());
+    }
+
+    public Serializable result() {
+        return MapUtils.get(definition, "result", Serializable.class);
+    }
+
+    public String throwError() {
+        return MapUtils.getString(definition, "throwError");
+    }
 }

@@ -20,78 +20,46 @@ package com.walmartlabs.concord.plugins.mock;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.plugins.mock.matcher.ArgsMatcher;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
-import com.walmartlabs.concord.sdk.MapUtils;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 @Singleton
 public class MockDefinitionProvider {
 
-    private final ObjectMapper objectMapper;
-
-    @Inject
-    public MockDefinitionProvider(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
-
     public MockDefinition find(Context ctx, String taskName, Variables input) {
-        List<Map<String, Object>> mocks = mocks(ctx);
-        List<MockDefinition> candidates = new ArrayList<>();
-        for (Map<String, Object> mock : mocks) {
-            String name = MapUtils.assertString(mock, "name");
-            Map<String, Object> in = MapUtils.getMap(mock, "in", Map.of());
-            if (taskName.equals(name) && ArgsMatcher.match(input.toMap(), in)) {
-                candidates.add(objectMapper.convertValue(mock, MockDefinition.class));
-            }
-        }
-
-        if (candidates.isEmpty()) {
-            return null;
-        } else if (candidates.size() == 1) {
-            return candidates.get(0);
-        }
-
-        throw new UserDefinedException("Too many mocks: " + candidates);
+        return findMockDefinitions(ctx, mock ->
+                taskName.equals(mock.name()) && ArgsMatcher.match(input.toMap(), mock.input()));
     }
 
     public MockDefinition find(Context ctx, String taskName, String method, Object[] params) {
-        List<Map<String, Object>> mocks = mocks(ctx);
-        List<MockDefinition> candidates = new ArrayList<>();
-        for (Map<String, Object> mock : mocks) {
-            String name = MapUtils.assertString(mock, "name");
-            List<Object> args = MapUtils.getList(mock, "args", List.of());
-            String expectedMethod = MapUtils.getString(mock, "method");
-            if (taskName.equals(name) && method.equals(expectedMethod) && ArgsMatcher.match(args, Arrays.asList(params))) {
-                candidates.add(objectMapper.convertValue(mock, MockDefinition.class));
-            }
-        }
+        return findMockDefinitions(ctx, mock ->
+                taskName.equals(mock.name()) && method.equals(mock.method()) && ArgsMatcher.match(params, mock.args()));
+    }
 
+    public boolean isTaskMocked(Context ctx, String taskName) {
+        return mocks(ctx).anyMatch(mock -> taskName.equals(mock.name()));
+    }
+
+    private static MockDefinition findMockDefinitions(Context ctx, Predicate<MockDefinition> predicate) {
+        var candidates = mocks(ctx).filter(predicate).toList();
         if (candidates.isEmpty()) {
             return null;
         } else if (candidates.size() == 1) {
             return candidates.get(0);
         }
-
         throw new UserDefinedException("Too many mocks: " + candidates);
     }
 
-    public boolean isTaskMocked(Context ctx, String taskName) {
-        for (Map<String, Object> mock : mocks(ctx)) {
-            String name = MapUtils.assertString(mock, "name");
-            if (taskName.equals(name)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static List<Map<String, Object>> mocks(Context ctx) {
-        return ctx.variables().getList("mocks", Collections.emptyList());
+    @SuppressWarnings("unchecked")
+    private static Stream<MockDefinition> mocks(Context ctx) {
+        return ctx.variables().getList("mocks", List.of()).stream()
+                .map(m -> new MockDefinition((Map<String, Object>) m));
     }
 }

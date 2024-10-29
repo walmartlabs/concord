@@ -21,8 +21,11 @@ package com.walmartlabs.concord.plugins.mock;
  */
 
 import com.walmartlabs.concord.runtime.v2.runner.TestRuntimeV2;
+import kotlin.text.Regex;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.runtime.v2.runner.TestRuntimeV2.assertLog;
 
@@ -45,7 +48,16 @@ public class MainTest {
         runtime.deploy("method-mock");
 
         byte[] log = runtime.run();
-        assertLog(log, ".*The actual task is not being executed; this is a mock.*");
-        assertLog(log, ".*result.ok: true.*");
+        assertLog(log, ".*" + Pattern.quote("The actual 'undefinedTask.myMethod()' is not being executed; this is a mock") + ".*");
+        assertLog(log, ".*result.ok: BOO.*");
+    }
+
+    @Test
+    public void testMethodMockWithAny() throws Exception {
+        runtime.deploy("method-mock-with-any");
+
+        byte[] log = runtime.run();
+        assertLog(log, ".*" + Pattern.quote("The actual 'undefinedTask.myMethod()' is not being executed; this is a mock") + ".*");
+        assertLog(log, ".*result.ok: BOO.*");
     }
 }

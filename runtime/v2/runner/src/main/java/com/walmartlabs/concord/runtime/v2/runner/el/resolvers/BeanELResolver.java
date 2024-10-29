@@ -47,22 +47,23 @@ public class BeanELResolver extends javax.el.BeanELResolver {
         }
 
         try {
-            Object result = null;
-
             var customResult = fromCustomResolvers(base, method, params);
             if (customResult != null) {
                 if (customResult.base() == null && customResult.method() == null) {
-                    result = customResult.value();
+                    context.setPropertyResolved(base, method);
+                    return customResult.value();
                 } else {
                     base = Objects.requireNonNull(customResult.base());
                     method = Objects.requireNonNull(customResult.method());
                 }
-            } else {
-                result = super.invoke(context, base, method, paramTypes, params);
             }
 
-            Method m = ReflectionUtil.findMethod(base.getClass(), method.toString(), paramTypes, params);
-            SensitiveDataProcessor.process(result, m);
+            Object result = super.invoke(context, base, method, paramTypes, params);
+
+            if (context.isPropertyResolved()) {
+                Method m = ReflectionUtil.findMethod(base.getClass(), method.toString(), paramTypes, params);
+                SensitiveDataProcessor.process(result, m);
+            }
 
             return result;
         } catch (javax.el.MethodNotFoundException e) {
@@ -71,12 +72,10 @@ public class BeanELResolver extends javax.el.BeanELResolver {
     }
 
     private CustomBeanELResolver.Result fromCustomResolvers(Object base, Object method, Object[] params) {
-        for (var resolver : customResolvers) {
-            CustomBeanELResolver.Result result = resolver.invoke(base, method.toString(), params);
-            if (result != null) {
-                return result;
-            }
-        }
-        return null;
+        return customResolvers.stream()
+                .map(resolver -> resolver.invoke(base, method.toString(), params))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
     }
 }
