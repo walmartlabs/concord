@@ -34,7 +34,6 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,7 +61,7 @@ public class CryptoTaskV2 implements Task {
 
         ProjectInfo projectInfo = processCfg.projectInfo();
         this.processOrg = projectInfo != null ? projectInfo.orgName() : null;
-        this.dryRunMode = processCfg.dryRunMode();
+        this.dryRunMode = processCfg.dryRun();
     }
 
     @SensitiveData

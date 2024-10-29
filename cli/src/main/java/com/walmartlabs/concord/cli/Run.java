@@ -254,7 +254,7 @@ public class Run implements Callable<Integer> {
         ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(args, profiles), projectInfo(args))
                 .entryPoint(entryPoint)
                 .instanceId(instanceId)
-                .dryRunMode(dryRunMode)
+                .dryRun(dryRunMode)
                 .build();
 
         Injector injector = new InjectorFactory(new WorkingDirectory(targetDir),

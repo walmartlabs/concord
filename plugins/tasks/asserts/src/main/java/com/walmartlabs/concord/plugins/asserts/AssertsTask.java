@@ -111,7 +111,7 @@ public class AssertsTask implements Task {
     }
 
     public void dryRunMode() {
-        if (!context.processConfiguration().dryRunMode()) {
+        if (!context.processConfiguration().dryRun()) {
             throw new UserDefinedException("Expected to run in the dry-run mode, running in the regular mode instead.");
         }
     }

@@ -120,7 +120,7 @@ public class Constants {
         /**
          * Run process in dry-run mode?.
          */
-        public static final String DRY_RUN_MODE_KEY = "dryRunMode";
+        public static final String DRY_RUN_MODE_KEY = "dryRun";
 
         /**
          * Active profiles.

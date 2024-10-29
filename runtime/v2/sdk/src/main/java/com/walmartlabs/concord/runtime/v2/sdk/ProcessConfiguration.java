@@ -54,7 +54,7 @@ public interface ProcessConfiguration extends Serializable {
     }
 
     @Value.Default
-    default boolean dryRunMode() {
+    default boolean dryRun() {
         return false;
     }
 

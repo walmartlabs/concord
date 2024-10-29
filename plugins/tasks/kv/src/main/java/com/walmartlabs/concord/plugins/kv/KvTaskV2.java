@@ -47,7 +47,7 @@ public class KvTaskV2 implements Task {
     public KvTaskV2(ApiClient apiClient, Context context) {
         this.apiClient = apiClient;
         this.processInstanceId = context.processInstanceId();
-        this.dryRunMode = context.processConfiguration().dryRunMode();
+        this.dryRunMode = context.processConfiguration().dryRun();
     }
 
     public void remove(String key) throws Exception {

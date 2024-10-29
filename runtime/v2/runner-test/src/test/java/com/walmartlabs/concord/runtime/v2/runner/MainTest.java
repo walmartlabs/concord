@@ -1723,7 +1723,7 @@ public class MainTest  {
         deploy("dryRunReadyAsExpression");
 
         save(ProcessConfiguration.builder()
-                .dryRunMode(true)
+                .dryRun(true)
                 .build());
 
         byte[] log = run();

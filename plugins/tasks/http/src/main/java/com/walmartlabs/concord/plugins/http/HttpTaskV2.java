@@ -42,7 +42,7 @@ public class HttpTaskV2 implements Task {
     public TaskResult execute(Variables input) throws Exception {
         Configuration config = Configuration.custom().build(context.workingDirectory().toString(), input.toMap(), context.processConfiguration().debug());
 
-        Map<String, Object> response = new HashMap<>(SimpleHttpClient.create(config, context.processConfiguration().dryRunMode()).execute().getResponse());
+        Map<String, Object> response = new HashMap<>(SimpleHttpClient.create(config, context.processConfiguration().dryRun()).execute().getResponse());
         return TaskResult.of((boolean)response.remove("success"), (String)response.remove("errorString"), response);
     }
 }

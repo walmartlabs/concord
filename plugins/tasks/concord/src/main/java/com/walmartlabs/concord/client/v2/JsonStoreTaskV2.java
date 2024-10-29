@@ -41,7 +41,7 @@ public class JsonStoreTaskV2 implements Task {
 
     @Inject
     public JsonStoreTaskV2(ApiClient apiClient, Context context) {
-        this.delegate = new JsonStoreTaskCommon(apiClient, context.processConfiguration().dryRunMode());
+        this.delegate = new JsonStoreTaskCommon(apiClient, context.processConfiguration().dryRun());
         this.processOrg = context.processConfiguration().projectInfo().orgName();
     }
 

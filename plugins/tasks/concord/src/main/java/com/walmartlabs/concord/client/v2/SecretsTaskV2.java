@@ -40,7 +40,7 @@ public class SecretsTaskV2 implements Task {
     public SecretsTaskV2(ApiClient apiClient, Context context) {
         this.delegate = new SecretsTaskCommon(apiClient,
                 context.processConfiguration().projectInfo().orgName(),
-                context.processConfiguration().dryRunMode());
+                context.processConfiguration().dryRun());
     }
 
     @Override

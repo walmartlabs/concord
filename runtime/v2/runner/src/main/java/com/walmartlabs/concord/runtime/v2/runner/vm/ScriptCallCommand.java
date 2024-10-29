@@ -151,7 +151,7 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> implements Elemen
     }
 
     private static void assertScriptDryRunReady(Context ctx, ScriptCallOptions opts) {
-        if (!ctx.processConfiguration().dryRunMode()) {
+        if (!ctx.processConfiguration().dryRun()) {
             return;
         }
 
