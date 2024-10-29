@@ -25,9 +25,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import javax.validation.constraints.Null;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 /**
