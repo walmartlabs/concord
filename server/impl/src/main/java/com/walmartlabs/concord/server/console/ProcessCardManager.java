@@ -30,6 +30,7 @@ import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.UiProcessCardsRecord;
 import com.walmartlabs.concord.server.org.EntityOwner;
 import com.walmartlabs.concord.server.org.ResourceAccessUtils;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -94,11 +95,14 @@ public class ProcessCardManager {
     }
 
     public ProcessCardOperationResponse createOrUpdate(UUID id, UUID projectId, UUID repoId, String name, Optional<String> entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data) {
-        boolean exists = false;
-        if (id != null) {
-            exists = dao.exists(id);
+        if (id == null) {
+            if (projectId == null) {
+                throw new ConcordApplicationException("projectId or projectName is required");
+            }
+            id = dao.getIdByName(projectId, name).orElse(null);
         }
 
+        boolean exists = id != null;
         if (!exists) {
             UUID resultId = dao.insert(id, projectId, repoId, name, entryPoint.orElse(Constants.Request.DEFAULT_ENTRY_POINT_NAME), description, icon, form, data);
             return new ProcessCardOperationResponse(resultId, OperationResult.CREATED);
@@ -143,6 +147,14 @@ public class ProcessCardManager {
                     .fetchOne(this::toEntry);
         }
 
+        public Optional<UUID> getIdByName(UUID projectId, String name) {
+            return dsl().select(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
+                    .from(UI_PROCESS_CARDS)
+                    .where(UI_PROCESS_CARDS.PROJECT_ID.eq(projectId)
+                            .and(UI_PROCESS_CARDS.NAME.eq(name)))
+                    .fetchOptional(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID);
+        }
+
         public UUID insert(UUID cardId, UUID projectId, UUID repoId, String name, String entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data) {
             return txResult(tx -> {
                 String sql = tx.insertInto(UI_PROCESS_CARDS)
@@ -156,7 +168,7 @@ public class ProcessCardManager {
                                 UI_PROCESS_CARDS.FORM,
                                 UI_PROCESS_CARDS.DATA,
                                 UI_PROCESS_CARDS.OWNER_ID)
-                        .values((UUID)null, null, null, null, null, null, null, null, null, null)
+                        .values((UUID) null, null, null, null, null, null, null, null, null, null)
                         .returning(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
                         .getSQL();
 
@@ -263,13 +275,6 @@ public class ProcessCardManager {
             tx(tx -> tx.delete(UI_PROCESS_CARDS)
                     .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(id))
                     .execute());
-        }
-
-        public boolean exists(UUID id) {
-            return txResult(tx -> tx.select(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
-                    .from(UI_PROCESS_CARDS)
-                    .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(id))
-                    .fetchOne(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)) != null;
         }
 
         public void rewriteTeamAccess(DSLContext tx, UUID cardId, List<UUID> teamIds) {
