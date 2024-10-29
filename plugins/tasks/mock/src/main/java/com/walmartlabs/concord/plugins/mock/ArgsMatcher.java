@@ -22,11 +22,16 @@ package com.walmartlabs.concord.plugins.mock;
 
 import com.walmartlabs.concord.common.Matcher;
 
+import java.util.List;
 import java.util.Map;
 
 public final class ArgsMatcher {
 
     public static boolean match(Map<String, Object> input, Map<String, Object> mockInput) {
+        return Matcher.matches(input, mockInput);
+    }
+
+    public static boolean match(List<Object> input, List<Object> mockInput) {
         return Matcher.matches(input, mockInput);
     }
 

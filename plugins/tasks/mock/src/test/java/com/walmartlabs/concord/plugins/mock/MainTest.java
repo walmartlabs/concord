@@ -39,4 +39,13 @@ public class MainTest {
         assertLog(log, ".*The actual task is not being executed; this is a mock.*");
         assertLog(log, ".*result.ok: true.*");
     }
+
+    @Test
+    public void testMethodMock() throws Exception {
+        runtime.deploy("method-mock");
+
+        byte[] log = runtime.run();
+        assertLog(log, ".*The actual task is not being executed; this is a mock.*");
+        assertLog(log, ".*result.ok: true.*");
+    }
 }

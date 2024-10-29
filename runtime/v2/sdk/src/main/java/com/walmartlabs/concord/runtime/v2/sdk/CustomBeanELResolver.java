@@ -3,6 +3,7 @@ package com.walmartlabs.concord.runtime.v2.sdk;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.util.Objects;
 
 public interface CustomBeanELResolver {
 
@@ -29,8 +30,8 @@ public interface CustomBeanELResolver {
 
         static Result of(Object base, String method) {
             return ImmutableResult.builder()
-                    .base(base)
-                    .method(method)
+                    .base(Objects.requireNonNull(base))
+                    .method(Objects.requireNonNull(method))
                     .build();
         }
     }

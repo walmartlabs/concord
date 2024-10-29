@@ -36,6 +36,10 @@ public class BeanELResolver extends javax.el.BeanELResolver {
 
     private final List<CustomBeanELResolver> customResolvers;
 
+    public BeanELResolver(List<CustomBeanELResolver> customResolvers) {
+        this.customResolvers = customResolvers;
+    }
+
     @Override
     public Object invoke(ELContext context, Object base, Object method, Class<?>[] paramTypes, Object[] params) {
         if (base == null || method == null) {
@@ -45,7 +49,7 @@ public class BeanELResolver extends javax.el.BeanELResolver {
         try {
             Object result = null;
 
-            var customResult = fromCustomResolvers(base, method, paramTypes);
+            var customResult = fromCustomResolvers(base, method, params);
             if (customResult != null) {
                 if (customResult.base() == null && customResult.method() == null) {
                     result = customResult.value();

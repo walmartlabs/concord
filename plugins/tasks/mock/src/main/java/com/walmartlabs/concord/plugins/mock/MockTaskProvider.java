@@ -24,6 +24,7 @@ package com.walmartlabs.concord.plugins.mock;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import org.eclipse.sisu.Priority;
 
 import javax.inject.Inject;
@@ -62,7 +63,7 @@ public class MockTaskProvider implements TaskProvider {
                         return t;
                     }
                 }
-                return null;
+                throw new UserDefinedException("Task not found: '" + key + "'");
             });
         }
 

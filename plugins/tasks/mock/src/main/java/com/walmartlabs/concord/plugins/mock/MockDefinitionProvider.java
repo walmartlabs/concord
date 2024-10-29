@@ -60,6 +60,27 @@ public class MockDefinitionProvider {
         throw new UserDefinedException("Too many mocks: " + candidates);
     }
 
+    public MockDefinition find(Context ctx, String taskName, String method, Object[] params) {
+        List<Map<String, Object>> mocks = mocks(ctx);
+        List<MockDefinition> candidates = new ArrayList<>();
+        for (Map<String, Object> mock : mocks) {
+            String name = MapUtils.assertString(mock, "name");
+            List<Object> args = MapUtils.getList(mock, "args", List.of());
+            String expectedMethod = MapUtils.getString(mock, "method");
+            if (taskName.equals(name) && method.equals(expectedMethod) && ArgsMatcher.match(args, Arrays.asList(params))) {
+                candidates.add(objectMapper.convertValue(mock, MockDefinition.class));
+            }
+        }
+
+        if (candidates.isEmpty()) {
+            return null;
+        } else if (candidates.size() == 1) {
+            return candidates.get(0);
+        }
+
+        throw new UserDefinedException("Too many mocks: " + candidates);
+    }
+
     public boolean isTaskMocked(Context ctx, String taskName) {
         for (Map<String, Object> mock : mocks(ctx)) {
             String name = MapUtils.assertString(mock, "name");
@@ -72,9 +93,5 @@ public class MockDefinitionProvider {
 
     private static List<Map<String, Object>> mocks(Context ctx) {
         return ctx.variables().getList("mocks", Collections.emptyList());
-    }
-
-    public MockDefinition find(Context ctx, String taskName, String method, Object[] params) {
-        return null;
     }
 }
