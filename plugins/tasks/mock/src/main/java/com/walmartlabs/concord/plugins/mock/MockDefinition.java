@@ -47,7 +47,6 @@ public interface MockDefinition {
     default Map<String, Object> out() {
         return Collections.emptyMap();
     }
-
     @Nullable
     String method();
 
