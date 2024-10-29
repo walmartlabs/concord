@@ -25,7 +25,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 @Value.Immutable
@@ -47,7 +49,15 @@ public interface MockDefinition {
     }
 
     @Nullable
-    String inputStoreId();
+    String method();
+
+    @Value.Default
+    default List<Object> args() {
+        return List.of();
+    }
+
+    @Nullable
+    Serializable result();
 
     @Nullable
     String throwError();

@@ -73,4 +73,8 @@ public class MockDefinitionProvider {
     private static List<Map<String, Object>> mocks(Context ctx) {
         return ctx.variables().getList("mocks", Collections.emptyList());
     }
+
+    public MockDefinition find(Context ctx, String taskName, String method, Object[] params) {
+        return null;
+    }
 }

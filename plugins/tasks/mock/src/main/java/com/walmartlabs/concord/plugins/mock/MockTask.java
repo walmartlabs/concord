@@ -52,10 +52,6 @@ public class MockTask implements Task {
             return delegate.get().execute(input);
         }
 
-        if (mockDefinition.inputStoreId() != null) {
-            MockInputUtils.storeInput(ctx.execution().state(), mockDefinition.inputStoreId(), input.toMap());
-        }
-
         log.info("The actual task is not being executed; this is a mock");
 
         if (mockDefinition.throwError() != null) {
@@ -65,5 +61,20 @@ public class MockTask implements Task {
         boolean success = MapUtils.getBoolean(mockDefinition.out(), "ok", true);
         return TaskResult.of(success)
                 .values(mockDefinition.out());
+    }
+
+    public CustomBeanELResolver.Result call(String method, Object[] params) {
+        MockDefinition mockDefinition = mockDefinitionProvider.find(ctx, taskName, method, params);
+        if (mockDefinition == null) {
+            return CustomBeanELResolver.Result.of(delegate.get(), method);
+        }
+
+        log.info("The actual '{}.{}()' is not being executed; this is a mock", taskName, method);
+
+        if (mockDefinition.throwError() != null) {
+            throw new UserDefinedException(mockDefinition.throwError());
+        }
+
+        return CustomBeanELResolver.Result.of(mockDefinition.result());
     }
 }
