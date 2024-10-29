@@ -708,7 +708,7 @@ public class ProcessIT extends AbstractTest {
         ConcordProcess proc = concord.processes().start(payload);
         expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
 
-        proc.assertLog(".*Error @ line: 6, col: 7. Dry run mode not supported for this 'script' step.*");
+        proc.assertLog(".*Error @ line: 6, col: 7. Dry-run mode is not supported for this 'script' step.*");
     }
 
     private List<ProcessEventEntry> getProcessElementEvents(ConcordProcess proc) throws Exception {
