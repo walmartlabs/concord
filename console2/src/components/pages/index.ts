@@ -31,6 +31,7 @@ export { default as NewTeamPage } from './NewTeamPage';
 export { default as NotFoundPage } from './NotFoundPage';
 export { default as OrganizationListPage } from './OrganizationListPage';
 export { default as OrganizationPage } from './OrganizationPage';
+export { default as ProcessCardFormPage } from './ProcessCardFormPage';
 export { default as ProcessFormPage } from './ProcessFormPage';
 export { default as ProcessListPage } from './ProcessListPage';
 export { default as ProcessPage } from './ProcessPage';
