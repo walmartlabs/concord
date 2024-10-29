@@ -28,7 +28,9 @@ import java.io.IOException;
 
 public interface AuthenticationHandler {
 
-    AuthenticationToken createToken(ServletRequest request, ServletResponse response);
+    default AuthenticationToken createToken(ServletRequest request, ServletResponse response) {
+        return null;
+    }
 
     default boolean onAccessDenied(ServletRequest request, ServletResponse response) throws IOException {
         return false;
