@@ -26,7 +26,7 @@ package com.walmartlabs.concord.server.boot.resteasy;
 public interface ApiDescriptor {
 
     /**
-     * Path patterns of the API. E.g. {@code "/api/**"} or {@code "/events/foo"}.
+     * Path patterns of the API. E.g. {@code "/api/*"} or {@code "/events/foo"}.
      */
     String[] paths();
 }
