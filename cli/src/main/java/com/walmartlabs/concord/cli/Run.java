@@ -247,6 +247,10 @@ public class Run implements Callable<Integer> {
 
         System.out.println("Starting...");
 
+        if (dryRunMode) {
+            System.out.println("Running in the dry-run mode.");
+        }
+
         ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(args, profiles), projectInfo(args))
                 .entryPoint(entryPoint)
                 .instanceId(instanceId)
