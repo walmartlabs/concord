@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.mock;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,17 +30,5 @@ public class MockBeanELResolver implements CustomBeanELResolver {
             return mockTask.call(method, params);
         }
         return null;
-//
-//        if (base != null && "com.walmartlabs.concord.plugins.mock.VerifyTask$Mock".equals(base.getClass().getName())) {
-//            paramTypes = new Class[2];
-//            paramTypes[0] = String.class;
-//            paramTypes[1] = List.class;
-//
-//            Object[] newParams = new Object[2];
-//            newParams[0] = method;
-//            newParams[1] = Arrays.asList(params);
-//            method = "verify";
-//            params = newParams;
-//        }
     }
 }
