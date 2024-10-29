@@ -43,7 +43,7 @@ public class JsonStoreIT extends AbstractServerIT {
             fail("exception expected");
         } catch (ApiException e) {
             assertEquals(400, e.getCode());
-            assertEquals("[{\"id\":\"ImmutableJsonStoreRequest.createOrUpdate.arg1.name\",\"message\":\"must match \\\"^[0-9a-zA-Z][0-9a-zA-Z_@.\\\\-~]{2,128}$\\\"\"}]", e.getResponseBody());
+            assertEquals("[{\"id\":\"ImmutableJsonStoreRequest.createOrUpdate.arg1.name\",\"message\":\"must match \\\"^[0-9a-zA-Z][0-9a-zA-Z_@.\\\\-~]{2,127}$\\\"\"}]", e.getResponseBody());
         }
     }
 
