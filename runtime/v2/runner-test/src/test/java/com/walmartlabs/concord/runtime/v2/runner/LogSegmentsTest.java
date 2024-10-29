@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,19 +24,27 @@ import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.ReentrantTaskExample;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.walmartlabs.concord.runtime.v2.runner.TestRuntimeV2.assertLog;
+import static com.walmartlabs.concord.runtime.v2.runner.TestRuntimeV2.assertMultiLineLog;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
-public class LogSegmentsTest extends AbstractTest {
+public class LogSegmentsTest {
+
+    @RegisterExtension
+    private static final TestRuntimeV2 runtime = new TestRuntimeV2();
 
     private static final ThreadLocal<byte[]> logWithoutSegmentsHolder = new ThreadLocal<>();
 
@@ -68,8 +76,8 @@ public class LogSegmentsTest extends AbstractTest {
             // ignore
         }
 
-        assertSegmentLog(lastLog, 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. BOOM");
-        assertSegmentStatusError(lastLog, 1);
+        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. BOOM");
+        assertSegmentStatusError(runtime.lastLog(), 1);
         assertNoMoreSegments();
     }
 
@@ -87,23 +95,23 @@ public class LogSegmentsTest extends AbstractTest {
             // ignore
         }
 
-        assertSegmentLog(lastLog, 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
-        assertSegmentStatusError(lastLog, 1);
+        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentStatusError(runtime.lastLog(), 1);
 
-        assertSegmentLog(lastLog, 2, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
-        assertSegmentStatusError(lastLog, 2);
+        assertSegmentLog(runtime.lastLog(), 2, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentStatusError(runtime.lastLog(), 2);
 
-        assertSegmentLog(lastLog, 3, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
-        assertSegmentStatusError(lastLog, 3);
+        assertSegmentLog(runtime.lastLog(), 3, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentStatusError(runtime.lastLog(), 3);
 
-        assertSegmentLog(lastLog, 4, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
-        assertSegmentStatusError(lastLog, 4);
+        assertSegmentLog(runtime.lastLog(), 4, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentStatusError(runtime.lastLog(), 4);
 
-        assertSegmentLog(lastLog, 5, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
-        assertSegmentStatusError(lastLog, 5);
+        assertSegmentLog(runtime.lastLog(), 5, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentStatusError(runtime.lastLog(), 5);
 
-        assertSegmentLog(lastLog, 6, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
-        assertSegmentStatusError(lastLog, 6);
+        assertSegmentLog(runtime.lastLog(), 6, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentStatusError(runtime.lastLog(), 6);
     }
 
     @Test
@@ -222,12 +230,12 @@ public class LogSegmentsTest extends AbstractTest {
             // ignore
         }
 
-        assertSegmentLog(lastLog, 1, "[INFO ] ConditionallyFailTask: ok");
-        assertSegmentStatusOk(lastLog, 1);
+        assertSegmentLog(runtime.lastLog(), 1, "[INFO ] ConditionallyFailTask: ok");
+        assertSegmentStatusOk(runtime.lastLog(), 1);
 
-        assertSegmentLog(lastLog, 2, "[INFO ] ConditionallyFailTask: fail");
-        assertSegmentLog(lastLog, 2, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
-        assertSegmentStatusError(lastLog, 2);
+        assertSegmentLog(runtime.lastLog(), 2, "[INFO ] ConditionallyFailTask: fail");
+        assertSegmentLog(runtime.lastLog(), 2, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
+        assertSegmentStatusError(runtime.lastLog(), 2);
 
         assertNoMoreSegments();
     }
@@ -247,9 +255,9 @@ public class LogSegmentsTest extends AbstractTest {
         }
 
         // invalid task out definition -> log into task segment
-        assertSegmentLog(lastLog, 1, "[INFO ] test");
-        assertSegmentLog(lastLog, 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
-        assertSegmentStatusError(lastLog, 1);
+        assertSegmentLog(runtime.lastLog(), 1, "[INFO ] test");
+        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSegmentStatusError(runtime.lastLog(), 1);
 
         assertNoMoreSegments();
     }
@@ -268,7 +276,7 @@ public class LogSegmentsTest extends AbstractTest {
             // ignore
         }
 
-        assertSystemSegment(lastLog, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
 
         assertNoMoreSegments();
     }
@@ -338,9 +346,9 @@ public class LogSegmentsTest extends AbstractTest {
         }
 
         // task error segment
-        assertSegmentLog(lastLog, 1, "[INFO ] will fail with error");
-        assertSegmentLog(lastLog, 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
-        assertSegmentStatusError(lastLog, 1);
+        assertSegmentLog(runtime.lastLog(), 1, "[INFO ] will fail with error");
+        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentStatusError(runtime.lastLog(), 1);
 
         assertNoMoreSegments();
     }
@@ -381,7 +389,7 @@ public class LogSegmentsTest extends AbstractTest {
             // ignore
         }
 
-        assertSystemSegment(lastLog, "[ERROR] (concord.yaml): Error @ line: 4, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 4, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
         assertNoMoreSegments();
     }
 
@@ -401,8 +409,8 @@ public class LogSegmentsTest extends AbstractTest {
         }
 
         // logs to the system segment
-        assertSegmentLog(lastLog, 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Task not found: 'undefinedTask'");
-        assertSegmentStatusError(lastLog, 1);
+        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Task not found: 'undefinedTask'");
+        assertSegmentStatusError(runtime.lastLog(), 1);
 
         assertNoMoreSegments();
     }
@@ -423,7 +431,7 @@ public class LogSegmentsTest extends AbstractTest {
         }
 
         // logs to the system segment
-        assertSystemSegment(lastLog, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
         assertNoMoreSegments();
     }
 
@@ -443,7 +451,7 @@ public class LogSegmentsTest extends AbstractTest {
         }
 
         // error into system segment
-        assertSystemSegment(lastLog, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
     }
 
     @Test
@@ -491,7 +499,7 @@ public class LogSegmentsTest extends AbstractTest {
         }
 
         // error into system segment
-        assertSystemSegment(lastLog, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
     }
 
     @Test
@@ -522,8 +530,8 @@ public class LogSegmentsTest extends AbstractTest {
             // ignore
         }
 
-        assertSegmentLog(lastLog, 1, "[ERROR] (concord.yml): Error @ line: 3, col: 7. Unknown language 'js234'. Check process dependencies.");
-        assertSegmentStatusError(lastLog, 1);
+        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yml): Error @ line: 3, col: 7. Unknown language 'js234'. Check process dependencies.");
+        assertSegmentStatusError(runtime.lastLog(), 1);
         assertNoMoreSegments();
     }
 
@@ -541,8 +549,8 @@ public class LogSegmentsTest extends AbstractTest {
             // ignore
         }
 
-        assertSegmentLogPattern(lastLog, 1, null, Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. TypeError: invokeMember (unknownMethod) on") + ".*");
-        assertSegmentStatusError(lastLog, 1);
+        assertSegmentLogPattern(runtime.lastLog(), 1, null, Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. TypeError: invokeMember (unknownMethod) on") + ".*");
+        assertSegmentStatusError(runtime.lastLog(), 1);
     }
 
     @Test
@@ -659,16 +667,16 @@ public class LogSegmentsTest extends AbstractTest {
             // ignore
         }
 
-        assertSegmentLog(lastLog, 1, "[ERROR] (concord.yaml): Error @ line: 13, col: 11. FAIL");
-        assertSegmentMultilineLog(lastLog, 1, "[ERROR] Call stack:\n" +
+        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 13, col: 11. FAIL");
+        assertSegmentMultilineLog(runtime.lastLog(), 1, "[ERROR] Call stack:\n" +
                 "(concord.yaml) @ line: 3, col: 7, thread: 0, flow: inner");
-        assertSegmentStatusError(lastLog, 1);
+        assertSegmentStatusError(runtime.lastLog(), 1);
 
-        assertSegmentLog(lastLog, 2, "[INFO ] in error block");
-        assertSegmentStatusOk(lastLog, 2);
+        assertSegmentLog(runtime.lastLog(), 2, "[INFO ] in error block");
+        assertSegmentStatusOk(runtime.lastLog(), 2);
 
-        assertSegmentLog(lastLog, 3, "[ERROR] (concord.yaml): Error @ line: 8, col: 11. FAIL");
-        assertSegmentStatusError(lastLog, 3);
+        assertSegmentLog(runtime.lastLog(), 3, "[ERROR] (concord.yaml): Error @ line: 8, col: 11. FAIL");
+        assertSegmentStatusError(runtime.lastLog(), 3);
 
         assertNoMoreSegments();
     }
@@ -756,13 +764,13 @@ public class LogSegmentsTest extends AbstractTest {
             logWithoutSegmentsHolder.set(Arrays.copyOf(log, log.length));
             return log;
         } catch (Exception e){
-            logWithoutSegmentsHolder.set(Arrays.copyOf(lastLog, lastLog.length));
+            logWithoutSegmentsHolder.set(Arrays.copyOf(runtime.lastLog(), runtime.lastLog().length));
             throw e;
         }
     }
 
     private byte[] resumeWithSegments(String eventName) throws Exception {
-        StateManager.saveResumeEvent(workDir, eventName);
+        StateManager.saveResumeEvent(runtime.workDir(), eventName);
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .logging(LoggingConfiguration.builder()
@@ -775,7 +783,7 @@ public class LogSegmentsTest extends AbstractTest {
             logWithoutSegmentsHolder.set(Arrays.copyOf(log, log.length));
             return log;
         } catch (Exception e){
-            logWithoutSegmentsHolder.set(Arrays.copyOf(lastLog, lastLog.length));
+            logWithoutSegmentsHolder.set(Arrays.copyOf(runtime.lastLog(), runtime.lastLog().length));
             throw e;
         }
     }
@@ -788,5 +796,26 @@ public class LogSegmentsTest extends AbstractTest {
         String resultString = matcher.replaceFirst("");
 
         return resultString.getBytes(StandardCharsets.UTF_8);
+    }
+
+
+    private void deploy(String name) throws URISyntaxException, IOException {
+        runtime.deploy(name);
+    }
+
+    private void save(ProcessConfiguration cfg) {
+        runtime.save(cfg);
+    }
+
+    private byte[] run() throws Exception {
+        return runtime.run();
+    }
+
+    private byte[] run(RunnerConfiguration baseCfg) throws Exception {
+        return runtime.run(baseCfg);
+    }
+
+    private byte[] resume(String eventName, ProcessConfiguration cfg) throws Exception {
+        return runtime.resume(eventName, cfg);
     }
 }
