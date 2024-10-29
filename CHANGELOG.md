@@ -15,7 +15,9 @@
 - concord-server: fix AuthenticationHandler result handling
 ([#1003](https://github.com/walmartlabs/concord/pull/1003));
 - project: update docker-login action in build flow
-([#1005](https://github.com/walmartlabs/concord/pull/1005)).
+([#1005](https://github.com/walmartlabs/concord/pull/1005));
+- runtime-v2: move tests to separate module
+([#1008](https://github.com/walmartlabs/concord/pull/1008)).
 
 ### Breaking
 
