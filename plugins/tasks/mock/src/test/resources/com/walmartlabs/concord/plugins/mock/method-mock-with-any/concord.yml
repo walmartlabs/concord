@@ -12,5 +12,3 @@ configuration:
         method: "myMethod"
         args: [1, "${mock.any()}"]
         result: "BOO"
-        out:
-          ok: true

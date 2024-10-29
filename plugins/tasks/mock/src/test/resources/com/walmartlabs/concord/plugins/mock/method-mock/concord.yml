@@ -12,5 +12,3 @@ configuration:
         method: "myMethod"
         args: [1, 'b', false, [1, 2, 3], {k: 'v'}]
         result: "BOO"
-        out:
-          ok: true
