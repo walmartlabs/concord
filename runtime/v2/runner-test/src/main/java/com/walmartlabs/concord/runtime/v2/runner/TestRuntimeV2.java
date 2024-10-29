@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,23 +52,20 @@ import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.*;
 import com.walmartlabs.concord.svm.Runtime;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
 import java.io.*;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -78,9 +75,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
-public abstract class AbstractTest {
+public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractTest.class);
+    private static final Logger log = LoggerFactory.getLogger(TestRuntimeV2.class);
 
     protected Path workDir;
     protected UUID instanceId;
@@ -95,105 +92,62 @@ public abstract class AbstractTest {
     protected byte[] lastLog;
     protected byte[] allLogs;
 
-    @BeforeEach
-    public void setUp(TestInfo testInfo) throws IOException {
-        workDir = Files.createTempDirectory("test");
+    private Class<?> testClass;
 
-        instanceId = UUID.randomUUID();
+    @Override
+    public void beforeEach(ExtensionContext context) throws Exception {
+        boolean ignoreSerializationAssert = context.getTestMethod()
+                .filter(m -> m.getAnnotation(IgnoreSerializationAssert.class) != null)
+                .isPresent();
 
-        Path formsDir = workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(Constants.Files.JOB_STATE_DIR_NAME)
-                .resolve(Constants.Files.JOB_FORMS_V2_DIR_NAME);
+        setUp(!ignoreSerializationAssert);
 
-        formService = new FormService(formsDir);
-
-        processStatusCallback = mock(ProcessStatusCallback.class);
-
-        checkpointService = spy(new TestCheckpointUploader());
-
-        testServices = new AbstractModule() {
-            @Override
-            protected void configure() {
-                install(new BaseRunnerModule());
-
-                bind(ClassLoader.class).annotatedWith(Names.named("runtime")).toInstance(AbstractTest.class.getClassLoader());
-
-                bind(CheckpointUploader.class).toInstance(checkpointService);
-                bind(CheckpointService.class).to(DefaultCheckpointService.class);
-                bind(DependencyManager.class).to(DefaultDependencyManager.class);
-                bind(DockerService.class).to(DefaultDockerService.class);
-                bind(FileService.class).to(DefaultFileService.class);
-                bind(LockService.class).to(DefaultLockService.class);
-                bind(PersistenceService.class).toInstance(mock(PersistenceService.class));
-                bind(ProcessStatusCallback.class).toInstance(processStatusCallback);
-                bind(SecretService.class).to(DefaultSecretService.class);
-                bind(ApiClient.class).toInstance(mock(ApiClient.class));
-
-                Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
-                taskProviders.addBinding().to(TaskV2Provider.class);
-
-                Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
-                taskCallListeners.addBinding().to(TaskCallPolicyChecker.class);
-                taskCallListeners.addBinding().to(TaskResultListener.class);
-
-                Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
-                executionListeners.addBinding().toInstance(new ExecutionListener(){
-                    @Override
-                    public void beforeProcessStart(Runtime runtime, State state) {
-                        SensitiveDataHolder.getInstance().get().clear();
-                    }
-                });
-                executionListeners.addBinding().to(StackTraceCollector.class);
-
-                boolean ignoreSerializationAssert = testInfo.getTestMethod()
-                        .filter(m -> m.getAnnotation(AbstractTest.IgnoreSerializationAssert.class) != null)
-                        .isPresent();
-                if (!ignoreSerializationAssert) {
-                    executionListeners.addBinding().toInstance(new ExecutionListener() {
-                        @Override
-                        public Result afterCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
-                            if (cmd instanceof BlockCommand
-                                    || cmd instanceof ParallelCommand) {
-                                return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
-                            }
-
-                            assertTrue(isSerializable(state), "Non serializable state after: " + cmd);
-                            return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
-                        }
-                    });
-                }
-            }
-        };
-
-        allLogs = null;
+        this.testClass = context.getTestClass().orElseThrow(() -> new IllegalStateException("No test class found"));
     }
 
-    @AfterEach
-    public void tearDown() throws IOException {
-        if (workDir != null) {
-            IOUtils.deleteRecursively(workDir);
-        }
-
-        LoggingConfigurator.reset();
+    @Override
+    public void afterEach(ExtensionContext context) throws Exception {
+        tearDown();
     }
 
-    private static boolean isSerializable(Object o) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new ByteArrayOutputStream())) {
-            oos.writeObject(o);
-        } catch (IOException e) {
-            log.warn("Serialization error: {}", e.getMessage(), e);
-            return false;
-        }
-
-        return true;
+    public Path workDir() {
+        return workDir;
     }
 
-    protected void deploy(String resource) throws URISyntaxException, IOException {
-        Path src = Paths.get(this.getClass().getResource(resource).toURI());
+    public FormService formService() {
+        return formService;
+    }
+
+    public UUID instanceId() {
+        return instanceId;
+    }
+
+    public byte[] lastLog() {
+        return lastLog;
+    }
+
+    public byte[] allLogs() {
+        return allLogs;
+    }
+
+    public TestCheckpointUploader checkpointService() {
+        return checkpointService;
+    }
+
+    public ProcessStatusCallback processStatusCallback() {
+        return processStatusCallback;
+    }
+
+    public void setWorkDir(Path newWorkDir) {
+        this.workDir = newWorkDir;
+    }
+
+    public void deploy(String resource) throws URISyntaxException, IOException {
+        Path src = Paths.get(testClass.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
     }
 
-    protected ImmutableProcessConfiguration.Builder cfgFromDeployment() throws IOException {
+    public ImmutableProcessConfiguration.Builder cfgFromDeployment() throws IOException {
         for (String fileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
             Path p = workDir.resolve(fileName);
             if (Files.exists(p)) {
@@ -206,7 +160,7 @@ public abstract class AbstractTest {
         return ImmutableProcessConfiguration.builder();
     }
 
-    protected void save(ProcessConfiguration cfg) {
+    public void save(ProcessConfiguration cfg) {
         ImmutableProcessConfiguration.Builder b = ProcessConfiguration.builder().from(cfg)
                 .instanceId(instanceId);
 
@@ -217,7 +171,7 @@ public abstract class AbstractTest {
         this.processConfiguration = b.build();
     }
 
-    protected byte[] resume(String eventName, ProcessConfiguration cfg) throws Exception {
+    public byte[] resume(String eventName, ProcessConfiguration cfg) throws Exception {
         StateManager.saveResumeEvent(workDir, eventName); // TODO use interface
         if (cfg != null) {
             save(cfg);
@@ -225,12 +179,14 @@ public abstract class AbstractTest {
         return run();
     }
 
-    protected byte[] run() throws Exception {
+    public byte[] run() throws Exception {
         return run(null);
     }
 
-    protected byte[] run(RunnerConfiguration baseCfg) throws Exception {
-        assertNotNull(processConfiguration, "save() the process configuration first");
+    public byte[] run(RunnerConfiguration baseCfg) throws Exception {
+        if (processConfiguration == null) {
+            save(cfgFromDeployment().build());
+        }
 
         ImmutableRunnerConfiguration.Builder runnerCfg = RunnerConfiguration.builder()
                 .logging(LoggingConfiguration.builder().segmentedLogs(false).build());
@@ -291,7 +247,7 @@ public abstract class AbstractTest {
         return log;
     }
 
-    protected static void assertLogAtLeast(byte[] ab, int n, String pattern) throws IOException {
+    public static void assertLogAtLeast(byte[] ab, int n, String pattern) throws IOException {
         if (ab == null) {
             fail("Log is empty");
         }
@@ -301,7 +257,7 @@ public abstract class AbstractTest {
         }
     }
 
-    protected static void assertLog(byte[] ab, String pattern) throws IOException {
+    public static void assertLog(byte[] ab, String pattern) throws IOException {
         if (ab == null) {
             fail("Log is empty");
         }
@@ -312,7 +268,7 @@ public abstract class AbstractTest {
         }
     }
 
-    protected static void assertMultiLineLog(byte[] ab, String pattern) throws IOException {
+    public static void assertMultiLineLog(byte[] ab, String pattern) throws IOException {
         if (ab == null) {
             fail("Log is empty");
         }
@@ -323,13 +279,13 @@ public abstract class AbstractTest {
         }
     }
 
-    protected static void assertNoLog(byte[] ab, String pattern) throws IOException {
+    public static void assertNoLog(byte[] ab, String pattern) throws IOException {
         if (grep(ab, pattern) > 0) {
             fail("Expected no log lines like this: " + pattern + ", got: \n" + new String(ab));
         }
     }
 
-    protected static int grep(byte[] ab, String pattern) throws IOException {
+    public static int grep(byte[] ab, String pattern) throws IOException {
         int cnt = 0;
 
         try (ByteArrayInputStream bais = new ByteArrayInputStream(ab);
@@ -346,7 +302,7 @@ public abstract class AbstractTest {
         return cnt;
     }
 
-    protected static int grepMultiLine(byte[] ab, String pattern) throws IOException {
+    public static int grepMultiLine(byte[] ab, String pattern) throws IOException {
         int cnt = 0;
 
         Pattern compiledPattern = Pattern.compile(pattern, Pattern.DOTALL);
@@ -369,6 +325,94 @@ public abstract class AbstractTest {
         return cnt;
     }
 
+    private void setUp(boolean withSerializationAssert) throws IOException {
+        workDir = Files.createTempDirectory("test");
+
+        instanceId = UUID.randomUUID();
+
+        Path formsDir = workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.Files.JOB_STATE_DIR_NAME)
+                .resolve(Constants.Files.JOB_FORMS_V2_DIR_NAME);
+
+        formService = new FormService(formsDir);
+
+        processStatusCallback = mock(ProcessStatusCallback.class);
+
+        checkpointService = spy(new TestCheckpointUploader());
+
+        testServices = new AbstractModule() {
+            @Override
+            protected void configure() {
+                install(new BaseRunnerModule());
+
+                bind(ClassLoader.class).annotatedWith(Names.named("runtime")).toInstance(testClass.getClassLoader());
+
+                bind(CheckpointUploader.class).toInstance(checkpointService);
+                bind(CheckpointService.class).to(DefaultCheckpointService.class);
+                bind(DependencyManager.class).to(DefaultDependencyManager.class);
+                bind(DockerService.class).to(DefaultDockerService.class);
+                bind(FileService.class).to(DefaultFileService.class);
+                bind(LockService.class).to(DefaultLockService.class);
+                bind(PersistenceService.class).toInstance(mock(PersistenceService.class));
+                bind(ProcessStatusCallback.class).toInstance(processStatusCallback);
+                bind(SecretService.class).to(DefaultSecretService.class);
+                bind(ApiClient.class).toInstance(mock(ApiClient.class));
+
+                Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
+                taskProviders.addBinding().to(TaskV2Provider.class);
+
+                Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
+                taskCallListeners.addBinding().to(TaskCallPolicyChecker.class);
+                taskCallListeners.addBinding().to(TaskResultListener.class);
+
+                Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
+                executionListeners.addBinding().toInstance(new ExecutionListener(){
+                    @Override
+                    public void beforeProcessStart(Runtime runtime, State state) {
+                        SensitiveDataHolder.getInstance().get().clear();
+                    }
+                });
+                executionListeners.addBinding().to(StackTraceCollector.class);
+
+                if (withSerializationAssert) {
+                    executionListeners.addBinding().toInstance(new ExecutionListener() {
+                        @Override
+                        public Result afterCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
+                            if (cmd instanceof BlockCommand
+                                    || cmd instanceof ParallelCommand) {
+                                return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
+                            }
+
+                            assertTrue(isSerializable(state), "Non serializable state after: " + cmd);
+                            return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
+                        }
+                    });
+                }
+            }
+        };
+
+        allLogs = null;
+    }
+
+    private void tearDown() throws IOException {
+        if (workDir != null) {
+            IOUtils.deleteRecursively(workDir);
+        }
+
+        LoggingConfigurator.reset();
+    }
+
+    private static boolean isSerializable(Object o) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new ByteArrayOutputStream())) {
+            oos.writeObject(o);
+        } catch (IOException e) {
+            log.warn("Serialization error: {}", e.getMessage(), e);
+            return false;
+        }
+
+        return true;
+    }
+
     @Singleton
     static class TestLoggingClient implements LoggingClient {
 
@@ -378,10 +422,5 @@ public abstract class AbstractTest {
         public long createSegment(UUID correlationId, String name) {
             return id.getAndIncrement();
         }
-    }
-
-    @Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface IgnoreSerializationAssert {
     }
 }
