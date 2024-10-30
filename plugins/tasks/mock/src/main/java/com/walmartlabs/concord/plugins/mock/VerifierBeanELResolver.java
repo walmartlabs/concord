@@ -20,34 +20,16 @@ package com.walmartlabs.concord.plugins.mock;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.CustomBeanELResolver;
 
-import javax.inject.Named;
-import java.io.Serial;
-import java.io.Serializable;
+public class VerifierBeanELResolver implements CustomBeanELResolver {
 
-@Named("mock")
-public class MockUtilsTask implements Task {
-
-    public static Any any() {
-        return new Any();
-    }
-
-    public static class Any implements Serializable {
-
-        @Serial
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public boolean equals(Object obj) {
-            return true;
+    @Override
+    public Result invoke(Object base, String method, Object[] params) {
+        if (base instanceof VerifyTask.Verifier verifier) {
+            verifier.verify(method, params);
+            return Result.of(null);
         }
-
-        @Override
-        @JsonValue
-        public String toString() {
-            return "any";
-        }
+        return null;
     }
 }

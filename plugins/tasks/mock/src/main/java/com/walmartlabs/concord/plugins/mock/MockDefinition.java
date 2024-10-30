@@ -20,15 +20,9 @@ package com.walmartlabs.concord.plugins.mock;
  * =====
  */
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.walmartlabs.concord.common.AllowNulls;
 import com.walmartlabs.concord.sdk.MapUtils;
-import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
