@@ -27,7 +27,7 @@ import {
 } from 'semantic-ui-react';
 
 import { get as apiGet, UserInfoEntry } from '../../../api/profile/user';
-import { RequestErrorMessage } from '../../molecules';
+import {RequestErrorMessage, WithCopyToClipboard} from '../../molecules';
 import { useApi } from '../../../hooks/useApi';
 import {Link} from "react-router-dom";
 
@@ -59,18 +59,26 @@ export default () => {
                 </ListItem>
             </List>
 
+            <h5>Internal ID</h5>
+            <List divided={true} relaxed={true}>
+                <ListItem>
+                    <ListContent>
+                        <ListDescription><WithCopyToClipboard value={data.id}>{data.id}</WithCopyToClipboard></ListDescription>
+                    </ListContent>
+                </ListItem>
+            </List>
 
             <h5>Roles</h5>
             <List divided={true} relaxed={true}>
                 {data.roles && data.roles
                     .sort((a, b) => a.localeCompare(b))
                     .map((role, index) => (
-                    <ListItem key={index}>
-                        <ListContent>
-                            <ListDescription>{role}</ListDescription>
-                        </ListContent>
-                    </ListItem>
-                ))}
+                        <ListItem key={index}>
+                            <ListContent>
+                                <ListDescription>{role}</ListDescription>
+                            </ListContent>
+                        </ListItem>
+                    ))}
             </List>
 
             <h5>Teams</h5>
@@ -82,14 +90,15 @@ export default () => {
                         return aConcat.localeCompare(bConcat);
                     })
                     .map((team, index) => (
-                    <ListItem key={index}>
-                        <ListContent>
-                            <ListDescription>
-                                <Link to={`/org/${team.orgName}/team/${team.teamName}`}>{team.orgName} / {team.teamName} ({team.role})</Link>
-                            </ListDescription>
-                        </ListContent>
-                    </ListItem>
-                ))}
+                        <ListItem key={index}>
+                            <ListContent>
+                                <ListDescription>
+                                    <Link
+                                        to={`/org/${team.orgName}/team/${team.teamName}`}>{team.orgName} / {team.teamName} ({team.role})</Link>
+                                </ListDescription>
+                            </ListContent>
+                        </ListItem>
+                    ))}
             </List>
 
             {data.ldapGroups && data.ldapGroups.length > 0 && (
