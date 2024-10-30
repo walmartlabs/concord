@@ -52,6 +52,15 @@ public class InvocationsCollector implements TaskCallListener, ExecutionListener
         }
     }
 
+    @Override
+    public void onProcessError(Runtime runtime, State state, Exception e) {
+        if (!params.enabled()) {
+            return;
+        }
+
+        invocations.cleanup();
+    }
+
     private static List<Object> sanitizeInput(String methodName, List<Object> input) {
         // task call
         if ("execute".equals(methodName) && input.size() == 1 && input.get(0) instanceof Variables variables) {

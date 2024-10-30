@@ -1,0 +1,13 @@
+flows:
+  default:
+    - set:
+        mocks:
+          - name: git
+            in:
+              action: "clone"
+
+    - task: git
+      in:
+        action: "clone"
+
+    - expr: "${verify.task('git', 1).execute({'action': 'clone'})}"

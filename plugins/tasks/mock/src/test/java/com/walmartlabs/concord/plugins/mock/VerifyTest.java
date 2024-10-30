@@ -17,4 +17,11 @@ public class VerifyTest {
 
         runtime.run();
     }
+
+    @Test
+    public void testVerifyMockedTask() throws Exception {
+        runtime.deploy("verify-mocked-task");
+
+        runtime.run();
+    }
 }

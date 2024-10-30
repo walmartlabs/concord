@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Named("verify")
+//TODO: @DryRunReady
 public class VerifyTask implements Task {
 
     private final ObjectMapper objectMapper;
