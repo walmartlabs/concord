@@ -4,22 +4,25 @@
 
 ## Changed
 
-- runtime-v2: log task method name in event
-([#1006](https://github.com/walmartlabs/concord/pull/1006));
-- runtime-v2: flush events on process error 
-([#1001](https://github.com/walmartlabs/concord/pull/1001));
 - concord-server: remove resteasy-guice dependency
 ([#997](https://github.com/walmartlabs/concord/pull/997));
 - project: update HikariCP version
 ([#1000](https://github.com/walmartlabs/concord/pull/1000));
+- runtime-v2: flush events on process error 
+([#1001](https://github.com/walmartlabs/concord/pull/1001));
 - concord-server: fix AuthenticationHandler result handling
 ([#1003](https://github.com/walmartlabs/concord/pull/1003));
+- server: fix ConcordKey validation regex to 128 character limit
+([#1004](https://github.com/walmartlabs/concord/pull/1004));
 - project: update docker-login action in build flow
 ([#1005](https://github.com/walmartlabs/concord/pull/1005));
+- runtime-v2: log task method name in event
+([#1006](https://github.com/walmartlabs/concord/pull/1006));
 - runtime-v2: move tests to separate module
 ([#1008](https://github.com/walmartlabs/concord/pull/1008));
-- server: fix ConcordKey validation regex to 128 character limit
-([#1004](https://github.com/walmartlabs/concord/pull/1004)).
+- runtime-v2: use shorter delay while polling status of
+threads
+([#1011](https://github.com/walmartlabs/concord/pull/1011)).
 
 ### Breaking
 
