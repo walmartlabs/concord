@@ -2,6 +2,11 @@
 
 ## [2.19.0] - Unreleased
 
+## Added
+
+- concord-console2: add a full-screen page for process cards
+([#1009](https://github.com/walmartlabs/concord/pull/1009)).
+
 ## Changed
 
 - concord-server: remove resteasy-guice dependency
