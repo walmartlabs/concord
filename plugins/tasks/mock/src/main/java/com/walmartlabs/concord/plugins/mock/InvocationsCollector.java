@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.mock;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -82,13 +82,13 @@ public class InvocationsCollector implements TaskCallListener, ExecutionListener
     }
 
     private static List<Object> sanitizeInput(String methodName, List<Object> input) {
-        // task call
+        // task call without input -> omit variables so we can use
+        // ${verify.task('testTask', 1).execute()}
         if ("execute".equals(methodName) && input.size() == 1 && input.get(0) instanceof Variables variables) {
             var m = variables.toMap();
             if (m.isEmpty()) {
                 return List.of();
             }
-            return List.of(m);
         }
 
         return InputSanitizer.sanitize(input);
