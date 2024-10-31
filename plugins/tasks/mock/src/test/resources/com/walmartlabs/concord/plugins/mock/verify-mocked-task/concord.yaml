@@ -2,7 +2,7 @@ flows:
   default:
     - set:
         mocks:
-          - name: git
+          - task: git
             in:
               action: "clone"
 

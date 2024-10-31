@@ -8,7 +8,7 @@ flows:
 configuration:
   arguments:
     mocks:
-      - name: "undefinedTask"
+      - task: "undefinedTask"
         method: "myMethod"
         args: [1, "${mock.any()}"]
         result: "BOO"
