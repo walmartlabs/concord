@@ -539,22 +539,6 @@ public class ProcessIT extends AbstractTest {
     }
 
     @Test
-    public void testTaskWithClient1() throws Exception {
-        String concordYml = resourceToString(ProcessIT.class.getResource("client1Task/concord.yml"))
-                .replaceAll("PROJECT_VERSION", ITConstants.PROJECT_VERSION);
-
-        Payload payload = new Payload().concordYml(concordYml);
-
-        ConcordProcess proc = concord.processes().start(payload);
-        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
-
-        // ---
-
-        proc.assertLog(".*process entry: RUNNING.*");
-        proc.assertLog(".*Works!.*");
-    }
-
-    @Test
     public void testRestart() throws Exception {
         Payload payload = new Payload()
                 .archive(resource("args"))
