@@ -1,9 +1,0 @@
-configuration:
-  runtime: concord-v2
-  dependencies:
-    - "mvn://com.walmartlabs.concord.it.tasks:client1-test:PROJECT_VERSION"
-
-flows:
-  default:
-  - task: client1Test
-  - log: "Works!"
