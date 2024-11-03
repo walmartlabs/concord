@@ -1,1 +1,0 @@
-Check the diff between `*.mustache` and `*.orig` to see the introduced customizations.
