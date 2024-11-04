@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +26,7 @@ import com.walmartlabs.concord.client2.ProcessEventRequest;
 import com.walmartlabs.concord.client2.ProcessEventsApi;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
+import com.walmartlabs.concord.svm.ExecutionListener;
 import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
@@ -42,7 +43,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class DefaultEventReportingService implements EventReportingService {
+public class DefaultEventReportingService implements EventReportingService, ExecutionListener {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultEventReportingService.class);
 
@@ -96,6 +97,12 @@ public class DefaultEventReportingService implements EventReportingService {
 
     @Override
     public void afterProcessEnds(Runtime runtime, State state, Frame lastFrame) {
+        flushScheduler.shutdown();
+        flush();
+    }
+
+    @Override
+    public void onProcessError(Runtime runtime, State state, Exception e) {
         flushScheduler.shutdown();
         flush();
     }

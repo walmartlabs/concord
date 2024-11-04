@@ -31,6 +31,8 @@ import io.takari.bpm.form.Form;
 import io.takari.bpm.form.FormSubmitResult;
 import io.takari.bpm.model.ProcessDefinition;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.mockito.ArgumentCaptor;
 
 import java.io.Serializable;
@@ -45,6 +47,7 @@ import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.isNull;
 import static org.mockito.Mockito.*;
 
+@Execution(ExecutionMode.CONCURRENT)
 public class YamlParserTest extends AbstractYamlParserTest {
 
     // PROCESSES (000 - 099)

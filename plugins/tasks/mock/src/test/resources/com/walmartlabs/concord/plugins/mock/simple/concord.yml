@@ -1,0 +1,13 @@
+flows:
+  default:
+    - task: undefinedTask
+      out: result
+
+    - log: "result.ok: ${result.ok}"
+
+configuration:
+  arguments:
+    mocks:
+      - name: "undefinedTask"
+        out:
+          ok: true

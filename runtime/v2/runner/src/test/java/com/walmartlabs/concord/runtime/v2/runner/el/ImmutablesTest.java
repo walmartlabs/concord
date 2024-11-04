@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,7 +42,7 @@ public class ImmutablesTest {
                 .build();
 
         EvalContextFactory ecf = new EvalContextFactoryImpl();
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders(), List.of());
         Map<String, Object> vars = Collections.singletonMap("testBean", testBean);
 
         // ---

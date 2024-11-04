@@ -141,7 +141,7 @@ public class ProcessCardResource implements Resource {
         UUID projectId = assertProject(orgId, r);
         UUID repoId = getRepo(projectId, r);
         String name = r.getName();
-        String entryPoint = r.getEntryPoint();
+        Optional<String> entryPoint = Optional.ofNullable(r.getEntryPoint());
         String description = r.getDescription();
         Map<String, Object> data = r.getData();
         UUID id = r.getId();
