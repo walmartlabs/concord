@@ -23,15 +23,13 @@ package com.walmartlabs.concord.plugins.lock.v2;
 import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.plugins.lock.LockTaskCommon;
 import com.walmartlabs.concord.plugins.lock.TaskParams;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
 @Named("unlock")
+@DryRunReady
 public class UnlockTaskV2 implements Task {
 
     private final LockTaskCommon delegate;

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.client.v2;
 import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.client.JsonStoreTaskCommon;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.DryRunReady;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
 import javax.inject.Inject;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 @Named("jsonStore")
+@DryRunReady
 @SuppressWarnings("unused")
 public class JsonStoreTaskV2 implements Task {
 
@@ -39,7 +41,7 @@ public class JsonStoreTaskV2 implements Task {
 
     @Inject
     public JsonStoreTaskV2(ApiClient apiClient, Context context) {
-        this.delegate = new JsonStoreTaskCommon(apiClient);
+        this.delegate = new JsonStoreTaskCommon(apiClient, context.processConfiguration().dryRun());
         this.processOrg = context.processConfiguration().projectInfo().orgName();
     }
 

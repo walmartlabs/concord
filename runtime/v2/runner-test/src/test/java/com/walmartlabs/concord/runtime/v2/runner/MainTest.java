@@ -1718,6 +1718,18 @@ public class MainTest  {
         assertLog(log, ".*value: myValue3.*");
     }
 
+    @Test
+    public void dryRunReadyAsExpression() throws Exception {
+        deploy("dryRunReadyAsExpression");
+
+        save(ProcessConfiguration.builder()
+                .dryRun(true)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*myValue: 42.*");
+    }
+
     private void deploy(String name) throws URISyntaxException, IOException {
         runtime.deploy(name);
     }

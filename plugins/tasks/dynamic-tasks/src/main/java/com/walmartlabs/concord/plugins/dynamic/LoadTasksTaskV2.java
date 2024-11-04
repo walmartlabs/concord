@@ -21,10 +21,7 @@ package com.walmartlabs.concord.plugins.dynamic;
  */
 
 import com.google.inject.Injector;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -32,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Named("loadTasks")
+@DryRunReady
 @SuppressWarnings("unused")
 public class LoadTasksTaskV2 implements Task {
 
