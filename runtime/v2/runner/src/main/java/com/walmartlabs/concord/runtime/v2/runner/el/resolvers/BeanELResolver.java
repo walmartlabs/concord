@@ -29,6 +29,8 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Same as {@link javax.el.BeanELResolver}, but throws more detailed "method is not found" exceptions.
  */
@@ -53,12 +55,12 @@ public class BeanELResolver extends javax.el.BeanELResolver {
                     context.setPropertyResolved(base, method);
                     return customResult.value();
                 } else {
-                    base = Objects.requireNonNull(customResult.base());
-                    method = Objects.requireNonNull(customResult.method());
+                    base = requireNonNull(customResult.base());
+                    method = requireNonNull(customResult.method());
                 }
             }
 
-            Object result = super.invoke(context, base, method, paramTypes, params);
+            var result = super.invoke(context, base, method, paramTypes, params);
 
             if (context.isPropertyResolved()) {
                 Method m = ReflectionUtil.findMethod(base.getClass(), method.toString(), paramTypes, params);

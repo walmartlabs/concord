@@ -49,3 +49,10 @@ export const listProcessCards = (
     fetchJson(
         `/api/v1/processcard`
     );
+
+export const getProcessCard = (
+    cardId: ConcordId
+): Promise<ProcessCardEntry> =>
+    fetchJson(
+        `/api/v1/processcard/${cardId}`
+    );

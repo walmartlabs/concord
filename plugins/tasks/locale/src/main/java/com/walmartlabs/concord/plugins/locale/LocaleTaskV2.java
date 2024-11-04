@@ -20,12 +20,14 @@ package com.walmartlabs.concord.plugins.locale;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.DryRunReady;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
 import javax.inject.Named;
 import java.util.Locale;
 
 @Named("locale")
+@DryRunReady
 public class LocaleTaskV2 implements Task {
 
     public String[] countries() {

@@ -40,6 +40,7 @@ import {
     OrganizationPage,
     ProcessFormPage,
     ProcessListPage,
+    ProcessCardFormPage,
     ProcessPage,
     ProcessWizardPage,
     ProfilePage,
@@ -48,7 +49,7 @@ import {
     SecretPage,
     TeamPage,
     UnauthorizedPage,
-    UserActivityPage
+    UserActivityPage,
 } from './components/pages';
 import { Layout } from './components/templates';
 import { history, store } from './store';
@@ -84,24 +85,31 @@ const App = () => {
                 <LoadingDispatch.Provider value={dispatch}>
                     <ConnectedRouter history={history}>
                         <UserSessionContext.Provider
-                            value={{ userInfo, setUserInfo, loggingIn, setLoggingIn, history }}>
+                            value={{ userInfo, setUserInfo, loggingIn, setLoggingIn, history }}
+                        >
                             <Switch>
                                 <Route exact={true} path="/">
                                     <Redirect to="/activity" />
                                 </Route>
 
+                                {/* pages with no decorations */}
                                 <Route path="/login">
-                                    <LoginPage/>
+                                    <LoginPage />
                                 </Route>
 
                                 <Route path="/logout/done">
-                                    <LogoutPage/>
+                                    <LogoutPage />
                                 </Route>
 
                                 <Route path="/unauthorized">
-                                    <UnauthorizedPage/>
+                                    <UnauthorizedPage />
                                 </Route>
 
+                                <ProtectedRoute path="/processCard/:cardId/form">
+                                    <ProcessCardFormPage />
+                                </ProtectedRoute>
+
+                                {/* pages with standard decorations (provided by Layout) */}
                                 <Layout>
                                     <Switch>
                                         <ProtectedRoute
