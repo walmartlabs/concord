@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.asserts;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.asserts;
  */
 
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.DryRunReady;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import org.slf4j.Logger;
@@ -34,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 @Named("asserts")
+@DryRunReady
 @SuppressWarnings("unused")
 public class AssertsTask implements Task {
 
@@ -105,6 +107,12 @@ public class AssertsTask implements Task {
     public static void assertTrue(String message, boolean condition) {
         if (!condition) {
             throw new UserDefinedException(message);
+        }
+    }
+
+    public void dryRunMode() {
+        if (!context.processConfiguration().dryRun()) {
+            throw new UserDefinedException("Expected to run in the dry-run mode, running in the regular mode instead.");
         }
     }
 

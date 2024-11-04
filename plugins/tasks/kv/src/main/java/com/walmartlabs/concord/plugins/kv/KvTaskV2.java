@@ -23,7 +23,10 @@ package com.walmartlabs.concord.plugins.kv;
 import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.client2.ProcessKvStoreApi;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.DryRunReady;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -31,22 +34,38 @@ import java.util.UUID;
 
 @Named("kv")
 @SuppressWarnings("unused")
+@DryRunReady
 public class KvTaskV2 implements Task {
+
+    private static final Logger log = LoggerFactory.getLogger(KvTaskV2.class);
+
     private final ApiClient apiClient;
     private final UUID processInstanceId;
+    private final boolean dryRunMode;
 
     @Inject
     public KvTaskV2(ApiClient apiClient, Context context) {
         this.apiClient = apiClient;
         this.processInstanceId = context.processInstanceId();
+        this.dryRunMode = context.processConfiguration().dryRun();
     }
 
     public void remove(String key) throws Exception {
+        if (dryRunMode) {
+            log.info("Running in dry-run mode: Skipping removing key '{}'", key);
+            return;
+        }
+
         ProcessKvStoreApi api = new ProcessKvStoreApi(apiClient);
         KvTaskUtils.remove(api, processInstanceId, key);
     }
 
     public void putString(String key, String value) throws Exception {
+        if (dryRunMode) {
+            log.info("Running in dry-run mode: Skipping putString with key '{}'", key);
+            return;
+        }
+
         ProcessKvStoreApi api = new ProcessKvStoreApi(apiClient);
         KvTaskUtils.putString(api, processInstanceId, key, value);
     }
@@ -57,6 +76,11 @@ public class KvTaskV2 implements Task {
     }
 
     public void putLong(String key, Long value) throws Exception {
+        if (dryRunMode) {
+            log.info("Running in dry-run mode: Skipping putLong with key '{}'", key);
+            return;
+        }
+
         ProcessKvStoreApi api = new ProcessKvStoreApi(apiClient);
         KvTaskUtils.putLong(api, processInstanceId, key, value);
     }

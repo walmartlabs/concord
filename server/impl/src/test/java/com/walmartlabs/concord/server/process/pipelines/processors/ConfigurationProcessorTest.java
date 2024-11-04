@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.LogManager;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -55,7 +57,7 @@ public class ConfigurationProcessorTest {
     public void init() {
         projectDao = mock(ProjectDao.class);
         orgDao = mock(OrganizationDao.class);
-        p = new ConfigurationProcessor(projectDao, orgDao);
+        p = new ConfigurationProcessor(projectDao, orgDao, mock(ProcessLogManager.class));
     }
 
     @Test
