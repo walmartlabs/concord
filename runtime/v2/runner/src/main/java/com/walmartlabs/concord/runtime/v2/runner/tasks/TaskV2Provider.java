@@ -22,12 +22,11 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
 
 import com.google.inject.Injector;
 import com.walmartlabs.concord.runtime.common.injector.TaskHolder;
+import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.runner.DefaultTaskVariablesService;
 import com.walmartlabs.concord.runtime.v2.runner.context.TaskContext;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
+import com.walmartlabs.concord.runtime.v2.runner.vm.StepOptionsUtils;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Inject;
 import java.util.Map;
@@ -56,6 +55,11 @@ public class TaskV2Provider implements TaskProvider {
             return null;
         }
 
+        boolean dryRun = ctx.processConfiguration().dryRun();
+        if (dryRun && !(isStepDryRunReady(ctx) || klass.getAnnotation(DryRunReady.class) != null)) {
+            throw new IllegalStateException("Dry-run mode is not supported for '" + key + "' task (yet)");
+        }
+
         Map<String, Object> defaultVariables = defaultTaskVariables.get(key);
         TaskContext taskContext = new TaskContext(ctx, new MapBackedVariables(defaultVariables));
         return ContextProvider.withContext(taskContext, () -> injector.getInstance(klass));
@@ -69,5 +73,18 @@ public class TaskV2Provider implements TaskProvider {
     @Override
     public Set<String> names() {
         return holder.keys();
+    }
+
+    private static boolean isStepDryRunReady(Context ctx) {
+        var step = ctx.execution().currentStep();
+        if (step == null) {
+            return false;
+        }
+
+        if (!(step instanceof AbstractStep)) {
+            return false;
+        }
+
+        return StepOptionsUtils.isDryRunReady(ctx, ((AbstractStep<?>) step).getOptions());
     }
 }

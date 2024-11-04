@@ -207,6 +207,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         functions.put("throw", ThrowFunction.getMethod());
         functions.put("hasFlow", HasFlowFunction.getMethod());
         functions.put("uuid", UuidFunction.getMethod());
+        functions.put("isDryRun", IsDryRunFunction.getMethod());
         return new FunctionMapper(functions);
     }
 

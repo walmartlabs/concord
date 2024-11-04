@@ -40,6 +40,7 @@ import static com.walmartlabs.concord.client.ConcordTaskParams.KillParams;
 import static com.walmartlabs.concord.client.ConcordTaskParams.ListSubProcesses;
 
 @Named("concord")
+@DryRunReady
 @SuppressWarnings("unused")
 public class ConcordTaskV2 implements ReentrantTask {
 

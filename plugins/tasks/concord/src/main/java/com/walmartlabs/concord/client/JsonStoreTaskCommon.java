@@ -38,9 +38,15 @@ public class JsonStoreTaskCommon {
     private static final long RETRY_INTERVAL = 5000;
 
     private final ApiClient apiClient;
+    private final boolean dryRunMode;
 
     public JsonStoreTaskCommon(ApiClient apiClient) {
+        this(apiClient, false);
+    }
+
+    public JsonStoreTaskCommon(ApiClient apiClient, boolean dryRunMode) {
         this.apiClient = apiClient;
+        this.dryRunMode = dryRunMode;
     }
 
     /**
@@ -89,6 +95,11 @@ public class JsonStoreTaskCommon {
      * Creates a new JSON store or updates an existing one.
      */
     public void createOrUpdateStore(String orgName, JsonStoreRequest request) throws ApiException {
+        if (dryRunMode) {
+            log.info("Dry-run mode enabled: Skipping creation or update of store '{}'", request.getName());
+            return;
+        }
+
         ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
             JsonStoreApi api = new JsonStoreApi(apiClient);
             GenericOperationResult result = api.createOrUpdateJsonStore(orgName, request);
@@ -101,6 +112,11 @@ public class JsonStoreTaskCommon {
      * Creates a new JSON store query or update an existing one.
      */
     public void createOrUpdateQuery(String orgName, String storeName, String queryName, String queryText) throws ApiException {
+        if (dryRunMode) {
+            log.info("Dry-run mode enabled: Skipping creation or update of query '{}' in store '{}'", queryName, storeName);
+            return;
+        }
+
         ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
             JsonStoreQueryApi api = new JsonStoreQueryApi(apiClient);
             JsonStoreQueryRequest request = new JsonStoreQueryRequest()
@@ -110,7 +126,6 @@ public class JsonStoreTaskCommon {
             log.info("The query '{}' in store '{}' has been successfully {}", queryName, storeName, result.getResult());
             return null;
         });
-
     }
 
     /**
@@ -133,6 +148,11 @@ public class JsonStoreTaskCommon {
 
         if (createStore && !isStoreExists(orgName, storeName)) {
             createOrUpdateStore(orgName, new JsonStoreRequest().name(storeName));
+        }
+
+        if (dryRunMode) {
+            log.info("Dry-run mode enabled: Skipping Updating item '{}' (org={}, store={})", itemPath, orgName, storeName);
+            return;
         }
 
         log.info("Updating item '{}' (org={}, store={})", itemPath, orgName, storeName);
@@ -167,6 +187,11 @@ public class JsonStoreTaskCommon {
         assertNotEmpty("Organization name", orgName);
         assertNotEmpty("Store name", storeName);
         assertNotEmpty("Item path", itemPath);
+
+        if (dryRunMode) {
+            log.info("Running in dry-run mode: Skipping removing item '{}' (org='{}', store='{}')", itemPath, orgName, storeName);
+            return true;
+        }
 
         log.info("Removing item '{}' (org='{}', store='{}')", itemPath, orgName, storeName);
 

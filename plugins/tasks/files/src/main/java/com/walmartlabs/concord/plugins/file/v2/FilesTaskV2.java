@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.file.v2;
  */
 
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.DryRunReady;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
 import javax.inject.Inject;
@@ -31,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 @Named("files")
+@DryRunReady
 @SuppressWarnings("unused")
 public class FilesTaskV2 implements Task {
 

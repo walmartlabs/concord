@@ -24,6 +24,7 @@ import com.oracle.truffle.js.scriptengine.GraalJSEngineFactory;
 import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.HostAccess;
@@ -89,6 +90,7 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
         }
         b.put("tasks", new TaskAccessor(taskProviders, ctx));
         b.put("log", log);
+        b.put("isDryRun", ctx.processConfiguration().dryRun());
         b.putAll(context.variables().toMap());
         b.putAll(variables);
         b.put("result", scriptResult);
