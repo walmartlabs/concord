@@ -30,7 +30,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 @Named
@@ -49,13 +51,17 @@ public class DependenciesProcessor implements PayloadProcessor {
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
 
         // get a list of dependencies from the cfg data
-        Collection<String> deps = deps(processKey, cfg);
-        if (deps == null) {
+        Collection<String> deps = getListOfStrings(processKey, cfg, Constants.Request.DEPENDENCIES_KEY);
+        Collection<String> extraDeps = getListOfStrings(processKey, cfg, Constants.Request.EXTRA_DEPENDENCIES_KEY);
+        if (deps == null && extraDeps == null) {
             return chain.process(payload);
         }
 
+        Collection<String> allDeps = new ArrayList<>(deps != null ? deps : Collections.emptyList());
+        allDeps.addAll(extraDeps != null ? extraDeps : Collections.emptyList());
+
         boolean failed = false;
-        for (String d : deps) {
+        for (String d : allDeps) {
             try {
                 new URI(d);
             } catch (URISyntaxException e) {
@@ -68,15 +74,15 @@ public class DependenciesProcessor implements PayloadProcessor {
             throw new ProcessException(processKey, "Invalid dependency list");
         }
 
-        cfg.put(Constants.Request.DEPENDENCIES_KEY, deps);
+        cfg.put(Constants.Request.DEPENDENCIES_KEY, allDeps);
         payload = payload.putHeader(Payload.CONFIGURATION, cfg);
 
         return chain.process(payload);
     }
 
     @SuppressWarnings("unchecked")
-    private Collection<String> deps(ProcessKey processKey, Map<String, Object> req) {
-        Object o = req.get(Constants.Request.DEPENDENCIES_KEY);
+    private Collection<String> getListOfStrings(ProcessKey processKey, Map<String, Object> req, String key) {
+        Object o = req.get(key);
         if (o == null) {
             return null;
         }
@@ -85,7 +91,7 @@ public class DependenciesProcessor implements PayloadProcessor {
             return (Collection<String>) o;
         }
 
-        logManager.error(processKey, "Invalid dependencies object type. Expected an array or a collection, got: {}", o.getClass());
-        throw new ProcessException(processKey, "Invalid dependencies object type. Expected an array or a collection, got: " + o.getClass());
+        logManager.error(processKey, "Invalid '{}' object type. Expected an array or a collection, got: {}", key, o.getClass());
+        throw new ProcessException(processKey, "Invalid '" + key + "' object type. Expected an array or a collection, got: " + o.getClass());
     }
 }

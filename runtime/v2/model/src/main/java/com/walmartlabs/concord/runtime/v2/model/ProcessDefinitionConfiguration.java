@@ -87,6 +87,15 @@ public interface ProcessDefinitionConfiguration extends Serializable {
     }
 
     /**
+     * List of extra dependencies. Extra dependencies are appended to the regular list of dependencies.
+     * In profiles, the regular "dependencies" must be overridden entirely, "extraDependencies" can be used to add additional dependencies.
+     */
+    @Value.Default
+    default List<String> extraDependencies() {
+        return Collections.emptyList();
+    }
+
+    /**
      * Process arguments. Arbitrary key-value pairs.
      */
     @Value.Default
