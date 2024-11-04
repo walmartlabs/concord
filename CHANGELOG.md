@@ -7,7 +7,9 @@
 - runtime-v2: initial support for dry-run mode
 ([#1007](https://github.com/walmartlabs/concord/pull/1007));
 - concord-console2: add a full-screen page for process cards
-([#1009](https://github.com/walmartlabs/concord/pull/1009)).
+([#1009](https://github.com/walmartlabs/concord/pull/1009));
+- mock-tasks: support for method mocks in tasks
+([#1010](https://github.com/walmartlabs/concord/pull/1010)).
 
 ## Changed
 
