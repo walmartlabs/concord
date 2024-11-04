@@ -4,6 +4,8 @@
 
 ## Added
 
+- runtime-v2: initial support for dry-run mode
+([#1007](https://github.com/walmartlabs/concord/pull/1007));
 - concord-console2: add a full-screen page for process cards
 ([#1009](https://github.com/walmartlabs/concord/pull/1009)).
 
