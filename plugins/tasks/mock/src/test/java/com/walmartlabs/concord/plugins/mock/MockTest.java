@@ -21,7 +21,6 @@ package com.walmartlabs.concord.plugins.mock;
  */
 
 import com.walmartlabs.concord.runtime.v2.runner.TestRuntimeV2;
-import kotlin.text.Regex;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -29,7 +28,7 @@ import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.runtime.v2.runner.TestRuntimeV2.assertLog;
 
-public class MainTest {
+public class MockTest {
 
     @RegisterExtension
     private static final TestRuntimeV2 runtime = new TestRuntimeV2();

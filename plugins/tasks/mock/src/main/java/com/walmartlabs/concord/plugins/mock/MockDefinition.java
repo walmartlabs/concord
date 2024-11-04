@@ -20,15 +20,10 @@ package com.walmartlabs.concord.plugins.mock;
  * =====
  */
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.walmartlabs.concord.common.AllowNulls;
 import com.walmartlabs.concord.sdk.MapUtils;
-import org.immutables.value.Value;
+import com.walmartlabs.concord.sdk.UserDefinedException;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -40,8 +35,12 @@ public class MockDefinition {
         this.definition = definition;
     }
 
-    public String name() {
-        return MapUtils.assertString(definition, "name");
+    public String task() {
+        try {
+            return MapUtils.assertString(definition, "task");
+        } catch (IllegalArgumentException e) {
+            throw new UserDefinedException("Invalid mock definition: " + e.getMessage() + "\n" + definition);
+        }
     }
 
     public Map<String, Object> input() {
@@ -67,4 +66,6 @@ public class MockDefinition {
     public String throwError() {
         return MapUtils.getString(definition, "throwError");
     }
+
+
 }
