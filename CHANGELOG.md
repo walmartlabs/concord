@@ -9,7 +9,9 @@
 - concord-console2: add a full-screen page for process cards
 ([#1009](https://github.com/walmartlabs/concord/pull/1009));
 - mock-tasks: support for method mocks in tasks
-([#1010](https://github.com/walmartlabs/concord/pull/1010)).
+([#1010](https://github.com/walmartlabs/concord/pull/1010));
+- mock-tasks: support for task call verify
+([#1012](https://github.com/walmartlabs/concord/pull/1012)).
 
 ## Changed
 
