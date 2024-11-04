@@ -26,7 +26,8 @@ import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Singleton;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -35,16 +36,16 @@ public class MockDefinitionProvider {
 
     public MockDefinition find(Context ctx, String taskName, Variables input) {
         return findMockDefinitions(ctx, mock ->
-                taskName.equals(mock.name()) && ArgsMatcher.match(input.toMap(), mock.input()));
+                taskName.equals(mock.task()) && ArgsMatcher.match(input.toMap(), mock.input()));
     }
 
     public MockDefinition find(Context ctx, String taskName, String method, Object[] params) {
         return findMockDefinitions(ctx, mock ->
-                taskName.equals(mock.name()) && method.equals(mock.method()) && ArgsMatcher.match(params, mock.args()));
+                taskName.equals(mock.task()) && method.equals(mock.method()) && ArgsMatcher.match(params, mock.args()));
     }
 
     public boolean isTaskMocked(Context ctx, String taskName) {
-        return mocks(ctx).anyMatch(mock -> taskName.equals(mock.name()));
+        return mocks(ctx).anyMatch(mock -> taskName.equals(mock.task()));
     }
 
     private static MockDefinition findMockDefinitions(Context ctx, Predicate<MockDefinition> predicate) {

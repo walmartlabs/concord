@@ -94,6 +94,13 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
 
     private Class<?> testClass;
 
+    private Class<? extends PersistenceService> persistenceServiceClass;
+
+    public TestRuntimeV2 withPersistenceService(Class<? extends PersistenceService> persistenceServiceClass) {
+        this.persistenceServiceClass = persistenceServiceClass;
+        return this;
+    }
+
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         boolean ignoreSerializationAssert = context.getTestMethod()
@@ -353,7 +360,11 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
                 bind(DockerService.class).to(DefaultDockerService.class);
                 bind(FileService.class).to(DefaultFileService.class);
                 bind(LockService.class).to(DefaultLockService.class);
-                bind(PersistenceService.class).toInstance(mock(PersistenceService.class));
+                if (persistenceServiceClass != null) {
+                    bind(PersistenceService.class).to(persistenceServiceClass);
+                } else {
+                    bind(PersistenceService.class).toInstance(mock(PersistenceService.class));
+                }
                 bind(ProcessStatusCallback.class).toInstance(processStatusCallback);
                 bind(SecretService.class).to(DefaultSecretService.class);
                 bind(ApiClient.class).toInstance(mock(ApiClient.class));
