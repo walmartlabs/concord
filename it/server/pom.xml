@@ -540,7 +540,7 @@
                                             <com.walmartlabs.concord.it.name>server</com.walmartlabs.concord.it.name>
                                         </labels>
                                         <log>
-                                            <prefix>SERVER </prefix>
+                                            <prefix>SERVER&#32;</prefix>
                                             <color>cyan</color>
                                         </log>
                                     </run>
