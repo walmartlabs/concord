@@ -1,0 +1,14 @@
+flows:
+  default:
+    - expr: "${undefinedTask.myMethod(1, 'something')}"
+      out: result
+
+    - log: "result.ok: ${result}"
+
+configuration:
+  arguments:
+    mocks:
+      - name: "undefinedTask"
+        method: "myMethod"
+        args: [1, "${mock.any()}"]
+        result: "BOO"

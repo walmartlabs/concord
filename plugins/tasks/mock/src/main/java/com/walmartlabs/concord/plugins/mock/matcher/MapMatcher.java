@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.plugins.mock;
+package com.walmartlabs.concord.plugins.mock.matcher;
 
 /*-
  * *****
@@ -20,21 +20,17 @@ package com.walmartlabs.concord.plugins.mock;
  * =====
  */
 
-import com.walmartlabs.concord.svm.State;
-
-import java.io.Serializable;
 import java.util.Map;
 
-public final class MockInputUtils {
+public class MapMatcher extends AbstractMatcher<Map<String, Object>, Map<String, Object>> {
 
-    public static void storeInput(State state, String inputStoreId, Map<String, Object> input) {
-        state.setThreadLocal(state.getRootThreadId(), inputStoreId, (Serializable) input);
+    public MapMatcher() {
+        super(new TypeReference<>() {}, new TypeReference<>() {});
     }
 
-    public static Map<String, Object> getInput(State state, String inputStoreId) {
-        return state.getThreadLocal(state.getRootThreadId(), inputStoreId);
-    }
-
-    private MockInputUtils() {
+    @Override
+    public boolean matches(Map<String, Object> input, Map<String, Object> mockInput) {
+        return mockInput.entrySet().stream()
+                .allMatch(entry -> ArgsMatcher.match(input.get(entry.getKey()), entry.getValue()));
     }
 }
