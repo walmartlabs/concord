@@ -218,8 +218,8 @@ public class ConfigurationProcessor implements PayloadProcessor {
     private static void processHandlersConfiguration(Payload payload, Map<String, Object> m) {
         ProcessKind processKind = payload.getHeader(Payload.PROCESS_KIND);
         if (processKind != ProcessKind.FAILURE_HANDLER &&
-                processKind != ProcessKind.CANCEL_HANDLER &&
-                processKind != ProcessKind.TIMEOUT_HANDLER) {
+            processKind != ProcessKind.CANCEL_HANDLER &&
+            processKind != ProcessKind.TIMEOUT_HANDLER) {
             return;
         }
 
@@ -236,7 +236,7 @@ public class ConfigurationProcessor implements PayloadProcessor {
         }
         m.put(Constants.Request.DRY_RUN_MODE_KEY, dryRunMode);
         if (dryRunMode) {
-            logManager.info(payload.getProcessKey(), "Dry-run mode: true");
+            logManager.info(payload.getProcessKey(), "Dry-run mode: enabled");
         }
     }
 
@@ -253,6 +253,6 @@ public class ConfigurationProcessor implements PayloadProcessor {
                 return false;
             }
         }
-        throw new ProcessException(payload.getProcessKey(), String.format("Invalid '%s' mode value type. Expected 'true|false', got: '%s'", key, value), Status.BAD_REQUEST);
+        throw new ProcessException(payload.getProcessKey(), String.format("Invalid '%s' mode value type. Expected a boolean value true or false, got: '%s'", key, value), Status.BAD_REQUEST);
     }
 }
