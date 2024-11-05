@@ -62,6 +62,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.stream.Stream;
 
 @Command(name = "run", description = "Run the current directory as a Concord process")
 public class Run implements Callable<Integer> {
@@ -194,21 +195,30 @@ public class Run implements Callable<Integer> {
             System.out.println("Active profiles: " + profiles);
         }
 
+        // "deps" are the "dependencies" of the last profile in the list of active profiles (if present)
         Map<String, Object> overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), profiles);
-        List<String> overlayDeps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
+        List<String> deps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
 
-        Collection<String> dependencies;
+        // "extraDependencies" are additive: ALL extra dependencies from ALL ACTIVE profiles are added to the list
+        List<String> extraDeps = profiles.stream()
+                .flatMap(profileName -> Stream.ofNullable(processDefinition.profiles().get(profileName)))
+                .flatMap(profile -> profile.configuration().extraDependencies().stream())
+                .toList();
 
+        List<String> allDeps = new ArrayList<>(deps);
+        allDeps.addAll(extraDeps);
+
+        DependencyResolver resolver = new DependencyResolver(dependencyManager, verbosity.verbose());
+        Collection<String> resolvedDependencies;
         try {
-            dependencies = new DependencyResolver(dependencyManager, verbosity.verbose())
-                    .resolveDeps(overlayDeps);
+            resolvedDependencies = resolver.resolveDeps(allDeps);
         } catch (Exception e) {
             System.err.println(e.getMessage());
             return -1;
         }
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
-                .dependencies(dependencies)
+                .dependencies(resolvedDependencies)
                 .debug(processDefinition.configuration().debug())
                 .build();
 
@@ -232,7 +242,7 @@ public class Run implements Callable<Integer> {
             ProcessDefinition pd = ProcessDefinition.builder().from(processDefinition)
                     .configuration(ProcessDefinitionConfiguration.builder().from(processDefinition.configuration())
                             .arguments(args)
-                            .dependencies(overlayDeps)
+                            .dependencies(deps)
                             .build())
                     .flows(flows)
                     .imports(Imports.builder().build())
