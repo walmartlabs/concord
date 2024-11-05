@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.20.0] - Unreleased
+
+### Changed
+
+- plugins: fix dependency scopes
+([#1017](https://github.com/walmartlabs/concord/pull/1017)).
+
+
+
 ## [2.19.0] - 2024-11-05
 
 ## Added
