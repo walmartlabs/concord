@@ -45,6 +45,11 @@ public class ConfigurationV1 implements Configuration, Serializable {
     }
 
     @Override
+    public List<String> extraDependencies() {
+        return Collections.emptyList();
+    }
+
+    @Override
     public Map<String, Object> asMap() {
         return values;
     }

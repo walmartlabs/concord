@@ -45,6 +45,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.process.loader.ProjectLoader.CONCORD_V1_RUNTIME_TYPE;
 
@@ -93,7 +94,14 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
             payload = PayloadUtils.addSnapshots(payload, snapshots);
 
             ProcessDefinition pd = result.projectDefinition();
-            int depsCount = pd.configuration().dependencies().size();
+
+            // grab "dependencies" and add all "extraDependencies" from the active profiles
+            List<String> allDependencies = new ArrayList<>(pd.configuration().dependencies());
+            List<String> activeProfiles = payload.getHeader(Payload.ACTIVE_PROFILES, Collections.emptyList());
+            activeProfiles.stream().flatMap(profileName -> Stream.ofNullable(pd.profiles().get(profileName)))
+                    .forEach(profile -> allDependencies.addAll(profile.configuration().extraDependencies()));
+
+            int depsCount = allDependencies.size();
             if (depsCount > MAX_DEPENDENCIES_COUNT) {
                 String msg = String.format("Too many dependencies. Current: %d, maximum allowed: %d", depsCount, MAX_DEPENDENCIES_COUNT);
                 throw new ConcordApplicationException(msg, Response.Status.BAD_REQUEST);
@@ -102,7 +110,7 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
             payload = payload.putHeader(Payload.PROJECT_DEFINITION, pd)
                     .putHeader(Payload.RUNTIME, pd.runtime())
                     .putHeader(Payload.IMPORTS, pd.imports())
-                    .putHeader(Payload.DEPENDENCIES, pd.configuration().dependencies());
+                    .putHeader(Payload.DEPENDENCIES, allDependencies);
 
             // save the runtime type in the process configuration
             Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
