@@ -108,6 +108,11 @@ public class Constants {
         public static final String DEPENDENCIES_KEY = "dependencies";
 
         /**
+         * Key of a process dependencies list in a request data JSON.
+         */
+        public static final String EXTRA_DEPENDENCIES_KEY = "extraDependencies";
+
+        /**
          * Process entry point.
          */
         public static final String ENTRY_POINT_KEY = "entryPoint";

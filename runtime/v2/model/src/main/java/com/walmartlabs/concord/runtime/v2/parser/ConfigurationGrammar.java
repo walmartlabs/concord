@@ -77,6 +77,7 @@ public final class ConfigurationGrammar {
                                     optional("runtime", stringVal.map(o::runtime)),
                                     optional("entryPoint", stringVal.map(o::entryPoint)),
                                     optional("dependencies", stringArrayVal.map(o::dependencies)),
+                                    optional("extraDependencies", stringArrayVal.map(o::extraDependencies)),
                                     optional("meta", mapVal.map(o::meta)),
                                     optional("requirements", mapVal.map(o::requirements)),
                                     optional("processTimeout", durationVal.map(o::processTimeout)),
