@@ -174,6 +174,7 @@ public class ProjectLoaderV2 {
         Map<String, Form> forms = new LinkedHashMap<>();
         Set<String> resources = new HashSet<>();
         Set<String> dependencies = new HashSet<>();
+        Set<String> extraDependencies = new HashSet<>();
         Map<String, Object> arguments = new LinkedHashMap<>();
 
         for (ProcessDefinition pd : definitions) {
@@ -184,6 +185,7 @@ public class ProjectLoaderV2 {
             forms.putAll(pd.forms());
             resources.addAll(pd.resources().concord());
             dependencies.addAll(pd.configuration().dependencies());
+            extraDependencies.addAll(pd.configuration().extraDependencies());
             arguments = ConfigurationUtils.deepMerge(arguments, pd.configuration().arguments());
         }
 
@@ -192,6 +194,7 @@ public class ProjectLoaderV2 {
         return ProcessDefinition.builder().from(root)
                 .configuration(ProcessDefinitionConfiguration.builder().from(root.configuration())
                         .dependencies(dependencies)
+                        .extraDependencies(extraDependencies)
                         .arguments(arguments)
                         .build())
                 .flows(flows)
