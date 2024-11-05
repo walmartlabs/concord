@@ -1,5 +1,54 @@
 # Change Log
 
+## [2.19.0] - Unreleased
+
+## Added
+
+- runtime-v2: introduce extraDependencies
+([#1014](https://github.com/walmartlabs/concord/pull/1014));
+- runtime-v2: initial support for dry-run mode
+([#1007](https://github.com/walmartlabs/concord/pull/1007));
+- concord-console2: add a full-screen page for process cards
+([#1009](https://github.com/walmartlabs/concord/pull/1009));
+- mock-tasks: support for method mocks in tasks
+([#1010](https://github.com/walmartlabs/concord/pull/1010));
+- mock-tasks: support for task call verify
+([#1012](https://github.com/walmartlabs/concord/pull/1012)).
+
+## Changed
+
+- concord-server: remove resteasy-guice dependency
+([#997](https://github.com/walmartlabs/concord/pull/997));
+- project: update HikariCP version
+([#1000](https://github.com/walmartlabs/concord/pull/1000));
+- runtime-v2: flush events on process error 
+([#1001](https://github.com/walmartlabs/concord/pull/1001));
+- concord-server: fix AuthenticationHandler result handling
+([#1003](https://github.com/walmartlabs/concord/pull/1003));
+- server: fix ConcordKey validation regex to 128 character limit
+([#1004](https://github.com/walmartlabs/concord/pull/1004));
+- project: update docker-login action in build flow
+([#1005](https://github.com/walmartlabs/concord/pull/1005));
+- runtime-v2: log task method name in event
+([#1006](https://github.com/walmartlabs/concord/pull/1006));
+- runtime-v2: move tests to separate module
+([#1008](https://github.com/walmartlabs/concord/pull/1008));
+- runtime-v2: use shorter delay while polling status of
+threads
+([#1011](https://github.com/walmartlabs/concord/pull/1011)).
+
+### Breaking
+
+- runtime-v2: store flow location in process definition.
+Note, this changes the type of
+`context.execution().processDefinition().flows()` object
+available in runtime-v2 processes.
+([#995](https://github.com/walmartlabs/concord/pull/995));
+- runtime-v2: remove ProjectLoadListener interface
+([#1015](https://github.com/walmartlabs/concord/pull/1015)).
+
+
+
 ## [2.18.0] - 2024-10-13
 
 ### Added
