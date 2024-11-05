@@ -62,6 +62,8 @@ public interface UserInfoResponse extends Serializable {
         }
     }
 
+    UUID id();
+
     String displayName();
 
     List<UserTeamInfo> teams();

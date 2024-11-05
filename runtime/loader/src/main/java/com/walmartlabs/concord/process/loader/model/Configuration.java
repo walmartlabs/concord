@@ -28,4 +28,6 @@ public interface Configuration {
     Map<String, Object> asMap();
 
     List<String> dependencies();
+
+    List<String> extraDependencies();
 }

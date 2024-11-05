@@ -33,6 +33,7 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.cfg.ProcessConfigurationUtils;
 
 import javax.inject.Inject;
@@ -54,11 +55,13 @@ public class ConfigurationProcessor implements PayloadProcessor {
 
     private final ProjectDao projectDao;
     private final OrganizationDao orgDao;
+    private final ProcessLogManager logManager;
 
     @Inject
-    public ConfigurationProcessor(ProjectDao projectDao, OrganizationDao orgDao) {
+    public ConfigurationProcessor(ProjectDao projectDao, OrganizationDao orgDao, ProcessLogManager logManager) {
         this.projectDao = projectDao;
         this.orgDao = orgDao;
+        this.logManager = logManager;
     }
 
     @Override
@@ -106,6 +109,8 @@ public class ConfigurationProcessor implements PayloadProcessor {
 
         // handle handlers special params
         processHandlersConfiguration(payload, m);
+
+        processDryRunModeConfiguration(payload, m);
 
         payload = payload.putHeader(Payload.CONFIGURATION, m);
 
@@ -213,8 +218,8 @@ public class ConfigurationProcessor implements PayloadProcessor {
     private static void processHandlersConfiguration(Payload payload, Map<String, Object> m) {
         ProcessKind processKind = payload.getHeader(Payload.PROCESS_KIND);
         if (processKind != ProcessKind.FAILURE_HANDLER &&
-                processKind != ProcessKind.CANCEL_HANDLER &&
-                processKind != ProcessKind.TIMEOUT_HANDLER) {
+            processKind != ProcessKind.CANCEL_HANDLER &&
+            processKind != ProcessKind.TIMEOUT_HANDLER) {
             return;
         }
 
@@ -222,5 +227,32 @@ public class ConfigurationProcessor implements PayloadProcessor {
         if (handlerTimeout != null) {
             m.put(Constants.Request.PROCESS_TIMEOUT, handlerTimeout);
         }
+    }
+
+    private void processDryRunModeConfiguration(Payload payload, Map<String, Object> m) {
+        Boolean dryRunMode = getBoolean(payload, m, Constants.Request.DRY_RUN_MODE_KEY);
+        if (dryRunMode == null) {
+            return;
+        }
+        m.put(Constants.Request.DRY_RUN_MODE_KEY, dryRunMode);
+        if (dryRunMode) {
+            logManager.info(payload.getProcessKey(), "Dry-run mode: enabled");
+        }
+    }
+
+    private Boolean getBoolean(Payload payload, Map<String, Object> m, String key) {
+        Object value = m.get(key);
+        if (value == null) {
+            return null;
+        } else if (value instanceof Boolean booleanValue) {
+            return booleanValue;
+        } else if (value instanceof String stringValue) {
+            if ("true".equalsIgnoreCase(stringValue)) {
+                return true;
+            } else if ("false".equalsIgnoreCase(stringValue)) {
+                return false;
+            }
+        }
+        throw new ProcessException(payload.getProcessKey(), String.format("Invalid '%s' mode value type. Expected a boolean value true or false, got: '%s'", key, value), Status.BAD_REQUEST);
     }
 }

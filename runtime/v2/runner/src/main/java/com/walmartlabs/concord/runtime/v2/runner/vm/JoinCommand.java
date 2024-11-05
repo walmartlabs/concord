@@ -26,13 +26,17 @@ import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serial;
 import java.util.Collection;
 import java.util.Map;
 
 public class JoinCommand<T extends Step> extends StepCommand<T> {
 
-    private static final Logger log = LoggerFactory.getLogger(JoinCommand.class);
+    @Serial
     private static final long serialVersionUID = 1L;
+
+    private static final Logger log = LoggerFactory.getLogger(JoinCommand.class);
+    private static final long BUSY_WAIT_SLEEP = 100; // how often poll status of threads, milliseconds
 
     private final Collection<ThreadId> ids;
 
@@ -90,7 +94,7 @@ public class JoinCommand<T extends Step> extends StepCommand<T> {
 
             // some children are still running, wait for a bit and then check again
             try {
-                Thread.sleep(1000); // a "good enough™" value
+                Thread.sleep(BUSY_WAIT_SLEEP);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

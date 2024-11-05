@@ -136,6 +136,7 @@ public class ConsoleService implements Resource {
                 .orElse(Set.of());
 
         return UserInfoResponse.builder()
+                .id(u.getId())
                 .displayName(displayName(u, p))
                 .teams(consoleServiceDao.listTeams(p.getId()))
                 .roles(u.getRoles().stream().map(RoleEntry::getName).toList())

@@ -1,0 +1,16 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+    - mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:2.15.0
+profiles:
+  foo:
+    configuration:
+      dependencies:
+        - mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:2.16.0
+  bar:
+    configuration:
+      extraDependencies:
+        - mvn://com.walmartlabs.concord.plugins:confluence-task:2.5.0
+flows:
+  default:
+    - log: "Hi!"

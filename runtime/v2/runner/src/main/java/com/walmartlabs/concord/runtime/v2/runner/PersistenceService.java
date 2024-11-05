@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.nio.file.OpenOption;
+import java.nio.file.StandardOpenOption;
 
 public interface PersistenceService {
 
@@ -33,11 +35,15 @@ public interface PersistenceService {
 
     void persistFile(String name, Writer writer);
 
+    void persistFile(String name, Writer writer, OpenOption... options);
+
     void persistSessionFile(String name, Writer writer);
 
     <T> T loadPersistedFile(String name, Converter<InputStream, T> converter);
 
     <T> T loadPersistedSessionFile(String name, Converter<InputStream, T> converter);
+
+    void deletePersistedFile(String name) throws IOException;
 
     interface Writer {
 

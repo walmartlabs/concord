@@ -33,8 +33,8 @@ public final class ProcessDefinitionUtils {
             return null;
         }
 
-        for (Map.Entry<String, List<Step>> e : processDefinition.flows().entrySet()) {
-            if (containsStep(e.getValue(), currentStep)) {
+        for (Map.Entry<String, Flow> e : processDefinition.flows().entrySet()) {
+            if (containsStep(e.getValue().steps(), currentStep)) {
                 return e.getKey();
             }
         }

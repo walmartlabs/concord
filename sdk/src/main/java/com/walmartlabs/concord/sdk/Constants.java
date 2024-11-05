@@ -108,6 +108,11 @@ public class Constants {
         public static final String DEPENDENCIES_KEY = "dependencies";
 
         /**
+         * Key of a process dependencies list in a request data JSON.
+         */
+        public static final String EXTRA_DEPENDENCIES_KEY = "extraDependencies";
+
+        /**
          * Process entry point.
          */
         public static final String ENTRY_POINT_KEY = "entryPoint";
@@ -116,6 +121,11 @@ public class Constants {
          * Name of the default entry point.
          */
         public static final String DEFAULT_ENTRY_POINT_NAME = "default";
+
+        /**
+         * Run process in dry-run mode?.
+         */
+        public static final String DRY_RUN_MODE_KEY = "dryRun";
 
         /**
          * Active profiles.

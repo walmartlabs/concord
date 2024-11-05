@@ -1,27 +1,7 @@
 flows:
   default:
-  - log: "Hello!"
-  - task: concord
-    in:
-      action: fork
-      entryPoint: onFork
-      sync: true
-      suspend: true
-      arguments:
-        item: ${item}
-    loop:
-      mode: parallel
-      parallelism: 4
-      items:
-        - a
-        - b
-        - c
-        - d
-
-  onFork:
-    - log: ${item}
-    - "${sleep.ms(5000)}"
-    - throw: "woowee, ${item}"
+    - log: "Hello, ${name}!"
 
 configuration:
-  runtime: concord-v2
+  arguments:
+    name: "Concord"
