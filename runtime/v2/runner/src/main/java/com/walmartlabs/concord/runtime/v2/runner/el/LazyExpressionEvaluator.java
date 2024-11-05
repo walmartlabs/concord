@@ -27,6 +27,7 @@ import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.BeanELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.MapELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.*;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
+import com.walmartlabs.concord.runtime.v2.sdk.CustomBeanELResolver;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
@@ -47,10 +48,12 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     private final ExpressionFactory expressionFactory = ExpressionFactory.newInstance();
     private final TaskProviders taskProviders;
     private final FunctionMapper functionMapper;
+    private final List<CustomBeanELResolver> customBeanELResolvers;
 
-    public LazyExpressionEvaluator(TaskProviders taskProviders) {
+    public LazyExpressionEvaluator(TaskProviders taskProviders, List<CustomBeanELResolver> customBeanELResolvers) {
         this.taskProviders = taskProviders;
         this.functionMapper = createFunctionMapper();
+        this.customBeanELResolvers = customBeanELResolvers;
     }
 
     @Override
@@ -158,6 +161,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
 
             throw new UserDefinedException(errorMessage);
         } catch (Exception e) {
+            e.printStackTrace();
             UserDefinedException u = ExceptionUtils.filterException(e, UserDefinedException.class);
             if (u != null) {
                 throw u;
@@ -191,7 +195,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         if (evalContext.context() != null) {
             r.add(new TaskMethodResolver(evalContext.context()));
         }
-        r.add(new BeanELResolver());
+        r.add(new BeanELResolver(customBeanELResolvers));
         return r;
     }
 
@@ -207,6 +211,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         functions.put("throw", ThrowFunction.getMethod());
         functions.put("hasFlow", HasFlowFunction.getMethod());
         functions.put("uuid", UuidFunction.getMethod());
+        functions.put("isDryRun", IsDryRunFunction.getMethod());
         return new FunctionMapper(functions);
     }
 

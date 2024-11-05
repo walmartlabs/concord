@@ -39,7 +39,7 @@ public class ExpressionEvaluatorTest {
 
     @Test
     public void testEvaGlobal() {
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        ExpressionEvaluator ee = expressionEvaluator(new TaskProviders());
         Map<String, Object> vars = Collections.singletonMap("name", "${Concord}");
 
         // ---
@@ -49,7 +49,7 @@ public class ExpressionEvaluatorTest {
 
     @Test
     public void testStrict() {
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        ExpressionEvaluator ee = expressionEvaluator(new TaskProviders());
         Map<String, Object> vars = Collections.singletonMap("name", "Concord");
         Map<String, Object> strict = Collections.singletonMap("name", "Concord!!!");
 
@@ -62,7 +62,7 @@ public class ExpressionEvaluatorTest {
 
     @Test
     public void testStrictUndef() {
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        ExpressionEvaluator ee = expressionEvaluator(new TaskProviders());
         Map<String, Object> vars = Collections.singletonMap("name", "Concord");
         Map<String, Object> strict = Collections.emptyMap();
 
@@ -84,7 +84,7 @@ public class ExpressionEvaluatorTest {
 
     @Test
     public void testEvalScope() {
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        ExpressionEvaluator ee = expressionEvaluator(new TaskProviders());
 
         Map<String, Object> vars = Collections.singletonMap("name", "${Concord}");
 
@@ -102,7 +102,7 @@ public class ExpressionEvaluatorTest {
 
     @Test
     public void testEvalListGlobal() {
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        ExpressionEvaluator ee = expressionEvaluator(new TaskProviders());
 
         Map<String, Object> vars = Collections.singletonMap("name", "${Concord}");
 
@@ -137,7 +137,7 @@ public class ExpressionEvaluatorTest {
                         "y2", "abc",
                         "y3", "${z}"));
 
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        ExpressionEvaluator ee = expressionEvaluator(new TaskProviders());
         Map<String, Object> vars = Collections.singletonMap("in", "task");
 
         // scope -> ok
@@ -174,7 +174,7 @@ public class ExpressionEvaluatorTest {
                 "x", "${y}",
                 "y", "${x}");
 
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        ExpressionEvaluator ee = expressionEvaluator(new TaskProviders());
         Map<String, Object> vars = Collections.emptyMap();
 
         // global: x -> undefined
@@ -220,7 +220,7 @@ public class ExpressionEvaluatorTest {
         TestTask task = spy(new TestTask());
         when(providers.createTask(any(), eq("task"))).thenReturn(task);
 
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(providers);
+        ExpressionEvaluator ee = expressionEvaluator(providers);
         Map<String, Object> vars = Collections.emptyMap();
 
         // global: y -> undefined
@@ -270,7 +270,7 @@ public class ExpressionEvaluatorTest {
         TestTask2 task = spy(new TestTask2());
         when(providers.createTask(any(), eq("task"))).thenReturn(task);
 
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(providers);
+        ExpressionEvaluator ee = expressionEvaluator(providers);
         Map<String, Object> vars = Collections.emptyMap();
 
         // scope:
@@ -292,7 +292,7 @@ public class ExpressionEvaluatorTest {
                         "y1", "y1-value",
                         "y2", "${y1}"));
 
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        ExpressionEvaluator ee = expressionEvaluator(new TaskProviders());
         Map<String, Object> vars = Collections.emptyMap();
 
         try {
@@ -308,7 +308,7 @@ public class ExpressionEvaluatorTest {
                 "x", Collections.singletonList("${y}"),
                 "y", "abc");
 
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        ExpressionEvaluator ee = expressionEvaluator(new TaskProviders());
         Map<String, Object> vars = Collections.emptyMap();
 
         // scope:
@@ -328,7 +328,7 @@ public class ExpressionEvaluatorTest {
          */
         Map<Object, Object> input = map("x", Collections.singletonList("${y}"), "y", "abc");
 
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        ExpressionEvaluator ee = expressionEvaluator(new TaskProviders());
         Map<String, Object> vars = Collections.emptyMap();
 
         // scope:
@@ -342,7 +342,7 @@ public class ExpressionEvaluatorTest {
     public void testEvalHasVariable() {
         String str = "${hasVariable('x')}";
 
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        ExpressionEvaluator ee = expressionEvaluator(new TaskProviders());
 
         // ---
 
@@ -360,7 +360,7 @@ public class ExpressionEvaluatorTest {
     public void testAllVariables() {
         String str = "${allVariables()}";
 
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        ExpressionEvaluator ee = expressionEvaluator(new TaskProviders());
 
         // ---
         Map<String, Object> vars = new HashMap<>();
@@ -393,6 +393,10 @@ public class ExpressionEvaluatorTest {
             result.put(k, v);
         }
         return result;
+    }
+
+    private static ExpressionEvaluator expressionEvaluator(TaskProviders taskProviders) {
+        return new DefaultExpressionEvaluator(taskProviders, List.of());
     }
 
     public static class TestTask implements Task {

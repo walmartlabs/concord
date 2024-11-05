@@ -53,6 +53,11 @@ public class ConfigurationV2 implements Configuration, Serializable {
     }
 
     @Override
+    public List<String> extraDependencies() {
+        return MapUtils.getList(values, Constants.Request.EXTRA_DEPENDENCIES_KEY, Collections.emptyList());
+    }
+
+    @Override
     public Map<String, Object> asMap() {
         return values;
     }

@@ -18,7 +18,7 @@
  * =====
  */
 
-import { fetchJson } from '../../common';
+import {ConcordId, fetchJson} from '../../common';
 import {TeamRole} from "../../org/team";
 
 export interface UserInfoTeam {
@@ -28,6 +28,7 @@ export interface UserInfoTeam {
 }
 
 export interface UserInfoEntry {
+    id: ConcordId;
     displayName: string;
     teams?: UserInfoTeam[];
     roles?: string[];

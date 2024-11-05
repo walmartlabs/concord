@@ -31,6 +31,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
@@ -81,11 +82,13 @@ public class SimpleHttpClient {
     private final HttpUriRequest request;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final boolean dryRunMode;
 
-    private SimpleHttpClient(Configuration config) throws Exception {
+    private SimpleHttpClient(Configuration config, boolean dryRunMode) throws Exception {
         this.config = config;
         this.client = createClient(config);
         this.request = buildHttpUriRequest(config);
+        this.dryRunMode = dryRunMode;
     }
 
     /**
@@ -94,8 +97,8 @@ public class SimpleHttpClient {
      * @param config {@link Configuration}
      * @return SimpleHttpClient
      */
-    public static SimpleHttpClient create(Configuration config) throws Exception {
-        return new SimpleHttpClient(config);
+    public static SimpleHttpClient create(Configuration config, boolean dryRunMode) throws Exception {
+        return new SimpleHttpClient(config, dryRunMode);
     }
 
     /**
@@ -110,6 +113,11 @@ public class SimpleHttpClient {
         try {
             if (config.isDebug()) {
                 logRequest(request);
+            }
+
+            if (dryRunMode && !HttpGet.METHOD_NAME.equals(request.getMethod())) {
+                log.info("Running in dry-run mode: Skipping sending request");
+                return new ClientResponse(Map.of("success", true, "statusCode", 200));
             }
 
             httpResponse = callWithTimeout(() -> this.client.execute(request), config.getRequestTimeout());
@@ -139,7 +147,6 @@ public class SimpleHttpClient {
 
             // TODO return a proper structure, convert later
             return new ClientResponse(response);
-
         } catch (RequestTimeoutException | IOException | UnauthorizedException e) {
             if (!config.isIgnoreErrors()) {
                 throw e;

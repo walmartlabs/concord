@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client2.ProcessApi;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.client2.StartProcessResponse;
 import com.walmartlabs.concord.common.IOUtils;
@@ -33,10 +32,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -62,7 +61,6 @@ public class DependenciesIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
@@ -86,5 +84,33 @@ public class DependenciesIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello, Concord.*", ab);
+    }
+
+    @Test
+    public void testExtraDependencies() throws Exception {
+        byte[] payload = archive(DependenciesIT.class.getResource("extraDeps").toURI());
+
+        // do the first run with the default profile
+
+        StartProcessResponse spr = start(payload);
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        byte[] ab = getLog(pir.getInstanceId());
+        assertLog(".*mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:2.15.0.*", ab);
+
+        // then add "foo" profile
+
+        spr = start(Map.of("archive", payload, "activeProfiles", "foo"));
+        pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        ab = getLog(pir.getInstanceId());
+        assertLog(".*mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:2.16.0.*", ab);
+        assertNoLog(".*confluence-task.*", ab);
+
+        // then both "foo" and "bar" profiles
+
+        spr = start(Map.of("archive", payload, "activeProfiles", "foo,bar"));
+        pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        ab = getLog(pir.getInstanceId());
+        assertLog(".*mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:2.16.0.*", ab);
+        assertLog(".*mvn://com.walmartlabs.concord.plugins:confluence-task:2.5.0.*", ab);
     }
 }

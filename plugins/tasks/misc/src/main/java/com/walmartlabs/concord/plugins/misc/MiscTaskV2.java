@@ -20,12 +20,14 @@ package com.walmartlabs.concord.plugins.misc;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.DryRunReady;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
 import javax.inject.Named;
 
 @Named("misc")
 @SuppressWarnings("unused")
+@DryRunReady
 public class MiscTaskV2 implements Task {
 
     public void throwRuntimeException(String message) {

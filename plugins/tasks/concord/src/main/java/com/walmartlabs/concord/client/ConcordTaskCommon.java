@@ -620,6 +620,10 @@ public class ConcordTaskCommon {
             req.put(Constants.Request.REQUIREMENTS, new HashMap<>(requirements));
         }
 
+        if (in.dryRunMode() != null) {
+            req.put(Constants.Request.DRY_RUN_MODE_KEY, in.dryRunMode());
+        }
+
         return req;
     }
 

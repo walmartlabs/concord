@@ -36,7 +36,7 @@ public class ResteasyModule implements Module {
     public void configure(Binder binder) {
         newSetBinder(binder, ApiDescriptor.class).addBinding().to(ConcordApiDescriptor.class);
 
-        newSetBinder(binder, ServletContextListener.class).addBinding().to(ResteasyListener.class);
+        newSetBinder(binder, ServletContextListener.class).addBinding().to(ResteasyBootstrapListener.class);
 
         binder.bind(ObjectMapperContextResolver.class).in(SINGLETON);
         newSetBinder(binder, Component.class).addBinding().to(ObjectMapperContextResolver.class);

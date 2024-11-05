@@ -219,7 +219,8 @@ public class SmtpTaskUtils {
     }
 
     public static void send(Map<String, Object> smtp, Map<String, Object> mail,
-                            Path baseDir, Object scope, boolean debug) throws Exception {
+                            Path baseDir, Object scope, boolean debug,
+                            boolean dryRunMode) throws Exception {
 
         if (mail == null) {
             throw new IllegalArgumentException("'mail' param is required");
@@ -263,6 +264,11 @@ public class SmtpTaskUtils {
             }
 
             email.setSubject(subject);
+
+            if (dryRunMode) {
+                log.info("Running in dry-run mode: Skipping sending email");
+                return;
+            }
 
             String msgId = email.send();
 
