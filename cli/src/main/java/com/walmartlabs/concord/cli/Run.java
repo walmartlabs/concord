@@ -40,7 +40,6 @@ import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
-import com.walmartlabs.concord.runtime.v2.runner.ProjectLoadListeners;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
@@ -265,9 +264,8 @@ public class Run implements Callable<Integer> {
                 .create();
 
         // Just to notify listeners
-        ProjectLoadListeners loadListeners = injector.getInstance(ProjectLoadListeners.class);
         ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
-        loader.load(targetDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, loadListeners);
+        loader.load(targetDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER);
 
         Runner runner = injector.getInstance(Runner.class);
 

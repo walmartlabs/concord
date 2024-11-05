@@ -30,7 +30,6 @@ import com.walmartlabs.concord.runtime.common.ProcessHeartbeat;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
-import com.walmartlabs.concord.runtime.v2.ProjectLoadListener;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
@@ -68,7 +67,6 @@ public class Main {
     private final WorkingDirectory workDir;
     private final TaskProviders taskProviders;
     private final ClassLoader classLoader;
-    private final ProjectLoadListeners projectLoadListeners;
 
     @Inject
     public Main(Runner runner,
@@ -76,8 +74,7 @@ public class Main {
                 ProcessConfiguration processCfg,
                 WorkingDirectory workDir,
                 TaskProviders taskProviders,
-                @Named("runtime") ClassLoader classLoader,
-                ProjectLoadListeners projectLoadListeners) {
+                @Named("runtime") ClassLoader classLoader) {
 
         this.runner = runner;
         this.runnerCfg = runnerCfg;
@@ -85,7 +82,6 @@ public class Main {
         this.workDir = workDir;
         this.taskProviders = taskProviders;
         this.classLoader = classLoader;
-        this.projectLoadListeners = projectLoadListeners;
     }
 
     public static void main(String[] args) throws Exception {
@@ -164,7 +160,7 @@ public class Main {
                 }
                 processArgs.putAll(prepareProcessArgs(processCfg));
 
-                snapshot = start(runner, processCfg, workDir, processArgs, projectLoadListeners);
+                snapshot = start(runner, processCfg, workDir, processArgs);
                 break;
             }
             case RESUME: {
@@ -215,10 +211,10 @@ public class Main {
         }
     }
 
-    private static ProcessSnapshot start(Runner runner, ProcessConfiguration cfg, Path workDir, Map<String, Object> args, ProjectLoadListener projectLoadListener) throws Exception {
+    private static ProcessSnapshot start(Runner runner, ProcessConfiguration cfg, Path workDir, Map<String, Object> args) throws Exception {
         // assume all imports were processed by the agent
         ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
-        ProcessDefinition processDefinition = loader.load(workDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, projectLoadListener).getProjectDefinition();
+        ProcessDefinition processDefinition = loader.load(workDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER).getProjectDefinition();
 
         Map<String, Object> initiator = cfg.initiator();
         if (initiator != null) {
