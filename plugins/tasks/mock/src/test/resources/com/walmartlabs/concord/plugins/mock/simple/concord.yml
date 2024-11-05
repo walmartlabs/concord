@@ -8,6 +8,6 @@ flows:
 configuration:
   arguments:
     mocks:
-      - name: "undefinedTask"
+      - task: "undefinedTask"
         out:
           ok: true

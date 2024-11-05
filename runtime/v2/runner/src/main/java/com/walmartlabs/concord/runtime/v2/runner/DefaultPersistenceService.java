@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
@@ -30,6 +31,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.file.Files;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
@@ -54,10 +56,15 @@ public class DefaultPersistenceService implements PersistenceService {
 
     @Override
     public void persistFile(String name, Writer writer) {
+        persistFile(name, writer, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    @Override
+    public void persistFile(String name, Writer writer, OpenOption... options) {
         Path storeDir = workingDirectory.getValue()
                 .resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
 
-        persistFile(storeDir, name, writer);
+        persistFile(storeDir, name, writer, options);
     }
 
     @Override
@@ -66,17 +73,23 @@ public class DefaultPersistenceService implements PersistenceService {
                 .resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(Constants.Files.JOB_SESSION_FILES_DIR_NAME);
 
-        persistFile(storeDir, name, writer);
+        persistFile(storeDir, name, writer, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
-    private void persistFile(Path storeDir, String name, Writer writer) {
-        try {
-            if (!Files.exists(storeDir)) {
-                Files.createDirectories(storeDir);
-            }
+    @Override
+    public void deletePersistedFile(String name) throws IOException {
+        IOUtils.deleteRecursively(workingDirectory.getValue()
+                .resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(name));
+    }
 
+    private void persistFile(Path storeDir, String name, Writer writer, OpenOption... options) {
+        try {
             Path p = storeDir.resolve(name);
-            try (OutputStream out = Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+            if (!Files.exists(p.getParent())) {
+                Files.createDirectories(p.getParent());
+            }
+            try (OutputStream out = Files.newOutputStream(p, options)) {
                 writer.write(out);
             }
         } catch (IOException e) {
