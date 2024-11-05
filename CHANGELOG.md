@@ -41,7 +41,9 @@ threads
 Note, this changes the type of
 `context.execution().processDefinition().flows()` object
 available in runtime-v2 processes.
-([#995](https://github.com/walmartlabs/concord/pull/995)).
+([#995](https://github.com/walmartlabs/concord/pull/995));
+- runtime-v2: remove ProjectLoadListener interface
+([#1015](https://github.com/walmartlabs/concord/pull/1015)).
 
 
 
