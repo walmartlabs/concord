@@ -471,7 +471,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertEquals(retryInput, t.getOptions().retry().input());
 
         // meta
-        assertMeta(t.getOptions());
+        assertMeta("Test script", t.getOptions());
     }
 
 
