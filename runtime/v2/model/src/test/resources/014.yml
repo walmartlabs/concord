@@ -1,6 +1,7 @@
 flows:
   default:
-    - script: groovy
+    - name: "Test script"
+      script: groovy
       body: |
         throw new RuntimeException("kaboom!")
       in:
