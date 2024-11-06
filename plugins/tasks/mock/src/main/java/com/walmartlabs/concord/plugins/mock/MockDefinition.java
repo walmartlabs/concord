@@ -74,5 +74,4 @@ public class MockDefinition {
     public String throwError() {
         return MapUtils.getString(definition, "throwError");
     }
-
 }
