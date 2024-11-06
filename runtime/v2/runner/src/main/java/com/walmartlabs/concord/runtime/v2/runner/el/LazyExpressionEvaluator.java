@@ -161,7 +161,6 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
 
             throw new UserDefinedException(errorMessage);
         } catch (Exception e) {
-            e.printStackTrace();
             UserDefinedException u = ExceptionUtils.filterException(e, UserDefinedException.class);
             if (u != null) {
                 throw u;
