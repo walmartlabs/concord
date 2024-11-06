@@ -5,7 +5,9 @@
 ### Changed
 
 - plugins: fix dependency scopes
-([#1017](https://github.com/walmartlabs/concord/pull/1017)).
+([#1017](https://github.com/walmartlabs/concord/pull/1017));
+- runtime-v2: remove extraneous error logging
+([#1021](https://github.com/walmartlabs/concord/pull/1021)).
 
 
 
