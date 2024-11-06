@@ -4,6 +4,8 @@
 
 ### Changed
 
+- runtime-v2: script meta options should not override the script step name
+([#1022](https://github.com/walmartlabs/concord/pull/1022));
 - plugins: fix dependency scopes
 ([#1017](https://github.com/walmartlabs/concord/pull/1017));
 - runtime-v2: remove extraneous error logging
