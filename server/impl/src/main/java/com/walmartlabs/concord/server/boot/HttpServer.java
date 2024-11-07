@@ -100,6 +100,7 @@ public class HttpServer {
 
         // session timeout
         SessionHandler sessionHandler = contextHandler.getSessionHandler();
+        log.info("Session timeout: {}", cfg.getSessionTimeout());
         sessionHandler.setMaxInactiveInterval((int) cfg.getSessionTimeout().getSeconds());
 
         // session cookies
