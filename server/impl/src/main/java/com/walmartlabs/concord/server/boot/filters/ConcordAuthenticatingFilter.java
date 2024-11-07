@@ -97,7 +97,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         }
 
         // no dice
-        return new UsernamePasswordToken();
+        return new UnauthenticatedToken();
     }
 
     @Override
@@ -199,6 +199,19 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         if (authHeader == null || authHeader.contains("Basic")) {
             resp.addHeader(HttpHeaders.WWW_AUTHENTICATE, "Basic");
             resp.addHeader(HttpHeaders.WWW_AUTHENTICATE, "ConcordApiToken");
+        }
+    }
+
+    public static final class UnauthenticatedToken implements AuthenticationToken {
+
+        @Override
+        public Object getPrincipal() {
+            return "";
+        }
+
+        @Override
+        public Object getCredentials() {
+            return "";
         }
     }
 }
