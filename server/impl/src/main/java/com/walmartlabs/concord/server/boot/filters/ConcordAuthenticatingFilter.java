@@ -201,17 +201,4 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             resp.addHeader(HttpHeaders.WWW_AUTHENTICATE, "ConcordApiToken");
         }
     }
-
-    public static final class UnauthenticatedToken implements AuthenticationToken {
-
-        @Override
-        public Object getPrincipal() {
-            return "";
-        }
-
-        @Override
-        public Object getCredentials() {
-            return "";
-        }
-    }
 }
