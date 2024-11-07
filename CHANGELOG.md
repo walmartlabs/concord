@@ -11,6 +11,8 @@
 - runtime-v2: script meta options should not override
 the script step name
 ([#1022](https://github.com/walmartlabs/concord/pull/1022));
+- runtime-v2: fix error messages
+([#1023](https://github.com/walmartlabs/concord/pull/1023));
 - concord-console2: fix zero content-length parsing in makeError
 ([#1025](https://github.com/walmartlabs/concord/pull/1025)).
 
