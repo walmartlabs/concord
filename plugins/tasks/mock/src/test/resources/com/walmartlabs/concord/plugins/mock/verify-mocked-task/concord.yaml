@@ -2,12 +2,12 @@ flows:
   default:
     - set:
         mocks:
-          - task: git
+          - task: testTask
             in:
               action: "clone"
 
-    - task: git
+    - task: testTask
       in:
         action: "clone"
 
-    - expr: "${verify.task('git', 1).execute({'action': 'clone'})}"
+    - expr: "${verify.task('testTask', 1).execute({'action': 'clone'})}"

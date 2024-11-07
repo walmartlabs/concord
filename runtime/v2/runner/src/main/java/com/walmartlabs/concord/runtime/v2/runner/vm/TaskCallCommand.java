@@ -81,7 +81,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
 
         TaskResult result;
         try {
-            result = interceptor.invoke(callContext, Method.of(t, "execute", Collections.singletonList(input)),
+            result = interceptor.invoke(callContext, Method.of(t.getClass(), "execute", Collections.singletonList(input)),
                     () -> t.execute(input));
         } catch (TaskException e) {
             result = TaskResult.fail(e.getCause());
