@@ -69,7 +69,7 @@ public class BeanELResolver extends javax.el.BeanELResolver {
 
             return result;
         } catch (javax.el.MethodNotFoundException e) {
-            throw new MethodNotFoundException(base, method, paramTypes);
+            throw new MethodNotFoundException(base.getClass(), method, paramTypes);
         }
     }
 

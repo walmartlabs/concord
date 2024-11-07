@@ -75,7 +75,7 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
 
         TaskResult result;
         try {
-            result = interceptor.invoke(callContext, TaskCallInterceptor.Method.of(rt, "resume", Collections.singletonList(event)),
+            result = interceptor.invoke(callContext, TaskCallInterceptor.Method.of(rt.getClass(), "resume", Collections.singletonList(event)),
                     () -> rt.resume(event));
         } catch (TaskException e) {
             result = TaskResult.fail(e.getCause());
