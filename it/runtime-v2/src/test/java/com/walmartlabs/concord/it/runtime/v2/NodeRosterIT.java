@@ -36,7 +36,7 @@ import static com.walmartlabs.concord.it.runtime.v2.Utils.resourceToString;
 public class NodeRosterIT extends AbstractTest {
 
     @RegisterExtension
-    public final ConcordRule concord = ConcordConfiguration.configure();
+    public static final ConcordRule concord = ConcordConfiguration.configure();
 
     /**
      * Tests various methods of the 'noderoster' plugin.

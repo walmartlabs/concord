@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class JsonStoreIT extends AbstractTest {
 
     @RegisterExtension
-    public final ConcordRule concord = ConcordConfiguration.configure();
+    public static final ConcordRule concord = ConcordConfiguration.configure();
 
     /**
      * Tests various methods of the 'jsonStore' plugin.
