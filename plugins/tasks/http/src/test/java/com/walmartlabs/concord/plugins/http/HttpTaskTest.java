@@ -43,7 +43,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testForAsStringMethod(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
-        String response = task.asString("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/json");
+        String response = task.asString("http://myuser@localhost:" + wmRuntimeInfo.getHttpPort() + "/json");
         verify(getRequestedFor(urlEqualTo("/json")));
         assertNotNull(response);
     }
