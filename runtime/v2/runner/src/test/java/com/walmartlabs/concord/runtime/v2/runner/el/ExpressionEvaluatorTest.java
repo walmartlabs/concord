@@ -396,7 +396,7 @@ public class ExpressionEvaluatorTest {
     }
 
     private static ExpressionEvaluator expressionEvaluator(TaskProviders taskProviders) {
-        return new DefaultExpressionEvaluator(taskProviders, List.of());
+        return new DefaultExpressionEvaluator(taskProviders, List.of(), List.of());
     }
 
     public static class TestTask implements Task {
