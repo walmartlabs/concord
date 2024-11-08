@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.client2.ApiException;
 import com.walmartlabs.concord.client2.ProcessEventRequest;
@@ -146,9 +145,8 @@ public class DefaultEventReportingService implements EventReportingService, Exec
     }
 
     private void saveEvent(ProcessEventRequest event) {
-        ObjectMapper objectMapper = new ObjectMapper();
         try {
-            persistenceService.persistFile(UUID.randomUUID().toString() + ".json", out -> objectMapper.writeValue(out, event));
+            persistenceService.persistFile(UUID.randomUUID() + ".json", out -> processEventsApi.getApiClient().getObjectMapper().writeValue(out, event));
         } catch (Exception e) {
             log.error("can't save event", e);
         }
