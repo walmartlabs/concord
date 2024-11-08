@@ -4,10 +4,6 @@
 
 ### Changed
 
-- mock-tasks: allow matching mocks by meta attributes or step name
-([#1024](https://github.com/walmartlabs/concord/pull/1024));
-- concord-server: split ConcordAuthenticationHandler into separate handlers 
-([#1026](https://github.com/walmartlabs/concord/pull/1026));
 - plugins: fix dependency scopes
 ([#1017](https://github.com/walmartlabs/concord/pull/1017));
 - runtime-v2: remove extraneous error logging
@@ -17,8 +13,16 @@ the script step name
 ([#1022](https://github.com/walmartlabs/concord/pull/1022));
 - runtime-v2: fix error messages
 ([#1023](https://github.com/walmartlabs/concord/pull/1023));
+- mock-tasks: allow matching mocks by meta attributes or
+step name
+([#1024](https://github.com/walmartlabs/concord/pull/1024));
 - concord-console2: fix zero content-length parsing in makeError
-([#1025](https://github.com/walmartlabs/concord/pull/1025)).
+([#1025](https://github.com/walmartlabs/concord/pull/1025));
+- concord-server: split ConcordAuthenticationHandler into
+separate handlers
+([#1026](https://github.com/walmartlabs/concord/pull/1026));
+- concord-server: fix session token handling
+([#1032](https://github.com/walmartlabs/concord/pull/1032)).
 
 
 
