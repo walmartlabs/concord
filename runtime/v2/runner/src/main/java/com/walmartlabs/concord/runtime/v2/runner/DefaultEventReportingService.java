@@ -148,7 +148,7 @@ public class DefaultEventReportingService implements EventReportingService, Exec
     private void saveEvent(ProcessEventRequest event) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            persistenceService.persistFile(UUID.randomUUID().toString(), out -> out.write(objectMapper.writeValueAsBytes(event)));
+            persistenceService.persistFile(UUID.randomUUID().toString(), out -> objectMapper.writeValue(out, event));
         } catch (Exception e) {
             log.error("can't save event");
         }
