@@ -4,6 +4,8 @@
 
 ### Changed
 
+- mock-tasks: allow matching mocks by meta attributes or step name
+([#1024](https://github.com/walmartlabs/concord/pull/1024));
 - concord-server: split ConcordAuthenticationHandler into separate handlers 
 ([#1026](https://github.com/walmartlabs/concord/pull/1026));
 - plugins: fix dependency scopes
