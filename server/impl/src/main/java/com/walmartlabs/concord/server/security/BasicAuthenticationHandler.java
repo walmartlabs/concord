@@ -35,6 +35,8 @@ import static com.walmartlabs.concord.sdk.Constants.Headers.REMEMBER_ME_HEADER;
 
 /**
  * Handles basic authentication (username/password).
+ *
+ * @see SessionTokenAuthenticationHandler for a special case of session tokens passed as usernames.
  */
 public class BasicAuthenticationHandler implements AuthenticationHandler {
 
@@ -64,12 +66,16 @@ public class BasicAuthenticationHandler implements AuthenticationHandler {
         auth = new String(Base64.getDecoder().decode(auth));
 
         var idx = auth.indexOf(":");
-        if (idx + 1 == auth.length()) {
-            throw new IllegalArgumentException("Invalid basic auth header");
+        if (idx < 0) {
+            // invalid auth header
+            return null;
         }
 
-        if (idx < 0 || idx + 1 >= auth.length()) {
-            throw new IllegalArgumentException("Invalid basic auth header");
+        if (idx + 1 == auth.length()) {
+            // no password
+            // it might be a session token that is passed as a username
+            // we let the SessionTokenAuthenticationHandler to handle it
+            return null;
         }
 
         var username = auth.substring(0, idx).trim();
