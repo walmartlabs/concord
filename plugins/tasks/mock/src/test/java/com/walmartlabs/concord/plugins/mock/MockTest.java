@@ -40,6 +40,7 @@ public class MockTest {
         byte[] log = runtime.run();
         assertLog(log, ".*The actual task is not being executed; this is a mock.*");
         assertLog(log, ".*result.ok: true.*");
+        assertLog(log, ".*result.fromMock: good.*");
     }
 
     @Test
@@ -47,7 +48,7 @@ public class MockTest {
         runtime.deploy("method-mock");
 
         byte[] log = runtime.run();
-        assertLog(log, ".*" + Pattern.quote("The actual 'undefinedTask.myMethod()' is not being executed; this is a mock") + ".*");
+        assertLog(log, ".*" + Pattern.quote("The actual 'testTask.myMethod()' is not being executed; this is a mock") + ".*");
         assertLog(log, ".*result.ok: BOO.*");
     }
 
@@ -56,7 +57,7 @@ public class MockTest {
         runtime.deploy("method-mock-with-any");
 
         byte[] log = runtime.run();
-        assertLog(log, ".*" + Pattern.quote("The actual 'undefinedTask.myMethod()' is not being executed; this is a mock") + ".*");
+        assertLog(log, ".*" + Pattern.quote("The actual 'testTask.myMethod()' is not being executed; this is a mock") + ".*");
         assertLog(log, ".*result.ok: BOO.*");
     }
 }
