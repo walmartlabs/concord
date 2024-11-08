@@ -20,16 +20,21 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
+import com.walmartlabs.concord.common.secret.SecretUtils;
 import com.walmartlabs.concord.server.boot.filters.AuthenticationHandler;
+import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
+import com.walmartlabs.concord.server.security.sessionkey.SessionKey;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
 
+import javax.inject.Inject;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 import java.util.Base64;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.sdk.Constants.Headers.REMEMBER_ME_HEADER;
 
@@ -39,6 +44,13 @@ import static com.walmartlabs.concord.sdk.Constants.Headers.REMEMBER_ME_HEADER;
 public class BasicAuthenticationHandler implements AuthenticationHandler {
 
     private static final String BASIC_AUTH_PREFIX = "Basic ";
+
+    private final SecretStoreConfiguration secretCfg;
+
+    @Inject
+    public BasicAuthenticationHandler(SecretStoreConfiguration secretCfg) {
+        this.secretCfg = secretCfg;
+    }
 
     @Override
     public AuthenticationToken createToken(ServletRequest request, ServletResponse response) {
@@ -65,7 +77,8 @@ public class BasicAuthenticationHandler implements AuthenticationHandler {
 
         var idx = auth.indexOf(":");
         if (idx + 1 == auth.length()) {
-            throw new IllegalArgumentException("Invalid basic auth header");
+            // empty password -> try user name as a session token
+            return buildSessionToken(auth.substring(0, auth.length() - 1));
         }
 
         if (idx < 0 || idx + 1 >= auth.length()) {
@@ -79,5 +92,17 @@ public class BasicAuthenticationHandler implements AuthenticationHandler {
         req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, true);
 
         return new UsernamePasswordToken(username, password, rememberMe);
+    }
+
+    private AuthenticationToken buildSessionToken(String key) {
+        return new SessionKey(decryptSessionKey(key));
+    }
+
+    private UUID decryptSessionKey(String h) {
+        byte[] salt = secretCfg.getSecretStoreSalt();
+        byte[] pwd = secretCfg.getServerPwd();
+
+        byte[] ab = SecretUtils.decrypt(Base64.getDecoder().decode(h), pwd, salt);
+        return UUID.fromString(new String(ab));
     }
 }
