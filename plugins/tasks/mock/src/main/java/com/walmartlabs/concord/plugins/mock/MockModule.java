@@ -22,8 +22,10 @@ package com.walmartlabs.concord.plugins.mock;
 
 import com.google.inject.Binder;
 import com.google.inject.multibindings.Multibinder;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.TaskMethodResolver;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.CustomBeanELResolver;
+import com.walmartlabs.concord.runtime.v2.sdk.CustomTaskMethodResolver;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
 import com.walmartlabs.concord.svm.ExecutionListener;
 
@@ -34,17 +36,19 @@ public class MockModule implements com.google.inject.Module {
 
     @Override
     public void configure(Binder binder) {
-        Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder, TaskProvider.class);
+        var taskProviders = Multibinder.newSetBinder(binder, TaskProvider.class);
         taskProviders.addBinding().to(MockTaskProvider.class);
 
-        Multibinder<CustomBeanELResolver> elResolvers = Multibinder.newSetBinder(binder, CustomBeanELResolver.class);
-        elResolvers.addBinding().to(MockBeanELResolver.class);
-        elResolvers.addBinding().to(VerifierBeanELResolver.class);
+        var beanElResolvers = Multibinder.newSetBinder(binder, CustomBeanELResolver.class);
+        beanElResolvers.addBinding().to(VerifierBeanELResolver.class);
 
-        Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder, TaskCallListener.class);
+        var taskMethodResolvers = Multibinder.newSetBinder(binder, CustomTaskMethodResolver.class);
+        taskMethodResolvers.addBinding().to(MockTaskMethodResolver.class);
+
+        var taskCallListeners = Multibinder.newSetBinder(binder, TaskCallListener.class);
         taskCallListeners.addBinding().to(InvocationsCollector.class);
 
-        Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder, ExecutionListener.class);
+        var executionListeners = Multibinder.newSetBinder(binder, ExecutionListener.class);
         executionListeners.addBinding().to(InvocationsCollector.class);
     }
 }

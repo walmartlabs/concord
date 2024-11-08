@@ -34,14 +34,17 @@ public class MockTask implements Task {
     private final Context ctx;
     private final String taskName;
     private final MockDefinitionProvider mockDefinitionProvider;
+    private final Class<? extends Task> originalTaskClass;
     private final Supplier<Task> delegate;
 
     public MockTask(Context ctx, String taskName,
                     MockDefinitionProvider mockDefinitionProvider,
+                    Class<? extends Task> originalTaskClass,
                     Supplier<Task> delegate) {
         this.ctx = ctx;
         this.taskName = taskName;
         this.mockDefinitionProvider = mockDefinitionProvider;
+        this.originalTaskClass = originalTaskClass;
         this.delegate = delegate;
     }
 
@@ -63,10 +66,10 @@ public class MockTask implements Task {
                 .values(mockDefinition.out());
     }
 
-    public CustomBeanELResolver.Result call(String method, Object[] params) {
+    public Object call(CustomTaskMethodResolver.InvocationContext ic, String method, Class<?>[] paramTypes, Object[] params) {
         MockDefinition mockDefinition = mockDefinitionProvider.find(ctx, taskName, method, params);
         if (mockDefinition == null) {
-            return CustomBeanELResolver.Result.of(delegate.get(), method);
+            return ic.invoker().invoke(delegate.get(), method, paramTypes, params);
         }
 
         log.info("The actual '{}.{}()' is not being executed; this is a mock", taskName, method);
@@ -75,6 +78,14 @@ public class MockTask implements Task {
             throw new UserDefinedException(mockDefinition.throwError());
         }
 
-        return CustomBeanELResolver.Result.of(mockDefinition.result());
+        return mockDefinition.result();
+    }
+
+    public String taskName() {
+        return taskName;
+    }
+
+    public Class<? extends Task> originalTaskClass() {
+        return originalTaskClass;
     }
 }
