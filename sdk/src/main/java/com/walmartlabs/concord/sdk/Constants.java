@@ -624,6 +624,8 @@ public class Constants {
         public static final String SECRET_TYPE = "X-Concord-SecretType";
 
         public static final String ENABLE_HTTP_SESSION = "X-Concord-EnableSession";
+
+        public static final String REMEMBER_ME_HEADER = "X-Concord-RememberMe";
     }
 
     /**
