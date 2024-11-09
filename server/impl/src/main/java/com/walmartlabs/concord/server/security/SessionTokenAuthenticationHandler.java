@@ -32,6 +32,7 @@ import javax.inject.Inject;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -39,6 +40,8 @@ import java.util.UUID;
  * Handles session tokens.
  */
 public class SessionTokenAuthenticationHandler implements AuthenticationHandler {
+
+    private static final String BASIC_AUTH_PREFIX = "Basic ";
 
     private final SecretStoreConfiguration secretCfg;
 
@@ -53,7 +56,23 @@ public class SessionTokenAuthenticationHandler implements AuthenticationHandler 
 
         var encryptedToken = req.getHeader(Constants.Headers.SESSION_TOKEN);
         if (encryptedToken == null) {
-            return null;
+            // handle the special case of session tokens passed as usernames
+            var auth = req.getHeader(HttpHeaders.AUTHORIZATION);
+            if (auth == null) {
+                // no session token header and no basic auth header, skip
+                return null;
+            }
+
+            auth = auth.substring(BASIC_AUTH_PREFIX.length());
+            auth = new String(Base64.getDecoder().decode(auth));
+
+            var idx = auth.indexOf(":");
+            if (idx < 0 || idx != auth.length() - 1) {
+                // invalid auth header or a non-empty password, skip
+                return null;
+            }
+
+            encryptedToken = auth.substring(0, idx);
         }
 
         var decryptedValue = decryptSessionKey(encryptedToken);

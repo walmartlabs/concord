@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.Method;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import org.junit.Test;
 
@@ -36,7 +37,7 @@ public class TaskCallInterceptorTest {
         String method = "varargs";
         List<Object> params = Arrays.asList("one", "two");
 
-        TaskCallInterceptor.Method m = TaskCallInterceptor.Method.of(base.getClass(), method, params);
+        Method m = Method.of(base.getClass(), method, params);
 
         assertEquals(0, m.annotations().size());
     }

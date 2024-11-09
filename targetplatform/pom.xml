@@ -42,12 +42,12 @@
         <bpm.version>1.0.3</bpm.version>
         <bytebuddy.version>1.14.9</bytebuddy.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
-        <commons.codec.version>1.15</commons.codec.version>
+        <commons.codec.version>1.17.1</commons.codec.version>
         <commons.collections.version>3.2.2</commons.collections.version>
-        <commons.compress.version>1.24.0</commons.compress.version>
+        <commons.compress.version>1.27.1</commons.compress.version>
         <commons.email.version>1.5</commons.email.version>
         <commons.io.version>2.16.1</commons.io.version>
-        <commons.lang.version>3.15.0</commons.lang.version>
+        <commons.lang.version>3.16.0</commons.lang.version>
         <commons.text.version>1.12.0</commons.text.version>
         <commons.validator.version>1.7</commons.validator.version>
         <config.version>1.4.2</config.version>
@@ -59,7 +59,7 @@
         <groovy.version>2.5.23</groovy.version>
         <guava.version>33.1.0-jre</guava.version>
         <guice.version>5.1.0</guice.version>
-        <hibernate.validator.version>6.1.5.Final</hibernate.validator.version>
+        <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
         <hikaricp.version>6.0.0</hikaricp.version>
         <http.request.version>6.0</http.request.version>
         <httpclient.version>4.5.13</httpclient.version>
@@ -81,7 +81,7 @@
         <jcl-over-slf4j.version>1.7.35</jcl-over-slf4j.version>
         <jetbrain.annotations.version>23.0.0</jetbrain.annotations.version>
         <jetty.version>12.0.7</jetty.version>
-        <jgit.version>5.13.0.202109080827-r</jgit.version>
+        <jgit.version>5.13.3.202401111512-r</jgit.version>
         <jna.version>5.13.0</jna.version>
         <jooq.version>3.14.0</jooq.version>
         <jsch.version>0.1.55</jsch.version>
@@ -106,8 +106,8 @@
         <metrics.version>4.2.25</metrics.version>
         <mockito.version>4.9.0</mockito.version>
         <mustache.version>0.9.10</mustache.version>
-        <nimbus.jwt.version>8.8</nimbus.jwt.version>
-        <pac4j.version>4.0.0-RC3</pac4j.version>
+        <nimbus.jwt.version>8.22.1</nimbus.jwt.version>
+        <pac4j.version>4.5.8</pac4j.version>
         <parc.version>0.1.2</parc.version>
         <picocli.version>4.7.0</picocli.version>
         <postgres.version>42.7.3</postgres.version>
