@@ -66,6 +66,11 @@ public class TaskV2Provider implements TaskProvider {
     }
 
     @Override
+    public Class<? extends Task> getTaskClass(Context ctx, String key) {
+        return holder.get(key);
+    }
+
+    @Override
     public boolean hasTask(String key) {
         return holder.get(key) != null;
     }

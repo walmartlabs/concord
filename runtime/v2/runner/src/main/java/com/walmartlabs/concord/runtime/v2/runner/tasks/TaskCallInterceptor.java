@@ -26,10 +26,10 @@ import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent.Phase;
+import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.svm.ThreadId;
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -124,9 +124,9 @@ public class TaskCallInterceptor {
             return Collections.emptyList();
         }
 
-        static Method of(Object base, String methodName, List<Object> params) {
+        static Method of(Class<? extends Task> taskClass, String methodName, List<Object> params) {
             List<List<Annotation>> annotations = Collections.emptyList();
-            java.lang.reflect.Method m = ReflectionUtil.findMethod(base.getClass(), methodName, null, params.toArray());
+            var m = ReflectionUtil.findMethod(taskClass, methodName, null, params.toArray());
             if (m != null && !m.isVarArgs()) {
                 annotations = Arrays.stream(m.getParameterAnnotations())
                         .map(Arrays::asList)
@@ -138,7 +138,6 @@ public class TaskCallInterceptor {
                     .annotations(annotations)
                     .build();
         }
-
     }
 
     @Value.Immutable
