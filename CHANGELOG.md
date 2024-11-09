@@ -6,6 +6,8 @@
 
 - plugins: fix dependency scopes
 ([#1017](https://github.com/walmartlabs/concord/pull/1017));
+- concord-cli: fix dependencies when generating effective yaml
+([#1018](https://github.com/walmartlabs/concord/pull/1018));
 - runtime-v2: remove extraneous error logging
 ([#1021](https://github.com/walmartlabs/concord/pull/1021));
 - runtime-v2: script meta options should not override
