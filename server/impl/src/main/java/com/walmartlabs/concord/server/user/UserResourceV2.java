@@ -69,17 +69,6 @@ public class UserResourceV2 implements Resource {
         return userDao.list(filter, offset, limit);
     }
 
-
-    /*
-        throws unauthorized exception if user is not an admin,
-        copied from UserResource.java
-    */
-    private static void assertAdmin() {
-        if (!Roles.isAdmin()) {
-            throw new UnauthorizedException("Only admins can do that");
-        }
-    }
-
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
