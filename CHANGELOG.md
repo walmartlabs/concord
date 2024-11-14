@@ -26,7 +26,9 @@ separate handlers
 - mocks-task: record task events for mocked tasks
 ([#1027](https://github.com/walmartlabs/concord/pull/1027));
 - concord-server: fix session token handling
-([#1032](https://github.com/walmartlabs/concord/pull/1032)).
+([#1032](https://github.com/walmartlabs/concord/pull/1032));
+- it: tighten up polling intervals
+([#1036](https://github.com/walmartlabs/concord/pull/1036)).
 
 
 
