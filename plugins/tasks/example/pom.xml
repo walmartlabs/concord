@@ -40,8 +40,15 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.eclipse.sisu</groupId>
-                <artifactId>sisu-maven-plugin</artifactId>
+                <groupId>dev.ybrig.concord</groupId>
+                <artifactId>concord-maven-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.walmartlabs.concord.runtime.v2</groupId>
+                        <artifactId>concord-runner-v2</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>
