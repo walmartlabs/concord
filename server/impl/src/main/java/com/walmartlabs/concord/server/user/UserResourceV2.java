@@ -91,8 +91,8 @@ public class UserResourceV2 implements Resource {
 
         UUID authenticatedId = loggedIn.getId();
 
-        if(!authenticatedId.equals(id)) {
-            assertAdmin();
+        if(!authenticatedId.equals(id) && !Roles.isAdmin()) {
+            throw new UnauthorizedException("Users can only view their own information or must have admin privileges.");
         }
 
         return userDao.get(id);
