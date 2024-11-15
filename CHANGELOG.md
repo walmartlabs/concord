@@ -27,6 +27,8 @@ separate handlers
 ([#1027](https://github.com/walmartlabs/concord/pull/1027));
 - concord-server: fix session token handling
 ([#1032](https://github.com/walmartlabs/concord/pull/1032));
+server: cleanup control chars from jsonb 
+([#1034](https://github.com/walmartlabs/concord/pull/1034));
 - it: tighten up polling intervals
 ([#1036](https://github.com/walmartlabs/concord/pull/1036)).
 
