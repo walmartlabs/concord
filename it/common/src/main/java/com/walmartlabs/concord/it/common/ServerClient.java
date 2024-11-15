@@ -175,7 +175,7 @@ public class ServerClient {
 
     public static ProcessEntry waitForStatus(ApiClient apiClient, UUID instanceId,
                                              ProcessEntry.StatusEnum status, ProcessEntry.StatusEnum... more) throws InterruptedException {
-        int retries = 60;
+        int retries = 600;
 
         ProcessV2Api apiV2 = new ProcessV2Api(apiClient);
 
@@ -199,7 +199,7 @@ public class ServerClient {
                 }
             }
 
-            Thread.sleep(1000);
+            Thread.sleep(100);
         }
     }
 
