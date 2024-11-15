@@ -32,7 +32,7 @@ import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 public class KvTaskIT extends AbstractTest {
 
     @RegisterExtension
-    public final ConcordRule concord = ConcordConfiguration.configure();
+    public static final ConcordRule concord = ConcordConfiguration.configure();
 
     /**
      * Tests various methods of the 'kv' plugin.
