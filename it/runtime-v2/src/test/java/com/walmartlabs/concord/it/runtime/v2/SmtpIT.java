@@ -40,10 +40,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class SmtpIT extends AbstractTest {
 
     @RegisterExtension
-    GreenMailExtension mailServer = new GreenMailExtension(new ServerSetup(0, "0.0.0.0", ServerSetup.PROTOCOL_SMTP));
+    public static final GreenMailExtension mailServer = new GreenMailExtension(new ServerSetup(0, "0.0.0.0", ServerSetup.PROTOCOL_SMTP))
+            .withPerMethodLifecycle(false);
 
     @RegisterExtension
-    public final ConcordRule concord = ConcordConfiguration.configure()
+    public static final ConcordRule concord = ConcordConfiguration.configure()
             .containerListener(new ContainerListener() {
                 @Override
                 public void beforeStart(ContainerType type) {
