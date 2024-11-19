@@ -43,8 +43,12 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.eclipse.sisu</groupId>
-                <artifactId>sisu-maven-plugin</artifactId>
+                <groupId>dev.ybrig.concord</groupId>
+                <artifactId>concord-maven-plugin</artifactId>
+                <configuration>
+                    <!-- no verify, as this plugin depends on runtime-v2 -->
+                    <skipVerify>true</skipVerify>
+                </configuration>
             </plugin>
         </plugins>
     </build>
