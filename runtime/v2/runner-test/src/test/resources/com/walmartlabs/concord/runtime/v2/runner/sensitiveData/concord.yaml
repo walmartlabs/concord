@@ -2,7 +2,7 @@ flows:
   default:
     - log: "sensitive: ${sensitiveTask.getSensitive('BOOM')}"
 
-    - expr: "${sensitiveTask.getSensitive('BOOM')}"
+    - expr: "${sensitiveTask.getSensitive('MASK_ME')}"
       out: mySecret
 
     - log: "log value: ${mySecret}"
@@ -15,6 +15,10 @@ flows:
     - log: "plain: ${sensitiveTask.getPlain('plain')}"
 
     - log: "secret from map: ${sensitiveTask.mySecretKey}"
+
+    - task: sensitiveTask
+      out: taskResult
+    - log: "secret from task execute: ${taskResult}"
 
     - suspend: ev1
 

@@ -27,6 +27,7 @@ import com.walmartlabs.concord.runtime.v2.runner.el.MethodNotFoundException;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskException;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.CustomBeanELResolver;
 import com.walmartlabs.concord.runtime.v2.sdk.CustomTaskMethodResolver;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
@@ -42,10 +43,14 @@ import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallIntercepto
 public class TaskMethodResolver extends ELResolver {
 
     private final List<CustomTaskMethodResolver> customResolvers;
+    private final List<CustomBeanELResolver> customBeanELResolvers;
     private final Context context;
 
-    public TaskMethodResolver(List<CustomTaskMethodResolver> customResolvers, Context context) {
+    public TaskMethodResolver(List<CustomTaskMethodResolver> customResolvers,
+                              List<CustomBeanELResolver> customBeanELResolvers,
+                              Context context) {
         this.customResolvers = customResolvers;
+        this.customBeanELResolvers = customBeanELResolvers;
         this.context = context;
     }
 
@@ -79,7 +84,7 @@ public class TaskMethodResolver extends ELResolver {
         try {
             return interceptor.invoke(callContext, Method.of(invocation.taskClass(), method.toString(), Arrays.asList(params)),
                     () -> {
-                        var result = invocation.invoke(new DefaultInvocationContext(elContext));
+                        var result = invocation.invoke(new DefaultInvocationContext(customBeanELResolvers, elContext));
                         elContext.setPropertyResolved(true);
                         return result;
                     });
@@ -155,9 +160,10 @@ public class TaskMethodResolver extends ELResolver {
         private final ELContext elContext;
         private final javax.el.BeanELResolver beanELResolver;
 
-        private DefaultInvocationContext(ELContext elContext) {
+        private DefaultInvocationContext(List<CustomBeanELResolver> customBeanELResolvers,
+                                         ELContext elContext) {
             this.elContext = elContext;
-            this.beanELResolver = new javax.el.BeanELResolver();
+            this.beanELResolver = new BeanELResolver(customBeanELResolvers);
         }
 
         @Override
