@@ -30,7 +30,9 @@ separate handlers
 server: cleanup control chars from jsonb 
 ([#1034](https://github.com/walmartlabs/concord/pull/1034));
 - it: tighten up polling intervals
-([#1036](https://github.com/walmartlabs/concord/pull/1036)).
+([#1036](https://github.com/walmartlabs/concord/pull/1036));
+- concord-server: fix process card createOrUpdate
+([#1039](https://github.com/walmartlabs/concord/pull/1039)).
 
 
 
