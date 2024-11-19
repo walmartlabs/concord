@@ -34,6 +34,8 @@ endpoint in API
 ([#1035](https://github.com/walmartlabs/concord/pull/1035));
 - it: tighten up polling intervals
 ([#1036](https://github.com/walmartlabs/concord/pull/1036));
+- project: use concord-maven-plugin
+([#1038](https://github.com/walmartlabs/concord/pull/1038));
 - concord-server: fix process card createOrUpdate
 ([#1039](https://github.com/walmartlabs/concord/pull/1039));
 - runtime-v2: allow mark sensitive data for task.execute result
