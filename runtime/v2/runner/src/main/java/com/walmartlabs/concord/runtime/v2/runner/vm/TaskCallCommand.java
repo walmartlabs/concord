@@ -20,8 +20,10 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.sun.el.util.ReflectionUtil;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.SensitiveDataProcessor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskException;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
@@ -83,6 +85,11 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         try {
             result = interceptor.invoke(callContext, Method.of(t.getClass(), "execute", Collections.singletonList(input)),
                     () -> t.execute(input));
+
+            if (result instanceof TaskResult.SimpleResult simpleResult) {
+                var m = ReflectionUtil.findMethod(t.getClass(), "execute", new Class[]{Variables.class}, new Variables[]{input});
+                SensitiveDataProcessor.process(simpleResult.values(), m);
+            }
         } catch (TaskException e) {
             result = TaskResult.fail(e.getCause());
         } catch (RuntimeException e) {
