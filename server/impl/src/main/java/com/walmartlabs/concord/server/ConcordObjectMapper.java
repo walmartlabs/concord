@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,6 +29,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Named
 @Singleton
@@ -36,6 +37,8 @@ public class ConcordObjectMapper {
 
     public static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<Map<String, Object>>() {
     };
+
+    private static final Pattern CONTROL_CHARS = Pattern.compile("[\\x00-\\x1F]");
 
     private final ObjectMapper delegate;
 
@@ -113,7 +116,7 @@ public class ConcordObjectMapper {
     }
 
     private static String removeUnsupportedEscape(String str) {
-        return str.replace("\\u0000", "");
+        return CONTROL_CHARS.matcher(str).replaceAll("");
     }
 
     private <T> T deserialize(String o, TypeReference<T> valueTypeRef) {

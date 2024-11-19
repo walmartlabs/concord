@@ -187,4 +187,11 @@ public class DefaultEventReportingService implements EventReportingService, Exec
         }
     }
 
+    private void saveEvent(ProcessEventRequest event) {
+        try {
+            persistenceService.persistFile("invalid_event_" + UUID.randomUUID() + ".json", out -> processEventsApi.getApiClient().getObjectMapper().writeValue(out, event));
+        } catch (Exception e) {
+            log.warn("can't save event", e);
+        }
+    }
 }
