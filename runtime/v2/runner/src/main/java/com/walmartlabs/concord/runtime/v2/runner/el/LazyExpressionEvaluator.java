@@ -114,8 +114,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             }
 
             return expectedType.cast(src);
-        } else if (value instanceof String) {
-            String s = (String) value;
+        } else if (value instanceof String s) {
             if (hasExpression(s)) {
                 return evalExpr(ctx, s, expectedType);
             }
@@ -193,7 +192,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         r.add(new ListELResolver());
         r.add(new ArrayELResolver());
         if (evalContext.context() != null) {
-            r.add(new TaskMethodResolver(taskMethodResolvers, evalContext.context()));
+            r.add(new TaskMethodResolver(taskMethodResolvers, customBeanELResolvers, evalContext.context()));
         }
         r.add(new BeanELResolver(customBeanELResolvers));
         return r;
