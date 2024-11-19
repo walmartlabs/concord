@@ -27,8 +27,11 @@ separate handlers
 ([#1027](https://github.com/walmartlabs/concord/pull/1027));
 - concord-server: fix session token handling
 ([#1032](https://github.com/walmartlabs/concord/pull/1032));
-server: cleanup control chars from jsonb 
+- concord-server: cleanup control chars from JSONB 
 ([#1034](https://github.com/walmartlabs/concord/pull/1034));
+- concord-server: add authorization check to User lookup
+endpoint in API
+([#1035](https://github.com/walmartlabs/concord/pull/1035));
 - it: tighten up polling intervals
 ([#1036](https://github.com/walmartlabs/concord/pull/1036));
 - concord-server: fix process card createOrUpdate
