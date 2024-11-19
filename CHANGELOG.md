@@ -35,8 +35,9 @@ endpoint in API
 - it: tighten up polling intervals
 ([#1036](https://github.com/walmartlabs/concord/pull/1036));
 - concord-server: fix process card createOrUpdate
-([#1039](https://github.com/walmartlabs/concord/pull/1039)).
-
+([#1039](https://github.com/walmartlabs/concord/pull/1039));
+- runtime-v2: allow mark sensitive data for task.execute result
+([#1040](https://github.com/walmartlabs/concord/pull/1040)).
 
 
 ## [2.19.0] - 2024-11-05
