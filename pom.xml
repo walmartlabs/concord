@@ -351,6 +351,22 @@
                     </executions>
                 </plugin>
                 <plugin>
+                    <groupId>dev.ybrig.concord</groupId>
+                    <artifactId>concord-maven-plugin</artifactId>
+                    <version>0.0.31</version>
+                    <configuration>
+                        <concordVersion>${project.version}</concordVersion>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>sisu-index</goal>
+                                <goal>verify</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-antrun-plugin</artifactId>
                     <version>1.8</version>

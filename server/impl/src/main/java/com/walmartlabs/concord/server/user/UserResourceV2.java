@@ -23,6 +23,9 @@ package com.walmartlabs.concord.server.user;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
+import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -72,6 +75,15 @@ public class UserResourceV2 implements Resource {
     @WithTimer
     @Operation(description = "Get an existing user", operationId = "getUser")
     public UserEntry get(@PathParam("id") UUID id) {
+
+        UserPrincipal loggedIn = UserPrincipal.assertCurrent();
+
+        UUID authenticatedId = loggedIn.getId();
+
+        if(!authenticatedId.equals(id) && !Roles.isAdmin()) {
+            throw new UnauthorizedException("Users can only view their own information or must have admin privileges.");
+        }
+
         return userDao.get(id);
     }
 }
