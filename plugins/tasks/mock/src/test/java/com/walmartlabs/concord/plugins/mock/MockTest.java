@@ -53,11 +53,32 @@ public class MockTest {
     }
 
     @Test
+    public void testMethodMockWithFlowExecute() throws Exception {
+        runtime.deploy("method-mock-with-flow-execute");
+
+        byte[] log = runtime.run();
+        assertLog(log, ".*" + Pattern.quote("The actual 'testTask.myMethod()' is not being executed; this is a mock") + ".*");
+        assertLog(log, ".* Executing flow 'assertMyMethod' to get mock results.*");
+        assertLog(log, ".*" + Pattern.quote("flow can access method args: [1, b, false, [1, 2, 3], {k=v}]") + ".*");
+        assertLog(log, ".*result.ok: WOW.*");
+    }
+
+    @Test
     public void testMethodMockWithAny() throws Exception {
         runtime.deploy("method-mock-with-any");
 
         byte[] log = runtime.run();
         assertLog(log, ".*" + Pattern.quote("The actual 'testTask.myMethod()' is not being executed; this is a mock") + ".*");
         assertLog(log, ".*result.ok: BOO.*");
+    }
+
+    @Test
+    public void testTaskMockWithFlowExecute() throws Exception {
+        runtime.deploy("task-mock-with-flow-execute");
+
+        byte[] log = runtime.run();
+        assertLog(log, ".*testTaskLogic can access task input params: p1=value-1, p2=value-2.*");
+        assertLog(log, ".*The actual task is not being executed; this is a mock.*");
+        assertLog(log, ".*result.ok: .*fromMockAsFlow=WOW.*");
     }
 }

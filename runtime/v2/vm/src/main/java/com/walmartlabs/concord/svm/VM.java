@@ -250,7 +250,7 @@ public class VM {
         }
     }
 
-    private static class EvalResult implements Serializable {
+    public static class EvalResult implements Serializable {
 
         private static final long serialVersionUID = 1L;
 
@@ -258,6 +258,10 @@ public class VM {
 
         private EvalResult(Frame lastFrame) {
             this.lastFrame = lastFrame;
+        }
+
+        public Frame lastFrame() {
+            return lastFrame;
         }
     }
 }

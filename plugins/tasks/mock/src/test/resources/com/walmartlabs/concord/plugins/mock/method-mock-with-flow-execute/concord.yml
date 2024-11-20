@@ -1,0 +1,20 @@
+flows:
+  default:
+    - expr: "${testTask.myMethod(1, 'b', false, [1, 2, 3], {'k': 'v'})}"
+      out: result
+
+    - log: "result.ok: ${result}"
+
+  assertMyMethod:
+    - log: "flow can access method args: ${args}"
+
+    - set:
+        result: "WOW"
+
+configuration:
+  arguments:
+    mocks:
+      - task: "testTask"
+        method: "myMethod"
+        args: [1, 'b', false, [1, 2, 3], {k: 'v'}]
+        executeFlow: "assertMyMethod"

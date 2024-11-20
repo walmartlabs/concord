@@ -20,11 +20,22 @@ package com.walmartlabs.concord.plugins.mock;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.FlowCall;
+import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
+import com.walmartlabs.concord.runtime.v2.model.Location;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.runner.vm.VMUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
+import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.svm.VM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public class MockTask implements Task {
@@ -50,7 +61,7 @@ public class MockTask implements Task {
 
     @Override
     public TaskResult execute(Variables input) throws Exception{
-        MockDefinition mockDefinition = mockDefinitionProvider.find(ctx, taskName, input);
+        var mockDefinition = mockDefinitionProvider.find(ctx, taskName, input);
         if (mockDefinition == null) {
             return delegate.get().execute(input);
         }
@@ -61,13 +72,19 @@ public class MockTask implements Task {
             throw new UserDefinedException(mockDefinition.throwError());
         }
 
-        boolean success = MapUtils.getBoolean(mockDefinition.out(), "ok", true);
+        var result = mockDefinition.out();
+        if (mockDefinition.executeFlow() != null) {
+            var flowResult = executeFlow(mockDefinition.executeFlow(), input.toMap());
+            result = assertMap(flowResult);
+        }
+
+        boolean success = MapUtils.getBoolean(result, "ok", true);
         return TaskResult.of(success)
-                .values(mockDefinition.out());
+                .values(result);
     }
 
     public Object call(CustomTaskMethodResolver.InvocationContext ic, String method, Class<?>[] paramTypes, Object[] params) {
-        MockDefinition mockDefinition = mockDefinitionProvider.find(ctx, taskName, method, params);
+        var mockDefinition = mockDefinitionProvider.find(ctx, taskName, method, params);
         if (mockDefinition == null) {
             return ic.invoker().invoke(delegate.get(), method, paramTypes, params);
         }
@@ -78,7 +95,12 @@ public class MockTask implements Task {
             throw new UserDefinedException(mockDefinition.throwError());
         }
 
-        return mockDefinition.result();
+        var result = mockDefinition.result();
+        if (mockDefinition.executeFlow() != null) {
+            result = executeFlow(mockDefinition.executeFlow(), toMap(params));
+        }
+
+        return result;
     }
 
     public String taskName() {
@@ -87,5 +109,57 @@ public class MockTask implements Task {
 
     public Class<? extends Task> originalTaskClass() {
         return originalTaskClass;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private Serializable executeFlow(String flowName, Map<String, Object> input) {
+        log.info("Executing flow '{}' to get mock results", flowName);
+
+        var runtime = ctx.execution().runtime();
+        var state = ctx.execution().state();
+        var compiler = runtime.getService(Compiler.class);
+        var pd = runtime.getService(ProcessDefinition.class);
+
+        var callOptions = FlowCallOptions.builder()
+                .input((Map)input)
+                .addOut("result")
+                .build();
+        var flowCallCommand = compiler.compile(pd, new FlowCall(Location.builder().build(), flowName, callOptions));
+
+        var currentThreadId = ctx.execution().currentThreadId();
+        var forkThreadId = state.nextThreadId();
+
+        state.fork(currentThreadId, forkThreadId, flowCallCommand);
+
+        var targetFrame = state.peekFrame(forkThreadId);
+        VMUtils.putLocals(targetFrame, VMUtils.getCombinedLocals(state, currentThreadId));
+
+        try {
+            var result = runtime.eval(state, forkThreadId);
+            return result.lastFrame().getLocal("result");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @SuppressWarnings({"unchecked"})
+    private Map<String, Object> assertMap(Serializable maybeMap) {
+        if (maybeMap == null) {
+            return Map.of();
+        }
+
+        if (maybeMap instanceof Map<?,?>) {
+            return (Map<String, Object>) maybeMap;
+        }
+
+        throw new IllegalArgumentException("Flow should set result as Map. Actual: " + maybeMap.getClass());
+    }
+
+    private static Map<String, Object> toMap(Object[] params) {
+        if (params == null || params.length == 0) {
+            return Map.of();
+        }
+
+        return Map.of("args", Arrays.asList(params));
     }
 }
