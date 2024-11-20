@@ -34,6 +34,7 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -46,6 +47,7 @@ import static java.util.Objects.requireNonNull;
  */
 public class TestingConcordServer implements AutoCloseable {
 
+
     private final PostgreSQLContainer<?> db;
     private final Map<String, String> extraConfiguration;
     private final List<Function<Config, Module>> extraModules;
@@ -56,16 +58,24 @@ public class TestingConcordServer implements AutoCloseable {
     private ConcordServer server;
 
     public TestingConcordServer(PostgreSQLContainer<?> db) {
-        this(db, 8001, Map.of(), List.of());
+        this(db, TestingServerConfig.createDefault());
     }
 
+    @Deprecated
     public TestingConcordServer(PostgreSQLContainer<?> db, int apiPort, Map<String, String> extraConfiguration, List<Function<Config, Module>> extraModules) {
+        this(db, new TestingServerConfig(Optional.of(apiPort), extraConfiguration, extraModules, Optional.empty(), Optional.empty()));
+    }
+
+    public TestingConcordServer(PostgreSQLContainer<?> db, TestingServerConfig config) {
         this.db = requireNonNull(db);
-        this.extraConfiguration = requireNonNull(extraConfiguration);
-        this.apiPort = apiPort;
-        this.extraModules = requireNonNull(extraModules);
-        this.adminApiKey = randomString(8);
-        this.agentApiKey = randomString(16);
+
+        requireNonNull(config);
+
+        this.extraConfiguration = requireNonNull(config.extraConfiguration());
+        this.apiPort = config.apiPort().orElse(8001);
+        this.extraModules = requireNonNull(config.extraModules());
+        this.adminApiKey = config.adminApiToken().orElseGet(() -> randomString(8));
+        this.agentApiKey = config.agentApiToken().orElseGet(() -> randomString(8));
     }
 
     public synchronized TestingConcordServer start() throws Exception {
@@ -149,8 +159,14 @@ public class TestingConcordServer implements AutoCloseable {
      * Just an example.
      */
     public static void main(String[] args) throws Exception {
+        var adminApiKey = Optional.ofNullable(System.getenv("TEST_ADMIN_API_KEY"));
+
+        var serverConfig = TestingServerConfig.createDefault()
+                .withOptionalAdminApiKey(adminApiKey)
+                .withExtraConfiguration(Map.of("process.watchdogPeriod", "10 seconds"));
+
         try (var db = new PostgreSQLContainer<>("postgres:15-alpine");
-             var server = new TestingConcordServer(db, 8001, Map.of("process.watchdogPeriod", "10 seconds"), List.of())) {
+             var server = new TestingConcordServer(db, serverConfig)) {
             db.start();
             server.start();
             System.out.printf("""
@@ -170,7 +186,9 @@ public class TestingConcordServer implements AutoCloseable {
                     server.getAdminApiKey(),
                     server.getAgentApiKey());
 
-            Thread.currentThread().join();
+            Thread.currentThread().
+
+                    join();
         }
     }
 }
