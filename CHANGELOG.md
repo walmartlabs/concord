@@ -1,5 +1,53 @@
 # Change Log
 
+## [2.20.0] - Unreleased
+
+### Added
+
+- mock-tasks: allow flows to be executed instead of tasks
+([#1042](https://github.com/walmartlabs/concord/pull/1042)).
+
+### Changed
+
+- plugins: fix dependency scopes
+([#1017](https://github.com/walmartlabs/concord/pull/1017));
+- concord-cli: fix dependencies when generating effective yaml
+([#1018](https://github.com/walmartlabs/concord/pull/1018));
+- runtime-v2: remove extraneous error logging
+([#1021](https://github.com/walmartlabs/concord/pull/1021));
+- runtime-v2: script meta options should not override
+the script step name
+([#1022](https://github.com/walmartlabs/concord/pull/1022));
+- runtime-v2: fix error messages
+([#1023](https://github.com/walmartlabs/concord/pull/1023));
+- mock-tasks: allow matching mocks by meta attributes or
+step name
+([#1024](https://github.com/walmartlabs/concord/pull/1024));
+- concord-console2: fix zero content-length parsing in makeError
+([#1025](https://github.com/walmartlabs/concord/pull/1025));
+- concord-server: split ConcordAuthenticationHandler into
+separate handlers
+([#1026](https://github.com/walmartlabs/concord/pull/1026));
+- mocks-task: record task events for mocked tasks
+([#1027](https://github.com/walmartlabs/concord/pull/1027));
+- concord-server: fix session token handling
+([#1032](https://github.com/walmartlabs/concord/pull/1032));
+- concord-server: cleanup control chars from JSONB 
+([#1034](https://github.com/walmartlabs/concord/pull/1034));
+- concord-server: add authorization check to User lookup
+endpoint in API
+([#1035](https://github.com/walmartlabs/concord/pull/1035));
+- it: tighten up polling intervals
+([#1036](https://github.com/walmartlabs/concord/pull/1036));
+- project: use concord-maven-plugin
+([#1038](https://github.com/walmartlabs/concord/pull/1038));
+- concord-server: fix process card createOrUpdate
+([#1039](https://github.com/walmartlabs/concord/pull/1039));
+- runtime-v2: allow mark sensitive data for task.execute result
+([#1040](https://github.com/walmartlabs/concord/pull/1040)).
+
+
+
 ## [2.19.0] - 2024-11-05
 
 ## Added
