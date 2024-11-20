@@ -74,4 +74,8 @@ public class MockDefinition {
     public String throwError() {
         return MapUtils.getString(definition, "throwError");
     }
+
+    public String executeFlow() {
+        return MapUtils.getString(definition, "executeFlow");
+    }
 }

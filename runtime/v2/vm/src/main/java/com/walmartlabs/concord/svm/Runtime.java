@@ -28,6 +28,11 @@ public interface Runtime {
     void spawn(State state, ThreadId threadId);
 
     /**
+     * Runs the specified "vm" thread on current java thread.
+     */
+    EvalResult eval(State state, ThreadId threadId) throws Exception;
+
+    /**
      * Returns an instance of the specified service using the underlying injector.
      */
     <T> T getService(Class<T> klass);
