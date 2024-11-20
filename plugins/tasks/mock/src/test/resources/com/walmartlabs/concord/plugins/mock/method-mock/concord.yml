@@ -1,6 +1,6 @@
 flows:
   default:
-    - expr: "${undefinedTask.myMethod(1, 'b', false, [1, 2, 3], {'k': 'v'})}"
+    - expr: "${testTask.myMethod(1, 'b', false, [1, 2, 3], {'k': 'v'})}"
       out: result
 
     - log: "result.ok: ${result}"
@@ -8,7 +8,7 @@ flows:
 configuration:
   arguments:
     mocks:
-      - task: "undefinedTask"
+      - task: "testTask"
         method: "myMethod"
         args: [1, 'b', false, [1, 2, 3], {k: 'v'}]
         result: "BOO"

@@ -35,6 +35,8 @@ public interface TaskProvider {
 
     Task createTask(Context ctx, String key);
 
+    Class<? extends Task> getTaskClass(Context ctx, String key);
+
     boolean hasTask(String key);
 
     Set<String> names();

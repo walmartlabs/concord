@@ -1,0 +1,23 @@
+configuration:
+  runtime: "concord-v2"
+flows:
+  default:
+    - script: js
+      body: |
+        const Base64 = Java.type('java.util.Base64');
+        const auth = processInfo.sessionToken + ":";
+        result.set('auth', Base64.getEncoder().withoutPadding().encodeToString(auth.getBytes()));
+      out:
+        auth: ${result.auth}
+
+    - task: http
+      in:
+        method: GET
+        headers:
+          Authorization: "Basic ${auth}"
+        url: ${targetUrl}
+        ignoreErrors: false
+        response: json
+      out: response
+
+    - log: "statusCode=${response.statusCode}"

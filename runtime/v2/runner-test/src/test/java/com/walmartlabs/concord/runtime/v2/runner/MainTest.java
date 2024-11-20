@@ -1358,7 +1358,7 @@ public class MainTest  {
         byte[] log = run();
         assertLog(log, ".*" + Pattern.quote("sensitive: ******") + ".*");
         assertLog(log, ".*" + Pattern.quote("log value: ******") + ".*");
-        assertLog(log, ".*" + Pattern.quote("hack: B O O M") + ".*");
+        assertLog(log, ".*" + Pattern.quote("hack: M A S K _ M E ") + ".*");
 
         assertLog(log, ".*" + Pattern.quote("map: {nonSecretButMasked=******, secret=******}") + ".*");
         assertLog(log, ".*" + Pattern.quote("map: {nonSecret=non secret value, secret=******}") + ".*");
@@ -1366,6 +1366,8 @@ public class MainTest  {
         assertLog(log, ".*" + Pattern.quote("plain: plain") + ".*");
 
         assertLog(log, ".*" + Pattern.quote("secret from map: ******") + ".*");
+
+        assertLog(log, ".*secret from task execute: .*" + Pattern.quote("keyWithSecretValue=******") + ".*");
 
         log = resume("ev1", ProcessConfiguration.builder().build());
         assertLog(log, ".*" + Pattern.quote("mySecret after suspend: ******") + ".*");
