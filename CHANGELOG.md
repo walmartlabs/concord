@@ -2,6 +2,11 @@
 
 ## [2.20.0] - Unreleased
 
+### Added
+
+- mock-tasks: allow flows to be executed instead of tasks
+([#1042](https://github.com/walmartlabs/concord/pull/1042)).
+
 ### Changed
 
 - plugins: fix dependency scopes
@@ -40,6 +45,7 @@ endpoint in API
 ([#1039](https://github.com/walmartlabs/concord/pull/1039));
 - runtime-v2: allow mark sensitive data for task.execute result
 ([#1040](https://github.com/walmartlabs/concord/pull/1040)).
+
 
 
 ## [2.19.0] - 2024-11-05
