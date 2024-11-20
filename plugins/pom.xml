@@ -38,5 +38,6 @@
         <module>tasks/variables</module>
         <module>templates/ansible</module>
         <module>tasks/files</module>
+        <module>tasks/oauth</module>
     </modules>
 </project>
