@@ -49,17 +49,19 @@ public class DefaultRuntime implements Runtime {
 
     @Override
     public void spawn(State state, ThreadId threadId) {
-        executor.submit(() -> {
-            try {
-                vm.eval(this, state, threadId);
-            } catch (LoggedException e) {
-                throw e.getCause();
-            } catch (Exception e) {
-                log.error("Error while evaluating commands for thread {}", threadId, e);
-                throw e;
-            }
-            return null;
-        });
+        executor.submit(() -> eval(state, threadId));
+    }
+
+    @Override
+    public VM.EvalResult eval(State state, ThreadId threadId) throws Exception {
+        try {
+            return vm.eval(this, state, threadId);
+        } catch (LoggedException e) {
+            throw e.getCause();
+        } catch (Exception e) {
+            log.error("Error while evaluating commands for thread {}", threadId, e);
+            throw e;
+        }
     }
 
     @Override
