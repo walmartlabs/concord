@@ -27,7 +27,7 @@ public interface Runtime {
      */
     void spawn(State state, ThreadId threadId);
 
-    VM.EvalResult eval(State state, ThreadId threadId) throws Exception;
+    EvalResult eval(State state, ThreadId threadId) throws Exception;
 
     /**
      * Returns an instance of the specified service using the underlying injector.

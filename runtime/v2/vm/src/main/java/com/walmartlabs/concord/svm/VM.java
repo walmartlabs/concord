@@ -23,7 +23,6 @@ package com.walmartlabs.concord.svm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -60,7 +59,7 @@ public class VM {
             throw e;
         }
 
-        listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
+        listeners.fireAfterProcessEnds(runtime, state, result.lastFrame());
 
         log.debug("start -> done");
     }
@@ -92,7 +91,7 @@ public class VM {
             throw e;
         }
 
-        listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
+        listeners.fireAfterProcessEnds(runtime, state, result.lastFrame());
 
         log.debug("resume ['{}'] -> done", eventRefs);
     }
@@ -247,21 +246,6 @@ public class VM {
             if (!events.containsKey(e.getKey()) && e.getValue() == ThreadStatus.SUSPENDED) {
                 state.setStatus(e.getKey(), ThreadStatus.READY);
             }
-        }
-    }
-
-    public static class EvalResult implements Serializable {
-
-        private static final long serialVersionUID = 1L;
-
-        private final Frame lastFrame;
-
-        private EvalResult(Frame lastFrame) {
-            this.lastFrame = lastFrame;
-        }
-
-        public Frame lastFrame() {
-            return lastFrame;
         }
     }
 }
