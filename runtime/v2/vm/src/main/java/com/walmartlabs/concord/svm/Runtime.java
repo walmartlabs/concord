@@ -27,6 +27,9 @@ public interface Runtime {
      */
     void spawn(State state, ThreadId threadId);
 
+    /**
+     * Runs the specified "vm" thread on current java thread.
+     */
     EvalResult eval(State state, ThreadId threadId) throws Exception;
 
     /**
