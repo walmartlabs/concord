@@ -34,7 +34,6 @@
             z-index: 1050;
         }
 
-        /* Style for the profile button */
         .profile-button {
             background: none;
             border: none;
@@ -47,10 +46,28 @@
             background-color: #f8f9fa;
         }
 
-        /* Ensure dropdown menu doesn't get cut off */
         .profile-dropdown {
             position: fixed !important;
             margin-top: 0.5rem !important;
+        }
+
+        .nav-link {
+            color: #6c757d;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-link:hover {
+            color: #0d6efd;
+            background-color: #f8f9fa;
+        }
+
+        .nav-link:active {
+            color: #0d6efd;
+            background-color: #e9ecef;
+            font-weight: 500;
         }
 
         @media (max-width: 767.98px) {
@@ -94,7 +111,31 @@
                     <h5 class="text-primary">Concord</h5>
                 </div>
 
-                <!-- Spacer to push profile/login section to bottom -->
+                <!-- Navigation Menu -->
+                <div class="nav flex-column">
+                    <a href="/processes" class="nav-link">
+                        <i class="bi bi-gear"></i>
+                        Processes
+                    </a>
+                    <a href="/projects" class="nav-link">
+                        <i class="bi bi-folder"></i>
+                        Projects
+                    </a>
+                    <a href="/json-stores" class="nav-link">
+                        <i class="bi bi-database"></i>
+                        JSON Stores
+                    </a>
+                    <a href="/secrets" class="nav-link">
+                        <i class="bi bi-key"></i>
+                        Secrets
+                    </a>
+                    <a href="/teams" class="nav-link">
+                        <i class="bi bi-people"></i>
+                        Teams
+                    </a>
+                </div>
+
+                <!-- Spacer -->
                 <div class="flex-grow-1"></div>
 
                 <!-- Profile/Login Section -->
