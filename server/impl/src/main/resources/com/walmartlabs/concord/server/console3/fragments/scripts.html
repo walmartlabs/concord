@@ -1,0 +1,17 @@
+<script th:fragment="menuScript">
+    document.getElementById('menu-toggle').addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('show');
+    });
+
+    document.addEventListener('click', function(event) {
+        const sidebar = document.getElementById('sidebar');
+        const menuToggle = document.getElementById('menu-toggle');
+
+        if (window.innerWidth < 768 &&
+            !sidebar.contains(event.target) &&
+            !menuToggle.contains(event.target) &&
+            sidebar.classList.contains('show')) {
+            sidebar.classList.remove('show');
+        }
+    });
+</script>
