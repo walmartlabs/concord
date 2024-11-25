@@ -26,16 +26,19 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import java.io.OutputStream;
 import java.util.Optional;
+import java.util.Set;
 
-@Path("/console3")
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+
+@Path(ConsoleResource.BASE_PATH)
 public class ConsoleResource implements Resource {
+
+    public static final String BASE_PATH = "/console3";
+    private static final Set<String> ALLOWED_PATHS = Set.of("index.html", "login.html");
+    private static final String RESOURCE_PREFIX = "com/walmartlabs/concord/server/console3/";
 
     private final TemplateRenderer renderer;
 
@@ -48,7 +51,7 @@ public class ConsoleResource implements Resource {
     @Path("/")
     @Produces(MediaType.TEXT_HTML)
     public Response index(@Context UriInfo uriInfo) {
-        var redirect = uriInfo.getBaseUriBuilder().path("console3/index.html").build();
+        var redirect = uriInfo.getBaseUriBuilder().path(BASE_PATH + "/index.html").build();
         return Response.seeOther(redirect).build();
     }
 
@@ -60,24 +63,21 @@ public class ConsoleResource implements Resource {
                           @Context HttpServletRequest request,
                           @Context HttpServletResponse response) {
 
-        if (path == null || path.contains("..")) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        }
+        var resource = Optional.ofNullable(path)
+                .filter(p -> !p.contains("..") && p.endsWith(".html"))
+                .flatMap(ConsoleResource::pathToResource)
+                .orElseThrow(() -> new WebApplicationException("Not found. Try starting at " + BASE_PATH, NOT_FOUND));
 
-        if (!path.endsWith(".html")) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-
-        var output = new StreamingOutput() {
-            @Override
-            public void write(OutputStream out) {
-                var user = userPrincipal.map(UserPrincipal::getUser).orElse(null);
-                renderer.render("com/walmartlabs/concord/server/console3/%s".formatted(path), request, response, user, out);
-            }
-        };
-
+        var user = userPrincipal.map(UserPrincipal::getUser);
+        var output = (StreamingOutput) out -> renderer.render(resource, request, response, user, out);
         return Response.ok(output)
-                .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
                 .build();
+    }
+
+    private static Optional<String> pathToResource(String path) {
+        if (ALLOWED_PATHS.contains(path)) {
+            return Optional.of(RESOURCE_PREFIX + path);
+        }
+        return Optional.empty();
     }
 }
