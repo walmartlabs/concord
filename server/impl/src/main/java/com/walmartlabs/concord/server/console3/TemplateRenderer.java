@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.console3;
  * =====
  */
 
-import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.TemplateEngine;
@@ -29,12 +28,13 @@ import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.thymeleaf.web.servlet.JavaxServletWebApplication;
 
-import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.Optional;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class TemplateRenderer {
 
     private final ITemplateEngine engine;
@@ -54,14 +54,14 @@ public class TemplateRenderer {
     public void render(String resource,
                        HttpServletRequest request,
                        HttpServletResponse response,
-                       @Nullable UserEntry user,
+                       Optional<UserEntry> user,
                        OutputStream out) {
 
         var servletContext = request.getServletContext();
         var app = JavaxServletWebApplication.buildApplication(servletContext);
 
         var templateContext = new WebContext(app.buildExchange(request, response));
-        templateContext.setVariable("user", user);
+        templateContext.setVariable("user", user.orElse(null));
 
         var writer = new OutputStreamWriter(out);
         engine.process(resource, templateContext, writer);
