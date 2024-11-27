@@ -63,6 +63,10 @@ public class SessionTokenAuthenticationHandler implements AuthenticationHandler 
                 return null;
             }
 
+            if (!auth.startsWith(BASIC_AUTH_PREFIX)) {
+                return null;
+            }
+
             auth = auth.substring(BASIC_AUTH_PREFIX.length());
             auth = new String(Base64.getDecoder().decode(auth));
 
