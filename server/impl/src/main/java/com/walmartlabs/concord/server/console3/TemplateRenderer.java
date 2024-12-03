@@ -41,6 +41,7 @@ public class TemplateRenderer {
 
     public TemplateRenderer() {
         var resolver = new ClassLoaderTemplateResolver();
+        resolver.setPrefix("com/walmartlabs/concord/server/console3/");
         resolver.setTemplateMode(TemplateMode.HTML);
         resolver.setCacheable(true);
         resolver.setCacheTTLMs(1L);
