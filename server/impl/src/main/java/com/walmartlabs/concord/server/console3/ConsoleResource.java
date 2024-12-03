@@ -38,7 +38,6 @@ public class ConsoleResource implements Resource {
 
     public static final String BASE_PATH = "/console3";
     private static final Set<String> ALLOWED_PATHS = Set.of("index.html", "login.html");
-    private static final String RESOURCE_PREFIX = "com/walmartlabs/concord/server/console3/";
 
     private final TemplateRenderer renderer;
 
@@ -76,7 +75,7 @@ public class ConsoleResource implements Resource {
 
     private static Optional<String> pathToResource(String path) {
         if (ALLOWED_PATHS.contains(path)) {
-            return Optional.of(RESOURCE_PREFIX + path);
+            return Optional.of(path);
         }
         return Optional.empty();
     }
