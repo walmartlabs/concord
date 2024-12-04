@@ -1,5 +1,18 @@
 # Change Log
 
+## [2.21.0] - Unreleased
+
+### Changed
+
+- concord-server: fix header validation in
+SessionTokenAuthenticationHandler
+([#1044](https://github.com/walmartlabs/concord/pull/1044));
+- concord-console2: add support for redirectTo to the login
+page
+([#1046])(https://github.com/walmartlabs/concord/pull/1046)).
+
+
+
 ## [2.20.0] - 2024-11-20
 
 ### Added
