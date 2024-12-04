@@ -6,7 +6,10 @@
 
 - concord-server: fix header validation in
 SessionTokenAuthenticationHandler
-([#1044](https://github.com/walmartlabs/concord/pull/1044)).
+([#1044](https://github.com/walmartlabs/concord/pull/1044));
+- concord-console2: add support for redirectTo to the login
+page
+([#1046])(https://github.com/walmartlabs/concord/pull/1046)).
 
 
 
