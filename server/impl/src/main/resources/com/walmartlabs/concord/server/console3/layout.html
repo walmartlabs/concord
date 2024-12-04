@@ -168,9 +168,9 @@
                     </div>
 
                     <!-- Show login button if no user -->
-                    <button th:if="${user == null}" class="btn btn-primary w-100">
+                    <a th:if="${user == null}" href="/#/login" class="btn btn-primary w-100">
                         <i class="bi bi-box-arrow-in-right me-2"></i>Log in
-                    </button>
+                    </a>
                 </div>
             </div>
         </nav>
