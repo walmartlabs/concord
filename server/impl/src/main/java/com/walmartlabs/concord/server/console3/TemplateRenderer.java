@@ -32,7 +32,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class TemplateRenderer {
@@ -53,18 +55,22 @@ public class TemplateRenderer {
     }
 
     public void render(String resource,
+                       Set<String> templateSelectors,
                        HttpServletRequest request,
                        HttpServletResponse response,
                        Optional<UserEntry> user,
+                       Map<String, Object> extraVars,
                        OutputStream out) {
 
         var servletContext = request.getServletContext();
         var app = JavaxServletWebApplication.buildApplication(servletContext);
 
-        var templateContext = new WebContext(app.buildExchange(request, response));
-        templateContext.setVariable("user", user.orElse(null));
+        var context = new WebContext(app.buildExchange(request, response));
+        context.setVariable("request", request);
+        context.setVariable("user", user.orElse(null));
+        context.setVariables(extraVars);
 
         var writer = new OutputStreamWriter(out);
-        engine.process(resource, templateContext, writer);
+        engine.process(resource, templateSelectors, context, writer);
     }
 }
