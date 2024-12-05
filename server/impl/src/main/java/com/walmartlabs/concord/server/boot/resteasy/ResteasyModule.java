@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.boot.resteasy;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.sdk.rest.Component;
 
 import javax.servlet.ServletContextListener;
@@ -29,6 +30,7 @@ import javax.servlet.ServletContextListener;
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static com.walmartlabs.concord.server.Utils.bindExceptionMapper;
+import static com.walmartlabs.concord.server.Utils.bindServletContextListener;
 
 public class ResteasyModule implements Module {
 
@@ -36,7 +38,7 @@ public class ResteasyModule implements Module {
     public void configure(Binder binder) {
         newSetBinder(binder, ApiDescriptor.class).addBinding().to(ConcordApiDescriptor.class);
 
-        newSetBinder(binder, ServletContextListener.class).addBinding().to(ResteasyBootstrapListener.class);
+        bindServletContextListener(binder, ResteasyBootstrapListener.class);
 
         binder.bind(ObjectMapperContextResolver.class).in(SINGLETON);
         newSetBinder(binder, Component.class).addBinding().to(ObjectMapperContextResolver.class);

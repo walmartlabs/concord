@@ -117,26 +117,11 @@
 
                 <!-- Navigation Menu -->
                 <div class="nav flex-column">
-                    <a th:href="${basePath} + '/processes.html'" th:hx-get="${basePath} + '/processes.html'" hx-target="#content" hx-swap="innerHTML" hx-push-url="true" class="nav-link">
-                        <i class="bi bi-gear"></i>
-                        Processes
-                    </a>
-                    <a th:href="${basePath} + '/projects.html'" th:hx-get="${basePath} + '/projects.html'" hx-target="#content" hx-swap="innerHTML" hx-push-url="true" class="nav-link">
-                        <i class="bi bi-folder"></i>
-                        Projects
-                    </a>
-                    <a th:href="${basePath} + '/json-stores'" class="nav-link">
-                        <i class="bi bi-database"></i>
-                        JSON Stores
-                    </a>
-                    <a th:href="${basePath} + '/secrets'" class="nav-link">
-                        <i class="bi bi-key"></i>
-                        Secrets
-                    </a>
-                    <a th:href="${basePath} + '/teams'" class="nav-link">
-                        <i class="bi bi-people"></i>
-                        Teams
-                    </a>
+                    <div th:replace="~{_components :: nav-link('/processes.html', 'bi bi-gear', 'Processes')}"></div>
+                    <div th:replace="~{_components :: nav-link('/projects.html', 'bi bi-folder', 'Projects')}"></div>
+                    <div th:replace="~{_components :: nav-link('/json-stores.html', 'bi bi-database', 'JSON Stores')}"></div>
+                    <div th:replace="~{_components :: nav-link('/secrets.html', 'bi bi-key', 'Secrets')}"></div>
+                    <div th:replace="~{_components :: nav-link('/teams.html', 'bi bi-people', 'Teams')}"></div>
                 </div>
 
                 <!-- Spacer -->

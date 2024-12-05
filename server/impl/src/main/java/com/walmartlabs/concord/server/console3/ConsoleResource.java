@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.console3;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import org.thymeleaf.context.WebContext;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -30,7 +31,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.net.URI;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -66,7 +66,6 @@ public class ConsoleResource implements Resource {
     @Path("{path:.*}")
     public Response serve(@PathParam("path") String path,
                           @Context UriInfo uriInfo,
-                          @Context Optional<UserPrincipal> userPrincipal,
                           @Context HttpServletRequest request,
                           @Context HttpServletResponse response) {
 
@@ -81,10 +80,9 @@ public class ConsoleResource implements Resource {
 
         var resource = maybeResource.get();
         var templateSelectors = request.getHeader("HX-Request") != null ? Set.of("content") : Set.<String>of();
-        var user = userPrincipal.map(UserPrincipal::getUser);
-        var extraVars = Map.<String, Object>of("basePath", BASE_PATH);
+        var context = prepareContext(request, response);
 
-        var output = (StreamingOutput) out -> renderer.render(resource, templateSelectors, request, response, user, extraVars, out);
+        var output = (StreamingOutput) out -> renderer.render(resource, templateSelectors, context, out);
         return Response.ok(output)
                 .build();
     }
@@ -98,5 +96,20 @@ public class ConsoleResource implements Resource {
 
     private static URI createBaseUri(UriInfo uriInfo, String path) {
         return uriInfo.getBaseUriBuilder().path(BASE_PATH + path).build();
+    }
+
+    private static WebContext prepareContext(HttpServletRequest request,
+                                             HttpServletResponse response) {
+
+        var app = ThymeleafApp.getInstance(request);
+        var ctx = new WebContext(app.buildExchange(request, response));
+
+        ctx.setVariable("request", request);
+        ctx.setVariable("basePath", BASE_PATH);
+
+        var principal = UserPrincipal.getCurrent();
+        ctx.setVariable("user", principal != null ? principal.getUser() : null);
+
+        return ctx;
     }
 }

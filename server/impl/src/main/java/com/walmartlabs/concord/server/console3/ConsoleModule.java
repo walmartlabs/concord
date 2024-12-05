@@ -35,11 +35,13 @@ import javax.servlet.http.HttpServletRequest;
 
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
+import static com.walmartlabs.concord.server.Utils.bindServletContextListener;
 
 public class ConsoleModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        bindServletContextListener(binder, ThymeleafApp.class);
         bindJaxRsResource(binder, ConsoleResource.class);
         newSetBinder(binder, ApiDescriptor.class).addBinding().to(Console3ApiDescriptor.class);
         newSetBinder(binder, AuthenticationHandler.class).addBinding().to(Console3AuthenticationHandler.class);
@@ -66,8 +68,7 @@ public class ConsoleModule implements Module {
         @Override
         public void configure(FilterChainManager manager) {
             manager.addFilter("console3", delegate);
-            manager.addFilter("console3-user-session", new UserPrincipalFilter());
-            manager.createChain("/console3/**", "console3, console3-user-session");
+            manager.createChain("/console3/**", "console3");
         }
     }
 
