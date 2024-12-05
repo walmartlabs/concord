@@ -6,6 +6,7 @@
     <title>Concord</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org"></script>
     <style>
         #sidebar {
             min-height: 100vh;
@@ -30,7 +31,7 @@
         #menu-toggle {
             position: fixed;
             top: 1rem;
-            left: 1rem;
+            right: 1rem;
             z-index: 1050;
         }
 
@@ -79,6 +80,12 @@
                 transform: translateX(-100%);
             }
 
+            /* used in JS */
+            /*noinspection CssUnusedSymbol*/
+            #sidebar.show {
+                transform: translateX(0);
+            }
+
             .content {
                 margin-top: 4rem;
             }
@@ -110,23 +117,23 @@
 
                 <!-- Navigation Menu -->
                 <div class="nav flex-column">
-                    <a href="/processes" class="nav-link">
+                    <a th:href="${basePath} + '/processes.html'" th:hx-get="${basePath} + '/processes.html'" hx-target="#content" hx-swap="innerHTML" hx-push-url="true" class="nav-link">
                         <i class="bi bi-gear"></i>
                         Processes
                     </a>
-                    <a href="/projects" class="nav-link">
+                    <a th:href="${basePath} + '/projects.html'" th:hx-get="${basePath} + '/projects.html'" hx-target="#content" hx-swap="innerHTML" hx-push-url="true" class="nav-link">
                         <i class="bi bi-folder"></i>
                         Projects
                     </a>
-                    <a href="/json-stores" class="nav-link">
+                    <a th:href="${basePath} + '/json-stores'" class="nav-link">
                         <i class="bi bi-database"></i>
                         JSON Stores
                     </a>
-                    <a href="/secrets" class="nav-link">
+                    <a th:href="${basePath} + '/secrets'" class="nav-link">
                         <i class="bi bi-key"></i>
                         Secrets
                     </a>
-                    <a href="/teams" class="nav-link">
+                    <a th:href="${basePath} + '/teams'" class="nav-link">
                         <i class="bi bi-people"></i>
                         Teams
                     </a>
@@ -143,9 +150,12 @@
                                 type="button"
                                 data-bs-toggle="dropdown"
                                 aria-expanded="false">
+
                             <i class="bi bi-person-circle fs-4"></i>
+
                             <span class="text-truncate"
                                   th:text="${user.displayName != null ? user.displayName : user.name}">User Name</span>
+
                             <i class="bi bi-chevron-down ms-auto"></i>
                         </button>
                         <ul class="dropdown-menu profile-dropdown">
@@ -158,7 +168,7 @@
                                 <hr class="dropdown-divider">
                             </li>
                             <li>
-                                <form action="/logout" method="post" class="dropdown-item">
+                                <form th:action="${basePath} + '/logout'" method="post" class="dropdown-item">
                                     <button type="submit" class="btn btn-link text-danger p-0">
                                         <i class="bi bi-box-arrow-right me-2"></i>Logout
                                     </button>
@@ -168,7 +178,8 @@
                     </div>
 
                     <!-- Show login button if no user -->
-                    <a th:if="${user == null}" href="/#/login" class="btn btn-primary w-100">
+                    <a th:if="${user == null}" th:href="'/#/login?redirectTo=' + ${request.requestURI}"
+                       class="btn btn-primary w-100">
                         <i class="bi bi-box-arrow-in-right me-2"></i>Log in
                     </a>
                 </div>
@@ -176,7 +187,7 @@
         </nav>
 
         <!-- Main Content -->
-        <main class="col-md-9 col-lg-10 content">
+        <main id="content" class="col-md-9 col-lg-10 content">
             <div class="d-flex align-items-center justify-content-center h-100" th:replace="${content}">
                 <div class="text-center">
                     <h1>Welcome!</h1>

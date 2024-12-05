@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.console3;
  */
 
 import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 
 import javax.inject.Inject;
@@ -28,16 +29,17 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.net.URI;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-
 @Path(ConsoleResource.BASE_PATH)
+@Produces(MediaType.TEXT_HTML)
 public class ConsoleResource implements Resource {
 
     public static final String BASE_PATH = "/console3";
-    private static final Set<String> ALLOWED_PATHS = Set.of("index.html", "login.html");
+    private static final Set<String> ALLOWED_PATHS = Set.of("index.html", "login.html", "404.html", "projects.html");
 
     private final TemplateRenderer renderer;
 
@@ -48,27 +50,41 @@ public class ConsoleResource implements Resource {
 
     @GET
     @Path("/")
-    @Produces(MediaType.TEXT_HTML)
     public Response index(@Context UriInfo uriInfo) {
-        var redirect = uriInfo.getBaseUriBuilder().path(BASE_PATH + "/index.html").build();
+        var redirect = createBaseUri(uriInfo, "/index.html");
         return Response.seeOther(redirect).build();
+    }
+
+    @POST
+    @Path("/logout")
+    public Response logout(@Context UriInfo uriInfo) {
+        SecurityUtils.logout();
+        return index(uriInfo);
     }
 
     @GET
     @Path("{path:.*}")
-    @Produces(MediaType.TEXT_HTML)
-    public Response index(@PathParam("path") String path,
+    public Response serve(@PathParam("path") String path,
+                          @Context UriInfo uriInfo,
                           @Context Optional<UserPrincipal> userPrincipal,
                           @Context HttpServletRequest request,
                           @Context HttpServletResponse response) {
 
-        var resource = Optional.ofNullable(path)
+        var maybeResource = Optional.ofNullable(path)
                 .filter(p -> !p.contains("..") && p.endsWith(".html"))
-                .flatMap(ConsoleResource::pathToResource)
-                .orElseThrow(() -> new WebApplicationException("Not found. Try starting at " + BASE_PATH, NOT_FOUND));
+                .flatMap(ConsoleResource::pathToResource);
 
+        if (maybeResource.isEmpty()) {
+            var redirect = createBaseUri(uriInfo, "/404.html");
+            return Response.seeOther(redirect).build();
+        }
+
+        var resource = maybeResource.get();
+        var templateSelectors = request.getHeader("HX-Request") != null ? Set.of("content") : Set.<String>of();
         var user = userPrincipal.map(UserPrincipal::getUser);
-        var output = (StreamingOutput) out -> renderer.render(resource, request, response, user, out);
+        var extraVars = Map.<String, Object>of("basePath", BASE_PATH);
+
+        var output = (StreamingOutput) out -> renderer.render(resource, templateSelectors, request, response, user, extraVars, out);
         return Response.ok(output)
                 .build();
     }
@@ -78,5 +94,9 @@ public class ConsoleResource implements Resource {
             return Optional.of(path);
         }
         return Optional.empty();
+    }
+
+    private static URI createBaseUri(UriInfo uriInfo, String path) {
+        return uriInfo.getBaseUriBuilder().path(BASE_PATH + path).build();
     }
 }
