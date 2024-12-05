@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concord</title>
+</head>
+<body>
+<th:block th:fragment="nav-link(path, iconClass, text)">
+    <a th:href="${basePath} + ${path}"
+       th:hx-get="${basePath} + ${path}"
+       hx-target="#content"
+       hx-swap="innerHTML"
+       hx-push-url="true"
+       class="nav-link">
+        <i th:class="${iconClass}"></i>
+        <span th:text="${text}"></span>
+    </a>
+</th:block>
+</body>
+</html>

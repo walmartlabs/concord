@@ -20,20 +20,14 @@ package com.walmartlabs.concord.server.console3;
  * =====
  */
 
-import com.walmartlabs.concord.server.user.UserEntry;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.WebContext;
+import org.thymeleaf.context.IContext;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
-import org.thymeleaf.web.servlet.JavaxServletWebApplication;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -43,8 +37,9 @@ public class TemplateRenderer {
 
     public TemplateRenderer() {
         var resolver = new ClassLoaderTemplateResolver();
-        resolver.setPrefix("com/walmartlabs/concord/server/console3/");
         resolver.setTemplateMode(TemplateMode.HTML);
+        resolver.setPrefix("com/walmartlabs/concord/server/console3/");
+        resolver.setSuffix(".html");
         resolver.setCacheable(true);
         resolver.setCacheTTLMs(1L);
 
@@ -56,19 +51,8 @@ public class TemplateRenderer {
 
     public void render(String resource,
                        Set<String> templateSelectors,
-                       HttpServletRequest request,
-                       HttpServletResponse response,
-                       Optional<UserEntry> user,
-                       Map<String, Object> extraVars,
+                       IContext context,
                        OutputStream out) {
-
-        var servletContext = request.getServletContext();
-        var app = JavaxServletWebApplication.buildApplication(servletContext);
-
-        var context = new WebContext(app.buildExchange(request, response));
-        context.setVariable("request", request);
-        context.setVariable("user", user.orElse(null));
-        context.setVariables(extraVars);
 
         var writer = new OutputStreamWriter(out);
         engine.process(resource, templateSelectors, context, writer);

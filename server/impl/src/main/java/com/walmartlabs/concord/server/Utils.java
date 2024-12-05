@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.sdk.rest.Resource;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
 
 import javax.servlet.Filter;
+import javax.servlet.ServletContextListener;
 import javax.ws.rs.ext.ExceptionMapper;
 import java.util.List;
 
@@ -66,6 +67,11 @@ public final class Utils {
         }
 
         return v.getValue();
+    }
+
+    public static void bindServletContextListener(Binder binder, Class<? extends ServletContextListener> klass) {
+        binder.bind(klass).in(SINGLETON);
+        newSetBinder(binder, ServletContextListener.class).addBinding().to(klass);
     }
 
     public static void bindServletFilter(Binder binder, Class<? extends Filter> klass) {

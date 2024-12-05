@@ -79,7 +79,7 @@ public class ApiServerModule implements Module {
 
         // Shiro
 
-        newSetBinder(binder, ServletContextListener.class).addBinding().to(ShiroListener.class).in(SINGLETON);
+        bindServletContextListener(binder, ShiroListener.class);
         newSetBinder(binder, FilterChainConfigurator.class).addBinding().to(ConcordFilterChainConfigurator.class).in(SINGLETON);
 
         binder.bind(ConcordSecurityManager.class).in(SINGLETON);
