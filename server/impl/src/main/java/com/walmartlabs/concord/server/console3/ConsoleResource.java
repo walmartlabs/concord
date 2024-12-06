@@ -39,7 +39,6 @@ import java.util.Set;
 public class ConsoleResource implements Resource {
 
     public static final String BASE_PATH = "/console3";
-    private static final Set<String> ALLOWED_PATHS = Set.of("index.html", "login.html", "404.html", "projects.html");
 
     private final TemplateRenderer renderer;
 
@@ -69,23 +68,22 @@ public class ConsoleResource implements Resource {
                           @Context HttpServletRequest request,
                           @Context HttpServletResponse response) {
 
-        var maybeResource = Optional.ofNullable(path)
+        var resource = Optional.ofNullable(path)
                 .filter(p -> !p.contains("..") && p.endsWith(".html"))
-                .flatMap(ConsoleResource::pathToResource);
+                .flatMap(ConsoleResource::pathToResource)
+                .orElse("404.html");
 
-        if (maybeResource.isEmpty()) {
-            var redirect = createBaseUri(uriInfo, "/404.html");
-            return Response.seeOther(redirect).build();
-        }
-
-        var resource = maybeResource.get();
+        // in case of HTMX requests, render only the "content" part of the template
         var templateSelectors = request.getHeader("HX-Request") != null ? Set.of("content") : Set.<String>of();
+
         var context = prepareContext(request, response);
 
         var output = (StreamingOutput) out -> renderer.render(resource, templateSelectors, context, out);
         return Response.ok(output)
                 .build();
     }
+
+    private static final Set<String> ALLOWED_PATHS = Set.of("index.html", "login.html", "404.html", "projects.html");
 
     private static Optional<String> pathToResource(String path) {
         if (ALLOWED_PATHS.contains(path)) {
