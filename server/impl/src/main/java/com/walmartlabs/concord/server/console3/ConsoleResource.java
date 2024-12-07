@@ -32,7 +32,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import java.util.Optional;
 import java.util.Set;
 
 @Path(ConsoleResource.BASE_PATH)
@@ -48,10 +47,13 @@ public class ConsoleResource implements Resource {
         this.renderer = new TemplateRenderer();
     }
 
+    /**
+     * Redirect to /processes.
+     */
     @GET
     @Path("/")
     public Response index(@Context UriInfo uriInfo) {
-        var redirect = uriInfo.getBaseUriBuilder().path(BASE_PATH + "/index.html").build();
+        var redirect = uriInfo.getBaseUriBuilder().path(BASE_PATH + "/processes").build();
         return Response.seeOther(redirect).build();
     }
 
@@ -62,6 +64,10 @@ public class ConsoleResource implements Resource {
         return index(uriInfo);
     }
 
+    /**
+     * Handles all pages that are not handled by their specific @GET methods.
+     * @return a rendered page
+     */
     @GET
     @Path("{path:.*}")
     public Response serve(@PathParam("path") String path,
@@ -80,14 +86,17 @@ public class ConsoleResource implements Resource {
                 .build();
     }
 
-    private static final Set<String> ALLOWED_PATHS = Set.of("index.html", "login.html", "404.html", "projects.html");
-
     private static String pathToTemplate(String path) {
-        return Optional.ofNullable(path)
-                .filter(p -> !p.contains(".."))
-                .filter(p -> p.endsWith(".html"))
-                .filter(ALLOWED_PATHS::contains)
-                .orElse("404.html");
+        if (path == null || path.contains("..")) {
+            return "404.html";
+        }
+
+        return switch (path) {
+            case "login" -> "login.html";
+            case "processes" -> "processes.html";
+            case "projects" -> "projects.html";
+            default -> "404.html";
+        };
     }
 
     private static WebContext prepareContext(HttpServletRequest request,

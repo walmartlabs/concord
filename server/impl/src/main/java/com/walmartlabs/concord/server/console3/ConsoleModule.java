@@ -48,6 +48,9 @@ public class ConsoleModule implements Module {
         newSetBinder(binder, FilterChainConfigurator.class).addBinding().to(Console3FilterChainConfigurator.class);
     }
 
+    /**
+     * Prefix for UI endpoints.
+     */
     static class Console3ApiDescriptor implements ApiDescriptor {
 
         @Override
@@ -56,6 +59,9 @@ public class ConsoleModule implements Module {
         }
     }
 
+    /**
+     * Use the standard built-in authentication.
+     */
     static class Console3FilterChainConfigurator implements FilterChainConfigurator {
 
         private final ConcordAuthenticatingFilter delegate;
@@ -72,6 +78,10 @@ public class ConsoleModule implements Module {
         }
     }
 
+    /**
+     * Prevents the default behaviour of sending Basic authentication prompt for non-legacy-UI requests.
+     * We do not want those popups.
+     */
     static class Console3AuthenticationHandler implements AuthenticationHandler {
 
         @Override
