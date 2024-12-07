@@ -82,6 +82,9 @@ public class ProcessSecurityContext {
 
     public void storeCurrentSubject(ProcessKey processKey) {
         Subject s = SecurityUtils.getSubject();
+        if (s == null) {
+            throw new IllegalStateException("Subject is not available. This is a bug.");
+        }
         PrincipalCollection src = s.getPrincipals();
         storeSubject(processKey, src);
     }
@@ -122,7 +125,7 @@ public class ProcessSecurityContext {
                     .principals(principals)
                     .buildSubject();
 
-            ThreadContext.bind(subject);
+            SecurityUtils.bindSubject(subject);
 
             return c.call();
         } finally {
@@ -143,7 +146,7 @@ public class ProcessSecurityContext {
                 .buildSubject();
 
         try {
-            ThreadContext.bind(subject);
+            SecurityUtils.bindSubject(subject);
 
             return c.call();
         } finally {
