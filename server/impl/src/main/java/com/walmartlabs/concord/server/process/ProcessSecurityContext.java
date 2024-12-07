@@ -82,7 +82,10 @@ public class ProcessSecurityContext {
 
     // TODO: invalidate cache for processKey?
     public void storeCurrentSubject(ProcessKey processKey) {
-        Subject s = SecurityUtils.getSubject();
+        Subject s = SecurityUtils.getSubject(false);
+        if (s == null) {
+            throw new IllegalStateException("Subject is not available. This is a bug.");
+        }
         PrincipalCollection src = s.getPrincipals();
         storeSubject(processKey, src);
     }

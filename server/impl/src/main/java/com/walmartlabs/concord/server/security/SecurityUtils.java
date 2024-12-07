@@ -43,25 +43,32 @@ import java.util.Set;
 public final class SecurityUtils {
 
     public static void logout() {
-        Subject subject = getSubject();
-        if (subject != null) {
-            subject.logout();
+        Subject subject = getSubject(false);
+        if (subject == null) {
+            return;
         }
+        subject.logout();
     }
 
     public static boolean hasRole(String role) {
-        Subject s = getSubject();
+        Subject s = getSubject(false);
+        if (s == null) {
+            return false;
+        }
         return s.hasRole(role);
     }
 
     public static boolean isPermitted(String permission) {
-        Subject s = getSubject();
+        Subject s = getSubject(false);
+        if (s == null) {
+            return false;
+        }
         return s.isPermitted(permission);
     }
 
-    public static Subject getSubject() {
+    public static Subject getSubject(boolean create) {
         Subject subject = ThreadContext.getSubject();
-        if (subject == null) {
+        if (subject == null && create) {
             subject = (new Subject.Builder()).buildSubject();
             ThreadContext.bind(subject);
         }
@@ -74,7 +81,7 @@ public final class SecurityUtils {
             return null;
         }
 
-        Subject subject = getSubject();
+        Subject subject = getSubject(false);
         if (subject == null) {
             return null;
         }
