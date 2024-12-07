@@ -23,14 +23,15 @@ package com.walmartlabs.concord.server.console3;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import org.thymeleaf.TemplateSpec;
 import org.thymeleaf.context.WebContext;
+import org.thymeleaf.templatemode.TemplateMode;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import java.net.URI;
 import java.util.Optional;
 import java.util.Set;
 
@@ -50,7 +51,7 @@ public class ConsoleResource implements Resource {
     @GET
     @Path("/")
     public Response index(@Context UriInfo uriInfo) {
-        var redirect = createBaseUri(uriInfo, "/index.html");
+        var redirect = uriInfo.getBaseUriBuilder().path(BASE_PATH + "/index.html").build();
         return Response.seeOther(redirect).build();
     }
 
@@ -68,32 +69,25 @@ public class ConsoleResource implements Resource {
                           @Context HttpServletRequest request,
                           @Context HttpServletResponse response) {
 
-        var resource = Optional.ofNullable(path)
-                .filter(p -> !p.contains("..") && p.endsWith(".html"))
-                .flatMap(ConsoleResource::pathToResource)
-                .orElse("404.html");
-
-        // in case of HTMX requests, render only the "content" part of the template
-        var templateSelectors = request.getHeader("HX-Request") != null ? Set.of("content") : Set.<String>of();
+        var template = pathToTemplate(path);
+        var templateSelectors = request.getHeader("HX-Request") != null ? Set.of("content") : Set.<String>of(); // in case of HTMX requests, render only the "content" part of the template
+        var templateSpec = new TemplateSpec(template, templateSelectors, TemplateMode.HTML, null);
 
         var context = prepareContext(request, response);
 
-        var output = (StreamingOutput) out -> renderer.render(resource, templateSelectors, context, out);
+        var output = (StreamingOutput) out -> renderer.render(templateSpec, context, out);
         return Response.ok(output)
                 .build();
     }
 
     private static final Set<String> ALLOWED_PATHS = Set.of("index.html", "login.html", "404.html", "projects.html");
 
-    private static Optional<String> pathToResource(String path) {
-        if (ALLOWED_PATHS.contains(path)) {
-            return Optional.of(path);
-        }
-        return Optional.empty();
-    }
-
-    private static URI createBaseUri(UriInfo uriInfo, String path) {
-        return uriInfo.getBaseUriBuilder().path(BASE_PATH + path).build();
+    private static String pathToTemplate(String path) {
+        return Optional.ofNullable(path)
+                .filter(p -> !p.contains(".."))
+                .filter(p -> p.endsWith(".html"))
+                .filter(ALLOWED_PATHS::contains)
+                .orElse("404.html");
     }
 
     private static WebContext prepareContext(HttpServletRequest request,
