@@ -66,7 +66,7 @@ public final class SecurityUtils {
         return s.isPermitted(permission);
     }
 
-    public static Subject getSubject(boolean create) {
+    public synchronized static Subject getSubject(boolean create) {
         Subject subject = ThreadContext.getSubject();
         if (subject == null && create) {
             subject = (new Subject.Builder()).buildSubject();
