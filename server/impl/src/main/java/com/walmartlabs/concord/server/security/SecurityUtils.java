@@ -43,38 +43,45 @@ import java.util.Set;
 public final class SecurityUtils {
 
     public static void logout() {
-        Subject subject = getSubject();
-        if (subject != null) {
-            subject.logout();
+        Subject subject = getSubject(false);
+        if (subject == null) {
+            return;
         }
+        subject.logout();
     }
 
     public static boolean hasRole(String role) {
-        Subject s = getSubject();
-        return s.hasRole(role);
+        Subject subject = getSubject(false);
+        if (subject == null) {
+            return false;
+        }
+        return subject.hasRole(role);
     }
 
     public static boolean isPermitted(String permission) {
-        Subject s = getSubject();
-        return s.isPermitted(permission);
+        Subject subject = getSubject(false);
+        if (subject == null) {
+            return false;
+        }
+        return subject.isPermitted(permission);
     }
 
-    public static Subject getSubject() {
+    public synchronized static Subject getSubject(boolean create) {
         Subject subject = ThreadContext.getSubject();
-        if (subject == null) {
-            subject = (new Subject.Builder()).buildSubject();
+        if (subject == null && create) {
+            subject = new Subject.Builder().buildSubject();
             ThreadContext.bind(subject);
         }
         return subject;
     }
 
-    public static <T> T getCurrent(Class<T> type) {
+    public static <T> T getPrincipal(Class<T> type) {
         SecurityManager securityManager = ThreadContext.getSecurityManager();
         if (securityManager == null) {
             return null;
         }
 
-        Subject subject = getSubject();
+        Subject subject = getSubject(false);
         if (subject == null) {
             return null;
         }
@@ -87,12 +94,12 @@ public final class SecurityUtils {
         return principals.oneByType(type);
     }
 
-    public static <T> T assertCurrent(Class<T> type) {
-        T p = getCurrent(type);
-        if (p == null) {
+    public static <T> T assertPrincipal(Class<T> type) {
+        T principal = getPrincipal(type);
+        if (principal == null) {
             throw new AuthenticationException("Can't determine the current principal (" + type.getName() + ")");
         }
-        return p;
+        return principal;
     }
 
     public static byte[] serialize(PrincipalCollection data) {

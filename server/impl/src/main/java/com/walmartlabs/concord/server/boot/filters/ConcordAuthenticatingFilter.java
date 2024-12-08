@@ -79,7 +79,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     @Override
     protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) {
-        Subject subject = SecurityUtils.getSubject();
+        Subject subject = SecurityUtils.getSubject(false);
         if (subject != null && subject.isRemembered()) {
             AuthenticationToken t = getFirstToken(subject);
             if (t != null) {
