@@ -51,31 +51,31 @@ public final class SecurityUtils {
     }
 
     public static boolean hasRole(String role) {
-        Subject s = getSubject(false);
-        if (s == null) {
+        Subject subject = getSubject(false);
+        if (subject == null) {
             return false;
         }
-        return s.hasRole(role);
+        return subject.hasRole(role);
     }
 
     public static boolean isPermitted(String permission) {
-        Subject s = getSubject(false);
-        if (s == null) {
+        Subject subject = getSubject(false);
+        if (subject == null) {
             return false;
         }
-        return s.isPermitted(permission);
+        return subject.isPermitted(permission);
     }
 
     public synchronized static Subject getSubject(boolean create) {
         Subject subject = ThreadContext.getSubject();
         if (subject == null && create) {
-            subject = (new Subject.Builder()).buildSubject();
+            subject = new Subject.Builder().buildSubject();
             ThreadContext.bind(subject);
         }
         return subject;
     }
 
-    public static <T> T getCurrent(Class<T> type) {
+    public static <T> T getPrincipal(Class<T> type) {
         SecurityManager securityManager = ThreadContext.getSecurityManager();
         if (securityManager == null) {
             return null;
@@ -94,12 +94,12 @@ public final class SecurityUtils {
         return principals.oneByType(type);
     }
 
-    public static <T> T assertCurrent(Class<T> type) {
-        T p = getCurrent(type);
-        if (p == null) {
+    public static <T> T assertPrincipal(Class<T> type) {
+        T principal = getPrincipal(type);
+        if (principal == null) {
             throw new AuthenticationException("Can't determine the current principal (" + type.getName() + ")");
         }
-        return p;
+        return principal;
     }
 
     public static byte[] serialize(PrincipalCollection data) {
