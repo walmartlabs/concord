@@ -33,15 +33,19 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
+import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
-import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
-import static com.walmartlabs.concord.server.Utils.bindServletContextListener;
+import static com.walmartlabs.concord.server.Utils.*;
 
 public class ConsoleModule implements Module {
 
+    public static final String BASE_PATH = "/console3";
+
     @Override
     public void configure(Binder binder) {
+        binder.bind(TemplateRenderer.class).in(SINGLETON);
         bindServletContextListener(binder, ThymeleafApp.class);
+        bindMessageBodyWriter(binder, TemplateResponseWriter.class);
         bindJaxRsResource(binder, ConsoleResource.class);
         newSetBinder(binder, ApiDescriptor.class).addBinding().to(Console3ApiDescriptor.class);
         newSetBinder(binder, AuthenticationHandler.class).addBinding().to(Console3AuthenticationHandler.class);
