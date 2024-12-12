@@ -31,6 +31,7 @@ import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import javax.servlet.Filter;
 import javax.servlet.ServletContextListener;
 import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.MessageBodyWriter;
 import java.util.List;
 
 import static com.google.inject.Scopes.SINGLETON;
@@ -107,6 +108,12 @@ public final class Utils {
         binder.bind(klass).in(SINGLETON);
         newSetBinder(binder, Component.class).addBinding().to(klass);
         newSetBinder(binder, ExceptionMapper.class).addBinding().to(klass);
+    }
+
+    public static <T extends MessageBodyWriter<?> & Component> void bindMessageBodyWriter(Binder binder, Class<? extends T> klass) {
+        binder.bind(klass);
+        newSetBinder(binder, Component.class).addBinding().to(klass);
+        newSetBinder(binder, MessageBodyWriter.class).addBinding().to(klass);
     }
 
     private Utils() {

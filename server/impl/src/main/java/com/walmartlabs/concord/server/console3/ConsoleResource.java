@@ -22,30 +22,24 @@ package com.walmartlabs.concord.server.console3;
 
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.security.SecurityUtils;
-import com.walmartlabs.concord.server.security.UserPrincipal;
-import org.thymeleaf.TemplateSpec;
-import org.thymeleaf.context.WebContext;
-import org.thymeleaf.templatemode.TemplateMode;
 
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import java.util.Set;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.util.Map;
 
-@Path(ConsoleResource.BASE_PATH)
+import static com.walmartlabs.concord.server.console3.ConsoleModule.BASE_PATH;
+
+@Path(BASE_PATH)
 @Produces(MediaType.TEXT_HTML)
 public class ConsoleResource implements Resource {
-
-    public static final String BASE_PATH = "/console3";
-
-    private final TemplateRenderer renderer;
-
-    @Inject
-    public ConsoleResource() {
-        this.renderer = new TemplateRenderer();
-    }
 
     /**
      * Redirect to /processes.
@@ -64,53 +58,22 @@ public class ConsoleResource implements Resource {
         return index(uriInfo);
     }
 
+    @GET
+    @Path("/processes")
+    public TemplateResponse processes(@Context UriInfo uriInfo,
+                                      @Context HttpServletRequest request,
+                                      @Context HttpServletResponse response) {
+
+        return new TemplateResponse("processes", Map.of());
+    }
+
     /**
-     * Handles all pages that are not handled by their specific @GET methods.
-     * @return a rendered page
+     * Handles 404s.
      */
     @GET
     @Path("{path:.*}")
-    public Response serve(@PathParam("path") String path,
-                          @Context UriInfo uriInfo,
-                          @Context HttpServletRequest request,
-                          @Context HttpServletResponse response) {
+    public TemplateResponse serve() {
 
-        var template = pathToTemplate(path);
-        var templateSelectors = request.getHeader("HX-Request") != null ? Set.of("content") : Set.<String>of(); // in case of HTMX requests, render only the "content" part of the template
-        var templateSpec = new TemplateSpec(template, templateSelectors, TemplateMode.HTML, null);
-
-        var context = prepareContext(request, response);
-
-        var output = (StreamingOutput) out -> renderer.render(templateSpec, context, out);
-        return Response.ok(output)
-                .build();
-    }
-
-    private static String pathToTemplate(String path) {
-        if (path == null || path.contains("..")) {
-            return "404.html";
-        }
-
-        return switch (path) {
-            case "login" -> "login.html";
-            case "processes" -> "processes.html";
-            case "projects" -> "projects.html";
-            default -> "404.html";
-        };
-    }
-
-    private static WebContext prepareContext(HttpServletRequest request,
-                                             HttpServletResponse response) {
-
-        var app = ThymeleafApp.getInstance(request);
-        var ctx = new WebContext(app.buildExchange(request, response));
-
-        ctx.setVariable("request", request);
-        ctx.setVariable("basePath", BASE_PATH);
-
-        var principal = UserPrincipal.getCurrent();
-        ctx.setVariable("user", principal != null ? principal.getUser() : null);
-
-        return ctx;
+        return new TemplateResponse("404.html");
     }
 }
