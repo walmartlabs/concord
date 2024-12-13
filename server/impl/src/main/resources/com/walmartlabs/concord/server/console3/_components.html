@@ -28,6 +28,8 @@
     </style>
 </head>
 <body>
+
+<!-- nav-link -->
 <th:block th:fragment="nav-link(path, iconClass, text)">
     <a href="#"
        th:href="${basePath} + ${path}"
@@ -40,5 +42,22 @@
         <span th:text="${text}">Settings</span>
     </a>
 </th:block>
+
+<!-- process-status-icon -->
+<th:block th:fragment="process-status-icon(status)">
+    <th:block th:fragment="process-status-icon(status)">
+        <!-- process-status-icon -->
+        <i class="bi" th:classappend="${
+        status != null ?
+        (status.name() == 'FINISHED' ? 'bi-check-circle link-success' :
+         status.name() == 'FAILED' ? 'bi-x-circle link-danger' :
+         status.name() == 'SUSPENDED' ? 'bi-pause-circle link-secondary' :
+         status.name() == 'ENQUEUED' ? 'bi-clock link-primary' :
+         'bi-question-circle link-warning')
+        : 'bi-question-circle link-warning'
+    }"></i>
+    </th:block>
+</th:block>
+
 </body>
 </html>

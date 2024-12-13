@@ -20,9 +20,12 @@ package com.walmartlabs.concord.server.console3;
  * =====
  */
 
+import com.walmartlabs.concord.server.process.queue.ProcessFilter;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.security.SecurityUtils;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
@@ -34,12 +37,21 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.walmartlabs.concord.server.console3.ConsoleModule.BASE_PATH;
+import static java.util.Objects.requireNonNull;
 
 @Path(BASE_PATH)
 @Produces(MediaType.TEXT_HTML)
 public class ConsoleResource implements Resource {
+
+    private final ProcessQueueDao queueDao;
+
+    @Inject
+    public ConsoleResource(ProcessQueueDao queueDao) {
+        this.queueDao = requireNonNull(queueDao);
+    }
 
     /**
      * Redirect to /processes.
@@ -64,7 +76,8 @@ public class ConsoleResource implements Resource {
                                       @Context HttpServletRequest request,
                                       @Context HttpServletResponse response) {
 
-        return new TemplateResponse("processes", Map.of());
+        var rows = queueDao.list(ProcessFilter.builder().build());
+        return new TemplateResponse("processes", Map.of("processes", rows));
     }
 
     /**
