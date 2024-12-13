@@ -6,13 +6,23 @@
     <title>Concord</title>
 </head>
 <body>
-<div th:fragment="content" class="d-flex align-items-center justify-content-center h-100">
-    <div class="text-center">
-        <h1>Processes</h1>
-        <p>
-            TBD
-        </p>
-    </div>
+<div th:fragment="content" class="mt-1">
+    <h1>Processes</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Status</th>
+                <th scope="col">Instance ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!--/*@thymesVar id="processes" type="java.util.List<com.walmartlabs.concord.server.process.ProcessEntry>"*/-->
+            <tr th:each="process : ${processes}">
+                <td><i class="bi bi-check-circle link-success" th:replace="~{_components :: process-status-icon(${process.status()})}"></i></td>
+                <td th:text="${process.instanceId()}">0a8f61fe-77fe-4626-aa01-eaa947087136</td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 </body>
 </html>
