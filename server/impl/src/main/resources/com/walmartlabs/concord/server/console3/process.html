@@ -8,10 +8,11 @@
 <body>
 <div th:fragment="content">
     <!--/*@thymesVar id="process" type="com.walmartlabs.concord.server.process.ProcessEntry"*/-->
-    <h1><i class="bi bi-check-circle link-success"
+    <h3>
+        <i class="bi bi-check-circle link-success"
            th:replace="~{_components :: process-status-icon(${process.status()})}"></i>
         <span th:text="${process.instanceId()}">9ff96c10-db1e-42f2-99fc-b951c4b4de90</span>
-    </h1>
+    </h3>
     <div>
         <p>Status:
             <span th:text="${process.status()}">FINISHED</span>
