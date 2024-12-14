@@ -77,6 +77,16 @@
                 display: none;
             }
         }
+
+        /*  TODO move into page styles */
+        .console3-process-list .status-col {
+            width: 0;
+        }
+
+        .console3-process-list .status-cell {
+            display: flex;
+            justify-content: flex-end;
+        }
     </style>
     <style th:replace="~{_components :: styles}"></style>
 </head>
@@ -155,11 +165,13 @@
 
         <!-- Main Content -->
         <main id="content" class="col-md-9 col-lg-10 content">
-            <div class="d-flex align-items-center justify-content-center h-100" th:replace="${content}">
-                <div class="text-center">
+            <div class="mt-2">
+                <div class="d-flex align-items-center justify-content-center h-100" th:replace="${content}">
+                    <div class="text-center">
                     <h1>Welcome!</h1>
                     <p class="lead">We're glad to see you here.</p>
                 </div>
+            </div>
             </div>
         </main>
     </div>

@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
@@ -18,8 +19,8 @@ import javax.ws.rs.ext.Provider;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.server.console3.ConsoleModule.BASE_PATH;
 
@@ -56,14 +57,41 @@ public class TemplateResponseWriter implements MessageBodyWriter<TemplateRespons
         var app = ThymeleafApp.getInstance(request);
         var ctx = new WebContext(app.buildExchange(request, response));
 
-        ctx.setVariable("request", request);
-        ctx.setVariable("basePath", BASE_PATH);
+        // locale
+
+        var locale = Optional.ofNullable(request.getHeader(HttpHeaders.ACCEPT_LANGUAGE))
+                .flatMap(TemplateResponseWriter::getLocaleFromAcceptLanguageHeader)
+                .orElseGet(Locale::getDefault);
+
+        ctx.setLocale(locale);
+
+        // variables
 
         var principal = UserPrincipal.getCurrent();
         ctx.setVariable("user", principal != null ? principal.getUser() : null);
 
+        ctx.setVariable("request", request);
+        ctx.setVariable("basePath", BASE_PATH);
         ctx.setVariables(extraVars);
 
         return ctx;
+    }
+
+    static Optional<Locale> getLocaleFromAcceptLanguageHeader(String v) {
+        return Arrays.stream(v.split(","))
+                .map(s -> s.trim().split(";"))
+                .filter(parts -> parts.length > 0)
+                .map(parts -> parts[0])
+                .flatMap(key -> {
+                    var localeParts = key.split("-");
+                    if (localeParts.length == 1) {
+                        return Stream.of(new Locale(localeParts[0]));
+                    } else if (localeParts.length == 2) {
+                        return Stream.of(new Locale(localeParts[0], localeParts[1]));
+                    } else {
+                        return Stream.empty();
+                    }
+                })
+                .findFirst();
     }
 }

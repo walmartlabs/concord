@@ -6,20 +6,22 @@
     <title>Concord</title>
 </head>
 <body>
-<div th:fragment="content" class="mt-1">
+<div th:fragment="content">
     <h1>Processes</h1>
-    <table class="table">
+    <table class="table console3-process-list">
         <thead>
             <tr>
-                <th scope="col">Status</th>
-                <th scope="col">Instance ID</th>
+                <th scope="col" class="status-col">Status</th>
+                <th scope="col" class="instanceId-col">Instance ID</th>
+                <th scope="col" class="lastUpdatedAt-col">Last Updated At</th>
             </tr>
         </thead>
         <tbody>
             <!--/*@thymesVar id="processes" type="java.util.List<com.walmartlabs.concord.server.process.ProcessEntry>"*/-->
             <tr th:each="process : ${processes}">
-                <td><i class="bi bi-check-circle link-success" th:replace="~{_components :: process-status-icon(${process.status()})}"></i></td>
-                <td th:text="${process.instanceId()}">0a8f61fe-77fe-4626-aa01-eaa947087136</td>
+                <td class="status-cell"><i class="bi bi-check-circle link-success" th:replace="~{_components :: process-status-icon(${process.status()})}"></i></td>
+                <td><a th:href="${basePath} + '/process/' + ${process.instanceId()}" th:text="${process.instanceId()}">0a8f61fe-77fe-4626-aa01-eaa947087136</a></td>
+                <td><span th:text="${#temporals.format(process.lastUpdatedAt(), 'yyyy-MM-dd HH:mm:ss', #locale)}">2024-12-14T10:54:10.805221-05:00</span></td>
             </tr>
         </tbody>
     </table>

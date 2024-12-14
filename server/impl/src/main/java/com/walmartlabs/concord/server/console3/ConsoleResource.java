@@ -22,22 +22,19 @@ package com.walmartlabs.concord.server.console3;
 
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.security.SecurityUtils;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.server.console3.ConsoleModule.BASE_PATH;
 import static java.util.Objects.requireNonNull;
@@ -54,7 +51,7 @@ public class ConsoleResource implements Resource {
     }
 
     /**
-     * Redirect to /processes.
+     * Main page. Redirects to /processes.
      */
     @GET
     @Path("/")
@@ -63,6 +60,9 @@ public class ConsoleResource implements Resource {
         return Response.seeOther(redirect).build();
     }
 
+    /**
+     * Perform logout and redirect back to the main page.
+     */
     @POST
     @Path("/logout")
     public Response logout(@Context UriInfo uriInfo) {
@@ -70,14 +70,26 @@ public class ConsoleResource implements Resource {
         return index(uriInfo);
     }
 
+    /**
+     * Process list.
+     */
     @GET
     @Path("/processes")
-    public TemplateResponse processes(@Context UriInfo uriInfo,
-                                      @Context HttpServletRequest request,
-                                      @Context HttpServletResponse response) {
-
+    public TemplateResponse processes() {
         var rows = queueDao.list(ProcessFilter.builder().build());
         return new TemplateResponse("processes", Map.of("processes", rows));
+    }
+
+    /**
+     * Process details.
+     */
+    @GET
+    @Path("/process/{instanceId}")
+    public TemplateResponse process(@PathParam("instanceId") UUID instanceId) {
+        var maybeProcess = queueDao.get(PartialProcessKey.from(instanceId));
+        return Optional.ofNullable(maybeProcess)
+                .map(process -> new TemplateResponse("process", Map.of("process", process)))
+                .orElseGet(this::serve404);
     }
 
     /**
@@ -85,8 +97,7 @@ public class ConsoleResource implements Resource {
      */
     @GET
     @Path("{path:.*}")
-    public TemplateResponse serve() {
-
+    public TemplateResponse serve404() {
         return new TemplateResponse("404.html");
     }
 }

@@ -421,6 +421,12 @@ public class ProcessQueueDao extends AbstractDao {
         return ProcessStatus.valueOf(status);
     }
 
+    public ProcessEntry get(PartialProcessKey processKey) {
+        SelectQuery<Record> query = buildSelect(dsl(), ProcessFilter.builder().build());
+        query.addConditions(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()));
+        return query.fetchOne(this::toEntry);
+    }
+
     public List<ProcessEntry> get(List<PartialProcessKey> processKeys) {
         if (processKeys.isEmpty()) {
             return Collections.emptyList();
