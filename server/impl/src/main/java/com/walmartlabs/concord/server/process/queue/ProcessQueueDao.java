@@ -64,6 +64,7 @@ import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static org.jooq.impl.DSL.*;
 
 @Named
+@SuppressWarnings("resource")
 public class ProcessQueueDao extends AbstractDao {
 
     public static final String ENQUEUED_NOW_METRIC = "ENQUEUED_NOW";
@@ -425,13 +426,16 @@ public class ProcessQueueDao extends AbstractDao {
             return Collections.emptyList();
         }
 
-        List<UUID> instanceIds = processKeys.stream()
-                .map(PartialProcessKey::getInstanceId)
-                .collect(Collectors.toList());
-
         SelectQuery<Record> query = buildSelect(dsl(), ProcessFilter.builder().build());
-
-        query.addConditions(PROCESS_QUEUE.INSTANCE_ID.in(instanceIds));
+        if (processKeys.size() == 1) {
+            UUID instanceId = processKeys.get(0).getInstanceId();
+            query.addConditions(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId));
+        } else {
+            List<UUID> instanceIds = processKeys.stream()
+                    .map(PartialProcessKey::getInstanceId)
+                    .collect(Collectors.toList());
+            query.addConditions(PROCESS_QUEUE.INSTANCE_ID.in(instanceIds));
+        }
         return query.fetch(this::toEntry);
     }
 
