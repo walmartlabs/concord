@@ -24,6 +24,7 @@ import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.junit.jupiter.api.Test;
@@ -193,6 +194,23 @@ public class ProcessIT extends AbstractTest {
         assertEquals(123, data.get("x"));
         assertEquals(true, data.get("y.some.boolean"));
         assertFalse(data.containsKey("z"));
+    }
+
+    @Test
+    public void testThrowWithPayload() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("throwWithPayload"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
+
+        // ---
+
+        Map<String, Object> data = proc.getOutVariables();
+        assertNotNull(data);
+
+        assertEquals("BOOM", ConfigurationUtils.get(data, "lastError", "message"));
+        assertEquals(Map.of("key", "value", "key2", "value2"), ConfigurationUtils.get(data, "lastError", "payload"));
     }
 
     @Test
