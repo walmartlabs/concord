@@ -1,0 +1,17 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - block:
+      - task: "throw"
+        in:
+          exception: "BOOM${item}"
+          payload:
+            key: "${item}"
+      loop:
+        items:
+        - 1
+        - 2
+        mode: parallel
+        parallelism: 2
