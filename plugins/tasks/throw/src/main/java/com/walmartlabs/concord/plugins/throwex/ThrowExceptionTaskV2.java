@@ -24,6 +24,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Named;
 import java.io.Serializable;
+import java.util.Map;
 
 @Named("throw")
 @DryRunReady
@@ -31,12 +32,12 @@ public class ThrowExceptionTaskV2 implements Task {
 
     @Override
     public TaskResult execute(Variables input) throws Exception {
-        Object exception = input.get("exception");
+        var exception = input.get("exception");
 
         if (exception instanceof Exception) {
             throw (Exception) exception;
-        } else if (exception instanceof String) {
-            throw new UserDefinedException(exception.toString());
+        } else if (exception instanceof String s) {
+            throw new UserDefinedException(s, input.getMap("payload", Map.of()));
         } else if (exception instanceof Serializable) {
             throw new ConcordException("Process Error", (Serializable) exception);
         } else {

@@ -68,6 +68,10 @@ public class SaveLastErrorCommand implements Command {
 
     private static Map<String, Object> serialize(Exception e) {
         try {
+            if (e instanceof LoggedException le) {
+                e = le.getCause();
+            }
+
             return createMapper().convertValue(e, MAP_TYPE);
         } catch (Exception ex) {
             // ignore ex
@@ -83,7 +87,7 @@ public class SaveLastErrorCommand implements Command {
     }
 
     @SuppressWarnings("unused")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIdentityInfo(generator= ObjectIdGenerators.IntSequenceGenerator.class)
     abstract static class ExceptionMixIn {
         @JsonIgnore
