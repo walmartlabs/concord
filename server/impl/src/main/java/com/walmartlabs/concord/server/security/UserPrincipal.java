@@ -35,11 +35,11 @@ public class UserPrincipal implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public static UserPrincipal getCurrent() {
-        return SecurityUtils.getCurrent(UserPrincipal.class);
+        return SecurityUtils.getPrincipal(UserPrincipal.class);
     }
 
     public static UserPrincipal assertCurrent() {
-        return SecurityUtils.assertCurrent(UserPrincipal.class);
+        return SecurityUtils.assertPrincipal(UserPrincipal.class);
     }
 
     private final String realm;
