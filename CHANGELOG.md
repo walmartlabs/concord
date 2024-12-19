@@ -11,8 +11,9 @@ SessionTokenAuthenticationHandler
 page
 ([#1046])(https://github.com/walmartlabs/concord/pull/1046));
 - runtime-v2: allow throw payload with exception
-([#1049](https://github.com/walmartlabs/concord/pull/1049)).
-
+([#1049](https://github.com/walmartlabs/concord/pull/1049));
+runtime-v2: mask workDir value in logs by default
+([#1052](https://github.com/walmartlabs/concord/pull/1052)).
 
 
 ## [2.20.0] - 2024-11-20
