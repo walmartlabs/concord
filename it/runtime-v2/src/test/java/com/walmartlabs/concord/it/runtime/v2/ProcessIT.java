@@ -197,6 +197,25 @@ public class ProcessIT extends AbstractTest {
     }
 
     @Test
+    public void testOutVariablesForFailedProcess() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("outForFailed"))
+                .out("x", "y.some.boolean", "z");
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
+
+        // ---
+
+        Map<String, Object> data = proc.getOutVariables();
+        assertNotNull(data);
+
+        assertEquals(123, data.get("x"));
+        assertEquals(true, data.get("y.some.boolean"));
+        assertFalse(data.containsKey("z"));
+    }
+
+    @Test
     public void testThrowWithPayload() throws Exception {
         Payload payload = new Payload()
                 .archive(resource("throwWithPayload"));
