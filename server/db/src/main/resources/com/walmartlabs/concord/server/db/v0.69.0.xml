@@ -4,9 +4,11 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
-    <property name="concordAgentUserId" value="d4f123c1-f8d4-40b2-8a12-b8947b9ce2d8"/>
+    <!-- concord agent user disabled from 2.21.x -->
+<!--    <property name="concordAgentUserId" value="d4f123c1-f8d4-40b2-8a12-b8947b9ce2d8"/>-->
 
     <!-- moved to v1.86.0.xml (no more hard-coded default token) -->
+    <!-- concord agent user disabled from 2.21.x -->
 <!--    <changeSet id="69000" author="ybrigo@gmail.com">
             <insert tableName="USERS">
                 <column name="USER_ID">${concordAgentUserId}</column>
@@ -21,7 +23,9 @@
             </insert>
         </changeSet> -->
 
+    <!-- concord agent user disabled from 2.21.x -->
     <!-- Create agent user when not exist -->
+    <!--
     <changeSet id="69001" author="benjamin.broadaway@walmart.com.com">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
@@ -37,5 +41,5 @@
             <column name="USER_TYPE">LOCAL</column>
         </insert>
     </changeSet>
-
+    -->
 </databaseChangeLog>
