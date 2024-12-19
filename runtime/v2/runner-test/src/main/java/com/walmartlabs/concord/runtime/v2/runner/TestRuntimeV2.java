@@ -50,8 +50,8 @@ import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.svm.*;
 import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.*;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -70,7 +70,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -205,6 +205,9 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
         runnerCfg.agentId(UUID.randomUUID().toString())
                 .api(ApiConfiguration.builder()
                         .baseUrl("http://localhost:8001") // TODO make optional?
+                        .build())
+                .logging(LoggingConfiguration.builder()
+                        .workDirMasking(false)
                         .build());
 
         PrintStream oldOut = System.out;
@@ -377,7 +380,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
                 taskCallListeners.addBinding().to(TaskResultListener.class);
 
                 Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
-                executionListeners.addBinding().toInstance(new ExecutionListener(){
+                executionListeners.addBinding().toInstance(new ExecutionListener() {
                     @Override
                     public void beforeProcessStart(Runtime runtime, State state) {
                         SensitiveDataHolder.getInstance().get().clear();
@@ -390,7 +393,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
                         @Override
                         public Result afterCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
                             if (cmd instanceof BlockCommand
-                                    || cmd instanceof ParallelCommand) {
+                                || cmd instanceof ParallelCommand) {
                                 return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
                             }
 

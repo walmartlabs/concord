@@ -53,6 +53,15 @@ public interface LoggingConfiguration {
         return true;
     }
 
+    /**
+     * If {@code true}, any ${workDir} value will be replaced with literal
+     * "$WORK_DIR" string. Reduces noise in the logs.
+     */
+    @Value.Default
+    default boolean workDirMasking() {
+        return true;
+    }
+
     static ImmutableLoggingConfiguration.Builder builder() {
         return ImmutableLoggingConfiguration.builder();
     }
