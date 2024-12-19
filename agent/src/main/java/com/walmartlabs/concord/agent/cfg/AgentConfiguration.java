@@ -53,6 +53,7 @@ public class AgentConfiguration {
 
     private final Path logDir;
     private final long logMaxDelay;
+    private final boolean workDirMasking;
 
     private final int workersCount;
     private final long pollInterval;
@@ -81,6 +82,7 @@ public class AgentConfiguration {
 
         this.logDir = getOrCreatePath(cfg, "logDir");
         this.logMaxDelay = cfg.getDuration("logMaxDelay", TimeUnit.MILLISECONDS);
+        this.workDirMasking = cfg.getBoolean("workDirMasking");
 
         this.workersCount = cfg.getInt("workersCount");
         this.maintenanceModeListenerHost = cfg.getString("maintenanceModeListenerHost");
@@ -134,6 +136,10 @@ public class AgentConfiguration {
 
     public long getLogMaxDelay() {
         return logMaxDelay;
+    }
+
+    public boolean isWorkDirMaskings() {
+        return workDirMasking;
     }
 
     public int getWorkersCount() {

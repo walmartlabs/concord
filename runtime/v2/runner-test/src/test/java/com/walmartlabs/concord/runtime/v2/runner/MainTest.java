@@ -625,6 +625,7 @@ public class MainTest  {
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .logging(LoggingConfiguration.builder()
                         .sendSystemOutAndErrToSLF4J(false)
+                        .workDirMasking(false)
                         .build())
                 .build();
 
