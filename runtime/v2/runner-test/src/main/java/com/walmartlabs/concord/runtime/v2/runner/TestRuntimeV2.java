@@ -196,7 +196,10 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
         }
 
         ImmutableRunnerConfiguration.Builder runnerCfg = RunnerConfiguration.builder()
-                .logging(LoggingConfiguration.builder().segmentedLogs(false).build());
+                .logging(LoggingConfiguration.builder()
+                        .segmentedLogs(false)
+                        .workDirMasking(false)
+                        .build());
 
         if (baseCfg != null) {
             runnerCfg.from(baseCfg);
@@ -205,9 +208,6 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
         runnerCfg.agentId(UUID.randomUUID().toString())
                 .api(ApiConfiguration.builder()
                         .baseUrl("http://localhost:8001") // TODO make optional?
-                        .build())
-                .logging(LoggingConfiguration.builder()
-                        .workDirMasking(false)
                         .build());
 
         PrintStream oldOut = System.out;
