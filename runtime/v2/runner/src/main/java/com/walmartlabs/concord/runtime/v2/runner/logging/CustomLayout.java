@@ -23,17 +23,31 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
 import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.walmartlabs.concord.runtime.v2.runner.SensitiveDataHolder;
+import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 
-import java.util.Collection;
+import static java.util.Objects.requireNonNull;
 
-public class MaskingSensitiveDataLayout extends PatternLayout {
+public class CustomLayout extends PatternLayout {
+
+    private static volatile String workDirToReplace;
+
+    /**
+     * Enables masking of ${workDir} values in logs. Such values often add noise to logs.
+     */
+    public static void enableWorkingDirectoryMasking(WorkingDirectory workDir) {
+        requireNonNull(workDir);
+        CustomLayout.workDirToReplace = workDir.getValue().toString();
+    }
 
     @Override
     public String doLayout(ILoggingEvent event) {
-        Collection<String> sensitiveData = SensitiveDataHolder.getInstance().get();
-        String msg = super.doLayout(event);
-        for (String d : sensitiveData) {
-            msg = msg.replace(d, "******");
+        var sensitiveData = SensitiveDataHolder.getInstance().get();
+        var msg = super.doLayout(event);
+        for (var sensitiveString : sensitiveData) {
+            msg = msg.replace(sensitiveString, "******");
+        }
+        if (CustomLayout.workDirToReplace != null) {
+            msg = msg.replace(workDirToReplace, "$WORK_DIR");
         }
         return msg;
     }

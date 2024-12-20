@@ -3,7 +3,7 @@
         <filter class="com.walmartlabs.concord.runtime.v2.runner.logging.LogLevelFilter" />
 
         <encoder class="com.walmartlabs.concord.runtime.v2.runner.logging.ConcordLogEncoder">
-            <layout class="com.walmartlabs.concord.runtime.v2.runner.logging.MaskingSensitiveDataLayout">
+            <layout class="com.walmartlabs.concord.runtime.v2.runner.logging.CustomLayout">
                 <!-- the UI expects log timestamps in a specific format to be able to convert it to the local time -->
                 <pattern>%date{yyyy-MM-dd'T'HH:mm:ss.SSSZ, UTC} [%-5level] %msg%n%rEx{full, com.sun, sun}</pattern>
             </layout>
