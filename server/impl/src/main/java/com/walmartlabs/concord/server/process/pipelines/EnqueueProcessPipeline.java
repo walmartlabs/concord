@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,11 +21,19 @@ package com.walmartlabs.concord.server.process.pipelines;
  */
 
 import com.google.inject.Injector;
+import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.pipelines.processors.*;
+import com.walmartlabs.concord.server.sdk.events.PipelineEvent;
+import com.walmartlabs.concord.server.sdk.events.PipelineEventListener;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
+import java.util.Set;
+
+import static com.walmartlabs.concord.server.sdk.events.PipelineEvent.EventType.ENQUEUE_PROCESS_PIPELINE_END;
+import static com.walmartlabs.concord.server.sdk.events.PipelineEvent.EventType.ENQUEUE_PROCESS_PIPELINE_START;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Handles NEW "regular" processes. Puts the processes into the ENQUEUED status.
@@ -36,10 +44,12 @@ public class EnqueueProcessPipeline extends Pipeline {
 
     private final ExceptionProcessor exceptionProcessor;
     private final FinalizerProcessor finalizerProcessor;
+    private final Set<PipelineEventListener> eventListeners;
 
     @Inject
     public EnqueueProcessPipeline(Injector injector,
-                                  CustomEnqueueProcessors customProcessors) {
+                                  CustomEnqueueProcessors customProcessors,
+                                  Set<PipelineEventListener> eventListeners) {
         super(List.of(
                 injector.getInstance(LoggingMDCProcessor.class),
                 injector.getInstance(PayloadRestoreProcessor.class),
@@ -76,6 +86,37 @@ public class EnqueueProcessPipeline extends Pipeline {
 
         this.exceptionProcessor = injector.getInstance(FailProcessor.class);
         this.finalizerProcessor = injector.getInstance(CleanupProcessor.class);
+
+        this.eventListeners = requireNonNull(eventListeners);
+    }
+
+    @Override
+    public Payload process(Payload payload) {
+        var startEvent = PipelineEvent.builder()
+                .eventType(ENQUEUE_PROCESS_PIPELINE_START)
+                .processKey(payload.getProcessKey())
+                .build();
+        eventListeners.forEach(l -> l.onPipelineEvent(startEvent));
+
+        try {
+            var result = super.process(payload);
+
+            var endEvent = PipelineEvent.builder()
+                    .eventType(ENQUEUE_PROCESS_PIPELINE_END)
+                    .processKey(payload.getProcessKey())
+                    .build();
+            eventListeners.forEach(l -> l.onPipelineEvent(endEvent));
+
+            return result;
+        } catch (Throwable error) {
+            var errorEvent = PipelineEvent.builder()
+                    .eventType(ENQUEUE_PROCESS_PIPELINE_END)
+                    .processKey(payload.getProcessKey())
+                    .build();
+            eventListeners.forEach(l -> l.onPipelineError(errorEvent, error));
+
+            throw error;
+        }
     }
 
     @Override

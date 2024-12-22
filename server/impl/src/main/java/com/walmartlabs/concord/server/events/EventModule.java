@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.events.externalevent.ExternalEventTriggerP
 import com.walmartlabs.concord.server.events.externalevent.ExternalEventTriggerV1Processor;
 import com.walmartlabs.concord.server.events.externalevent.ExternalEventTriggerV2Processor;
 import com.walmartlabs.concord.server.events.github.GithubTriggerProcessor;
+import com.walmartlabs.concord.server.sdk.events.PipelineEventListener;
 import com.walmartlabs.concord.server.sdk.events.ProcessEventListener;
 
 import static com.google.inject.Scopes.SINGLETON;
@@ -42,6 +43,7 @@ public class EventModule implements Module {
         binder.bind(TriggerProcessExecutor.class).in(SINGLETON);
 
         newSetBinder(binder, ProcessEventListener.class);
+        newSetBinder(binder, PipelineEventListener.class);
 
         binder.bind(GithubTriggerProcessor.class).in(SINGLETON);
         newSetBinder(binder, GithubTriggerProcessor.EventEnricher.class).addBinding().to(GithubTriggerProcessor.RepositoryInfoEnricher.class);
