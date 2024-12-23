@@ -39,10 +39,10 @@ public class WebSocketCreator implements JettyWebSocketCreator {
 
     private static final Logger log = LoggerFactory.getLogger(WebSocketCreator.class);
 
-    private final WebSocketChannelManager channelManager;
+    private final MessageChannelManager channelManager;
     private final ApiKeyDao apiKeyDao;
 
-    public WebSocketCreator(WebSocketChannelManager channelManager, ApiKeyDao apiKeyDao) {
+    public WebSocketCreator(MessageChannelManager channelManager, ApiKeyDao apiKeyDao) {
         this.channelManager = channelManager;
         this.apiKeyDao = apiKeyDao;
     }
@@ -71,7 +71,7 @@ public class WebSocketCreator implements JettyWebSocketCreator {
             return null;
         }
 
-        UUID channelId = UUID.randomUUID();
+        String channelId = "ws-" + UUID.randomUUID();
         String agentId = req.getHeader(QueueClient.AGENT_ID);
         String userAgent = req.getHeader(QueueClient.AGENT_UA);
         return new WebSocketListener(channelManager, channelId, agentId, userAgent);

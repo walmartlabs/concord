@@ -25,7 +25,7 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.boot.BackgroundTasks;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.task.TaskScheduler;
-import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
+import com.walmartlabs.concord.server.websocket.MessageChannelManager;
 import org.jooq.Configuration;
 
 import javax.inject.Inject;
@@ -42,18 +42,18 @@ public class ServerResource implements Resource {
 
     private final TaskScheduler taskScheduler;
     private final BackgroundTasks backgroundTasks;
-    private final WebSocketChannelManager webSocketChannelManager;
+    private final MessageChannelManager messageChannelManager;
     private final PingDao pingDao;
 
     @Inject
     public ServerResource(TaskScheduler taskScheduler,
                           BackgroundTasks backgroundTasks,
-                          WebSocketChannelManager webSocketChannelManager,
+                          MessageChannelManager messageChannelManager,
                           PingDao pingDao) {
 
         this.taskScheduler = taskScheduler;
         this.backgroundTasks = backgroundTasks;
-        this.webSocketChannelManager = webSocketChannelManager;
+        this.messageChannelManager = messageChannelManager;
         this.pingDao = pingDao;
     }
 
@@ -78,7 +78,7 @@ public class ServerResource implements Resource {
     public void maintenanceMode() {
         backgroundTasks.stop();
 
-        webSocketChannelManager.shutdown();
+        messageChannelManager.shutdown();
         taskScheduler.stop();
     }
 
