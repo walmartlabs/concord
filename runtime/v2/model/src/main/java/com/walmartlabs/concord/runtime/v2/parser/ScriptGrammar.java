@@ -52,7 +52,7 @@ public final class ScriptGrammar {
                         optional("body", stringVal.map(o::body)),
                         optional("in", scriptCallInOption(o)),
                         optional("out", scriptCallOutOption(o)),
-                        optional("meta", mapVal.map(o::meta)),
+                        optional("meta", mapVal.map(o::putAllMeta)),
                         optional("name", stringVal.map(v -> o.putMeta(Constants.SEGMENT_NAME, v))),
                         optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.SERIAL)))),
                         optional("parallelWithItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.PARALLEL)))),

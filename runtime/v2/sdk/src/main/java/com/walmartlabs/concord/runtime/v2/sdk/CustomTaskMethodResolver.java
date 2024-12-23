@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.plugins.mock;
+package com.walmartlabs.concord.runtime.v2.sdk;
 
 /*-
  * *****
@@ -20,15 +20,26 @@ package com.walmartlabs.concord.plugins.mock;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.CustomBeanELResolver;
+public interface CustomTaskMethodResolver {
 
-public class MockBeanELResolver implements CustomBeanELResolver {
+    Invocation resolve(Task base, String method, Class<?>[] paramTypes, Object[] params);
 
-    @Override
-    public Result invoke(Object base, String method, Object[] params) {
-        if (base instanceof MockTask mockTask) {
-            return mockTask.call(method, params);
-        }
-        return null;
+    interface MethodInvoker {
+
+        Object invoke(Task base, String method, Class<?>[] paramTypes, Object[] params);
+    }
+
+    interface InvocationContext {
+
+        MethodInvoker invoker();
+    }
+
+    interface Invocation {
+
+        String taskName();
+
+        Class<? extends Task> taskClass();
+
+        Object invoke(InvocationContext context);
     }
 }

@@ -64,9 +64,9 @@ const clearLastLoginType = () => {
     localStorage.removeItem('lastLoginType');
 };
 
-const DEFAULT_DESTINATION = '/';
+const DEFAULT_FROM_VALUE = '/';
 
-const getDestination = (props: RouteComponentProps<{}>) => {
+const getFrom = (props: RouteComponentProps<{}>): string => {
     const location = props.location as any;
 
     if (location && location.state && location.state.from && location.state.from.pathname) {
@@ -75,11 +75,19 @@ const getDestination = (props: RouteComponentProps<{}>) => {
 
     const fromUrl = parseQueryString(props.location.search);
 
-    if (fromUrl && fromUrl.from) {
+    if (fromUrl && typeof fromUrl.from === 'string') {
         return fromUrl.from;
     }
 
-    return DEFAULT_DESTINATION;
+    return DEFAULT_FROM_VALUE;
+};
+
+const getRedirectTo = (props: RouteComponentProps<{}>): string | undefined => {
+    const qs = parseQueryString(props.location.search);
+    const redirectTo = qs ? qs.redirectTo : undefined;
+    if (typeof redirectTo === 'string') {
+        return redirectTo;
+    }
 };
 
 const Login = (props: RouteComponentProps<{}>) => {
@@ -90,7 +98,6 @@ const Login = (props: RouteComponentProps<{}>) => {
     const [password, setPassword] = useState<string>('');
     const [apiKey, setApiKey] = useState<string>('');
     const [rememberMe, setRememberMe] = useState<boolean | undefined>();
-    const [destination] = useState(getDestination(props));
     const { loggingIn, setLoggingIn, setUserInfo } = useContext(UserSessionContext);
 
     const handleSubmit = useCallback(async () => {
@@ -106,7 +113,22 @@ const Login = (props: RouteComponentProps<{}>) => {
 
             saveLastLoginType(nonEmpty(apiKey) ? 'apiKey' : 'username');
 
-            props.history.push(destination);
+            // with 'redirectTo' the user will be redirected to the specified href
+            // the values can be arbitrary endpoints
+            const redirectTo = getRedirectTo(props);
+
+            // the 'from' query parameter value will be pushed to history
+            // the values must be valid routes
+            // e.g. from=/org will be turned into http.../#/org
+            const from = getFrom(props);
+
+            if (redirectTo) {
+                setTimeout(() => {
+                    window.location.href = redirectTo;
+                }, 100);
+            } else {
+                props.history.push(from);
+            }
         } catch (e) {
             let msg = e.message || 'Log in error';
             if (e.status === 401) {
@@ -124,8 +146,7 @@ const Login = (props: RouteComponentProps<{}>) => {
         apiKey,
         setLoggingIn,
         setUserInfo,
-        props.history,
-        destination
+        props,
     ]);
 
     const onChangeLoginType = useCallback(() => {

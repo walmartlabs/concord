@@ -242,7 +242,7 @@ public class Run implements Callable<Integer> {
             ProcessDefinition pd = ProcessDefinition.builder().from(processDefinition)
                     .configuration(ProcessDefinitionConfiguration.builder().from(processDefinition.configuration())
                             .arguments(args)
-                            .dependencies(deps)
+                            .dependencies(allDeps)
                             .build())
                     .flows(flows)
                     .imports(Imports.builder().build())

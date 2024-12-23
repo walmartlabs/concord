@@ -37,6 +37,7 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimerTask;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -53,14 +54,17 @@ public class DefaultEventReportingService implements EventReportingService, Exec
     private final int maxBatchSize;
     private final Object batchLock = new Object();
     private final ScheduledExecutorService flushScheduler;
+    private final PersistenceService persistenceService;
 
     @Inject
     public DefaultEventReportingService(InstanceId instanceId,
                                         ProcessConfiguration processConfiguration,
-                                        ApiClient apiClient) {
+                                        ApiClient apiClient,
+                                        PersistenceService persistenceService) {
         this.instanceId = instanceId;
         this.processEventsApi = new ProcessEventsApi(apiClient);
         this.maxBatchSize = processConfiguration.events().batchSize();
+        this.persistenceService = persistenceService;
         this.eventQueue = initializeQueue(maxBatchSize);
         this.flushScheduler = Executors.newSingleThreadScheduledExecutor();
 
@@ -132,6 +136,9 @@ public class DefaultEventReportingService implements EventReportingService, Exec
         try {
             getProcessEventsApi().batchEvent(instanceId.getValue(), eventBatch);
         } catch (ApiException e) {
+            for (var event: eventBatch) {
+                saveEvent(event);
+            }
             log.warn("Error while sending batch of {} event{} to the server: {}",
                     eventBatch.size(), eventBatch.isEmpty() ? "" : "s", e.getMessage());
         }
@@ -141,6 +148,7 @@ public class DefaultEventReportingService implements EventReportingService, Exec
         try {
             getProcessEventsApi().event(instanceId.getValue(), req);
         } catch (ApiException e) {
+            saveEvent(req);
             log.warn("error while sending an event to the server: {}", e.getMessage());
         }
     }
@@ -171,4 +179,11 @@ public class DefaultEventReportingService implements EventReportingService, Exec
         }
     }
 
+    private void saveEvent(ProcessEventRequest event) {
+        try {
+            persistenceService.persistFile("invalid_event_" + UUID.randomUUID() + ".json", out -> processEventsApi.getApiClient().getObjectMapper().writeValue(out, event));
+        } catch (Exception e) {
+            log.warn("can't save event", e);
+        }
+    }
 }

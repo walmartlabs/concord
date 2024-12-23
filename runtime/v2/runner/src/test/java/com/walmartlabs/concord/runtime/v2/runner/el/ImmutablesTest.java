@@ -42,7 +42,7 @@ public class ImmutablesTest {
                 .build();
 
         EvalContextFactory ecf = new EvalContextFactoryImpl();
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders(), List.of());
+        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders(), List.of(), List.of());
         Map<String, Object> vars = Collections.singletonMap("testBean", testBean);
 
         // ---
