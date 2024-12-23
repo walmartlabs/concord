@@ -91,7 +91,7 @@
         <junit.version>5.9.1</junit.version>
         <kafka.client.version>2.4.0</kafka.client.version>
         <kerby.version>2.0.1</kerby.version>
-        <kubernetes.client.version>5.7.0</kubernetes.client.version>
+        <kubernetes.client.version>7.0.1</kubernetes.client.version>
         <launcher.version>0.128</launcher.version>
         <liquibase.version>4.29.2</liquibase.version>
         <logback.version>1.4.14</logback.version>
@@ -1100,11 +1100,6 @@
                 <groupId>commons-collections</groupId>
                 <artifactId>commons-collections</artifactId>
                 <version>${commons.collections.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.fabric8</groupId>
-                <artifactId>kubernetes-model</artifactId>
-                <version>${kubernetes.client.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.fabric8</groupId>
