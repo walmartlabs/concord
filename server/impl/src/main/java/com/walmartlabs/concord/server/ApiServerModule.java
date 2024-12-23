@@ -81,7 +81,6 @@ public class ApiServerModule implements Module {
 
         newSetBinder(binder, ServletContextListener.class).addBinding().to(ShiroListener.class).in(SINGLETON);
         newSetBinder(binder, FilterChainConfigurator.class).addBinding().to(ConcordFilterChainConfigurator.class).in(SINGLETON);
-        newSetBinder(binder, AuthenticationHandler.class).addBinding().to(ConcordAuthenticationHandler.class).in(SINGLETON);
 
         binder.bind(ConcordSecurityManager.class).in(SINGLETON);
         binder.bind(SecurityManager.class).to(ConcordSecurityManager.class);

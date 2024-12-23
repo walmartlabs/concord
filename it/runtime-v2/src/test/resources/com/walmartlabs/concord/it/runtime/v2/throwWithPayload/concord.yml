@@ -1,0 +1,11 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+  - task: "throw"
+    in:
+      exception: "BOOM"
+      payload:
+        key: "value"
+        key2: "value2"

@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class FormIT extends AbstractTest {
 
     @RegisterExtension
-    public final ConcordRule concord = ConcordConfiguration.configure();
+    public static final ConcordRule concord = ConcordConfiguration.configure();
 
     /**
      * A straightforward single form process.

@@ -30,10 +30,8 @@ import org.eclipse.sisu.Priority;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
 
 @Priority(-1)
 @Singleton
@@ -52,21 +50,14 @@ public class MockTaskProvider implements TaskProvider {
     public Task createTask(Context ctx, String key) {
         boolean mocked = mockDefinitionProvider.isTaskMocked(ctx, key);
         if (mocked) {
-            return new MockTask(ctx, key, mockDefinitionProvider, () -> {
-                var providers = taskProviderProvider.get().stream()
-                        .filter(p -> !(p instanceof MockTaskProvider))
-                        .sorted(Comparator.comparingInt(MockTaskProvider::getPriority))
-                        .toList();
-                for (TaskProvider p : providers) {
-                    Task t = p.createTask(ctx, key);
-                    if (t != null) {
-                        return t;
-                    }
-                }
-                throw new UserDefinedException("Task not found: '" + key + "'");
-            });
+            return new MockTask(ctx, key, mockDefinitionProvider, originTaskClass(ctx, key), () -> originalTask(ctx, key));
         }
 
+        return null;
+    }
+
+    @Override
+    public Class<? extends Task> getTaskClass(Context ctx, String key) {
         return null;
     }
 
@@ -80,6 +71,25 @@ public class MockTaskProvider implements TaskProvider {
         return Collections.emptySet();
     }
 
+    private Class<? extends Task> originTaskClass(Context ctx, String key) {
+        return findFirstMatchingTaskProvider((provider) -> provider.getTaskClass(ctx, key))
+                .orElseThrow(() -> new UserDefinedException("Task not found: '" + key + "'"));
+    }
+
+    private Task originalTask(Context ctx, String key) {
+        return findFirstMatchingTaskProvider((provider) -> provider.createTask(ctx, key))
+                .orElseThrow(() -> new UserDefinedException("Task not found: '" + key + "'"));
+    }
+
+    private <T> Optional<T> findFirstMatchingTaskProvider(Function<TaskProvider, T> taskFunction) {
+        return taskProviderProvider.get().stream()
+                .filter(MockTaskProvider::isNotMockProvider)
+                .sorted(Comparator.comparingInt(MockTaskProvider::getPriority))
+                .map(taskFunction)
+                .filter(Objects::nonNull)
+                .findFirst();
+    }
+
     private static int getPriority(TaskProvider p) {
         Class<? extends TaskProvider> klass = p.getClass();
         Priority priority = klass.getDeclaredAnnotation(Priority.class);
@@ -87,5 +97,9 @@ public class MockTaskProvider implements TaskProvider {
             return 0;
         }
         return priority.value();
+    }
+
+    private static boolean isNotMockProvider(TaskProvider provider) {
+        return !(provider instanceof MockTaskProvider);
     }
 }

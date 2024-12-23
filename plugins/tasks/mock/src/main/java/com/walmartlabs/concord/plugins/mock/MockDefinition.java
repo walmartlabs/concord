@@ -35,6 +35,14 @@ public class MockDefinition {
         this.definition = definition;
     }
 
+    public String stepName() {
+        return MapUtils.getString(definition, "stepName");
+    }
+
+    public Map<String, Object> stepMeta() {
+        return MapUtils.getMap(definition, "stepMeta", Map.of());
+    }
+
     public String task() {
         try {
             return MapUtils.assertString(definition, "task");
@@ -67,5 +75,7 @@ public class MockDefinition {
         return MapUtils.getString(definition, "throwError");
     }
 
-
+    public String executeFlow() {
+        return MapUtils.getString(definition, "executeFlow");
+    }
 }

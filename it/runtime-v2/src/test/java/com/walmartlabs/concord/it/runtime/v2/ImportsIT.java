@@ -40,7 +40,7 @@ import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 public class ImportsIT extends AbstractTest {
 
     @RegisterExtension
-    public final ConcordRule concord = ConcordConfiguration.configure()
+    public static final ConcordRule concord = ConcordConfiguration.configure()
             .extraConfigurationSupplier(() -> "concord-server { imports { disabledProcessors = [] } }\n" +
                     "concord-agent { imports { disabledProcessors = [] } }");
 

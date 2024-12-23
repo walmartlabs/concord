@@ -97,7 +97,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         }
 
         // no dice
-        return new UsernamePasswordToken();
+        return new UnauthenticatedToken();
     }
 
     @Override
