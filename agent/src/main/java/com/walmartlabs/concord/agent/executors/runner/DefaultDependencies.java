@@ -32,7 +32,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DefaultDependencies {
@@ -45,9 +44,10 @@ public class DefaultDependencies {
     public DefaultDependencies() {
         String path = System.getenv(CFG_KEY);
         if (path != null) {
-            try (Stream<String> stream = Files.lines(Paths.get(path))) {
-                this.dependencies = stream.map(DefaultDependencies::parseUri)
-                        .collect(Collectors.toList());
+            try (Stream<String> lines = Files.lines(Paths.get(path))) {
+                this.dependencies = lines.filter(String::isBlank)
+                        .map(DefaultDependencies::parseUri)
+                        .toList();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -56,8 +56,8 @@ public class DefaultDependencies {
         } else {
             try (InputStream is = DefaultDependencies.class.getResourceAsStream("default-dependencies")) {
                 this.dependencies = new BufferedReader(new InputStreamReader(is)).lines()
-                        .map(DefaultDependencies::parseUri)
-                        .collect(Collectors.toList());
+                        .filter(String::isBlank)
+                        .map(DefaultDependencies::parseUri).toList();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
