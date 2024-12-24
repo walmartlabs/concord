@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.queueclient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.walmartlabs.concord.server.queueclient.message.Message;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 
@@ -58,6 +59,7 @@ public final class MessageSerializer {
         ObjectMapper om = new ObjectMapper();
         om.registerModule(new GuavaModule());
         om.registerModule(new Jdk8Module());
+        om.registerModule(new JavaTimeModule());
         return om;
     }
 

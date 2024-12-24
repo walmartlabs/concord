@@ -34,14 +34,15 @@ public class WebSocketMetricsModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        Provider<WebSocketChannelManager> channelManagerProvider = getProvider(WebSocketChannelManager.class);
+        Provider<MessageChannelManager> channelManagerProvider = getProvider(MessageChannelManager.class);
 
+        @SuppressWarnings("rawtypes")
         Multibinder<GaugeProvider> gauges = Multibinder.newSetBinder(binder(), GaugeProvider.class);
         gauges.addBinding().toInstance(createGauge(channelManagerProvider));
         gauges.addBinding().toInstance(create(channelManagerProvider));
     }
 
-    private static GaugeProvider<Integer> createGauge(Provider<WebSocketChannelManager> channelManagerProvider) {
+    private static GaugeProvider<Integer> createGauge(Provider<MessageChannelManager> channelManagerProvider) {
         return new GaugeProvider<Integer>() {
             @Override
             public String name() {
@@ -55,8 +56,8 @@ public class WebSocketMetricsModule extends AbstractModule {
         };
     }
 
-    private static GaugeProvider<Integer> create(Provider<WebSocketChannelManager> channelManagerProvider) {
-        return new GaugeProvider<Integer>() {
+    private static GaugeProvider<Integer> create(Provider<MessageChannelManager> channelManagerProvider) {
+        return new GaugeProvider<>() {
             @Override
             public String name() {
                 return "agent-workers-available";
