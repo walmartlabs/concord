@@ -45,7 +45,7 @@ public class DefaultDependencies {
         String path = System.getenv(CFG_KEY);
         if (path != null) {
             try (Stream<String> lines = Files.lines(Paths.get(path))) {
-                this.dependencies = lines.filter(String::isBlank)
+                this.dependencies = lines.filter(s -> !s.isBlank())
                         .map(DefaultDependencies::parseUri)
                         .toList();
             } catch (IOException e) {
@@ -55,8 +55,12 @@ public class DefaultDependencies {
             log.info("init -> using external default dependencies configuration: {}", path);
         } else {
             try (InputStream is = DefaultDependencies.class.getResourceAsStream("default-dependencies")) {
+                if (is == null) {
+                    throw new RuntimeException("Can't find com/walmartlabs/concord/agent/executors/runner/default-dependencies. " +
+                                               "This is most likely a bug or an issue with the local build and/or classpath.");
+                }
                 this.dependencies = new BufferedReader(new InputStreamReader(is)).lines()
-                        .filter(String::isBlank)
+                        .filter(s -> !s.isBlank())
                         .map(DefaultDependencies::parseUri).toList();
             } catch (IOException e) {
                 throw new RuntimeException(e);
