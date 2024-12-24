@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.security.apikey;
  * =====
  */
 
+import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
@@ -38,6 +39,7 @@ import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.shiro.authz.AuthorizationException;
 import org.jooq.exception.DataAccessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +49,6 @@ import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -86,6 +87,22 @@ public class ApiKeyResource implements Resource {
     }
 
     @POST
+    @Path("/{name}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Validate
+    @Operation(description = "Create a new API key", operationId = "createApiKey")
+    public CreateApiKeyResponse create(@PathParam("name") @ConcordKey String name) {
+        assertAdmin();
+
+        if (apiKeyDao.getId(null, name) != null) {
+            throw new ValidationErrorsException("API Token with name '" + name + "' already exists");
+        }
+
+        return createApiKey(null, name);
+    }
+
+    @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
@@ -105,40 +122,14 @@ public class ApiKeyResource implements Resource {
         String name = trim(req.getName());
         if (name == null || name.isEmpty()) {
             // auto generate the name
-            name = "key#" + UUID.randomUUID().toString();
+            name = "key#" + UUID.randomUUID();
         }
 
         if (apiKeyDao.getId(userId, name) != null) {
             throw new ValidationErrorsException("API Token with name '" + name + "' already exists");
         }
 
-        String key = apiKeyDao.newApiKey();
-
-        OffsetDateTime expiredAt = null;
-        if (cfg.isExpirationEnabled()) {
-            expiredAt = OffsetDateTime.now().plus(cfg.getExpirationPeriod().toDays(), ChronoUnit.DAYS);
-        }
-
-        UUID id;
-        try {
-            id = apiKeyDao.insert(userId, key, name, expiredAt);
-        } catch (DataAccessException e) {
-            if (PgUtils.isUniqueViolationError(e)) {
-                log.warn("create ['{}'] -> duplicate name error: {}", name, e.getMessage());
-                throw new ValidationErrorsException("Duplicate API key name: " + name);
-            }
-
-            throw e;
-        }
-
-        auditLog.add(AuditObject.API_KEY, AuditAction.CREATE)
-                .field("id", id)
-                .field("name", name)
-                .field("expiredAt", expiredAt)
-                .field("userId", userId)
-                .log();
-
-        return new CreateApiKeyResponse(id, key);
+        return createApiKey(userId, name);
     }
 
     @DELETE
@@ -161,6 +152,36 @@ public class ApiKeyResource implements Resource {
                 .log();
 
         return new GenericOperationResult(OperationResult.DELETED);
+    }
+
+    private CreateApiKeyResponse createApiKey(UUID userId, String name) {
+        String key = apiKeyDao.newApiKey();
+
+        OffsetDateTime expiredAt = null;
+        if (cfg.isExpirationEnabled()) {
+            expiredAt = OffsetDateTime.now().plusDays(cfg.getExpirationPeriod().toDays());
+        }
+
+        UUID id;
+        try {
+            id = apiKeyDao.insert(userId, key, name, expiredAt);
+        } catch (DataAccessException e) {
+            if (PgUtils.isUniqueViolationError(e)) {
+                log.warn("create ['{}'] -> duplicate name error: {}", name, e.getMessage());
+                throw new ValidationErrorsException("Duplicate API key name: " + name);
+            }
+
+            throw e;
+        }
+
+        auditLog.add(AuditObject.API_KEY, AuditAction.CREATE)
+                .field("id", id)
+                .field("name", name)
+                .field("expiredAt", expiredAt)
+                .field("userId", userId)
+                .log();
+
+        return new CreateApiKeyResponse(id, key);
     }
 
     private UUID assertUsername(String username, String domain, UserType type) {
@@ -197,6 +218,12 @@ public class ApiKeyResource implements Resource {
         UserPrincipal p = UserPrincipal.assertCurrent();
         if (!userId.equals(p.getId())) {
             throw new UnauthorizedException("Operation is not permitted");
+        }
+    }
+
+    private static void assertAdmin() {
+        if (!Roles.isAdmin()) {
+            throw new AuthorizationException("Only admins are allowed to update organizations");
         }
     }
 
