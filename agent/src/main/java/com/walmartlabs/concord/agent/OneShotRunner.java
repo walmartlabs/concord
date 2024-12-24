@@ -24,20 +24,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.agent.cfg.AgentConfiguration;
 import com.walmartlabs.concord.agent.guice.WorkerModule;
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.nio.file.Paths;
 
-import static com.walmartlabs.concord.client2.ProcessEntry.StatusEnum.CANCELLED;
-import static com.walmartlabs.concord.client2.ProcessEntry.StatusEnum.FAILED;
 import static java.util.Objects.requireNonNull;
 
 public class OneShotRunner {
-
-    private static final Logger log = LoggerFactory.getLogger(OneShotRunner.class);
 
     private final AgentConfiguration agentCfg;
     private final ObjectMapper objectMapper;
@@ -55,24 +49,22 @@ public class OneShotRunner {
 
     public void run(String processResponseJson) throws Exception {
         var processResponse = objectMapper.readValue(processResponseJson, ProcessResponse.class);
-        log.info("run [{}] -> preparing...", processResponse.getProcessId());
-
-        var workDir = Paths.get(System.getProperty("user.dir"));
+        var workDir = IOUtils.createTempDir(agentCfg.getPayloadDir(), "workDir");
         var jobRequest = JobRequest.from(processResponse, workDir);
 
-        var instanceId = jobRequest.getInstanceId();
-
-        var workerModule = new WorkerModule(agentCfg.getAgentId(), instanceId, jobRequest.getSessionToken());
+        var workerModule = new WorkerModule(agentCfg.getAgentId(), jobRequest.getInstanceId(), jobRequest.getSessionToken());
         var workerFactory = injector.createChildInjector(workerModule).getInstance(WorkerFactory.class);
         var worker = workerFactory.create(jobRequest, status -> {
-            log.info("run ['{}'] -> {}", instanceId, status);
-            var exitCode = 0;
-            if (status == FAILED || status == CANCELLED) {
-                exitCode = 1;
-            }
-            System.exit(exitCode);
         });
 
-        worker.run();
+        worker.setThrowOnFailure(true);
+
+        try {
+            worker.run();
+        } catch (Exception e) {
+            System.exit(1);
+        }
+
+        System.exit(0);
     }
 }

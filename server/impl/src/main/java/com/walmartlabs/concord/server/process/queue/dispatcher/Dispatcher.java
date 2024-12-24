@@ -268,6 +268,7 @@ public class Dispatcher extends PeriodicTask {
             ProcessResponse resp = new ProcessResponse(correlationId,
                     sessionTokenCreator.create(item.key()),
                     item.key().getInstanceId(),
+                    item.key().getCreatedAt(),
                     secret != null ? secret.orgName : null,
                     item.repoUrl(),
                     item.repoPath(),
