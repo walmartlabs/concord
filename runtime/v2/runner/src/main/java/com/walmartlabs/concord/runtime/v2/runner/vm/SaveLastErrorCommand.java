@@ -126,7 +126,9 @@ public class SaveLastErrorCommand implements Command {
             gen.writeNumberField("@id", idGenerator.getAndIncrement());
             gen.writeStringField("message", exception.getMessage());
             if (exception instanceof UserDefinedException ue) {
-                gen.writeObjectField("payload", ue.getPayload());
+                if (ue.getPayload() != null && !ue.getPayload().isEmpty()) {
+                    gen.writeObjectField("payload", ue.getPayload());
+                }
             } else {
                 gen.writeStringField("type", exception.getClass().getName());
             }
