@@ -40,4 +40,9 @@ public class LoggedException extends RuntimeException {
     public String getMessage() {
         return getCause().getMessage();
     }
+
+    @Override
+    public StackTraceElement[] getStackTrace() {
+        return new StackTraceElement[0];
+    }
 }
