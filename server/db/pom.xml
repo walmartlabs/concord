@@ -16,7 +16,8 @@
     <properties>
         <db.image>library/postgres:10.4-alpine</db.image>
         <db.baseDir>${project.build.directory}/db</db.baseDir>
-        <db.changeLogPath>com/walmartlabs/concord/server/db/liquibase.xml</db.changeLogPath>
+        <mainDb.changeLogPath>com/walmartlabs/concord/server/db/mainDb.xml</mainDb.changeLogPath>
+        <logDb.changeLogPath>com/walmartlabs/concord/server/db/logDb.xml</logDb.changeLogPath>
         <db.host>localhost</db.host>
         <db.username>postgres</db.username>
         <db.password>q1</db.password>
@@ -164,14 +165,27 @@
                 <version>${liquibase.version}</version>
                 <executions>
                     <execution>
+                        <id>main-db</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>update</goal>
                         </goals>
+                        <configuration>
+                            <changeLogFile>src/main/resources/${mainDb.changeLogPath}</changeLogFile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>log-db</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>update</goal>
+                        </goals>
+                        <configuration>
+                            <changeLogFile>src/main/resources/${logDb.changeLogPath}</changeLogFile>
+                        </configuration>
                     </execution>
                 </executions>
                 <configuration>
-                    <changeLogFile>src/main/resources/${db.changeLogPath}</changeLogFile>
                     <driver>org.postgresql.Driver</driver>
                     <url>jdbc:postgresql://${db.host}:${db.port}/postgres</url>
                     <username>${db.username}</username>

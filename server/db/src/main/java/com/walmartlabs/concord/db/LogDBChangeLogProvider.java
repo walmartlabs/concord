@@ -4,7 +4,7 @@ package com.walmartlabs.concord.db;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2024 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,22 +20,22 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
-@MainDB
-public class MainDBChangeLogProvider implements DatabaseChangeLogProvider {
+@LogDB
+public class LogDBChangeLogProvider implements DatabaseChangeLogProvider {
 
     @Override
     public String getChangeLogPath() {
-        return "com/walmartlabs/concord/server/db/mainDb.xml";
+        return "com/walmartlabs/concord/server/db/logDb.xml";
     }
 
     @Override
     public int order() {
-        // we expect the main DB to be migrated first
-        return 0;
+        // we expect the log DB to be migrated after the main DB
+        return 1;
     }
 
     @Override
     public String toString() {
-        return "main-db";
+        return "log-db";
     }
 }

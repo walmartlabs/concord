@@ -58,9 +58,9 @@ public abstract class AbstractDaoTest {
         DatabaseConfiguration cfg = new DatabaseConfigurationImpl("jdbc:postgresql://localhost:5432/postgres", "postgres", "q1", 3);
 
         DatabaseModule db = new DatabaseModule(migrateDb);
-        this.dataSource = db.appDataSource(cfg, new MetricRegistry(), Collections.singleton(new MainDBChangeLogProvider()));
+        this.dataSource = db.mainDbDataSource(cfg, new MetricRegistry(), Collections.singleton(new MainDBChangeLogProvider()));
 
-        this.cfg = db.appJooqConfiguration(this.dataSource);
+        this.cfg = db.mainDbJooqConfiguration(this.dataSource);
     }
 
     @AfterEach

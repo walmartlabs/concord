@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.process.logs;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.db.LogDB;
 import com.walmartlabs.concord.db.PgIntRange;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogDataRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogSegmentsRecord;
@@ -45,8 +45,13 @@ import static org.jooq.impl.DSL.*;
 public class ProcessLogsDao extends AbstractDao {
 
     @Inject
-    public ProcessLogsDao(@MainDB Configuration cfg) {
+    public ProcessLogsDao(@LogDB Configuration cfg) {
         super(cfg);
+    }
+
+    @Override
+    protected void tx(Tx t) {
+        super.tx(t);
     }
 
     /**
