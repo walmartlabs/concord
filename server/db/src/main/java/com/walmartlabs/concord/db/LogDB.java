@@ -20,22 +20,11 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
-@MainDB
-public class MainDBChangeLogProvider implements DatabaseChangeLogProvider {
+import javax.inject.Qualifier;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-    @Override
-    public String getChangeLogPath() {
-        return "com/walmartlabs/concord/server/db/mainDb.xml";
-    }
-
-    @Override
-    public int order() {
-        // we expect the main DB to be migrated first
-        return 0;
-    }
-
-    @Override
-    public String toString() {
-        return "main-db";
-    }
+@Retention(RetentionPolicy.RUNTIME)
+@Qualifier
+public @interface LogDB {
 }

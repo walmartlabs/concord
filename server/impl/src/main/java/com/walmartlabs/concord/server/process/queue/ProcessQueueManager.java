@@ -88,8 +88,9 @@ public class ProcessQueueManager {
         queueDao.tx(tx -> {
             queueDao.insert(tx, processKey, status, kind, parentInstanceId, projectId, repoId, branchOrTag, commitId, initiatorId, meta, triggeredBy);
             notifyStatusChange(tx, processKey, status);
-            processLogManager.createSystemSegment(tx, payload.getProcessKey());
         });
+
+        processLogManager.createSystemSegment(processKey);
     }
 
     /**
