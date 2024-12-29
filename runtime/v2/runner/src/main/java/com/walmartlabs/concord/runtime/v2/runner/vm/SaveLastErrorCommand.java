@@ -47,7 +47,7 @@ public class SaveLastErrorCommand implements Command {
     // for backward compatibility (java8 concord 1.92.0 version)
     private static final long serialVersionUID = 5759484819869224819L;
 
-    private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<Map<String, Object>>() {
+    private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {
     };
 
     private static final AtomicInteger idGenerator = new AtomicInteger(1);
@@ -84,6 +84,7 @@ public class SaveLastErrorCommand implements Command {
         var module = new SimpleModule();
         module.addSerializer(ParallelExecutionException.class, new ParallelExceptionSerializer());
         module.addSerializer(LoggedException.class, new LoggedExceptionSerializer());
+        module.addSerializer(UserDefinedException.class, new UserDefinedExceptionSerializer());
         module.addSerializer(Exception.class, new ExceptionSerializer());
 
         var om = new ObjectMapper();
@@ -118,6 +119,20 @@ public class SaveLastErrorCommand implements Command {
         }
     }
 
+    private static class UserDefinedExceptionSerializer extends JsonSerializer<UserDefinedException> {
+
+        @Override
+        public void serialize(UserDefinedException exception, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+            gen.writeStartObject();
+            gen.writeNumberField("@id", idGenerator.getAndIncrement());
+            gen.writeStringField("message", exception.getMessage());
+            if (exception.getPayload() != null && !exception.getPayload().isEmpty()) {
+                gen.writeObjectField("payload", exception.getPayload());
+            }
+            gen.writeEndObject();
+        }
+    }
+
     private static class ExceptionSerializer extends JsonSerializer<Exception> {
 
         @Override
@@ -125,13 +140,7 @@ public class SaveLastErrorCommand implements Command {
             gen.writeStartObject();
             gen.writeNumberField("@id", idGenerator.getAndIncrement());
             gen.writeStringField("message", exception.getMessage());
-            if (exception instanceof UserDefinedException ue) {
-                if (ue.getPayload() != null && !ue.getPayload().isEmpty()) {
-                    gen.writeObjectField("payload", ue.getPayload());
-                }
-            } else {
-                gen.writeStringField("type", exception.getClass().getName());
-            }
+            gen.writeStringField("type", exception.getClass().getName());
             gen.writeEndObject();
         }
     }
