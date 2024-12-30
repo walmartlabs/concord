@@ -35,6 +35,7 @@ import java.util.*;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v2.Utils.resourceToString;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ProcessIT extends AbstractTest {
 
@@ -746,6 +747,23 @@ public class ProcessIT extends AbstractTest {
         expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
 
         proc.assertLog(".*Error @ line: 6, col: 7. Dry-run mode is not supported for this 'script' step.*");
+    }
+
+    @Test
+    public void testThrowParallelWithPayload() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("parallelExceptionPayload"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+        Map<String, Object> data = proc.getOutVariables();
+        List<Map<String, Object>> exceptions = (List<Map<String, Object>>) ConfigurationUtils.get(data, "exceptions");
+
+        assertNotNull(exceptions);
+        assertEquals(List.of("BOOM1", "BOOM2"), exceptions.stream().map(e -> e.get("message")).toList());
+        assertEquals(List.of(Map.of("key", 1), Map.of("key", 2)), exceptions.stream().map(e -> e.get("payload")).toList());
     }
 
     private List<ProcessEventEntry> getProcessElementEvents(ConcordProcess proc) throws Exception {

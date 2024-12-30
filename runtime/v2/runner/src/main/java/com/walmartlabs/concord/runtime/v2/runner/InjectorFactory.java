@@ -32,6 +32,7 @@ import com.walmartlabs.concord.runtime.common.injector.TaskHolder;
 import com.walmartlabs.concord.runtime.v2.runner.guice.CurrentClasspathModule;
 import com.walmartlabs.concord.runtime.v2.runner.guice.DefaultRunnerModule;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
+import com.walmartlabs.concord.runtime.v2.runner.logging.CustomLayout;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.V2;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
@@ -123,6 +124,10 @@ public class InjectorFactory {
         @Override
         protected void configure() {
             bind(WorkingDirectory.class).toInstance(workDir);
+            if (runnerCfg.logging().workDirMasking()) {
+                CustomLayout.enableWorkingDirectoryMasking(workDir);
+            }
+
             bind(RunnerConfiguration.class).toInstance(runnerCfg);
             bind(ProcessConfiguration.class).toProvider(processCfgProvider);
             bind(InstanceId.class).toProvider(InstanceIdProvider.class);

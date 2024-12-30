@@ -759,6 +759,8 @@ public class RunnerJobExecutor implements JobExecutor {
 
         boolean segmentedLogs();
 
+        boolean workDirMasking();
+
         @Value.Default
         default List<String> extraDockerVolumes() {
             return Collections.emptyList();
