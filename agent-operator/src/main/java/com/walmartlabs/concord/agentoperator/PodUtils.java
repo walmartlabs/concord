@@ -23,40 +23,14 @@ package com.walmartlabs.concord.agentoperator;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.dsl.ExecListener;
-import io.fabric8.kubernetes.client.dsl.ExecWatch;
-import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 
 public final class PodUtils {
 
     private static final Logger log = LoggerFactory.getLogger(PodUtils.class);
-
-    public static Output exec(KubernetesClient client, String podName, String containerName, String... cmd) {
-        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-
-        Listener l = new Listener();
-        try (ExecWatch w = client.pods().withName(podName)
-                .inContainer(containerName)
-                .writingOutput(stdout)
-                .writingError(stderr)
-                .usingListener(l)
-                .exec(cmd)) {
-
-            l.await();
-        } catch (Exception e) {
-            log.error("exec ['{}', '{}'] -> error while executing '{}': {}", podName, containerName, cmd, e.getMessage());
-            throw e;
-        }
-
-        return new Output(stdout.toString(), stderr.toString());
-    }
 
     public static void applyTag(KubernetesClient client, String podName, String tagName, String tagValue) {
         Pod pod = client.pods().withName(podName).get();
@@ -77,52 +51,6 @@ public final class PodUtils {
         } catch (KubernetesClientException e) {
             if (e.getCode() == 404) {
                 log.warn("['{}']: apply tag ['{}': '{}'] -> pod doesn't exist, nothing to do", podName, tagName, tagValue);
-            }
-        }
-    }
-
-    public static class Output {
-
-        private final String stdout;
-        private final String stderr;
-
-        private Output(String stdout, String stderr) {
-            this.stdout = stdout;
-            this.stderr = stderr;
-        }
-
-        public String getStdout() {
-            return stdout;
-        }
-
-        public String getStderr() {
-            return stderr;
-        }
-    }
-
-    private static class Listener implements ExecListener {
-
-        private final CountDownLatch latch = new CountDownLatch(1);
-
-        @Override
-        public void onOpen(Response response) {
-        }
-
-        @Override
-        public void onFailure(Throwable t, Response response) {
-            latch.countDown();
-        }
-
-        @Override
-        public void onClose(int code, String reason) {
-            latch.countDown();
-        }
-
-        public void await() {
-            try {
-                latch.await();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
             }
         }
     }

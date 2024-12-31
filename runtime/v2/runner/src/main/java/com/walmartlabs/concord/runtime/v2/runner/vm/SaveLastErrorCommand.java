@@ -20,21 +20,24 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.walmartlabs.concord.runtime.v2.runner.PersistenceService;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Saves the current unhandled exception as a process metadata variable.
@@ -44,8 +47,10 @@ public class SaveLastErrorCommand implements Command {
     // for backward compatibility (java8 concord 1.92.0 version)
     private static final long serialVersionUID = 5759484819869224819L;
 
-    private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<Map<String, Object>>() {
+    private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {
     };
+
+    private static final AtomicInteger idGenerator = new AtomicInteger(1);
 
     @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) throws Exception {
@@ -68,10 +73,6 @@ public class SaveLastErrorCommand implements Command {
 
     private static Map<String, Object> serialize(Exception e) {
         try {
-            if (e instanceof LoggedException le) {
-                e = le.getCause();
-            }
-
             return createMapper().convertValue(e, MAP_TYPE);
         } catch (Exception ex) {
             // ignore ex
@@ -80,26 +81,67 @@ public class SaveLastErrorCommand implements Command {
     }
 
     private static ObjectMapper createMapper() {
-        ObjectMapper om = new ObjectMapper();
+        var module = new SimpleModule();
+        module.addSerializer(ParallelExecutionException.class, new ParallelExceptionSerializer());
+        module.addSerializer(LoggedException.class, new LoggedExceptionSerializer());
+        module.addSerializer(UserDefinedException.class, new UserDefinedExceptionSerializer());
+        module.addSerializer(Exception.class, new ExceptionSerializer());
+
+        var om = new ObjectMapper();
         om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-        om.addMixIn(Throwable.class, ExceptionMixIn.class);
+        om.registerModule(module);
         return om;
     }
 
-    @SuppressWarnings("unused")
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @JsonIdentityInfo(generator= ObjectIdGenerators.IntSequenceGenerator.class)
-    abstract static class ExceptionMixIn {
-        @JsonIgnore
-        abstract StackTraceElement[] getStackTrace();
+    private static class ParallelExceptionSerializer extends JsonSerializer<ParallelExecutionException> {
 
-        @JsonIgnore
-        abstract String getLocalizedMessage();
+        @Override
+        public void serialize(ParallelExecutionException exception, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+            gen.writeStartObject();
+            gen.writeNumberField("@id", idGenerator.getAndIncrement());
+            gen.writeStringField("message", exception.getMessage());
 
-        @JsonIgnore
-        abstract Throwable[] getSuppressed();
+            gen.writeArrayFieldStart("exceptions");
+            for (var e : exception.getExceptions()) {
+                gen.writeObject(e);
+            }
+            gen.writeEndArray();
 
-        @JsonIgnore
-        abstract Throwable getCause();
+            gen.writeEndObject();
+        }
+    }
+
+    private static class LoggedExceptionSerializer extends JsonSerializer<LoggedException> {
+
+        @Override
+        public void serialize(LoggedException exception, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+            gen.writeObject(exception.getCause());
+        }
+    }
+
+    private static class UserDefinedExceptionSerializer extends JsonSerializer<UserDefinedException> {
+
+        @Override
+        public void serialize(UserDefinedException exception, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+            gen.writeStartObject();
+            gen.writeNumberField("@id", idGenerator.getAndIncrement());
+            gen.writeStringField("message", exception.getMessage());
+            if (exception.getPayload() != null && !exception.getPayload().isEmpty()) {
+                gen.writeObjectField("payload", exception.getPayload());
+            }
+            gen.writeEndObject();
+        }
+    }
+
+    private static class ExceptionSerializer extends JsonSerializer<Exception> {
+
+        @Override
+        public void serialize(Exception exception, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+            gen.writeStartObject();
+            gen.writeNumberField("@id", idGenerator.getAndIncrement());
+            gen.writeStringField("message", exception.getMessage());
+            gen.writeStringField("type", exception.getClass().getName());
+            gen.writeEndObject();
+        }
     }
 }

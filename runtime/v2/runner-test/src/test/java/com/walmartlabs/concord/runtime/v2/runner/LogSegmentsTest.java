@@ -627,7 +627,7 @@ public class LogSegmentsTest {
         assertSegmentStatusError(log, 2);
         assertSegmentStatusError(log, 1);
 
-        assertSystemSegment(log, "[WARN ] Last error: com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException: FAIL. Waiting for 1000ms before retry (attempt #0)");
+        assertSystemSegment(log, "[WARN ] Last error: FAIL. Waiting for 1000ms before retry (attempt #0)");
 
         assertSegmentLog(log, 4, "[INFO ] in inner flow");
         assertSegmentStatusOk(log, 4);
