@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.runtime.v2.runner.SensitiveDataHolder;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -38,33 +39,33 @@ public class TaskCallEventRecordingListenerTest {
     @Test
     public void testMaskVars() throws Exception {
         String in = "{" +
-                "   \"a\":1," +
-                "   \"b\":2," +
-                "   \"c\":{" +
-                "      \"c1\":3," +
-                "      \"c2\":4," +
-                "      \"c3\":{" +
-                "         \"c31\":5," +
-                "         \"c32\":6" +
-                "      }" +
-                "   }" +
-                "}";
+                    "   \"a\":1," +
+                    "   \"b\":2," +
+                    "   \"c\":{" +
+                    "      \"c1\":3," +
+                    "      \"c2\":4," +
+                    "      \"c3\":{" +
+                    "         \"c31\":5," +
+                    "         \"c32\":6" +
+                    "      }" +
+                    "   }" +
+                    "}";
 
         List<String> blackList = Arrays.asList("b", "c.c1", "c.c3.c31");
         Map<String, Object> result = TaskCallEventRecordingListener.maskVars(vars(in), blackList);
 
         String expected = "{" +
-                "   \"a\":1," +
-                "   \"b\":\"***\"," +
-                "   \"c\":{" +
-                "      \"c1\":\"***\"," +
-                "      \"c2\":4," +
-                "      \"c3\":{" +
-                "         \"c31\":\"***\"," +
-                "         \"c32\":6" +
-                "      }" +
-                "   }" +
-                "}";
+                          "   \"a\":1," +
+                          "   \"b\":\"***\"," +
+                          "   \"c\":{" +
+                          "      \"c1\":\"***\"," +
+                          "      \"c2\":4," +
+                          "      \"c3\":{" +
+                          "         \"c31\":\"***\"," +
+                          "         \"c32\":6" +
+                          "      }" +
+                          "   }" +
+                          "}";
         assertEquals(vars(expected), result);
     }
 
@@ -78,6 +79,29 @@ public class TaskCallEventRecordingListenerTest {
         List<String> blackList = Collections.singletonList("x.y.z");
         Map<String, Object> result = TaskCallEventRecordingListener.maskVars(vars, blackList);
         assertEquals("{x={y={z=***}}}", result.toString());
+    }
+
+    @Test
+    public void testSensitiveDataMasking() throws JsonProcessingException {
+        SensitiveDataHolder holder = SensitiveDataHolder.getInstance();
+        holder.add("foo");
+        holder.add("bar");
+
+        String in = "{" +
+                    "\"a\": \"foo\"," +
+                    "\"b\": \"bar\"," +
+                    "\"c\": \"baz\"," +
+                    "\"d\": { \"e\": \"foo\" }" +
+                    "}";
+
+        Map<String, Object> result = TaskCallEventRecordingListener.processSensitiveData(vars(in));
+        String expected = "{" +
+                          "   \"a\": \"***\"," +
+                          "   \"b\": \"***\"," +
+                          "   \"c\": \"baz\"," +
+                          "   \"d\": { \"e\": \"***\" }" +
+                          "}";
+        assertEquals(vars(expected), result);
     }
 
     @SuppressWarnings("unchecked")
