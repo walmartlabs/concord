@@ -1,0 +1,14 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+  - set:
+      x: 123
+      y:
+        some:
+          nested: ["data", "in", "arrays"]
+          boolean: true
+          number: 234
+
+  - throw: BOOM
