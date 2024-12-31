@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.svm.Runtime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +37,11 @@ public final class TaskCallUtils {
     public static void processTaskResult(Runtime runtime, Context ctx, String taskName, TaskCallOptions opts, TaskResult result) {
         assertTaskResult(taskName, result);
 
-        if (result instanceof TaskResult.SuspendResult) {
-            TaskResult.SuspendResult r = (TaskResult.SuspendResult) result;
+        if (result instanceof TaskResult.SuspendResult r) {
             ctx.suspend(r.eventName());
-        } else if (result instanceof TaskResult.ReentrantSuspendResult) {
-            TaskResult.ReentrantSuspendResult r = (TaskResult.ReentrantSuspendResult) result;
+        } else if (result instanceof TaskResult.ReentrantSuspendResult r) {
             ctx.reentrantSuspend(r.eventName(), r.payload());
-        } else if (result instanceof TaskResult.SimpleResult) {
-            TaskResult.SimpleResult r = (TaskResult.SimpleResult) result;
+        } else if (result instanceof TaskResult.SimpleResult r) {
 
             OutputUtils.process(runtime, ctx, toMap(ctx, r), opts.out(), opts.outExpr());
 
@@ -51,8 +49,7 @@ public final class TaskCallUtils {
                 return;
             }
 
-            if (result instanceof TaskResult.SimpleFailResult) {
-                TaskResult.SimpleFailResult rr = (TaskResult.SimpleFailResult) r;
+            if (result instanceof TaskResult.SimpleFailResult rr) {
                 RuntimeException exception = toException(taskName, rr);
 
                 if (opts.ignoreErrors()) {
@@ -74,7 +71,7 @@ public final class TaskCallUtils {
                 return new RuntimeException(rr.cause());
             }
         } else {
-            return new RuntimeException("Error during execution of '" + taskName + "' task" + (rr.error() != null ? ": " + rr.error() : ""));
+            return new UserDefinedException("Error during execution of '" + taskName + "' task" + (rr.error() != null ? ": " + rr.error() : ""), rr.values());
         }
     }
 
