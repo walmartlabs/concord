@@ -17,6 +17,8 @@ SessionTokenAuthenticationHandler
 ([#1051](https://github.com/walmartlabs/concord/pull/1051));
 - runtime-v2: mask workDir value in logs by default
 ([#1052](https://github.com/walmartlabs/concord/pull/1052));
+- runtime-v2: save out variables for failed process
+([#1053](https://github.com/walmartlabs/concord/pull/1053))
 - concord-targetplatform: update dependencies
 ([#1057](https://github.com/walmartlabs/concord/pull/1057)). 
 
