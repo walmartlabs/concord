@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2024 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,29 +20,22 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
-public class LoggedException extends RuntimeException {
+import com.walmartlabs.concord.runtime.v2.runner.OutVariablesProcessor;
+import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.*;
 
-    public LoggedException(Exception cause) {
-        super(cause);
-    }
+import java.io.Serial;
 
-    @Override
-    public Exception getCause() {
-        return (Exception) super.getCause();
-    }
+public class SaveOutVariablesOnErrorCommand implements Command {
 
-    @Override
-    public String toString() {
-        return getCause().toString();
-    }
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     @Override
-    public String getMessage() {
-        return getCause().getMessage();
-    }
+    public void eval(Runtime runtime, State state, ThreadId threadId) throws Exception {
+        Frame frame = state.peekFrame(threadId);
+        frame.pop();
 
-    @Override
-    public StackTraceElement[] getStackTrace() {
-        return new StackTraceElement[0];
+        runtime.getService(OutVariablesProcessor.class).afterProcessEnds(runtime, state, frame);
     }
 }

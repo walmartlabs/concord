@@ -56,4 +56,13 @@ public class UserDefinedException extends RuntimeException {
     public Map<String, Object> getPayload() {
         return payload;
     }
+
+    @Override
+    public String toString() {
+        var m = getLocalizedMessage();
+        if (payload != null && !payload.isEmpty()) {
+            m = m + ": " + payload;
+        }
+        return m;
+    }
 }

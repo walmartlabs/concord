@@ -23,7 +23,9 @@ package com.walmartlabs.concord.svm;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -34,9 +36,15 @@ public class ParallelExecutionException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
     private static final int MAX_STACK_TRACE_ELEMENTS = 3;
+    private final List<Exception> exceptions;
 
     public ParallelExecutionException(Collection<Exception> causes) {
         super("Parallel execution errors: \n" + toMessage(causes));
+        this.exceptions = new ArrayList<>(causes);
+    }
+
+    public List<Exception> getExceptions() {
+        return exceptions;
     }
 
     private static String toMessage(Collection<Exception> causes) {
