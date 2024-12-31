@@ -11,6 +11,8 @@ SessionTokenAuthenticationHandler
 ([#1046])(https://github.com/walmartlabs/concord/pull/1046));
 - runtime-v2: allow throw payload with exception
 ([#1049](https://github.com/walmartlabs/concord/pull/1049));
+- runtime-v2: use SensitiveDataHolder for task parameter masking
+([#1050](https://github.com/walmartlabs/concord/pull/1050));
 - runtime-v2: add exceptions to ParallelExecutionException
 ([#1051](https://github.com/walmartlabs/concord/pull/1051));
 - runtime-v2: mask workDir value in logs by default
