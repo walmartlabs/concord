@@ -28,6 +28,7 @@ import com.walmartlabs.concord.runtime.v2.model.EventConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.EventReportingService;
+import com.walmartlabs.concord.runtime.v2.runner.SensitiveDataHolder;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
@@ -64,7 +65,9 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
         List<Object> inVars = event.input();
         if (inVars != null && eventConfiguration.recordTaskInVars()) {
-            Map<String, Object> vars = maskVars(convertInput(hideSensitiveData(inVars, event.inputAnnotations())), eventConfiguration.inVarsBlacklist());
+            Map<String, Object> input = convertInput(processSensitiveDataAnnotations(inVars, event.inputAnnotations()));
+            input = processSensitiveData(input);
+            Map<String, Object> vars = maskVars(input, eventConfiguration.inVarsBlacklist());
             if (eventConfiguration.truncateInVars()) {
                 vars = ObjectTruncater.truncateMap(vars, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
             }
@@ -75,7 +78,9 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
         Object outVars = event.result();
         if (outVars != null && eventConfiguration.recordTaskOutVars()) {
-            Map<String, Object> vars = maskVars(asMapOrNull(outVars), eventConfiguration.outVarsBlacklist());
+            Map<String, Object> output = asMapOrNull(outVars);
+            output = processSensitiveData(output);
+            Map<String, Object> vars = maskVars(output, eventConfiguration.outVarsBlacklist());
             if (eventConfiguration.truncateOutVars()) {
                 vars = ObjectTruncater.truncateMap(vars, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
             }
@@ -86,7 +91,9 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
         Object metaVars = event.meta();
         if (metaVars != null && eventConfiguration.recordTaskMeta()) {
-            Map<String, Object> meta = maskVars(asMapOrNull(metaVars), eventConfiguration.metaBlacklist());
+            Map<String, Object> rawMeta = asMapOrNull(metaVars);
+            Map<String, Object> meta = processSensitiveData(rawMeta);
+            meta = maskVars(meta, eventConfiguration.metaBlacklist());
             if (eventConfiguration.truncateMeta()) {
                 meta = ObjectTruncater.truncateMap(meta, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
             }
@@ -170,6 +177,34 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
         return result;
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    static <T> T processSensitiveData(T v) {
+        Set<String> sensitiveStrings = SensitiveDataHolder.getInstance().get();
+        if (sensitiveStrings.isEmpty()) {
+            return v;
+        }
+
+        if (v instanceof String s) {
+            for (String sensitiveString : sensitiveStrings) {
+                s = s.replace(sensitiveString, MASK);
+            }
+            return (T) s;
+        } else if (v instanceof List<?> l) {
+            List<Object> result = new ArrayList<>(l.size());
+            for (Object vv : l) {
+                vv = processSensitiveData(vv);
+                result.add(vv);
+            }
+            return (T) result;
+        } else if (v instanceof Map m) {
+            Map<String, Object> result = new HashMap<>(m);
+            result.replaceAll((k, vv) -> processSensitiveData(vv));
+            return (T) result;
+        }
+
+        return v;
+    }
+
     @SuppressWarnings("unchecked")
     private static Map<String, Object> ensureModifiable(Map<String, Object> m, int depth, String[] path) {
         if (depth == 0) {
@@ -217,7 +252,7 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
         return result;
     }
 
-    private static List<Object> hideSensitiveData(List<Object> input, List<List<Annotation>> annotations) {
+    private static List<Object> processSensitiveDataAnnotations(List<Object> input, List<List<Annotation>> annotations) {
         if (annotations.isEmpty()) {
             return input;
         }
