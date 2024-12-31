@@ -26,9 +26,7 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
-import com.walmartlabs.concord.runtime.v2.runner.vm.SaveLastErrorCommand;
-import com.walmartlabs.concord.runtime.v2.runner.vm.UpdateLocalsCommand;
-import com.walmartlabs.concord.runtime.v2.runner.vm.VMUtils;
+import com.walmartlabs.concord.runtime.v2.runner.vm.*;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.svm.*;
@@ -77,7 +75,7 @@ public class Runner {
         // install the exception handler into the root frame
         // takes care of all unhandled errors bubbling up
         VMUtils.assertNearestRoot(state, state.getRootThreadId())
-                .setExceptionHandler(new SaveLastErrorCommand());
+                .setExceptionHandler(new BlockCommand(new SaveOutVariablesOnErrorCommand(), new SaveLastErrorCommand()));
 
         VM vm = createVM(processDefinition);
         // update the global variables using the input map by running a special command
