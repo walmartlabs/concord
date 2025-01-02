@@ -104,11 +104,6 @@ public class Main {
             System.exit(0);
         } catch (UserDefinedException | ParallelExecutionException e) {
             System.exit(1);
-        } catch (WrappedException e) {
-            var cause = e.getCause();
-            if (!(cause instanceof UserDefinedException) && !(cause instanceof ParallelExecutionException)) {
-                log.error("", cause);
-            }
         } catch (Throwable t) {
             log.error("", t);
             System.exit(1);

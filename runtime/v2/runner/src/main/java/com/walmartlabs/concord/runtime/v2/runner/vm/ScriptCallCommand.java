@@ -160,6 +160,6 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> implements Elemen
             return;
         }
 
-        throw new IllegalStateException("Dry-run mode is not supported for this 'script' step");
+        throw new UserDefinedException("Dry-run mode is not supported for this 'script' step");
     }
 }

@@ -287,12 +287,6 @@ public class Run implements Callable<Integer> {
             runner.start(cfg, processDefinition, args);
         } catch (ParallelExecutionException | UserDefinedException e) {
             return -1;
-        } catch (WrappedException e) {
-            var cause = e.getCause();
-            if (!(cause instanceof UserDefinedException) && !(cause instanceof ParallelExecutionException)) {
-                logException(verbosity, cause);
-            }
-            return -1;
         } catch (Exception e) {
             logException(verbosity, e);
             return 1;

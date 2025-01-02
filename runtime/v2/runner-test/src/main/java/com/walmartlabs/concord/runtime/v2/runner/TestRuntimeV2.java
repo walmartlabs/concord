@@ -239,12 +239,6 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
             injector.getInstance(Main.class).execute();
         } catch (UserDefinedException | ParallelExecutionException e) { // see {@link com.walmartlabs.concord.runtime.v2.runner.Main#main}
             throw e;
-        } catch (WrappedException e) {
-            var cause = e.getCause();
-            if (!(cause instanceof UserDefinedException) && !(cause instanceof ParallelExecutionException)) {
-                cause.printStackTrace(out);
-            }
-            throw cause;
         } catch (Throwable t) {
             t.printStackTrace(out);
             throw t;
