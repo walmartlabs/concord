@@ -129,7 +129,7 @@ public class ProcessSecurityContext {
 
             return c.call();
         } finally {
-            ThreadContext.unbindSubject();
+            SecurityUtils.unbindSubject();
             ThreadContext.unbindSecurityManager();
         }
     }
@@ -150,7 +150,7 @@ public class ProcessSecurityContext {
 
             return c.call();
         } finally {
-            ThreadContext.unbindSubject();
+            SecurityUtils.unbindSubject();
             ThreadContext.unbindSecurityManager();
         }
     }
