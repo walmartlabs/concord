@@ -70,6 +70,10 @@ public final class SecurityUtils {
         ThreadContext.bind(subject);
     }
 
+    public static void unbindSubject() {
+        ThreadContext.unbindSubject();
+    }
+
     public static Subject getSubject() {
         return ThreadContext.getSubject();
     }
