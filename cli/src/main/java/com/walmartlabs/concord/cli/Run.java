@@ -43,8 +43,8 @@ import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
+import com.walmartlabs.concord.runtime.v2.runner.vm.WrappedException;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.runtime.v2.runner.vm.LoggedException;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.svm.ParallelExecutionException;
@@ -285,18 +285,16 @@ public class Run implements Callable<Integer> {
 
         try {
             runner.start(cfg, processDefinition, args);
-        } catch (LoggedException e) {
+        } catch (ParallelExecutionException | UserDefinedException e) {
             return -1;
-        } catch (ParallelExecutionException e) {
-            System.err.println(e.getMessage());
+        } catch (WrappedException e) {
+            var cause = e.getCause();
+            if (!(cause instanceof UserDefinedException) && !(cause instanceof ParallelExecutionException)) {
+                logException(verbosity, cause);
+            }
             return -1;
         } catch (Exception e) {
-            if (verbosity.verbose()) {
-                System.err.print("Error: ");
-                e.printStackTrace(System.err);
-            } else {
-                System.err.println("Error: " + e.getMessage());
-            }
+            logException(verbosity, e);
             return 1;
         }
 
@@ -421,6 +419,15 @@ public class Run implements Callable<Integer> {
             System.out.println(om.writerWithDefaultPrettyPrinter().writeValueAsString(args));
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static void logException(Verbosity verbosity, Exception e) {
+        if (verbosity.verbose()) {
+            System.err.print("Error: ");
+            e.printStackTrace(System.err);
+        } else {
+            System.err.println("Error: " + e.getMessage());
         }
     }
 

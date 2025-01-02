@@ -66,7 +66,7 @@ public class RetryWrapper implements Command {
             execute(runtime, state, threadId);
         } catch (Exception e) {
             StepCommand.logException(step, state, threadId, e);
-            throw new LoggedException(e);
+            throw e;
         }
     }
 

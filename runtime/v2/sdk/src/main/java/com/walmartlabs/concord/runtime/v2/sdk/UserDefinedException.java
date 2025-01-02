@@ -43,16 +43,6 @@ public class UserDefinedException extends RuntimeException {
         this.payload = payload;
     }
 
-    @Override
-    public void printStackTrace(PrintStream s) {
-        s.println(getMessage());
-    }
-
-    @Override
-    public void printStackTrace(PrintWriter s) {
-        s.println(getMessage());
-    }
-
     public Map<String, Object> getPayload() {
         return payload;
     }
@@ -64,5 +54,20 @@ public class UserDefinedException extends RuntimeException {
             m = m + ": " + payload;
         }
         return m;
+    }
+
+    @Override
+    public StackTraceElement[] getStackTrace() {
+        return new StackTraceElement[0];
+    }
+
+    @Override
+    public void printStackTrace(PrintWriter s) {
+        // do nothing
+    }
+
+    @Override
+    public void printStackTrace(PrintStream s) {
+        // do nothing
     }
 }

@@ -28,6 +28,7 @@ import com.walmartlabs.concord.runtime.v2.runner.script.ScriptResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -121,7 +122,7 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> implements Elemen
             return normalizedLanguage;
         }
 
-        throw new RuntimeException("Unknown language '" + language + "'. Check process dependencies.");
+        throw new UserDefinedException("Unknown language '" + language + "'. Check process dependencies.");
     }
 
     private static String getExtension(String s) {
