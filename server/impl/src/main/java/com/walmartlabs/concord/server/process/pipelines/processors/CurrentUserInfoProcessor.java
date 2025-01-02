@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.pipelines.processors.signing.Signing;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -31,7 +32,7 @@ import javax.inject.Named;
 public class CurrentUserInfoProcessor extends UserInfoProcessor {
 
     @Inject
-    public CurrentUserInfoProcessor(UserManager userManager, Signing signing) {
-        super(Constants.Request.CURRENT_USER_KEY, userManager, signing);
+    public CurrentUserInfoProcessor(UserManager userManager, Signing signing, ObjectMapper objectMapper) {
+        super(Constants.Request.CURRENT_USER_KEY, userManager, signing, objectMapper);
     }
 }
