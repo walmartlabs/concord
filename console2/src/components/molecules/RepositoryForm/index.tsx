@@ -71,7 +71,7 @@ interface State {
 
 const sourceOptions = [
     {
-        text: 'Branch/tag',
+        text: 'Branch/tag/version',
         value: RepositorySourceType.BRANCH_OR_TAG
     },
     {
@@ -224,7 +224,7 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                         {values.sourceType === RepositorySourceType.BRANCH_OR_TAG && (
                             <FormikInput
                                 name="branch"
-                                label="Branch/Tag"
+                                label="Branch/Tag/Version"
                                 fluid={true}
                                 required={true}
                             />

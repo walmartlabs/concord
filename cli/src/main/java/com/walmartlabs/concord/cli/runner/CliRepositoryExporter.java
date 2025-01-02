@@ -29,8 +29,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Objects;
+import com.walmartlabs.concord.dependencymanager.DependencyManager;
 
 public class CliRepositoryExporter implements RepositoryExporter {
 
@@ -46,7 +47,7 @@ public class CliRepositoryExporter implements RepositoryExporter {
 
     private final RepositoryProviders providers;
 
-    public CliRepositoryExporter(Path repoCacheDir) {
+    public CliRepositoryExporter(Path repoCacheDir, DependencyManager dependencyManager) {
         this.repoCacheDir = repoCacheDir;
 
         GitClientConfiguration clientCfg = GitClientConfiguration.builder()
@@ -59,7 +60,7 @@ public class CliRepositoryExporter implements RepositoryExporter {
                 .sshTimeoutRetryCount(SSH_TIMEOUT_RETRY_COUNT)
                 .build();
 
-        this.providers = new RepositoryProviders(Collections.singletonList(new GitCliRepositoryProvider(clientCfg)));
+        this.providers = new RepositoryProviders(Arrays.asList(new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(clientCfg)));
     }
 
     @Override

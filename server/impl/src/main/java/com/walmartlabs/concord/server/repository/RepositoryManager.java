@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.repository.*;
 import com.walmartlabs.concord.sdk.Secret;
@@ -60,7 +61,8 @@ public class RepositoryManager {
                              GitConfiguration gitCfg,
                              RepositoryConfiguration repoCfg,
                              ProjectDao projectDao,
-                             SecretManager secretManager) throws IOException {
+                             SecretManager secretManager,
+                             DependencyManager dependencyManager) throws IOException {
 
         GitClientConfiguration gitCliCfg = GitClientConfiguration.builder()
                 .oauthToken(gitCfg.getOauthToken())
@@ -72,7 +74,7 @@ public class RepositoryManager {
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
                 .build();
 
-        List<RepositoryProvider> providers = Arrays.asList(new ClasspathRepositoryProvider(), new GitCliRepositoryProvider(gitCliCfg));
+        List<RepositoryProvider> providers = Arrays.asList(new ClasspathRepositoryProvider(), new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(gitCliCfg));
 
         this.gitCfg = gitCfg;
         this.providers = new RepositoryProviders(providers);
