@@ -348,10 +348,10 @@ const validator = async (values: FormValues, props: Props) => {
     }
 
     if (!values.withSecret) {
-        if (!values.url.startsWith('https://')) {
+        if (!values.url.startsWith('https://') && !values.url.startsWith('mvn://')) {
             return Promise.resolve({
                 url:
-                    "Invalid repository URL: must begin with 'https://'. SSH repository URLs require additional credentials to be specified."
+                    "Invalid repository URL: must begin with 'https://' or 'mvn://'. SSH repository URLs require additional credentials to be specified."
             });
         }
     } else {

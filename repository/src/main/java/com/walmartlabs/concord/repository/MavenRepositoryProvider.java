@@ -10,6 +10,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,9 +22,9 @@ import java.util.List;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,7 +61,7 @@ public class MavenRepositoryProvider implements RepositoryProvider {
         try {
             URI uri = new URI(request.url().concat(":").concat(request.version().value()));
             Path dependencyPath = dependencyManager.resolveSingle(uri).getPath();
-            IOUtils.copy(dependencyPath, dst, StandardCopyOption.REPLACE_EXISTING);
+            IOUtils.unzip(dependencyPath, dst, false, StandardCopyOption.REPLACE_EXISTING);
             return null;
         } catch (URISyntaxException | IOException e) {
             try {
@@ -83,7 +84,9 @@ public class MavenRepositoryProvider implements RepositoryProvider {
     @Override
     public Snapshot export(Path src, Path dst, List<String> ignorePatterns) throws IOException {
         LastModifiedSnapshot snapshot = new LastModifiedSnapshot();
-        IOUtils.unzip(src, dst, false, snapshot, StandardCopyOption.REPLACE_EXISTING);
+        List<String> allIgnorePatterns = new ArrayList<>();
+        allIgnorePatterns.addAll(ignorePatterns);
+        IOUtils.copy(src, dst, allIgnorePatterns, snapshot, StandardCopyOption.REPLACE_EXISTING);
         return snapshot;
     }
 }
