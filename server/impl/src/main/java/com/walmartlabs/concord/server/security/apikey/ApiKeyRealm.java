@@ -62,17 +62,20 @@ public class ApiKeyRealm extends AuthorizingRealm {
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
         ApiKey t = (ApiKey) token;
 
-        UserEntry u = userManager.get(t.getUserId()).orElse(null);
-        if (u == null) {
-            return null;
-        }
+        UserEntry u = null;
+        if (t.getUserId() != null) {
+            u = userManager.get(t.getUserId()).orElse(null);
+            if (u == null) {
+                return null;
+            }
 
-        if (u.isDisabled()) {
-            throw new AuthenticationException("User account '" + u.getName() + "' is disabled");
+            if (u.isDisabled()) {
+                throw new AuthenticationException("User account '" + u.getName() + "' is disabled");
+            }
         }
 
         auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
-                .userId(u.getId())
+                .userId(u != null ? u.getId() : null)
                 .field("realm", REALM_NAME)
                 .field("apiKeyId", t.getKeyId())
                 .log();
