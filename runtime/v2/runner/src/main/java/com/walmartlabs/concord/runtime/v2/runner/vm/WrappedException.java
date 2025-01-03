@@ -64,6 +64,4 @@ public class WrappedException extends RuntimeException {
     public String toString() {
         return getCause().toString();
     }
-
-
 }
