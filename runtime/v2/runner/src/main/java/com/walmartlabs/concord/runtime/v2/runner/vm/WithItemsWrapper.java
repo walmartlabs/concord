@@ -198,7 +198,7 @@ public abstract class WithItemsWrapper implements Command {
                     .nonRoot()
                     .build());
 
-            frame.push(new JoinCommand(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet()), step));
+            frame.push(new JoinCommand<>(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet()), step));
         }
     }
 
