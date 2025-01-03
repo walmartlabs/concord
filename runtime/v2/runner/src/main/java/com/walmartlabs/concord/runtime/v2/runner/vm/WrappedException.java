@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2024 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,14 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
-public class LoggedException extends RuntimeException {
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.util.Objects;
 
-    public LoggedException(Exception cause) {
-        super(cause);
+public class WrappedException extends RuntimeException {
+
+    public WrappedException(Exception cause) {
+        super(Objects.requireNonNull(cause));
     }
 
     @Override
@@ -32,8 +36,23 @@ public class LoggedException extends RuntimeException {
     }
 
     @Override
-    public String toString() {
-        return getCause().toString();
+    public StackTraceElement[] getStackTrace() {
+        return getCause().getStackTrace();
+    }
+
+    @Override
+    public void printStackTrace(PrintWriter s) {
+        getCause().printStackTrace(s);
+    }
+
+    @Override
+    public void printStackTrace(PrintStream s) {
+        getCause().printStackTrace(s);
+    }
+
+    @Override
+    public String getLocalizedMessage() {
+        return getCause().getLocalizedMessage();
     }
 
     @Override
@@ -42,7 +61,7 @@ public class LoggedException extends RuntimeException {
     }
 
     @Override
-    public StackTraceElement[] getStackTrace() {
-        return new StackTraceElement[0];
+    public String toString() {
+        return getCause().toString();
     }
 }

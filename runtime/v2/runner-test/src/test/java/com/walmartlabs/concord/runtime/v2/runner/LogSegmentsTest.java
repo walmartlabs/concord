@@ -95,22 +95,22 @@ public class LogSegmentsTest {
             // ignore
         }
 
-        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 1);
 
-        assertSegmentLog(runtime.lastLog(), 2, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(runtime.lastLog(), 2, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 2);
 
-        assertSegmentLog(runtime.lastLog(), 3, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(runtime.lastLog(), 3, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 3);
 
-        assertSegmentLog(runtime.lastLog(), 4, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(runtime.lastLog(), 4, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 4);
 
-        assertSegmentLog(runtime.lastLog(), 5, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(runtime.lastLog(), 5, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 5);
 
-        assertSegmentLog(runtime.lastLog(), 6, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(runtime.lastLog(), 6, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 6);
     }
 
@@ -147,7 +147,7 @@ public class LogSegmentsTest {
         assertSegmentStatusOk(log, 2);
 
         // TODO: maybe into task segment?
-        assertSystemSegment(log, "[WARN ] Last error: java.lang.RuntimeException: boom!. Waiting for 1000ms before retry (attempt #0)");
+        assertSystemSegment(log, "[WARN ] Last error: boom!. Waiting for 1000ms before retry (attempt #0)");
 
         assertNoMoreSegments();
     }
@@ -163,7 +163,7 @@ public class LogSegmentsTest {
 
         // first try
         assertSegmentLog(log, 1, "[INFO ] will fail with error");
-        assertSegmentLog(log, 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(log, 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(log, 1);
 
         // error block
@@ -347,7 +347,7 @@ public class LogSegmentsTest {
 
         // task error segment
         assertSegmentLog(runtime.lastLog(), 1, "[INFO ] will fail with error");
-        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 1);
 
         assertNoMoreSegments();
@@ -365,7 +365,7 @@ public class LogSegmentsTest {
 
         // task error into task segment
         assertSegmentLog(log, 1, "[INFO ] will fail with error");
-        assertSegmentLog(log, 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(log, 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(log, 1);
 
         // error handler logs

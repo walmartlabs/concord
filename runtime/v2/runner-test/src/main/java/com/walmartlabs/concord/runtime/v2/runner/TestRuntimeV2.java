@@ -48,6 +48,7 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.WrappedException;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Runtime;
@@ -70,8 +71,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
@@ -150,7 +150,10 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
     }
 
     public void deploy(String resource) throws URISyntaxException, IOException {
-        Path src = Paths.get(testClass.getResource(resource).toURI());
+        var res = testClass.getResource(resource);
+        assertNotNull(res, "Resource not found: " + resource);
+
+        Path src = Paths.get(res.toURI());
         IOUtils.copy(src, workDir);
     }
 
@@ -234,6 +237,11 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
                     runtimeModule)
                     .create();
             injector.getInstance(Main.class).execute();
+        } catch (UserDefinedException | ParallelExecutionException e) { // see {@link com.walmartlabs.concord.runtime.v2.runner.Main#main}
+            throw e;
+        } catch (Throwable t) {
+            t.printStackTrace(out);
+            throw t;
         } finally {
             out.flush();
             System.setOut(oldOut);
@@ -264,6 +272,17 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
 
         if (grep(ab, pattern) < n) {
             fail("Expected at least " + n + " log line(s): " + pattern + ", got: \n" + new String(ab));
+        }
+    }
+
+    public static void assertLogExactMatch(byte[] ab, int n, String pattern) throws IOException {
+        if (ab == null) {
+            fail("Log is empty");
+        }
+
+        int count = grep(ab, pattern);
+        if (count != n) {
+            fail("Expected exactly " + n + " log line(s): " + pattern + ", but found: " + count + "\nLog content:\n" + new String(ab));
         }
     }
 
