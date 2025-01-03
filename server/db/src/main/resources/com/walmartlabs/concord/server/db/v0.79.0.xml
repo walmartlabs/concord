@@ -4,7 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
-    <!-- concord agent user disabled from 2.21.x -->
+    <!-- starting from 2.21.x, the default agent token is no longer associated with any user -->
     <!--
     <changeSet id="79000" author="ibodrov@gmail.com">
         <insert tableName="USER_ROLES">

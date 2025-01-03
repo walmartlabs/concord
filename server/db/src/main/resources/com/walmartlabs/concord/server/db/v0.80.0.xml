@@ -14,7 +14,7 @@
             <column name="GLOBAL_WRITER">true</column>
         </insert>
 
-        <!-- concord agent user disabled from 2.21.x -->
+        <!-- starting from 2.21.x, the default agent token is no longer associated with any user -->
         <!--
         <insert tableName="USER_ROLES">
             <column name="ROLE_ID">${concordSystemWriterRoleId}</column>

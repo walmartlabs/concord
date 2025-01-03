@@ -4,21 +4,23 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
-<!--    <property name="concordRunnerUserId" value="2599c604-1384-4660-a767-8bc03baa7a31"/>
+    <!--
+    <property name="concordRunnerUserId" value="2599c604-1384-4660-a767-8bc03baa7a31"/>
 
-        <changeSet id="70000" author="ybrigo@gmail.com">
-            <insert tableName="USERS">
-                <column name="USER_ID">${concordRunnerUserId}</column>
-                <column name="USERNAME">concordRunner</column>
-                <column name="USER_TYPE">LOCAL</column>
-            </insert>
+    <changeSet id="70000" author="ybrigo@gmail.com">
+        <insert tableName="USERS">
+            <column name="USER_ID">${concordRunnerUserId}</column>
+            <column name="USERNAME">concordRunner</column>
+            <column name="USER_TYPE">LOCAL</column>
+        </insert>
 
-            <insert tableName="API_KEYS">
-                &lt;!&ndash; "Gz0q/DeGlH8Zs7QJMj1v8g" &ndash;&gt;
-                <column name="API_KEY">DrRt3j6G7b6GHY/Prddu4voyKyZa17iFkEj99ac0q/A</column>
-                <column name="USER_ID">${concordRunnerUserId}</column>
-            </insert>
-        </changeSet> -->
+        <insert tableName="API_KEYS">
+            &lt;!&ndash; "Gz0q/DeGlH8Zs7QJMj1v8g" &ndash;&gt;
+            <column name="API_KEY">DrRt3j6G7b6GHY/Prddu4voyKyZa17iFkEj99ac0q/A</column>
+            <column name="USER_ID">${concordRunnerUserId}</column>
+        </insert>
+    </changeSet>
+    -->
 
     <changeSet id="70100" author="ybrigo@gmail.com">
         <addColumn tableName="PROCESS_QUEUE">

@@ -5,8 +5,10 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
     <property name="concordAdminUserId" value="230c5c9c-d9a7-11e6-bcfd-bb681c07b26c"/>
-    <!-- concord agent user disabled from 2.21.x -->
-<!--    <property name="concordAgentUserId" value="d4f123c1-f8d4-40b2-8a12-b8947b9ce2d8"/>-->
+    <!-- starting from 2.21.x, the default agent token is no longer associated with any user -->
+    <!--
+    <property name="concordAgentUserId" value="d4f123c1-f8d4-40b2-8a12-b8947b9ce2d8"/>
+    -->
     <property name="concordRunnerUserId" value="2599c604-1384-4660-a767-8bc03baa7a31"/>
 
     <!-- delete old hard-coded default admin API token -->
@@ -39,7 +41,7 @@
     </changeSet>
 
     <!-- delete old hard-coded default agent API token -->
-    <!-- concord agent user disabled from 2.21.x -->
+    <!-- starting from 2.21.x, the default agent token is no longer associated with any user -->
     <!--
     <changeSet id="1860200" author="benjamin.broadaway@walmart.com" runInTransaction="false" context="!codegen">
         <sql>
@@ -51,7 +53,7 @@
     -->
 
     <!-- Set initial agent API token when not exist  -->
-    <!-- concord agent user disabled from 2.21.x -->
+    <!-- starting from 2.21.x, the default agent token is no longer associated with any user -->
     <!--
     <changeSet id="1860300" author="benjamin.broadaway@walmart.com" runInTransaction="false" context="!codegen">
         <validCheckSum>ANY</validCheckSum>
