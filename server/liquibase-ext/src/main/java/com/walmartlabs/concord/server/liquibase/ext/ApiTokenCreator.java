@@ -118,7 +118,11 @@ public class ApiTokenCreator implements CustomSqlChange, CustomSqlRollback {
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         System.out.println();
-        System.out.println("API token created for user '" + username + "': " + token);
+        if (username == null) {
+            System.out.println("API token created (without a user): " + token);
+        } else {
+            System.out.println("API token created for user '" + username + "': " + token);
+        }
         System.out.println();
         System.out.println("(don't forget to remove it in production)");
         System.out.println();
