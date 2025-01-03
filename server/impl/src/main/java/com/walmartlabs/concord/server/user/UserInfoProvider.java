@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.user;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
@@ -44,9 +43,15 @@ public interface UserInfoProvider {
     UserInfo getInfo(UUID id, String username, String userDomain);
 
     UUID create(String username, String domain, String displayName, String email, Set<String> roles);
-    
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    interface BaseUserInfo {
+
+    @Value.Immutable
+    @JsonSerialize(as = ImmutableUserInfo.class)
+    @JsonDeserialize(as = ImmutableUserInfo.class)
+    interface UserInfo {
+
+        static ImmutableUserInfo.Builder builder() {
+            return ImmutableUserInfo.builder();
+        }
 
         @Nullable
         UUID id();
@@ -68,15 +73,5 @@ public interface UserInfoProvider {
 
         @Nullable
         Map<String, Object> attributes();
-    }
-
-    @Value.Immutable
-    @JsonSerialize(as = ImmutableUserInfo.class)
-    @JsonDeserialize(as = ImmutableUserInfo.class)
-    interface UserInfo extends BaseUserInfo {
-
-        static ImmutableUserInfo.Builder builder() {
-            return ImmutableUserInfo.builder();
-        }
     }
 }
