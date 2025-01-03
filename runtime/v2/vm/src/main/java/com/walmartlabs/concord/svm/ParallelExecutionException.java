@@ -43,16 +43,6 @@ public class ParallelExecutionException extends RuntimeException {
         this.exceptions = new ArrayList<>(causes);
     }
 
-    @Override
-    public String getLocalizedMessage() {
-        return super.getLocalizedMessage();
-    }
-
-    @Override
-    public String getMessage() {
-        return super.getMessage();
-    }
-
     public List<Exception> getExceptions() {
         return exceptions;
     }
