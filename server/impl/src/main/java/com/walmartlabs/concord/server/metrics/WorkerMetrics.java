@@ -47,8 +47,9 @@ public class WorkerMetrics implements BackgroundTask {
         String prop = cfg.getGroupByCapabilitiesProperty();
         String[] path = prop.split("\\.");
 
-        // retain the metrics keys
-        // if a certain flavor of workers disappears we'd want to show zero in the metric instead of no metric at all
+        // "persist" some of the metrics
+        // if some "flavor" of agents disappear, we would want to show zero in the metric instead of no metric at all
+        // we keep keys of all agent metrics in memory
         Set<Object> keys = new HashSet<>();
         Lock mutex = new ReentrantLock();
 
