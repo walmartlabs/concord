@@ -4,12 +4,15 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <!-- starting from 2.21.x, the default agent token is no longer associated with any user -->
+    <!--
     <changeSet id="79000" author="ibodrov@gmail.com">
         <insert tableName="USER_ROLES">
             <column name="ROLE_ID">${concordSystemReaderRoleId}</column>
             <column name="USER_ID">${concordAgentUserId}</column>
         </insert>
     </changeSet>
+    -->
 
     <changeSet id="79100" author="ybrigo@gmail.com">
         <addColumn tableName="API_KEYS">
