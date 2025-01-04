@@ -43,7 +43,7 @@ public class MavenRepositoryProvider implements RepositoryProvider {
     }
 
     /**
-     * @param url maven repo url in format mvn://groupId:artifactId
+     * @param url maven repo url in format mvn://groupId:artifactId:extension
      * @return boolean can handle or not
      */
     @Override
@@ -79,7 +79,7 @@ public class MavenRepositoryProvider implements RepositoryProvider {
      * @param dst destination to be copied to
      * @param ignorePatterns ignore some files while copying
      * @return  snapshot of copied files
-     * @throws IOException exception occurred during copy
+     * @throws IOException exception during IO operation
      */
     @Override
     public Snapshot export(Path src, Path dst, List<String> ignorePatterns) throws IOException {
