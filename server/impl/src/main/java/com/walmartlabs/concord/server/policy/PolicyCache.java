@@ -40,6 +40,7 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
@@ -53,7 +54,7 @@ public class PolicyCache implements BackgroundTask {
 
     private final ObjectMapper objectMapper;
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-    private final Object refreshMutex = new Object();
+    private final Lock refreshMutex = new ReentrantLock();
 
     private final PolicyCacheConfiguration cacheCfg;
     private final Dao dao;
@@ -93,9 +94,12 @@ public class PolicyCache implements BackgroundTask {
         try {
             reloadPolicies();
         } catch (Exception e) {
-            synchronized (refreshMutex) {
+            refreshMutex.lock();
+            try {
                 lastRefreshRequestAt = System.currentTimeMillis();
                 refreshMutex.notifyAll();
+            } finally {
+                refreshMutex.unlock();
             }
         }
     }
@@ -167,12 +171,15 @@ public class PolicyCache implements BackgroundTask {
                 long now = System.currentTimeMillis();
                 reloadPolicies();
 
-                synchronized (refreshMutex) {
+                refreshMutex.lock();
+                try {
                     if (lastRefreshRequestAt > now) {
                         lastRefreshRequestAt = now;
                     } else {
                         refreshMutex.wait(cacheCfg.getReloadInterval().toMillis());
                     }
+                } finally {
+                    refreshMutex.unlock();
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
