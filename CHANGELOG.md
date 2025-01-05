@@ -23,8 +23,9 @@ SessionTokenAuthenticationHandler
 remove user from default agent token
 ([#1054](https://github.com/walmartlabs/concord/pull/1054));
 - concord-targetplatform: update dependencies
-([#1057](https://github.com/walmartlabs/concord/pull/1057)). 
-
+([#1057](https://github.com/walmartlabs/concord/pull/1057));
+- concord-server: replace synchronized with locks
+([#1060](https://github.com/walmartlabs/concord/pull/1060)). 
 
 
 ## [2.20.0] - 2024-11-20
