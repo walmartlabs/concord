@@ -39,8 +39,13 @@ public class MavenRepoIT extends AbstractServerIT {
     @Test
     public void test() throws Exception {
         // prepare local mvn repo
-        Path mvnDirectory = Path.of(System.getProperty("user.home"))
-                .resolve(".m2/repository/com/walmartlabs/concord/mvn-concord/0.0.1");
+        Path localMavenRepo;
+        try {
+            localMavenRepo = Path.of(System.getProperty("local.mvn.repo"));
+        } catch (NullPointerException e) {
+            localMavenRepo = Path.of(System.getProperty("user.home")).resolve(".m2/repository");
+        }
+        Path mvnDirectory = localMavenRepo.resolve("com/walmartlabs/concord/mvn-concord/0.0.1");
 
         Path src = Paths.get(MavenRepoIT.class.getResource("mvnRepoFiles").toURI());
         IOUtils.copy(src, mvnDirectory, StandardCopyOption.REPLACE_EXISTING);
