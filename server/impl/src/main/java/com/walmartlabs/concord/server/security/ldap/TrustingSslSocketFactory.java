@@ -31,6 +31,8 @@ import java.net.Socket;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A socket factory that creates SSL sockets using {@link DummyTrustManager}.
@@ -39,10 +41,17 @@ import java.security.cert.X509Certificate;
  */
 public class TrustingSslSocketFactory extends SocketFactory {
 
+    private static final Lock mutex = new ReentrantLock();
+
     private final SSLSocketFactory delegate;
 
-    public static synchronized SocketFactory getDefault() {
-        return new TrustingSslSocketFactory();
+    public static SocketFactory getDefault() {
+        mutex.lock();
+        try {
+            return new TrustingSslSocketFactory();
+        } finally {
+            mutex.unlock();
+        }
     }
 
     public TrustingSslSocketFactory() {
