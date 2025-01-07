@@ -83,7 +83,7 @@ public class SaveLastErrorCommand implements Command {
     private static ObjectMapper createMapper() {
         var module = new SimpleModule();
         module.addSerializer(ParallelExecutionException.class, new ParallelExceptionSerializer());
-        module.addSerializer(LoggedException.class, new LoggedExceptionSerializer());
+        module.addSerializer(WrappedException.class, new WrappedExceptionSerializer());
         module.addSerializer(UserDefinedException.class, new UserDefinedExceptionSerializer());
         module.addSerializer(Exception.class, new ExceptionSerializer());
 
@@ -111,10 +111,10 @@ public class SaveLastErrorCommand implements Command {
         }
     }
 
-    private static class LoggedExceptionSerializer extends JsonSerializer<LoggedException> {
+    private static class WrappedExceptionSerializer extends JsonSerializer<WrappedException> {
 
         @Override
-        public void serialize(LoggedException exception, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+        public void serialize(WrappedException exception, JsonGenerator gen, SerializerProvider serializers) throws IOException {
             gen.writeObject(exception.getCause());
         }
     }

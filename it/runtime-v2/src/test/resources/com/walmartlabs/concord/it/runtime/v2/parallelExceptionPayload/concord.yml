@@ -19,4 +19,4 @@ flows:
       parallelism: 2
     error:
       - set:
-          exceptions: ${lastError.cause.exceptions.stream().map(e -> e.cause).toList()}
+          exceptions: ${lastError.exceptions.stream().toList()}
