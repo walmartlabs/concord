@@ -60,6 +60,11 @@ public class BeanELResolver extends javax.el.BeanELResolver {
                 }
             }
 
+            // NPE in super.invoke if method not found :(
+            if (ReflectionUtil.findMethod(base.getClass(), method.toString(), paramTypes, params) == null) {
+                throw new MethodNotFoundException(base.getClass(), method, paramTypes);
+            }
+
             var result = super.invoke(context, base, method, paramTypes, params);
 
             if (context.isPropertyResolved()) {

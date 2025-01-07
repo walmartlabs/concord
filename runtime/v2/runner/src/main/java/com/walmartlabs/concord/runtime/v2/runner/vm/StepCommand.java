@@ -97,7 +97,7 @@ public abstract class StepCommand<T extends Step> implements Command {
                 execute(runtime, state, threadId);
             } catch (Exception e) {
                 logException(step, state, threadId, e);
-                throw new LoggedException(e);
+                throw e;
             }
         });
     }

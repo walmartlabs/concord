@@ -1,3 +1,0 @@
-flows:
-  default:
-    - task: faultyTask
