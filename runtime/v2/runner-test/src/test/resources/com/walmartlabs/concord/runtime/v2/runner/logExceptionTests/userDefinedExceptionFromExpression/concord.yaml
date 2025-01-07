@@ -1,0 +1,3 @@
+flows:
+  default:
+    - expr: "${userDefinedExceptionTask.exception('BOOM')}"

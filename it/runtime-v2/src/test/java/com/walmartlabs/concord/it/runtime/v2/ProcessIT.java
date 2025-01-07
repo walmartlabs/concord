@@ -759,7 +759,7 @@ public class ProcessIT extends AbstractTest {
 
         // ---
         Map<String, Object> data = proc.getOutVariables();
-        List<Map<String, Object>> exceptions = (List<Map<String, Object>>) ConfigurationUtils.get(data, "exceptions");
+        List<Map<String, Object>> exceptions = MapUtils.getList(data, "exceptions", List.of());
 
         assertNotNull(exceptions);
         assertEquals(List.of("BOOM1", "BOOM2"), exceptions.stream().map(e -> e.get("message")).toList());

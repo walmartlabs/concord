@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.LogTags;
 import com.walmartlabs.concord.sdk.MapUtils;
@@ -415,7 +416,7 @@ public class ConcordTaskCommon {
         }
 
         if (hasErrors) {
-            throw new IllegalStateException(errors.toString());
+            throw new UserDefinedException(errors.toString());
         }
     }
 
