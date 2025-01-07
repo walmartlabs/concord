@@ -25,7 +25,9 @@ remove user from default agent token
 - concord-targetplatform: update dependencies
 ([#1057](https://github.com/walmartlabs/concord/pull/1057));
 - concord-server: replace synchronized with locks
-([#1060](https://github.com/walmartlabs/concord/pull/1060)). 
+([#1060](https://github.com/walmartlabs/concord/pull/1060));
+- runtime-v2: fix for exception stack trace logging
+([#1062](https://github.com/walmartlabs/concord/pull/1062)). 
 
 
 ## [2.20.0] - 2024-11-20
