@@ -142,7 +142,9 @@ public class Worker implements Runnable {
     }
 
     private void fetchRepo(JobRequest r) throws Exception {
-        if (r.getRepoUrl() == null || r.getCommitId() == null) {
+        if (r.getRepoUrl() == null
+                || (r.getCommitId() == null && r.getRepoBranch() == null)
+                || r.getRepoUrl().startsWith("classpath://")) {
             return;
         }
 
