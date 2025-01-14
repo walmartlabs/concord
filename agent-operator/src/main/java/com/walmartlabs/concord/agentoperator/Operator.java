@@ -28,11 +28,8 @@ import com.walmartlabs.concord.agentoperator.scheduler.AutoScalerFactory;
 import com.walmartlabs.concord.agentoperator.scheduler.Event;
 import com.walmartlabs.concord.agentoperator.scheduler.Scheduler;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
-import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
-import io.fabric8.kubernetes.client.dsl.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,54 +40,52 @@ public class Operator {
     public static void main(String[] args) {
         // TODO support overloading the CRD with an external file?
 
-        String namespace = System.getenv("WATCH_NAMESPACE");
+        var namespace = System.getenv("WATCH_NAMESPACE");
         if (namespace == null) {
             namespace = "default";
         }
 
-        KubernetesClient client = new DefaultKubernetesClient() // NOSONAR
+        var client = new DefaultKubernetesClient() // NOSONAR
                 .inNamespace(namespace);
 
-        String baseUrl = getEnv("CONCORD_BASE_URL", "http://192.168.99.1:8001"); // use minikube/vbox host's default address
-        String apiToken = getEnv("CONCORD_API_TOKEN", null);
-        boolean useMaintenanceMode = Boolean.parseBoolean(getEnv("USE_AGENT_MAINTENANCE_MODE", "false"));
+        var baseUrl = getEnv("CONCORD_BASE_URL", "http://192.168.99.1:8001"); // use minikube/vbox host's default address
+        var apiToken = getEnv("CONCORD_API_TOKEN", null);
+        var useMaintenanceMode = Boolean.parseBoolean(getEnv("USE_AGENT_MAINTENANCE_MODE", "false"));
 
         // TODO use secrets for the token?
-        Scheduler.Configuration cfg = new Scheduler.Configuration(baseUrl, apiToken);
-        AutoScalerFactory autoScalerFactory = new AutoScalerFactory(cfg, client);
-        AgentClientFactory agentClientFactory = new AgentClientFactory(useMaintenanceMode);
-        Scheduler scheduler = new Scheduler(autoScalerFactory, client, agentClientFactory);
+        var cfg = new Scheduler.Configuration(baseUrl, apiToken);
+        var autoScalerFactory = new AutoScalerFactory(cfg, client);
+        var agentClientFactory = new AgentClientFactory(useMaintenanceMode);
+        var scheduler = new Scheduler(autoScalerFactory, client, agentClientFactory);
         scheduler.start();
 
-        // TODO retries
         log.info("main -> my watch begins... (namespace={})", namespace);
 
-        NonNamespaceOperation<AgentPool, AgentPoolList, Resource<AgentPool>> dummyClient = client.resources(AgentPool.class, AgentPoolList.class);
-        dummyClient.watch(new Watcher<AgentPool>() {
-            @Override
-            public void eventReceived(Action action, AgentPool resource) {
-                scheduler.onEvent(actionToEvent(action), resource);
-            }
+        var dummyClient = client.resources(AgentPool.class, AgentPoolList.class);
+        try {
+            dummyClient.watch(new Watcher<>() {
+                @Override
+                public void eventReceived(Action action, AgentPool resource) {
+                    scheduler.onEvent(actionToEvent(action), resource);
+                }
 
-            @Override
-            public void onClose(WatcherException we) {
-                log.error("Watcher exception  {}", we.getMessage(), we);
-            }
-        });
+                @Override
+                public void onClose(WatcherException we) {
+                    log.error("Watcher exception  {}", we.getMessage(), we);
+                }
+            });
+        } catch (Exception e) {
+            log.error("error while watching", e);
+            System.exit(2);
+        }
     }
 
     private static Event.Type actionToEvent(Watcher.Action action) {
-        switch (action) {
-            case ADDED:
-            case MODIFIED: {
-                return Event.Type.MODIFIED;
-            }
-            case DELETED: {
-                return Event.Type.DELETED;
-            }
-            default:
-                throw new IllegalArgumentException("Unknown action type: " + action);
-        }
+        return switch (action) {
+            case ADDED, MODIFIED -> Event.Type.MODIFIED;
+            case DELETED -> Event.Type.DELETED;
+            default -> throw new IllegalArgumentException("Unknown action type: " + action);
+        };
     }
 
     private static String getEnv(String key, String defaultValue) {
