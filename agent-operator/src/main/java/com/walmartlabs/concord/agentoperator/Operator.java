@@ -75,7 +75,7 @@ public class Operator {
                 }
             });
         } catch (Exception e) {
-            log.error("error while watching", e);
+            log.error("Error while watching for CRs (namespace={})", namespace, e);
             System.exit(2);
         }
     }
