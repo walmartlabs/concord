@@ -147,6 +147,7 @@ public class JobRequest {
                 ", repoUrl='" + repoUrl + '\'' +
                 ", repoPath='" + repoPath + '\'' +
                 ", commitId='" + commitId + '\'' +
+                ", repoBranch='" + repoBranch + '\'' +
                 ", secretName='" + secretName + '\'' +
                 ", imports='" + imports + '\'' +
                 '}';
