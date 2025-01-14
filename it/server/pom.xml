@@ -34,7 +34,7 @@
         <oldap.image>osixia/openldap</oldap.image>
         <server.image>walmartlabs/concord-server</server.image>
         <skip.socat>true</skip.socat>
-        <socat.image>bobrik/socat</socat.image>
+        <socat.image>alpine/socat</socat.image>
         <tmp.dir.src.mount>${java.io.tmpdir}</tmp.dir.src.mount>
         <tmp.dir>${java.io.tmpdir}</tmp.dir>
     </properties>
@@ -250,6 +250,7 @@
                     <systemProperties>
                         <java.io.tmpdir>${tmp.dir}</java.io.tmpdir>
                         <isDocker>${is.docker.profile}</isDocker>
+                        <local.mvn.repo>${local.repository.src.mount}</local.mvn.repo>
                     </systemProperties>
                 </configuration>
             </plugin>
@@ -529,6 +530,9 @@
                                                 <volume>${base.dir}/src/test/resources/server.conf:/opt/concord/conf/server.conf:ro</volume>
                                                 <!-- provide the default process variables cfg -->
                                                 <volume>${base.dir}/src/test/resources/default_vars.yml:/opt/concord/conf/default_vars.yml:ro</volume>
+                                                <!-- share host artifacts -->
+                                                <volume>${local.repository.src.mount}:/host/.m2/repository:ro</volume>
+                                                <volume>${base.dir}/src/test/resources/mvn.json:/opt/concord/conf/mvn.json:ro</volume>
                                             </bind>
                                         </volumes>
                                         <env>
@@ -543,6 +547,7 @@
                                             <NODEROSTER_DB_PASSWORD>it</NODEROSTER_DB_PASSWORD>
                                             <NODEROSTER_DB_URL>jdbc:postgresql://${it.db.addr}/postgres</NODEROSTER_DB_URL>
                                             <NODEROSTER_DB_USERNAME>postgres</NODEROSTER_DB_USERNAME>
+                                            <CONCORD_MAVEN_CFG>/opt/concord/conf/mvn.json</CONCORD_MAVEN_CFG>
                                         </env>
                                         <wait>
                                             <!--suppress MavenModelInspection -->
