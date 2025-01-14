@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.Tables.POLICIES;
 import static com.walmartlabs.concord.server.jooq.Tables.POLICY_LINKS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class PolicyCache implements BackgroundTask {
 
@@ -176,7 +177,9 @@ public class PolicyCache implements BackgroundTask {
                     if (lastRefreshRequestAt > now) {
                         lastRefreshRequestAt = now;
                     } else {
-                        refreshMutex.wait(cacheCfg.getReloadInterval().toMillis());
+                        //noinspection ResultOfMethodCallIgnored
+                        refreshMutex.newCondition()
+                                .await(cacheCfg.getReloadInterval().toMillis(), MILLISECONDS);
                     }
                 } finally {
                     refreshMutex.unlock();
