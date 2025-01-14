@@ -2,6 +2,11 @@
 
 ## [2.21.0] - Unreleased
 
+### Added
+
+- concord-repository: support for `mvn://` scheme
+([#1063](https://github.com/walmartlabs/concord/pull/1063)).
+
 ### Changed
 
 - concord-server: fix header validation in
