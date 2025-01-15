@@ -1,5 +1,48 @@
 # Change Log
 
+## [2.21.0] - Unreleased
+
+### Added
+
+- concord-repository: support for `mvn://` scheme
+([#1063](https://github.com/walmartlabs/concord/pull/1063)).
+
+### Changed
+
+- concord-server: fix header validation in
+SessionTokenAuthenticationHandler
+([#1044](https://github.com/walmartlabs/concord/pull/1044));
+- concord-console2: add support for redirectTo to the login page
+([#1046](https://github.com/walmartlabs/concord/pull/1046));
+- runtime-v2: allow throw payload with exception
+([#1049](https://github.com/walmartlabs/concord/pull/1049));
+- runtime-v2: use SensitiveDataHolder for task parameter masking
+([#1050](https://github.com/walmartlabs/concord/pull/1050));
+- runtime-v2: add exceptions to ParallelExecutionException
+([#1051](https://github.com/walmartlabs/concord/pull/1051));
+- runtime-v2: mask workDir value in logs by default
+([#1052](https://github.com/walmartlabs/concord/pull/1052));
+- runtime-v2: save out variables for failed process
+([#1053](https://github.com/walmartlabs/concord/pull/1053));
+- concord-server: allow tokens without users, remove user
+from default agent token
+([#1054](https://github.com/walmartlabs/concord/pull/1054));
+- concord-targetplatform: update dependencies
+([#1057](https://github.com/walmartlabs/concord/pull/1057));
+- concord-server: replace synchronized with locks
+([#1060](https://github.com/walmartlabs/concord/pull/1060));
+- runtime-v2: fix for exception stack trace logging
+([#1062](https://github.com/walmartlabs/concord/pull/1062));
+- concord-agent-operator: fix ConfigMap creation, update
+example CRDs
+([#1065](https://github.com/walmartlabs/concord/pull/1065));
+- concord-server: fix PolicyCache reloading loop
+([#1066](https://github.com/walmartlabs/concord/pull/1066));
+- concord-agent-operator: simple exit on watcher error
+([#1067](https://github.com/walmartlabs/concord/pull/1067)).
+
+
+
 ## [2.20.0] - 2024-11-20
 
 ### Added
