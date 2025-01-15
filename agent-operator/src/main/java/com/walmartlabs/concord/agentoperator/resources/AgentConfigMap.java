@@ -41,7 +41,7 @@ public final class AgentConfigMap {
 
     public static void create(KubernetesClient client, AgentPoolInstance poolInstance, String configMapName) throws IOException {
         ConfigMap m = prepare(client, poolInstance, configMapName);
-        client.configMaps().create(m);
+        client.configMaps().resource(m).create();
     }
 
     public static boolean hasChanges(KubernetesClient client, AgentPoolInstance poolInstance, ConfigMap a) throws IOException {
@@ -60,7 +60,7 @@ public final class AgentConfigMap {
                 .replaceAll("%%configMapName%%", configMapName)
                 .replace("%%preStopHook%%", escape(Resources.get("/prestop-hook.sh")));
 
-        return client.configMaps().load(new ByteArrayInputStream(configMapYaml.getBytes())).get();
+        return client.configMaps().load(new ByteArrayInputStream(configMapYaml.getBytes())).item();
     }
 
     private static String escape(String str) throws JsonProcessingException {
