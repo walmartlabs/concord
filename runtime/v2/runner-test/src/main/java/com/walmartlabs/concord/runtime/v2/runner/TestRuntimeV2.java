@@ -48,10 +48,11 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.WrappedException;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.svm.*;
 import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.*;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -71,7 +72,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
@@ -150,7 +150,10 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
     }
 
     public void deploy(String resource) throws URISyntaxException, IOException {
-        Path src = Paths.get(testClass.getResource(resource).toURI());
+        var res = testClass.getResource(resource);
+        assertNotNull(res, "Resource not found: " + resource);
+
+        Path src = Paths.get(res.toURI());
         IOUtils.copy(src, workDir);
     }
 
@@ -196,7 +199,10 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
         }
 
         ImmutableRunnerConfiguration.Builder runnerCfg = RunnerConfiguration.builder()
-                .logging(LoggingConfiguration.builder().segmentedLogs(false).build());
+                .logging(LoggingConfiguration.builder()
+                        .segmentedLogs(false)
+                        .workDirMasking(false)
+                        .build());
 
         if (baseCfg != null) {
             runnerCfg.from(baseCfg);
@@ -231,6 +237,11 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
                     runtimeModule)
                     .create();
             injector.getInstance(Main.class).execute();
+        } catch (UserDefinedException | ParallelExecutionException e) { // see {@link com.walmartlabs.concord.runtime.v2.runner.Main#main}
+            throw e;
+        } catch (Throwable t) {
+            t.printStackTrace(out);
+            throw t;
         } finally {
             out.flush();
             System.setOut(oldOut);
@@ -261,6 +272,17 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
 
         if (grep(ab, pattern) < n) {
             fail("Expected at least " + n + " log line(s): " + pattern + ", got: \n" + new String(ab));
+        }
+    }
+
+    public static void assertLogExactMatch(byte[] ab, int n, String pattern) throws IOException {
+        if (ab == null) {
+            fail("Log is empty");
+        }
+
+        int count = grep(ab, pattern);
+        if (count != n) {
+            fail("Expected exactly " + n + " log line(s): " + pattern + ", but found: " + count + "\nLog content:\n" + new String(ab));
         }
     }
 
@@ -377,7 +399,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
                 taskCallListeners.addBinding().to(TaskResultListener.class);
 
                 Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
-                executionListeners.addBinding().toInstance(new ExecutionListener(){
+                executionListeners.addBinding().toInstance(new ExecutionListener() {
                     @Override
                     public void beforeProcessStart(Runtime runtime, State state) {
                         SensitiveDataHolder.getInstance().get().clear();
@@ -390,7 +412,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
                         @Override
                         public Result afterCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
                             if (cmd instanceof BlockCommand
-                                    || cmd instanceof ParallelCommand) {
+                                || cmd instanceof ParallelCommand) {
                                 return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
                             }
 

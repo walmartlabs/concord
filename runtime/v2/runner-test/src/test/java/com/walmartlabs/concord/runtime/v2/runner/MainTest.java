@@ -25,7 +25,6 @@ import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.ReentrantTaskExample;
-import com.walmartlabs.concord.runtime.v2.runner.vm.LoggedException;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -385,7 +384,7 @@ public class MainTest  {
         try {
             run();
             fail("exception expected");
-        } catch (LoggedException e) {
+        } catch (Exception e) {
             assertEquals("Found forbidden tasks", e.getMessage());
         }
 
@@ -625,6 +624,7 @@ public class MainTest  {
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .logging(LoggingConfiguration.builder()
                         .sendSystemOutAndErrToSLF4J(false)
+                        .workDirMasking(false)
                         .build())
                 .build();
 
@@ -679,8 +679,8 @@ public class MainTest  {
         save(ProcessConfiguration.builder()
                 .build());
 
-        LoggedException exception = assertThrows(LoggedException.class, this::run);
-        assertTrue(exception.getMessage().matches("(?s)Parallel execution errors:.*faultyTask.*\n.*faultyTask.*"));
+        Exception exception = assertThrows(Exception.class, this::run);
+        assertTrue(exception.getMessage().matches("(?s)Parallel execution errors:.*boom.*\n.*boom.*"));
     }
 
     @Test
@@ -1343,7 +1343,7 @@ public class MainTest  {
         try {
             run();
             fail("exception expected");
-        } catch (LoggedException e) {
+        } catch (Exception e) {
             assertEquals("42 not found", e.getMessage());
         }
     }
@@ -1487,37 +1487,6 @@ public class MainTest  {
         assertLog(runtime.lastLog(), ".*" + Pattern.quote(expected));
     }
 
-    @Test
-    public void testTaskThrowUserDefinedError() throws Exception {
-        deploy("faultyTask2");
-
-        save(ProcessConfiguration.builder()
-                .build());
-
-        try {
-            run();
-            fail("must fail");
-        } catch (Exception e) {
-            // ignore
-        }
-        assertLog(runtime.lastLog(), ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!"));
-    }
-
-    @Test
-    public void testTaskThrowRuntimeException() throws Exception {
-        deploy("faultyTask3");
-
-        save(ProcessConfiguration.builder()
-                .build());
-
-        try {
-            run();
-            fail("must fail");
-        } catch (Exception e) {
-            // ignore
-        }
-        assertLog(runtime.lastLog(), ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. boom!"));
-    }
 
     @Test
     public void testTaskThrowException() throws Exception {

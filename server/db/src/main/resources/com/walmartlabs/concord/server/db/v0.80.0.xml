@@ -7,16 +7,20 @@
     <property name="concordSystemWriterRoleId" value="c162d868-89ea-11e8-80be-97fd8a9f7419"/>
 
     <changeSet id="80000" author="ibodrov@gmail.com">
+        <validCheckSum>ANY</validCheckSum>
         <insert tableName="ROLES">
             <column name="ROLE_ID">${concordSystemWriterRoleId}</column>
             <column name="ROLE_NAME">concordSystemWriter</column>
             <column name="GLOBAL_WRITER">true</column>
         </insert>
 
+        <!-- starting from 2.21.x, the default agent token is no longer associated with any user -->
+        <!--
         <insert tableName="USER_ROLES">
             <column name="ROLE_ID">${concordSystemWriterRoleId}</column>
             <column name="USER_ID">${concordAgentUserId}</column>
         </insert>
+        -->
     </changeSet>
 
     <!-- removed in 1.9.0+

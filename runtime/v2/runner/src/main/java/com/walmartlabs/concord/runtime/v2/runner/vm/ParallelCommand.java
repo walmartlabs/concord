@@ -74,7 +74,7 @@ public class ParallelCommand extends StepCommand<ParallelBlock> implements Eleme
         }
 
         Collection<ThreadId> forkIds = forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet());
-        frame.push(new JoinCommand(forkIds, getStep()));
+        frame.push(new JoinCommand<>(forkIds, getStep()));
 
         Collections.reverse(forks);
         forks.forEach(f -> {

@@ -24,6 +24,7 @@ import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,7 @@ import java.util.*;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v2.Utils.resourceToString;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ProcessIT extends AbstractTest {
 
@@ -193,6 +195,42 @@ public class ProcessIT extends AbstractTest {
         assertEquals(123, data.get("x"));
         assertEquals(true, data.get("y.some.boolean"));
         assertFalse(data.containsKey("z"));
+    }
+
+    @Test
+    public void testOutVariablesForFailedProcess() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("outForFailed"))
+                .out("x", "y.some.boolean", "z");
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
+
+        // ---
+
+        Map<String, Object> data = proc.getOutVariables();
+        assertNotNull(data);
+
+        assertEquals(123, data.get("x"));
+        assertEquals(true, data.get("y.some.boolean"));
+        assertFalse(data.containsKey("z"));
+    }
+
+    @Test
+    public void testThrowWithPayload() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("throwWithPayload"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
+
+        // ---
+
+        Map<String, Object> data = proc.getOutVariables();
+        assertNotNull(data);
+
+        assertEquals("BOOM", ConfigurationUtils.get(data, "lastError", "message"));
+        assertEquals(Map.of("key", "value", "key2", "value2"), ConfigurationUtils.get(data, "lastError", "payload"));
     }
 
     @Test
@@ -709,6 +747,23 @@ public class ProcessIT extends AbstractTest {
         expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
 
         proc.assertLog(".*Error @ line: 6, col: 7. Dry-run mode is not supported for this 'script' step.*");
+    }
+
+    @Test
+    public void testThrowParallelWithPayload() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("parallelExceptionPayload"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+        Map<String, Object> data = proc.getOutVariables();
+        List<Map<String, Object>> exceptions = MapUtils.getList(data, "exceptions", List.of());
+
+        assertNotNull(exceptions);
+        assertEquals(List.of("BOOM1", "BOOM2"), exceptions.stream().map(e -> e.get("message")).toList());
+        assertEquals(List.of(Map.of("key", 1), Map.of("key", 2)), exceptions.stream().map(e -> e.get("payload")).toList());
     }
 
     private List<ProcessEventEntry> getProcessElementEvents(ConcordProcess proc) throws Exception {
