@@ -32,7 +32,9 @@ remove user from default agent token
 - concord-server: replace synchronized with locks
 ([#1060](https://github.com/walmartlabs/concord/pull/1060));
 - runtime-v2: fix for exception stack trace logging
-([#1062](https://github.com/walmartlabs/concord/pull/1062)). 
+([#1062](https://github.com/walmartlabs/concord/pull/1062));
+- concord-server: fix PolicyCache reloading loop
+([#1066](https://github.com/walmartlabs/concord/pull/1066)). 
 
 
 ## [2.20.0] - 2024-11-20
