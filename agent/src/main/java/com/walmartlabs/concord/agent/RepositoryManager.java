@@ -27,11 +27,12 @@ import com.walmartlabs.concord.client2.SecretClient;
 import com.walmartlabs.concord.imports.Import.SecretDefinition;
 import com.walmartlabs.concord.repository.*;
 import com.walmartlabs.concord.sdk.Secret;
+import com.walmartlabs.concord.dependencymanager.DependencyManager;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 public class RepositoryManager {
@@ -45,7 +46,8 @@ public class RepositoryManager {
     public RepositoryManager(SecretClient secretClient,
                              GitConfiguration gitCfg,
                              RepositoryCacheConfiguration cacheCfg,
-                             ObjectMapper objectMapper) throws IOException {
+                             ObjectMapper objectMapper,
+                             DependencyManager dependencyManager) throws IOException {
 
         this.secretClient = secretClient;
         this.gitCfg = gitCfg;
@@ -60,7 +62,7 @@ public class RepositoryManager {
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
                 .build();
 
-        List<RepositoryProvider> providers = Collections.singletonList(new GitCliRepositoryProvider(clientCfg));
+        List<RepositoryProvider> providers = Arrays.asList(new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(clientCfg));
         this.providers = new RepositoryProviders(providers);
 
         this.repositoryCache = new RepositoryCache(cacheCfg.getCacheDir(),
