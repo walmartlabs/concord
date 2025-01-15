@@ -24,8 +24,8 @@ SessionTokenAuthenticationHandler
 ([#1052](https://github.com/walmartlabs/concord/pull/1052));
 - runtime-v2: save out variables for failed process
 ([#1053](https://github.com/walmartlabs/concord/pull/1053));
-- concord-server: allow tokens without users,
-remove user from default agent token
+- concord-server: allow tokens without users, remove user
+from default agent token
 ([#1054](https://github.com/walmartlabs/concord/pull/1054));
 - concord-targetplatform: update dependencies
 ([#1057](https://github.com/walmartlabs/concord/pull/1057));
