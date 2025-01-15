@@ -13,7 +13,7 @@
 SessionTokenAuthenticationHandler
 ([#1044](https://github.com/walmartlabs/concord/pull/1044));
 - concord-console2: add support for redirectTo to the login page
-([#1046])(https://github.com/walmartlabs/concord/pull/1046));
+([#1046](https://github.com/walmartlabs/concord/pull/1046));
 - runtime-v2: allow throw payload with exception
 ([#1049](https://github.com/walmartlabs/concord/pull/1049));
 - runtime-v2: use SensitiveDataHolder for task parameter masking
@@ -33,6 +33,9 @@ remove user from default agent token
 ([#1060](https://github.com/walmartlabs/concord/pull/1060));
 - runtime-v2: fix for exception stack trace logging
 ([#1062](https://github.com/walmartlabs/concord/pull/1062));
+- concord-agent-operator: fix ConfigMap creation, update
+example CRDs
+([#1065](https://github.com/walmartlabs/concord/pull/1065));
 - concord-server: fix PolicyCache reloading loop
 ([#1066](https://github.com/walmartlabs/concord/pull/1066)). 
 
