@@ -37,7 +37,10 @@ remove user from default agent token
 example CRDs
 ([#1065](https://github.com/walmartlabs/concord/pull/1065));
 - concord-server: fix PolicyCache reloading loop
-([#1066](https://github.com/walmartlabs/concord/pull/1066)). 
+([#1066](https://github.com/walmartlabs/concord/pull/1066));
+- concord-agent-operator: simple exit on watcher error
+([#1067](https://github.com/walmartlabs/concord/pull/1067)).
+
 
 
 ## [2.20.0] - 2024-11-20
