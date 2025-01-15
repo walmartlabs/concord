@@ -45,6 +45,7 @@ spec:
               queueSelector:
                 additionalProperties:
                   type: object
+                  x-kubernetes-preserve-unknown-fields: true
                 type: object
               configMap:
                 properties:
