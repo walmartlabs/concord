@@ -43,4 +43,5 @@ ${JDK_SPECIFIC_OPTS} \
 -Dlogback.configurationFile=com/walmartlabs/concord/agent/logback.xml \
 -Dconcord.conf=${CONCORD_CFG_FILE} \
 -cp "${BASE_DIR}/lib/*" \
-com.walmartlabs.concord.agent.Main
+com.walmartlabs.concord.agent.Main \
+"$@"
