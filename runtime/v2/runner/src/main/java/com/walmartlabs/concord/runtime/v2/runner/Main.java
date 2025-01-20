@@ -28,6 +28,7 @@ import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.runtime.common.ProcessHeartbeat;
 import com.walmartlabs.concord.runtime.common.StateManager;
+import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
@@ -85,7 +86,7 @@ public class Main {
     }
 
     public static void main(String[] args) throws Exception {
-        RunnerConfiguration runnerCfg = readRunnerConfiguration(args);
+        RunnerConfiguration runnerCfg = loadRunnerConfiguration(args);
 
         // create the injector with all dependencies and services available before
         // the actual process' working directory is ready. It allows us to load
@@ -110,18 +111,41 @@ public class Main {
         }
     }
 
-    private static RunnerConfiguration readRunnerConfiguration(String[] args) throws IOException {
-        Path src;
+    private static RunnerConfiguration loadRunnerConfiguration(String[] args) throws IOException {
+        RunnerConfiguration result = RunnerConfiguration.builder().build();
+
+        // load file first, then overlay system env vars
+
         if (args.length > 0) {
-            src = Paths.get(args[0]);
-        } else {
-            throw new IllegalArgumentException("Path to the runner configuration file is required");
+            Path src = Paths.get(args[0]);
+            ObjectMapper om = ObjectMapperProvider.getInstance();
+            try (InputStream in = Files.newInputStream(src)) {
+                result = om.readValue(in, RunnerConfiguration.class);
+            }
         }
 
-        ObjectMapper om = ObjectMapperProvider.getInstance();
-        try (InputStream in = Files.newInputStream(src)) {
-            return om.readValue(in, RunnerConfiguration.class);
+        String agentId = System.getenv("RUNNER_AGENT_ID");
+        if (agentId != null) {
+            result = RunnerConfiguration.builder().from(result)
+                    .agentId(agentId)
+                    .build();
         }
+
+        String apiBaseUrl = System.getenv("RUNNER_API_BASE_URL");
+        if (apiBaseUrl != null) {
+            result = RunnerConfiguration.builder().from(result)
+                    .api(ApiConfiguration.builder().from(result.api())
+                            .baseUrl(apiBaseUrl)
+                            .build())
+                    .build();
+        }
+
+        if (result.agentId() == null || result.api() == null || result.api().baseUrl() == null) {
+            throw new IllegalArgumentException("Specify the path to the runner configuration file or " +
+                                               "provide RUNNER_AGENT_ID and RUNNER_API_BASE_URL environment variables.");
+        }
+
+        return result;
     }
 
     public void execute() throws Exception {
