@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.websocket;
+package com.walmartlabs.concord.server.agent.websocket;
 
 /*-
  * *****
@@ -20,10 +20,10 @@ package com.walmartlabs.concord.server.websocket;
  * =====
  */
 
+import com.walmartlabs.concord.server.message.MessageChannelManager;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import org.eclipse.jetty.ee8.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.ee8.websocket.server.JettyWebSocketServletFactory;
-
 
 import javax.inject.Inject;
 import javax.servlet.annotation.WebServlet;
@@ -33,11 +33,11 @@ public class ConcordWebSocketServlet extends JettyWebSocketServlet {
 
     private static final long serialVersionUID = 1L;
 
-    private final WebSocketChannelManager channelManager;
+    private final MessageChannelManager channelManager;
     private final ApiKeyDao apiKeyDao;
 
     @Inject
-    public ConcordWebSocketServlet(WebSocketChannelManager channelManager, ApiKeyDao apiKeyDao) {
+    public ConcordWebSocketServlet(MessageChannelManager channelManager, ApiKeyDao apiKeyDao) {
         this.channelManager = channelManager;
         this.apiKeyDao = apiKeyDao;
     }

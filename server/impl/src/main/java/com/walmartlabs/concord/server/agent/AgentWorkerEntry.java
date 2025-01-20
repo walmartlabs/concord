@@ -27,7 +27,6 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.util.Map;
-import java.util.UUID;
 
 @Value.Immutable
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -35,7 +34,7 @@ import java.util.UUID;
 @JsonDeserialize(as = ImmutableAgentWorkerEntry.class)
 public interface AgentWorkerEntry {
 
-    UUID channelId();
+    String channelId();
 
     @Nullable // backward-compatibility with old agent versions
     String agentId();
