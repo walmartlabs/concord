@@ -20,11 +20,12 @@ package com.walmartlabs.concord.server.agent;
  * =====
  */
 
+import com.walmartlabs.concord.server.agent.message.MessageChannel;
+import com.walmartlabs.concord.server.agent.message.MessageChannelManager;
+import com.walmartlabs.concord.server.agent.websocket.WebSocketChannel;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
-import com.walmartlabs.concord.server.websocket.WebSocketChannel;
-import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
@@ -38,23 +39,24 @@ import java.util.stream.Collectors;
 public class AgentManager {
 
     private final AgentCommandsDao commandQueue;
-    private final WebSocketChannelManager channelManager;
+    private final MessageChannelManager channelManager;
 
     @Inject
     public AgentManager(AgentCommandsDao commandQueue,
-                        WebSocketChannelManager channelManager) {
+                        MessageChannelManager channelManager) {
 
         this.commandQueue = commandQueue;
         this.channelManager = channelManager;
     }
 
     public Collection<AgentWorkerEntry> getAvailableAgents() {
-        Map<WebSocketChannel, ProcessRequest> reqs = channelManager.getRequests(MessageType.PROCESS_REQUEST);
+        Map<MessageChannel, ProcessRequest> reqs = channelManager.getRequests(MessageType.PROCESS_REQUEST);
         return reqs.entrySet().stream()
+                .filter(r -> r.getKey() instanceof WebSocketChannel) // TODO a better way
                 .map(r -> AgentWorkerEntry.builder()
                         .channelId(r.getKey().getChannelId())
                         .agentId(r.getKey().getAgentId())
-                        .userAgent(r.getKey().getUserAgent())
+                        .userAgent(((WebSocketChannel) r.getKey()).getUserAgent())
                         .capabilities(r.getValue().getCapabilities())
                         .build())
                 .collect(Collectors.toList());
