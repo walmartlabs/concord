@@ -373,7 +373,7 @@ public class DependencyManager {
         if (idx >= 0 && idx + 1 < p.length()) {
             return p.substring(idx + 1);
         }
-        throw new IllegalArgumentException("Invalid dependency URL. Can't get a file name: " + uri);
+        throw new IllegalArgumentException("Invalid dependency URL. Can't get a file name, uri=" + uri);
     }
 
     private static boolean shouldSkipCache(URI u) {
