@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.22.0] - Unreleased
+
+### Changed
+
+- concord-agent, runtime-v2: miscellaneous improvements
+([#1070](https://github.com/walmartlabs/concord/pull/1070)).
+
+
+
 ## [2.21.0] - 2025-01-15
 
 ### Added
