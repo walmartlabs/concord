@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: simplify UserInfo, UserInfoProcessor
+([#1061](https://github.com/walmartlabs/concord/pull/1061));
 - project: update to latest Jetty 12.x
 ([#1068](https://github.com/walmartlabs/concord/pull/1068));
 - concord-agent, runtime-v2: miscellaneous improvements
