@@ -11,7 +11,9 @@
 - concord-agent, runtime-v2: miscellaneous improvements
 ([#1070](https://github.com/walmartlabs/concord/pull/1070));
 - concord-agent-operator: use informers API
-([#1072](https://github.com/walmartlabs/concord/pull/1072)).
+([#1072](https://github.com/walmartlabs/concord/pull/1072));
+- concord-agent-operator: attempt to improve error logging
+([#1073](https://github.com/walmartlabs/concord/pull/1073)).
 
 
 
