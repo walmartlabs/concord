@@ -73,7 +73,7 @@ public class TryToDeletePodChange implements Change {
         Map<String, String> labels = pod.getMetadata().getLabels();
 
         if ("true".equals(labels.getOrDefault(AgentPod.PRE_STOP_HOOK_TERMINATION_LABEL, "false"))) {
-            log.warn("['{}'] -> has been marked for termination", podName);
+            log.debug("['{}'] -> has already been marked for termination", podName);
             return;
         }
 
