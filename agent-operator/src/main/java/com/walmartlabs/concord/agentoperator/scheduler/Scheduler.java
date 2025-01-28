@@ -46,10 +46,10 @@ public class Scheduler {
     private final Map<String, AgentPoolInstance> pools;
     private final List<Event> events;
 
-    public Scheduler(AutoScalerFactory autoScalerFactory, KubernetesClient k8sClient, AgentClientFactory agentClientFactory) {
+    public Scheduler(AutoScalerFactory autoScalerFactory, KubernetesClient k8sClient, boolean useMaintenanceMode) {
         this.autoScalerFactory = autoScalerFactory;
         this.k8sClient = k8sClient;
-        this.planner = new Planner(k8sClient, agentClientFactory);
+        this.planner = new Planner(k8sClient, new AgentClientFactory(useMaintenanceMode));
         this.pools = new HashMap<>();
         this.events = new LinkedList<>();
     }
@@ -68,7 +68,7 @@ public class Scheduler {
     /**
      * Process the recent events and update the cluster state.
      */
-    private void doRun() throws Exception {
+    private void doRun() {
         // drain the event queue
         List<Event> evs;
         synchronized (events) {
