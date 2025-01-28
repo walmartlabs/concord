@@ -214,23 +214,4 @@ public class Scheduler {
             }
         }
     }
-
-    public static class Configuration {
-
-        private final String concordBaseUrl;
-        private final String concordApiToken;
-
-        public Configuration(String concordBaseUrl, String concordApiToken) {
-            this.concordBaseUrl = concordBaseUrl;
-            this.concordApiToken = concordApiToken;
-        }
-
-        public String getConcordApiToken() {
-            return concordApiToken;
-        }
-
-        public String getConcordBaseUrl() {
-            return concordBaseUrl;
-        }
-    }
 }
