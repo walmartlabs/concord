@@ -28,9 +28,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-public final class PodUtils {
+public final class PodLabels {
 
-    private static final Logger log = LoggerFactory.getLogger(PodUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(PodLabels.class);
 
     public static void applyTag(KubernetesClient client, String podName, String tagName, String tagValue) {
         Pod pod = client.pods().withName(podName).get();
@@ -51,10 +51,12 @@ public final class PodUtils {
         } catch (KubernetesClientException e) {
             if (e.getCode() == 404) {
                 log.warn("['{}']: apply tag ['{}': '{}'] -> pod doesn't exist, nothing to do", podName, tagName, tagValue);
+            } else {
+                log.warn("['{}']: apply tag ['{}': '{}'] -> error", podName, tagName, tagValue, e);
             }
         }
     }
 
-    private PodUtils() {
+    private PodLabels() {
     }
 }

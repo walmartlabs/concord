@@ -20,9 +20,9 @@ package com.walmartlabs.concord.agentoperator.planner;
  * =====
  */
 
+import com.walmartlabs.concord.agentoperator.HashUtils;
 import com.walmartlabs.concord.agentoperator.agent.AgentClient;
 import com.walmartlabs.concord.agentoperator.agent.AgentClientFactory;
-import com.walmartlabs.concord.agentoperator.HashUtils;
 import com.walmartlabs.concord.agentoperator.resources.AgentConfigMap;
 import com.walmartlabs.concord.agentoperator.resources.AgentPod;
 import com.walmartlabs.concord.agentoperator.scheduler.AgentPoolInstance;
@@ -56,11 +56,7 @@ public class Planner {
         List<Change> changes = new ArrayList<>();
 
         // process pods marked for removal first
-        client.pods()
-                .withLabel(AgentPod.TAGGED_FOR_REMOVAL_LABEL)
-                .withLabel(AgentPod.POOL_NAME_LABEL, resourceName)
-                .list()
-                .getItems()
+        AgentPod.listMarkedForRemoval(client, resourceName)
                 .forEach(n -> changes.add(new TryToDeletePodChange(n.getMetadata().getName(), agentClientFactory.create(n))));
 
         List<Pod> pods = AgentPod.list(client, resourceName);
