@@ -44,20 +44,16 @@ public class Operator {
     private static final long RESYNC_PERIOD = Duration.ofSeconds(10).toMillis();
 
     public static void main(String[] args) {
-        // TODO support overloading the CRD with an external file?
-
         var namespace = getEnv("WATCH_NAMESPACE", "default");
-        var baseUrl = getEnv("CONCORD_BASE_URL", "http://192.168.99.1:8001"); // use minikube/vbox host's default address
-        var apiToken = getEnv("CONCORD_API_TOKEN", null);
+        var concordBaseUrl = getEnv("CONCORD_BASE_URL", "http://192.168.99.1:8001"); // use minikube/vbox host's default address
+        var concordApiToken = getEnv("CONCORD_API_TOKEN", null);
         var useMaintenanceMode = Boolean.parseBoolean(getEnv("USE_AGENT_MAINTENANCE_MODE", "false"));
 
-        // TODO use secrets for the token?
-        var client = new DefaultKubernetesClient().inNamespace(namespace);
-        var autoScalerFactory = new AutoScalerFactory(baseUrl, apiToken, client);
-        var agentClientFactory = new AgentClientFactory(useMaintenanceMode);
-        var executor = Executors.newCachedThreadPool();
+        var k8sClient = new DefaultKubernetesClient().inNamespace(namespace);
+        var executor = Executors.newSingleThreadExecutor();
 
-        var scheduler = new Scheduler(autoScalerFactory, client, agentClientFactory);
+        var autoScalerFactory = new AutoScalerFactory(concordBaseUrl, concordApiToken, k8sClient);
+        var scheduler = new Scheduler(autoScalerFactory, k8sClient, useMaintenanceMode);
         var handler = new ResourceEventHandler<AgentPool>() {
             @Override
             public void onAdd(AgentPool resource) {
@@ -78,7 +74,7 @@ public class Operator {
             }
         };
 
-        var informer = client.resources(AgentPool.class, AgentPoolList.class)
+        var informer = k8sClient.resources(AgentPool.class, AgentPoolList.class)
                 .inAnyNamespace()
                 .inform(handler, RESYNC_PERIOD);
 
