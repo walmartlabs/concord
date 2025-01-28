@@ -55,6 +55,7 @@ public class Scheduler {
     }
 
     public void onEvent(Event.Type type, AgentPool resource) {
+        log.info("onEvent -> handling {} for {}/{}", type, resource.getMetadata().getNamespace(), resource.getMetadata().getName());
         synchronized (events) {
             events.add(new Event(type, resource));
         }
@@ -161,13 +162,13 @@ public class Scheduler {
     }
 
     private void processActive(AgentPoolInstance i) throws IOException {
-        log.info("processActive ['{}']", i);
+        log.info("processActive ['{}']", i.getName());
         List<Change> changes = planner.plan(i);
         apply(changes);
     }
 
     private void processDeleted(AgentPoolInstance i) throws IOException {
-        log.info("processDeleted ['{}']", i);
+        log.info("processDeleted ['{}']", i.getName());
         String resourceName = i.getName();
 
         // remove all pool's pods
