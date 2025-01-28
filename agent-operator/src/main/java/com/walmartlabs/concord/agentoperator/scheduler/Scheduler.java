@@ -122,7 +122,7 @@ public class Scheduler {
                         throw new IllegalArgumentException("Unknown pool status: " + i.getStatus());
                 }
             } catch (IOException e) {
-                log.error("doRun -> error while processing a registered pool {}: {}", i.getName(), e.getMessage());
+                log.error("doRun -> error while processing a registered pool {} ({}): {}", i.getName(), i.getStatus(), e.getMessage());
             }
         });
     }
@@ -176,7 +176,7 @@ public class Scheduler {
         apply(changes);
 
         // if no pods left - remove the pool
-        List<Pod> pods = AgentPod.listPods(k8sClient, resourceName);
+        List<Pod> pods = AgentPod.list(k8sClient, resourceName);
         if (pods.isEmpty()) {
             synchronized (pools) {
                 pools.remove(resourceName);
