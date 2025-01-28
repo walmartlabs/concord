@@ -9,7 +9,9 @@
 - project: update to latest Jetty 12.x
 ([#1068](https://github.com/walmartlabs/concord/pull/1068));
 - concord-agent, runtime-v2: miscellaneous improvements
-([#1070](https://github.com/walmartlabs/concord/pull/1070)).
+([#1070](https://github.com/walmartlabs/concord/pull/1070));
+- concord-agent-operator: use informers API
+([#1072](https://github.com/walmartlabs/concord/pull/1072)).
 
 
 
