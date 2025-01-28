@@ -37,8 +37,8 @@ public class Scheduler {
 
     private static final Logger log = LoggerFactory.getLogger(Scheduler.class);
 
-    private static final long POLL_DELAY = 5000;
-    private static final long ERROR_DELAY = 10000;
+    private static final long POLL_DELAY = 10000;
+    private static final long ERROR_DELAY = 30000;
 
     private final AutoScalerFactory autoScalerFactory;
     private final KubernetesClient k8sClient;
