@@ -52,9 +52,8 @@ public class Operator {
         var useMaintenanceMode = Boolean.parseBoolean(getEnv("USE_AGENT_MAINTENANCE_MODE", "false"));
 
         // TODO use secrets for the token?
-        var cfg = new Scheduler.Configuration(baseUrl, apiToken);
         var client = new DefaultKubernetesClient().inNamespace(namespace);
-        var autoScalerFactory = new AutoScalerFactory(cfg, client);
+        var autoScalerFactory = new AutoScalerFactory(baseUrl, apiToken, client);
         var agentClientFactory = new AgentClientFactory(useMaintenanceMode);
         var executor = Executors.newCachedThreadPool();
 
