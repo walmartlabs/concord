@@ -4,17 +4,9 @@
         <mirror>
             <id>walmart-gec</id>
             <mirrorOf>external:*</mirrorOf>
-	        <url>${env.MAVEN_MIRROR}</url>
+            <url>${env.MAVEN_MIRROR}</url>
         </mirror>
     </mirrors>
-
-    <servers>
-        <server>
-            <id>walmart-gec</id>
-            <username>${env.DEPLOYMENT_USERNAME}</username>
-            <password>${env.DEPLOYMENT_PASSWORD}</password>
-        </server>
-    </servers>
 
     <profiles>
         <profile>
