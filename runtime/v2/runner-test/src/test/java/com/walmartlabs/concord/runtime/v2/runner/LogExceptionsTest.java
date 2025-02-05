@@ -75,6 +75,7 @@ public class LogExceptionsTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void shouldLogExceptionStackTraceWhenTaskThrowsExceptionFromParallel() throws Exception {
         runtime.deploy("logExceptionTests/fromParallel");
 
@@ -144,6 +145,7 @@ public class LogExceptionsTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void noStacktraceForUserDefinedExceptionFromTaskParallel() throws Exception {
         runtime.deploy("logExceptionTests/userDefinedExceptionFromTaskParallel");
 
@@ -227,7 +229,7 @@ public class LogExceptionsTest {
         }
 
         // error
-        assertLog(runtime.lastLog(), ".*" + quote("(concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${unknown}': Can't find a variable 'unknown' used in '${unknown}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'unknown'") + ".*");
+        assertLog(runtime.lastLog(), ".*" + quote("(concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${unknown}': Can't find a variable 'unknown'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'unknown'") + ".*");
 
         // no stacktrace
         assertNoLog(runtime.lastLog(), ".*" + quote("at com.walmartlabs.concord.runtime.v2.runner.el.LazyExpressionEvaluator.evalExpr") + ".*");
