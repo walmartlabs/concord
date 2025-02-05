@@ -30,6 +30,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.svm.ThreadId;
 import org.immutables.value.Value;
 
+import javax.el.MethodNotFoundException;
 import javax.inject.Inject;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -49,7 +50,7 @@ public class TaskCallInterceptor {
         this.listeners = listeners;
     }
 
-    public <T> T invoke(CallContext ctx, Method method, Callable<T> callable) throws Exception {
+    public <T> T invoke(CallContext ctx, Method method, Callable<T> callable) throws TaskException {
         // record the PRE event
         TaskCallEvent preEvent = eventBuilder(Phase.PRE, method, ctx).build();
         listeners.forEach(l -> l.onEvent(preEvent));
@@ -124,7 +125,7 @@ public class TaskCallInterceptor {
             return Collections.emptyList();
         }
 
-        static Method of(Class<? extends Task> taskClass, String methodName, List<Object> params) {
+        static Method of(Class<? extends Task> taskClass, String methodName, List<Object> params) throws javax.el.MethodNotFoundException {
             List<List<Annotation>> annotations = Collections.emptyList();
             var m = ReflectionUtil.findMethod(taskClass, methodName, null, params.toArray());
             if (m != null && !m.isVarArgs()) {
