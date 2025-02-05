@@ -161,7 +161,7 @@ public class ProcessCardManager {
                     .fetchOptional(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID);
         }
 
-        public UUID insert(UUID cardId, UUID projectId, UUID repoId, String name, String entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data, UUID objectId) {
+        public UUID insert(UUID cardId, UUID projectId, UUID repoId, String name, String entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data, UUID orderId) {
             return txResult(tx -> {
                 String sql = tx.insertInto(UI_PROCESS_CARDS)
                         .columns(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID,
@@ -191,6 +191,7 @@ public class ProcessCardManager {
                         ps.setBinaryStream(8, form);
                         ps.setObject(9, data != null ? objectMapper.toJSONB(data).data() : null);
                         ps.setObject(10, UserPrincipal.assertCurrent().getId());
+                        ps.setObject(11, orderId);
 
                         try (ResultSet rs = ps.executeQuery()) {
                             if (!rs.next()) {
