@@ -105,4 +105,9 @@ public class ProcessCardRequest {
     public InputStream getForm() {
         return MultipartUtils.getStream(input, "form");
     }
+
+    @Schema(name = Constants.Multipart.ORDER_ID)
+    public UUID getOrderId() {
+        return MultipartUtils.getUuid(input, Constants.Multipart.ORDER_ID);
+    }
 }
