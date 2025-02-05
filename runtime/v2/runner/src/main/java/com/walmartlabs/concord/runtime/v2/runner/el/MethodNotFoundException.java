@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 
 import javax.el.ELException;
@@ -30,7 +31,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MethodNotFoundException extends ELException {
+public class MethodNotFoundException extends UserDefinedException {
 
     private static final long serialVersionUID = 1L;
 

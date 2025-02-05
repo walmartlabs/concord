@@ -256,7 +256,7 @@ public class LogSegmentsTest {
 
         // invalid task out definition -> log into task segment
         assertSegmentLog(runtime.lastLog(), 1, "[INFO ] test");
-        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
         assertSegmentStatusError(runtime.lastLog(), 1);
 
         assertNoMoreSegments();
@@ -276,7 +276,7 @@ public class LogSegmentsTest {
             // ignore
         }
 
-        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
 
         assertNoMoreSegments();
     }
@@ -389,7 +389,7 @@ public class LogSegmentsTest {
             // ignore
         }
 
-        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 4, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 4, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
         assertNoMoreSegments();
     }
 
@@ -431,7 +431,7 @@ public class LogSegmentsTest {
         }
 
         // logs to the system segment
-        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
         assertNoMoreSegments();
     }
 
@@ -451,7 +451,7 @@ public class LogSegmentsTest {
         }
 
         // error into system segment
-        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
     }
 
     @Test
@@ -499,7 +499,7 @@ public class LogSegmentsTest {
         }
 
         // error into system segment
-        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
     }
 
     @Test

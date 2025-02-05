@@ -27,6 +27,7 @@ import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.BeanELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.MapELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.*;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
+import com.walmartlabs.concord.runtime.v2.runner.vm.WrappedException;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.el.*;
@@ -139,8 +140,8 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         };
         sc.putContext(ExpressionFactory.class, expressionFactory);
 
-        ValueExpression x = expressionFactory.createValueExpression(sc, expr, type);
         try {
+            ValueExpression x = expressionFactory.createValueExpression(sc, expr, type);
             Object v = withEvalContext(ctx, () -> x.getValue(sc));
             return type.cast(v);
         } catch (PropertyNotFoundException e) {
@@ -152,20 +153,28 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
 
             String propName = propertyNameFromException(e);
             if (propName != null) {
-                errorMessage = String.format("Can't find a variable %s used in '%s'. " +
-                        "Check if it is defined in the current scope. Details: %s", propName, expr, e.getMessage());
+                errorMessage = String.format("Can't find a variable %s. " +
+                        "Check if it is defined in the current scope. Details: %s", propName, e.getMessage());
             } else {
-                errorMessage = String.format("Can't find the specified variable in '%s'. " +
-                        "Check if it is defined in the current scope. Details: %s", expr, e.getMessage());
+                errorMessage = String.format("Can't find the specified variable. " +
+                        "Check if it is defined in the current scope. Details: %s", e.getMessage());
             }
 
-            throw new UserDefinedException(errorMessage);
-        } catch (Exception e) {
-            UserDefinedException u = ExceptionUtils.filterException(e, UserDefinedException.class);
-            if (u != null) {
-                throw u;
+            throw new UserDefinedException(exceptionPrefix(expr) + errorMessage);
+        } catch (UserDefinedException e) {
+            throw new UserDefinedException(exceptionPrefix(expr) + e.getMessage());
+        } catch (javax.el.ELException e) {
+            if (e.getCause() instanceof com.sun.el.parser.ParseException pe) {
+                throw new WrappedException("while parsing expression '" + expr + "': ", pe);
             }
-            throw new RuntimeException("while evaluating expression '" + expr + "': " + e.getMessage());
+
+            var lastElException = ExceptionUtils.findLastException(e, javax.el.ELException.class);
+            if (lastElException.getCause() instanceof Exception ee) {
+                throw new WrappedException(exceptionPrefix(expr), ee);
+            }
+            throw lastElException;
+        } catch (Exception e) {
+            throw new WrappedException(exceptionPrefix(expr), e);
         }
     }
 
@@ -248,6 +257,10 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             result.put(key, value);
         }
         return result;
+    }
+
+    private static String exceptionPrefix(String expr) {
+        return "while evaluating expression '" + expr + "': ";
     }
 
     private static final String PROP_NOT_FOUND_EL_MESSAGE = "ELResolver cannot handle a null base Object with identifier ";
