@@ -94,7 +94,7 @@ public class ProcessCardManager {
         return dao.listCards(userId);
     }
 
-    public ProcessCardOperationResponse createOrUpdate(UUID id, UUID projectId, UUID repoId, String name, Optional<String> entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data) {
+    public ProcessCardOperationResponse createOrUpdate(UUID id, UUID projectId, UUID repoId, String name, Optional<String> entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data, UUID orderId) {
         boolean exists;
         if (id == null) {
             if (projectId == null) {
@@ -110,12 +110,12 @@ public class ProcessCardManager {
         }
 
         if (!exists) {
-            UUID resultId = dao.insert(id, projectId, repoId, name, entryPoint.orElse(Constants.Request.DEFAULT_ENTRY_POINT_NAME), description, icon, form, data);
+            UUID resultId = dao.insert(id, projectId, repoId, name, entryPoint.orElse(Constants.Request.DEFAULT_ENTRY_POINT_NAME), description, icon, form, data, orderId);
             return new ProcessCardOperationResponse(resultId, OperationResult.CREATED);
         } else {
             assertAccess(id);
 
-            dao.update(id, projectId, repoId, name, entryPoint.orElse(null), description, icon, form, data);
+            dao.update(id, projectId, repoId, name, entryPoint.orElse(null), description, icon, form, data, orderId);
             return new ProcessCardOperationResponse(id, OperationResult.UPDATED);
         }
     }
@@ -161,7 +161,7 @@ public class ProcessCardManager {
                     .fetchOptional(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID);
         }
 
-        public UUID insert(UUID cardId, UUID projectId, UUID repoId, String name, String entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data) {
+        public UUID insert(UUID cardId, UUID projectId, UUID repoId, String name, String entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data, UUID objectId) {
             return txResult(tx -> {
                 String sql = tx.insertInto(UI_PROCESS_CARDS)
                         .columns(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID,
@@ -173,8 +173,9 @@ public class ProcessCardManager {
                                 UI_PROCESS_CARDS.ICON,
                                 UI_PROCESS_CARDS.FORM,
                                 UI_PROCESS_CARDS.DATA,
-                                UI_PROCESS_CARDS.OWNER_ID)
-                        .values((UUID) null, null, null, null, null, null, null, null, null, null)
+                                UI_PROCESS_CARDS.OWNER_ID,
+                                UI_PROCESS_CARDS.ORDER_ID)
+                        .values((UUID) null, null, null, null, null, null, null, null, null, null, null)
                         .returning(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
                         .getSQL();
 
@@ -205,7 +206,7 @@ public class ProcessCardManager {
 
         public void update(UUID cardId, UUID projectId, UUID repoId, String name,
                            String entryPoint, String description, InputStream icon, InputStream form,
-                           Map<String, Object> data) {
+                           Map<String, Object> data, UUID orderId) {
             tx(tx -> {
                 List<Object> params = new ArrayList<>();
                 UpdateSetStep<UiProcessCardsRecord> q = tx.update(UI_PROCESS_CARDS);
@@ -252,6 +253,11 @@ public class ProcessCardManager {
 
                 if (params.isEmpty()) {
                     return;
+                }
+
+                if (orderId != null) {
+                    q.set(UI_PROCESS_CARDS.ORDER_ID, (UUID) null);
+                    params.add(orderId);
                 }
 
                 String sql = q.set(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID, cardId)
