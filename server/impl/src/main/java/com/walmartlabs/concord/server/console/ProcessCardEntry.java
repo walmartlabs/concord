@@ -70,6 +70,9 @@ public interface ProcessCardEntry extends Serializable {
 
     boolean isCustomForm();
 
+    @Nullable
+    UUID orderId();
+
     static ImmutableProcessCardEntry.Builder builder() {
         return ImmutableProcessCardEntry.builder();
     }

@@ -404,7 +404,7 @@ public class ProcessCardManager {
             });
         }
 
-        private static SelectOnConditionStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean>> buildSelect(DSLContext tx) {
+        private static SelectOnConditionStep<Record13<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean, UUID>> buildSelect(DSLContext tx) {
             Field<Boolean> isCustomForm = when(field(UI_PROCESS_CARDS.FORM).isNotNull(), true).otherwise(false);
 
             return tx.select(
@@ -419,14 +419,15 @@ public class ProcessCardManager {
                             UI_PROCESS_CARDS.ENTRY_POINT,
                             UI_PROCESS_CARDS.DESCRIPTION,
                             UI_PROCESS_CARDS.ICON,
-                            isCustomForm.as("isCustomForm"))
+                            isCustomForm.as("isCustomForm"),
+                            UI_PROCESS_CARDS.ORDER_ID)
                     .from(UI_PROCESS_CARDS)
                     .leftJoin(REPOSITORIES).on(REPOSITORIES.REPO_ID.eq(UI_PROCESS_CARDS.REPO_ID))
                     .leftJoin(PROJECTS).on(PROJECTS.PROJECT_ID.eq(UI_PROCESS_CARDS.PROJECT_ID))
                     .leftJoin(ORGANIZATIONS).on(ORGANIZATIONS.ORG_ID.eq(PROJECTS.ORG_ID));
         }
 
-        private ProcessCardEntry toEntry(Record12<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean> r) {
+        private ProcessCardEntry toEntry(Record13<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean, UUID> r) {
             return ProcessCardEntry.builder()
                     .id(r.get(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID))
                     .orgName(r.get(ORGANIZATIONS.ORG_NAME))
@@ -437,6 +438,7 @@ public class ProcessCardManager {
                     .description(r.get(UI_PROCESS_CARDS.DESCRIPTION))
                     .icon(encodeBase64(r.get(UI_PROCESS_CARDS.ICON)))
                     .isCustomForm(r.get("isCustomForm", Boolean.class))
+                    .orderId(r.get(UI_PROCESS_CARDS.ORDER_ID))
                     .build();
         }
 
