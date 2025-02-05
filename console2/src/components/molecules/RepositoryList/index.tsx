@@ -26,6 +26,7 @@ import { ConcordKey } from '../../../api/common';
 import { RepositoryEntry } from '../../../api/org/project/repository';
 import { GitHubLink } from '../../molecules';
 import { RepositoryActionDropdown } from '../../organisms';
+import { gitUrlParse } from "../GitHubLink";
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -44,7 +45,7 @@ const RepositoryList = ({ orgName, projectName, data, loading, refresh }: Extern
                         <Table.HeaderCell collapsing={true} />
                         <Table.HeaderCell collapsing={true}>Name</Table.HeaderCell>
                         <Table.HeaderCell>Repository URL</Table.HeaderCell>
-                        <Table.HeaderCell collapsing={true}>Branch/Commit ID</Table.HeaderCell>
+                        <Table.HeaderCell collapsing={true}>Branch/Commit ID/Version</Table.HeaderCell>
                         <Table.HeaderCell singleLine={true}>Path</Table.HeaderCell>
                         <Table.HeaderCell collapsing={true} style={{ width: '8%' }}>
                             Secret
@@ -72,9 +73,14 @@ const RepositoryList = ({ orgName, projectName, data, loading, refresh }: Extern
 };
 
 const renderRepoPath = (r: RepositoryEntry) => {
+    const urlLink = gitUrlParse(r.url);
+    if (!urlLink) {
+        return r.path;
+    }
     if (r.commitId) {
         return (
             <GitHubLink
+                link={urlLink}
                 url={r.url!}
                 commitId={r.commitId}
                 path={r.path || '/'}
@@ -82,14 +88,20 @@ const renderRepoPath = (r: RepositoryEntry) => {
             />
         );
     }
-    return <GitHubLink url={r.url!} branch={r.branch} path={r.path || '/'} text={r.path || '/'} />;
+    return <GitHubLink url={r.url!} link={urlLink} branch={r.branch} path={r.path || '/'} text={r.path || '/'} />;
 };
 
 const renderRepoCommitIdOrBranch = (r: RepositoryEntry) => {
-    if (r.commitId) {
-        return <GitHubLink url={r.url!} commitId={r.commitId} text={r.commitId} />;
+
+    const urlLink = gitUrlParse(r.url);
+    if (!urlLink) {
+        return r.branch;
     }
-    return <GitHubLink url={r.url!} branch={r.branch} text={r.branch} />;
+
+    if (r.commitId) {
+        return <GitHubLink url={r.url!} link={urlLink} commitId={r.commitId} text={r.commitId}/>;
+    }
+    return <GitHubLink url={r.url!} link={urlLink} branch={r.branch} text={r.branch}/>;
 };
 
 const renderTableRow = (

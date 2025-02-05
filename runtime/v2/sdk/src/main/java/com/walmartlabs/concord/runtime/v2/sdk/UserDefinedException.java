@@ -43,17 +43,31 @@ public class UserDefinedException extends RuntimeException {
         this.payload = payload;
     }
 
+    public Map<String, Object> getPayload() {
+        return payload;
+    }
+
     @Override
-    public void printStackTrace(PrintStream s) {
-        s.println(getMessage());
+    public String toString() {
+        var m = getLocalizedMessage();
+        if (payload != null && !payload.isEmpty()) {
+            m = m + ": " + payload;
+        }
+        return m;
+    }
+
+    @Override
+    public StackTraceElement[] getStackTrace() {
+        return new StackTraceElement[0];
     }
 
     @Override
     public void printStackTrace(PrintWriter s) {
-        s.println(getMessage());
+        // do nothing
     }
 
-    public Map<String, Object> getPayload() {
-        return payload;
+    @Override
+    public void printStackTrace(PrintStream s) {
+        // do nothing
     }
 }

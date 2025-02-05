@@ -57,7 +57,7 @@ public class TaskV2Provider implements TaskProvider {
 
         boolean dryRun = ctx.processConfiguration().dryRun();
         if (dryRun && !(isStepDryRunReady(ctx) || klass.getAnnotation(DryRunReady.class) != null)) {
-            throw new IllegalStateException("Dry-run mode is not supported for '" + key + "' task (yet)");
+            throw new UserDefinedException("Dry-run mode is not supported for '" + key + "' task (yet)");
         }
 
         Map<String, Object> defaultVariables = defaultTaskVariables.get(key);

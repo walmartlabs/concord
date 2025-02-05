@@ -1,0 +1,12 @@
+configuration:
+  runtime: concord-v2
+
+flows:
+  default:
+    - task: http
+      in:
+        method: GET
+        url: ${baseUrl.replace('://', '://' += ${processInfo.sessionToken})}/api/v1/process/${txId}
+      out: result
+
+    - log: "${result}"

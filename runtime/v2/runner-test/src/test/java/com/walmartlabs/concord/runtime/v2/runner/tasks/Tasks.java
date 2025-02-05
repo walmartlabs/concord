@@ -202,6 +202,20 @@ public final class Tasks {
         }
     }
 
+    @Named("userDefinedExceptionTask")
+    @SuppressWarnings("unused")
+    public static class UserDefinedExceptionTask implements Task {
+
+        @Override
+        public TaskResult execute(Variables input) {
+            throw new UserDefinedException("boom!");
+        }
+
+        public void exception(String msg) {
+            throw new UserDefinedException(msg);
+        }
+    }
+
     @Named("faultyOnceTask")
     @SuppressWarnings("unused")
     static class FaultyOnceTask implements Task {
@@ -245,7 +259,7 @@ public final class Tasks {
         public TaskResult execute(Variables input) {
             if (input.getBoolean("fail", false)) {
                 log.info("ConditionallyFailTask: fail");
-                throw new RuntimeException("boom!");
+                return TaskResult.fail("boom!");
             }
 
             log.info("ConditionallyFailTask: ok");

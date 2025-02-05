@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
@@ -42,6 +43,9 @@ import java.util.Map;
  * Normally, the server picks up the file and saves the data into the process' metadata.
  */
 public class OutVariablesProcessor implements ExecutionListener {
+
+    private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {
+    };
 
     private final ObjectMapper objectMapper;
     private final PersistenceService persistenceService;
@@ -84,7 +88,13 @@ public class OutVariablesProcessor implements ExecutionListener {
             return;
         }
 
+        Map<String, Object> currentOut = persistenceService.loadPersistedFile(Constants.Files.OUT_VALUES_FILE_NAME,
+                in -> objectMapper.readValue(in, MAP_TYPE));
+
+        Map<String, Object> result = new HashMap<>(currentOut != null ? currentOut : Collections.emptyMap());
+        result.putAll(outValues);
+
         persistenceService.persistFile(Constants.Files.OUT_VALUES_FILE_NAME,
-                out -> objectMapper.writeValue(out, outValues));
+                out -> objectMapper.writeValue(out, result));
     }
 }
