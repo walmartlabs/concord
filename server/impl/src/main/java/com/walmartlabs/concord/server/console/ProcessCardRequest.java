@@ -77,8 +77,8 @@ public class ProcessCardRequest {
     }
 
     @Schema(name = Constants.Multipart.ORDER_ID)
-    public UUID getOrderId() {
-        return MultipartUtils.getUuid(input, Constants.Multipart.ORDER_ID);
+    public Integer getOrderId() {
+        return MultipartUtils.getInt(input, Constants.Multipart.ORDER_ID);
     }
     @Schema(name = "name")
     public String getName() {

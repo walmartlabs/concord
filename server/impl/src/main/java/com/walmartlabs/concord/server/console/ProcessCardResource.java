@@ -145,7 +145,7 @@ public class ProcessCardResource implements Resource {
         String description = r.getDescription();
         Map<String, Object> data = r.getData();
         UUID id = r.getId();
-        UUID orderId = r.getOrderId();
+        Integer orderId = r.getOrderId();
 
         try (InputStream icon = r.getIcon();
              InputStream form = r.getForm()) {

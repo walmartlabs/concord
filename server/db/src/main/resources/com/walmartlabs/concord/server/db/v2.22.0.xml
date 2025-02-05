@@ -6,7 +6,7 @@
 
     <changeSet id="2220000" author="oalfonso@gmail.com">
         <addColumn tableName="UI_PROCESS_CARDS">
-            <column name="ORDER_ID" type="uuid">
+            <column name="ORDER_ID" type="int">
             </column>
         </addColumn>
     </changeSet>
