@@ -365,7 +365,7 @@ public class ProcessCardManager {
                     .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.in(userCardsFilter));
 
             return query
-                    .orderBy(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
+                    .orderBy(UI_PROCESS_CARDS.ORDER_ID, UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
                     .fetch(this::toEntry);
         }
 
