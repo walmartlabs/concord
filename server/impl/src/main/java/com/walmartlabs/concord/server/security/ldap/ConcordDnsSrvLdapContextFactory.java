@@ -40,6 +40,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ConcordDnsSrvLdapContextFactory implements LdapContextFactory {
 
@@ -51,9 +53,10 @@ public class ConcordDnsSrvLdapContextFactory implements LdapContextFactory {
     private static final String PORT = "3269";
     private static final int MAX_RETRY = 100;
 
-    private Iterator<String> ldapUrlIterator;
-
     private final LdapConfiguration cfg;
+    private final Lock mutex = new ReentrantLock();
+
+    private Iterator<String> ldapUrlIterator;
 
     /*
     1. check dnsSRV and refresh SRV list
@@ -70,12 +73,22 @@ public class ConcordDnsSrvLdapContextFactory implements LdapContextFactory {
         return ((JndiLdapContextFactory) this.delegate).getUrl();
     }
 
-    public synchronized void setLdapContextFactory(LdapContextFactory ldapContextFactory) {
-        this.delegate = ldapContextFactory;
+    public void setLdapContextFactory(LdapContextFactory ldapContextFactory) {
+        mutex.lock();
+        try {
+            this.delegate = ldapContextFactory;
+        } finally {
+            mutex.unlock();
+        }
     }
 
-    public synchronized void setLdapUrlIterator(Iterator<String> ldapUrlIterator) {
-        this.ldapUrlIterator = ldapUrlIterator;
+    public void setLdapUrlIterator(Iterator<String> ldapUrlIterator) {
+        mutex.lock();
+        try {
+            this.ldapUrlIterator = ldapUrlIterator;
+        } finally {
+            mutex.unlock();
+        }
     }
 
     @Override
@@ -180,7 +193,7 @@ public class ConcordDnsSrvLdapContextFactory implements LdapContextFactory {
 
     private String resolveUrl() {
         if (cfg.getDnsSRVName() != null) {
-            String ldapUrl = getNextLdapUrl(this.ldapUrlIterator);
+            String ldapUrl = getNextLdapUrl();
             if (ldapUrl != null) {
                 return ldapUrl;
             }
@@ -191,11 +204,16 @@ public class ConcordDnsSrvLdapContextFactory implements LdapContextFactory {
         return null;
     }
 
-    private static String getNextLdapUrl(Iterator<String> ldapUrlIterator) {
-        if (ldapUrlIterator != null && ldapUrlIterator.hasNext()) {
-            return ldapUrlIterator.next();
+    private String getNextLdapUrl() {
+        mutex.lock();
+        try {
+            if (ldapUrlIterator != null && ldapUrlIterator.hasNext()) {
+                return ldapUrlIterator.next();
+            }
+            return null;
+        } finally {
+            mutex.unlock();
         }
-        return null;
     }
 
     private void handleCommunicationException(Exception e) throws NamingException {
@@ -207,6 +225,7 @@ public class ConcordDnsSrvLdapContextFactory implements LdapContextFactory {
         if (this.ldapUrlIterator != null && !this.ldapUrlIterator.hasNext()) {
             this.refreshSRVList();
         }
-        this.setLdapContextFactory(getNewContextInstance(getNextLdapUrl(this.ldapUrlIterator)));
+
+        this.setLdapContextFactory(getNewContextInstance(getNextLdapUrl()));
     }
 }

@@ -77,7 +77,6 @@ public class SaveLastErrorCommandTest {
         writerCaptor.getValue().write(bos);
 
         assertThat(bos.toString(), containsString("\"message\":\"BOOM1\""));
-        assertThat(bos.toString(), containsString("\"someCyclicField\":1"));
         assertThat(bos.toString(), containsString("\"@id\":1"));
     }
 

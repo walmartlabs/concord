@@ -57,6 +57,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -513,7 +514,12 @@ public class RunnerJobExecutor implements JobExecutor {
         // the job's payload directory, contains all files from the state snapshot including imports
         Path src = job.getPayloadDir();
 
-        Files.move(src, workDir, StandardCopyOption.ATOMIC_MOVE);
+        try {
+            Files.move(src, workDir, StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException e) {
+            log.error("startOneTime ['{}'] -> unable to move {} to {} atomically", job.getInstanceId(), src, workDir);
+            throw e;
+        }
 
         writeInstanceId(job.getInstanceId(), workDir);
 

@@ -5,7 +5,10 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
     <property name="concordAdminUserId" value="230c5c9c-d9a7-11e6-bcfd-bb681c07b26c"/>
+    <!-- starting from 2.21.x, the default agent token is no longer associated with any user -->
+    <!--
     <property name="concordAgentUserId" value="d4f123c1-f8d4-40b2-8a12-b8947b9ce2d8"/>
+    -->
     <property name="concordRunnerUserId" value="2599c604-1384-4660-a767-8bc03baa7a31"/>
 
     <!-- delete old hard-coded default admin API token -->
@@ -38,6 +41,8 @@
     </changeSet>
 
     <!-- delete old hard-coded default agent API token -->
+    <!-- starting from 2.21.x, the default agent token is no longer associated with any user -->
+    <!--
     <changeSet id="1860200" author="benjamin.broadaway@walmart.com" runInTransaction="false" context="!codegen">
         <sql>
             delete from API_KEYS
@@ -45,8 +50,11 @@
             and API_KEY = '1sw9eLZ41EOK4w/iV3jFnn6cqeAMeFtxfazqVY04koY'
         </sql>
     </changeSet>
+    -->
 
     <!-- Set initial agent API token when not exist  -->
+    <!-- starting from 2.21.x, the default agent token is no longer associated with any user -->
+    <!--
     <changeSet id="1860300" author="benjamin.broadaway@walmart.com" runInTransaction="false" context="!codegen">
         <validCheckSum>ANY</validCheckSum>
 
@@ -60,14 +68,13 @@
         </preConditions>
 
         <customChange class="com.walmartlabs.concord.server.liquibase.ext.ApiTokenCreator">
-            <!-- default agent user id from v0.69.0.xml -->
             <param name="userId" value="${concordAgentUserId}"/>
             <param name="username" value="concordAgent"/>
-            <!-- values from concord-server.conf -->
             <param name="token" value="${defaultAgentToken}"/>
             <param name="skip" value="${skipAgentTokenGeneration}"/>
         </customChange>
     </changeSet>
+    -->
 
     <!-- Delete runner API tokens and user when exist  -->
     <changeSet id="1860400" author="benjamin.broadaway@walmart.com" runInTransaction="false" context="!codegen">

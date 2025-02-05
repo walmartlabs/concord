@@ -20,8 +20,8 @@ package com.walmartlabs.concord.agentoperator.crd;
  * =====
  */
 
-import io.fabric8.kubernetes.client.CustomResourceList;
+import io.fabric8.kubernetes.api.model.DefaultKubernetesResourceList;
 
-public class AgentPoolList extends CustomResourceList<AgentPool> {
+public class AgentPoolList extends DefaultKubernetesResourceList<AgentPool> {
 
 }

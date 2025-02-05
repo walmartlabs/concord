@@ -23,6 +23,7 @@ import { REPOSITORY_SSH_URL_PATTERN } from '../../../validation';
 
 interface Props {
     url: string;
+    link?: string;
     path?: string;
     commitId?: string;
     text?: string;
@@ -59,9 +60,9 @@ const normalizePath = (s: string): string => {
 
 class GitHubLink extends React.PureComponent<Props> {
     render() {
-        const { url, commitId, path, text, branch } = this.props;
+        const { url, link, commitId, path, text, branch } = this.props;
 
-        let s = gitUrlParse(url);
+        let s = !link ? gitUrlParse(url) : link;
         if (!s) {
             return url;
         }
