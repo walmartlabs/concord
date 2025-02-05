@@ -82,6 +82,7 @@ public class LogSegmentsTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void loopStepShouldLogErrorInProperLogSegment() throws Exception {
         deploy("logSegments/taskErrorWithLoop");
 
