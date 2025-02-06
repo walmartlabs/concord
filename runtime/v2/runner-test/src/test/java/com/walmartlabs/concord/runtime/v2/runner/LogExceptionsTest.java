@@ -135,7 +135,7 @@ public class LogExceptionsTest {
         }
 
         // error
-        assertLog(runtime.lastLog(), ".*" + quote("(concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${userDefinedExceptionTask.exception('BOOM')}': BOOM") + ".*");
+        assertLog(runtime.lastLog(), ".*" + quote("(concord.yaml): Error @ line: 3, col: 7. BOOM") + ".*");
 
         // no single exception message
         assertNoLog(runtime.lastLog(), quote("BOOM"));

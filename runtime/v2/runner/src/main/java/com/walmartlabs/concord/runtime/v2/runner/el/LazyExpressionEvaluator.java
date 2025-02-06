@@ -164,14 +164,14 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         } catch (MethodNotFoundException e) {
             throw new UserDefinedException(exceptionPrefix(expr) + e.getMessage());
         } catch (UserDefinedException e) {
-            throw new UserDefinedException(e.getMessage());
+            throw e;
         } catch (javax.el.ELException e) {
-            if (e.getCause() instanceof com.sun.el.parser.ParseException pe) {
-                throw new WrappedException("while parsing expression '" + expr + "': ", pe);
-            }
-
             var lastElException = ExceptionUtils.findLastException(e, javax.el.ELException.class);
-            if (lastElException.getCause() instanceof Exception ee) {
+            if (lastElException.getCause() instanceof UserDefinedException ue) {
+                throw ue;
+            } else if (e.getCause() instanceof com.sun.el.parser.ParseException pe) {
+                throw new UserDefinedException("while parsing expression '" + expr + "': " + pe.getMessage());
+            } else if (lastElException.getCause() instanceof Exception ee) {
                 throw new WrappedException(exceptionPrefix(expr), ee);
             }
             throw lastElException;
