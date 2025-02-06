@@ -508,7 +508,7 @@ public class MainTest  {
                 .build());
 
         byte[] log = run();
-        assertLog(log, ".*error occurred: java.lang.RuntimeException: Error: this is an error.*");
+        assertLog(log, ".*" + quote("(concord.yml): Error @ line: 3, col: 7. Error: this is an error") + ".*");
     }
 
     @Test
@@ -1344,7 +1344,7 @@ public class MainTest  {
             run();
             fail("exception expected");
         } catch (Exception e) {
-            assertEquals("while evaluating expression '${items.stream().filter(i -> i == 42).findFirst().orElseGet(() -> throw('42 not found'))}': 42 not found", e.getMessage());
+            assertEquals("42 not found", e.getMessage());
         }
     }
 
@@ -1466,7 +1466,7 @@ public class MainTest  {
         } catch (Exception e) {
             // ignore
         }
-        assertLog(runtime.lastLog(), ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. while evaluating expression '${faultyTask.fail('BOOM')}': BOOM"));
+        assertLog(runtime.lastLog(), ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. BOOM"));
     }
 
     @Test
