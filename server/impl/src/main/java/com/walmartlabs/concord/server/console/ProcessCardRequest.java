@@ -80,6 +80,7 @@ public class ProcessCardRequest {
     public Integer getOrderId() {
         return MultipartUtils.getInt(input, Constants.Multipart.ORDER_ID);
     }
+
     @Schema(name = "name")
     public String getName() {
         return MultipartUtils.getString(input, "name");
