@@ -66,12 +66,12 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         }
 
         if (value instanceof Map) {
-            Map<String, Object> m = nestedToMap((Map<String, Object>)value);
+            var m = nestedToMap((Map<String, Object>) value);
             value = mergeWithVariables(ctx, m, ((Map<String, Object>) value).keySet().stream().filter(ConfigurationUtils::isNestedKey).collect(Collectors.toSet()));
         }
 
         if (ctx.useIntermediateResults() && value instanceof Map) {
-            Map<String, Object> m = (Map<String, Object>) value;
+            var m = (Map<String, Object>) value;
             if (m.isEmpty()) {
                 return expectedType.cast(m);
             }
@@ -89,23 +89,20 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         }
 
         if (value instanceof Map) {
-            Map<String, Object> m = (Map<String, Object>) value;
+            var m = (Map<String, Object>) value;
             return expectedType.cast(new LazyEvalMap(this, ctx, m));
-        } else if (value instanceof List) {
-            List<Object> src = (List<Object>) value;
+        } else if (value instanceof List<?> src) {
             return expectedType.cast(new LazyEvalList(this, ctx, src));
-        } else if (value instanceof Set) {
-            Set<Object> src = (Set<Object>) value;
-
+        } else if (value instanceof Set<?> src) {
             // use LinkedHashSet to preserve the order of keys
-            Set<Object> dst = new LinkedHashSet<>(src.size());
-            for (Object vv : src) {
+            var dst = new LinkedHashSet<>(src.size());
+            for (var vv : src) {
                 dst.add(evalValue(ctx, vv, Object.class));
             }
 
             return expectedType.cast(dst);
         } else if (value.getClass().isArray()) {
-            Object[] src = (Object[]) value;
+            var src = (Object[]) value;
             if (src.length == 0) {
                 return expectedType.cast(src);
             }
@@ -125,9 +122,9 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     }
 
     private <T> T evalExpr(LazyEvalContext ctx, String expr, Class<T> type) {
-        ELResolver resolver = createResolver(ctx, expressionFactory);
+        var resolver = createResolver(ctx, expressionFactory);
 
-        StandardELContext sc = new StandardELContext(expressionFactory) {
+        var sc = new StandardELContext(expressionFactory) {
             @Override
             public ELResolver getELResolver() {
                 return resolver;
@@ -141,24 +138,19 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         sc.putContext(ExpressionFactory.class, expressionFactory);
 
         try {
-            ValueExpression x = expressionFactory.createValueExpression(sc, expr, type);
-            Object v = withEvalContext(ctx, () -> x.getValue(sc));
+            var x = expressionFactory.createValueExpression(sc, expr, type);
+            var v = withEvalContext(ctx, () -> x.getValue(sc));
             return type.cast(v);
         } catch (PropertyNotFoundException e) {
             if (ctx.undefinedVariableAsNull()) {
                 return null;
             }
 
-            String errorMessage;
-
-            String propName = propertyNameFromException(e);
-            if (propName != null) {
-                errorMessage = String.format("Can't find a variable %s. " +
-                        "Check if it is defined in the current scope. Details: %s", propName, e.getMessage());
-            } else {
-                errorMessage = String.format("Can't find the specified variable. " +
-                        "Check if it is defined in the current scope. Details: %s", e.getMessage());
-            }
+            var errorMessage = propertyNameFromException(e)
+                    .map(propName -> String.format("Can't find a variable %s. " +
+                            "Check if it is defined in the current scope. Details: %s", propName, e.getMessage()))
+                    .orElse(String.format("Can't find the specified variable. " +
+                            "Check if it is defined in the current scope. Details: %s", e.getMessage()));
 
             throw new UserDefinedException(exceptionPrefix(expr) + errorMessage);
         } catch (MethodNotFoundException e) {
@@ -187,7 +179,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     private ELResolver createResolver(LazyEvalContext evalContext,
                                       ExpressionFactory expressionFactory) {
 
-        CompositeELResolver r = new CompositeELResolver();
+        var r = new CompositeELResolver();
         if (evalContext.scope() != null) {
             r.add(new VariableResolver(evalContext.scope()));
         }
@@ -210,7 +202,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     }
 
     private static FunctionMapper createFunctionMapper() {
-        Map<String, Method> functions = new HashMap<>();
+        var functions = new HashMap<String, Method>();
         functions.put("hasVariable", HasVariableFunction.getMethod());
         functions.put("hasNonNullVariable", HasNonNullVariableFunction.getMethod());
         functions.put("orDefault", OrDefaultFunction.getMethod());
@@ -230,10 +222,10 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     }
 
     private static Map<String, Object> nestedToMap(Map<String, Object> value) {
-        Map<String, Object> result = new LinkedHashMap<>();
-        for (Map.Entry<String, Object> e : value.entrySet()) {
+        Map<String, Object> result = new LinkedHashMap<String, Object>();
+        for (var e : value.entrySet()) {
             if (isNestedKey(e.getKey())) {
-                Map<String, Object> m = toNested(e.getKey(), e.getValue());
+                var m = toNested(e.getKey(), e.getValue());
                 result = deepMerge(result, m);
             } else {
                 result.put(e.getKey(), e.getValue());
@@ -244,16 +236,16 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
 
     @SuppressWarnings("unchecked")
     private static Map<String, Object> mergeWithVariables(EvalContext ctx, Map<String, Object> m, Set<String> nestedKeys) {
-        Map<String, Object> result = new LinkedHashMap<>();
-        for (Map.Entry<String, Object> e : m.entrySet()) {
-            String key = e.getKey();
-            Object value = e.getValue();
-            boolean isNested = nestedKeys.stream().anyMatch(s -> s.startsWith(key + "."));
+        var result = new LinkedHashMap<String, Object>();
+        for (var e : m.entrySet()) {
+            var key = e.getKey();
+            var value = e.getValue();
+            var isNested = nestedKeys.stream().anyMatch(s -> s.startsWith(key + "."));
             if (isNested && ctx.variables().has(key)) {
-                Object o = ctx.variables().get(key);
+                var o = ctx.variables().get(key);
                 if (o instanceof Map && e.getValue() instanceof Map) {
-                    Map<String, Object> valuesFromVars = (Map<String, Object>)o;
-                    value = deepMerge(valuesFromVars, (Map<String, Object>)value);
+                    var valuesFromVars = (Map<String, Object>) o;
+                    value = deepMerge(valuesFromVars, (Map<String, Object>) value);
                 }
             }
             result.put(key, value);
@@ -267,15 +259,15 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
 
     private static final String PROP_NOT_FOUND_EL_MESSAGE = "ELResolver cannot handle a null base Object with identifier ";
 
-    private static String propertyNameFromException(PropertyNotFoundException e) {
+    private static Optional<String> propertyNameFromException(PropertyNotFoundException e) {
         if (e.getMessage() == null) {
-            return null;
+            return Optional.empty();
         }
 
         if (e.getMessage().startsWith(PROP_NOT_FOUND_EL_MESSAGE)) {
-            return e.getMessage().substring(PROP_NOT_FOUND_EL_MESSAGE.length());
+            return Optional.of(e.getMessage().substring(PROP_NOT_FOUND_EL_MESSAGE.length()));
         }
 
-        return null;
+        return Optional.empty();
     }
 }
