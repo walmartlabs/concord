@@ -90,14 +90,12 @@ public class TaskMethodResolver extends ELResolver {
                     });
         } catch (javax.el.MethodNotFoundException e) {
             throw new MethodNotFoundException(invocation.taskClass(), method, paramTypes);
-        } catch (javax.el.ELException e) {
-            if (e.getCause() instanceof RuntimeException) {
-                throw (RuntimeException) e.getCause();
-            }
-            throw e;
         } catch (RuntimeException e) {
             throw e;
         } catch (TaskException e) {
+            if (e.getCause() instanceof RuntimeException re) {
+                throw re;
+            }
             throw new RuntimeException(e.getCause());
         } catch (Exception e) {
             throw new RuntimeException(e);
