@@ -23,8 +23,9 @@ package com.walmartlabs.concord.runtime.v2.runner.script;
 import com.oracle.truffle.js.scriptengine.GraalJSEngineFactory;
 import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
+import com.walmartlabs.concord.runtime.v2.runner.vm.WrappedException;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.sdk.Constants;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.HostAccess;
@@ -100,11 +101,11 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
             return scriptResult;
         } catch (ScriptException e) {
             if (e.getCause() instanceof PolyglotException) {
-                throw new RuntimeException(e.getCause().getMessage());
+                throw new UserDefinedException(e.getCause().getMessage());
             }
-            throw new RuntimeException(e.getMessage());
+            throw new UserDefinedException(e.getMessage());
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new WrappedException(e);
         }
     }
 
@@ -143,8 +144,8 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
                 Optional<Integer> esVersion = Arrays.stream(GRAAL_ES_VERSIONS)
                         .filter(it -> it.equals(value))
                         .findFirst();
-                if (!esVersion.isPresent()) {
-                    throw new RuntimeException("unsupported esVersion: " + value.toString());
+                if (esVersion.isEmpty()) {
+                    throw new UserDefinedException("unsupported esVersion: " + value.toString());
                 }
                 ctx.option("js.ecmascript-version", esVersion.get().toString());
             }

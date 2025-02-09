@@ -50,7 +50,7 @@ public class LogExceptionsTest {
         // error
         assertLog(runtime.lastLog(), ".*" + quote("(concord.yaml): Error @ line: 3, col: 7. boom!") + ".*");
         // stacktrace
-        assertLog(runtime.lastLog(), ".*at com.walmartlabs.concord.runtime.v2.runner.LogExceptionsTest.shouldLogExceptionStackTraceWhenTaskThrowsException.*");
+        assertLog(runtime.lastLog(), ".*" + quote("at com.walmartlabs.concord.runtime.v2.runner.tasks.Tasks$FaultyTask2.execute") + ".*");
     }
 
     @Test
@@ -69,12 +69,13 @@ public class LogExceptionsTest {
 
         // error
         // TODO: "javax.el.ELException: java.lang.Exception: ..." remove javax.el.ELException?
-        assertLog(runtime.lastLog(), ".*" + quote("Error @ line: 3, col: 7. while evaluating expression '${faultyTask.exception('BOOM')}': javax.el.ELException: java.lang.Exception: BOOM") + ".*");
+        assertLog(runtime.lastLog(), ".*" + quote("Error @ line: 3, col: 7. while evaluating expression '${faultyTask.exception('BOOM')}': BOOM") + ".*");
         // stacktrace
-        assertLog(runtime.lastLog(), ".*at com.walmartlabs.concord.runtime.v2.runner.LogExceptionsTest.shouldLogExceptionStackTraceWhenExpressionThrowsException.*");
+        assertLog(runtime.lastLog(), ".*" + quote("at com.walmartlabs.concord.runtime.v2.runner.tasks.Tasks$FaultyTask") + ".*");
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void shouldLogExceptionStackTraceWhenTaskThrowsExceptionFromParallel() throws Exception {
         runtime.deploy("logExceptionTests/fromParallel");
 
@@ -144,6 +145,7 @@ public class LogExceptionsTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void noStacktraceForUserDefinedExceptionFromTaskParallel() throws Exception {
         runtime.deploy("logExceptionTests/userDefinedExceptionFromTaskParallel");
 
@@ -189,5 +191,47 @@ public class LogExceptionsTest {
         // no stacktrace
         assertNoLog(runtime.lastLog(), ".*noStacktraceForTaskFailReturn.*");
         assertNoLog(runtime.lastLog(), ".*" + quote("at com.walmartlabs.concord.runtime.v2.runner.tasks.Tasks$FaultyTask.execute") + ".*");
+    }
+
+    @Test
+    public void noStackTraceForMethodNotFound() throws Exception {
+        runtime.deploy("logExceptionTests/methodNotFound");
+
+        runtime.save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            runtime.run();
+            fail("Exception expected");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        // error
+        assertLog(runtime.lastLog(), ".*" + quote("(concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${faultyTask.unknownMethod('BOOM')}': Can't find 'unknownMethod()' method in com.walmartlabs.concord.runtime.v2.runner.tasks.Tasks$FaultyTask") + ".*");
+
+        // no stacktrace
+        assertNoLog(runtime.lastLog(), ".*" + quote("at com.walmartlabs.concord.runtime.v2.runner.el.LazyExpressionEvaluator.evalExpr") + ".*");
+    }
+
+    @Test
+    public void noStackTraceForVariableNotFound() throws Exception {
+        runtime.deploy("logExceptionTests/variableNotFound");
+
+        runtime.save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            runtime.run();
+            fail("Exception expected");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        // error
+        assertLog(runtime.lastLog(), ".*" + quote("(concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${unknown}': Can't find a variable 'unknown'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'unknown'") + ".*");
+
+        // no stacktrace
+        assertNoLog(runtime.lastLog(), ".*" + quote("at com.walmartlabs.concord.runtime.v2.runner.el.LazyExpressionEvaluator.evalExpr") + ".*");
     }
 }
