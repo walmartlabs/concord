@@ -13,9 +13,10 @@
 - concord-agent-operator: use informers API
 ([#1072](https://github.com/walmartlabs/concord/pull/1072));
 - concord-agent-operator: attempt to improve error logging
-([#1073](https://github.com/walmartlabs/concord/pull/1073)).
-
-
+([#1073](https://github.com/walmartlabs/concord/pull/1073));
+- runtime-v2: do not log stack trace for EL MethodNotFound
+exception and unify the error messages
+([#1076](https://github.com/walmartlabs/concord/pull/1076)).
 
 ## [2.21.0] - 2025-01-15
 
