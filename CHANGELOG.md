@@ -16,7 +16,12 @@
 ([#1073](https://github.com/walmartlabs/concord/pull/1073));
 - runtime-v2: do not log stack trace for EL MethodNotFound
 exception and unify the error messages
-([#1076](https://github.com/walmartlabs/concord/pull/1076)).
+([#1076](https://github.com/walmartlabs/concord/pull/1076));
+- project: do not log into Docker in check runs started in
+forks
+([#1079](https://github.com/walmartlabs/concord/pull/1079)).
+
+
 
 ## [2.21.0] - 2025-01-15
 
