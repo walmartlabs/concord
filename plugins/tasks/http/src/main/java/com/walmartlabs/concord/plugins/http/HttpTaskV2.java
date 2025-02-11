@@ -24,9 +24,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
 
 @Named("http")
 @DryRunReady
