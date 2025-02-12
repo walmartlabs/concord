@@ -36,18 +36,18 @@ public class ParallelExecutionException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
     private static final int MAX_STACK_TRACE_ELEMENTS = 3;
-    private final List<Exception> exceptions;
+    private final List<ThreadError> exceptions;
 
-    public ParallelExecutionException(Collection<Exception> causes) {
+    public ParallelExecutionException(Collection<ThreadError> causes) {
         super("Parallel execution errors: \n" + toMessage(causes));
         this.exceptions = new ArrayList<>(causes);
     }
 
-    public List<Exception> getExceptions() {
+    public List<ThreadError> getExceptions() {
         return exceptions;
     }
 
-    private static String toMessage(Collection<Exception> causes) {
+    private static String toMessage(Collection<ThreadError> causes) {
         return causes.stream()
                 .map(ParallelExecutionException::stacktraceToString)
                 .collect(Collectors.joining("\n"));
@@ -63,10 +63,15 @@ public class ParallelExecutionException extends RuntimeException {
         s.println(getMessage());
     }
 
-    private static String stacktraceToString(Exception e) {
+    private static String stacktraceToString(ThreadError e) {
         StringWriter sw = new StringWriter();
-        sw.append(e.toString()).append("\n");
+        sw.append(e.toString());
+
         StackTraceElement[] elements = e.getStackTrace();
+        if (elements.length > 0) {
+            sw.append("\n");
+        }
+
         int maxElements = Math.min(elements.length, MAX_STACK_TRACE_ELEMENTS);
         for (int i = 0; i < maxElements; i++) {
             StackTraceElement element = elements[i];
@@ -76,5 +81,15 @@ public class ParallelExecutionException extends RuntimeException {
             sw.append("\t...").append(String.valueOf(elements.length - maxElements)).append(" more\n");
         }
         return sw.toString();
+    }
+
+    @Override
+    public String toString() {
+        return getMessage();
+    }
+
+    @Override
+    public StackTraceElement[] getStackTrace() {
+        return new StackTraceElement[0];
     }
 }

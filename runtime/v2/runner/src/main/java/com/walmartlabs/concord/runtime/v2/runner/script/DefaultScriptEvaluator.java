@@ -23,7 +23,6 @@ package com.walmartlabs.concord.runtime.v2.runner.script;
 import com.oracle.truffle.js.scriptengine.GraalJSEngineFactory;
 import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.runner.vm.WrappedException;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.sdk.Constants;
@@ -100,12 +99,10 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
             engine.eval(input, b);
             return scriptResult;
         } catch (ScriptException e) {
-            if (e.getCause() instanceof PolyglotException) {
+            if (e.getCause() != null) {
                 throw new UserDefinedException(e.getCause().getMessage());
             }
             throw new UserDefinedException(e.getMessage());
-        } catch (Exception e) {
-            throw new WrappedException(e);
         }
     }
 
