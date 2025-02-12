@@ -41,7 +41,7 @@ public class InMemoryState implements Serializable, State {
     private final Map<ThreadId, ThreadStatus> threadStatus = new HashMap<>();
     private final Map<ThreadId, Set<ThreadId>> children = new HashMap<>();
     private final Map<ThreadId, String> eventRefs = new HashMap<>();
-    private final Map<ThreadId, Exception> threadErrors = new HashMap<>();
+    private final Map<ThreadId, ThreadError> threadErrors = new HashMap<>();
     private final Map<ThreadId, List<StackTraceItem>> stackTrace = new HashMap<>();
     private final Map<ThreadId, Map<String, Serializable>> threadLocals = new HashMap<>();
 
@@ -206,7 +206,7 @@ public class InMemoryState implements Serializable, State {
     }
 
     @Override
-    public Exception getThreadError(ThreadId threadId) {
+    public ThreadError getThreadError(ThreadId threadId) {
         synchronized (this) {
             return threadErrors.get(threadId);
         }
@@ -214,13 +214,18 @@ public class InMemoryState implements Serializable, State {
 
     @Override
     public void setThreadError(ThreadId threadId, Exception error) {
+        setThreadError(threadId, null, error);
+    }
+
+    @Override
+    public void setThreadError(ThreadId threadId, Command cmd, Exception error) {
         synchronized (this) {
-            threadErrors.put(threadId, error);
+            threadErrors.put(threadId, new ThreadError(threadId, cmd, error));
         }
     }
 
     @Override
-    public Exception clearThreadError(ThreadId threadId) {
+    public ThreadError clearThreadError(ThreadId threadId) {
         synchronized (this) {
             return threadErrors.remove(threadId);
         }

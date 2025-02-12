@@ -103,7 +103,7 @@ public class SaveLastErrorCommand implements Command {
 
             gen.writeArrayFieldStart("exceptions");
             for (var e : exception.getExceptions()) {
-                gen.writeObject(e);
+                gen.writeObject(e.exception());
             }
             gen.writeEndArray();
 
