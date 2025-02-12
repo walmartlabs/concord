@@ -2,6 +2,11 @@
 
 ## [2.22.0] - Unreleased
 
+### Added
+
+- concord-server: order ui_process_card by a new order_id field
+([#1075](https://github.com/walmartlabs/concord/pull/1075)).
+
 ### Changed
 
 - concord-server: simplify UserInfo, UserInfoProcessor
