@@ -99,12 +99,6 @@ public abstract class StepCommand<T extends Step> implements Command {
         });
     }
 
-    @Override
-    public String toString() {
-        // TODO: why error prefix? add location to command?
-        return Location.toErrorPrefix(step.getLocation());
-    }
-
     public static void logException(Step step, State state, ThreadId threadId, Exception e) {
         // for backward compatibility...
         if (step != null) {

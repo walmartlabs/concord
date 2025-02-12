@@ -208,7 +208,8 @@ public class InMemoryState implements Serializable, State {
     @Override
     public ThreadError getThreadError(ThreadId threadId) {
         synchronized (this) {
-            return threadErrors.get(threadId);
+            Object result = threadErrors.get(threadId);
+            return StateBackwardCompatibility.processThreadError(result, threadId);
         }
     }
 
@@ -227,7 +228,8 @@ public class InMemoryState implements Serializable, State {
     @Override
     public ThreadError clearThreadError(ThreadId threadId) {
         synchronized (this) {
-            return threadErrors.remove(threadId);
+            Object result = threadErrors.remove(threadId);
+            return StateBackwardCompatibility.processThreadError(result, threadId);
         }
     }
 

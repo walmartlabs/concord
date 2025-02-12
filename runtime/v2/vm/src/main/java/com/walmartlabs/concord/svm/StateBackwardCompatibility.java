@@ -20,15 +20,21 @@ package com.walmartlabs.concord.svm;
  * =====
  */
 
-import java.io.Serial;
-import java.io.Serializable;
+/**
+ * Backward compatibility for processing old {@link State} instances.
+ */
+public class StateBackwardCompatibility {
 
-public record ThreadError(ThreadId threadId, Command cmd, Exception exception) implements Serializable {
+    // 2.21.1-SNAPSHOT
+    public static ThreadError processThreadError(Object threadError, ThreadId threadId) {
+        if (threadError == null) {
+            return null;
+        }
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+        if (threadError instanceof Exception e) {
+            return new ThreadError(threadId, null, e);
+        }
 
-    public StackTraceElement[] getStackTrace() {
-        return exception.getStackTrace();
+        return (ThreadError) threadError;
     }
 }

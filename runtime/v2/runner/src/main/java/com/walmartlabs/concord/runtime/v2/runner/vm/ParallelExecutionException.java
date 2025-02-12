@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.svm;
+package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 /*-
  * *****
@@ -20,8 +20,12 @@ package com.walmartlabs.concord.svm;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.Location;
+import com.walmartlabs.concord.svm.ThreadError;
+
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.Serial;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,23 +36,24 @@ import java.util.stream.Collectors;
  * An exception that is thrown when multiple exceptions are thrown
  * in {@code parallel} blocks.
  */
-@Deprecated
 public class ParallelExecutionException extends RuntimeException {
 
+    @Serial
     private static final long serialVersionUID = 1L;
-    private static final int MAX_STACK_TRACE_ELEMENTS = 3;
-    private final List<Exception> exceptions;
 
-    public ParallelExecutionException(Collection<Exception> causes) {
+    private static final int MAX_STACK_TRACE_ELEMENTS = 3;
+    private final List<ThreadError> exceptions;
+
+    public ParallelExecutionException(Collection<ThreadError> causes) {
         super("Parallel execution errors: \n" + toMessage(causes));
         this.exceptions = new ArrayList<>(causes);
     }
 
     public List<Exception> getExceptions() {
-        return exceptions;
+        return exceptions.stream().map(ThreadError::exception).toList();
     }
 
-    private static String toMessage(Collection<Exception> causes) {
+    private static String toMessage(Collection<ThreadError> causes) {
         return causes.stream()
                 .map(ParallelExecutionException::stacktraceToString)
                 .collect(Collectors.joining("\n"));
@@ -64,10 +69,15 @@ public class ParallelExecutionException extends RuntimeException {
         s.println(getMessage());
     }
 
-    private static String stacktraceToString(Exception e) {
+    private static String stacktraceToString(ThreadError e) {
         StringWriter sw = new StringWriter();
-        sw.append(e.toString()).append("\n");
+        sw.append(toString(e));
+
         StackTraceElement[] elements = e.getStackTrace();
+        if (elements.length > 0) {
+            sw.append("\n");
+        }
+
         int maxElements = Math.min(elements.length, MAX_STACK_TRACE_ELEMENTS);
         for (int i = 0; i < maxElements; i++) {
             StackTraceElement element = elements[i];
@@ -77,5 +87,23 @@ public class ParallelExecutionException extends RuntimeException {
             sw.append("\t...").append(String.valueOf(elements.length - maxElements)).append(" more\n");
         }
         return sw.toString();
+    }
+
+    @Override
+    public String toString() {
+        return getMessage();
+    }
+
+    @Override
+    public StackTraceElement[] getStackTrace() {
+        return new StackTraceElement[0];
+    }
+
+    private static String toString(ThreadError threadError) {
+        String prefix = "";
+        if (threadError.cmd() instanceof StepCommand<?> sc) {
+            prefix = Location.toErrorPrefix(sc.getStep().getLocation()) + ", ";
+        }
+        return prefix + "thread: " + threadError.threadId().id() + ": " + threadError.exception();
     }
 }
