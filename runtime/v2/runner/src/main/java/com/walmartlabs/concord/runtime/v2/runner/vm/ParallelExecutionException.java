@@ -40,7 +40,7 @@ public class ParallelExecutionException extends RuntimeException {
 
     @Serial
     private static final long serialVersionUID = 1L;
-    
+
     private static final int MAX_STACK_TRACE_ELEMENTS = 3;
     private final List<ThreadError> exceptions;
 
@@ -49,8 +49,8 @@ public class ParallelExecutionException extends RuntimeException {
         this.exceptions = new ArrayList<>(causes);
     }
 
-    public List<ThreadError> getExceptions() {
-        return exceptions;
+    public List<Exception> getExceptions() {
+        return exceptions.stream().map(ThreadError::exception).toList();
     }
 
     private static String toMessage(Collection<ThreadError> causes) {
