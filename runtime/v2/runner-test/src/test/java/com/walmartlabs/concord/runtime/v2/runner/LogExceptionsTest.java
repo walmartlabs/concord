@@ -161,7 +161,7 @@ public class LogExceptionsTest {
 
         // error
         assertLog(runtime.lastLog(), ".*" + quote("(concord.yaml): Error @ line: 4, col: 11. boom!") + ".*");
-        assertMultiLineLog(runtime.lastLog(), ".*" + quote("(concord.yaml): Error @ line: 3, col: 7. Parallel execution errors: ") + "\n" + quote("boom!"));
+        assertMultiLineLog(runtime.lastLog(), ".*" + quote("(concord.yaml): Error @ line: 3, col: 7. Parallel execution errors: ") + "\n" + quote("(concord.yaml): Error @ line: 4, col: 11, thread: 1: boom!"));
 
         assertLogExactMatch(runtime.lastLog(), 1, ".*" + quote("Parallel execution errors") + ".*");
 
@@ -233,5 +233,49 @@ public class LogExceptionsTest {
 
         // no stacktrace
         assertNoLog(runtime.lastLog(), ".*" + quote("at com.walmartlabs.concord.runtime.v2.runner.el.LazyExpressionEvaluator.evalExpr") + ".*");
+    }
+
+    @Test
+    public void noStacktraceForScriptException() throws Exception {
+        runtime.deploy("logExceptionTests/fromScript");
+
+        runtime.save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            runtime.run();
+            fail("Exception expected");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        // error
+        assertLog(runtime.lastLog(), ".*" + quote("(concord.yaml): Error @ line: 3, col: 7. Something went wrong") + ".*");
+
+        // no stacktrace
+        assertNoLog(runtime.lastLog(), ".*DefaultScriptEvaluator.*");
+    }
+
+    @Test
+    @IgnoreSerializationAssert
+    public void noStacktraceForUserDefinedExceptionFromTaskParallelParallel() throws Exception {
+        runtime.deploy("logExceptionTests/fromParallelParallel");
+
+        runtime.save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            runtime.run();
+            fail("Exception expected");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        // error
+        assertLogExactMatch(runtime.lastLog(), 2, ".*" + quote("(concord.yaml): Error @ line: 11, col: 11. boom!") + ".*");
+
+        // no stacktrace
+        assertNoLog(runtime.lastLog(), ".*" + quote("com.walmartlabs.concord.svm.ParallelExecutionException") + ".*");
+        assertNoLog(runtime.lastLog(), ".*" + quote("at com.walmartlabs.concord.runtime.v2.runner.vm.JoinCommand.execute") + ".*");
     }
 }
