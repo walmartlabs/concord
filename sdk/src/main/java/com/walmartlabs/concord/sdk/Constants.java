@@ -615,6 +615,8 @@ public class Constants {
         public static final String SYNC = "sync";
 
         public static final String META = "meta";
+
+        public static final String ORDER_ID = "orderId";
     }
 
     public static class Headers {

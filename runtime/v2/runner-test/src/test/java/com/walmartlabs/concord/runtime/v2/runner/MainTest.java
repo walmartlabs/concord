@@ -508,7 +508,7 @@ public class MainTest  {
                 .build());
 
         byte[] log = run();
-        assertLog(log, ".*error occurred: java.lang.RuntimeException: Error: this is an error.*");
+        assertLog(log, ".*" + quote("(concord.yml): Error @ line: 3, col: 7. Error: this is an error") + ".*");
     }
 
     @Test
@@ -1412,7 +1412,7 @@ public class MainTest  {
         }
 
         String logString = new String(runtime.lastLog());
-        String expected = "[ERROR] (concord.yml): Error @ line: 9, col: 7. Error Parsing: ${str.split('\\n')}. Encountered \"\\'\\\\n\" at line 1, column 13.\n" +
+        String expected = "[ERROR] (concord.yml): Error @ line: 9, col: 7. while parsing expression '${str.split('\\n')}': Encountered \"\\'\\\\n\" at line 1, column 13.\n" +
                 "Was expecting one of:\n" +
                 "    \"{\" ...\n" +
                 "    <INTEGER_LITERAL> ...\n" +
@@ -1483,7 +1483,7 @@ public class MainTest  {
             // ignore
         }
 
-        String expected = "[ERROR] (concord.yml): Error @ line: 3, col: 7. while evaluating expression '${faultyTask.exception('BOOM')}': javax.el.ELException: java.lang.Exception: BOOM";
+        String expected = "[ERROR] (concord.yml): Error @ line: 3, col: 7. while evaluating expression '${faultyTask.exception('BOOM')}': BOOM";
         assertLog(runtime.lastLog(), ".*" + Pattern.quote(expected));
     }
 
@@ -1517,7 +1517,7 @@ public class MainTest  {
         } catch (Exception e) {
         }
 
-        assertLog(runtime.lastLog(), ".*" + quote("(concord.yml): Error @ line: 4, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+        assertLog(runtime.lastLog(), ".*" + quote("(concord.yml): Error @ line: 4, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'") + ".*");
     }
 
     @Test
@@ -1533,7 +1533,7 @@ public class MainTest  {
         } catch (Exception e) {
         }
 
-        assertLog(runtime.lastLog(), ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+        assertLog(runtime.lastLog(), ".*" + quote("(concord.yml): Error @ line: 6, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'") + ".*");
     }
 
     @Test
@@ -1549,7 +1549,7 @@ public class MainTest  {
         } catch (Exception e) {
         }
 
-        assertLog(runtime.lastLog(), ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+        assertLog(runtime.lastLog(), ".*" + quote("(concord.yml): Error @ line: 6, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'") + ".*");
     }
 
     @Test
