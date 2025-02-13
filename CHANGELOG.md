@@ -6,6 +6,8 @@
 
 - concord-server: order ui_process_card by a new order_id field
 ([#1075](https://github.com/walmartlabs/concord/pull/1075));
+- misc-tasks: add base64 task, shortcut for current ISO timestamp
+([#1078](https://github.com/walmartlabs/concord/pull/1078));
 - http-tasks: use default variables
 ([#1080](https://github.com/walmartlabs/concord/pull/1080)).
 
