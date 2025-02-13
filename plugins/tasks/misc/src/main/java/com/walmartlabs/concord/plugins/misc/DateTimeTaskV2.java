@@ -43,6 +43,10 @@ public class DateTimeTaskV2 implements Task {
         return DateTimeFormatter.ofPattern(pattern).format(ZonedDateTime.now());
     }
 
+    public String currentISO() {
+        return current("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    }
+
     public String currentWithZone(String zone, String pattern) {
         return DateTimeFormatter.ofPattern(pattern).format(ZonedDateTime.now(ZoneId.of(zone)));
     }
