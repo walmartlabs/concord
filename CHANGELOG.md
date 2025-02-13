@@ -5,7 +5,9 @@
 ### Added
 
 - concord-server: order ui_process_card by a new order_id field
-([#1075](https://github.com/walmartlabs/concord/pull/1075)).
+([#1075](https://github.com/walmartlabs/concord/pull/1075));
+- http-tasks: use default variables
+([#1080](https://github.com/walmartlabs/concord/pull/1080)).
 
 ### Changed
 
