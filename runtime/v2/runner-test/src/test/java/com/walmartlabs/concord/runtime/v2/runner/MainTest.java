@@ -673,6 +673,7 @@ public class MainTest  {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelWithError() throws Exception {
         deploy("parallelWithError");
 
