@@ -94,7 +94,7 @@ public class ProcessCardManager {
         return dao.listCards(userId);
     }
 
-    public ProcessCardOperationResponse createOrUpdate(UUID id, UUID projectId, UUID repoId, String name, Optional<String> entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data) {
+    public ProcessCardOperationResponse createOrUpdate(UUID id, UUID projectId, UUID repoId, String name, Optional<String> entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data, Integer orderId) {
         boolean exists;
         if (id == null) {
             if (projectId == null) {
@@ -110,12 +110,12 @@ public class ProcessCardManager {
         }
 
         if (!exists) {
-            UUID resultId = dao.insert(id, projectId, repoId, name, entryPoint.orElse(Constants.Request.DEFAULT_ENTRY_POINT_NAME), description, icon, form, data);
+            UUID resultId = dao.insert(id, projectId, repoId, name, entryPoint.orElse(Constants.Request.DEFAULT_ENTRY_POINT_NAME), description, icon, form, data, orderId);
             return new ProcessCardOperationResponse(resultId, OperationResult.CREATED);
         } else {
             assertAccess(id);
 
-            dao.update(id, projectId, repoId, name, entryPoint.orElse(null), description, icon, form, data);
+            dao.update(id, projectId, repoId, name, entryPoint.orElse(null), description, icon, form, data, orderId);
             return new ProcessCardOperationResponse(id, OperationResult.UPDATED);
         }
     }
@@ -161,7 +161,7 @@ public class ProcessCardManager {
                     .fetchOptional(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID);
         }
 
-        public UUID insert(UUID cardId, UUID projectId, UUID repoId, String name, String entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data) {
+        public UUID insert(UUID cardId, UUID projectId, UUID repoId, String name, String entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data, Integer orderId) {
             return txResult(tx -> {
                 String sql = tx.insertInto(UI_PROCESS_CARDS)
                         .columns(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID,
@@ -173,8 +173,9 @@ public class ProcessCardManager {
                                 UI_PROCESS_CARDS.ICON,
                                 UI_PROCESS_CARDS.FORM,
                                 UI_PROCESS_CARDS.DATA,
-                                UI_PROCESS_CARDS.OWNER_ID)
-                        .values((UUID) null, null, null, null, null, null, null, null, null, null)
+                                UI_PROCESS_CARDS.OWNER_ID,
+                                UI_PROCESS_CARDS.ORDER_ID)
+                        .values((UUID) null, null, null, null, null, null, null, null, null, null, null)
                         .returning(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
                         .getSQL();
 
@@ -190,6 +191,7 @@ public class ProcessCardManager {
                         ps.setBinaryStream(8, form);
                         ps.setObject(9, data != null ? objectMapper.toJSONB(data).data() : null);
                         ps.setObject(10, UserPrincipal.assertCurrent().getId());
+                        ps.setObject(11, orderId);
 
                         try (ResultSet rs = ps.executeQuery()) {
                             if (!rs.next()) {
@@ -205,7 +207,7 @@ public class ProcessCardManager {
 
         public void update(UUID cardId, UUID projectId, UUID repoId, String name,
                            String entryPoint, String description, InputStream icon, InputStream form,
-                           Map<String, Object> data) {
+                           Map<String, Object> data, Integer orderId) {
             tx(tx -> {
                 List<Object> params = new ArrayList<>();
                 UpdateSetStep<UiProcessCardsRecord> q = tx.update(UI_PROCESS_CARDS);
@@ -252,6 +254,11 @@ public class ProcessCardManager {
 
                 if (params.isEmpty()) {
                     return;
+                }
+
+                if (orderId != null) {
+                    q.set(UI_PROCESS_CARDS.ORDER_ID, (Integer) null);
+                    params.add(orderId);
                 }
 
                 String sql = q.set(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID, cardId)
@@ -358,7 +365,7 @@ public class ProcessCardManager {
                     .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.in(userCardsFilter));
 
             return query
-                    .orderBy(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
+                    .orderBy(UI_PROCESS_CARDS.ORDER_ID, UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
                     .fetch(this::toEntry);
         }
 
@@ -404,7 +411,7 @@ public class ProcessCardManager {
             });
         }
 
-        private static SelectOnConditionStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean>> buildSelect(DSLContext tx) {
+        private static SelectOnConditionStep<Record13<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean, Integer>> buildSelect(DSLContext tx) {
             Field<Boolean> isCustomForm = when(field(UI_PROCESS_CARDS.FORM).isNotNull(), true).otherwise(false);
 
             return tx.select(
@@ -419,14 +426,15 @@ public class ProcessCardManager {
                             UI_PROCESS_CARDS.ENTRY_POINT,
                             UI_PROCESS_CARDS.DESCRIPTION,
                             UI_PROCESS_CARDS.ICON,
-                            isCustomForm.as("isCustomForm"))
+                            isCustomForm.as("isCustomForm"),
+                            UI_PROCESS_CARDS.ORDER_ID)
                     .from(UI_PROCESS_CARDS)
                     .leftJoin(REPOSITORIES).on(REPOSITORIES.REPO_ID.eq(UI_PROCESS_CARDS.REPO_ID))
                     .leftJoin(PROJECTS).on(PROJECTS.PROJECT_ID.eq(UI_PROCESS_CARDS.PROJECT_ID))
                     .leftJoin(ORGANIZATIONS).on(ORGANIZATIONS.ORG_ID.eq(PROJECTS.ORG_ID));
         }
 
-        private ProcessCardEntry toEntry(Record12<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean> r) {
+        private ProcessCardEntry toEntry(Record13<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean, Integer> r) {
             return ProcessCardEntry.builder()
                     .id(r.get(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID))
                     .orgName(r.get(ORGANIZATIONS.ORG_NAME))
@@ -437,6 +445,7 @@ public class ProcessCardManager {
                     .description(r.get(UI_PROCESS_CARDS.DESCRIPTION))
                     .icon(encodeBase64(r.get(UI_PROCESS_CARDS.ICON)))
                     .isCustomForm(r.get("isCustomForm", Boolean.class))
+                    .orderId(r.get(UI_PROCESS_CARDS.ORDER_ID))
                     .build();
         }
 
