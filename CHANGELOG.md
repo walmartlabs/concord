@@ -28,7 +28,9 @@ exception and unify the error messages
 ([#1076](https://github.com/walmartlabs/concord/pull/1076));
 - project: do not log into Docker in check runs started in
 forks
-([#1079](https://github.com/walmartlabs/concord/pull/1079)).
+([#1079](https://github.com/walmartlabs/concord/pull/1079));
+- concord-server: proper close queue client
+([#1082](http://github.com/walmartlabs/concord/pull/1082)).
 
 
 
