@@ -38,10 +38,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -132,6 +131,8 @@ public class QueueClient {
         private final long reconnectDelay;
 
         private WebSocketClient client;
+        private CompletableFuture<Void> closeFuture;
+
         private long lastRequestTimestamp;
         private long lastResponseTimestamp;
 
@@ -238,6 +239,7 @@ public class QueueClient {
         @Override
         public void onWebSocketClose(int statusCode, String reason) {
             state.set(State.DISCONNECTING);
+            closeFuture.complete(null);
             log.info("onWebSocketClose [{}, '{}'] -> done", statusCode, reason);
         }
 
@@ -248,7 +250,11 @@ public class QueueClient {
 
         @Override
         public void onWebSocketError(Throwable cause) {
-            log.error("onWebSocketError -> '{}'", cause.getMessage());
+            if (cause instanceof ClosedChannelException) {
+                log.warn("onWebSocketError -> closed channel");
+            } else {
+                log.error("onWebSocketError -> '{}'", cause.getMessage());
+            }
         }
 
         public void disconnect() {
@@ -258,6 +264,8 @@ public class QueueClient {
         private Session connect(URI destUri) throws Exception {
             this.client = createWebSocketClient(connectTimeout);
             this.client.start();
+
+            closeFuture = new CompletableFuture<>();
 
             ClientUpgradeRequest request = new ClientUpgradeRequest();
             request.setHeader(AGENT_ID, agentId);
@@ -316,10 +324,14 @@ public class QueueClient {
 
         private void close(Session session) {
             try {
-                if (session != null) {
+                if (session != null && session.isOpen()) {
                     session.close();
-                    session.disconnect();
+
+                    closeFuture.get(5, TimeUnit.SECONDS);
+                    closeFuture = null;
                 }
+            } catch (TimeoutException e) {
+                log.warn("close -> error: timeout waiting for close");
             } catch (Exception e) {
                 log.warn("close -> error", e);
             }
