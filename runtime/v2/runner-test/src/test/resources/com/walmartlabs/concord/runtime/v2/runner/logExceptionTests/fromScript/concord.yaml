@@ -1,0 +1,6 @@
+flows:
+  default:
+    - script: "js"
+      body: |
+        log.info('ready...');
+        throw new java.lang.RuntimeException("Something went wrong");
