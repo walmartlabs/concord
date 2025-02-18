@@ -93,10 +93,14 @@ public class CustomFormService implements Resource {
                                     @PathParam("formName") String formName,
                                     MultipartInput data) {
 
-        if (isV2(processInstanceId)) {
-            return customFormServiceV2.continueSession(uriInfo, headers, processInstanceId, formName, data);
-        } else {
-            return customFormServiceV1.continueSession(uriInfo, headers, processInstanceId, formName, data);
+        try {
+            if (isV2(processInstanceId)) {
+                return customFormServiceV2.continueSession(uriInfo, headers, processInstanceId, formName, data);
+            } else {
+                return customFormServiceV1.continueSession(uriInfo, headers, processInstanceId, formName, data);
+            }
+        } finally {
+            data.close();
         }
     }
 

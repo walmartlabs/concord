@@ -26,6 +26,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 public class GetDataRequest {
+
     public static GetDataRequest from(MultipartInput input) {
         return new GetDataRequest(input);
     }

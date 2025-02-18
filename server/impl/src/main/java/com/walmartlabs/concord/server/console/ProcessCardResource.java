@@ -135,21 +135,25 @@ public class ProcessCardResource implements Resource {
     public ProcessCardOperationResponse createOrUpdate(
             @Parameter(schema = @Schema(type = "object", implementation = ProcessCardRequest.class)) MultipartInput input) throws IOException {
 
-        ProcessCardRequest r = ProcessCardRequest.from(input);
+        try {
+            ProcessCardRequest r = ProcessCardRequest.from(input);
 
-        UUID orgId = organizationManager.assertAccess(r.getOrgId(), r.getOrgName(), false).getId();
-        UUID projectId = assertProject(orgId, r);
-        UUID repoId = getRepo(projectId, r);
-        String name = r.getName();
-        Optional<String> entryPoint = Optional.ofNullable(r.getEntryPoint());
-        String description = r.getDescription();
-        Map<String, Object> data = r.getData();
-        UUID id = r.getId();
-        Integer orderId = r.getOrderId();
+            UUID orgId = organizationManager.assertAccess(r.getOrgId(), r.getOrgName(), false).getId();
+            UUID projectId = assertProject(orgId, r);
+            UUID repoId = getRepo(projectId, r);
+            String name = r.getName();
+            Optional<String> entryPoint = Optional.ofNullable(r.getEntryPoint());
+            String description = r.getDescription();
+            Map<String, Object> data = r.getData();
+            UUID id = r.getId();
+            Integer orderId = r.getOrderId();
 
-        try (InputStream icon = r.getIcon();
-             InputStream form = r.getForm()) {
-            return processCardManager.createOrUpdate(id, projectId, repoId, name, entryPoint, description, icon, form, data, orderId);
+            try (InputStream icon = r.getIcon();
+                 InputStream form = r.getForm()) {
+                return processCardManager.createOrUpdate(id, projectId, repoId, name, entryPoint, description, icon, form, data, orderId);
+            }
+        } finally {
+            input.close();
         }
     }
 
