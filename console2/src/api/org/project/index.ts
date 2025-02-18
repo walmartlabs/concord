@@ -36,6 +36,7 @@ export enum ProjectVisibility {
 
 export interface ProjectEntryMetaUI {
     processList?: ColumnDefinition[];
+    childrenProcessList?: ColumnDefinition[];
 }
 
 export interface ProjectEntryMeta {
