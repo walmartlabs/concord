@@ -291,6 +291,8 @@ const ProcessActivity = (props: ExternalProps) => {
                     <ProcessChildrenActivity
                         instanceId={instanceId}
                         processStatus={process ? process.status : undefined}
+                        processOrgName={process ? process.orgName : undefined}
+                        processProjectName={process ? process.projectName : undefined}
                         loadingHandler={loadingHandler}
                         forceRefresh={refresh}
                         dataFetchInterval={dataFetchInterval}
