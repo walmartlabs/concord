@@ -1,5 +1,17 @@
 # Change Log
 
+## [2.23.0] - Unreleased
+
+### Changed
+
+- runtime-v2: hide stack trace and log location for
+ParallelExecutionException
+([#1081](https://github.com/walmartlabs/concord/pull/1081));
+- concord-server: close MultipartInput explicitly
+([#1084](https://github.com/walmartlabs/concord/pull/1084).
+
+
+
 ## [2.22.0] - 2025-02-14
 
 ### Added
