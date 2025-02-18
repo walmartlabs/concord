@@ -1,5 +1,37 @@
 # Change Log
 
+## [2.22.0] - Unreleased
+
+### Added
+
+- concord-server: order ui_process_card by a new order_id field
+([#1075](https://github.com/walmartlabs/concord/pull/1075));
+- misc-tasks: add base64 task, shortcut for current ISO timestamp
+([#1078](https://github.com/walmartlabs/concord/pull/1078));
+- http-tasks: use default variables
+([#1080](https://github.com/walmartlabs/concord/pull/1080)).
+
+### Changed
+
+- concord-server: simplify UserInfo, UserInfoProcessor
+([#1061](https://github.com/walmartlabs/concord/pull/1061));
+- project: update to latest Jetty 12.x
+([#1068](https://github.com/walmartlabs/concord/pull/1068));
+- concord-agent, runtime-v2: miscellaneous improvements
+([#1070](https://github.com/walmartlabs/concord/pull/1070));
+- concord-agent-operator: use informers API
+([#1072](https://github.com/walmartlabs/concord/pull/1072));
+- concord-agent-operator: attempt to improve error logging
+([#1073](https://github.com/walmartlabs/concord/pull/1073));
+- runtime-v2: do not log stack trace for EL MethodNotFound
+exception and unify the error messages
+([#1076](https://github.com/walmartlabs/concord/pull/1076));
+- project: do not log into Docker in check runs started in
+forks
+([#1079](https://github.com/walmartlabs/concord/pull/1079)).
+
+
+
 ## [2.21.0] - 2025-01-15
 
 ### Added
