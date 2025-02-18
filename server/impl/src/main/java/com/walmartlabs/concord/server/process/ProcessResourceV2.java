@@ -290,8 +290,8 @@ public class ProcessResourceV2 implements Resource {
         List<MetadataFilter> metaFilters = MetadataUtils.parseMetadataFilters(uriInfo);
 
         // can't allow seq scans, we don't index PROCESS_QUEUE.META (yet?)
-        if (!metaFilters.isEmpty() && effectiveProjectId == null) {
-            throw new ValidationErrorsException("Process metadata filters require a project name or an ID to be included in the query.");
+        if (!metaFilters.isEmpty() && (effectiveProjectId == null && parentId == null)) {
+            throw new ValidationErrorsException("Process metadata filters require a project name or parentId or an ID to be included in the query.");
         }
 
         return ProcessFilter.builder()
