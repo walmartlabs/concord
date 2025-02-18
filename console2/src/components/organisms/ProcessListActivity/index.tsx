@@ -113,7 +113,7 @@ export const parseSearchFilter = (s: string): ProcessSearchFilter => {
     };
 };
 
-const addBuiltInColumns = (columns?: ColumnDefinition[]): ColumnDefinition[] | undefined => {
+export const addBuiltInColumns = (columns?: ColumnDefinition[]): ColumnDefinition[] | undefined => {
     if (!columns) {
         return;
     }
