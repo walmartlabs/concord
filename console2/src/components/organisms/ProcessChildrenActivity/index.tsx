@@ -107,8 +107,6 @@ const ProcessChildrenActivity = ({
 
     const fetchData = useCallback(async () => {
         const query = {
-            orgName : processOrgName,
-            projectName : processProjectName,
             parentInstanceId: instanceId,
             ...searchFilter.pagination
         } as ProcessListQuery;
