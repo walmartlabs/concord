@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import {ConcordId, ConcordKey, queryParams} from '../../../api/common';
+import { ConcordId, ConcordKey, queryParams } from '../../../api/common';
 import { Pagination } from '../../../state/data/processes';
 import {
     list as apiProcessList,
@@ -37,14 +37,14 @@ import {
     STATUS_COLUMN
 } from '../../molecules/ProcessList';
 import { useHistory, useLocation } from 'react-router';
-import {addBuiltInColumns, filtersToQuery, parseSearchFilter, ProcessSearchFilter} from '../ProcessListActivity';
+import { addBuiltInColumns, filtersToQuery, parseSearchFilter, ProcessSearchFilter } from '../ProcessListActivity';
 import { ProcessFilters } from '../../../api/process';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePolling } from '../../../api/usePolling';
 import { get as apiGetProject, ProjectEntry } from "../../../api/org/project";
 import { useApi } from "../../../hooks/useApi";
-import {LoadingDispatch} from "../../../App";
+import { LoadingDispatch } from "../../../App";
 
 const COLUMNS = [
     STATUS_COLUMN,
