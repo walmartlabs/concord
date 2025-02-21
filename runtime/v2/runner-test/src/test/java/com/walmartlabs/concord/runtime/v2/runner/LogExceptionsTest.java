@@ -278,4 +278,32 @@ public class LogExceptionsTest {
         assertNoLog(runtime.lastLog(), ".*" + quote("com.walmartlabs.concord.svm.ParallelExecutionException") + ".*");
         assertNoLog(runtime.lastLog(), ".*" + quote("at com.walmartlabs.concord.runtime.v2.runner.vm.JoinCommand.execute") + ".*");
     }
+
+
+    @Test
+    public void noStackTraceForArgsEvalError() throws Exception {
+        runtime.deploy("logExceptionTests/invalidArgs");
+
+        runtime.save(ProcessConfiguration.builder()
+                .putArguments("name", "${undefinedVariableName}")
+                .build());
+
+        try {
+            runtime.run();
+            fail("Exception expected");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        var errorMessage = "[ERROR] Error while evaluating process arguments: while evaluating expression " +
+                "'${undefinedVariableName}': Can't find a variable 'undefinedVariableName'. " +
+                "Check if it is defined in the current scope. " +
+                "Details: ELResolver cannot handle a null base Object with identifier 'undefinedVariableName'";
+
+        // error
+        assertLog(runtime.lastLog(), ".*" + quote(errorMessage) + ".*");
+
+        // no stacktrace
+        assertNoLog(runtime.lastLog(), ".*" + quote("at com.walmartlabs.concord.runtime.v2") + ".*");
+    }
 }
