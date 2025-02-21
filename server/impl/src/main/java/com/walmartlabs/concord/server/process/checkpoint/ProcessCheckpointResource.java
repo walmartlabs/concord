@@ -112,25 +112,29 @@ public class ProcessCheckpointResource implements Resource {
     public void uploadCheckpoint(@PathParam("id") UUID instanceId,
                                  @Parameter(schema = @Schema(type = "object", implementation = Object.class)) MultipartInput input) {
 
-        // TODO replace with ProcessKeyCache
-        ProcessEntry entry = processManager.assertProcess(instanceId);
-        ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
+        try {
+            // TODO replace with ProcessKeyCache
+            ProcessEntry entry = processManager.assertProcess(instanceId);
+            ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
-        UUID checkpointId = MultipartUtils.assertUuid(input, "id");
-        UUID correlationId = MultipartUtils.assertUuid(input, "correlationId");
-        String checkpointName = MultipartUtils.assertString(input, "name");
-        try (InputStream data = MultipartUtils.assertStream(input, "data");
-             TemporaryPath tmpIn = IOUtils.tempFile("checkpoint", ".zip")) {
+            UUID checkpointId = MultipartUtils.assertUuid(input, "id");
+            UUID correlationId = MultipartUtils.assertUuid(input, "correlationId");
+            String checkpointName = MultipartUtils.assertString(input, "name");
+            try (InputStream data = MultipartUtils.assertStream(input, "data");
+                 TemporaryPath tmpIn = IOUtils.tempFile("checkpoint", ".zip")) {
 
-            Files.copy(data, tmpIn.path(), StandardCopyOption.REPLACE_EXISTING);
-            checkpointManager.importCheckpoint(processKey, checkpointId, correlationId, checkpointName, tmpIn.path());
-        } catch (ValidationErrorsException e) {
-            throw new ConcordApplicationException(e.getMessage(), Response.Status.BAD_REQUEST);
-        } catch (IOException e) {
-            log.error("uploadCheckpoint ['{}'] -> error", processKey, e);
-            throw new ConcordApplicationException("upload error: " + e.getMessage());
+                Files.copy(data, tmpIn.path(), StandardCopyOption.REPLACE_EXISTING);
+                checkpointManager.importCheckpoint(processKey, checkpointId, correlationId, checkpointName, tmpIn.path());
+            } catch (ValidationErrorsException e) {
+                throw new ConcordApplicationException(e.getMessage(), Response.Status.BAD_REQUEST);
+            } catch (IOException e) {
+                log.error("uploadCheckpoint ['{}'] -> error", processKey, e);
+                throw new ConcordApplicationException("upload error: " + e.getMessage());
+            }
+
+            log.info("uploadCheckpoint ['{}'] -> done", processKey);
+        } finally {
+            input.close();
         }
-
-        log.info("uploadCheckpoint ['{}'] -> done", processKey);
     }
 }

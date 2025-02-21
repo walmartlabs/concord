@@ -1,0 +1,12 @@
+flows:
+  default:
+    - call: inner
+      loop:
+        items: [1, 2]
+        mode: parallel
+        parallelism: 2
+
+  inner:
+    - parallel:
+        - task: "userDefinedExceptionTask"
+        - log: "OK"

@@ -48,7 +48,7 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelCommand;
-import com.walmartlabs.concord.runtime.v2.runner.vm.WrappedException;
+import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelExecutionException;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Runtime;
