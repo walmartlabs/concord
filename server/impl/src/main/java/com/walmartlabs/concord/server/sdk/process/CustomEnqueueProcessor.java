@@ -43,9 +43,9 @@ public interface CustomEnqueueProcessor {
     }
 
     /**
-     * Process the process configuration before the merge rules are applied.
+     * Process the process configuration after the merge rules are applied.
      */
-    default Payload prepareConfiguration(Payload payload) {
+    default Payload handleConfiguration(Payload payload) {
         return payload;
     }
 }
