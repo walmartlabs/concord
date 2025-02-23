@@ -47,10 +47,10 @@ public class CustomEnqueueProcessors {
         };
     }
 
-    public PayloadProcessor prepareConfiguration() {
+    public PayloadProcessor handleConfiguration() {
         return (chain, payload) -> {
             for (CustomEnqueueProcessor p : processors) {
-                payload = p.prepareConfiguration(payload);
+                payload = p.handleConfiguration(payload);
             }
             return chain.process(payload);
         };

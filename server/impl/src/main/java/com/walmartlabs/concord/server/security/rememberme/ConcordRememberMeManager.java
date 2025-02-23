@@ -86,7 +86,7 @@ public class ConcordRememberMeManager extends CookieRememberMeManager {
         // delete the "remember me" cookie only if it is present
         HttpServletRequest request = WebUtils.getHttpRequest(subject);
         var rememberMeCookieName = getCookie().getName();
-        if (Stream.of(request.getCookies())
+        if (request.getCookies() != null && Stream.of(request.getCookies())
                 .anyMatch(cookie -> cookie.getName().equals(rememberMeCookieName))) {
             super.forgetIdentity(subject);
         }
