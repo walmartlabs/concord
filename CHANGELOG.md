@@ -8,7 +8,10 @@
 ParallelExecutionException
 ([#1081](https://github.com/walmartlabs/concord/pull/1081));
 - concord-server: close MultipartInput explicitly
-([#1084](https://github.com/walmartlabs/concord/pull/1084).
+([#1084](https://github.com/walmartlabs/concord/pull/1084);
+- concord-tasks: send archive as a file instead of byte
+array
+([#1087](https://github.com/walmartlabs/concord/pull/1087)).
 
 
 
