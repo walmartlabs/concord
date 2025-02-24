@@ -28,6 +28,8 @@ import com.walmartlabs.concord.imports.Import.SecretDefinition;
 import com.walmartlabs.concord.repository.*;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -36,6 +38,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class RepositoryManager {
+
+    private static final Logger log = LoggerFactory.getLogger(RepositoryManager.class);
 
     private final SecretClient secretClient;
     private final RepositoryProviders providers;
@@ -74,6 +78,11 @@ public class RepositoryManager {
     }
 
     public void export(String repoUrl, String branch, String commitId, String repoPath, Path dest, SecretDefinition secretDefinition, List<String> ignorePatterns) throws ExecutionException {
+        if (!gitCfg.isEnabled()) {
+            log.info("Git disabled, using local state");
+            return;
+        }
+
         Secret secret = getSecret(secretDefinition);
 
         Path cacheDir = repositoryCache.getPath(repoUrl);
