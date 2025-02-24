@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
  * An exception that is thrown when multiple exceptions are thrown
  * in {@code parallel} blocks.
  */
+@Deprecated
 public class ParallelExecutionException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;

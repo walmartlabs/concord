@@ -173,8 +173,12 @@ public class CustomFormServiceV2 {
                                     @PathParam("formName") String formName,
                                     MultipartInput data) {
 
-        ProcessKey processKey = assertKey(processInstanceId);
-        return continueSession(uriInfo, headers, processKey, formName, MultipartUtils.toMap(data));
+        try {
+            ProcessKey processKey = assertKey(processInstanceId);
+            return continueSession(uriInfo, headers, processKey, formName, MultipartUtils.toMap(data));
+        } finally {
+            data.close();
+        }
     }
 
     private Response continueSession(UriInfo uriInfo, HttpHeaders headers, ProcessKey processKey,

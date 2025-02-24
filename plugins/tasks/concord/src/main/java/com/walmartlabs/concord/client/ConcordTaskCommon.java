@@ -217,7 +217,7 @@ public class ConcordTaskCommon {
         Map<String, Object> input = new HashMap<>();
 
         if (archive != null) {
-            input.put("archive", Files.readAllBytes(archive));
+            input.put("archive", archive);
         }
 
         Map<String, Object> req = createRequest(in);

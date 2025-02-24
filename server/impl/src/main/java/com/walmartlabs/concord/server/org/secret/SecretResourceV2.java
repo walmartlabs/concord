@@ -104,34 +104,38 @@ public class SecretResourceV2 implements Resource {
                                          @PathParam("secretName") @ConcordKey String secretName,
                                          @Parameter(schema = @Schema(type = "object", implementation = Object.class)) MultipartInput input) {
 
-        OrganizationEntry org = orgManager.assertAccess(orgName, true);
-        Set<UUID> projectIds = getProjectIds(
-                org.getId(),
-                MultipartUtils.getUUIDList(input, Constants.Multipart.PROJECT_IDS),
-                MultipartUtils.getStringList(input, Constants.Multipart.PROJECT_NAMES),
-                MultipartUtils.getUuid(input, Constants.Multipart.PROJECT_ID),
-                MultipartUtils.getString(input, Constants.Multipart.PROJECT_NAME)
-        );
         try {
-            SecretUpdateParams newSecretParams = SecretUpdateParams.builder()
-                    .newOrgId(MultipartUtils.getUuid(input, Constants.Multipart.ORG_ID))
-                    .newOrgName(MultipartUtils.getString(input, Constants.Multipart.ORG_NAME))
-                    .newProjectIds(projectIds)
-                    .removeProjectLink(MultipartUtils.getBoolean(input, "removeProjectLink", false))
-                    .newOwnerId(MultipartUtils.getUuid(input, "ownerId"))
-                    .currentPassword(MultipartUtils.getString(input, Constants.Multipart.STORE_PASSWORD))
-                    .newPassword(MultipartUtils.getString(input, Constants.Multipart.NEW_STORE_PASSWORD))
-                    .newSecret(buildSecret(input))
-                    .newName(MultipartUtils.getString(input, Constants.Multipart.NAME))
-                    .newVisibility(SecretResourceUtils.getVisibility(input))
-                    .build();
+            OrganizationEntry org = orgManager.assertAccess(orgName, true);
+            Set<UUID> projectIds = getProjectIds(
+                    org.getId(),
+                    MultipartUtils.getUUIDList(input, Constants.Multipart.PROJECT_IDS),
+                    MultipartUtils.getStringList(input, Constants.Multipart.PROJECT_NAMES),
+                    MultipartUtils.getUuid(input, Constants.Multipart.PROJECT_ID),
+                    MultipartUtils.getString(input, Constants.Multipart.PROJECT_NAME)
+            );
+            try {
+                SecretUpdateParams newSecretParams = SecretUpdateParams.builder()
+                        .newOrgId(MultipartUtils.getUuid(input, Constants.Multipart.ORG_ID))
+                        .newOrgName(MultipartUtils.getString(input, Constants.Multipart.ORG_NAME))
+                        .newProjectIds(projectIds)
+                        .removeProjectLink(MultipartUtils.getBoolean(input, "removeProjectLink", false))
+                        .newOwnerId(MultipartUtils.getUuid(input, "ownerId"))
+                        .currentPassword(MultipartUtils.getString(input, Constants.Multipart.STORE_PASSWORD))
+                        .newPassword(MultipartUtils.getString(input, Constants.Multipart.NEW_STORE_PASSWORD))
+                        .newSecret(buildSecret(input))
+                        .newName(MultipartUtils.getString(input, Constants.Multipart.NAME))
+                        .newVisibility(SecretResourceUtils.getVisibility(input))
+                        .build();
 
-            secretManager.update(org.getId(), secretName, newSecretParams);
-        } catch (IOException e) {
-            throw new ConcordApplicationException("Error while processing the request: " + e.getMessage(), e);
+                secretManager.update(org.getId(), secretName, newSecretParams);
+            } catch (IOException e) {
+                throw new ConcordApplicationException("Error while processing the request: " + e.getMessage(), e);
+            }
+
+            return new GenericOperationResult(OperationResult.UPDATED);
+        } finally {
+            input.close();
         }
-
-        return new GenericOperationResult(OperationResult.UPDATED);
     }
 
     public Secret buildSecret(MultipartInput input) throws IOException {

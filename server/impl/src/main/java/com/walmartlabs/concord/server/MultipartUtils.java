@@ -174,6 +174,14 @@ public final class MultipartUtils {
         throw new ConcordApplicationException(key + " not specified", Response.Status.BAD_REQUEST);
     }
 
+    public static Integer getInt(MultipartInput input, String key) {
+        String s = getString(input, key);
+        if (s == null) {
+            return null;
+        }
+        return Integer.parseInt(s);
+    }
+
     public static InputStream getStream(MultipartInput input, String key) {
         try {
             for (InputPart p : input.getParts()) {

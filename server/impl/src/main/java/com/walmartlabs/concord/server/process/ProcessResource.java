@@ -271,26 +271,30 @@ public class ProcessResource implements Resource {
                                       @Parameter(hidden = true) @Deprecated @QueryParam("out") String[] out,
                                       @Context HttpServletRequest request) {
 
-        boolean sync2 = MultipartUtils.getBoolean(input, Constants.Multipart.SYNC, false);
-        if (sync || sync2) {
-            throw syncIsForbidden();
-        }
-
-        Payload payload;
         try {
-            payload = payloadManager.createPayload(input, request);
+            boolean sync2 = MultipartUtils.getBoolean(input, Constants.Multipart.SYNC, false);
+            if (sync || sync2) {
+                throw syncIsForbidden();
+            }
 
-            // TODO remove after deprecating the old endpoints
-            payload = PayloadBuilder.basedOn(payload)
-                    .parentInstanceId(parentInstanceId)
-                    .mergeOutExpressions(out)
-                    .build();
-        } catch (IOException e) {
-            log.error("start -> error creating a payload: {}", e.getMessage());
-            throw new ConcordApplicationException("Error creating a payload", e);
+            Payload payload;
+            try {
+                payload = payloadManager.createPayload(input, request);
+
+                // TODO remove after deprecating the old endpoints
+                payload = PayloadBuilder.basedOn(payload)
+                        .parentInstanceId(parentInstanceId)
+                        .mergeOutExpressions(out)
+                        .build();
+            } catch (IOException e) {
+                log.error("start -> error creating a payload: {}", e.getMessage());
+                throw new ConcordApplicationException("Error creating a payload", e);
+            }
+
+            return toResponse(processManager.start(payload));
+        } finally {
+            input.close();
         }
-
-        return toResponse(processManager.start(payload));
     }
 
     /**
@@ -310,27 +314,31 @@ public class ProcessResource implements Resource {
                                       @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @QueryParam("out") String[] out) {
 
-        if (sync) {
-            throw syncIsForbidden();
-        }
-
-        assertPartialKey(parentInstanceId);
-
-        PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
-
-        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
-        EntryPoint ep = payloadManager.parseEntryPoint(processKey, orgId, entryPoint);
-        UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
-
-        Payload payload;
         try {
-            payload = payloadManager.createPayload(processKey, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, input, out);
-        } catch (IOException e) {
-            log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
-            throw new ConcordApplicationException("Error creating a payload", e);
-        }
+            if (sync) {
+                throw syncIsForbidden();
+            }
 
-        return toResponse(processManager.start(payload));
+            assertPartialKey(parentInstanceId);
+
+            PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
+
+            UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
+            EntryPoint ep = payloadManager.parseEntryPoint(processKey, orgId, entryPoint);
+            UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
+
+            Payload payload;
+            try {
+                payload = payloadManager.createPayload(processKey, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, input, out);
+            } catch (IOException e) {
+                log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
+                throw new ConcordApplicationException("Error creating a payload", e);
+            }
+
+            return toResponse(processManager.start(payload));
+        } finally {
+            input.close();
+        }
     }
 
     /**

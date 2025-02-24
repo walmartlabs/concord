@@ -26,8 +26,15 @@ import java.util.Objects;
 
 public class WrappedException extends RuntimeException {
 
+    private final String prefix;
+
     public WrappedException(Exception cause) {
+        this(null, Objects.requireNonNull(cause));
+    }
+
+    public WrappedException(String prefix, Exception cause) {
         super(Objects.requireNonNull(cause));
+        this.prefix = prefix;
     }
 
     @Override
@@ -52,16 +59,23 @@ public class WrappedException extends RuntimeException {
 
     @Override
     public String getLocalizedMessage() {
-        return getCause().getLocalizedMessage();
+        return messagePrefix() + getCause().getLocalizedMessage();
     }
 
     @Override
     public String getMessage() {
-        return getCause().getMessage();
+        return messagePrefix() + getCause().getMessage();
     }
 
     @Override
     public String toString() {
-        return getCause().toString();
+        return messagePrefix() + getCause().toString();
+    }
+
+    private String messagePrefix() {
+        if (prefix != null) {
+            return prefix;
+        }
+        return "";
     }
 }

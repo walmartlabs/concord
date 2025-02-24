@@ -150,7 +150,7 @@ public class CustomFormServiceV1 {
             // copy shared resources (if present)
             copySharedResources(processKey, dst);
         } catch (IOException e) {
-            log.warn("startSession ['{}', '{}'] -> error while preparing a custom form: {}", processKey, formName, e);
+            log.warn("startSession ['{}', '{}'] -> error while preparing a custom form: {}", processKey, formName, e.getMessage());
             throw new ConcordApplicationException("Error while preparing a custom form", e);
         }
 
@@ -182,8 +182,12 @@ public class CustomFormServiceV1 {
                                     @PathParam("formName") String formName,
                                     MultipartInput data) {
 
-        ProcessKey processKey = assertKey(processInstanceId);
-        return continueSession(uriInfo, headers, processKey, formName, MultipartUtils.toMap(data));
+        try {
+            ProcessKey processKey = assertKey(processInstanceId);
+            return continueSession(uriInfo, headers, processKey, formName, MultipartUtils.toMap(data));
+        } finally {
+            data.close();
+        }
     }
 
     private Response continueSession(UriInfo uriInfo, HttpHeaders headers, ProcessKey processKey,
