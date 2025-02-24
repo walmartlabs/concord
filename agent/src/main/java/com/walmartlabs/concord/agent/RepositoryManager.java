@@ -78,8 +78,8 @@ public class RepositoryManager {
     }
 
     public void export(String repoUrl, String branch, String commitId, String repoPath, Path dest, SecretDefinition secretDefinition, List<String> ignorePatterns) throws ExecutionException {
-        if (!gitCfg.isEnabled()) {
-            log.info("Git disabled, using local state");
+        if (gitCfg.isSkip()) {
+            log.info("Skipping git export, using local state");
             return;
         }
 
