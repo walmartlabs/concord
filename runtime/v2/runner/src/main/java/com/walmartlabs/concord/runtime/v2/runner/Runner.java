@@ -79,7 +79,12 @@ public class Runner {
 
         VM vm = createVM(processDefinition);
         // update the global variables using the input map by running a special command
-        vm.run(state, new UpdateLocalsCommand(input)); // TODO merge with the cfg's arguments
+        try {
+            vm.run(state, new UpdateLocalsCommand(input)); // TODO merge with the cfg's arguments
+        } catch (RuntimeException e) {
+            log.error("Error while evaluating process arguments: {}", e.getMessage(), e);
+            throw e;
+        }
         // start the normal execution
         vm.start(state);
 
@@ -105,7 +110,12 @@ public class Runner {
                 .filter(kv -> eventRefs.contains(kv.getValue()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
-        vm.run(state, new UpdateLocalsCommand(input, resumingThreads));
+        try {
+            vm.run(state, new UpdateLocalsCommand(input, resumingThreads));
+        } catch (RuntimeException e) {
+            log.error("Error while evaluating resume arguments: {}", e.getMessage(), e);
+            throw e;
+        }
 
         // resume normally
         vm.resume(state, eventRefs);
@@ -126,7 +136,13 @@ public class Runner {
 
         VM vm = createVM(snapshot.processDefinition());
         // update the global variables using the input map by running a special command
-        vm.run(state, new UpdateLocalsCommand(input));
+        try {
+            vm.run(state, new UpdateLocalsCommand(input));
+        } catch (RuntimeException e) {
+            log.error("Error while evaluating resume arguments: {}", e.getMessage(), e);
+            throw e;
+        }
+
         // continue as usual
         vm.start(state);
 
