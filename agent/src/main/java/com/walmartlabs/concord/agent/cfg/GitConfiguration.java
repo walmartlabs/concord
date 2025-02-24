@@ -38,7 +38,7 @@ public class GitConfiguration {
     private final Duration httpLowSpeedTime;
     private final Duration sshTimeout;
     private final int sshTimeoutRetryCount;
-    private final boolean enabled;
+    private final boolean skip;
 
     @Inject
     public GitConfiguration(Config cfg) {
@@ -51,7 +51,7 @@ public class GitConfiguration {
         this.httpLowSpeedTime = cfg.getDuration("git.httpLowSpeedTime");
         this.sshTimeout = cfg.getDuration("git.sshTimeout");
         this.sshTimeoutRetryCount = cfg.getInt("git.sshTimeoutRetryCount");
-        this.enabled = cfg.getBoolean("git.enabled");
+        this.skip = cfg.getBoolean("git.skip");
     }
 
     public String getToken() {
@@ -90,7 +90,7 @@ public class GitConfiguration {
         return sshTimeoutRetryCount;
     }
 
-    public boolean isEnabled() {
-        return enabled;
+    public boolean isSkip() {
+        return skip;
     }
 }
