@@ -2,6 +2,12 @@
 
 ## [2.23.0] - Unreleased
 
+### Added
+
+- concord-server: allow handle configuration in custom
+enqueue processor
+([#1088](https://github.com/walmartlabs/concord/pull/1088)).
+
 ### Changed
 
 - runtime-v2: hide stack trace and log location for
