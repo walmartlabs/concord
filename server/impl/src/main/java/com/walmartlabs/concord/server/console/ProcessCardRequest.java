@@ -76,6 +76,11 @@ public class ProcessCardRequest {
         return MultipartUtils.getString(input, Constants.Multipart.ENTRY_POINT);
     }
 
+    @Schema(name = Constants.Multipart.ORDER_ID)
+    public Integer getOrderId() {
+        return MultipartUtils.getInt(input, Constants.Multipart.ORDER_ID);
+    }
+
     @Schema(name = "name")
     public String getName() {
         return MultipartUtils.getString(input, "name");
@@ -105,4 +110,5 @@ public class ProcessCardRequest {
     public InputStream getForm() {
         return MultipartUtils.getStream(input, "form");
     }
+
 }

@@ -49,24 +49,24 @@ public class TaskCallInterceptor {
         this.listeners = listeners;
     }
 
-    public <T> T invoke(CallContext ctx, Method method, Callable<T> callable) throws Exception {
+    public <T> T invoke(CallContext ctx, Method method, Callable<T> callable) throws TaskException {
         // record the PRE event
-        TaskCallEvent preEvent = eventBuilder(Phase.PRE, method, ctx).build();
+        var preEvent = eventBuilder(Phase.PRE, method, ctx).build();
         listeners.forEach(l -> l.onEvent(preEvent));
 
         // call the callable and measure the duration
         T result = null;
         Exception error = null;
-        long startedAt = System.currentTimeMillis();
+        var startedAt = System.currentTimeMillis();
         try {
             result = callable.call();
         } catch (Exception e) {
             error = e;
         }
-        long duration = System.currentTimeMillis() - startedAt;
+        var duration = System.currentTimeMillis() - startedAt;
 
         // record the POST event
-        TaskCallEvent postEvent = eventBuilder(Phase.POST, method, ctx)
+        var postEvent = eventBuilder(Phase.POST, method, ctx)
                 .error(errorMessage(error))
                 .duration(duration)
                 .result(result instanceof Serializable ? (Serializable) result : null)
@@ -115,17 +115,17 @@ public class TaskCallInterceptor {
         @AllowNulls
         @Value.Default
         default List<Object> arguments() {
-            return Collections.emptyList();
+            return List.of();
         }
 
         @AllowNulls
         @Value.Default
         default List<List<Annotation>> annotations() {
-            return Collections.emptyList();
+            return List.of();
         }
 
-        static Method of(Class<? extends Task> taskClass, String methodName, List<Object> params) {
-            List<List<Annotation>> annotations = Collections.emptyList();
+        static Method of(Class<? extends Task> taskClass, String methodName, List<Object> params) throws javax.el.MethodNotFoundException {
+            List<List<Annotation>> annotations = List.of();
             var m = ReflectionUtil.findMethod(taskClass, methodName, null, params.toArray());
             if (m != null && !m.isVarArgs()) {
                 annotations = Arrays.stream(m.getParameterAnnotations())
