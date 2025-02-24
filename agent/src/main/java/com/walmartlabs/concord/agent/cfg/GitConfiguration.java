@@ -51,7 +51,7 @@ public class GitConfiguration {
         this.httpLowSpeedTime = cfg.getDuration("git.httpLowSpeedTime");
         this.sshTimeout = cfg.getDuration("git.sshTimeout");
         this.sshTimeoutRetryCount = cfg.getInt("git.sshTimeoutRetryCount");
-        this.enabled = !cfg.hasPath("git.enabled") || cfg.getBoolean("git.enabled");
+        this.enabled = cfg.getBoolean("git.enabled");
     }
 
     public String getToken() {
