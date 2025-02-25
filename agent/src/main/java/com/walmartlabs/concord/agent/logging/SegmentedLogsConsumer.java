@@ -99,7 +99,7 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
                     .warnCount(0)
                     .length(s.end() - s.start())
                     .build();
-            segments.add(Segment.of(header, s.start()));
+            segments.add(new Segment(header, s.start()));
         }
     }
 
@@ -160,11 +160,7 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
         }
 
         if (done || errorCount > 0 || warnCount > 0) {
-            return LogSegmentStats.builder()
-                    .status(status)
-                    .errors(errorCount)
-                    .warnings(warnCount)
-                    .build();
+            return new LogSegmentStats(status, errorCount, warnCount);
         }
         return null;
     }
