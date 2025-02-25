@@ -17,6 +17,8 @@ ParallelExecutionException
 ([#1084](https://github.com/walmartlabs/concord/pull/1084);
 - console2: configure children process columns
 ([#1085](https://github.com/walmartlabs/concord/pull/1085));
+- runtimev2: error message for process arguments evaluation
+([#1086](https://github.com/walmartlabs/concord/pull/1086)); 
 - concord-tasks: send archive as a file instead of byte
 array
 ([#1087](https://github.com/walmartlabs/concord/pull/1087)).
