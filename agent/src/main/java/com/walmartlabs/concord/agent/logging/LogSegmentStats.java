@@ -21,30 +21,12 @@ package com.walmartlabs.concord.agent.logging;
  */
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
-import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 
-@Value.Immutable
-@Value.Style(jdkOnly = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonSerialize(as = ImmutableLogSegmentStats.class)
-@JsonDeserialize(as = ImmutableLogSegmentStats.class)
-public interface LogSegmentStats {
-
-    @Nullable
-    LogSegmentStatus status();
-
-    @Nullable
-    Integer errors();
-
-    @Nullable
-    Integer warnings();
-
-    static ImmutableLogSegmentStats.Builder builder() {
-        return ImmutableLogSegmentStats.builder();
-    }
+public record LogSegmentStats(@Nullable LogSegmentStatus status,
+                              @Nullable Integer errors,
+                              @Nullable Integer warnings) {
 }
