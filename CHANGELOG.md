@@ -1,5 +1,33 @@
 # Change Log
 
+## [2.23.0] - Unreleased
+
+### Added
+
+- concord-server: allow handle configuration in custom
+enqueue processor
+([#1088](https://github.com/walmartlabs/concord/pull/1088));
+- concord-agent: allow skipping repository state
+([#1089](https://github.com/walmartlabs/concord/pull/1089)).
+
+### Changed
+
+- runtime-v2: hide stack trace and log location for
+ParallelExecutionException
+([#1081](https://github.com/walmartlabs/concord/pull/1081));
+- concord-server: close MultipartInput explicitly
+([#1084](https://github.com/walmartlabs/concord/pull/1084);
+- console2: configure children process columns
+([#1085](https://github.com/walmartlabs/concord/pull/1085));
+- runtimev2: error message for process arguments evaluation
+([#1086](https://github.com/walmartlabs/concord/pull/1086)); 
+- concord-tasks: send archive as a file instead of byte
+array
+([#1087](https://github.com/walmartlabs/concord/pull/1087));
+- concord-server: handle request without cookies
+([#1090](https://github.com/walmartlabs/concord/pull/1090)).
+
+
 ## [2.22.0] - 2025-02-14
 
 ### Added
