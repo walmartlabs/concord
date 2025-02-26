@@ -6,7 +6,9 @@
 
 - concord-server: allow handle configuration in custom
 enqueue processor
-([#1088](https://github.com/walmartlabs/concord/pull/1088)).
+([#1088](https://github.com/walmartlabs/concord/pull/1088));
+- concord-agent: allow skipping repository state
+([#1089](https://github.com/walmartlabs/concord/pull/1089)).
 
 ### Changed
 
@@ -22,8 +24,6 @@ ParallelExecutionException
 - concord-tasks: send archive as a file instead of byte
 array
 ([#1087](https://github.com/walmartlabs/concord/pull/1087));
-- concord-agent: allow skipping repository state
-([#1089](https://github.com/walmartlabs/concord/pull/1089));
 - concord-server: handle request without cookies
 ([#1090](https://github.com/walmartlabs/concord/pull/1090)).
 
