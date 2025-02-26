@@ -22,9 +22,10 @@ ParallelExecutionException
 - concord-tasks: send archive as a file instead of byte
 array
 ([#1087](https://github.com/walmartlabs/concord/pull/1087));
+- concord-agent: allow skipping repository state
+([#1089](https://github.com/walmartlabs/concord/pull/1089));
 - concord-server: handle request without cookies
 ([#1090](https://github.com/walmartlabs/concord/pull/1090)).
-
 
 
 ## [2.22.0] - 2025-02-14
