@@ -35,6 +35,8 @@ import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.cfg.ProcessConfigurationUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -50,6 +52,8 @@ import java.util.*;
  */
 @Named
 public class ConfigurationProcessor implements PayloadProcessor {
+
+    private static final Logger log = LoggerFactory.getLogger(ConfigurationProcessor.class);
 
     public static final AttachmentKey REQUEST_ATTACHMENT_KEY = AttachmentKey.register("request");
 
@@ -69,22 +73,34 @@ public class ConfigurationProcessor implements PayloadProcessor {
         // default configuration from policy
         Map<String, Object> policyDefCfg = getDefaultCfgFromPolicy(payload);
 
+        log.info("process: {}", policyDefCfg);
+
         // org configuration
         Map<String, Object> orgCfg = getOrgCfg(payload);
+
+        log.info("orgCfg: {}", orgCfg);
 
         ProjectEntry projectEntry = getProject(payload);
 
         // project configuration
         Map<String, Object> projectCfg = getProjectCfg(projectEntry);
 
+        log.info("projectCfg: {}", projectCfg);
+
         // _main.json file in the workspace
         Map<String, Object> workspaceCfg = getWorkspaceCfg(payload);
+
+        log.info("workspaceCfg: {}", workspaceCfg);
 
         // attached to the request JSON file
         Map<String, Object> attachedCfg = getAttachedCfg(payload);
 
+        log.info("attachedCfg: {}", attachedCfg);
+
         // existing configuration values from the payload
         Map<String, Object> payloadCfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
+
+        log.info("payloadCfg: {}", payloadCfg);
 
         // determine the active profile names
         List<String> activeProfiles = ProcessConfigurationUtils.getActiveProfiles(payloadCfg, attachedCfg, workspaceCfg, projectCfg, orgCfg);
@@ -97,11 +113,15 @@ public class ConfigurationProcessor implements PayloadProcessor {
         // merged profile data
         Map<String, Object> profileCfg = getProfileCfg(payload, activeProfiles);
 
+        log.info("profileCfg: {}", profileCfg);
+
         // automatically provided variables
         Map<String, Object> providedCfg = ProcessConfigurationUtils.prepareProvidedCfg(payload, projectEntry);
+        log.info("providedCfg: {}", providedCfg);
 
         // configuration from the policy
         Map<String, Object> policyCfg = getPolicyCfg(payload);
+        log.info("policyCfg: {}", policyCfg);
 
         // create the resulting configuration
         Map<String, Object> m = ConfigurationUtils.deepMerge(policyDefCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, payloadCfg, providedCfg, policyCfg);
@@ -113,6 +133,8 @@ public class ConfigurationProcessor implements PayloadProcessor {
         processDryRunModeConfiguration(payload, m);
 
         payload = payload.putHeader(Payload.CONFIGURATION, m);
+
+        log.info("m: {}", m);
 
         return chain.process(payload);
     }
