@@ -62,7 +62,7 @@ public class CollectionsTaskV2 implements Task {
      * @param size the size of the list to create
      * @return a list of integers from 0 to (size - 1)
      */
-    public static List<Integer> newList(int size) {
+    public static List<Integer> range(int size) {
         List<Integer> result = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             result.add(i);
