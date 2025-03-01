@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
 
 
 import com.walmartlabs.concord.server.security.SecurityUtils;
-import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,8 +63,7 @@ public class SsoLogoutFilter extends AbstractHttpFilter {
             }
         }
         SsoCookies.clear(response);
-        Subject subject = SecurityUtils.getSubject();
-        subject.logout();
+        SecurityUtils.logout();
 
         redirectHelper.sendRedirect(response, "/#/logout/done");
     }
