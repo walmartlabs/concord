@@ -67,6 +67,7 @@ public class SlackClient implements AutoCloseable {
     private static final String CREATE_CHANNEL_CMD = "channels.create";
     private static final String CREATE_GROUP_CMD = "groups.create";
     private static final String ARCHIVE_CHANNEL_CMD = "channels.archive";
+    private static final String ARCHIVE_CONVERSATION_CMD = "conversations.archive";
     private static final String ARCHIVE_GROUP_CMD = "groups.archive";
     private static final String AS_USER = "as_user";
     private static final String CHANNEL = "channel";
@@ -157,6 +158,10 @@ public class SlackClient implements AutoCloseable {
 
     public Response archiveChannel(String channelId) throws IOException {
         return exec(ARCHIVE_CHANNEL_CMD, Collections.singletonMap(CHANNEL, channelId));
+    }
+
+    public Response archiveConversation(String id) throws IOException {
+        return exec(ARCHIVE_CONVERSATION_CMD, Map.of(CHANNEL, id));
     }
 
     public Response archiveGroup(String channelId) throws IOException {
