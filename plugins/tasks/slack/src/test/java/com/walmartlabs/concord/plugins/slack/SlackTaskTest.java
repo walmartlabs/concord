@@ -30,11 +30,10 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Disabled
-public class SlackTaskTest {
+class SlackTaskTest {
 
     @Test
-    @SuppressWarnings("unchecked")
-    public void testMessage() {
+    void testMessage() {
         Map<String, Object> m = new HashMap<>();
 
         Map<String, Object> slackCfg = new HashMap<>();
@@ -45,19 +44,33 @@ public class SlackTaskTest {
         m.put("channelId", TestParams.TEST_CHANNEL);
         m.put("text", "test");
         m.put("username", "My Bot");
+        m.put("iconEmoji", ":smile:");
         m.put("isLegacy", false);
 
         MockContext ctx = new MockContext(m);
         SlackTask t = new SlackTask();
         t.execute(ctx);
 
-        Map<String, Object> result = (Map<String, Object>) ctx.getVariable("result");
-        assert (boolean) result.get("ok");
+        var result1 = assertInstanceOf(Map.class, ctx.getVariable("result"));
+        assertTrue(assertInstanceOf(Boolean.class, result1.get("ok")));
+
+
+        var ts = assertInstanceOf(String.class, result1.get("ts"));
+        m.put("ts", ts);
+        m.put("username", "My Other Bot");
+        m.put("iconEmoji", ":frowning:");
+        m.put("text", "replying to message in thread, with broadcast");
+
+        ctx = new MockContext(m);
+        t.execute(ctx);
+
+        var result2 = assertInstanceOf(Map.class, ctx.getVariable("result"));
+        assertTrue(assertInstanceOf(Boolean.class, result2.get("ok")));
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testJsonMessage() {
+    void testJsonMessage() {
         Map<String, Object> m = new HashMap<>();
 
         Map<String, Object> slackCfg = new HashMap<>();
@@ -102,12 +115,12 @@ public class SlackTaskTest {
         SlackTask t = new SlackTask();
         t.execute(ctx);
 
-        Map<String, Object> result = (Map<String, Object>) ctx.getVariable("result");
-        assert (boolean) result.get("ok");
+        var result = assertInstanceOf(Map.class, ctx.getVariable("result"));
+        assertTrue(assertInstanceOf(Boolean.class, result.get("ok")));
     }
 
     @Test
-    public void testMessageInvalidProxyThrowErrors() {
+    void testMessageInvalidProxyThrowErrors() {
         Map<String, Object> m = new HashMap<>();
 
         Map<String, Object> slackCfg = new HashMap<>();
@@ -120,16 +133,12 @@ public class SlackTaskTest {
 
         MockContext ctx = new MockContext(m);
         SlackTask t = new SlackTask();
-        try {
-            t.execute(ctx);
-            fail("should fail");
-        } catch (Exception e) {
-            // expected
-        }
+
+        assertThrows(Exception.class, () -> t.execute(ctx));
     }
 
     @Test
-    public void testMessageInvalidProxyIgnoreErrors() {
+    void testMessageInvalidProxyIgnoreErrors() {
         Map<String, Object> m = new HashMap<>();
 
         Map<String, Object> slackCfg = new HashMap<>();
@@ -143,6 +152,6 @@ public class SlackTaskTest {
 
         MockContext ctx = new MockContext(m);
         SlackTask t = new SlackTask();
-        t.execute(ctx);
+        assertDoesNotThrow(() -> t.execute(ctx));
     }
 }
