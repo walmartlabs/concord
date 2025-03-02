@@ -31,6 +31,7 @@ public class SlackConfigurationParams {
     }
 
     private static final String API_TOKEN = "apiToken";
+    private static final String IS_LEGACY = "isLegacy";
     private static final String AUTH_TOKEN = "authToken";
     private static final String CONNECT_TIMEOUT = "connectTimeout";
     private static final String RETRY_COUNT = "retryCount";
@@ -56,6 +57,10 @@ public class SlackConfigurationParams {
         }
 
         return apiToken;
+    }
+
+    public boolean isLegacy() {
+        return variables.getBoolean(IS_LEGACY, true);
     }
 
     public int connectTimeout(int defaultValue) {

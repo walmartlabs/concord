@@ -21,7 +21,6 @@ package com.walmartlabs.concord.plugins.slack;
  */
 
 import com.walmartlabs.concord.sdk.MockContext;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -29,15 +28,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Disabled
 public class SlackTaskTest {
-
-    @BeforeEach
-    public void setUp() {
-        assumeTrue(TestParams.TEST_API_TOKEN != null);
-    }
 
     @Test
     @SuppressWarnings("unchecked")
@@ -51,6 +44,8 @@ public class SlackTaskTest {
         m.put("slackCfg", slackCfg);
         m.put("channelId", TestParams.TEST_CHANNEL);
         m.put("text", "test");
+        m.put("username", "My Bot");
+        m.put("isLegacy", false);
 
         MockContext ctx = new MockContext(m);
         SlackTask t = new SlackTask();
