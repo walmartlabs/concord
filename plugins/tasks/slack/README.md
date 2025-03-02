@@ -15,5 +15,7 @@ Required `slack` task OAuth scopes:
 
 Required `slackChannel` task OAuth scopes:
 
+- [`channels:manage`](https://api.slack.com/scopes/channels:manage) -
+    For creating and archiving public channels.
 - [`groups:write`](https://api.slack.com/scopes/groups:write) -
     For creating and archiving private channels.
