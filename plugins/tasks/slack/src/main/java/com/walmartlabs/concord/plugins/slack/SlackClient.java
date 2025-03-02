@@ -72,6 +72,7 @@ public class SlackClient implements AutoCloseable {
     private static final int TOO_MANY_REQUESTS_ERROR = 429;
     private static final int DEFAULT_RETRY_AFTER = 10;
 
+    private final SlackConfiguration slackCfg;
     private final int retryCount;
     private final PoolingHttpClientConnectionManager connManager;
     private final CloseableHttpClient client;
@@ -82,6 +83,7 @@ public class SlackClient implements AutoCloseable {
         this.retryCount = cfg.getRetryCount();
         this.connManager = createConnManager();
         this.client = createClient(cfg, connManager);
+        this.slackCfg = cfg;
     }
 
     @Override
@@ -110,7 +112,10 @@ public class SlackClient implements AutoCloseable {
     public Response message(String channelId, String ts, boolean replyBroadcast, String text, String iconEmoji, String username, Collection<Object> attachments) throws IOException {
         Map<String, Object> params = new HashMap<>();
         params.put("channel", channelId);
-        params.put("as_user", true);
+
+        if (slackCfg.isLegacy()) {
+            params.put("as_user", true);
+        }
 
         params.put("text", text);
 
@@ -121,12 +126,16 @@ public class SlackClient implements AutoCloseable {
 
         if (iconEmoji != null) {
             params.put("icon_emoji", iconEmoji);
-            params.put("as_user", false);
+            if (slackCfg.isLegacy()) {
+                params.put("as_user", false);
+            }
         }
 
         if (username != null) {
             params.put("username", username);
-            params.put("as_user", false);
+            if (slackCfg.isLegacy()) {
+                params.put("as_user", false);
+            }
         }
 
         if (attachments != null) {
