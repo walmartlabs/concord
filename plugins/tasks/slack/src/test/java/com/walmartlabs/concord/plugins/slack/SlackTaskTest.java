@@ -34,18 +34,12 @@ class SlackTaskTest {
 
     @Test
     void testMessage() {
-        Map<String, Object> m = new HashMap<>();
+        Map<String, Object> m = new HashMap<>(defaultInput());
 
-        Map<String, Object> slackCfg = new HashMap<>();
-        slackCfg.put("authToken", TestParams.TEST_API_TOKEN);
-        slackCfg.put("proxyAddress", TestParams.TEST_PROXY_ADDRESS);
-        slackCfg.put("proxyPort", TestParams.TEST_PROXY_PORT);
-        m.put("slackCfg", slackCfg);
         m.put("channelId", TestParams.TEST_CHANNEL);
         m.put("text", "test");
         m.put("username", "My Bot");
         m.put("iconEmoji", ":smile:");
-        m.put("isLegacy", false);
 
         MockContext ctx = new MockContext(m);
         SlackTask t = new SlackTask();
@@ -69,7 +63,6 @@ class SlackTaskTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void testJsonMessage() {
         Map<String, Object> m = new HashMap<>();
 
@@ -117,6 +110,20 @@ class SlackTaskTest {
 
         var result = assertInstanceOf(Map.class, ctx.getVariable("result"));
         assertTrue(assertInstanceOf(Boolean.class, result.get("ok")));
+    }
+
+    private Map<String, Object> defaultInput() {
+        Map<String, Object> m = new HashMap<>();
+
+        Map<String, Object> slackCfg = new HashMap<>();
+        slackCfg.put("authToken", TestParams.TEST_API_TOKEN);
+        slackCfg.put("isLegacy", false);
+        slackCfg.put("proxyAddress", TestParams.TEST_PROXY_ADDRESS);
+        slackCfg.put("proxyPort", TestParams.TEST_PROXY_PORT);
+        m.put("slackCfg", slackCfg);
+        m.put("isLegacy", false);
+
+        return m;
     }
 
     @Test
