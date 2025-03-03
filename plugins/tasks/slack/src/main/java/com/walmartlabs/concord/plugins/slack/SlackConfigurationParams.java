@@ -60,7 +60,7 @@ public class SlackConfigurationParams {
     }
 
     public boolean isLegacy() {
-        return variables.getBoolean(IS_LEGACY, true);
+        return variables.getBoolean(IS_LEGACY, false);
     }
 
     public int connectTimeout(int defaultValue) {

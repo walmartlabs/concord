@@ -47,7 +47,7 @@ public class SlackConfiguration {
     private int retryCount = DEFAULT_RETRY_COUNT;
 
     public SlackConfiguration(String authToken) {
-        this(authToken, true);
+        this(authToken, false);
     }
 
     public SlackConfiguration(String authToken, boolean isLegacy) {
