@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.24.0] - Unreleased
+
+### Added
+
+- plugins: new env and collections tasks
+([#1092](https://github.com/walmartlabs/concord/pull/1092)).
+
+
+
 ## [2.23.0] - 2025-02-26
 
 ### Added
