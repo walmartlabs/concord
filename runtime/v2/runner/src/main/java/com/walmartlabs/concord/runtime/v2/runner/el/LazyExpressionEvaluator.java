@@ -23,7 +23,6 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.ExceptionUtils;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.*;
-import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.BeanELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.MapELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.*;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
@@ -46,16 +45,16 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     private final ExpressionFactory expressionFactory = ExpressionFactory.newInstance();
     private final TaskProviders taskProviders;
     private final FunctionMapper functionMapper;
-    private final List<CustomBeanELResolver> customBeanELResolvers;
     private final List<CustomTaskMethodResolver> taskMethodResolvers;
+    private final List<CustomBeanMethodResolver> beanMethodResolvers;
 
     public LazyExpressionEvaluator(TaskProviders taskProviders,
-                                   List<CustomBeanELResolver> customBeanELResolvers,
-                                   List<CustomTaskMethodResolver> taskMethodResolvers) {
+                                   List<CustomTaskMethodResolver> taskMethodResolvers,
+                                   List<CustomBeanMethodResolver> beanMethodResolvers) {
         this.taskProviders = taskProviders;
         this.functionMapper = createFunctionMapper();
-        this.customBeanELResolvers = customBeanELResolvers;
         this.taskMethodResolvers = taskMethodResolvers;
+        this.beanMethodResolvers = beanMethodResolvers;
     }
 
     @Override
@@ -195,9 +194,9 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         r.add(new ListELResolver());
         r.add(new ArrayELResolver());
         if (evalContext.context() != null) {
-            r.add(new TaskMethodResolver(taskMethodResolvers, customBeanELResolvers, evalContext.context()));
+            r.add(new TaskMethodResolver(taskMethodResolvers, evalContext.context()));
         }
-        r.add(new BeanELResolver(customBeanELResolvers));
+        r.add(new CompositeBeanELResolver(taskMethodResolvers, beanMethodResolvers));
         return r;
     }
 

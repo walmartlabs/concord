@@ -23,14 +23,7 @@ package com.walmartlabs.concord.runtime.v2.sdk;
 /**
  * Unstable API, subject to change.
  */
-public interface CustomTaskMethodResolver {
+public interface CustomBeanMethodResolver {
 
-    TaskInvocation resolve(Task base, String method, Class<?>[] paramTypes, Object[] params);
-
-    interface TaskInvocation extends Invocation{
-
-        String taskName();
-
-        Class<? extends Task> taskClass();
-    }
+    Invocation resolve(Object base, String method, Class<?>[] paramTypes, Object[] params);
 }
