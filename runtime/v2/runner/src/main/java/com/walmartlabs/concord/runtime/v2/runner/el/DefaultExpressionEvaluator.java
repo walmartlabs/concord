@@ -21,7 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  */
 
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.CustomBeanELResolver;
+import com.walmartlabs.concord.runtime.v2.sdk.CustomBeanMethodResolver;
 import com.walmartlabs.concord.runtime.v2.sdk.CustomTaskMethodResolver;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
@@ -35,9 +35,9 @@ public class DefaultExpressionEvaluator implements ExpressionEvaluator {
 
     @Inject
     public DefaultExpressionEvaluator(TaskProviders taskProviders,
-                                      List<CustomBeanELResolver> customBeanELResolvers,
-                                      List<CustomTaskMethodResolver> taskMethodResolvers) {
-        this.delegate = new LazyExpressionEvaluator(taskProviders, customBeanELResolvers, taskMethodResolvers);
+                                      List<CustomTaskMethodResolver> taskMethodResolvers,
+                                      List<CustomBeanMethodResolver> beanMethodResolvers) {
+        this.delegate = new LazyExpressionEvaluator(taskProviders, taskMethodResolvers, beanMethodResolvers);
     }
 
     @Override
