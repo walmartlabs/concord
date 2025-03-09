@@ -31,7 +31,6 @@ import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.context.DefaultContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.DefaultExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactoryImpl;
-import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.TaskMethodResolver;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.runner.script.DefaultScriptEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.script.ScriptEvaluator;
@@ -66,8 +65,5 @@ public class BaseRunnerModule extends AbstractModule {
         Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
         taskCallListeners.addBinding().to(TaskCallPolicyChecker.class);
         taskCallListeners.addBinding().to(TaskResultListener.class);
-
-        var taskMethodResolvers = Multibinder.newSetBinder(binder(), CustomTaskMethodResolver.class);
-        taskMethodResolvers.addBinding().to(TaskMethodResolver.DefaultTaskMethodResolver.class);
     }
 }

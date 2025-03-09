@@ -50,6 +50,8 @@ public class MockTest {
         byte[] log = runtime.run();
         assertLog(log, ".*" + Pattern.quote("The actual 'testTask.myMethod()' is not being executed; this is a mock") + ".*");
         assertLog(log, ".*result.ok: BOO.*");
+        assertLog(log, ".*original: original.*");
+        assertLog(log, ".*original2: original2.*");
     }
 
     @Test
