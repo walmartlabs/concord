@@ -72,6 +72,7 @@ public class ApiServerModule implements Module {
         // RequestErrorHandler
 
         newSetBinder(binder, RequestErrorHandler.class).addBinding().to(FormRequestErrorHandler.class);
+        newSetBinder(binder, RequestErrorHandler.class).addBinding().to(GenericRequestErrorHandler.class);
 
         // ContextHandlerConfigurator
 
