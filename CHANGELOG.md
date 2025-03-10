@@ -1,5 +1,18 @@
 # Change Log
 
+## [2.24.0] - Unreleased
+
+### Added
+
+- plugins: allow suspend/resume process from concord task
+([#1094](https://github.com/walmartlabs/concord/pull/1094));
+- plugins: new env and collections tasks
+([#1092](https://github.com/walmartlabs/concord/pull/1092));
+- concord-server: default message for unexpected errors
+([#1096](https://github.com/walmartlabs/concord/pull/1096)).
+
+
+
 ## [2.23.0] - 2025-02-26
 
 ### Added
