@@ -26,6 +26,9 @@ import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.server.queueclient.message.*;
 import org.junit.jupiter.api.Test;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -104,16 +107,18 @@ public class MessageSerializerTest {
 
         Imports imports = Imports.of(Collections.singletonList(item));
 
-        ProcessResponse r = new ProcessResponse(123, "sesion-token", UUID.randomUUID(), "org-name", "repo-url", "repo-path", "commit-id", "repo-branch", "secret-name", imports);
+        OffsetDateTime createdAt = OffsetDateTime.now(ZoneId.of("UTC")).minusMinutes(10).truncatedTo(ChronoUnit.MILLIS); // mimic the DB time
+        ProcessResponse r = new ProcessResponse(123, "sesion-token", UUID.randomUUID(), createdAt, "org-name", "repo-url", "repo-path", "commit-id", "repo-branch", "secret-name", imports);
 
         // ---
         String rSerialized = MessageSerializer.serialize(r);
         assertNotNull(rSerialized);
 
         ProcessResponse rDeserialized = MessageSerializer.deserialize(rSerialized);
-        assertEquals(r.getMessageType(), MessageType.PROCESS_RESPONSE);
+        assertEquals(MessageType.PROCESS_RESPONSE, r.getMessageType());
         assertEquals(r.getSessionToken(), rDeserialized.getSessionToken());
         assertEquals(r.getProcessId(), rDeserialized.getProcessId());
+        assertEquals(createdAt, rDeserialized.getProcessCreatedAt());
         assertEquals(r.getCorrelationId(), rDeserialized.getCorrelationId());
         assertEquals("repo-branch", rDeserialized.getRepoBranch());
     }
