@@ -54,7 +54,7 @@ public class SegmentedLogsConsumerTest {
         consumer.accept(toChunk(ab));
 
         verify(logAppender, times(1)).appendLog(any(), eq(1L), eq(msg.getBytes()));
-        verify(logAppender, times(1)).updateSegment(any(), eq(1L), eq(LogSegmentStats.builder().errors(2).warnings(1).build()));
+        verify(logAppender, times(1)).updateSegment(any(), eq(1L), eq(new LogSegmentStats(null, 2, 1)));
     }
 
     /**
@@ -71,7 +71,7 @@ public class SegmentedLogsConsumerTest {
         consumer.accept(toChunk(Bytes.concat(s1, s2)));
 
         verify(logAppender, times(1)).appendLog(any(), eq(1L), eq(Bytes.concat(msg1.getBytes(), msg2.getBytes())));
-        verify(logAppender, times(1)).updateSegment(any(), eq(1L), eq(LogSegmentStats.builder().errors(2).warnings(1).build()));
+        verify(logAppender, times(1)).updateSegment(any(), eq(1L), eq(new LogSegmentStats(null, 2, 1)));
     }
 
     /**
@@ -89,7 +89,7 @@ public class SegmentedLogsConsumerTest {
 
         verify(logAppender, times(1)).appendLog(any(), eq(1L), eq(msg1.getBytes()));
         verify(logAppender, times(1)).appendLog(any(), eq(2L), eq(msg2.getBytes()));
-        verify(logAppender, times(1)).updateSegment(any(), eq(1L), eq(LogSegmentStats.builder().errors(2).warnings(1).build()));
+        verify(logAppender, times(1)).updateSegment(any(), eq(1L), eq(new LogSegmentStats(null, 2, 1)));
     }
 
     /**
@@ -108,7 +108,7 @@ public class SegmentedLogsConsumerTest {
         byte[] p2 = {'l', 'l', 'o'};
         consumer.accept(toChunk(p2));
         verify(logAppender, times(1)).appendLog(any(), eq(1L), eq(p2));
-        verify(logAppender, times(2)).updateSegment(any(), eq(1L), eq(LogSegmentStats.builder().errors(2).warnings(1).build()));
+        verify(logAppender, times(2)).updateSegment(any(), eq(1L), eq(new LogSegmentStats(null, 2, 1)));
     }
 
     /**
