@@ -27,8 +27,8 @@ import com.walmartlabs.concord.runtime.v2.runner.el.MethodNotFoundException;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskException;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.CustomBeanELResolver;
 import com.walmartlabs.concord.runtime.v2.sdk.CustomTaskMethodResolver;
+import com.walmartlabs.concord.runtime.v2.sdk.InvocationContext;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
 import javax.el.ELContext;
@@ -42,15 +42,13 @@ import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallIntercepto
 
 public class TaskMethodResolver extends ELResolver {
 
-    private final List<CustomTaskMethodResolver> customResolvers;
-    private final List<CustomBeanELResolver> customBeanELResolvers;
+    private final List<CustomTaskMethodResolver> resolvers = new ArrayList<>();
     private final Context context;
 
     public TaskMethodResolver(List<CustomTaskMethodResolver> customResolvers,
-                              List<CustomBeanELResolver> customBeanELResolvers,
                               Context context) {
-        this.customResolvers = customResolvers;
-        this.customBeanELResolvers = customBeanELResolvers;
+        this.resolvers.addAll(customResolvers);
+        this.resolvers.add(new DefaultTaskMethodResolver());
         this.context = context;
     }
 
@@ -63,7 +61,7 @@ public class TaskMethodResolver extends ELResolver {
             return null;
         }
 
-        var invocation = customResolvers.stream()
+        var invocation = resolvers.stream()
                 .map(resolver -> resolver.resolve(task, method.toString(), paramTypes, params))
                 .filter(Objects::nonNull)
                 .findFirst()
@@ -84,7 +82,7 @@ public class TaskMethodResolver extends ELResolver {
         try {
             return interceptor.invoke(callContext, Method.of(invocation.taskClass(), method.toString(), Arrays.asList(params)),
                     () -> {
-                        var result = invocation.invoke(new DefaultInvocationContext(customBeanELResolvers, elContext));
+                        var result = invocation.invoke(new DefaultInvocationContext(elContext));
                         elContext.setPropertyResolved(true);
                         return result;
                     });
@@ -132,10 +130,10 @@ public class TaskMethodResolver extends ELResolver {
         return null;
     }
 
-    public static class DefaultTaskMethodResolver implements CustomTaskMethodResolver {
+    private static class DefaultTaskMethodResolver implements CustomTaskMethodResolver {
 
         @Override
-        public Invocation resolve(Task base, String method, Class<?>[] paramTypes, Object[] params) {
+        public TaskInvocation resolve(Task base, String method, Class<?>[] paramTypes, Object[] params) {
             String taskName = getName(base);
             if (taskName == null) {
                 return null;
@@ -153,25 +151,8 @@ public class TaskMethodResolver extends ELResolver {
         }
     }
 
-    private static class DefaultInvocationContext implements CustomTaskMethodResolver.InvocationContext {
-
-        private final ELContext elContext;
-        private final javax.el.BeanELResolver beanELResolver;
-
-        private DefaultInvocationContext(List<CustomBeanELResolver> customBeanELResolvers,
-                                         ELContext elContext) {
-            this.elContext = elContext;
-            this.beanELResolver = new BeanELResolver(customBeanELResolvers);
-        }
-
-        @Override
-        public CustomTaskMethodResolver.MethodInvoker invoker() {
-            return (base, method, paramTypes, params) -> beanELResolver.invoke(elContext, base, method, paramTypes, params);
-        }
-    }
-
     private record DefaultInvocation(String taskName, Task base, String method,
-                                     Class<?>[] paramTypes, Object[] params) implements CustomTaskMethodResolver.Invocation {
+                                     Class<?>[] paramTypes, Object[] params) implements CustomTaskMethodResolver.TaskInvocation {
 
         @Override
         public Class<? extends Task> taskClass() {
@@ -179,7 +160,7 @@ public class TaskMethodResolver extends ELResolver {
         }
 
         @Override
-        public Object invoke(CustomTaskMethodResolver.InvocationContext context) {
+        public Object invoke(InvocationContext context) {
             return context.invoker().invoke(base, method, paramTypes, params);
         }
     }
