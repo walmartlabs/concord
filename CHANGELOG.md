@@ -11,6 +11,10 @@
 - concord-server: default message for unexpected errors
 ([#1096](https://github.com/walmartlabs/concord/pull/1096)).
 
+### Changed
+
+- runtime-v2: restrict regex github trigger attributes to string value
+([#1097](https://github.com/walmartlabs/concord/pull/1097))
 
 
 ## [2.23.0] - 2025-02-26
