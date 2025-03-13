@@ -497,7 +497,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
 
     @Test
     public void test129() throws Exception {
-        String msg = "(029.yml): Error @ line: 8, col: 13. Invalid value type, expected: PATTERN, got: INT\n" +
+        String msg = "(029.yml): Error @ line: 8, col: 11. Invalid value type, expected: PATTERN, got: ARRAY\n" +
                 "\twhile processing steps:\n" +
                 "\t'githubOrg' @ line: 7, col: 9\n" +
                 "\t\t'conditions' @ line: 5, col: 7\n" +
