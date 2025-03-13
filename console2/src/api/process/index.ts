@@ -265,15 +265,10 @@ export const get = (
     return fetchJson(`/api/v2/process/${instanceId}?${params.toString()}`);
 };
 
-export const getRoot = async (instanceId: ConcordId): Promise<ProcessEntry|void> => {
-    const resp = await managedFetch(`/api/v1/process/${instanceId}/root`, { method: 'GET' });
-    if (resp.status === 200) {
-        console.log(resp);
-        return resp.json();
-    } else { // may get 204 if no parent exists
-        console.log(resp);
-        return Promise.reject();
-    }
+export const getRoot = (
+    instanceId: ConcordId
+): Promise<ProcessEntry> => {
+    return fetchJson(`/api/v1/process/${instanceId}/root`);
 };
 
 export const disable = (instanceId: ConcordId, disabled: boolean): Promise<{}> =>
