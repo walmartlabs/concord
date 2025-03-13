@@ -119,26 +119,21 @@ public interface TriggerMixIn extends Trigger {
                 String type();
 
                 @JsonProperty("githubOrg")
-                @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"array\", \"items\" : {\"type\" : \"string\"}}, {\"type\": \"string\"} ]}", merge = false)
                 String githubOrg();
 
                 @JsonProperty("githubRepo")
-                @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"array\", \"items\" : {\"type\" : \"string\"}}, {\"type\": \"string\"} ]}", merge = false)
                 String githubRepo();
 
                 @JsonProperty("githubHost")
                 String githubHost();
 
                 @JsonProperty("branch")
-                @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"array\", \"items\" : {\"type\" : \"string\"}}, {\"type\": \"string\"} ]}", merge = false)
                 String branch();
 
                 @JsonProperty("sender")
-                @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"array\", \"items\" : {\"type\" : \"string\"}}, {\"type\": \"string\"} ]}", merge = false)
                 String sender();
 
                 @JsonProperty("status")
-                @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"array\", \"items\" : {\"type\" : \"string\"}}, {\"type\": \"string\"} ]}", merge = false)
                 String status();
 
                 @JsonProperty("repositoryInfo")
