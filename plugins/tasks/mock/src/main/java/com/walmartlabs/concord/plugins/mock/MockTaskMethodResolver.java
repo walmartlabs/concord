@@ -21,14 +21,15 @@ package com.walmartlabs.concord.plugins.mock;
  */
 
 import com.walmartlabs.concord.runtime.v2.sdk.CustomTaskMethodResolver;
+import com.walmartlabs.concord.runtime.v2.sdk.InvocationContext;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
 public class MockTaskMethodResolver implements CustomTaskMethodResolver {
 
     @Override
-    public Invocation resolve(Task base, String method, Class<?>[] paramTypes, Object[] params) {
+    public TaskInvocation resolve(Task base, String method, Class<?>[] paramTypes, Object[] params) {
         if (base instanceof MockTask mockTask) {
-            return new Invocation() {
+            return new TaskInvocation() {
 
                 @Override
                 public String taskName() {

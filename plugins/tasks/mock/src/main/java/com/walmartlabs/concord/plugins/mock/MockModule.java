@@ -22,9 +22,8 @@ package com.walmartlabs.concord.plugins.mock;
 
 import com.google.inject.Binder;
 import com.google.inject.multibindings.Multibinder;
-import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.TaskMethodResolver;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
-import com.walmartlabs.concord.runtime.v2.sdk.CustomBeanELResolver;
+import com.walmartlabs.concord.runtime.v2.sdk.CustomBeanMethodResolver;
 import com.walmartlabs.concord.runtime.v2.sdk.CustomTaskMethodResolver;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
 import com.walmartlabs.concord.svm.ExecutionListener;
@@ -39,11 +38,11 @@ public class MockModule implements com.google.inject.Module {
         var taskProviders = Multibinder.newSetBinder(binder, TaskProvider.class);
         taskProviders.addBinding().to(MockTaskProvider.class);
 
-        var beanElResolvers = Multibinder.newSetBinder(binder, CustomBeanELResolver.class);
-        beanElResolvers.addBinding().to(VerifierBeanELResolver.class);
-
         var taskMethodResolvers = Multibinder.newSetBinder(binder, CustomTaskMethodResolver.class);
         taskMethodResolvers.addBinding().to(MockTaskMethodResolver.class);
+
+        var beanMethodResolvers = Multibinder.newSetBinder(binder, CustomBeanMethodResolver.class);
+        beanMethodResolvers.addBinding().to(VerifierBeanMethodResolver.class);
 
         var taskCallListeners = Multibinder.newSetBinder(binder, TaskCallListener.class);
         taskCallListeners.addBinding().to(InvocationsCollector.class);
