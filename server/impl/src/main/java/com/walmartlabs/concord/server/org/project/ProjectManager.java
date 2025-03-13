@@ -197,7 +197,7 @@ public class ProjectManager {
 
     private UUID insert(DSLContext tx, UUID orgId, UserEntry owner, ProjectEntry entry, RawPayloadMode rawPayloadMode, byte[] encryptedKey, Map<String, ProcessDefinition> processDefinitions) {
         UUID id = projectDao.insert(tx, orgId, entry.getName(), entry.getDescription(), owner.getId(), entry.getCfg(),
-                entry.getVisibility(), rawPayloadMode, encryptedKey, entry.getMeta(), entry.getOutVariablesMode());
+                entry.getVisibility(), rawPayloadMode, encryptedKey, entry.getMeta(), entry.getOutVariablesMode(), entry.getProcessExecMode());
 
         Map<String, RepositoryEntry> repos = entry.getRepositories();
         if (repos != null) {
@@ -280,7 +280,8 @@ public class ProjectManager {
         }
 
         projectDao.update(tx, orgIdUpdate, projectId, entry.getVisibility(), entry.getName(),
-                entry.getDescription(), entry.getCfg(), rawPayloadMode, updatedOwnerId, entry.getMeta(), entry.getOutVariablesMode());
+                entry.getDescription(), entry.getCfg(), rawPayloadMode, updatedOwnerId, entry.getMeta(), entry.getOutVariablesMode(),
+                entry.getProcessExecMode());
 
         Map<String, RepositoryEntry> repos = entry.getRepositories();
         if (repos != null) {

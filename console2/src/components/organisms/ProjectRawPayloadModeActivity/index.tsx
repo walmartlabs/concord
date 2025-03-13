@@ -81,7 +81,7 @@ export default ({ orgName, projectId, initialValue = RawPayloadMode.DISABLED }: 
         <>
             {error && <RequestErrorActivity error={error} />}
             <Form loading={updating}>
-                <Form.Group>
+                <Form.Group inline={true}>
                     <Form.Dropdown
                         selection={true}
                         value={value}

@@ -21,33 +21,29 @@ import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Form } from 'semantic-ui-react';
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
-import { createOrUpdate as apiCreateOrUpdate, OutVariablesMode } from '../../../api/org/project';
+import { createOrUpdate as apiCreateOrUpdate, ProcessExecMode } from '../../../api/org/project';
 import { RequestErrorActivity } from '../index';
 
 export interface Props {
     orgName: ConcordKey;
     projectId: ConcordId;
-    initialValue?: OutVariablesMode;
+    initialValue?: ProcessExecMode;
 }
 
-const getDescription = (m: OutVariablesMode): string => {
+const getDescription = (m: ProcessExecMode): string => {
     switch (m) {
-        case OutVariablesMode.DISABLED:
-            return 'Sending custom out variable names is disabled. Only out variables defined in concord.yml can be used.';
-        case OutVariablesMode.OWNERS:
-            return "Only the project's owner and team members with OWNER privileges can specify custom out variable names.";
-        case OutVariablesMode.TEAM_MEMBERS:
-            return "Only the members of the teams assigned to the project's can specify custom out variable names.";
-        case OutVariablesMode.ORG_MEMBERS:
-            return "Only the project's organization members can specify custom out variable names.";
-        case OutVariablesMode.EVERYONE:
-            return 'Everyone can can specify custom out variable names. This is the least secure option.';
+        case ProcessExecMode.DISABLED:
+            return 'No new processes are allowed to run within the context of the project.';
+        case ProcessExecMode.READERS:
+            return "READER (or above) privileges are necessary to execute a process. All users have READER access to public projects. Private projects must assign permissions explicitly. This is the default mode.";
+        case ProcessExecMode.WRITERS:
+            return "WRITER privileges are necessary to execute a process.";
         default:
-            return `Unknown raw payload mode: ${m}`;
+            return `Unknown process exec mode: ${m}`;
     }
 };
 
-export default ({ orgName, projectId, initialValue = OutVariablesMode.DISABLED }: Props) => {
+export default ({ orgName, projectId, initialValue = ProcessExecMode.DISABLED }: Props) => {
     const [value, setValue] = useState(initialValue);
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState<RequestError>();
@@ -65,7 +61,7 @@ export default ({ orgName, projectId, initialValue = OutVariablesMode.DISABLED }
                 setUpdating(true);
                 await apiCreateOrUpdate(orgName, {
                     id: projectId,
-                    outVariablesMode: value
+                    processExecMode: value
                 });
             } catch (e) {
                 setError(e);
@@ -85,20 +81,11 @@ export default ({ orgName, projectId, initialValue = OutVariablesMode.DISABLED }
                     <Form.Dropdown
                         selection={true}
                         value={value}
-                        onChange={(ev, data) => setValue(data.value as OutVariablesMode)}
+                        onChange={(ev, data) => setValue(data.value as ProcessExecMode)}
                         options={[
-                            { value: OutVariablesMode.DISABLED, text: 'Disabled', icon: 'lock' },
-                            { value: OutVariablesMode.OWNERS, text: 'Only owners' },
-                            { value: OutVariablesMode.TEAM_MEMBERS, text: 'Only team members' },
-                            {
-                                value: OutVariablesMode.ORG_MEMBERS,
-                                text: 'Only organization members'
-                            },
-                            {
-                                value: OutVariablesMode.EVERYONE,
-                                text: 'Everyone',
-                                icon: 'lock open'
-                            }
+                            { value: ProcessExecMode.DISABLED, text: 'Disabled', icon: 'lock' },
+                            { value: ProcessExecMode.READERS, text: 'READERs or WRITERs' },
+                            { value: ProcessExecMode.WRITERS, text: 'WRITERs only' },
                         ]}
                     />
 

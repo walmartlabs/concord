@@ -22,30 +22,46 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.UUID;
+
+import static java.util.Objects.requireNonNull;
 
 @Named
 public class AuthorizationProcessor implements PayloadProcessor {
 
+    private final ProjectDao projectDao;
     private final ProjectAccessManager accessManager;
 
     @Inject
-    public AuthorizationProcessor(ProjectAccessManager accessManager) {
-        this.accessManager = accessManager;
+    public AuthorizationProcessor(ProjectDao projectDao, ProjectAccessManager accessManager) {
+        this.projectDao = requireNonNull(projectDao);
+        this.accessManager = requireNonNull(accessManager);
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        UUID projectId = payload.getHeader(Payload.PROJECT_ID);
+        var projectId = payload.getHeader(Payload.PROJECT_ID);
         if (projectId == null) {
             return chain.process(payload);
         }
 
-        accessManager.assertAccess(projectId, ResourceAccessLevel.READER, false);
+        var projectEntry = projectDao.get(projectId);
+        if (projectEntry == null) {
+            throw new ValidationErrorsException("Project not found: " + projectId);
+        }
+
+        switch (projectEntry.getProcessExecMode()) {
+            case DISABLED -> throw new ConcordApplicationException("Process execution is disabled for the project.");
+            case READERS -> accessManager.assertAccess(projectId, ResourceAccessLevel.READER, false);
+            case WRITERS -> accessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, false);
+        }
+
         return chain.process(payload);
     }
 }
