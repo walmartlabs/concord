@@ -26,6 +26,8 @@ import com.walmartlabs.concord.runtime.v2.runner.logging.LogUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
 import java.util.List;
@@ -35,6 +37,8 @@ import java.util.stream.Stream;
 
 @Singleton
 public class MockDefinitionProvider {
+
+    private static final Logger log = LoggerFactory.getLogger(MockDefinitionProvider.class);
 
     private final MockDefinitionMatcher mockDefinitionMatcher = new MockDefinitionMatcher();
 
@@ -63,7 +67,7 @@ public class MockDefinitionProvider {
     }
 
     @SuppressWarnings("unchecked")
-    private static Stream<MockDefinition> mocks(Context ctx) {
+    public static Stream<MockDefinition> mocks(Context ctx) {
         return ctx.variables().getList("mocks", List.of()).stream()
                 .map(m -> new MockDefinition((Map<String, Object>) m));
     }
