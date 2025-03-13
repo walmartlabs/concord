@@ -4,17 +4,21 @@
 
 ### Added
 
-- plugins: allow suspend/resume process from concord task
-([#1094](https://github.com/walmartlabs/concord/pull/1094));
 - plugins: new env and collections tasks
 ([#1092](https://github.com/walmartlabs/concord/pull/1092));
+- plugins: allow suspend/resume process from concord task
+([#1094](https://github.com/walmartlabs/concord/pull/1094));
 - concord-server: default message for unexpected errors
 ([#1096](https://github.com/walmartlabs/concord/pull/1096)).
 
 ### Changed
 
-- runtime-v2: restrict regex github trigger attributes to string value
-([#1097](https://github.com/walmartlabs/concord/pull/1097))
+- runtime-v2: restrict regex github trigger attributes to
+string value
+([#1097](https://github.com/walmartlabs/concord/pull/1097));
+- mock-tasks: correctly handle mocks in `set variables` step
+([#1098](https://github.com/walmartlabs/concord/pull/1098)).
+
 
 
 ## [2.23.0] - 2025-02-26
