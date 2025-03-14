@@ -9,7 +9,10 @@
 - plugins: allow suspend/resume process from concord task
 ([#1094](https://github.com/walmartlabs/concord/pull/1094));
 - concord-server: default message for unexpected errors
-([#1096](https://github.com/walmartlabs/concord/pull/1096)).
+([#1096](https://github.com/walmartlabs/concord/pull/1096));
+- concord-server, concord-console2: add support for
+processExecMode
+([#1102](https://github.com/walmartlabs/concord/pull/1102)).
 
 ### Changed
 
