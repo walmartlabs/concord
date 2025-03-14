@@ -5,6 +5,17 @@ flows:
 
     - log: "result.ok: ${result}"
 
+    # call original method
+    - expr: "${testTask.doAction('original')}"
+      out: original
+
+    - log: "original: ${original}"
+
+    - set:
+        original2: "${testTask.doAction('original2')}"
+
+    - log: "original2: ${original2}"
+
 configuration:
   arguments:
     mocks:

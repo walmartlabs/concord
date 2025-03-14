@@ -52,7 +52,7 @@ public class SecretDaoTest extends AbstractDaoTest {
         String projectName = "project#" + System.currentTimeMillis();
 
         ProjectDao projectDao = new ProjectDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
-        UUID projectId = projectDao.insert(orgId, projectName, "test", null, null, null, null, new byte[0], null, null);
+        UUID projectId = projectDao.insert(orgId, projectName, "test", null, null, null, null, new byte[0], null, null, null);
 
         String secretName = "secret#" + System.currentTimeMillis();
         SecretDao secretDao = new SecretDao(getConfiguration());

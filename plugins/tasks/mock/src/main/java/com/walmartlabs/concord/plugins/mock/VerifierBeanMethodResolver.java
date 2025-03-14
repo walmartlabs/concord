@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.sdk;
+package com.walmartlabs.concord.plugins.mock;
 
 /*-
  * *****
@@ -20,17 +20,20 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
-/**
- * Unstable API, subject to change.
- */
-public interface CustomTaskMethodResolver {
+import com.walmartlabs.concord.runtime.v2.sdk.CustomBeanMethodResolver;
+import com.walmartlabs.concord.runtime.v2.sdk.Invocation;
 
-    TaskInvocation resolve(Task base, String method, Class<?>[] paramTypes, Object[] params);
+public class VerifierBeanMethodResolver implements CustomBeanMethodResolver {
 
-    interface TaskInvocation extends Invocation{
+    @Override
+    public Invocation resolve(Object base, String method, Class<?>[] paramTypes, Object[] params) {
+        if (base instanceof VerifyTask.Verifier verifier) {
+            return context -> {
+                verifier.verify(method, params);
+                return null;
+            };
+        }
 
-        String taskName();
-
-        Class<? extends Task> taskClass();
+        return null;
     }
 }
