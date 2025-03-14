@@ -20,7 +20,9 @@ processExecMode
 string value
 ([#1097](https://github.com/walmartlabs/concord/pull/1097));
 - mock-tasks: correctly handle mocks in `set variables` step
-([#1098](https://github.com/walmartlabs/concord/pull/1098)).
+([#1098](https://github.com/walmartlabs/concord/pull/1098));
+- concord-console2: handle non-existent root parent
+([#1100](https://github.com/walmartlabs/concord/pull/1100)).
 
 
 
