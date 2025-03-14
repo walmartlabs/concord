@@ -50,7 +50,7 @@ public class GenericRequestErrorHandler implements RequestErrorHandler {
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         String accept = request.getHeader(HttpHeaders.ACCEPT);
 
-        if (accept.toLowerCase().startsWith(MimeTypes.Type.APPLICATION_JSON.asString())) {
+        if (accept != null && accept.toLowerCase().startsWith(MimeTypes.Type.APPLICATION_JSON.asString())) {
             response.setContentType(MimeTypes.Type.APPLICATION_JSON_UTF_8.asString());
             out.write("{\"error\": \"An unexpected error occurred.\"}".getBytes(StandardCharsets.UTF_8));
         } else {
