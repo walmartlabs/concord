@@ -21,7 +21,6 @@ package com.walmartlabs.concord.plugins.slack;
  */
 
 import com.walmartlabs.concord.sdk.MockContext;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -29,40 +28,42 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Disabled
-public class SlackTaskTest {
-
-    @BeforeEach
-    public void setUp() {
-        assumeTrue(TestParams.TEST_API_TOKEN != null);
-    }
+class SlackTaskTest {
 
     @Test
-    @SuppressWarnings("unchecked")
-    public void testMessage() {
-        Map<String, Object> m = new HashMap<>();
+    void testMessage() {
+        Map<String, Object> m = new HashMap<>(defaultInput());
 
-        Map<String, Object> slackCfg = new HashMap<>();
-        slackCfg.put("authToken", TestParams.TEST_API_TOKEN);
-        slackCfg.put("proxyAddress", TestParams.TEST_PROXY_ADDRESS);
-        slackCfg.put("proxyPort", TestParams.TEST_PROXY_PORT);
-        m.put("slackCfg", slackCfg);
         m.put("channelId", TestParams.TEST_CHANNEL);
         m.put("text", "test");
+        m.put("username", "My Bot");
+        m.put("iconEmoji", ":smile:");
 
         MockContext ctx = new MockContext(m);
         SlackTask t = new SlackTask();
         t.execute(ctx);
 
-        Map<String, Object> result = (Map<String, Object>) ctx.getVariable("result");
-        assert (boolean) result.get("ok");
+        var result1 = assertInstanceOf(Map.class, ctx.getVariable("result"));
+        assertTrue(assertInstanceOf(Boolean.class, result1.get("ok")));
+
+
+        var ts = assertInstanceOf(String.class, result1.get("ts"));
+        m.put("ts", ts);
+        m.put("username", "My Other Bot");
+        m.put("iconEmoji", ":frowning:");
+        m.put("text", "replying to message in thread, with broadcast");
+
+        ctx = new MockContext(m);
+        t.execute(ctx);
+
+        var result2 = assertInstanceOf(Map.class, ctx.getVariable("result"));
+        assertTrue(assertInstanceOf(Boolean.class, result2.get("ok")));
     }
 
     @Test
-    @SuppressWarnings("unchecked")
-    public void testJsonMessage() {
+    void testJsonMessage() {
         Map<String, Object> m = new HashMap<>();
 
         Map<String, Object> slackCfg = new HashMap<>();
@@ -107,12 +108,26 @@ public class SlackTaskTest {
         SlackTask t = new SlackTask();
         t.execute(ctx);
 
-        Map<String, Object> result = (Map<String, Object>) ctx.getVariable("result");
-        assert (boolean) result.get("ok");
+        var result = assertInstanceOf(Map.class, ctx.getVariable("result"));
+        assertTrue(assertInstanceOf(Boolean.class, result.get("ok")));
+    }
+
+    private Map<String, Object> defaultInput() {
+        Map<String, Object> m = new HashMap<>();
+
+        Map<String, Object> slackCfg = new HashMap<>();
+        slackCfg.put("authToken", TestParams.TEST_API_TOKEN);
+        slackCfg.put("isLegacy", false);
+        slackCfg.put("proxyAddress", TestParams.TEST_PROXY_ADDRESS);
+        slackCfg.put("proxyPort", TestParams.TEST_PROXY_PORT);
+        m.put("slackCfg", slackCfg);
+        m.put("isLegacy", false);
+
+        return m;
     }
 
     @Test
-    public void testMessageInvalidProxyThrowErrors() {
+    void testMessageInvalidProxyThrowErrors() {
         Map<String, Object> m = new HashMap<>();
 
         Map<String, Object> slackCfg = new HashMap<>();
@@ -125,16 +140,12 @@ public class SlackTaskTest {
 
         MockContext ctx = new MockContext(m);
         SlackTask t = new SlackTask();
-        try {
-            t.execute(ctx);
-            fail("should fail");
-        } catch (Exception e) {
-            // expected
-        }
+
+        assertThrows(Exception.class, () -> t.execute(ctx));
     }
 
     @Test
-    public void testMessageInvalidProxyIgnoreErrors() {
+    void testMessageInvalidProxyIgnoreErrors() {
         Map<String, Object> m = new HashMap<>();
 
         Map<String, Object> slackCfg = new HashMap<>();
@@ -148,6 +159,6 @@ public class SlackTaskTest {
 
         MockContext ctx = new MockContext(m);
         SlackTask t = new SlackTask();
-        t.execute(ctx);
+        assertDoesNotThrow(() -> t.execute(ctx));
     }
 }
