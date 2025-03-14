@@ -94,7 +94,6 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>25.1-jre</version>
         </dependency>
         <dependency>
             <groupId>io.takari.bpm</groupId>
