@@ -24,10 +24,10 @@ RUN export DEFAULT_TARGETARCH=$(/tmp/get_arch.sh); \
     tar xpf /tmp/jdk.tar.gz --strip 1 -C /opt/jdk && \
     rm /tmp/jdk.tar.gz
 
-ENV JAVA_HOME /opt/jdk
+ENV JAVA_HOME=/opt/jdk
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
-ENV LC_CTYPE en_US.UTF-8
-ENV LANG en_US.UTF-8
+ENV LC_CTYPE=en_US.UTF-8
+ENV LANG=en_US.UTF-8
 
 RUN virtualenv /usr/local/bin/concord_venv && \
     /usr/local/bin/concord_venv/bin/pip3 --no-cache-dir install dumb-init
