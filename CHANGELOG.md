@@ -6,6 +6,8 @@
 
 - plugins: new env and collections tasks
 ([#1092](https://github.com/walmartlabs/concord/pull/1092));
+- slack-tasks: modern bot token support
+([#1093](https://github.com/walmartlabs/concord/pull/1093));
 - plugins: allow suspend/resume process from concord task
 ([#1094](https://github.com/walmartlabs/concord/pull/1094));
 - concord-server: default message for unexpected errors
