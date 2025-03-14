@@ -29,7 +29,8 @@ import {
     ProjectRawPayloadModeActivity,
     ProjectOutVariablesModeActivity,
     ProjectRenameActivity,
-    RequestErrorActivity
+    RequestErrorActivity,
+    ProjectProcessExecModeActivity
 } from '../index';
 import { LoadingDispatch } from '../../../App';
 import { useApi } from '../../../hooks/useApi';
@@ -72,6 +73,17 @@ const ProjectSettings = ({ orgName, projectName, forceRefresh }: ExternalProps) 
             <Segment disabled={isLoading}>
                 <Header as="h4">KV capacity</Header>
                 <Capacity org={data?.orgName} project={data?.name} current={data?.size} max={data?.maxSize} />
+            </Segment>
+
+            <Segment disabled={isLoading}>
+                <Header as="h4">Allow process execution</Header>
+                {data && (
+                    <ProjectProcessExecModeActivity
+                        orgName={orgName}
+                        projectId={data.id}
+                        initialValue={data.processExecMode}
+                    />
+                )}
             </Segment>
 
             <Segment disabled={isLoading}>
