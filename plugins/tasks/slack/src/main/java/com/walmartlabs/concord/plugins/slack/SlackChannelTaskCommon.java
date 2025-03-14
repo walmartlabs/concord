@@ -92,7 +92,9 @@ public class SlackChannelTaskCommon {
 
         SlackConfiguration cfg = SlackConfiguration.from(in.cfg());
         try (SlackClient client = new SlackClient(cfg)) {
-            Response r = client.archiveChannel(channelId);
+            Response r = cfg.isLegacy()
+                    ? client.archiveChannel(channelId)
+                    : client.archiveConversation(channelId);
             handleError(in.action(), r, channelId);
         }
     }
@@ -109,7 +111,7 @@ public class SlackChannelTaskCommon {
 
     private static void handleError(Action action, Response r, String channelId) {
         if (!r.isOk()) {
-            throw new RuntimeException(action + " error (channel: '" + channelId + "): " + r.getError());
+            throw new RuntimeException(action + " error (channel: '" + channelId + "'): " + r.getError());
         }
     }
 }
