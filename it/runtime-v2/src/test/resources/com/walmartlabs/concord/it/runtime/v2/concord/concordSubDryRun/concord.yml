@@ -1,0 +1,17 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - if: "${isDryRun() == false}"
+      then:
+        - throw: "Dry run mode expected"
+
+    - task: concord
+      in:
+        action: start
+        payload: myPayload
+        sync: true
+        suspend: true
+
+    - log: "Done!"

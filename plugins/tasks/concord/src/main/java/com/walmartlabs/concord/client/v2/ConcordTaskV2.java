@@ -143,12 +143,24 @@ public class ConcordTaskV2 implements ReentrantTask {
         return delegate().getOutVars(null, null, toUUIDs(ids), timeout);
     }
 
+    public void suspend(String eventId) {
+        this.context.suspend(eventId);
+    }
+
+    public void resume(String processId, String eventId, String saveAs, Map<String, Object> payload) throws ApiException {
+        ClientUtils.withRetry(3, 15000, () -> { // TODO: input args?
+            var api = new ProcessApi(apiClientFactory.create(ApiClientConfiguration.builder().build()));
+            api.resume(UUID.fromString(processId), eventId, saveAs, payload);
+            return null;
+        });
+    }
+
     private ConcordTaskCommon delegate() {
         String sessionToken = context.processConfiguration().processInfo().sessionToken();
         UUID instanceId = context.processInstanceId();
         ProjectInfo projectInfo = context.processConfiguration().projectInfo();
         return new ConcordTaskCommon(sessionToken, apiClientFactory, instanceId, projectInfo.orgName(),
-                context.workingDirectory(), context.processConfiguration().debug());
+                context.workingDirectory(), context.processConfiguration().debug(), context.processConfiguration().dryRun());
     }
 
     private static List<UUID> toUUIDs(List<String> ids) {

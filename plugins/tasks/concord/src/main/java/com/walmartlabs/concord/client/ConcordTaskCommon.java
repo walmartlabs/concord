@@ -70,14 +70,16 @@ public class ConcordTaskCommon {
     private final String currentOrgName;
     private final Path workDir;
     private final boolean globalDebug;
+    private final boolean dryRun;
 
-    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, UUID currentProcessId, String currentOrgName, Path workDir, boolean globalDebug) {
+    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, UUID currentProcessId, String currentOrgName, Path workDir, boolean globalDebug, boolean dryRun) {
         this.sessionToken = sessionToken;
         this.apiClientFactory = apiClientFactory;
         this.currentProcessId = currentProcessId;
         this.currentOrgName = currentOrgName;
         this.workDir = workDir;
         this.globalDebug = globalDebug;
+        this.dryRun = dryRun;
     }
 
     public TaskResult execute(ConcordTaskParams in) throws Exception {
@@ -568,7 +570,7 @@ public class ConcordTaskCommon {
         return path;
     }
 
-    private static Map<String, Object> createRequest(StartParams in) {
+    private Map<String, Object> createRequest(StartParams in) {
         Map<String, Object> req = new HashMap<>();
 
         Set<String> activeProfiles = in.activeProfiles();
@@ -621,8 +623,8 @@ public class ConcordTaskCommon {
             req.put(Constants.Request.REQUIREMENTS, new HashMap<>(requirements));
         }
 
-        if (in.dryRunMode() != null) {
-            req.put(Constants.Request.DRY_RUN_MODE_KEY, in.dryRunMode());
+        if (in.dryRunMode(dryRun)) {
+            req.put(Constants.Request.DRY_RUN_MODE_KEY, true);
         }
 
         return req;
