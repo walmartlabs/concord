@@ -24,8 +24,9 @@ string value
 - mock-tasks: correctly handle mocks in `set variables` step
 ([#1098](https://github.com/walmartlabs/concord/pull/1098));
 - concord-console2: handle non-existent root parent
-([#1100](https://github.com/walmartlabs/concord/pull/1100)).
-
+([#1100](https://github.com/walmartlabs/concord/pull/1100));
+- concord-server: disable deprecated process start endpoints
+([#1101](https://github.com/walmartlabs/concord/pull/1101)).
 
 
 ## [2.23.0] - 2025-02-26
