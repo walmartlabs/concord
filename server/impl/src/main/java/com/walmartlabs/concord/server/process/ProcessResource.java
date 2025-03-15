@@ -178,25 +178,7 @@ public class ProcessResource implements Resource {
                                       @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @QueryParam("out") String[] out) {
 
-        if (sync) {
-            throw syncIsForbidden();
-        }
-
-        assertPartialKey(parentInstanceId);
-
-        PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
-
-        UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
-
-        Payload payload;
-        try {
-            payload = payloadManager.createPayload(processKey, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), in, out);
-        } catch (IOException e) {
-            log.error("start -> error creating a payload: {}", e.getMessage());
-            throw new ConcordApplicationException("Error creating a payload", e);
-        }
-
-        return toResponse(processManager.start(payload));
+        throw new ConcordApplicationException("This API endpoint is no longer supported.");
     }
 
     /**
@@ -214,7 +196,7 @@ public class ProcessResource implements Resource {
                                       @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @QueryParam("out") String[] out) {
 
-        return start(entryPoint, Collections.emptyMap(), parentInstanceId, sync, out);
+        throw new ConcordApplicationException("This API endpoint is no longer supported.");
     }
 
     /**
@@ -234,27 +216,7 @@ public class ProcessResource implements Resource {
                                       @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @QueryParam("out") String[] out) {
 
-        if (sync) {
-            throw syncIsForbidden();
-        }
-
-        assertPartialKey(parentInstanceId);
-
-        PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
-
-        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
-        EntryPoint ep = payloadManager.parseEntryPoint(processKey, orgId, entryPoint);
-        UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
-
-        Payload payload;
-        try {
-            payload = payloadManager.createPayload(processKey, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, req, out);
-        } catch (IOException e) {
-            log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e.getMessage());
-            throw new ConcordApplicationException("Error creating a payload", e);
-        }
-
-        return toResponse(processManager.start(payload));
+        throw new ConcordApplicationException("This API endpoint is no longer supported.");
     }
 
     /**
@@ -314,31 +276,7 @@ public class ProcessResource implements Resource {
                                       @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @QueryParam("out") String[] out) {
 
-        try {
-            if (sync) {
-                throw syncIsForbidden();
-            }
-
-            assertPartialKey(parentInstanceId);
-
-            PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
-
-            UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
-            EntryPoint ep = payloadManager.parseEntryPoint(processKey, orgId, entryPoint);
-            UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
-
-            Payload payload;
-            try {
-                payload = payloadManager.createPayload(processKey, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, input, out);
-            } catch (IOException e) {
-                log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
-                throw new ConcordApplicationException("Error creating a payload", e);
-            }
-
-            return toResponse(processManager.start(payload));
-        } finally {
-            input.close();
-        }
+        throw new ConcordApplicationException("This API endpoint is no longer supported.");
     }
 
     /**
@@ -358,32 +296,7 @@ public class ProcessResource implements Resource {
                                       @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @QueryParam("out") String[] out) {
 
-        if (sync) {
-            throw syncIsForbidden();
-        }
-
-        // allow empty POST requests
-        if (isEmpty(in)) {
-            return start(entryPoint, parentInstanceId, sync, out);
-        }
-
-        assertPartialKey(parentInstanceId);
-
-        PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
-
-        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
-        EntryPoint ep = payloadManager.parseEntryPoint(processKey, orgId, entryPoint);
-        UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
-
-        Payload payload;
-        try {
-            payload = payloadManager.createPayload(processKey, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, in, out);
-        } catch (IOException e) {
-            log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e.getMessage());
-            throw new ConcordApplicationException("Error creating a payload", e);
-        }
-
-        return toResponse(processManager.start(payload));
+        throw new ConcordApplicationException("This API endpoint is no longer supported.");
     }
 
     @POST
@@ -792,13 +705,13 @@ public class ProcessResource implements Resource {
     /**
      * Appends a process' log.
      *
-     * @deprecated in favor of the /api/v2/process/{id}/log* endpoints
+     * @deprecated in favor of the /api/v2/process/{id}/log* endpoints. The endpoint is still used for the runtime-v1.
      */
     @POST
     @javax.ws.rs.Path("{id}/log")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
-    @Deprecated
+    @Deprecated()
     @Operation(description = "Appends a process' log", operationId = "appendProcessLog")
     @RequestBody(description = "Log content", required = true,
             content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM,

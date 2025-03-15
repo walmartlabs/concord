@@ -24,6 +24,7 @@ import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -192,6 +193,19 @@ public class ConcordTaskIT extends AbstractTest {
 
         Payload payload = new Payload()
                 .archive(resource("concord/repositoryRefreshTask"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+        proc.assertLog(".*Done!.*");
+    }
+
+    @Test
+    public void testDryRunForChildProcess() throws Exception {
+        Payload payload = new Payload()
+                .parameter(Constants.Request.DRY_RUN_MODE_KEY, true)
+                .archive(resource("concord/concordSubDryRun"));
 
         ConcordProcess proc = concord.processes().start(payload);
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
