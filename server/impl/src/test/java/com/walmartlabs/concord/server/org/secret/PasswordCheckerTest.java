@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
+import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import org.apache.shiro.mgt.DefaultSecurityManager;
@@ -53,7 +54,7 @@ public class PasswordCheckerTest {
         ctx.setPrincipals(new SimplePrincipalCollection(p, p.getRealm()));
 
         Subject subject = securityManager.createSubject(ctx);
-        ThreadContext.bind(subject);
+        SecurityUtils.bindSubject(subject);
     }
 
     @AfterEach
