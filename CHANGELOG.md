@@ -29,7 +29,9 @@ string value
 ([#1101](https://github.com/walmartlabs/concord/pull/1101));
 - concord-plugin: set dry-run mode for subprocesses by
 default if the parent process was started in dry-run mode
-([#1104](https://github.com/walmartlabs/concord/pull/1104)).
+([#1104](https://github.com/walmartlabs/concord/pull/1104));
+- project: update Maven plugin versions
+([#1105](https://github.com/walmartlabs/concord/pull/1105)).
 
 
 
