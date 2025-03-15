@@ -26,7 +26,11 @@ string value
 - concord-console2: handle non-existent root parent
 ([#1100](https://github.com/walmartlabs/concord/pull/1100));
 - concord-server: disable deprecated process start endpoints
-([#1101](https://github.com/walmartlabs/concord/pull/1101)).
+([#1101](https://github.com/walmartlabs/concord/pull/1101));
+- concord-plugin: set dry-run mode for subprocesses by
+default if the parent process was started in dry-run mode
+([#1104](https://github.com/walmartlabs/concord/pull/1104)).
+
 
 
 ## [2.23.0] - 2025-02-26
