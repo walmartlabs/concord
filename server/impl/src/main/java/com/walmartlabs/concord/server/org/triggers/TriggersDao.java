@@ -25,33 +25,34 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
+import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.jooq.tables.Organizations;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.jooq.tables.Repositories;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.walmartlabs.concord.db.PgUtils.jsonbText;
 import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Triggers.TRIGGERS;
+import static java.util.Objects.requireNonNull;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.value;
 
 public class TriggersDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
+    private final UuidGenerator uuidGenerator;
 
     @Inject
     public TriggersDao(@MainDB Configuration cfg,
-                       ConcordObjectMapper objectMapper) {
+                       ConcordObjectMapper objectMapper,
+                       UuidGenerator uuidGenerator) {
         super(cfg);
-
-        this.objectMapper = objectMapper;
+        this.objectMapper = requireNonNull(objectMapper);
+        this.uuidGenerator = requireNonNull(uuidGenerator);
     }
 
     public TriggerEntry get(UUID id) {
@@ -62,9 +63,10 @@ public class TriggersDao extends AbstractDao {
     }
 
     public UUID insert(DSLContext tx, UUID projectId, UUID repositoryId, String eventSource, List<String> activeProfiles, Map<String, Object> args, Map<String, Object> conditions, Map<String, Object> config) {
+        UUID triggerId = uuidGenerator.generate();
         return tx.insertInto(TRIGGERS)
-                .columns(TRIGGERS.PROJECT_ID, TRIGGERS.REPO_ID, TRIGGERS.EVENT_SOURCE, TRIGGERS.ACTIVE_PROFILES, TRIGGERS.ARGUMENTS, TRIGGERS.CONDITIONS, TRIGGERS.TRIGGER_CFG)
-                .values(projectId, repositoryId, eventSource, Utils.toArray(activeProfiles), objectMapper.toJSONB(args), objectMapper.toJSONB(conditions), objectMapper.toJSONB(config))
+                .columns(TRIGGERS.TRIGGER_ID, TRIGGERS.PROJECT_ID, TRIGGERS.REPO_ID, TRIGGERS.EVENT_SOURCE, TRIGGERS.ACTIVE_PROFILES, TRIGGERS.ARGUMENTS, TRIGGERS.CONDITIONS, TRIGGERS.TRIGGER_CFG)
+                .values(triggerId, projectId, repositoryId, eventSource, Utils.toArray(activeProfiles), objectMapper.toJSONB(args), objectMapper.toJSONB(conditions), objectMapper.toJSONB(config))
                 .returning(TRIGGERS.TRIGGER_ID)
                 .fetchOne()
                 .getTriggerId();

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org.jsonstore;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.Utils;
+import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.jooq.Tables;
 import com.walmartlabs.concord.server.jooq.tables.JsonStores;
 import com.walmartlabs.concord.server.jooq.tables.Organizations;
@@ -38,6 +39,7 @@ import org.jooq.*;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.JsonStoreTeamAccess.JSON_STORE_TEAM_ACCESS;
@@ -46,13 +48,17 @@ import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZAT
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static com.walmartlabs.concord.server.jooq.tables.VUserTeams.V_USER_TEAMS;
+import static java.util.Objects.requireNonNull;
 import static org.jooq.impl.DSL.*;
 
 public class JsonStoreDao extends AbstractDao {
 
+    private final UuidGenerator uuidGenerator;
+
     @Inject
-    public JsonStoreDao(@MainDB Configuration cfg) {
+    public JsonStoreDao(@MainDB Configuration cfg, UuidGenerator uuidGenerator) {
         super(cfg);
+        this.uuidGenerator = requireNonNull(uuidGenerator);
     }
 
     @Override
@@ -197,9 +203,10 @@ public class JsonStoreDao extends AbstractDao {
     }
 
     private UUID insert(DSLContext tx, UUID orgId, String name, JsonStoreVisibility visibility, UUID ownerId) {
+        UUID jsonStoreId = uuidGenerator.generate();
         return tx.insertInto(JSON_STORES)
-                .columns(JSON_STORES.OWNER_ID, JSON_STORES.JSON_STORE_NAME, JSON_STORES.ORG_ID, JSON_STORES.VISIBILITY)
-                .values(ownerId, name, orgId, visibility.name())
+                .columns(JSON_STORES.JSON_STORE_ID, JSON_STORES.OWNER_ID, JSON_STORES.JSON_STORE_NAME, JSON_STORES.ORG_ID, JSON_STORES.VISIBILITY)
+                .values(jsonStoreId, ownerId, name, orgId, visibility.name())
                 .returning(JSON_STORES.JSON_STORE_ID)
                 .fetchOne()
                 .getJsonStoreId();
