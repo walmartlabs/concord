@@ -43,8 +43,8 @@ public class UserDaoTest extends AbstractDaoTest {
 
     @BeforeEach
     public void setUp() {
-        userDao = new UserDao(getConfiguration());
-        apiKeyDao = new ApiKeyDao(getConfiguration(), new SecureRandomProvider().get());
+        userDao = new UserDao(getConfiguration(), getUuidGenerator());
+        apiKeyDao = new ApiKeyDao(getConfiguration(), new SecureRandomProvider().get(), getUuidGenerator());
     }
 
     @Test

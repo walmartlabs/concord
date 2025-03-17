@@ -69,6 +69,7 @@ public class ConcordServerModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        binder.bind(UuidGenerator.class).in(SINGLETON);
         binder.bind(ObjectMapper.class).toProvider(ObjectMapperProvider.class);
 
         binder.install(new ConfigurationModule(config));
