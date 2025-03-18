@@ -40,8 +40,8 @@ public class ProcessKeyCacheGaugeModule extends AbstractModule {
         Provider<ProcessKeyCache> provider = getProvider(ProcessKeyCache.class);
 
         Multibinder<GaugeProvider> gauges = Multibinder.newSetBinder(binder(), GaugeProvider.class);
-//        gauges.addBinding().toInstance(create("hit-count", provider, CacheStats::hitCount));
-//        gauges.addBinding().toInstance(create("miss-count", provider, CacheStats::missCount));
+        gauges.addBinding().toInstance(create("hit-count", provider, CacheStats::hitCount));
+        gauges.addBinding().toInstance(create("miss-count", provider, CacheStats::missCount));
     }
 
     private static GaugeProvider<Long> create(String suffix, Provider<ProcessKeyCache> provider, Function<CacheStats, Long> value) {
