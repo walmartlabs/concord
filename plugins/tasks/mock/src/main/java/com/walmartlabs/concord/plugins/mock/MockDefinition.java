@@ -78,4 +78,9 @@ public class MockDefinition {
     public String executeFlow() {
         return MapUtils.getString(definition, "executeFlow");
     }
+
+    @Override
+    public String toString() {
+        return String.valueOf(definition);
+    }
 }

@@ -131,7 +131,11 @@ const ProcessActivity = (props: ExternalProps) => {
         setProcess(process);
 
         if (process.parentInstanceId && !rootProcessRef.current) {
-            rootProcessRef.current = await apiGetRoot(process.parentInstanceId);
+            try {
+                rootProcessRef.current = await apiGetRoot(process.parentInstanceId);
+            } catch {
+                rootProcessRef.current = process;
+            }
         }
 
         return !isFinal(process.status);

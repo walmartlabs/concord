@@ -1,5 +1,68 @@
 # Change Log
 
+## [2.24.0] - 2025-03-15
+
+### Added
+
+- plugins: new env and collections tasks
+([#1092](https://github.com/walmartlabs/concord/pull/1092));
+- slack-tasks: modern bot token support
+([#1093](https://github.com/walmartlabs/concord/pull/1093));
+- plugins: allow suspend/resume process from concord task
+([#1094](https://github.com/walmartlabs/concord/pull/1094));
+- concord-server: default message for unexpected errors
+([#1096](https://github.com/walmartlabs/concord/pull/1096));
+- concord-server, concord-console2: add support for
+processExecMode
+([#1102](https://github.com/walmartlabs/concord/pull/1102)).
+
+### Changed
+
+- runtime-v2: restrict regex github trigger attributes to
+string value
+([#1097](https://github.com/walmartlabs/concord/pull/1097));
+- mock-tasks: correctly handle mocks in `set variables` step
+([#1098](https://github.com/walmartlabs/concord/pull/1098));
+- concord-console2: handle non-existent root parent
+([#1100](https://github.com/walmartlabs/concord/pull/1100));
+- concord-server: disable deprecated process start endpoints
+([#1101](https://github.com/walmartlabs/concord/pull/1101));
+- concord-plugin: set dry-run mode for subprocesses by
+default if the parent process was started in dry-run mode
+([#1104](https://github.com/walmartlabs/concord/pull/1104));
+- project: update Maven plugin versions
+([#1105](https://github.com/walmartlabs/concord/pull/1105)).
+
+
+
+## [2.23.0] - 2025-02-26
+
+### Added
+
+- concord-server: allow handle configuration in custom
+enqueue processor
+([#1088](https://github.com/walmartlabs/concord/pull/1088));
+- concord-agent: allow skipping repository state
+([#1089](https://github.com/walmartlabs/concord/pull/1089)).
+
+### Changed
+
+- runtime-v2: hide stack trace and log location for
+ParallelExecutionException
+([#1081](https://github.com/walmartlabs/concord/pull/1081));
+- concord-server: close MultipartInput explicitly
+([#1084](https://github.com/walmartlabs/concord/pull/1084);
+- console2: configure children process columns
+([#1085](https://github.com/walmartlabs/concord/pull/1085));
+- runtimev2: error message for process arguments evaluation
+([#1086](https://github.com/walmartlabs/concord/pull/1086)); 
+- concord-tasks: send archive as a file instead of byte
+array
+([#1087](https://github.com/walmartlabs/concord/pull/1087));
+- concord-server: handle request without cookies
+([#1090](https://github.com/walmartlabs/concord/pull/1090)).
+
+
 ## [2.22.0] - 2025-02-14
 
 ### Added

@@ -218,8 +218,8 @@ public class ConcordTaskParams {
             return variables.getBoolean(DEBUG_KEY, defaultValue);
         }
 
-        public Boolean dryRunMode() {
-            return variables.get(DRY_RUN_MODE_KEY, null, Boolean.class);
+        public boolean dryRunMode(boolean defaultValue) {
+            return variables.get(DRY_RUN_MODE_KEY, defaultValue, Boolean.class);
         }
 
         public String org() {
