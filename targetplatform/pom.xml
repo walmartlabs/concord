@@ -86,7 +86,7 @@
         <jooq.version>3.14.0</jooq.version>
         <jsch.version>0.1.55</jsch.version>
         <json.schema.validator.version>1.5.4</json.schema.validator.version>
-        <json.smart.version>2.5.0</json.smart.version>
+        <json.smart.version>2.5.2</json.smart.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>5.9.1</junit.version>
         <kafka.client.version>2.4.0</kafka.client.version>
