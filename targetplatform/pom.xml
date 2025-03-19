@@ -89,7 +89,7 @@
         <json.smart.version>2.5.2</json.smart.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>5.9.1</junit.version>
-        <kafka.client.version>2.4.0</kafka.client.version>
+        <kafka.client.version>3.7.1</kafka.client.version>
         <kerby.version>2.0.1</kerby.version>
         <kubernetes.client.version>7.0.1</kubernetes.client.version>
         <launcher.version>0.128</launcher.version>
