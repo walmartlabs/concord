@@ -35,7 +35,6 @@ import com.walmartlabs.concord.server.security.SecurityUtils;
 import org.apache.shiro.subject.PrincipalCollection;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -43,7 +42,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-@Named
 public class PayloadRestoreProcessor implements PayloadProcessor {
 
     private final ObjectMapper objectMapper;

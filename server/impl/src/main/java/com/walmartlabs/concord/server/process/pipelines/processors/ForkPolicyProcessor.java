@@ -36,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Objects;
@@ -45,7 +44,6 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class ForkPolicyProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ForkPolicyProcessor.class);
@@ -103,7 +101,6 @@ public class ForkPolicyProcessor implements PayloadProcessor {
         return sb.toString();
     }
 
-    @Named
     private static class ForkDepthDao extends AbstractDao {
 
         @Inject

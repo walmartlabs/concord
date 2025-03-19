@@ -24,13 +24,11 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.server.process.pipelines.processors.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 
 /**
  * Resumes the execution of previously suspended processes.
  */
-@Named
 public class ResumePipeline extends Pipeline {
 
     private final ExceptionProcessor exceptionProcessor;

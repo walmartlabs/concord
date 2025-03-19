@@ -26,7 +26,6 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -38,7 +37,6 @@ import java.util.Map;
 /**
  * Cleans up the fork's files copied from the parent process.
  */
-@Named
 public class ForkCleanupProcessor implements PayloadProcessor {
 
     private static final String[] MARKER_FILES = {Constants.Files.SUSPEND_MARKER_FILE_NAME, Constants.Files.RESUME_MARKER_FILE_NAME};

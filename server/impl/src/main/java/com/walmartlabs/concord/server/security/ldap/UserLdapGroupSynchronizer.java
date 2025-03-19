@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -133,7 +132,6 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
                 () -> userManager.delete(userId));
     }
 
-    @Named
     public static final class Dao extends AbstractDao {
 
         @Inject

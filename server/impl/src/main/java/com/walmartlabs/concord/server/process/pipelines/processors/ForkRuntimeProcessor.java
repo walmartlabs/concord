@@ -25,13 +25,11 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.UUID;
 
 /**
  * Get the runtime value from the parent process.
  */
-@Named
 public class ForkRuntimeProcessor implements PayloadProcessor {
 
     private final ProcessQueueDao queueDao;
