@@ -18,7 +18,6 @@ const defaultOpts = {
 // proxy api requests to the backend server
 app.all("/api/*", proxy("localhost:8001", defaultOpts));
 
-app.all("/logs/*", proxy("localhost:8001", defaultOpts));
 app.all("/forms/*", proxy("localhost:8001", defaultOpts));
 
 // everything else goes to the default dev server
