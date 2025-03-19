@@ -20,16 +20,13 @@ package com.walmartlabs.concord.server.org;
  * =====
  */
 
-import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.OffsetDateTimeParam;
 import com.walmartlabs.concord.server.console.ResponseTemplates;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.form.FormServiceV1;
 import com.walmartlabs.concord.server.process.form.FormServiceV2;
-import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
@@ -37,7 +34,6 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
-import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
@@ -58,7 +54,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
 
-import static com.walmartlabs.concord.server.Utils.unwrap;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 import static javax.ws.rs.core.Response.Status;
 
@@ -107,67 +102,7 @@ public class ProjectProcessResource implements Resource {
         this.repositoryDao = repositoryDao;
         this.stateManager = stateManager;
     }
-
-    @GET
-//    @ApiOperation("List processes for the specified organization")
-    @Path("/{orgName}/process")
-    @Produces(MediaType.APPLICATION_JSON)
-    @WithTimer
-    @Deprecated
-    // TODO replace with /api/v1/process?orgName=...&status=...
-    public List<ProcessEntry> list(@PathParam("orgName") @ConcordKey String orgName,
-                                   @QueryParam("status") ProcessStatus processStatus,
-                                   @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
-                                   @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
-                                   @QueryParam("limit") @DefaultValue(DEFAULT_LIST_LIMIT) int limit,
-                                   @QueryParam("offset") @DefaultValue("0") int offset) {
-
-        OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        ProcessFilter filter = ProcessFilter.builder()
-                .orgIds(Collections.singleton(org.getId()))
-                .status(processStatus)
-                .afterCreatedAt(unwrap(afterCreatedAt))
-                .beforeCreatedAt(unwrap(beforeCreatedAt))
-                .limit(limit)
-                .offset(offset)
-                .build();
-
-        return queueDao.list(filter);
-    }
-
-    @GET
-//    @ApiOperation("List processes for the specified project")
-    @Path("/{orgName}/project/{projectName}/process")
-    @Produces(MediaType.APPLICATION_JSON)
-    @WithTimer
-    @Deprecated
-    public List<ProcessEntry> list(@PathParam("orgName") @ConcordKey String orgName,
-                                   @PathParam("projectName") @ConcordKey String projectName,
-                                   @QueryParam("status") ProcessStatus processStatus,
-                                   @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
-                                   @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
-                                   @QueryParam("limit") @DefaultValue(DEFAULT_LIST_LIMIT) int limit,
-                                   @QueryParam("offset") @DefaultValue("0") int offset) {
-
-        OrganizationEntry org = orgManager.assertAccess(orgName, false);
-
-        UUID projectId = projectDao.getId(org.getId(), projectName);
-        if (projectId == null) {
-            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
-        }
-
-        ProcessFilter filter = ProcessFilter.builder()
-                .projectId(projectId)
-                .status(processStatus)
-                .afterCreatedAt(unwrap(afterCreatedAt))
-                .beforeCreatedAt(unwrap(beforeCreatedAt))
-                .limit(limit)
-                .offset(offset)
-                .build();
-
-        return queueDao.list(filter);
-    }
-
+    
     /**
      * Starts a new process instance.
      */
