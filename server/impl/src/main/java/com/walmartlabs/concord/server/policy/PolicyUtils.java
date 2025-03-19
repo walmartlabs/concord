@@ -26,7 +26,7 @@ import com.walmartlabs.concord.server.org.jsonstore.JsonStoreEntry;
 import com.walmartlabs.concord.server.org.jsonstore.JsonStoreVisibility;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.org.secret.SecretEntry;
+import com.walmartlabs.concord.server.org.secret.SecretEntryV2;
 import com.walmartlabs.concord.server.org.secret.SecretType;
 import com.walmartlabs.concord.server.org.secret.SecretVisibility;
 import com.walmartlabs.concord.server.user.UserEntry;
@@ -74,7 +74,7 @@ public final class PolicyUtils {
 
     public static Map<String, Object> repositoryToMap(ProjectEntry project,
                                                       RepositoryEntry repo,
-                                                      SecretEntry secret) {
+                                                      SecretEntryV2 secret) {
         return repositoryToMap(project.getOrgId(), project.getOrgName(), project.getId(), project.getName(), repo, secret);
     }
 
@@ -83,7 +83,7 @@ public final class PolicyUtils {
                                                       UUID projectId,
                                                       String projectName,
                                                       RepositoryEntry repo,
-                                                      SecretEntry secret) {
+                                                      SecretEntryV2 secret) {
 
         Map<String, Object> m = new HashMap<>();
         m.put("orgId", orgId);
