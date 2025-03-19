@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.walmartlabs.concord.client2.ProjectEntry.RawPayloadModeEnum.EVERYONE;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
@@ -41,7 +42,7 @@ public class OutVariablesProjectIT extends AbstractServerIT {
         String orgName = "Default";
         String projectName = "project_" + System.currentTimeMillis();
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
-                .acceptsRawPayload(true)
+                .rawPayloadMode(EVERYONE)
                 .outVariablesMode(ProjectEntry.OutVariablesModeEnum.EVERYONE)
                 .name(projectName));
 
@@ -72,7 +73,7 @@ public class OutVariablesProjectIT extends AbstractServerIT {
         String orgName = "Default";
         String projectName = "project_" + System.currentTimeMillis();
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
-                .acceptsRawPayload(true)
+                .rawPayloadMode(EVERYONE)
                 .name(projectName));
 
         // ---
@@ -99,7 +100,7 @@ public class OutVariablesProjectIT extends AbstractServerIT {
         String orgName = "Default";
         String projectName = "project_" + System.currentTimeMillis();
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
-                .acceptsRawPayload(true)
+                .rawPayloadMode(EVERYONE)
                 .name(projectName));
 
         // ---
