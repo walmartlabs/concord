@@ -24,8 +24,8 @@ import com.walmartlabs.concord.server.cfg.RememberMeConfiguration;
 import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import org.apache.shiro.authc.UsernamePasswordToken;
-import org.apache.shiro.io.SerializationException;
-import org.apache.shiro.io.Serializer;
+import org.apache.shiro.lang.io.SerializationException;
+import org.apache.shiro.lang.io.Serializer;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
@@ -34,11 +34,9 @@ import org.apache.shiro.web.util.WebUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * Implementation of {@link org.apache.shiro.mgt.RememberMeManager}. Uses the DB to store session data.
