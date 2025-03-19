@@ -28,10 +28,8 @@ import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.*;
 
-@Named
 public class EntryPointProcessor implements PayloadProcessor {
 
     private final ProcessLogManager logManager;

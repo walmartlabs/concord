@@ -25,16 +25,12 @@ import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Named
-@Singleton
 public class WebSocketChannelManager {
 
     private static final Logger log = LoggerFactory.getLogger(WebSocketChannelManager.class);
