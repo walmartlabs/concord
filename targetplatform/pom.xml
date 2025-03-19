@@ -94,7 +94,7 @@
         <kubernetes.client.version>7.0.1</kubernetes.client.version>
         <launcher.version>0.128</launcher.version>
         <liquibase.version>4.29.2</liquibase.version>
-        <logback.version>1.4.14</logback.version>
+        <logback.version>1.5.13</logback.version>
         <maven.annotation.version>3.5</maven.annotation.version>
         <maven.api.version>3.0.5</maven.api.version>
         <maven.artifact.version>3.8.4</maven.artifact.version>
