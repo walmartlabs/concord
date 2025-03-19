@@ -67,9 +67,9 @@
         <httpmime.version>4.5.11</httpmime.version>
         <immutables.version>2.9.3</immutables.version>
         <ini4j.version>0.5.4</ini4j.version>
-        <jackson.databind.version>2.18.2</jackson.databind.version>
+        <jackson.databind.version>2.18.3</jackson.databind.version>
         <jackson.jsonschema.version>1.0.39</jackson.jsonschema.version>
-        <jackson.version>2.18.2</jackson.version>
+        <jackson.version>2.18.3</jackson.version>
         <javax.activation.version>1.2.0</javax.activation.version>
         <javax.annotations.api.version>1.3.2</javax.annotations.api.version>
         <javax.inject.version>1</javax.inject.version>
