@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-agent: replace simple immutables with records
+([#1091](https://github.com/walmartlabs/concord/pull/1091));
 - concord-server: upgrade Shiro to 2.x
 ([#1107](https://github.com/walmartlabs/concord/pull/1107)).
 
