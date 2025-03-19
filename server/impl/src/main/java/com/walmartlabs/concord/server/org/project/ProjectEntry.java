@@ -47,7 +47,7 @@ public class ProjectEntry implements Serializable {
 
     public static ProjectEntry replace(ProjectEntry e, Map<String, RepositoryEntry> repos) {
         return new ProjectEntry(e.id, e.name, e.description, e.orgId, e.orgName, repos,
-                e.cfg, e.visibility, e.owner, e.acceptsRawPayload, e.rawPayloadMode, e.meta, e.outVariablesMode,
+                e.cfg, e.visibility, e.owner, e.rawPayloadMode, e.meta, e.outVariablesMode,
                 e.processExecMode, e.createdAt);
     }
 
@@ -75,12 +75,6 @@ public class ProjectEntry implements Serializable {
 
     private final EntityOwner owner;
 
-    /**
-     * @deprecated use {@link #rawPayloadMode}
-     */
-    @Deprecated
-    private final Boolean acceptsRawPayload;
-
     private final RawPayloadMode rawPayloadMode;
 
     private final OutVariablesMode outVariablesMode;
@@ -93,19 +87,19 @@ public class ProjectEntry implements Serializable {
     private final OffsetDateTime createdAt;
 
     public ProjectEntry(String name) {
-        this(null, name, null, null, null, null, null, null, null, false, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED, ProcessExecMode.READERS, null);
+        this(null, name, null, null, null, null, null, null, null, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED, ProcessExecMode.READERS, null);
     }
 
     public ProjectEntry(String name, ProjectVisibility visibility) {
-        this(null, name, null, null, null, null, null, visibility, null, false, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED, ProcessExecMode.READERS, null);
+        this(null, name, null, null, null, null, null, visibility, null, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED, ProcessExecMode.READERS, null);
     }
 
     public ProjectEntry(String name, Map<String, RepositoryEntry> repositories) {
-        this(null, name, null, null, null, repositories, null, null, null, false, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED, ProcessExecMode.READERS, null);
+        this(null, name, null, null, null, repositories, null, null, null, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED, ProcessExecMode.READERS, null);
     }
 
     public ProjectEntry(String name, UUID id) {
-        this(id, name, null, null, null, null, null, null, null, false, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED, ProcessExecMode.READERS, null);
+        this(id, name, null, null, null, null, null, null, null, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED, ProcessExecMode.READERS, null);
     }
 
     @JsonCreator
@@ -118,7 +112,6 @@ public class ProjectEntry implements Serializable {
                         @JsonProperty("cfg") Map<String, Object> cfg,
                         @JsonProperty("visibility") ProjectVisibility visibility,
                         @JsonProperty("owner") EntityOwner owner,
-                        @JsonProperty("acceptsRawPayload") Boolean acceptsRawPayload,
                         @JsonProperty("rawPayloadMode") RawPayloadMode rawPayloadMode,
                         @JsonProperty("meta") Map<String, Object> meta,
                         @JsonProperty("outVariablesMode") OutVariablesMode outVariablesMode,
@@ -134,7 +127,6 @@ public class ProjectEntry implements Serializable {
         this.cfg = cfg;
         this.visibility = visibility;
         this.owner = owner;
-        this.acceptsRawPayload = acceptsRawPayload;
         this.rawPayloadMode = rawPayloadMode;
         this.meta = meta;
         this.outVariablesMode = outVariablesMode;
@@ -182,11 +174,6 @@ public class ProjectEntry implements Serializable {
         return owner;
     }
 
-    @Deprecated
-    public Boolean getAcceptsRawPayload() {
-        return acceptsRawPayload;
-    }
-
     public RawPayloadMode getRawPayloadMode() {
         return rawPayloadMode;
     }
@@ -219,7 +206,6 @@ public class ProjectEntry implements Serializable {
                 ", cfg=" + cfg +
                 ", visibility=" + visibility +
                 ", owner=" + owner +
-                ", acceptsRawPayload=" + acceptsRawPayload +
                 ", rawPayloadMode=" + rawPayloadMode +
                 ", outVariablesMode=" + outVariablesMode +
                 ", meta=" + meta +

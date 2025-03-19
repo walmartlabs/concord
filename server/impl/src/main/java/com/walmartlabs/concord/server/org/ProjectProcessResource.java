@@ -102,7 +102,7 @@ public class ProjectProcessResource implements Resource {
         this.repositoryDao = repositoryDao;
         this.stateManager = stateManager;
     }
-    
+
     /**
      * Starts a new process instance.
      */
