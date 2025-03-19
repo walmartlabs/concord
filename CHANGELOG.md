@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.25.0] - Unreleased
+
+### Changed
+
+- concord-server: upgrade Shiro to 2.x
+([#1107](https://github.com/walmartlabs/concord/pull/1107)).
+
+
+
 ## [2.24.0] - 2025-03-15
 
 ### Added
