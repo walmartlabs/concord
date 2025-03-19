@@ -41,4 +41,11 @@ public interface CustomEnqueueProcessor {
     default Payload handleState(Payload payload) {
         return payload;
     }
+
+    /**
+     * Process the process configuration after the merge rules are applied.
+     */
+    default Payload handleConfiguration(Payload payload) {
+        return payload;
+    }
 }

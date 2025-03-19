@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.runtime.v2.runner.vm;
+package com.walmartlabs.concord.svm;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2024 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,29 +20,21 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
-public class LoggedException extends RuntimeException {
+/**
+ * Backward compatibility for processing old {@link State} instances.
+ */
+public class StateBackwardCompatibility {
 
-    public LoggedException(Exception cause) {
-        super(cause);
-    }
+    // 2.21.1-SNAPSHOT
+    public static ThreadError processThreadError(Object threadError, ThreadId threadId) {
+        if (threadError == null) {
+            return null;
+        }
 
-    @Override
-    public Exception getCause() {
-        return (Exception) super.getCause();
-    }
+        if (threadError instanceof Exception e) {
+            return new ThreadError(threadId, null, e);
+        }
 
-    @Override
-    public String toString() {
-        return getCause().toString();
-    }
-
-    @Override
-    public String getMessage() {
-        return getCause().getMessage();
-    }
-
-    @Override
-    public StackTraceElement[] getStackTrace() {
-        return new StackTraceElement[0];
+        return (ThreadError) threadError;
     }
 }

@@ -24,25 +24,34 @@ import com.walmartlabs.concord.server.sdk.BackgroundTask;
 
 import javax.inject.Inject;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class BackgroundTasks {
 
     private final Set<BackgroundTask> tasks;
+    private final Lock controlMutex = new ReentrantLock();
 
     @Inject
     public BackgroundTasks(Set<BackgroundTask> tasks) {
-        this.tasks = tasks;
+        this.tasks = Set.copyOf(tasks);
     }
 
     public void start() {
-        synchronized (tasks) {
+        controlMutex.lock();
+        try {
             tasks.forEach(BackgroundTask::start);
+        } finally {
+            controlMutex.unlock();
         }
     }
 
     public void stop() {
-        synchronized (tasks) {
+        controlMutex.lock();
+        try {
             tasks.forEach(BackgroundTask::stop);
+        } finally {
+            controlMutex.unlock();
         }
     }
 

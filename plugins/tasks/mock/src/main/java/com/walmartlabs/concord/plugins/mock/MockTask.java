@@ -28,12 +28,10 @@ import com.walmartlabs.concord.runtime.v2.runner.vm.VMUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.svm.VM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -47,6 +45,7 @@ public class MockTask implements Task {
     private final MockDefinitionProvider mockDefinitionProvider;
     private final Class<? extends Task> originalTaskClass;
     private final Supplier<Task> delegate;
+    private final boolean debug;
 
     public MockTask(Context ctx, String taskName,
                     MockDefinitionProvider mockDefinitionProvider,
@@ -57,12 +56,18 @@ public class MockTask implements Task {
         this.mockDefinitionProvider = mockDefinitionProvider;
         this.originalTaskClass = originalTaskClass;
         this.delegate = delegate;
+        this.debug = ctx.processConfiguration().debug();
     }
 
     @Override
     public TaskResult execute(Variables input) throws Exception{
         var mockDefinition = mockDefinitionProvider.find(ctx, taskName, input);
         if (mockDefinition == null) {
+            if (debug) {
+                log.info("Arguments did not match for '{}' mocked task. Executing the real task", taskName);
+                log.info("Mock definitions:\n{}", MockDefinitionProvider.mocks(ctx).toList());
+            }
+
             return delegate.get().execute(input);
         }
 
@@ -83,9 +88,14 @@ public class MockTask implements Task {
                 .values(result);
     }
 
-    public Object call(CustomTaskMethodResolver.InvocationContext ic, String method, Class<?>[] paramTypes, Object[] params) {
+    public Object call(InvocationContext ic, String method, Class<?>[] paramTypes, Object[] params) {
         var mockDefinition = mockDefinitionProvider.find(ctx, taskName, method, params);
         if (mockDefinition == null) {
+            if (debug) {
+                log.info("Arguments did not match for '{}.{}' mocked task call. Executing the real task.", taskName, method);
+                log.info("Mock definitions:\n{}", MockDefinitionProvider.mocks(ctx).toList());
+            }
+
             return ic.invoker().invoke(delegate.get(), method, paramTypes, params);
         }
 

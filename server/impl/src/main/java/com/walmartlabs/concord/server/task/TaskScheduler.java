@@ -28,10 +28,16 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
 import static com.walmartlabs.concord.db.PgUtils.interval;
 import static java.util.stream.Collectors.toMap;
@@ -50,7 +56,9 @@ public class TaskScheduler extends PeriodicTask {
     private final ExecutorService executor;
     private final SchedulerDao dao;
     private final Map<String, ScheduledTask> tasks;
-    private final Set<String> runningTasks = Collections.synchronizedSet(new HashSet<>());
+    private final Set<String> runningTasks = new HashSet<>();
+
+    private final Lock mutex = new ReentrantLock();
 
     private long lastUpdateDate;
     private long lasStalledCheckDate;
@@ -69,7 +77,7 @@ public class TaskScheduler extends PeriodicTask {
     @Override
     protected boolean performTask() {
         if (lastUpdateDate + RUNNING_UPDATE_INTERVAL <= System.currentTimeMillis()) {
-            updateRunningTasks();
+            withRunningTasks();
             lastUpdateDate = System.currentTimeMillis();
         }
 
@@ -109,9 +117,8 @@ public class TaskScheduler extends PeriodicTask {
         }
 
         executor.submit(() -> {
+            withRunningTasks(tasks -> tasks.add(id));
             try {
-                runningTasks.add(id);
-
                 task.performTask();
 
                 dao.success(id);
@@ -122,17 +129,13 @@ public class TaskScheduler extends PeriodicTask {
 
                 dao.error(id, e);
             } finally {
-                runningTasks.remove(id);
+                withRunningTasks(tasks -> tasks.remove(id));
             }
         });
     }
 
-    private void updateRunningTasks() {
-        Set<String> forUpdate;
-        synchronized (runningTasks) {
-            forUpdate = new HashSet<>(runningTasks);
-        }
-
+    private void withRunningTasks() {
+        Set<String> forUpdate = copyRunningTasks();
         if (forUpdate.isEmpty()) {
             return;
         }
@@ -160,4 +163,21 @@ public class TaskScheduler extends PeriodicTask {
         }
     }
 
+    private void withRunningTasks(Consumer<Set<String>> f) {
+        mutex.lock();
+        try {
+            f.accept(runningTasks);
+        } finally {
+            mutex.unlock();
+        }
+    }
+
+    private Set<String> copyRunningTasks() {
+        mutex.lock();
+        try {
+            return Set.copyOf(runningTasks);
+        } finally {
+            mutex.unlock();
+        }
+    }
 }

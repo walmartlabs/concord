@@ -48,8 +48,8 @@ public class RepositoryInfoUpdateProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        String commitId = null;
-        String commitBranch = null;
+        String commitId = i.getCommitId();
+        String commitBranch = i.getBranch();
 
         RepositoryProcessor.CommitInfo ci = i.getCommitInfo();
         if (ci != null) {

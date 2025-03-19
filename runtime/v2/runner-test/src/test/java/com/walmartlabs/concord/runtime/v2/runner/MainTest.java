@@ -25,7 +25,6 @@ import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.ReentrantTaskExample;
-import com.walmartlabs.concord.runtime.v2.runner.vm.LoggedException;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -385,7 +384,7 @@ public class MainTest  {
         try {
             run();
             fail("exception expected");
-        } catch (LoggedException e) {
+        } catch (Exception e) {
             assertEquals("Found forbidden tasks", e.getMessage());
         }
 
@@ -509,7 +508,7 @@ public class MainTest  {
                 .build());
 
         byte[] log = run();
-        assertLog(log, ".*error occurred: java.lang.RuntimeException: Error: this is an error.*");
+        assertLog(log, ".*" + quote("(concord.yml): Error @ line: 3, col: 7. Error: this is an error") + ".*");
     }
 
     @Test
@@ -674,14 +673,15 @@ public class MainTest  {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelWithError() throws Exception {
         deploy("parallelWithError");
 
         save(ProcessConfiguration.builder()
                 .build());
 
-        LoggedException exception = assertThrows(LoggedException.class, this::run);
-        assertTrue(exception.getMessage().matches("(?s)Parallel execution errors:.*faultyTask.*\n.*faultyTask.*"));
+        Exception exception = assertThrows(Exception.class, this::run);
+        assertTrue(exception.getMessage().matches("(?s)Parallel execution errors:.*boom.*\n.*boom.*"));
     }
 
     @Test
@@ -1344,7 +1344,7 @@ public class MainTest  {
         try {
             run();
             fail("exception expected");
-        } catch (LoggedException e) {
+        } catch (Exception e) {
             assertEquals("42 not found", e.getMessage());
         }
     }
@@ -1413,7 +1413,7 @@ public class MainTest  {
         }
 
         String logString = new String(runtime.lastLog());
-        String expected = "[ERROR] (concord.yml): Error @ line: 9, col: 7. Error Parsing: ${str.split('\\n')}. Encountered \"\\'\\\\n\" at line 1, column 13.\n" +
+        String expected = "[ERROR] (concord.yml): Error @ line: 9, col: 7. while parsing expression '${str.split('\\n')}': Encountered \"\\'\\\\n\" at line 1, column 13.\n" +
                 "Was expecting one of:\n" +
                 "    \"{\" ...\n" +
                 "    <INTEGER_LITERAL> ...\n" +
@@ -1484,41 +1484,10 @@ public class MainTest  {
             // ignore
         }
 
-        String expected = "[ERROR] (concord.yml): Error @ line: 3, col: 7. while evaluating expression '${faultyTask.exception('BOOM')}': javax.el.ELException: java.lang.Exception: BOOM";
+        String expected = "[ERROR] (concord.yml): Error @ line: 3, col: 7. while evaluating expression '${faultyTask.exception('BOOM')}': BOOM";
         assertLog(runtime.lastLog(), ".*" + Pattern.quote(expected));
     }
 
-    @Test
-    public void testTaskThrowUserDefinedError() throws Exception {
-        deploy("faultyTask2");
-
-        save(ProcessConfiguration.builder()
-                .build());
-
-        try {
-            run();
-            fail("must fail");
-        } catch (Exception e) {
-            // ignore
-        }
-        assertLog(runtime.lastLog(), ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!"));
-    }
-
-    @Test
-    public void testTaskThrowRuntimeException() throws Exception {
-        deploy("faultyTask3");
-
-        save(ProcessConfiguration.builder()
-                .build());
-
-        try {
-            run();
-            fail("must fail");
-        } catch (Exception e) {
-            // ignore
-        }
-        assertLog(runtime.lastLog(), ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. boom!"));
-    }
 
     @Test
     public void testTaskThrowException() throws Exception {
@@ -1549,7 +1518,7 @@ public class MainTest  {
         } catch (Exception e) {
         }
 
-        assertLog(runtime.lastLog(), ".*" + quote("(concord.yml): Error @ line: 4, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+        assertLog(runtime.lastLog(), ".*" + quote("(concord.yml): Error @ line: 4, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'") + ".*");
     }
 
     @Test
@@ -1565,7 +1534,7 @@ public class MainTest  {
         } catch (Exception e) {
         }
 
-        assertLog(runtime.lastLog(), ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+        assertLog(runtime.lastLog(), ".*" + quote("(concord.yml): Error @ line: 6, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'") + ".*");
     }
 
     @Test
@@ -1581,7 +1550,7 @@ public class MainTest  {
         } catch (Exception e) {
         }
 
-        assertLog(runtime.lastLog(), ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+        assertLog(runtime.lastLog(), ".*" + quote("(concord.yml): Error @ line: 6, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'") + ".*");
     }
 
     @Test

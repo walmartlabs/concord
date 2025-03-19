@@ -36,6 +36,7 @@ export enum ProjectVisibility {
 
 export interface ProjectEntryMetaUI {
     processList?: ColumnDefinition[];
+    childrenProcessList?: ColumnDefinition[];
 }
 
 export interface ProjectEntryMeta {
@@ -58,6 +59,12 @@ export enum OutVariablesMode {
     EVERYONE = 'EVERYONE'
 }
 
+export enum ProcessExecMode {
+    DISABLED = 'DISABLED',
+    READERS = 'READERS',
+    WRITERS = 'WRITERS'
+}
+
 export interface ProjectEntry {
     id: ConcordId;
     name: ConcordKey;
@@ -75,6 +82,8 @@ export interface ProjectEntry {
     meta?: ProjectEntryMeta;
 
     outVariablesMode: OutVariablesMode;
+
+    processExecMode: ProcessExecMode;
 }
 
 export interface NewProjectEntry {
@@ -92,6 +101,7 @@ export interface UpdateProjectEntry {
     visibility?: ProjectVisibility;
     rawPayloadMode?: RawPayloadMode;
     outVariablesMode?: OutVariablesMode;
+    processExecMode?: ProcessExecMode;
 }
 
 export interface PaginatedProjectEntries {

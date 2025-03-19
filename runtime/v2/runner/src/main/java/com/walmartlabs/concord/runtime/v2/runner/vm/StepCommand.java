@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
-import com.walmartlabs.concord.common.ExceptionUtils;
 import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
@@ -28,13 +27,11 @@ import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.ContextProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.el.ELException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -97,7 +94,7 @@ public abstract class StepCommand<T extends Step> implements Command {
                 execute(runtime, state, threadId);
             } catch (Exception e) {
                 logException(step, state, threadId, e);
-                throw new LoggedException(e);
+                throw e;
             }
         });
     }
@@ -105,9 +102,9 @@ public abstract class StepCommand<T extends Step> implements Command {
     public static void logException(Step step, State state, ThreadId threadId, Exception e) {
         // for backward compatibility...
         if (step != null) {
-            log.error("{} {}", Location.toErrorPrefix(step.getLocation()), getExceptionMessage(e));
+            log.error("{}. {}", Location.toErrorPrefix(step.getLocation()), e.getMessage());
         } else {
-            log.error("{}", getExceptionMessage(e));
+            log.error("{}", e.getMessage());
         }
 
         List<StackTraceItem> stackTrace = state.getStackTrace(threadId);
@@ -117,21 +114,4 @@ public abstract class StepCommand<T extends Step> implements Command {
     }
 
     protected abstract void execute(Runtime runtime, State state, ThreadId threadId);
-
-    private static String getExceptionMessage(Exception e) {
-        UserDefinedException u = ExceptionUtils.filterException(e, UserDefinedException.class);
-        if (u != null) {
-            return u.getMessage();
-        }
-
-        if (e instanceof ELException) {
-            return
-                    ExceptionUtils.getExceptionList(e).stream()
-                            .map(Throwable::getMessage)
-                            .collect(Collectors.joining(". "));
-        }
-
-        List<Throwable> exceptions = ExceptionUtils.getExceptionList(e);
-        return exceptions.get(exceptions.size() - 1).getMessage();
-    }
 }

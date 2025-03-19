@@ -37,8 +37,8 @@ public class Scheduler {
 
     private static final Logger log = LoggerFactory.getLogger(Scheduler.class);
 
-    private static final long POLL_DELAY = 5000;
-    private static final long ERROR_DELAY = 10000;
+    private static final long POLL_DELAY = 10000;
+    private static final long ERROR_DELAY = 30000;
 
     private final AutoScalerFactory autoScalerFactory;
     private final KubernetesClient k8sClient;
@@ -46,15 +46,16 @@ public class Scheduler {
     private final Map<String, AgentPoolInstance> pools;
     private final List<Event> events;
 
-    public Scheduler(AutoScalerFactory autoScalerFactory, KubernetesClient k8sClient, AgentClientFactory agentClientFactory) {
+    public Scheduler(AutoScalerFactory autoScalerFactory, KubernetesClient k8sClient, boolean useMaintenanceMode) {
         this.autoScalerFactory = autoScalerFactory;
         this.k8sClient = k8sClient;
-        this.planner = new Planner(k8sClient, agentClientFactory);
+        this.planner = new Planner(k8sClient, new AgentClientFactory(useMaintenanceMode));
         this.pools = new HashMap<>();
         this.events = new LinkedList<>();
     }
 
     public void onEvent(Event.Type type, AgentPool resource) {
+        log.info("onEvent -> handling {} for {}/{}", type, resource.getMetadata().getNamespace(), resource.getMetadata().getName());
         synchronized (events) {
             events.add(new Event(type, resource));
         }
@@ -67,7 +68,7 @@ public class Scheduler {
     /**
      * Process the recent events and update the cluster state.
      */
-    private void doRun() throws Exception {
+    private void doRun() {
         // drain the event queue
         List<Event> evs;
         synchronized (events) {
@@ -121,7 +122,7 @@ public class Scheduler {
                         throw new IllegalArgumentException("Unknown pool status: " + i.getStatus());
                 }
             } catch (IOException e) {
-                log.error("doRun -> error while processing a registered pool {}: {}", i.getName(), e.getMessage());
+                log.error("doRun -> error while processing a registered pool {} ({}): {}", i.getName(), i.getStatus(), e.getMessage());
             }
         });
     }
@@ -161,13 +162,13 @@ public class Scheduler {
     }
 
     private void processActive(AgentPoolInstance i) throws IOException {
-        log.info("processActive ['{}']", i);
+        log.info("processActive ['{}']", i.getName());
         List<Change> changes = planner.plan(i);
         apply(changes);
     }
 
     private void processDeleted(AgentPoolInstance i) throws IOException {
-        log.info("processDeleted ['{}']", i);
+        log.info("processDeleted ['{}']", i.getName());
         String resourceName = i.getName();
 
         // remove all pool's pods
@@ -175,7 +176,7 @@ public class Scheduler {
         apply(changes);
 
         // if no pods left - remove the pool
-        List<Pod> pods = AgentPod.listPods(k8sClient, resourceName);
+        List<Pod> pods = AgentPod.list(k8sClient, resourceName);
         if (pods.isEmpty()) {
             synchronized (pools) {
                 pools.remove(resourceName);
@@ -211,25 +212,6 @@ public class Scheduler {
                     sleep(ERROR_DELAY);
                 }
             }
-        }
-    }
-
-    public static class Configuration {
-
-        private final String concordBaseUrl;
-        private final String concordApiToken;
-
-        public Configuration(String concordBaseUrl, String concordApiToken) {
-            this.concordBaseUrl = concordBaseUrl;
-            this.concordApiToken = concordApiToken;
-        }
-
-        public String getConcordApiToken() {
-            return concordApiToken;
-        }
-
-        public String getConcordBaseUrl() {
-            return concordBaseUrl;
         }
     }
 }

@@ -47,12 +47,17 @@ public final class TestParams {
         return value != null ? value : testProperties.getProperty(profileName);
     }
 
-    public static final String TEST_API_TOKEN = testParameter("SLACK_TEST_API_TOKEN", "SLACK_BOT_API_TOKEN");
+    private static String assertTestParameter(String existingName, String profileName) {
+        return Optional.ofNullable(testParameter(existingName, profileName))
+                .orElseThrow(() -> new IllegalArgumentException("Missing test parameter: " + existingName + " (env var) or " + profileName + " (~/.concord/profile)"));
+    }
+
+    public static final String TEST_API_TOKEN = assertTestParameter("SLACK_TEST_API_TOKEN", "SLACK_BOT_API_TOKEN");
     public static final String TEST_USER_API_TOKEN = testParameter("SLACK_TEST_API_TOKEN", "SLACK_USER_API_TOKEN");
     public static final String TEST_PROXY_ADDRESS = testParameter("SLACK_TEST_PROXY_ADDRESS", "SLACK_PROXY_ADDRESS");
     public static final String TEST_INVALID_PROXY_ADDRESS = testParameter("SLACK_TEST_INVALID_PROXY_ADDRESS", "SLACK_INVALID_PROXY_ADDRESS");
     public static final int TEST_PROXY_PORT = Integer.parseInt(Optional.ofNullable(testParameter("SLACK_TEST_PROXY_PORT", "SLACK_PROXY_PORT")).orElse("-1"));
-    public static final String TEST_CHANNEL = testParameter("SLACK_TEST_CHANNEL", "SLACK_CHANNEL");
+    public static final String TEST_CHANNEL = assertTestParameter("SLACK_TEST_CHANNEL", "SLACK_CHANNEL");
 
     private TestParams() {
     }

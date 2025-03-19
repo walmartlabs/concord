@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.io.Serial;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 
 public class JoinCommand<T extends Step> extends StepCommand<T> {
 
@@ -89,6 +90,7 @@ public class JoinCommand<T extends Step> extends StepCommand<T> {
             if (!failed.isEmpty() && !anyReady) {
                 throw new ParallelExecutionException(failed.stream()
                         .map(state::clearThreadError)
+                        .filter(Objects::nonNull)
                         .toList());
             }
 

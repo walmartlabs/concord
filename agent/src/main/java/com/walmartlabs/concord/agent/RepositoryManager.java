@@ -27,14 +27,19 @@ import com.walmartlabs.concord.client2.SecretClient;
 import com.walmartlabs.concord.imports.Import.SecretDefinition;
 import com.walmartlabs.concord.repository.*;
 import com.walmartlabs.concord.sdk.Secret;
+import com.walmartlabs.concord.dependencymanager.DependencyManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 public class RepositoryManager {
+
+    private static final Logger log = LoggerFactory.getLogger(RepositoryManager.class);
 
     private final SecretClient secretClient;
     private final RepositoryProviders providers;
@@ -45,7 +50,8 @@ public class RepositoryManager {
     public RepositoryManager(SecretClient secretClient,
                              GitConfiguration gitCfg,
                              RepositoryCacheConfiguration cacheCfg,
-                             ObjectMapper objectMapper) throws IOException {
+                             ObjectMapper objectMapper,
+                             DependencyManager dependencyManager) throws IOException {
 
         this.secretClient = secretClient;
         this.gitCfg = gitCfg;
@@ -60,7 +66,7 @@ public class RepositoryManager {
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
                 .build();
 
-        List<RepositoryProvider> providers = Collections.singletonList(new GitCliRepositoryProvider(clientCfg));
+        List<RepositoryProvider> providers = Arrays.asList(new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(clientCfg));
         this.providers = new RepositoryProviders(providers);
 
         this.repositoryCache = new RepositoryCache(cacheCfg.getCacheDir(),
@@ -72,6 +78,11 @@ public class RepositoryManager {
     }
 
     public void export(String repoUrl, String branch, String commitId, String repoPath, Path dest, SecretDefinition secretDefinition, List<String> ignorePatterns) throws ExecutionException {
+        if (gitCfg.isSkip()) {
+            log.info("Skipping git export, using local state");
+            return;
+        }
+
         Secret secret = getSecret(secretDefinition);
 
         Path cacheDir = repositoryCache.getPath(repoUrl);

@@ -87,7 +87,7 @@ public abstract class LoopWrapper implements Command {
             execute(runtime, state, threadId);
         } catch (Exception e) {
             StepCommand.logException(step, state, threadId, e);
-            throw new LoggedException(e);
+            throw e;
         }
     }
 
@@ -207,7 +207,7 @@ public abstract class LoopWrapper implements Command {
                 state.pushFrame(threadId, cmdFrame);
             }
 
-            frame.push(new JoinCommand(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet()), getStep()));
+            frame.push(new JoinCommand<>(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet()), getStep()));
         }
 
         private static List<ArrayList<Serializable>> batches(ArrayList<Serializable> items, int batchSize) {

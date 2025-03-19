@@ -31,6 +31,8 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public final class ConcordServer {
 
@@ -45,7 +47,7 @@ public final class ConcordServer {
     @Inject
     private HttpServer server;
 
-    private final Object controlMutex = new Object();
+    private final Lock controlMutex = new ReentrantLock();
 
     public static ConcordServer withModules(Module... modules) throws Exception {
         return withModules(List.of(modules));
@@ -65,15 +67,19 @@ public final class ConcordServer {
     }
 
     public ConcordServer start() throws Exception {
-        synchronized (controlMutex) {
+        controlMutex.lock();
+        try {
             tasks.start();
             server.start();
+        } finally {
+            controlMutex.unlock();
         }
         return this;
     }
 
     public void stop() throws Exception {
-        synchronized (controlMutex) {
+        controlMutex.lock();
+        try {
             if (server != null) {
                 server.stop();
                 server = null;
@@ -83,6 +89,8 @@ public final class ConcordServer {
                 tasks.stop();
                 tasks = null;
             }
+        } finally {
+            controlMutex.unlock();
         }
     }
 
