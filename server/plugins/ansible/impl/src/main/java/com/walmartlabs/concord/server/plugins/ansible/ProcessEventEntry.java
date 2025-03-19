@@ -47,9 +47,6 @@ public interface ProcessEventEntry extends Serializable {
     @JsonRawValue
     Object data();
 
-    /**
-     * should match the format in {@link com.walmartlabs.concord.server.IsoDateParam}
-     */
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     OffsetDateTime eventDate();
 
