@@ -54,7 +54,7 @@ public class SegmentHeaderParser {
                     char ch = (char) bb.get();
                     if (ch == '|') {
                         if (mark != -1) {
-                            invalidSegments.add(Position.of(mark, bb.position() - 1));
+                            invalidSegments.add(new Position(mark, bb.position() - 1));
                         }
 
                         mark = bb.position() - 1;
@@ -104,7 +104,7 @@ public class SegmentHeaderParser {
                     field = field.next();
                     if (field == null) {
                         LogSegmentHeader h = headerBuilder.build();
-                        segments.add(Segment.of(h, bb.position()));
+                        segments.add(new Segment(h, bb.position()));
 
                         int actualLength = Math.min(h.length(), bb.remaining());
                         bb.position(bb.position() + actualLength);
@@ -128,7 +128,7 @@ public class SegmentHeaderParser {
         int result;
         if (mark != -1) {
             if (state == State.FIND_HEADER) {
-                invalidSegments.add(Position.of(mark, bb.position()));
+                invalidSegments.add(new Position(mark, bb.position()));
                 result = bb.position();
             } else {
                 result = mark;
@@ -140,34 +140,10 @@ public class SegmentHeaderParser {
         return result;
     }
 
-    @Value.Immutable
-    @Value.Style(jdkOnly = true)
-    public interface Position {
-
-        @Value.Parameter
-        int start();
-
-        @Value.Parameter
-        int end();
-
-        static Position of(int start, int end) {
-            return ImmutablePosition.of(start, end);
-        }
+    public record Position(int start, int end) {
     }
 
-    @Value.Immutable
-    @Value.Style(jdkOnly = true)
-    public interface Segment {
-
-        @Value.Parameter
-        LogSegmentHeader header();
-
-        @Value.Parameter
-        int msgStart();
-
-        static Segment of(LogSegmentHeader header, int msgStart) {
-            return ImmutableSegment.of(header, msgStart);
-        }
+    public record Segment(LogSegmentHeader header, int msgStart) {
     }
 
     enum State {
