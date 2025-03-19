@@ -24,8 +24,9 @@ public class SlackConfiguration {
 
     public static SlackConfiguration from(SlackConfigurationParams in) {
         String apiToken = in.apiToken();
+        boolean isLegacy = in.isLegacy();
 
-        SlackConfiguration cfg = new SlackConfiguration(apiToken);
+        SlackConfiguration cfg = new SlackConfiguration(apiToken, isLegacy);
         cfg.setProxy(in.proxyAddress(), in.proxyPort(-1));
         cfg.setConnectTimeout(in.connectTimeout(DEFAULT_CONNECT_TIMEOUT));
         cfg.setSoTimeout(in.soTimeout(DEFAULT_SO_TIMEOUT));
@@ -38,6 +39,7 @@ public class SlackConfiguration {
     private static final int DEFAULT_RETRY_COUNT = 3;
 
     private final String authToken;
+    private final boolean isLegacy;
     private String proxyAddress;
     private Integer proxyPort;
     private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
@@ -45,7 +47,12 @@ public class SlackConfiguration {
     private int retryCount = DEFAULT_RETRY_COUNT;
 
     public SlackConfiguration(String authToken) {
+        this(authToken, false);
+    }
+
+    public SlackConfiguration(String authToken, boolean isLegacy) {
         this.authToken = authToken;
+        this.isLegacy = isLegacy;
     }
 
     private void setProxy(String proxyAddress, Integer proxyPort) {
@@ -67,6 +74,10 @@ public class SlackConfiguration {
 
     public String getAuthToken() {
         return authToken;
+    }
+
+    public boolean isLegacy() {
+        return isLegacy;
     }
 
     public String getProxyAddress() {

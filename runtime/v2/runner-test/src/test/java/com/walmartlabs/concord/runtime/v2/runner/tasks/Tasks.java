@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -202,6 +202,20 @@ public final class Tasks {
         }
     }
 
+    @Named("userDefinedExceptionTask")
+    @SuppressWarnings("unused")
+    public static class UserDefinedExceptionTask implements Task {
+
+        @Override
+        public TaskResult execute(Variables input) {
+            throw new UserDefinedException("boom!");
+        }
+
+        public void exception(String msg) {
+            throw new UserDefinedException(msg);
+        }
+    }
+
     @Named("faultyOnceTask")
     @SuppressWarnings("unused")
     static class FaultyOnceTask implements Task {
@@ -245,7 +259,7 @@ public final class Tasks {
         public TaskResult execute(Variables input) {
             if (input.getBoolean("fail", false)) {
                 log.info("ConditionallyFailTask: fail");
-                throw new RuntimeException("boom!");
+                return TaskResult.fail("boom!");
             }
 
             log.info("ConditionallyFailTask: ok");
@@ -304,6 +318,13 @@ public final class Tasks {
         @Override
         public Set<Entry<String, String>> entrySet() {
             return null;
+        }
+
+        @SensitiveData(keys = "keyWithSecretValue")
+        @Override
+        public TaskResult execute(Variables input) {
+            return TaskResult.success()
+                    .value("keyWithSecretValue", "topSecret!!!!");
         }
     }
 

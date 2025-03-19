@@ -32,9 +32,9 @@ public class AutoScalerFactory {
     private final Function<String, Integer> podCounter;
     private final ProcessQueueClient processQueueClient;
 
-    public AutoScalerFactory(Scheduler.Configuration cfg, KubernetesClient k8sClient) {
+    public AutoScalerFactory(String concordBaseUrl, String concordApiToken, KubernetesClient k8sClient) {
         this.podCounter = n -> AgentPod.list(k8sClient, n).size();
-        this.processQueueClient = new ProcessQueueClient(cfg.getConcordBaseUrl(), cfg.getConcordApiToken());
+        this.processQueueClient = new ProcessQueueClient(concordBaseUrl, concordApiToken);
     }
 
     public AutoScaler create(AgentPoolInstance poolInstance) {

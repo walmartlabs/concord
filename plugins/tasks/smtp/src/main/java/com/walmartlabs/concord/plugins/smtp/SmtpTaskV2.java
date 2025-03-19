@@ -49,7 +49,7 @@ public class SmtpTaskV2 implements Task {
         Object scope = getScope(ctx, mail);
         boolean debug = input.getBoolean(Constants.DEBUG_KEY, ctx.processConfiguration().debug());
 
-        SmtpTaskUtils.send(smtp, mail, baseDir, scope, debug);
+        SmtpTaskUtils.send(smtp, mail, baseDir, scope, debug, ctx.processConfiguration().dryRun());
         return TaskResult.success();
     }
 

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.LogTags;
 import com.walmartlabs.concord.sdk.MapUtils;
@@ -69,14 +70,16 @@ public class ConcordTaskCommon {
     private final String currentOrgName;
     private final Path workDir;
     private final boolean globalDebug;
+    private final boolean dryRun;
 
-    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, UUID currentProcessId, String currentOrgName, Path workDir, boolean globalDebug) {
+    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, UUID currentProcessId, String currentOrgName, Path workDir, boolean globalDebug, boolean dryRun) {
         this.sessionToken = sessionToken;
         this.apiClientFactory = apiClientFactory;
         this.currentProcessId = currentProcessId;
         this.currentOrgName = currentOrgName;
         this.workDir = workDir;
         this.globalDebug = globalDebug;
+        this.dryRun = dryRun;
     }
 
     public TaskResult execute(ConcordTaskParams in) throws Exception {
@@ -216,7 +219,7 @@ public class ConcordTaskCommon {
         Map<String, Object> input = new HashMap<>();
 
         if (archive != null) {
-            input.put("archive", Files.readAllBytes(archive));
+            input.put("archive", archive);
         }
 
         Map<String, Object> req = createRequest(in);
@@ -415,7 +418,7 @@ public class ConcordTaskCommon {
         }
 
         if (hasErrors) {
-            throw new IllegalStateException(errors.toString());
+            throw new UserDefinedException(errors.toString());
         }
     }
 
@@ -567,7 +570,7 @@ public class ConcordTaskCommon {
         return path;
     }
 
-    private static Map<String, Object> createRequest(StartParams in) {
+    private Map<String, Object> createRequest(StartParams in) {
         Map<String, Object> req = new HashMap<>();
 
         Set<String> activeProfiles = in.activeProfiles();
@@ -618,6 +621,10 @@ public class ConcordTaskCommon {
         Map<String, Object> requirements = in.requirements();
         if (!requirements.isEmpty()) {
             req.put(Constants.Request.REQUIREMENTS, new HashMap<>(requirements));
+        }
+
+        if (in.dryRunMode(dryRun)) {
+            req.put(Constants.Request.DRY_RUN_MODE_KEY, true);
         }
 
         return req;

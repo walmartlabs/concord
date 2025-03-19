@@ -45,15 +45,11 @@ public class ProjectLoaderV2 {
     }
 
     public Result load(Path baseDir, ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception {
-        return load(baseDir, importsNormalizer, listener, new NopProjectLoadListener());
-    }
-
-    public Result load(Path baseDir, ImportsNormalizer importsNormalizer, ImportsListener listener, ProjectLoadListener loadListener) throws Exception {
         YamlParserV2 parser = new YamlParserV2();
 
         // load the initial ProcessDefinition from the root concord.yml file
         // it will be used to determine whether we need to load other resources (e.g. imports)
-        ProcessDefinition root = loadRoot(parser, baseDir, loadListener);
+        ProcessDefinition root = loadRoot(parser, baseDir);
 
         List<Snapshot> snapshots = Collections.emptyList();
         if (root != null) {
@@ -67,7 +63,6 @@ public class ProjectLoaderV2 {
         List<ProcessDefinition> definitions = new ArrayList<>();
         for (Path p : files) {
             ProcessDefinition pd = parser.parse(baseDir, p);
-            loadListener.afterFlowDefinitionLoaded(p);
             definitions.add(pd);
         }
 
@@ -79,15 +74,13 @@ public class ProjectLoaderV2 {
             throw new IllegalStateException("Can't find any Concord process definition files in '" + baseDir + "'");
         }
 
-        loadListener.afterProjectLoaded();
-
         return new Result(snapshots, merge(definitions));
     }
 
     public void export(Path baseDir, Path destDir, ImportsNormalizer importsNormalizer, ImportsListener listener, CopyOption... options) throws Exception {
         YamlParserV2 parser = new YamlParserV2();
 
-        ProcessDefinition root = loadRoot(parser, baseDir, new NopProjectLoadListener());
+        ProcessDefinition root = loadRoot(parser, baseDir);
 
         Resources resources = root != null ? root.resources() : Resources.builder().build();
         boolean hasImports = root != null && root.imports() != null && !root.imports().isEmpty();
@@ -112,12 +105,11 @@ public class ProjectLoaderV2 {
         }
     }
 
-    private ProcessDefinition loadRoot(YamlParserV2 parser, Path baseDir, ProjectLoadListener loadListener) throws IOException {
+    private ProcessDefinition loadRoot(YamlParserV2 parser, Path baseDir) throws IOException {
         for (String fileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
             Path p = baseDir.resolve(fileName);
             if (Files.exists(p)) {
                 ProcessDefinition result = parser.parse(baseDir, p);
-                loadListener.afterFlowDefinitionLoaded(p);
                 return result;
             }
         }
@@ -182,6 +174,7 @@ public class ProjectLoaderV2 {
         Map<String, Form> forms = new LinkedHashMap<>();
         Set<String> resources = new HashSet<>();
         Set<String> dependencies = new HashSet<>();
+        Set<String> extraDependencies = new HashSet<>();
         Map<String, Object> arguments = new LinkedHashMap<>();
 
         for (ProcessDefinition pd : definitions) {
@@ -192,6 +185,7 @@ public class ProjectLoaderV2 {
             forms.putAll(pd.forms());
             resources.addAll(pd.resources().concord());
             dependencies.addAll(pd.configuration().dependencies());
+            extraDependencies.addAll(pd.configuration().extraDependencies());
             arguments = ConfigurationUtils.deepMerge(arguments, pd.configuration().arguments());
         }
 
@@ -200,6 +194,7 @@ public class ProjectLoaderV2 {
         return ProcessDefinition.builder().from(root)
                 .configuration(ProcessDefinitionConfiguration.builder().from(root.configuration())
                         .dependencies(dependencies)
+                        .extraDependencies(extraDependencies)
                         .arguments(arguments)
                         .build())
                 .flows(flows)

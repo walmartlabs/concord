@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.plugins.basic</groupId>
         <artifactId>parent</artifactId>
-        <version>2.18.1-SNAPSHOT</version>
+        <version>2.24.1-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -42,8 +42,15 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.eclipse.sisu</groupId>
-                <artifactId>sisu-maven-plugin</artifactId>
+                <groupId>dev.ybrig.concord</groupId>
+                <artifactId>concord-maven-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.walmartlabs.concord.runtime.v2</groupId>
+                        <artifactId>concord-runner-v2</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>

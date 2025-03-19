@@ -21,7 +21,7 @@ package com.walmartlabs.concord.agentoperator.planner;
  */
 
 import com.walmartlabs.concord.agentoperator.agent.AgentClient;
-import com.walmartlabs.concord.agentoperator.PodUtils;
+import com.walmartlabs.concord.agentoperator.PodLabels;
 import com.walmartlabs.concord.agentoperator.resources.AgentPod;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -73,7 +73,7 @@ public class TryToDeletePodChange implements Change {
         Map<String, String> labels = pod.getMetadata().getLabels();
 
         if ("true".equals(labels.getOrDefault(AgentPod.PRE_STOP_HOOK_TERMINATION_LABEL, "false"))) {
-            log.warn("['{}'] -> has been marked for termination", podName);
+            log.debug("['{}'] -> has already been marked for termination", podName);
             return;
         }
 
@@ -88,7 +88,7 @@ public class TryToDeletePodChange implements Change {
 
         // agent pod in maintenance mode and all workers done
         client.pods().withName(podName).delete();
-        PodUtils.applyTag(client, podName, AgentPod.PRE_STOP_HOOK_TERMINATION_LABEL, "true");
+        PodLabels.applyTag(client, podName, AgentPod.PRE_STOP_HOOK_TERMINATION_LABEL, "true");
         log.info("apply ['{}'] -> Marked for termination (former phase: {})", podName, pod.getStatus().getPhase());
     }
 

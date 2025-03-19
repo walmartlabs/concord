@@ -109,6 +109,7 @@ public class ConcordTaskParams {
         private static final String DEBUG_KEY = "debug";
         private static final String DISABLE_ON_CANCEL_KEY = "disableOnCancel";
         private static final String DISABLE_ON_FAILURE_KEY = "disableOnFailure";
+        private static final String DRY_RUN_MODE_KEY = "dryRunMode";
         private static final String EXCLUSIVE_KEY = "exclusive";
         private static final String IGNORE_FAILURES_KEY = "ignoreFailures";
         private static final String META_KEY = "meta";
@@ -215,6 +216,10 @@ public class ConcordTaskParams {
 
         public boolean debug(boolean defaultValue) {
             return variables.getBoolean(DEBUG_KEY, defaultValue);
+        }
+
+        public boolean dryRunMode(boolean defaultValue) {
+            return variables.get(DRY_RUN_MODE_KEY, defaultValue, Boolean.class);
         }
 
         public String org() {

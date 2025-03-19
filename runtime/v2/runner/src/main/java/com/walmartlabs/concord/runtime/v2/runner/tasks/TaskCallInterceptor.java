@@ -26,10 +26,10 @@ import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent.Phase;
+import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.svm.ThreadId;
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -49,24 +49,24 @@ public class TaskCallInterceptor {
         this.listeners = listeners;
     }
 
-    public <T> T invoke(CallContext ctx, Method method, Callable<T> callable) throws Exception {
+    public <T> T invoke(CallContext ctx, Method method, Callable<T> callable) throws TaskException {
         // record the PRE event
-        TaskCallEvent preEvent = eventBuilder(Phase.PRE, method, ctx).build();
+        var preEvent = eventBuilder(Phase.PRE, method, ctx).build();
         listeners.forEach(l -> l.onEvent(preEvent));
 
         // call the callable and measure the duration
         T result = null;
         Exception error = null;
-        long startedAt = System.currentTimeMillis();
+        var startedAt = System.currentTimeMillis();
         try {
             result = callable.call();
         } catch (Exception e) {
             error = e;
         }
-        long duration = System.currentTimeMillis() - startedAt;
+        var duration = System.currentTimeMillis() - startedAt;
 
         // record the POST event
-        TaskCallEvent postEvent = eventBuilder(Phase.POST, method, ctx)
+        var postEvent = eventBuilder(Phase.POST, method, ctx)
                 .error(errorMessage(error))
                 .duration(duration)
                 .result(result instanceof Serializable ? (Serializable) result : null)
@@ -115,18 +115,18 @@ public class TaskCallInterceptor {
         @AllowNulls
         @Value.Default
         default List<Object> arguments() {
-            return Collections.emptyList();
+            return List.of();
         }
 
         @AllowNulls
         @Value.Default
         default List<List<Annotation>> annotations() {
-            return Collections.emptyList();
+            return List.of();
         }
 
-        static Method of(Object base, String methodName, List<Object> params) {
-            List<List<Annotation>> annotations = Collections.emptyList();
-            java.lang.reflect.Method m = ReflectionUtil.findMethod(base.getClass(), methodName, null, params.toArray());
+        static Method of(Class<? extends Task> taskClass, String methodName, List<Object> params) throws javax.el.MethodNotFoundException {
+            List<List<Annotation>> annotations = List.of();
+            var m = ReflectionUtil.findMethod(taskClass, methodName, null, params.toArray());
             if (m != null && !m.isVarArgs()) {
                 annotations = Arrays.stream(m.getParameterAnnotations())
                         .map(Arrays::asList)
@@ -138,7 +138,6 @@ public class TaskCallInterceptor {
                     .annotations(annotations)
                     .build();
         }
-
     }
 
     @Value.Immutable

@@ -40,15 +40,13 @@ import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
-import com.walmartlabs.concord.runtime.v2.runner.ProjectLoadListeners;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.runtime.v2.runner.vm.LoggedException;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.svm.ParallelExecutionException;
+import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelExecutionException;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -63,6 +61,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.stream.Stream;
 
 @Command(name = "run", description = "Run the current directory as a Concord process")
 public class Run implements Callable<Integer> {
@@ -128,6 +127,9 @@ public class Run implements Callable<Integer> {
     @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")
     Path sourceDir = Paths.get(System.getProperty("user.dir"));
 
+    @Option(names = {"--dry-run"}, description = "execute process in dry-run mode?")
+    boolean dryRunMode = false;
+
     @Override
     public Integer call() throws Exception {
         Verbosity verbosity = new Verbosity(this.verbosity);
@@ -192,21 +194,30 @@ public class Run implements Callable<Integer> {
             System.out.println("Active profiles: " + profiles);
         }
 
+        // "deps" are the "dependencies" of the last profile in the list of active profiles (if present)
         Map<String, Object> overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), profiles);
-        List<String> overlayDeps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
+        List<String> deps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
 
-        Collection<String> dependencies;
+        // "extraDependencies" are additive: ALL extra dependencies from ALL ACTIVE profiles are added to the list
+        List<String> extraDeps = profiles.stream()
+                .flatMap(profileName -> Stream.ofNullable(processDefinition.profiles().get(profileName)))
+                .flatMap(profile -> profile.configuration().extraDependencies().stream())
+                .toList();
 
+        List<String> allDeps = new ArrayList<>(deps);
+        allDeps.addAll(extraDeps);
+
+        DependencyResolver resolver = new DependencyResolver(dependencyManager, verbosity.verbose());
+        Collection<String> resolvedDependencies;
         try {
-            dependencies = new DependencyResolver(dependencyManager, verbosity.verbose())
-                    .resolveDeps(overlayDeps);
+            resolvedDependencies = resolver.resolveDeps(allDeps);
         } catch (Exception e) {
             System.err.println(e.getMessage());
             return -1;
         }
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
-                .dependencies(dependencies)
+                .dependencies(resolvedDependencies)
                 .debug(processDefinition.configuration().debug())
                 .build();
 
@@ -230,7 +241,7 @@ public class Run implements Callable<Integer> {
             ProcessDefinition pd = ProcessDefinition.builder().from(processDefinition)
                     .configuration(ProcessDefinitionConfiguration.builder().from(processDefinition.configuration())
                             .arguments(args)
-                            .dependencies(overlayDeps)
+                            .dependencies(allDeps)
                             .build())
                     .flows(flows)
                     .imports(Imports.builder().build())
@@ -244,9 +255,14 @@ public class Run implements Callable<Integer> {
 
         System.out.println("Starting...");
 
+        if (dryRunMode) {
+            System.out.println("Running in the dry-run mode.");
+        }
+
         ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(args, profiles), projectInfo(args))
                 .entryPoint(entryPoint)
                 .instanceId(instanceId)
+                .dryRun(dryRunMode)
                 .build();
 
         Injector injector = new InjectorFactory(new WorkingDirectory(targetDir),
@@ -257,9 +273,8 @@ public class Run implements Callable<Integer> {
                 .create();
 
         // Just to notify listeners
-        ProjectLoadListeners loadListeners = injector.getInstance(ProjectLoadListeners.class);
         ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
-        loader.load(targetDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, loadListeners);
+        loader.load(targetDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER);
 
         Runner runner = injector.getInstance(Runner.class);
 
@@ -269,18 +284,10 @@ public class Run implements Callable<Integer> {
 
         try {
             runner.start(cfg, processDefinition, args);
-        } catch (LoggedException e) {
-            return -1;
-        } catch (ParallelExecutionException e) {
-            System.err.println(e.getMessage());
+        } catch (ParallelExecutionException | UserDefinedException e) {
             return -1;
         } catch (Exception e) {
-            if (verbosity.verbose()) {
-                System.err.print("Error: ");
-                e.printStackTrace(System.err);
-            } else {
-                System.err.println("Error: " + e.getMessage());
-            }
+            logException(verbosity, e);
             return 1;
         }
 
@@ -405,6 +412,15 @@ public class Run implements Callable<Integer> {
             System.out.println(om.writerWithDefaultPrettyPrinter().writeValueAsString(args));
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static void logException(Verbosity verbosity, Exception e) {
+        if (verbosity.verbose()) {
+            System.err.print("Error: ");
+            e.printStackTrace(System.err);
+        } else {
+            System.err.println("Error: " + e.getMessage());
         }
     }
 

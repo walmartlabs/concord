@@ -20,45 +20,67 @@ package com.walmartlabs.concord.plugins.mock;
  * =====
  */
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.immutables.value.Value;
+import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.sdk.UserDefinedException;
 
-import javax.annotation.Nullable;
-import java.util.Collections;
+import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
-/**
-    mocks:
-      - name: "http"
-        in:
-          url: ".*"
-          method: "POST"
-        out:
-          ok: true
-          statusCode: 200
- */
+public class MockDefinition {
 
-@Value.Immutable
-@Value.Style(jdkOnly = true)
-@JsonSerialize(as = ImmutableMockDefinition.class)
-@JsonDeserialize(as = ImmutableMockDefinition.class)
-public interface MockDefinition {
+    private final Map<String, Object> definition;
 
-    String name();
-
-    @Value.Default
-    default Map<String, Object> in() {
-        return Collections.emptyMap();
+    public MockDefinition(Map<String, Object> definition) {
+        this.definition = definition;
     }
 
-    @Value.Default
-    default Map<String, Object> out() {
-        return Collections.emptyMap();
+    public String stepName() {
+        return MapUtils.getString(definition, "stepName");
     }
-    @Nullable
-    String inputStoreId();
 
-    @Nullable
-    String throwError();
+    public Map<String, Object> stepMeta() {
+        return MapUtils.getMap(definition, "stepMeta", Map.of());
+    }
+
+    public String task() {
+        try {
+            return MapUtils.assertString(definition, "task");
+        } catch (IllegalArgumentException e) {
+            throw new UserDefinedException("Invalid mock definition: " + e.getMessage() + "\n" + definition);
+        }
+    }
+
+    public Map<String, Object> input() {
+        return MapUtils.getMap(definition, "in", Map.of());
+    }
+
+    public Map<String, Object> out() {
+        return MapUtils.getMap(definition, "out", Map.of());
+    }
+
+    public String method() {
+        return MapUtils.getString(definition, "method");
+    }
+
+    public List<Object> args() {
+        return MapUtils.getList(definition, "args", List.of());
+    }
+
+    public Serializable result() {
+        return MapUtils.get(definition, "result", Serializable.class);
+    }
+
+    public String throwError() {
+        return MapUtils.getString(definition, "throwError");
+    }
+
+    public String executeFlow() {
+        return MapUtils.getString(definition, "executeFlow");
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(definition);
+    }
 }

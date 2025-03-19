@@ -1,0 +1,5 @@
+flows:
+  default:
+    - parallel:
+        - task: "userDefinedExceptionTask"
+        - log: "OK"

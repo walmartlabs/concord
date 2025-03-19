@@ -1,13 +1,14 @@
 flows:
   default:
-    - task: undefinedTask
+    - task: testTask
       out: result
 
     - log: "result.ok: ${result.ok}"
+    - log: "result.fromMock: ${result.fromMock}"
 
 configuration:
   arguments:
     mocks:
-      - name: "undefinedTask"
+      - task: "testTask"
         out:
-          ok: true
+          fromMock: "good"

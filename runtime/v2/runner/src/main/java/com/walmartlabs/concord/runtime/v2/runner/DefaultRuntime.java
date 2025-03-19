@@ -21,11 +21,8 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.google.inject.Injector;
+import com.walmartlabs.concord.svm.*;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.runtime.v2.runner.vm.LoggedException;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
-import com.walmartlabs.concord.svm.VM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,17 +46,12 @@ public class DefaultRuntime implements Runtime {
 
     @Override
     public void spawn(State state, ThreadId threadId) {
-        executor.submit(() -> {
-            try {
-                vm.eval(this, state, threadId);
-            } catch (LoggedException e) {
-                throw e.getCause();
-            } catch (Exception e) {
-                log.error("Error while evaluating commands for thread {}", threadId, e);
-                throw e;
-            }
-            return null;
-        });
+        executor.submit(() -> eval(state, threadId));
+    }
+
+    @Override
+    public EvalResult eval(State state, ThreadId threadId) throws Exception {
+        return vm.eval(this, state, threadId);
     }
 
     @Override

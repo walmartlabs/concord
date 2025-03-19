@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+
 public interface UserInfoProvider {
 
     UserType getUserType();
@@ -44,9 +46,16 @@ public interface UserInfoProvider {
     UserInfo getInfo(UUID id, String username, String userDomain);
 
     UUID create(String username, String domain, String displayName, String email, Set<String> roles);
-    
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    interface BaseUserInfo {
+
+    @Value.Immutable
+    @JsonInclude(NON_EMPTY)
+    @JsonSerialize(as = ImmutableUserInfo.class)
+    @JsonDeserialize(as = ImmutableUserInfo.class)
+    interface UserInfo {
+
+        static ImmutableUserInfo.Builder builder() {
+            return ImmutableUserInfo.builder();
+        }
 
         @Nullable
         UUID id();
@@ -68,15 +77,5 @@ public interface UserInfoProvider {
 
         @Nullable
         Map<String, Object> attributes();
-    }
-
-    @Value.Immutable
-    @JsonSerialize(as = ImmutableUserInfo.class)
-    @JsonDeserialize(as = ImmutableUserInfo.class)
-    interface UserInfo extends BaseUserInfo {
-
-        static ImmutableUserInfo.Builder builder() {
-            return ImmutableUserInfo.builder();
-        }
     }
 }

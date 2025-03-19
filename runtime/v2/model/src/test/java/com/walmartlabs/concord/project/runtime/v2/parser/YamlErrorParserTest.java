@@ -497,7 +497,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
 
     @Test
     public void test129() throws Exception {
-        String msg = "(029.yml): Error @ line: 8, col: 13. Invalid value type, expected: PATTERN, got: INT\n" +
+        String msg = "(029.yml): Error @ line: 8, col: 11. Invalid value type, expected: PATTERN, got: ARRAY\n" +
                 "\twhile processing steps:\n" +
                 "\t'githubOrg' @ line: 7, col: 9\n" +
                 "\t\t'conditions' @ line: 5, col: 7\n" +
@@ -1897,7 +1897,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test1306() throws Exception {
         String msg =
-                "(006.yml): Error @ line: 8, col: 9. Unknown options: ['trash' [NULL] @ line: 8, col: 9], expected: [activeProfiles, arguments, debug, dependencies, entryPoint, events, exclusive, meta, out, parallelLoopParallelism, processTimeout, requirements, runtime, suspendTimeout, template]. Remove invalid options and/or fix indentation\n" +
+                "(006.yml): Error @ line: 8, col: 9. Unknown options: ['trash' [NULL] @ line: 8, col: 9], expected: [activeProfiles, arguments, debug, dependencies, entryPoint, events, exclusive, extraDependencies, meta, out, parallelLoopParallelism, processTimeout, requirements, runtime, suspendTimeout, template]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'configuration' @ line: 1, col: 1";
 

@@ -39,6 +39,7 @@ public class ResponseTemplates {
     private final Mustache processError;
     private final Mustache inProgressWait;
     private final Mustache formNotFound;
+    private final Mustache genericError;
 
     public ResponseTemplates() {
         MustacheFactory mf = new DefaultMustacheFactory();
@@ -47,6 +48,7 @@ public class ResponseTemplates {
         processError = mf.compile("com/walmartlabs/concord/server/console/processError.html");
         inProgressWait = mf.compile("com/walmartlabs/concord/server/console/inProgress.html");
         formNotFound = mf.compile("com/walmartlabs/concord/server/console/formNotFound.html");
+        genericError = mf.compile("com/walmartlabs/concord/server/console/genericError.html");
     }
 
     private ResponseBuilder html(Mustache m, ResponseBuilder r, Map<String, Object> args) {
@@ -77,6 +79,12 @@ public class ResponseTemplates {
     public void formNotFound(OutputStream out, Map<String, Object> args) throws IOException {
         try (OutputStreamWriter w = new OutputStreamWriter(out)) {
             formNotFound.execute(w, args);
+        }
+    }
+
+    public void genericError(OutputStream out, Map<String, Object> args) throws IOException {
+        try (OutputStreamWriter w = new OutputStreamWriter(out)) {
+            genericError.execute(w, args);
         }
     }
 }

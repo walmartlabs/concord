@@ -24,8 +24,8 @@ import com.walmartlabs.concord.server.cfg.RememberMeConfiguration;
 import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import org.apache.shiro.authc.UsernamePasswordToken;
-import org.apache.shiro.io.SerializationException;
-import org.apache.shiro.io.Serializer;
+import org.apache.shiro.lang.io.SerializationException;
+import org.apache.shiro.lang.io.Serializer;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
@@ -34,9 +34,9 @@ import org.apache.shiro.web.util.WebUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.stream.Stream;
+import java.util.Optional;
 
 /**
  * Implementation of {@link org.apache.shiro.mgt.RememberMeManager}. Uses the DB to store session data.
@@ -84,12 +84,14 @@ public class ConcordRememberMeManager extends CookieRememberMeManager {
         }
 
         // delete the "remember me" cookie only if it is present
-        HttpServletRequest request = WebUtils.getHttpRequest(subject);
+        var request = WebUtils.getHttpRequest(subject);
         var rememberMeCookieName = getCookie().getName();
-        if (Stream.of(request.getCookies())
-                .anyMatch(cookie -> cookie.getName().equals(rememberMeCookieName))) {
-            super.forgetIdentity(subject);
-        }
+
+        Optional.ofNullable(request.getCookies()).stream()
+                .flatMap(Arrays::stream)
+                .filter(cookie -> cookie.getName().equals(rememberMeCookieName))
+                .findFirst()
+                .ifPresent(cookie -> super.forgetIdentity(subject));
     }
 
     private static class PrincipalCollectionSerializer implements Serializer<PrincipalCollection> {

@@ -1,0 +1,29 @@
+flows:
+  default:
+    - expr: "${testTask.doAction('test')}"
+
+    - task: "testTask"
+
+    - task: "testTask"
+      in:
+        k: v
+        k2:
+          k3: v3
+
+    - expr: "${testTask.doAction('test_1')}"
+    - expr: "${testTask.doAction('test_2')}"
+    - expr: "${testTask.doAction('test_3')}"
+
+    # expr
+    - expr: "${verify.task('testTask', 1).doAction('test')}"
+
+    # task without args
+    - expr: "${verify.task('testTask', 1).execute()}"
+
+    # task with args
+    - expr: "${verify.task('testTask', 1).execute(mock.any())}"
+    - expr: "${verify.task('testTask', 1).execute({'k': 'v'})}"
+    - expr: "${verify.task('testTask', 1).execute({'k': 'v', 'k2': {'k3': 'v3'} })}"
+
+    # expr
+    - expr: "${verify.task('testTask', 3).doAction('test_.*')}"

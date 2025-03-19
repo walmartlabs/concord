@@ -25,72 +25,69 @@ import com.walmartlabs.concord.agentoperator.agent.AgentClientFactory;
 import com.walmartlabs.concord.agentoperator.crd.AgentPool;
 import com.walmartlabs.concord.agentoperator.crd.AgentPoolList;
 import com.walmartlabs.concord.agentoperator.scheduler.AutoScalerFactory;
-import com.walmartlabs.concord.agentoperator.scheduler.Event;
 import com.walmartlabs.concord.agentoperator.scheduler.Scheduler;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.WatcherException;
-import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
-import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.util.concurrent.Executors;
+
+import static com.walmartlabs.concord.agentoperator.scheduler.Event.Type.DELETED;
+import static com.walmartlabs.concord.agentoperator.scheduler.Event.Type.MODIFIED;
 
 public class Operator {
 
     private static final Logger log = LoggerFactory.getLogger(Operator.class);
 
+    private static final long RESYNC_PERIOD = Duration.ofSeconds(10).toMillis();
+
     public static void main(String[] args) {
-        // TODO support overloading the CRD with an external file?
+        var namespace = getEnv("WATCH_NAMESPACE", "default");
+        var concordBaseUrl = getEnv("CONCORD_BASE_URL", "http://192.168.99.1:8001"); // use minikube/vbox host's default address
+        var concordApiToken = getEnv("CONCORD_API_TOKEN", null);
+        var useMaintenanceMode = Boolean.parseBoolean(getEnv("USE_AGENT_MAINTENANCE_MODE", "false"));
 
-        String namespace = System.getenv("WATCH_NAMESPACE");
-        if (namespace == null) {
-            namespace = "default";
-        }
+        var k8sClient = new DefaultKubernetesClient().inNamespace(namespace);
+        var executor = Executors.newSingleThreadExecutor();
 
-        KubernetesClient client = new DefaultKubernetesClient() // NOSONAR
-                .inNamespace(namespace);
+        var autoScalerFactory = new AutoScalerFactory(concordBaseUrl, concordApiToken, k8sClient);
+        var scheduler = new Scheduler(autoScalerFactory, k8sClient, useMaintenanceMode);
+        var handler = new ResourceEventHandler<AgentPool>() {
+            @Override
+            public void onAdd(AgentPool resource) {
+                executor.submit(() -> scheduler.onEvent(MODIFIED, resource));
+            }
 
-        String baseUrl = getEnv("CONCORD_BASE_URL", "http://192.168.99.1:8001"); // use minikube/vbox host's default address
-        String apiToken = getEnv("CONCORD_API_TOKEN", null);
-        boolean useMaintenanceMode = Boolean.parseBoolean(getEnv("USE_AGENT_MAINTENANCE_MODE", "false"));
+            @Override
+            public void onUpdate(AgentPool oldResource, AgentPool newResource) {
+                if (oldResource == newResource) {
+                    return;
+                }
+                executor.submit(() -> scheduler.onEvent(MODIFIED, newResource));
+            }
 
-        // TODO use secrets for the token?
-        Scheduler.Configuration cfg = new Scheduler.Configuration(baseUrl, apiToken);
-        AutoScalerFactory autoScalerFactory = new AutoScalerFactory(cfg, client);
-        AgentClientFactory agentClientFactory = new AgentClientFactory(useMaintenanceMode);
-        Scheduler scheduler = new Scheduler(autoScalerFactory, client, agentClientFactory);
+            @Override
+            public void onDelete(AgentPool resource, boolean deletedFinalStateUnknown) {
+                executor.submit(() -> scheduler.onEvent(DELETED, resource));
+            }
+        };
+
+        var informer = k8sClient.resources(AgentPool.class, AgentPoolList.class)
+                .inAnyNamespace()
+                .inform(handler, RESYNC_PERIOD);
+
         scheduler.start();
 
-        // TODO retries
-        log.info("main -> my watch begins... (namespace={})", namespace);
-
-        NonNamespaceOperation<AgentPool, AgentPoolList, Resource<AgentPool>> dummyClient = client.resources(AgentPool.class, AgentPoolList.class);
-        dummyClient.watch(new Watcher<AgentPool>() {
-            @Override
-            public void eventReceived(Action action, AgentPool resource) {
-                scheduler.onEvent(actionToEvent(action), resource);
-            }
-
-            @Override
-            public void onClose(WatcherException we) {
-                log.error("Watcher exception  {}", we.getMessage(), we);
-            }
-        });
-    }
-
-    private static Event.Type actionToEvent(Watcher.Action action) {
-        switch (action) {
-            case ADDED:
-            case MODIFIED: {
-                return Event.Type.MODIFIED;
-            }
-            case DELETED: {
-                return Event.Type.DELETED;
-            }
-            default:
-                throw new IllegalArgumentException("Unknown action type: " + action);
+        try {
+            informer.run();
+        } catch (Exception e) {
+            log.error("Error while watching for CRs (namespace={})", namespace, e);
+            System.exit(2);
         }
+
+        log.info("main -> and so my watch begins... (namespace={})", namespace);
     }
 
     private static String getEnv(String key, String defaultValue) {

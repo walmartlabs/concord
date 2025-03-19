@@ -28,21 +28,20 @@ import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.runtime.common.ProcessHeartbeat;
 import com.walmartlabs.concord.runtime.common.StateManager;
+import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
-import com.walmartlabs.concord.runtime.v2.ProjectLoadListener;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.runner.vm.LoggedException;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Frame;
-import com.walmartlabs.concord.svm.ParallelExecutionException;
+import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelExecutionException;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadStatus;
 import org.slf4j.Logger;
@@ -68,7 +67,6 @@ public class Main {
     private final WorkingDirectory workDir;
     private final TaskProviders taskProviders;
     private final ClassLoader classLoader;
-    private final ProjectLoadListeners projectLoadListeners;
 
     @Inject
     public Main(Runner runner,
@@ -76,8 +74,7 @@ public class Main {
                 ProcessConfiguration processCfg,
                 WorkingDirectory workDir,
                 TaskProviders taskProviders,
-                @Named("runtime") ClassLoader classLoader,
-                ProjectLoadListeners projectLoadListeners) {
+                @Named("runtime") ClassLoader classLoader) {
 
         this.runner = runner;
         this.runnerCfg = runnerCfg;
@@ -85,11 +82,10 @@ public class Main {
         this.workDir = workDir;
         this.taskProviders = taskProviders;
         this.classLoader = classLoader;
-        this.projectLoadListeners = projectLoadListeners;
     }
 
     public static void main(String[] args) throws Exception {
-        RunnerConfiguration runnerCfg = readRunnerConfiguration(args);
+        RunnerConfiguration runnerCfg = loadRunnerConfiguration(args);
 
         // create the injector with all dependencies and services available before
         // the actual process' working directory is ready. It allows us to load
@@ -106,13 +102,7 @@ public class Main {
             main.execute();
 
             System.exit(0);
-        } catch (LoggedException e) {
-            System.exit(1);
-        } catch (UserDefinedException e) {
-            log.error(e.getMessage());
-            System.exit(1);
-        } catch (ParallelExecutionException e) {
-            log.error("{}", e.getMessage());
+        } catch (UserDefinedException | ParallelExecutionException e) {
             System.exit(1);
         } catch (Throwable t) {
             log.error("", t);
@@ -120,18 +110,41 @@ public class Main {
         }
     }
 
-    private static RunnerConfiguration readRunnerConfiguration(String[] args) throws IOException {
-        Path src;
+    private static RunnerConfiguration loadRunnerConfiguration(String[] args) throws IOException {
+        RunnerConfiguration result = RunnerConfiguration.builder().build();
+
+        // load file first, then overlay system env vars
+
         if (args.length > 0) {
-            src = Paths.get(args[0]);
-        } else {
-            throw new IllegalArgumentException("Path to the runner configuration file is required");
+            Path src = Paths.get(args[0]);
+            ObjectMapper om = ObjectMapperProvider.getInstance();
+            try (InputStream in = Files.newInputStream(src)) {
+                result = om.readValue(in, RunnerConfiguration.class);
+            }
         }
 
-        ObjectMapper om = ObjectMapperProvider.getInstance();
-        try (InputStream in = Files.newInputStream(src)) {
-            return om.readValue(in, RunnerConfiguration.class);
+        String agentId = System.getenv("RUNNER_AGENT_ID");
+        if (agentId != null) {
+            result = RunnerConfiguration.builder().from(result)
+                    .agentId(agentId)
+                    .build();
         }
+
+        String apiBaseUrl = System.getenv("RUNNER_API_BASE_URL");
+        if (apiBaseUrl != null) {
+            result = RunnerConfiguration.builder().from(result)
+                    .api(ApiConfiguration.builder().from(result.api())
+                            .baseUrl(apiBaseUrl)
+                            .build())
+                    .build();
+        }
+
+        if (result.agentId() == null || result.api() == null || result.api().baseUrl() == null) {
+            throw new IllegalArgumentException("Specify the path to the runner configuration file or " +
+                                               "provide RUNNER_AGENT_ID and RUNNER_API_BASE_URL environment variables.");
+        }
+
+        return result;
     }
 
     public void execute() throws Exception {
@@ -164,7 +177,7 @@ public class Main {
                 }
                 processArgs.putAll(prepareProcessArgs(processCfg));
 
-                snapshot = start(runner, processCfg, workDir, processArgs, projectLoadListeners);
+                snapshot = start(runner, processCfg, workDir, processArgs);
                 break;
             }
             case RESUME: {
@@ -215,10 +228,10 @@ public class Main {
         }
     }
 
-    private static ProcessSnapshot start(Runner runner, ProcessConfiguration cfg, Path workDir, Map<String, Object> args, ProjectLoadListener projectLoadListener) throws Exception {
+    private static ProcessSnapshot start(Runner runner, ProcessConfiguration cfg, Path workDir, Map<String, Object> args) throws Exception {
         // assume all imports were processed by the agent
         ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
-        ProcessDefinition processDefinition = loader.load(workDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, projectLoadListener).getProjectDefinition();
+        ProcessDefinition processDefinition = loader.load(workDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER).getProjectDefinition();
 
         Map<String, Object> initiator = cfg.initiator();
         if (initiator != null) {

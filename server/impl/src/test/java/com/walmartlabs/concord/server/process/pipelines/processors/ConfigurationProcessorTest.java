@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.LogManager;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -55,7 +57,7 @@ public class ConfigurationProcessorTest {
     public void init() {
         projectDao = mock(ProjectDao.class);
         orgDao = mock(OrganizationDao.class);
-        p = new ConfigurationProcessor(projectDao, orgDao);
+        p = new ConfigurationProcessor(projectDao, orgDao, mock(ProcessLogManager.class));
     }
 
     @Test
@@ -78,7 +80,7 @@ public class ConfigurationProcessorTest {
         prjCfg.put("a", "a-prj");
         prjCfg.put("project", "prj-value");
 
-        ProjectEntry projectEntry = new ProjectEntry(prjId, null, null, null, null, null, prjCfg, null, null, null, null, null, null, null); // nom-nom
+        ProjectEntry projectEntry = new ProjectEntry(prjId, null, null, null, null, null, prjCfg, null, null, null, null, null, null, null, null); // nom-nom
 
         Map<String, Object> processCfgPolicy = new HashMap<>();
         processCfgPolicy.put("a", "a-process-cfg-policy");
@@ -143,7 +145,7 @@ public class ConfigurationProcessorTest {
         prjCfg.put("a", "a-prj");
         prjCfg.put("project", "prj-value");
 
-        ProjectEntry projectEntry = new ProjectEntry(prjId, null, null, null, null, null, prjCfg, null, null, null, null, null, null, null);
+        ProjectEntry projectEntry = new ProjectEntry(prjId, null, null, null, null, null, prjCfg, null, null, null, null, null, null, null, null);
 
         // ---
         when(orgDao.getConfiguration(eq(orgId))).thenReturn(orgCfg);

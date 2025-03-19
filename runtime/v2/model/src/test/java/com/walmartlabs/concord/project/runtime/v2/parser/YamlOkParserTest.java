@@ -348,6 +348,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertTrue(cfg.debug());
         assertEquals("main-test", cfg.entryPoint());
         assertEquals(Arrays.asList("d1", "d2"), cfg.dependencies());
+        assertEquals(Arrays.asList("d3", "d4"), cfg.extraDependencies());
         assertEquals(Collections.singletonMap("k", "v"), cfg.arguments());
         assertEquals(Collections.singletonMap("k", "v1"), cfg.requirements());
         assertEquals(Duration.parse("PT1H"), cfg.processTimeout());
@@ -470,7 +471,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertEquals(retryInput, t.getOptions().retry().input());
 
         // meta
-        assertMeta(t.getOptions());
+        assertMeta("Test script", t.getOptions());
     }
 
 

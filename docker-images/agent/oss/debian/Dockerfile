@@ -5,7 +5,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 FROM ${docker_namespace}/concord-ansible:${container_version}
 LABEL maintainer="amith.k.b@walmartlabs.com"
 
-ENV DOCKER_HOST tcp://dind:2375
+ENV DOCKER_HOST=tcp://dind:2375
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
 USER root

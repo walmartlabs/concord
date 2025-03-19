@@ -82,6 +82,7 @@ public class LogSegmentsTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void loopStepShouldLogErrorInProperLogSegment() throws Exception {
         deploy("logSegments/taskErrorWithLoop");
 
@@ -95,22 +96,22 @@ public class LogSegmentsTest {
             // ignore
         }
 
-        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 1);
 
-        assertSegmentLog(runtime.lastLog(), 2, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(runtime.lastLog(), 2, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 2);
 
-        assertSegmentLog(runtime.lastLog(), 3, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(runtime.lastLog(), 3, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 3);
 
-        assertSegmentLog(runtime.lastLog(), 4, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(runtime.lastLog(), 4, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 4);
 
-        assertSegmentLog(runtime.lastLog(), 5, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(runtime.lastLog(), 5, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 5);
 
-        assertSegmentLog(runtime.lastLog(), 6, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(runtime.lastLog(), 6, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 6);
     }
 
@@ -147,7 +148,7 @@ public class LogSegmentsTest {
         assertSegmentStatusOk(log, 2);
 
         // TODO: maybe into task segment?
-        assertSystemSegment(log, "[WARN ] Last error: java.lang.RuntimeException: boom!. Waiting for 1000ms before retry (attempt #0)");
+        assertSystemSegment(log, "[WARN ] Last error: boom!. Waiting for 1000ms before retry (attempt #0)");
 
         assertNoMoreSegments();
     }
@@ -163,7 +164,7 @@ public class LogSegmentsTest {
 
         // first try
         assertSegmentLog(log, 1, "[INFO ] will fail with error");
-        assertSegmentLog(log, 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(log, 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(log, 1);
 
         // error block
@@ -256,7 +257,7 @@ public class LogSegmentsTest {
 
         // invalid task out definition -> log into task segment
         assertSegmentLog(runtime.lastLog(), 1, "[INFO ] test");
-        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
         assertSegmentStatusError(runtime.lastLog(), 1);
 
         assertNoMoreSegments();
@@ -276,7 +277,7 @@ public class LogSegmentsTest {
             // ignore
         }
 
-        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
 
         assertNoMoreSegments();
     }
@@ -347,7 +348,7 @@ public class LogSegmentsTest {
 
         // task error segment
         assertSegmentLog(runtime.lastLog(), 1, "[INFO ] will fail with error");
-        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 1);
 
         assertNoMoreSegments();
@@ -365,7 +366,7 @@ public class LogSegmentsTest {
 
         // task error into task segment
         assertSegmentLog(log, 1, "[INFO ] will fail with error");
-        assertSegmentLog(log, 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!");
+        assertSegmentLog(log, 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(log, 1);
 
         // error handler logs
@@ -389,7 +390,7 @@ public class LogSegmentsTest {
             // ignore
         }
 
-        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 4, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 4, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
         assertNoMoreSegments();
     }
 
@@ -431,7 +432,7 @@ public class LogSegmentsTest {
         }
 
         // logs to the system segment
-        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
         assertNoMoreSegments();
     }
 
@@ -451,7 +452,7 @@ public class LogSegmentsTest {
         }
 
         // error into system segment
-        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
     }
 
     @Test
@@ -499,7 +500,7 @@ public class LogSegmentsTest {
         }
 
         // error into system segment
-        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. Can't find a variable 'undefined' used in '${undefined}'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
     }
 
     @Test
@@ -625,7 +626,7 @@ public class LogSegmentsTest {
                 "(concord.yaml) @ line: 3, col: 7, thread: 0, flow: inner");
         assertSegmentStatusError(log, 1);
 
-        assertSystemSegment(log, "[WARN ] Last error: com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException: FAIL. Waiting for 1000ms before retry (attempt #0)");
+        assertSystemSegment(log, "[WARN ] Last error: FAIL. Waiting for 1000ms before retry (attempt #0)");
 
         assertSegmentLog(log, 2, "[INFO ] in inner flow");
         assertSegmentStatusOk(log, 2);

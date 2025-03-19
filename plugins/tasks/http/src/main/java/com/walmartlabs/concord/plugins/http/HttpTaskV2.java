@@ -20,17 +20,14 @@ package com.walmartlabs.concord.plugins.http;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.HashMap;
-import java.util.Map;
 
 @Named("http")
+@DryRunReady
 public class HttpTaskV2 implements Task {
 
     private final Context context;
@@ -42,9 +39,12 @@ public class HttpTaskV2 implements Task {
 
     @Override
     public TaskResult execute(Variables input) throws Exception {
-        Configuration config = Configuration.custom().build(context.workingDirectory().toString(), input.toMap(), context.processConfiguration().debug());
+        var inputMap = new HashMap<>(context.defaultVariables().toMap());
+        inputMap.putAll(input.toMap());
 
-        Map<String, Object> response = new HashMap<>(SimpleHttpClient.create(config).execute().getResponse());
+        var config = Configuration.custom().build(context.workingDirectory().toString(), inputMap, context.processConfiguration().debug());
+
+        var response = new HashMap<>(SimpleHttpClient.create(config, context.processConfiguration().dryRun()).execute().getResponse());
         return TaskResult.of((boolean)response.remove("success"), (String)response.remove("errorString"), response);
     }
 }

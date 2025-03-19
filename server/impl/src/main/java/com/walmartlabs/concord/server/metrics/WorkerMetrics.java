@@ -33,6 +33,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class WorkerMetrics implements BackgroundTask {
 
@@ -45,21 +47,28 @@ public class WorkerMetrics implements BackgroundTask {
         String prop = cfg.getGroupByCapabilitiesProperty();
         String[] path = prop.split("\\.");
 
-        // retain the metric's keys
-        // if a certain flavor of workers disappears we'd want to show zero in the metric instead of no metric at all
-        Set<Object> keys = Collections.synchronizedSet(new HashSet<>());
+        // "persist" some of the metrics
+        // if some "flavor" of agents disappear, we would want to show zero in the metric instead of no metric at all
+        // we keep keys of all agent metrics in memory
+        Set<Object> keys = new HashSet<>();
+        Lock mutex = new ReentrantLock();
 
         collector = new Collector() {
             @Override
             public List<MetricFamilySamples> collect() {
                 Collection<AgentWorkerEntry> data = agentManager.getAvailableAgents();
 
-                Map<Object, Long> currentData = AgentWorkerUtils.groupBy(data, path);
-                keys.addAll(currentData.keySet());
-
                 Map<Object, Long> m = new HashMap<>();
-                keys.forEach(k -> m.put(k, 0L));
-                m.putAll(currentData);
+
+                Map<Object, Long> currentData = AgentWorkerUtils.groupBy(data, path);
+                mutex.lock();
+                try {
+                    keys.addAll(currentData.keySet());
+                    keys.forEach(k -> m.put(k, 0L));
+                    m.putAll(currentData);
+                } finally {
+                    mutex.unlock();
+                }
 
                 GaugeMetricFamily f = new GaugeMetricFamily("available_workers", "number of available workers for the " + prop, Collections.singletonList("prop"));
                 m.forEach((k, v) -> {

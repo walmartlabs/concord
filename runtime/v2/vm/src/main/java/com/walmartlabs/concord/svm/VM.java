@@ -23,7 +23,6 @@ package com.walmartlabs.concord.svm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -60,7 +59,7 @@ public class VM {
             throw e;
         }
 
-        listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
+        listeners.fireAfterProcessEnds(runtime, state, result.lastFrame());
 
         log.debug("start -> done");
     }
@@ -92,7 +91,7 @@ public class VM {
             throw e;
         }
 
-        listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
+        listeners.fireAfterProcessEnds(runtime, state, result.lastFrame());
 
         log.debug("resume ['{}'] -> done", eventRefs);
     }
@@ -132,11 +131,11 @@ public class VM {
                     if (status == ThreadStatus.UNWINDING) {
                         // no more frames to unwind, looks like there is no exception handler
                         state.setStatus(threadId, ThreadStatus.FAILED);
-                        Exception cause = state.getThreadError(threadId);
-                        if (cause == null) {
+                        ThreadError threadError = state.getThreadError(threadId);
+                        if (threadError == null) {
                             throw new IllegalStateException("The thread is unwinding the stack but no error was set: " + threadId);
                         }
-                        throw cause;
+                        throw threadError.exception();
                     }
 
                     log.trace("eval [{}] -> the thread is done, stopping the execution", threadId);
@@ -147,8 +146,8 @@ public class VM {
                 if (status == ThreadStatus.UNWINDING) {
                     Command handler = frame.getExceptionHandler();
                     if (handler != null) {
-                        Exception cause = state.clearThreadError(threadId);
-                        if (cause == null) {
+                        ThreadError threadError = state.clearThreadError(threadId);
+                        if (threadError == null) {
                             throw new IllegalStateException("The thread is unwinding the stack but no error was set: " + threadId);
                         }
 
@@ -159,7 +158,7 @@ public class VM {
 
                         // save the exception as a local frame variable, so it can be retrieved
                         // by the error handling command
-                        frame.setLocal(Frame.LAST_EXCEPTION_KEY, cause);
+                        frame.setLocal(Frame.LAST_EXCEPTION_KEY, threadError.exception());
 
                         // and run the error handler next
                         frame.push(handler);
@@ -199,7 +198,7 @@ public class VM {
                 } catch (Exception e) {
                     frame.push(new PopFrameCommand());
                     state.setStatus(threadId, ThreadStatus.UNWINDING);
-                    state.setThreadError(threadId, e);
+                    state.setThreadError(threadId, cmd, e);
                 }
 
                 if (stop) {
@@ -247,17 +246,6 @@ public class VM {
             if (!events.containsKey(e.getKey()) && e.getValue() == ThreadStatus.SUSPENDED) {
                 state.setStatus(e.getKey(), ThreadStatus.READY);
             }
-        }
-    }
-
-    private static class EvalResult implements Serializable {
-
-        private static final long serialVersionUID = 1L;
-
-        private final Frame lastFrame;
-
-        private EvalResult(Frame lastFrame) {
-            this.lastFrame = lastFrame;
         }
     }
 }

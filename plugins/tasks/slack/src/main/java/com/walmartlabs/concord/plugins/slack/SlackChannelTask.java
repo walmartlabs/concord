@@ -21,24 +21,27 @@ package com.walmartlabs.concord.plugins.slack;
  */
 
 import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.InjectVariable;
+import com.walmartlabs.concord.sdk.ContextUtils;
 import com.walmartlabs.concord.sdk.Task;
 
 import javax.inject.Named;
+import java.util.Collections;
 import java.util.Map;
 
 @Named("slackChannel")
 @SuppressWarnings("unused")
 public class SlackChannelTask implements Task {
 
-    @InjectVariable("slackCfg")
-    private Map<String, Object> defaults;
-
     private final SlackChannelTaskCommon delegate = new SlackChannelTaskCommon();
 
     @Override
     public void execute(Context ctx) throws Exception {
-        Map<String, Object> result = delegate.execute(SlackChannelTaskParams.of(new ContextVariables(ctx), defaults));
+        Map<String, Object> result = delegate.execute(SlackChannelTaskParams.of(new ContextVariables(ctx), defaults(ctx)));
         result.forEach(ctx::setVariable);
     }
+
+    private static Map<String, Object> defaults(Context ctx) {
+        return ContextUtils.getMap(ctx, "slackCfg", Collections.emptyMap());
+    }
+
 }
