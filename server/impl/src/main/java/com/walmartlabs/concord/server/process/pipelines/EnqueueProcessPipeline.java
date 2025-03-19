@@ -64,7 +64,6 @@ public class EnqueueProcessPipeline extends Pipeline {
                 injector.getInstance(ResumeEventsProcessor.class),
                 injector.getInstance(ConfigurationStoringProcessor.class),
                 injector.getInstance(PolicyProcessor.class),
-                injector.getInstance(DependencyVersionsExportProcessor.class),
                 customProcessors.handleState(),
                 injector.getInstance(StateImportingProcessor.class),
                 injector.getInstance(ProcessHandlersProcessor.class),

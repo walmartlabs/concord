@@ -47,7 +47,6 @@ public class ResumePipeline extends Pipeline {
                 injector.getInstance(ResumeEventsProcessor.class),
                 injector.getInstance(ClearStartAtProcessor.class),
                 injector.getInstance(ConfigurationStoringProcessor.class),
-                injector.getInstance(DependencyVersionsExportProcessor.class),
                 injector.getInstance(PolicyExportProcessor.class),
                 injector.getInstance(StateImportingProcessor.class),
                 injector.getInstance(ResumeProcessor.class)

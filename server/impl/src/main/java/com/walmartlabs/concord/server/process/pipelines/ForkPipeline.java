@@ -49,7 +49,6 @@ public class ForkPipeline extends Pipeline {
                 injector.getInstance(InitiatorUserInfoProcessor.class),
                 injector.getInstance(OutVariablesSettingProcessor.class),
                 injector.getInstance(ConfigurationStoringProcessor.class),
-                injector.getInstance(DependencyVersionsExportProcessor.class),
                 injector.getInstance(StateImportingProcessor.class),
                 injector.getInstance(ForkHandlersProcessor.class),
                 injector.getInstance(ForkRepositoryInfoProcessor.class),
