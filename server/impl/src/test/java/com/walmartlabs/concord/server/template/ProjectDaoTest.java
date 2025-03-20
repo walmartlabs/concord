@@ -49,8 +49,8 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
     @BeforeEach
     public void setUp() {
-        repositoryDao = new RepositoryDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
-        projectDao = new ProjectDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
+        repositoryDao = new RepositoryDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE), getUuidGenerator());
+        projectDao = new ProjectDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE), getUuidGenerator());
     }
 
     @Test

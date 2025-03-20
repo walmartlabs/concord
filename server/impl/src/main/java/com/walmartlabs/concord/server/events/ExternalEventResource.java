@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
@@ -44,6 +45,7 @@ import javax.ws.rs.core.Response;
 import java.util.*;
 
 import static com.walmartlabs.concord.common.MemoSupplier.memo;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Handles generic external events.
@@ -62,6 +64,7 @@ public class ExternalEventResource implements Resource {
     private final TriggerEventInitiatorResolver initiatorResolver;
     private final Set<ExternalEventTriggerProcessor> processors;
     private final AuditLog auditLog;
+    private final UuidGenerator uuidGenerator;
 
     @Inject
     public ExternalEventResource(ExternalEventsConfiguration cfg,
@@ -69,14 +72,16 @@ public class ExternalEventResource implements Resource {
                                  UserManager userManager,
                                  TriggerEventInitiatorResolver initiatorResolver,
                                  Set<ExternalEventTriggerProcessor> processors,
-                                 AuditLog auditLog) {
+                                 AuditLog auditLog,
+                                 UuidGenerator uuidGenerator) {
 
-        this.cfg = cfg;
-        this.executor = executor;
-        this.userManager = userManager;
-        this.initiatorResolver = initiatorResolver;
-        this.processors = processors;
-        this.auditLog = auditLog;
+        this.cfg = requireNonNull(cfg);
+        this.executor = requireNonNull(executor);
+        this.userManager = requireNonNull(userManager);
+        this.initiatorResolver = requireNonNull(initiatorResolver);
+        this.processors = requireNonNull(processors);
+        this.auditLog = requireNonNull(auditLog);
+        this.uuidGenerator = requireNonNull(uuidGenerator);
     }
 
     @POST
@@ -94,7 +99,7 @@ public class ExternalEventResource implements Resource {
 
         Map<String, Object> event = data != null ? data : new HashMap<>();
 
-        String eventId = event.computeIfAbsent("id", s -> UUID.randomUUID()).toString();
+        String eventId = event.computeIfAbsent("id", s -> uuidGenerator.generate()).toString();
 
         if (cfg.isLogEvents()) {
             auditLog.add(AuditObject.EXTERNAL_EVENT, AuditAction.ACCESS)

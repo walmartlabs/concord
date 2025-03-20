@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.user;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.jooq.Tables;
 import com.walmartlabs.concord.server.jooq.tables.records.UsersRecord;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
@@ -40,13 +41,17 @@ import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserRoles.USER_ROLES;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
+import static java.util.Objects.requireNonNull;
 import static org.jooq.impl.DSL.*;
 
 public class UserDao extends AbstractDao {
 
+    private final UuidGenerator uuidGenerator;
+
     @Inject
-    public UserDao(@MainDB Configuration cfg) {
+    public UserDao(@MainDB Configuration cfg, UuidGenerator uuidGenerator) {
         super(cfg);
+        this.uuidGenerator = requireNonNull(uuidGenerator);
     }
 
     @Override
@@ -59,10 +64,11 @@ public class UserDao extends AbstractDao {
      * Note that {@code username} and {@code domain} are case-insensitive and forced to lower case.
      */
     public UUID insertOrUpdate(String username, String domain, String displayName, String email, UserType type, Set<String> roles) {
+        UUID userId = uuidGenerator.generate();
         return txResult(tx -> {
-            UUID userId = tx.insertInto(USERS)
-                    .columns(USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.USER_TYPE)
-                    .values(toLowerCase(username), toLowerCase(domain), displayName, email, type.toString())
+            UUID effectiveUserId = tx.insertInto(USERS)
+                    .columns(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.USER_TYPE)
+                    .values(userId, toLowerCase(username), toLowerCase(domain), displayName, email, type.toString())
                     .onConflict(lower(USERS.USERNAME), lower(USERS.DOMAIN), field(USERS.USER_TYPE))
                     .doUpdate()
                     .set(USERS.DISPLAY_NAME, displayName)
@@ -72,10 +78,10 @@ public class UserDao extends AbstractDao {
                     .getUserId();
 
             if (roles != null) {
-                updateRoles(tx, userId, roles);
+                updateRoles(tx, effectiveUserId, roles);
             }
 
-            return userId;
+            return effectiveUserId;
         });
     }
 

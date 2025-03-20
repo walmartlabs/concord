@@ -25,6 +25,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
+import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.jooq.enums.OutVariablesMode;
 import com.walmartlabs.concord.server.jooq.enums.ProcessExecMode;
 import com.walmartlabs.concord.server.jooq.enums.RawPayloadMode;
@@ -40,10 +41,7 @@ import org.jooq.*;
 
 import javax.inject.Inject;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 
 import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
@@ -53,17 +51,21 @@ import static com.walmartlabs.concord.server.jooq.tables.ProjectTeamAccess.PROJE
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
+import static java.util.Objects.requireNonNull;
 import static org.jooq.impl.DSL.*;
 
 public class ProjectDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
+    private final UuidGenerator uuidGenerator;
 
     @Inject
     public ProjectDao(@MainDB Configuration cfg,
-                      ConcordObjectMapper objectMapper) {
+                      ConcordObjectMapper objectMapper,
+                      UuidGenerator uuidGenerator) {
         super(cfg);
-        this.objectMapper = objectMapper;
+        this.objectMapper = requireNonNull(objectMapper);
+        this.uuidGenerator = requireNonNull(uuidGenerator);
     }
 
     @Override
@@ -181,8 +183,11 @@ public class ProjectDao extends AbstractDao {
             visibility = ProjectVisibility.PUBLIC;
         }
 
+        UUID projectId = uuidGenerator.generate();
+
         return tx.insertInto(PROJECTS)
-                .columns(PROJECTS.PROJECT_NAME,
+                .columns(PROJECTS.PROJECT_ID,
+                        PROJECTS.PROJECT_NAME,
                         PROJECTS.DESCRIPTION,
                         PROJECTS.ORG_ID,
                         PROJECTS.PROJECT_CFG,
@@ -194,7 +199,8 @@ public class ProjectDao extends AbstractDao {
                         PROJECTS.OUT_VARIABLES_MODE,
                         PROJECTS.PROCESS_EXEC_MODE,
                         PROJECTS.CREATED_AT)
-                .values(value(name),
+                .values(value(projectId),
+                        value(name),
                         value(description),
                         value(orgId),
                         value(objectMapper.toJSONB(cfg)),
