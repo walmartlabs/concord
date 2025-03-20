@@ -24,14 +24,12 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import static com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.REPOSITORY_INFO_KEY;
 
 /**
  * Updates the process queue entry according to the current process' repository data.
  */
-@Named
 public class RepositoryInfoUpdateProcessor implements PayloadProcessor {
 
     private final ProcessQueueDao queueDao;

@@ -34,13 +34,11 @@ import com.walmartlabs.concord.server.OffsetDateTimeParam;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.events.ExpressionUtils;
-import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.policy.PolicyException;
 import com.walmartlabs.concord.server.policy.PolicyManager;
-import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitEntry;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
@@ -48,16 +46,12 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogAccessManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
-import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.process.waits.AbstractWaitCondition;
 import com.walmartlabs.concord.server.process.waits.ProcessWaitManager;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.sdk.PartialProcessKey;
-import com.walmartlabs.concord.server.sdk.ProcessKey;
-import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.sdk.*;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
@@ -509,7 +503,7 @@ public class ProcessResource implements Resource {
     @WithTimer
     @Operation(description = "Get process status history")
     public List<ProcessStatusHistoryEntry> getStatusHistory(@PathParam("instanceId") UUID instanceId) throws IOException {
-        ProcessKey pk = assertKey(instanceId);
+        ProcessKey pk = processKeyCache.assertKey(instanceId);
         return queueDao.getStatusHistory(pk);
     }
 
@@ -522,7 +516,7 @@ public class ProcessResource implements Resource {
     @WithTimer
     @Operation(description = "Get process' wait conditions")
     public ProcessWaitEntry getWait(@PathParam("instanceId") UUID instanceId) {
-        ProcessKey pk = assertKey(instanceId);
+        ProcessKey pk = processKeyCache.assertKey(instanceId);
         return processWaitManager.getWait(pk);
     }
 
@@ -1030,19 +1024,6 @@ public class ProcessResource implements Resource {
         }
 
         return k;
-    }
-
-    private ProcessKey assertKey(UUID id) {
-        Optional<ProcessKey> key = processKeyCache.getUncached(id);
-        return key.orElseThrow(() -> new ValidationErrorsException("Unknown instance ID: " + id));
-    }
-
-    private static boolean isEmpty(InputStream in) {
-        try {
-            return in.available() <= 0;
-        } catch (IOException e) {
-            throw new ConcordApplicationException("Internal error", e);
-        }
     }
 
     private static Optional<Path> copyToTmp(InputStream in) {

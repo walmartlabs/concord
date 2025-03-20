@@ -27,14 +27,12 @@ import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.process.form.FormServiceV1;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Map;
 
 /**
  * Responsible for saving the current user's security subject when
  * the process resumes with {@code runAs.keep} form option.
  */
-@Named
 public class ChangeUserProcessor implements PayloadProcessor {
 
     private final ProcessSecurityContext securityContext;

@@ -29,7 +29,6 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,7 +38,6 @@ import java.nio.file.StandardCopyOption;
  * @deprecated replaced with the "dependencyVersions" policy.
  * @see com.walmartlabs.concord.policyengine.DependencyVersionsPolicy
  */
-@Named
 @Deprecated
 public class DependencyVersionsExportProcessor implements PayloadProcessor {
 

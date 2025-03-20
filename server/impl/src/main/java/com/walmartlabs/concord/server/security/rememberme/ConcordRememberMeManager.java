@@ -33,7 +33,6 @@ import org.apache.shiro.web.mgt.CookieRememberMeManager;
 import org.apache.shiro.web.util.WebUtils;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
@@ -41,7 +40,6 @@ import java.util.Optional;
 /**
  * Implementation of {@link org.apache.shiro.mgt.RememberMeManager}. Uses the DB to store session data.
  */
-@Named
 public class ConcordRememberMeManager extends CookieRememberMeManager {
 
     @Inject

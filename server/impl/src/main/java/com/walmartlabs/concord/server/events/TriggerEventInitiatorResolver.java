@@ -25,9 +25,6 @@ import com.walmartlabs.concord.server.org.triggers.TriggerUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 
-import javax.inject.Named;
-
-@Named
 public class TriggerEventInitiatorResolver {
 
     public UserEntry resolve(TriggerEntry trigger, Event event) {
