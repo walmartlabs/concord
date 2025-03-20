@@ -29,7 +29,7 @@ import com.walmartlabs.concord.server.org.jsonstore.JsonStoreAccessManager;
 import com.walmartlabs.concord.server.org.jsonstore.JsonStoreEntry;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.org.secret.SecretEntry;
+import com.walmartlabs.concord.server.org.secret.SecretEntryV2;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
@@ -255,7 +255,7 @@ public class AuditLogResource implements Resource {
         }
 
         if (secretId != null || secretName != null) {
-            SecretEntry secret = secretManager.assertAccess(effectiveOrgId, secretId, secretName, ResourceAccessLevel.READER, true);
+            SecretEntryV2 secret = secretManager.assertAccess(effectiveOrgId, secretId, secretName, ResourceAccessLevel.READER, true);
             return secret.getId();
         }
 

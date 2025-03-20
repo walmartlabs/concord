@@ -403,7 +403,7 @@ public class SecretManager {
                 .log();
     }
 
-    private String validateName(String newName, UUID newOrgId, SecretEntry e) {
+    private String validateName(String newName, UUID newOrgId, SecretEntryV2 e) {
         if (newOrgId == null && newName == null) {
             return null;
         }
@@ -420,7 +420,7 @@ public class SecretManager {
      * Removes an existing secret.
      */
     public void delete(DSLContext tx, UUID orgId, String secretName) {
-        SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.OWNER, true);
+        SecretEntryV2 e = assertAccess(orgId, null, secretName, ResourceAccessLevel.OWNER, true);
 
         // delete the content first
         getSecretStore(e.getStoreType()).delete(tx, e.getId());
@@ -455,7 +455,7 @@ public class SecretManager {
         return new DecryptedSecret(e.getId(), s);
     }
 
-    private byte[] decryptData(SecretEntry e, String password) {
+    private byte[] decryptData(SecretEntryV2 e, String password) {
         byte[] data = getSecretStore(e.getStoreType()).get(e.getId());
         if (data == null) {
             throw new IllegalStateException("Can't find the secret's data in the store " + e.getStoreType() + " : " + e.getId());
@@ -674,7 +674,7 @@ public class SecretManager {
         }
     }
 
-    private UUID validateOrgId(UUID newOrgId, String newOrgName, SecretEntry e) {
+    private UUID validateOrgId(UUID newOrgId, String newOrgName, SecretEntryV2 e) {
         UUID orgId = null;
         if (newOrgId != null) {
             orgId = orgManager.assertAccess(newOrgId, true).getId();
@@ -712,7 +712,7 @@ public class SecretManager {
         }).collect(Collectors.toSet());
     }
 
-    private UserEntry validateOwner(UUID newOwnerId, SecretEntry e) {
+    private UserEntry validateOwner(UUID newOwnerId, SecretEntryV2 e) {
         if (newOwnerId == null) {
             return null;
         }

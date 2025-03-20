@@ -51,7 +51,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -285,7 +284,6 @@ public class Dispatcher extends PeriodicTask {
         }
     }
 
-    @Named
     public static class DispatcherDao extends AbstractDao {
 
         private final ConcordObjectMapper objectMapper;

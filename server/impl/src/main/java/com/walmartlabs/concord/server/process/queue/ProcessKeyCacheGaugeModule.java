@@ -27,12 +27,8 @@ import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.server.sdk.metrics.GaugeProvider;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.function.Function;
 
-@Named
-@Singleton
 public class ProcessKeyCacheGaugeModule extends AbstractModule {
 
     @Override
@@ -40,8 +36,8 @@ public class ProcessKeyCacheGaugeModule extends AbstractModule {
         Provider<ProcessKeyCache> provider = getProvider(ProcessKeyCache.class);
 
         Multibinder<GaugeProvider> gauges = Multibinder.newSetBinder(binder(), GaugeProvider.class);
-//        gauges.addBinding().toInstance(create("hit-count", provider, CacheStats::hitCount));
-//        gauges.addBinding().toInstance(create("miss-count", provider, CacheStats::missCount));
+        gauges.addBinding().toInstance(create("hit-count", provider, CacheStats::hitCount));
+        gauges.addBinding().toInstance(create("miss-count", provider, CacheStats::missCount));
     }
 
     private static GaugeProvider<Long> create(String suffix, Provider<ProcessKeyCache> provider, Function<CacheStats, Long> value) {
