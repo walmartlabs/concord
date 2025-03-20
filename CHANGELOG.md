@@ -6,13 +6,14 @@
 
 - concord-agent: replace simple immutables with records
 ([#1091](https://github.com/walmartlabs/concord/pull/1091));
+- concord-server, concord-server-db: generate UUIDs on the server, use UUID v7
+([#1106](https://github.com/walmartlabs/concord/pull/1106));
 - concord-server: upgrade Shiro to 2.x
 ([#1107](https://github.com/walmartlabs/concord/pull/1107));
 - concord-server, concord-client2: uncomment valid code
 ([#1108](https://github.com/walmartlabs/concord/pull/1108));
 - concord-server: remove more @Named usage
 ([#1110](https://github.com/walmartlabs/concord/pull/1110)).
-
 
 
 ## [2.24.0] - 2025-03-15
