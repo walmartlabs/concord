@@ -39,8 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -52,8 +50,6 @@ import static com.walmartlabs.concord.process.loader.ProjectLoader.CONCORD_V1_RU
 /**
  * Loads the process definition using the working directory and configured {@code imports}.
  */
-@Named
-@Singleton
 public class ProcessDefinitionProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessDefinitionProcessor.class);

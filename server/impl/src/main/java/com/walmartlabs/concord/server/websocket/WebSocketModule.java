@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.process.pipelines.processors;
+package com.walmartlabs.concord.server.websocket;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2024 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,16 +20,16 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
+import com.google.inject.Binder;
+import com.google.inject.Module;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.Provider;
+import static com.google.inject.Scopes.SINGLETON;
 
-@Provider
-public class InvalidProcessStateExceptionMapper extends ExceptionMapperSupport<InvalidProcessStateException> {
+public class WebSocketModule implements Module {
 
     @Override
-    protected Response convert(InvalidProcessStateException e) {
-        return Response.status(Response.Status.CONFLICT).entity(e.getMessage()).build();
+    public void configure(Binder binder) {
+        binder.bind(WebSocketChannelManager.class).in(SINGLETON);
+        binder.install(new WebSocketMetricsModule());
     }
 }

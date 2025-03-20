@@ -36,8 +36,7 @@ import org.apache.shiro.realm.ldap.LdapContextFactory;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
-import static com.walmartlabs.concord.server.Utils.bindExceptionMapper;
-import static com.walmartlabs.concord.server.Utils.bindSingletonScheduledTask;
+import static com.walmartlabs.concord.server.Utils.*;
 
 public class SecurityModule implements Module {
 
@@ -66,5 +65,7 @@ public class SecurityModule implements Module {
 
         bindExceptionMapper(binder, UnauthorizedExceptionMapper.class);
         bindExceptionMapper(binder, UnauthenticatedExceptionMapper.class);
+
+        bindJaxRsResource(binder, UserLdapGroupResource.class);
     }
 }

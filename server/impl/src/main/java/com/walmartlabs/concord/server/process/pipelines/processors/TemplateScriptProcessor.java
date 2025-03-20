@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,8 +32,6 @@ import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Value;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
@@ -47,8 +45,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-@Named
-@Singleton
 public class TemplateScriptProcessor implements PayloadProcessor {
 
     public static final String REQUEST_DATA_TEMPLATE_FILE_NAME = "_main.js";
@@ -91,7 +87,7 @@ public class TemplateScriptProcessor implements PayloadProcessor {
         CycleChecker.CheckResult result = CycleChecker.check(INPUT_REQUEST_DATA_KEY, merged);
         if (result.isHasCycle()) {
             throw new ProcessException(processKey, "Found cycle in " + REQUEST_DATA_TEMPLATE_FILE_NAME + ": " +
-                    result.getNode1() + " <-> " + result.getNode2() );
+                                                   result.getNode1() + " <-> " + result.getNode2());
         }
         payload = payload.putHeader(Payload.CONFIGURATION, merged);
 

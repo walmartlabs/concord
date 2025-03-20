@@ -24,14 +24,12 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.server.process.pipelines.processors.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 
 /**
  * Handles processes forked from a parent (including "handler"
  * processes such as "onCancel", "onFailure", etc).
  */
-@Named
 public class ForkPipeline extends Pipeline {
 
     private final ExceptionProcessor exceptionProcessor;
