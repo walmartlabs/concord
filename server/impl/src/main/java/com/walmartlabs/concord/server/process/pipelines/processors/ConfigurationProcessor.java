@@ -37,7 +37,6 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.cfg.ProcessConfigurationUtils;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,7 +47,6 @@ import java.util.*;
 /**
  * Responsible for preparing the process' {@code configuration} object.
  */
-@Named
 public class ConfigurationProcessor implements PayloadProcessor {
 
     public static final AttachmentKey REQUEST_ATTACHMENT_KEY = AttachmentKey.register("request");

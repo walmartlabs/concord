@@ -28,13 +28,11 @@ import com.walmartlabs.concord.server.process.pipelines.processors.policy.Policy
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Set;
 
 /**
  * Applies policies.
  */
-@Named
 public class PolicyProcessor implements PayloadProcessor {
 
     private final ProcessLogManager logManager;

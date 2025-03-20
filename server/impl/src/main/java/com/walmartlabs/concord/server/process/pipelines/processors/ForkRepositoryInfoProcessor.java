@@ -28,7 +28,6 @@ import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.REPOSITORY_INFO_KEY;
@@ -38,7 +37,6 @@ import static com.walmartlabs.concord.server.process.pipelines.processors.Reposi
  * This information will be used by the Agent to pull the repository files into
  * the fork's workspace.
  */
-@Named
 public class ForkRepositoryInfoProcessor implements PayloadProcessor {
 
     private final ProcessQueueManager queueManager;

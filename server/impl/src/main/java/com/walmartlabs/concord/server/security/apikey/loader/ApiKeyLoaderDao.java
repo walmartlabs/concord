@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -38,7 +37,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static com.walmartlabs.concord.server.security.apikey.ApiKeyUtils.hash;
 import static java.util.Objects.requireNonNull;
 
-@Named
 public class ApiKeyLoaderDao extends AbstractDao {
 
     private static final Logger log = LoggerFactory.getLogger(ApiKeyLoaderDao.class);
