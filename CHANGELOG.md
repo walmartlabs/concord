@@ -9,7 +9,9 @@
 - concord-server: upgrade Shiro to 2.x
 ([#1107](https://github.com/walmartlabs/concord/pull/1107));
 - concord-server, concord-client2: uncomment valid code
-([#1108](https://github.com/walmartlabs/concord/pull/1108)).
+([#1108](https://github.com/walmartlabs/concord/pull/1108));
+- concord-server: remove more @Named usage
+([#1110](https://github.com/walmartlabs/concord/pull/1110)).
 
 
 
