@@ -13,7 +13,10 @@
 - concord-server, concord-client2: uncomment valid code
 ([#1108](https://github.com/walmartlabs/concord/pull/1108));
 - concord-server: remove more @Named usage
-([#1110](https://github.com/walmartlabs/concord/pull/1110)).
+([#1110](https://github.com/walmartlabs/concord/pull/1110));
+- concord-server: remove deprecated SecretEntry
+([#1111](https://github.com/walmartlabs/concord/pull/1111)).
+
 
 
 ## [2.24.0] - 2025-03-15
