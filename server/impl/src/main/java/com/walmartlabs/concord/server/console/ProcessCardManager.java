@@ -25,6 +25,7 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.OperationResult;
+import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.jooq.tables.UiProcessCards;
 import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.UiProcessCardsRecord;
@@ -48,6 +49,7 @@ import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
+import static java.util.Objects.requireNonNull;
 import static org.jooq.impl.DSL.*;
 
 public class ProcessCardManager {
@@ -80,7 +82,7 @@ public class ProcessCardManager {
         }
 
         throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
-                "access to the process card: " + cardId);
+                                        "access to the process card: " + cardId);
     }
 
     public void updateAccess(UUID cardId, List<UUID> teamIds, List<UUID> userIds) {
@@ -132,11 +134,15 @@ public class ProcessCardManager {
     public static class Dao extends AbstractDao {
 
         private final ConcordObjectMapper objectMapper;
+        private final UuidGenerator uuidGenerator;
 
         @Inject
-        protected Dao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
+        protected Dao(@MainDB Configuration cfg,
+                      ConcordObjectMapper objectMapper,
+                      UuidGenerator uuidGenerator) {
             super(cfg);
-            this.objectMapper = objectMapper;
+            this.objectMapper = requireNonNull(objectMapper);
+            this.uuidGenerator = requireNonNull(uuidGenerator);
         }
 
         protected void tx(Tx t) {
@@ -181,7 +187,7 @@ public class ProcessCardManager {
 
                 return tx.connectionResult(conn -> {
                     try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                        ps.setObject(1, cardId == null ? UUID.randomUUID() : cardId);
+                        ps.setObject(1, cardId == null ? uuidGenerator.generate() : cardId);
                         ps.setObject(2, projectId);
                         ps.setObject(3, repoId);
                         ps.setString(4, name);

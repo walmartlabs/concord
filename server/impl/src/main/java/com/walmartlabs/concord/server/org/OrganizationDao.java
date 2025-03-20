@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.jooq.tables.Organizations;
 import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.OrganizationsRecord;
@@ -39,17 +40,22 @@ import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
+import static java.util.Objects.requireNonNull;
 import static org.jooq.impl.DSL.*;
 
 public class OrganizationDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
+    private final UuidGenerator uuidGenerator;
 
     @Inject
     public OrganizationDao(@MainDB Configuration cfg,
-                           ConcordObjectMapper objectMapper) {
+                           ConcordObjectMapper objectMapper,
+                           UuidGenerator uuidGenerator) {
+
         super(cfg);
-        this.objectMapper = objectMapper;
+        this.objectMapper = requireNonNull(objectMapper);
+        this.uuidGenerator = requireNonNull(uuidGenerator);
     }
 
     @Override
@@ -119,13 +125,17 @@ public class OrganizationDao extends AbstractDao {
             visibility = OrganizationVisibility.PUBLIC;
         }
 
+        UUID orgId = uuidGenerator.generate();
+
         return tx.insertInto(ORGANIZATIONS)
-                .columns(ORGANIZATIONS.ORG_NAME,
+                .columns(ORGANIZATIONS.ORG_ID,
+                        ORGANIZATIONS.ORG_NAME,
                         ORGANIZATIONS.OWNER_ID,
                         ORGANIZATIONS.VISIBILITY,
                         ORGANIZATIONS.META,
                         ORGANIZATIONS.ORG_CFG)
-                .values(name,
+                .values(orgId,
+                        name,
                         ownerId,
                         visibility.toString(),
                         objectMapper.toJSONB(meta),
@@ -171,15 +181,15 @@ public class OrganizationDao extends AbstractDao {
         Users u = USERS.as("u");
 
         SelectOnConditionStep<Record10<UUID, String, UUID, String, String, String, String, String, JSONB, JSONB>> q = dsl().select(o.ORG_ID,
-                o.ORG_NAME,
-                o.OWNER_ID,
-                u.USERNAME,
-                u.DOMAIN,
-                u.DISPLAY_NAME,
-                u.USER_TYPE,
-                o.VISIBILITY,
-                o.META,
-                o.ORG_CFG)
+                        o.ORG_NAME,
+                        o.OWNER_ID,
+                        u.USERNAME,
+                        u.DOMAIN,
+                        u.DISPLAY_NAME,
+                        u.USER_TYPE,
+                        o.VISIBILITY,
+                        o.META,
+                        o.ORG_CFG)
                 .from(o)
                 .leftJoin(u).on(u.USER_ID.eq(o.OWNER_ID));
 
@@ -224,8 +234,8 @@ public class OrganizationDao extends AbstractDao {
 
     public boolean hasOwner(DSLContext tx, UUID orgId) {
         return tx.select(ORGANIZATIONS.OWNER_ID).from(ORGANIZATIONS)
-                .where(ORGANIZATIONS.ORG_ID.eq(orgId))
-                .fetchOne() != null;
+                       .where(ORGANIZATIONS.ORG_ID.eq(orgId))
+                       .fetchOne() != null;
     }
 
     public boolean hasRole(DSLContext tx, UUID orgId, TeamRole role) {

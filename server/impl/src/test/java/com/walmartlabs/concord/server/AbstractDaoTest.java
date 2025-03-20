@@ -80,6 +80,10 @@ public abstract class AbstractDaoTest {
         return cfg;
     }
 
+    protected UuidGenerator getUuidGenerator() {
+        return new UuidGenerator();
+    }
+
     private static final class DatabaseConfigurationImpl implements DatabaseConfiguration {
 
         private final String url;

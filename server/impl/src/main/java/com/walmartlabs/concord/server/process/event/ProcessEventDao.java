@@ -24,6 +24,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessEventsRecord;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
@@ -35,16 +36,21 @@ import java.time.OffsetDateTime;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENTS;
+import static java.util.Objects.requireNonNull;
 import static org.jooq.impl.DSL.*;
 
 public class ProcessEventDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
+    private final UuidGenerator uuidGenerator;
 
     @Inject
-    public ProcessEventDao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
+    public ProcessEventDao(@MainDB Configuration cfg,
+                           ConcordObjectMapper objectMapper,
+                           UuidGenerator uuidGenerator) {
         super(cfg);
-        this.objectMapper = objectMapper;
+        this.objectMapper = requireNonNull(objectMapper);
+        this.uuidGenerator = requireNonNull(uuidGenerator);
     }
 
     @Override
@@ -110,7 +116,9 @@ public class ProcessEventDao extends AbstractDao {
     }
 
     public void insert(DSLContext tx, List<ProcessKey> processKeys, String eventType, Map<String, Object> data) {
+
         String sql = tx.insertInto(PROCESS_EVENTS)
+                .set(PROCESS_EVENTS.EVENT_ID, (UUID) null)
                 .set(PROCESS_EVENTS.INSTANCE_ID, (UUID) null)
                 .set(PROCESS_EVENTS.INSTANCE_CREATED_AT, (OffsetDateTime) null)
                 .set(PROCESS_EVENTS.EVENT_TYPE, (String) null)
@@ -122,10 +130,12 @@ public class ProcessEventDao extends AbstractDao {
         tx.connection(conn -> {
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (ProcessKey pk : processKeys) {
-                    ps.setObject(1, pk.getInstanceId());
-                    ps.setObject(2, pk.getCreatedAt());
-                    ps.setString(3, eventType);
-                    ps.setString(4, objectMapper.toJSONB(data).toString());
+                    UUID eventId = uuidGenerator.generate();
+                    ps.setObject(1, eventId);
+                    ps.setObject(2, pk.getInstanceId());
+                    ps.setObject(3, pk.getCreatedAt());
+                    ps.setString(4, eventType);
+                    ps.setString(5, objectMapper.toJSONB(data).toString());
                     ps.addBatch();
                 }
                 ps.executeBatch();
@@ -146,12 +156,14 @@ public class ProcessEventDao extends AbstractDao {
         if (events.size() == 1) {
             NewProcessEvent ev = events.get(0);
 
+            UUID eventId = uuidGenerator.generate();
             ProcessKey processKey = ev.processKey();
             Field<OffsetDateTime> ts = ev.eventDate() != null ? value(ev.eventDate()) : currentOffsetDateTime();
             Map<String, Object> m = ev.data() != null ? ev.data() : Collections.emptyMap();
             String eventType = ev.eventType();
 
             ProcessEventsRecord r = tx.insertInto(PROCESS_EVENTS)
+                    .set(PROCESS_EVENTS.EVENT_ID, eventId)
                     .set(PROCESS_EVENTS.INSTANCE_ID, processKey.getInstanceId())
                     .set(PROCESS_EVENTS.INSTANCE_CREATED_AT, processKey.getCreatedAt())
                     .set(PROCESS_EVENTS.EVENT_TYPE, eventType)
@@ -177,6 +189,7 @@ public class ProcessEventDao extends AbstractDao {
             ProcessKey pk = ev.processKey();
 
             ProcessEventsRecord r = new ProcessEventsRecord();
+            r.setEventId(uuidGenerator.generate());
             r.setInstanceId(pk.getInstanceId());
             r.setInstanceCreatedAt(pk.getCreatedAt());
             r.setEventType(ev.eventType());
