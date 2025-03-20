@@ -25,6 +25,7 @@ import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.Utils;
+import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.jooq.tables.Organizations;
 import com.walmartlabs.concord.server.jooq.tables.Secrets;
 import com.walmartlabs.concord.server.jooq.tables.Users;
@@ -50,6 +51,7 @@ import static com.walmartlabs.concord.server.jooq.tables.SecretTeamAccess.SECRET
 import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
+import static java.util.Objects.requireNonNull;
 import static org.jooq.impl.DSL.*;
 
 public class SecretDao extends AbstractDao {
@@ -59,9 +61,12 @@ public class SecretDao extends AbstractDao {
         UPSERT
     }
 
+    private final UuidGenerator uuidGenerator;
+
     @Inject
-    public SecretDao(@MainDB Configuration cfg) {
+    public SecretDao(@MainDB Configuration cfg, UuidGenerator uuidGenerator) {
         super(cfg);
+        this.uuidGenerator = requireNonNull(uuidGenerator);
     }
 
     @Override
@@ -113,8 +118,11 @@ public class SecretDao extends AbstractDao {
                        SecretEncryptedByType encryptedBy, String storeType,
                        SecretVisibility visibility, byte[] secretSalt, HashAlgorithm hashAlgorithm, InsertMode insertMode) {
 
+        UUID secretId = uuidGenerator.generate();
+
         InsertOnDuplicateStep<SecretsRecord> builder = tx.insertInto(SECRETS)
-                .columns(SECRETS.SECRET_NAME,
+                .columns(SECRETS.SECRET_ID,
+                        SECRETS.SECRET_NAME,
                         SECRETS.SECRET_TYPE,
                         SECRETS.ORG_ID,
                         SECRETS.OWNER_ID,
@@ -123,7 +131,7 @@ public class SecretDao extends AbstractDao {
                         SECRETS.VISIBILITY,
                         SECRETS.SECRET_SALT,
                         SECRETS.HASH_ALGORITHM)
-                .values(name, type.toString(), orgId, ownerId, encryptedBy.toString(), storeType, visibility.toString(), secretSalt, hashAlgorithm.getName());
+                .values(secretId, name, type.toString(), orgId, ownerId, encryptedBy.toString(), storeType, visibility.toString(), secretSalt, hashAlgorithm.getName());
 
         if (insertMode == InsertMode.UPSERT) {
             Optional<SecretsRecord> secretsRecord = builder.onDuplicateKeyIgnore()

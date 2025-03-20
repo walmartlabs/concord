@@ -207,7 +207,7 @@ public class SecretIT extends AbstractServerIT {
 
         assertNotNull(secret);
         assertEquals(cur.getId(), secret.getOwner().getId());
-        assertNull(secret.getProjectName());
+        assertTrue(secret.getProjects() == null || secret.getProjects().isEmpty());
         assertEquals(SecretEntryV2.VisibilityEnum.PRIVATE, secret.getVisibility());
 
         // ---
