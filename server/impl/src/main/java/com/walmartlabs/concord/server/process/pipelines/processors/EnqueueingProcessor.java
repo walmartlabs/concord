@@ -28,14 +28,12 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
 /**
  * Moves the process into ENQUEUED status, filling in the necessary attributes.
  */
-@Named
 public class EnqueueingProcessor implements PayloadProcessor {
 
     private final ProcessQueueManager queueManager;

@@ -25,13 +25,11 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-@Named
 public class ResumeEventsProcessor implements PayloadProcessor {
 
     private final ProcessLogManager logManager;

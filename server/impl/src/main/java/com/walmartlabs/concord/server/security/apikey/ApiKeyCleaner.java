@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.server.jooq.Tables.API_KEYS;
@@ -65,8 +64,7 @@ public class ApiKeyCleaner implements ScheduledTask {
         cleanerDao.deleteExpiredKeys();
     }
 
-    @Named
-    private static class CleanerDao extends AbstractDao {
+    static class CleanerDao extends AbstractDao {
 
         @Inject
         protected CleanerDao(@MainDB Configuration cfg) {

@@ -25,14 +25,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jooq.JSONB;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-@Named
-@Singleton
 public class ConcordObjectMapper {
 
     public static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<Map<String, Object>>() {

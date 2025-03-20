@@ -23,13 +23,11 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 
-import javax.inject.Named;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-@Named
 public class OutVariablesSettingProcessor implements PayloadProcessor {
 
     @Override

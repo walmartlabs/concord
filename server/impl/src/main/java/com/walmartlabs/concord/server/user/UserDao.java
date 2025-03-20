@@ -31,7 +31,6 @@ import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -45,7 +44,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static java.util.Objects.requireNonNull;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class UserDao extends AbstractDao {
 
     private final UuidGenerator uuidGenerator;

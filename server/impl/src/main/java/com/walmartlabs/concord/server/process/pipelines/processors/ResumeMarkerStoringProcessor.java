@@ -27,7 +27,6 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,7 +39,6 @@ import java.util.Set;
  * The event marker file is used by the runtime to determine whether the process
  * should be started using a previously saved state snapshot.
  */
-@Named
 public class ResumeMarkerStoringProcessor implements PayloadProcessor {
 
     private final ProcessLogManager logManager;

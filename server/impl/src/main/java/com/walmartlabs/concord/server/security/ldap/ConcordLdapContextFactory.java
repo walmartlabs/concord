@@ -59,11 +59,6 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
     }
 
     @Override
-    public LdapContext getLdapContext(String username, String password) throws NamingException {
-        return delegate.getLdapContext(username, password);
-    }
-
-    @Override
     public LdapContext getLdapContext(Object principal, Object credentials) throws NamingException {
         return delegate.getLdapContext(principal, credentials);
     }
