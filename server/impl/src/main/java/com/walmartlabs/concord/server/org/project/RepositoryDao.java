@@ -23,27 +23,33 @@ package com.walmartlabs.concord.server.org.project;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.UuidGenerator;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
+import static java.util.Objects.requireNonNull;
 import static org.jooq.impl.DSL.*;
 
 public class RepositoryDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
+    private final UuidGenerator uuidGenerator;
 
     @Inject
     public RepositoryDao(@MainDB Configuration cfg,
-                         ConcordObjectMapper objectMapper) {
+                         ConcordObjectMapper objectMapper,
+                         UuidGenerator uuidGenerator) {
         super(cfg);
-        this.objectMapper = objectMapper;
+        this.objectMapper = requireNonNull(objectMapper);
+        this.uuidGenerator = requireNonNull(uuidGenerator);
     }
 
     @Override
@@ -110,11 +116,12 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public UUID insert(DSLContext tx, UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId, boolean disabled, Map<String, Object> meta, boolean isTriggersDisabled) {
+        UUID repoId = uuidGenerator.generate();
         return tx.insertInto(REPOSITORIES)
-                .columns(REPOSITORIES.PROJECT_ID, REPOSITORIES.REPO_NAME,
+                .columns(REPOSITORIES.REPO_ID, REPOSITORIES.PROJECT_ID, REPOSITORIES.REPO_NAME,
                         REPOSITORIES.REPO_URL, REPOSITORIES.REPO_BRANCH, REPOSITORIES.REPO_COMMIT_ID,
                         REPOSITORIES.REPO_PATH, REPOSITORIES.SECRET_ID, REPOSITORIES.META, REPOSITORIES.IS_DISABLED, REPOSITORIES.IS_TRIGGERS_DISABLED)
-                .values(projectId, repositoryName, url, branch, commitId, path, secretId, objectMapper.toJSONB(meta), disabled, isTriggersDisabled)
+                .values(repoId, projectId, repositoryName, url, branch, commitId, path, secretId, objectMapper.toJSONB(meta), disabled, isTriggersDisabled)
                 .returning(REPOSITORIES.REPO_ID)
                 .fetchOne()
                 .getRepoId();
