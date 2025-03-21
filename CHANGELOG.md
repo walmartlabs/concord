@@ -21,6 +21,8 @@ the server, use UUID v7
 ([#1113](https://github.com/walmartlabs/concord/pull/1113));
 - project: update dependencies
 ([#1114](https://github.com/walmartlabs/concord/pull/1114));
+- project: update README
+([#1115](https://github.com/walmartlabs/concord/pull/1115));
 - docker-images: update JDK versions
 ([#1116](https://github.com/walmartlabs/concord/pull/1116)).
 
