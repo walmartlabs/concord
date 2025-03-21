@@ -6,7 +6,8 @@
 
 - concord-agent: replace simple immutables with records
 ([#1091](https://github.com/walmartlabs/concord/pull/1091));
-- concord-server, concord-server-db: generate UUIDs on the server, use UUID v7
+- concord-server, concord-server-db: generate UUIDs on
+the server, use UUID v7
 ([#1106](https://github.com/walmartlabs/concord/pull/1106));
 - concord-server: upgrade Shiro to 2.x
 ([#1107](https://github.com/walmartlabs/concord/pull/1107));
@@ -19,7 +20,10 @@
 - concord-server: remove deprecated /logs/* endpoint
 ([#1113](https://github.com/walmartlabs/concord/pull/1113));
 - project: update dependencies
-([#1114](https://github.com/walmartlabs/concord/pull/1114)).
+([#1114](https://github.com/walmartlabs/concord/pull/1114));
+- docker-images: update JDK versions
+([#1116](https://github.com/walmartlabs/concord/pull/1116)).
+
 
 
 ## [2.24.0] - 2025-03-15
