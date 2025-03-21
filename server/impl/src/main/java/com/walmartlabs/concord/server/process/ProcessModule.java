@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.walmartlabs.concord.imports.ImportManager;
-import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.process.loader.ProjectLoader.ProjectLoaderConfiguration;
 import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointResource;
 import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointV2Resource;
@@ -37,11 +36,10 @@ import com.walmartlabs.concord.server.process.locks.ProcessLocksWatchdog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogAccessManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.ExclusiveGroupProcessor;
+import com.walmartlabs.concord.server.process.pipelines.processors.InvalidProcessStateExceptionMapper;
+import com.walmartlabs.concord.server.process.pipelines.processors.TemplateScriptProcessor;
 import com.walmartlabs.concord.server.process.pipelines.processors.policy.*;
-import com.walmartlabs.concord.server.process.queue.EnqueuedTaskProvider;
-import com.walmartlabs.concord.server.process.queue.ExternalProcessListenerHandler;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueWatchdog;
-import com.walmartlabs.concord.server.process.queue.ProcessStatusListener;
+import com.walmartlabs.concord.server.process.queue.*;
 import com.walmartlabs.concord.server.process.queue.dispatcher.ConcurrentProcessFilter;
 import com.walmartlabs.concord.server.process.queue.dispatcher.Dispatcher;
 import com.walmartlabs.concord.server.process.queue.dispatcher.ExclusiveProcessFilter;
@@ -51,13 +49,13 @@ import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.process.waits.*;
 import com.walmartlabs.concord.server.sdk.BackgroundTask;
+import com.walmartlabs.concord.server.sdk.ProcessKeyCache;
 import com.walmartlabs.concord.server.sdk.log.ProcessLogListener;
 import com.walmartlabs.concord.server.sdk.process.CustomEnqueueProcessor;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
-import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
-import static com.walmartlabs.concord.server.Utils.bindSingletonScheduledTask;
+import static com.walmartlabs.concord.server.Utils.*;
 
 public class ProcessModule implements Module {
 
@@ -119,7 +117,15 @@ public class ProcessModule implements Module {
         bindJaxRsResource(binder, ProcessResource.class);
         bindJaxRsResource(binder, ProcessResourceV2.class);
 
+        bindExceptionMapper(binder, InvalidProcessStateExceptionMapper.class);
+        bindExceptionMapper(binder, ProcessExceptionMapper.class);
+
+        binder.bind(TemplateScriptProcessor.class).in(SINGLETON);
+        binder.bind(ProcessKeyCache.class).to(com.walmartlabs.concord.server.process.queue.ProcessKeyCache.class).in(SINGLETON);
+
         binder.install(new ExclusiveGroupProcessor.ModeProcessorModule());
         binder.install(new FormModule());
+        binder.install(new ProcessQueueGaugeModule());
+        binder.install(new ProcessKeyCacheGaugeModule());
     }
 }

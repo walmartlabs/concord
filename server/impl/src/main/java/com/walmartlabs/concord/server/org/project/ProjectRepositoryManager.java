@@ -26,7 +26,7 @@ import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.jooq.Tables;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.org.secret.SecretEntry;
+import com.walmartlabs.concord.server.org.secret.SecretEntryV2;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.org.triggers.TriggerManager;
 import com.walmartlabs.concord.server.policy.EntityAction;
@@ -101,7 +101,7 @@ public class ProjectRepositoryManager {
 
         UUID repoId = entry.getId() != null ? entry.getId() : repositoryDao.getId(projectId, entry.getName());
 
-        SecretEntry secret = assertSecret(project.getOrgId(), entry);
+        SecretEntryV2 secret = assertSecret(project.getOrgId(), entry);
 
         policyManager.checkEntity(project.getOrgId(), project.getId(), EntityType.REPOSITORY, repoId == null ? EntityAction.CREATE : EntityAction.UPDATE,
                 null, PolicyUtils.repositoryToMap(project, entry, secret));
@@ -118,7 +118,7 @@ public class ProjectRepositoryManager {
         repositoryDao.deleteAll(tx, projectId);
 
         for (RepositoryEntry re : repos) {
-            SecretEntry secret = assertSecret(orgId, re);
+            SecretEntryV2 secret = assertSecret(orgId, re);
             insertOrUpdate(tx, projectId, null, re, secret, processDefinitions.get(re.getName()));
         }
     }
@@ -157,7 +157,7 @@ public class ProjectRepositoryManager {
         RepositoryEntry newEntry();
     }
 
-    private InsertUpdateResult insertOrUpdate(DSLContext tx, UUID projectId, UUID repoId, RepositoryEntry entry, SecretEntry secret, ProcessDefinition processDefinition) {
+    private InsertUpdateResult insertOrUpdate(DSLContext tx, UUID projectId, UUID repoId, RepositoryEntry entry, SecretEntryV2 secret, ProcessDefinition processDefinition) {
         if (!entry.isDisabled() && processDefinition == null) {
             // should have already thrown and exception by this point, but just in case
             // something went wrong cloning/loading process definition
@@ -201,7 +201,7 @@ public class ProjectRepositoryManager {
                 .build();
     }
 
-    private SecretEntry assertSecret(UUID orgId, RepositoryEntry entry) {
+    private SecretEntryV2 assertSecret(UUID orgId, RepositoryEntry entry) {
         if (entry.getSecretId() == null && entry.getSecretName() == null) {
             return null;
         }

@@ -27,12 +27,8 @@ import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.server.sdk.metrics.GaugeProvider;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.function.Function;
 
-@Named
-@Singleton
 public class ProcessKeyCacheGaugeModule extends AbstractModule {
 
     @Override

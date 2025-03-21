@@ -30,14 +30,12 @@ import org.jooq.SelectConditionStep;
 import org.jooq.SelectJoinStep;
 
 import javax.annotation.Nullable;
-import javax.inject.Named;
 import java.util.*;
 
 import static com.walmartlabs.concord.db.PgUtils.jsonbText;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class ExclusiveProcessFilterDao {
 
     private static final List<ProcessStatus> RUNNING_PROCESS_STATUSES = Arrays.asList(
