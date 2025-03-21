@@ -17,8 +17,9 @@
 - concord-server: remove deprecated SecretEntry
 ([#1111](https://github.com/walmartlabs/concord/pull/1111));
 - concord-server: remove deprecated /logs/* endpoint
-([#1113](https://github.com/walmartlabs/concord/pull/1113)).
-
+([#1113](https://github.com/walmartlabs/concord/pull/1113));
+- project: update dependencies
+([#1114](https://github.com/walmartlabs/concord/pull/1114)).
 
 
 ## [2.24.0] - 2025-03-15
