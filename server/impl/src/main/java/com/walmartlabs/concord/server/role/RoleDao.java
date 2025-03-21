@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.role;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.jooq.tables.RoleLdapGroups;
 import com.walmartlabs.concord.server.user.RoleEntry;
 import org.jooq.*;
@@ -31,13 +32,17 @@ import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Roles.ROLES;
+import static java.util.Objects.requireNonNull;
 import static org.jooq.impl.DSL.*;
 
 public class RoleDao extends AbstractDao {
 
+    private final UuidGenerator uuidGenerator;;
+
     @Inject
-    protected RoleDao(@MainDB Configuration cfg) {
+    protected RoleDao(@MainDB Configuration cfg, UuidGenerator uuidGenerator) {
         super(cfg);
+        this.uuidGenerator = requireNonNull(uuidGenerator);
     }
 
     @Override
@@ -70,22 +75,24 @@ public class RoleDao extends AbstractDao {
     }
 
     public UUID insert(DSLContext tx, String roleName, Set<String> permissions) {
-        UUID roleId = tx.insertInto(ROLES)
-                .columns(ROLES.ROLE_NAME)
-                .values(value(roleName))
+        UUID roleId = uuidGenerator.generate();
+
+        UUID effectiveRoleId = tx.insertInto(ROLES)
+                .columns(ROLES.ROLE_ID, ROLES.ROLE_NAME)
+                .values(value(roleId), value(roleName))
                 .returning(ROLES.ROLE_ID)
                 .fetchOne().getRoleId();
 
         if (permissions != null) {
             tx.insertInto(ROLE_PERMISSIONS).select(
                     select(
-                            value(roleId).as(ROLE_PERMISSIONS.ROLE_ID),
+                            value(effectiveRoleId).as(ROLE_PERMISSIONS.ROLE_ID),
                             PERMISSIONS.PERMISSION_ID.as(ROLE_PERMISSIONS.PERMISSION_ID)
                     ).from(PERMISSIONS).where(PERMISSIONS.PERMISSION_NAME.in(permissions)))
                     .execute();
         }
 
-        return roleId;
+        return effectiveRoleId;
     }
 
     public void update(UUID roleId, String name, Set<String> permissions) {

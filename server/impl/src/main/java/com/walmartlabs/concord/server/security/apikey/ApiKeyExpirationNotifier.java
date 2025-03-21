@@ -34,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
@@ -136,7 +135,6 @@ public class ApiKeyExpirationNotifier implements ScheduledTask {
         }
     }
 
-    @Named
     private static class ExpiredKeysDao extends AbstractDao {
 
         @Inject
