@@ -12,13 +12,17 @@ Some classes require explicit binding using `Multibinder.newSetBinder`:
 - BackgroundTask
 - Component
 - ContextHandlerConfigurator
+- CustomBeanMethodResolver
 - CustomEnqueueProcessor
+- CustomTaskMethodResolver
 - ExceptionMapper
+- ExecutionListener
 - Filter
 - FilterChainConfigurator
 - FilterHolder
 - GaugeProvider
 - HttpServlet
+- LogAppender
 - ModeProcessor
 - PolicyApplier
 - ProcessEventListener
@@ -32,4 +36,6 @@ Some classes require explicit binding using `Multibinder.newSetBinder`:
 - SecretStore
 - ServletContextListener
 - ServletHolder
+- TaskCallListener
+- TaskProvider
 - UserInfoProvider

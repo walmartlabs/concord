@@ -67,7 +67,7 @@ npm run start
 
 Prerequisites:
 
-- Git 2.3+
+- Git 2.18+
 - Docker, listening on `tcp://127.0.0.1:2375`;
 - Ansible 2.6.0+ must be installed and available in `$PATH`.
   See [the official documentation](http://docs.ansible.com/ansible/intro_installation.html);
@@ -107,16 +107,30 @@ See the [examples](examples) directory.
   ```
   $ ./mvnw release:prepare release:perform
   ```
-- push the new tag:
+- update and commit the CHANGELOG.md file
+  ```
+  $ git add CHANGELOG.md
+  $ git commit -m 'update changelog'
+  ```
+- push the new tag and the master branch:
   ```
   $ git push origin RELEASE_TAG
+  $ git push origin master
   ```
-- sync to [Central](https://central.sonatype.com/);
 - build and push the Docker images:
   ```
   $ git checkout RELEASE_TAG
   $ ./mvnw -f docker-images clean package -Pdocker
   $ ./docker-images/push.sh RELEASE_TAG
+  ```
+- sync to [Sonatype](https://oss.sonatype.org/);
+- check the Central repository if the sync is complete:
+  ```
+  https://repo.maven.apache.org/maven2/com/walmartlabs/concord/parent/RELEASE_TAG
+  ```
+- once the sync is complete, push the `latest` Docker images:
+  ```
+  $ ./docker-images/push.sh latest
   ```
 
 ## Development Notes
