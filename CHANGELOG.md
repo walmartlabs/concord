@@ -2,6 +2,11 @@
 
 ## [2.25.0] - Unreleased
 
+## Breaking
+
+- project: remove client1
+([#1013](https://github.com/walmartlabs/concord/pull/1013)).
+
 ### Changed
 
 - concord-agent: replace simple immutables with records
