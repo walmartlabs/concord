@@ -173,7 +173,7 @@ public class ProjectManager {
         byte[] encryptedKey = encryptedValueManager.createEncryptedSecretKey();
 
         RawPayloadMode rawPayloadMode;
-        if (entry.getRawPayloadMode() == null && entry.getAcceptsRawPayload() != null && entry.getAcceptsRawPayload()) {
+        if (entry.getRawPayloadMode() == null) {
             rawPayloadMode = RawPayloadMode.ORG_MEMBERS;
         } else {
             rawPayloadMode = entry.getRawPayloadMode();
@@ -253,7 +253,7 @@ public class ProjectManager {
         UUID orgIdUpdate = organizationEntry != null ? organizationEntry.getId() : orgId;
 
         RawPayloadMode rawPayloadMode;
-        if (entry.getRawPayloadMode() == null && entry.getAcceptsRawPayload() != null && entry.getAcceptsRawPayload()) {
+        if (entry.getRawPayloadMode() == null) {
             rawPayloadMode = RawPayloadMode.ORG_MEMBERS;
         } else {
             rawPayloadMode = entry.getRawPayloadMode();
