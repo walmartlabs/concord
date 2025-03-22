@@ -2,11 +2,6 @@
 
 ## [2.25.0] - Unreleased
 
-## Breaking
-
-- project: remove client1
-([#1013](https://github.com/walmartlabs/concord/pull/1013)).
-
 ### Changed
 
 - concord-agent: replace simple immutables with records
@@ -32,6 +27,11 @@ the server, use UUID v7
 ([#1116](https://github.com/walmartlabs/concord/pull/1116));
 - project: update dependencies
 ([#1118](https://github.com/walmartlabs/concord/pull/1118)).
+
+### Breaking
+
+- project: remove client1
+([#1013](https://github.com/walmartlabs/concord/pull/1013)).
 
 
 
@@ -96,6 +96,7 @@ array
 ([#1087](https://github.com/walmartlabs/concord/pull/1087));
 - concord-server: handle request without cookies
 ([#1090](https://github.com/walmartlabs/concord/pull/1090)).
+
 
 
 ## [2.22.0] - 2025-02-14
