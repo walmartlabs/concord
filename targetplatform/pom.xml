@@ -813,11 +813,6 @@
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.eclipse.jetty.ee8.websocket</groupId>
-                <artifactId>jetty-ee8-websocket-servlet</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.eclipse.jetty.websocket</groupId>
                 <artifactId>jetty-websocket-jetty-common</artifactId>
                 <version>${jetty.version}</version>
@@ -1087,11 +1082,6 @@
             </dependency>
             <dependency>
                 <groupId>io.fabric8</groupId>
-                <artifactId>crd-generator-api</artifactId>
-                <version>${kubernetes.client.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.fabric8</groupId>
                 <artifactId>kubernetes-model-core</artifactId>
                 <version>${kubernetes.client.version}</version>
             </dependency>
@@ -1100,21 +1090,15 @@
                 <artifactId>kubernetes-model-apiextensions</artifactId>
                 <version>${kubernetes.client.version}</version>
             </dependency>
-
-            <dependency>
-                <groupId>commons-collections</groupId>
-                <artifactId>commons-collections</artifactId>
-                <version>${commons.collections.version}</version>
-            </dependency>
             <dependency>
                 <groupId>io.fabric8</groupId>
                 <artifactId>kubernetes-model-common</artifactId>
                 <version>${kubernetes.client.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.fabric8</groupId>
-                <artifactId>crd-generator-apt</artifactId>
-                <version>${kubernetes.client.version}</version>
+                <groupId>commons-collections</groupId>
+                <artifactId>commons-collections</artifactId>
+                <version>${commons.collections.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
