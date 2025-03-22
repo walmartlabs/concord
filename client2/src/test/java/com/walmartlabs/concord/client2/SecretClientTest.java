@@ -32,6 +32,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @WireMockTest
+@Disabled("Doesn't work in parallel mode")
 public class SecretClientTest {
 
     @Test

@@ -42,7 +42,7 @@ import static java.util.regex.Pattern.quote;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class MainTest  {
+public class MainTest {
 
     @RegisterExtension
     private static final TestRuntimeV2 runtime = new TestRuntimeV2();
@@ -160,8 +160,8 @@ public class MainTest  {
         assertLog(runtime.lastLog(), ".*" + Pattern.quote("in flowA") + ".*");
 
         String expected = "Call stack:\n" +
-                "(concord.yml) @ line: 13, col: 7, thread: 2, flow: flowB\n" +
-                "(concord.yml) @ line: 3, col: 7, thread: 2, flow: flowA";
+                          "(concord.yml) @ line: 13, col: 7, thread: 2, flow: flowB\n" +
+                          "(concord.yml) @ line: 3, col: 7, thread: 2, flow: flowA";
 
         String logString = new String(runtime.lastLog());
         assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
@@ -182,13 +182,13 @@ public class MainTest  {
         }
 
         String expected = "Call stack:\n" +
-                "(concord.yml) @ line: 8, col: 7, thread: 0, flow: flowB\n" +
-                "(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA";
+                          "(concord.yml) @ line: 8, col: 7, thread: 0, flow: flowB\n" +
+                          "(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA";
 
         String expected1 = "Call stack:\n" +
-                "(concord.yml) @ line: 16, col: 11, thread: 0, flow: flowThrow\n" +
-                "(concord.yml) @ line: 8, col: 7, thread: 0, flow: flowB\n" +
-                "(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA";
+                           "(concord.yml) @ line: 16, col: 11, thread: 0, flow: flowThrow\n" +
+                           "(concord.yml) @ line: 8, col: 7, thread: 0, flow: flowB\n" +
+                           "(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA";
 
         String logString = new String(runtime.lastLog());
         assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
@@ -210,11 +210,11 @@ public class MainTest  {
         }
 
         String expected = ".*Call stack:\n" +
-                "\\(concord.yml\\) @ line: 21, col: 7, thread: .*, flow: flowC\n" +
-                "\\(concord.yml\\) @ line: 11, col: 11, thread: 2, flow: flowB\n" +
-                "\\(concord.yml\\) @ line: 6, col: 7, thread: 0, flow: flowA\n" +
-                "\\(concord.yml\\) @ line: 3, col: 7, thread: 0, flow: flow0.*";
-        Pattern expectedPattern = Pattern.compile(expected, Pattern.MULTILINE|Pattern.DOTALL|Pattern.UNIX_LINES);
+                          "\\(concord.yml\\) @ line: 21, col: 7, thread: .*, flow: flowC\n" +
+                          "\\(concord.yml\\) @ line: 11, col: 11, thread: 2, flow: flowB\n" +
+                          "\\(concord.yml\\) @ line: 6, col: 7, thread: 0, flow: flowA\n" +
+                          "\\(concord.yml\\) @ line: 3, col: 7, thread: 0, flow: flow0.*";
+        Pattern expectedPattern = Pattern.compile(expected, Pattern.MULTILINE | Pattern.DOTALL | Pattern.UNIX_LINES);
 
         String logString = new String(runtime.lastLog());
         assertTrue(expectedPattern.matcher(logString).matches(), "expected log contains: " + expected + ", actual: " + logString);
@@ -1414,22 +1414,22 @@ public class MainTest  {
 
         String logString = new String(runtime.lastLog());
         String expected = "[ERROR] (concord.yml): Error @ line: 9, col: 7. while parsing expression '${str.split('\\n')}': Encountered \"\\'\\\\n\" at line 1, column 13.\n" +
-                "Was expecting one of:\n" +
-                "    \"{\" ...\n" +
-                "    <INTEGER_LITERAL> ...\n" +
-                "    <FLOATING_POINT_LITERAL> ...\n" +
-                "    <STRING_LITERAL> ...\n" +
-                "    \"true\" ...\n" +
-                "    \"false\" ...\n" +
-                "    \"null\" ...\n" +
-                "    \"(\" ...\n" +
-                "    \")\" ...\n" +
-                "    \"[\" ...\n" +
-                "    \"!\" ...\n" +
-                "    \"not\" ...\n" +
-                "    \"empty\" ...\n" +
-                "    \"-\" ...\n" +
-                "    <IDENTIFIER> ...";
+                          "Was expecting one of:\n" +
+                          "    \"{\" ...\n" +
+                          "    <INTEGER_LITERAL> ...\n" +
+                          "    <FLOATING_POINT_LITERAL> ...\n" +
+                          "    <STRING_LITERAL> ...\n" +
+                          "    \"true\" ...\n" +
+                          "    \"false\" ...\n" +
+                          "    \"null\" ...\n" +
+                          "    \"(\" ...\n" +
+                          "    \")\" ...\n" +
+                          "    \"[\" ...\n" +
+                          "    \"!\" ...\n" +
+                          "    \"not\" ...\n" +
+                          "    \"empty\" ...\n" +
+                          "    \"-\" ...\n" +
+                          "    <IDENTIFIER> ...";
 
         assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
     }

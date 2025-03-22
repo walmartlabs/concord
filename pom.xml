@@ -256,6 +256,13 @@
                             <include>**/Test*.java</include>
                         </includes>
                         <argLine>${failsafe.args}</argLine>
+                        <systemProperties>
+                            <junit.jupiter.execution.parallel.enabled>true</junit.jupiter.execution.parallel.enabled>
+                            <junit.jupiter.execution.parallel.mode.default>concurrent</junit.jupiter.execution.parallel.mode.default>
+                            <junit.jupiter.execution.parallel.mode.classes.default>same_thread</junit.jupiter.execution.parallel.mode.classes.default>
+                            <junit.jupiter.execution.parallel.config.strategy>fixed</junit.jupiter.execution.parallel.config.strategy>
+                            <junit.jupiter.execution.parallel.config.fixed.parallelism>4</junit.jupiter.execution.parallel.config.fixed.parallelism>
+                        </systemProperties>
                     </configuration>
                     <executions>
                         <execution>
@@ -277,6 +284,15 @@
                             <version>${junit.version}</version>
                         </dependency>
                     </dependencies>
+                    <configuration>
+                        <systemProperties>
+                            <junit.jupiter.execution.parallel.enabled>true</junit.jupiter.execution.parallel.enabled>
+                            <junit.jupiter.execution.parallel.mode.default>concurrent</junit.jupiter.execution.parallel.mode.default>
+                            <junit.jupiter.execution.parallel.mode.classes.default>same_thread</junit.jupiter.execution.parallel.mode.classes.default>
+                            <junit.jupiter.execution.parallel.config.strategy>fixed</junit.jupiter.execution.parallel.config.strategy>
+                            <junit.jupiter.execution.parallel.config.fixed.parallelism>4</junit.jupiter.execution.parallel.config.fixed.parallelism>
+                        </systemProperties>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

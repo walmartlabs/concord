@@ -545,7 +545,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         // ---
         byte[] ab = getLog(pe.getInstanceId());
         if (grep(".*\\{x=1, y=2, z=3\\}.*", ab).isEmpty()
-                || grep(".*\\{a=4, b=5, c=6\\}.*", ab).isEmpty()) {
+            || grep(".*\\{a=4, b=5, c=6\\}.*", ab).isEmpty()) {
 
             for (UUID id : pe.getChildrenIds()) {
                 ProcessEntry pp = new ProcessV2Api(getApiClient()).getProcess(id, Collections.singleton("childrenIds"));

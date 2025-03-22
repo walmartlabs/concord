@@ -27,6 +27,7 @@ import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.MockContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.parallel.Execution;
 
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -37,8 +38,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
 @SuppressWarnings("deprecation")
+@Execution(SAME_THREAD) // TODO address parallelism issues
 public class SmtpTaskTest {
 
     @RegisterExtension
