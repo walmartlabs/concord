@@ -38,7 +38,8 @@
         <activation.api.version>1.2.2</activation.api.version>
         <aopalliance.version>1.0</aopalliance.version>
         <aws.version>1.11.475</aws.version>
-        <bouncycastle.version>1.70</bouncycastle.version>
+        <bouncycastle.version>1.80</bouncycastle.version>
+        <bouncycastle.ext.version>1.78.1</bouncycastle.ext.version>
         <bpm.version>1.0.3</bpm.version>
         <bytebuddy.version>1.14.9</bytebuddy.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
@@ -1123,12 +1124,17 @@
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bcprov-ext-jdk15on</artifactId>
+                <artifactId>bcprov-ext-jdk18on</artifactId>
+                <version>${bouncycastle.ext.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
                 <version>${bouncycastle.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bcpkix-jdk15on</artifactId>
+                <artifactId>bcpkix-jdk18on</artifactId>
                 <version>${bouncycastle.version}</version>
             </dependency>
             <dependency>
