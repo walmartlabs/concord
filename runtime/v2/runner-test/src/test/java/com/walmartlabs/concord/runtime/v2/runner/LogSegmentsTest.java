@@ -28,6 +28,7 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.ReentrantTaskExample;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.parallel.Execution;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -40,7 +41,9 @@ import static com.walmartlabs.concord.runtime.v2.runner.TestRuntimeV2.assertLog;
 import static com.walmartlabs.concord.runtime.v2.runner.TestRuntimeV2.assertMultiLineLog;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
+@Execution(SAME_THREAD) // TODO address parallelism issues
 public class LogSegmentsTest {
 
     @RegisterExtension

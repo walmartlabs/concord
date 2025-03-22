@@ -312,7 +312,10 @@
                     <environmentVariables>
                         <CONCORD_TMP_DIR>${java.io.tmpdir}</CONCORD_TMP_DIR>
                     </environmentVariables>
-                    <parallel>methods</parallel>
+                    <systemProperties>
+                        <!-- TODO address parallelism issues -->
+                        <junit.jupiter.execution.parallel.enabled>false</junit.jupiter.execution.parallel.enabled>
+                    </systemProperties>
                 </configuration>
             </plugin>
         </plugins>

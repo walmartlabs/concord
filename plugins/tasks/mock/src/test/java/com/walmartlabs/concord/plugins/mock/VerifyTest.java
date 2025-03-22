@@ -24,7 +24,11 @@ import com.walmartlabs.concord.runtime.v2.runner.DefaultPersistenceService;
 import com.walmartlabs.concord.runtime.v2.runner.TestRuntimeV2;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.parallel.Execution;
 
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
+
+@Execution(SAME_THREAD) // TODO address parallelism issues
 public class VerifyTest {
 
     @RegisterExtension

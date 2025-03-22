@@ -60,6 +60,7 @@ public final class ConcordConfiguration {
                 .useLocalMavenRepository(true)
                 .extraConfigurationSupplier(() -> """
                     concord-agent {
+                        workersCount = 8
                         dependencyResolveTimeout = "30 seconds"
                         logMaxDelay = "250 milliseconds"
                         pollInterval = "250 milliseconds"
