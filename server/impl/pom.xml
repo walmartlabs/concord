@@ -134,10 +134,6 @@
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty.ee8</groupId>
-            <artifactId>jetty-ee8-servlets</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty.ee8</groupId>
             <artifactId>jetty-ee8-servlet</artifactId>
         </dependency>
         <dependency>
@@ -292,10 +288,6 @@
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty.ee8.websocket</groupId>
-            <artifactId>jetty-ee8-websocket-servlet</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty.ee8.websocket</groupId>
             <artifactId>jetty-ee8-websocket-jetty-server</artifactId>
         </dependency>
         <dependency>
@@ -305,16 +297,6 @@
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-queue-client</artifactId>
-        </dependency>
-
-        <!-- JDK9+ compatibility -->
-        <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.xml.bind</groupId>
-            <artifactId>jaxb-impl</artifactId>
         </dependency>
 
         <dependency>
@@ -333,11 +315,6 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
