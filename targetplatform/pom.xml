@@ -134,12 +134,6 @@
     <dependencyManagement>
         <dependencies>
             <!-- Concord -->
-            <!-- deprecated -->
-            <dependency>
-                <groupId>com.walmartlabs.concord</groupId>
-                <artifactId>concord-client</artifactId>
-                <version>${project.version}</version>
-            </dependency>
             <dependency>
                 <groupId>com.walmartlabs.concord</groupId>
                 <artifactId>concord-client2</artifactId>
