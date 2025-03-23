@@ -1,5 +1,44 @@
 # Change Log
 
+## [2.25.0] - Unreleased
+
+### Changed
+
+- concord-agent: replace simple immutables with records
+([#1091](https://github.com/walmartlabs/concord/pull/1091));
+- concord-server, concord-server-db: generate UUIDs on
+the server, use UUID v7
+([#1106](https://github.com/walmartlabs/concord/pull/1106));
+- concord-server: upgrade Shiro to 2.x
+([#1107](https://github.com/walmartlabs/concord/pull/1107));
+- concord-server, concord-client2: uncomment valid code
+([#1108](https://github.com/walmartlabs/concord/pull/1108));
+- concord-server: remove more @Named usage
+([#1110](https://github.com/walmartlabs/concord/pull/1110));
+- concord-server: remove deprecated SecretEntry
+([#1111](https://github.com/walmartlabs/concord/pull/1111));
+- concord-server: remove deprecated /logs/* endpoint
+([#1113](https://github.com/walmartlabs/concord/pull/1113));
+- project: update dependencies
+([#1114](https://github.com/walmartlabs/concord/pull/1114));
+- project: update README
+([#1115](https://github.com/walmartlabs/concord/pull/1115));
+- docker-images: update JDK versions
+([#1116](https://github.com/walmartlabs/concord/pull/1116));
+- project: update dependencies
+([#1118](https://github.com/walmartlabs/concord/pull/1118));
+- project: remove unused dependencies
+([#1119](https://github.com/walmartlabs/concord/pull/1119)).
+
+### Breaking
+
+- project: remove client1
+([#1013](https://github.com/walmartlabs/concord/pull/1013));
+- concord-server: remove deprecated features
+([#1112](https://github.com/walmartlabs/concord/pull/1112)).
+
+
+
 ## [2.24.0] - 2025-03-15
 
 ### Added
@@ -61,6 +100,7 @@ array
 ([#1087](https://github.com/walmartlabs/concord/pull/1087));
 - concord-server: handle request without cookies
 ([#1090](https://github.com/walmartlabs/concord/pull/1090)).
+
 
 
 ## [2.22.0] - 2025-02-14
