@@ -33,7 +33,9 @@ the server, use UUID v7
 ### Breaking
 
 - project: remove client1
-([#1013](https://github.com/walmartlabs/concord/pull/1013)).
+([#1013](https://github.com/walmartlabs/concord/pull/1013));
+- concord-server: remove deprecated features
+([#1112](https://github.com/walmartlabs/concord/pull/1112)).
 
 
 
