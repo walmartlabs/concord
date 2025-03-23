@@ -23,8 +23,6 @@ package com.walmartlabs.concord.server.process;
 import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -34,8 +32,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.UUID;
 
-@Named
-@Singleton
 @Provider
 public class ProcessExceptionMapper extends ExceptionMapperSupport<ProcessException> {
 

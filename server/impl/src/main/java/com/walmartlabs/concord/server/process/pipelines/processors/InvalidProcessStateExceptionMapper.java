@@ -22,13 +22,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
-@Named
-@Singleton
 @Provider
 public class InvalidProcessStateExceptionMapper extends ExceptionMapperSupport<InvalidProcessStateException> {
 

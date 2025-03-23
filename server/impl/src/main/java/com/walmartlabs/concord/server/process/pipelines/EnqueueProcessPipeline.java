@@ -24,14 +24,12 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.server.process.pipelines.processors.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 
 /**
  * Handles NEW "regular" processes. Puts the processes into the ENQUEUED status.
  * Forks are processed by {@link ForkPipeline}.
  */
-@Named
 public class EnqueueProcessPipeline extends Pipeline {
 
     private final ExceptionProcessor exceptionProcessor;
@@ -66,7 +64,6 @@ public class EnqueueProcessPipeline extends Pipeline {
                 injector.getInstance(ResumeEventsProcessor.class),
                 injector.getInstance(ConfigurationStoringProcessor.class),
                 injector.getInstance(PolicyProcessor.class),
-                injector.getInstance(DependencyVersionsExportProcessor.class),
                 customProcessors.handleState(),
                 injector.getInstance(StateImportingProcessor.class),
                 injector.getInstance(ProcessHandlersProcessor.class),

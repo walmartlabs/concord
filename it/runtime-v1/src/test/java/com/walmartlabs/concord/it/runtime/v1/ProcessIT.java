@@ -577,22 +577,6 @@ public class ProcessIT {
         proc.assertLog(".*Invalid exclusive mode.*");
     }
 
-    @Test
-    public void testTaskWithClient1() throws Exception {
-        String concordYml = resourceToString(ProcessIT.class.getResource("client1Task/concord.yml"))
-                .replaceAll("PROJECT_VERSION", ITConstants.PROJECT_VERSION);
-
-        Payload payload = new Payload().concordYml(concordYml);
-
-        ConcordProcess proc = concord.processes().start(payload);
-        proc.expectStatus(StatusEnum.FINISHED);
-
-        // ---
-
-        proc.assertLog(".*process entry: RUNNING.*");
-        proc.assertLog(".*Works!.*");
-    }
-
     /**
      * Tests process event batch flushing when a long-running task executes.
      */

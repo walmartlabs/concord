@@ -23,27 +23,32 @@ package com.walmartlabs.concord.server.org.policy;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.jooq.tables.records.PolicyLinksRecord;
 import org.jooq.*;
 
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.POLICIES;
 import static com.walmartlabs.concord.server.jooq.Tables.POLICY_LINKS;
+import static java.util.Objects.requireNonNull;
 
 public class PolicyDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
+    private final UuidGenerator uuidGenerator;
 
     @Inject
     public PolicyDao(@MainDB Configuration cfg,
-                     ConcordObjectMapper objectMapper) {
+                     ConcordObjectMapper objectMapper,
+                     UuidGenerator uuidGenerator) {
         super(cfg);
-
-        this.objectMapper = objectMapper;
+        this.objectMapper = requireNonNull(objectMapper);
+        this.uuidGenerator = requireNonNull(uuidGenerator);
     }
 
     public UUID getId(String name) {
@@ -122,9 +127,10 @@ public class PolicyDao extends AbstractDao {
     }
 
     public UUID insert(DSLContext tx, String name, UUID parentId, Map<String, Object> rules) {
+        UUID policyId = uuidGenerator.generate();
         return tx.insertInto(POLICIES)
-                .columns(POLICIES.POLICY_NAME, POLICIES.PARENT_POLICY_ID, POLICIES.RULES)
-                .values(name, parentId, objectMapper.toJSONB(rules))
+                .columns(POLICIES.POLICY_ID, POLICIES.POLICY_NAME, POLICIES.PARENT_POLICY_ID, POLICIES.RULES)
+                .values(policyId, name, parentId, objectMapper.toJSONB(rules))
                 .returning(POLICIES.POLICY_ID)
                 .fetchOne()
                 .getPolicyId();

@@ -1,7 +1,7 @@
 configuration:
   runtime: concord-v2
   dependencies:
-  - "mvn://org.python:jython-standalone:2.7.0"
+  - "mvn://org.python:jython-standalone:2.7.4"
   arguments:
     x: 2
 

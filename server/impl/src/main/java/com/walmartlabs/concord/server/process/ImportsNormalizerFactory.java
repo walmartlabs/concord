@@ -27,7 +27,6 @@ import com.walmartlabs.concord.server.cfg.ImportConfiguration;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -36,7 +35,6 @@ import java.util.stream.Collectors;
  * Creates a {@link ImportsNormalizer} instance to fill the necessary fields
  * in the process' {@code imports} based on the project.
  */
-@Named
 public class ImportsNormalizerFactory {
 
     private static final String DEFAULT_DEST = "concord";

@@ -29,6 +29,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 
+import static com.walmartlabs.concord.client2.ProjectEntry.RawPayloadModeEnum.DISABLED;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -57,7 +58,7 @@ public class MavenRepoIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdateProject("Default", new ProjectEntry()
                 .name(projectName)
-                .acceptsRawPayload(false)
+                .rawPayloadMode(DISABLED)
                 .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .name(repoName)
                         .url(url)

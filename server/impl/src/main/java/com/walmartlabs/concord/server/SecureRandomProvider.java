@@ -20,12 +20,10 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import javax.inject.Named;
 import javax.inject.Provider;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
-@Named
 public class SecureRandomProvider implements Provider<SecureRandom> {
 
     @Override

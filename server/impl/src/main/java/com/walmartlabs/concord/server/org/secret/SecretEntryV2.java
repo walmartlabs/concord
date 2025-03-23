@@ -20,19 +20,54 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.walmartlabs.concord.common.secret.HashAlgorithm;
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
+import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.org.EntityOwner;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 
+import javax.validation.constraints.NotNull;
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
 
-public class SecretEntryV2 extends SecretEntry {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class SecretEntryV2 implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    private final UUID id;
+
+    @NotNull
+    @ConcordKey
+    private final String name;
+
+    private final UUID orgId;
+
+    @ConcordKey
+    private final String orgName;
+
+    @NotNull
+    private final SecretType type;
+
+    @NotNull
+    private final String storeType;
+
+    private final SecretEncryptedByType encryptedBy;
+
+    private final SecretVisibility visibility;
+
+    private final EntityOwner owner;
+
+    @JsonIgnore
+    private final byte[] secretSalt;
+
+    @JsonIgnore
+    private final HashAlgorithm hashAlgorithm;
 
     private final Set<ProjectEntry> projects;
 
@@ -58,12 +93,64 @@ public class SecretEntryV2 extends SecretEntry {
                          byte[] secretSalt,
                          HashAlgorithm hashAlgorithm
     ) {
-        super(id, name, orgId, orgName, projects.stream().map(ProjectEntry::getId).findFirst().orElse(null),
-                projects.stream().map(ProjectEntry::getName).findFirst().orElse(null), type,
-                encryptedBy, storeType, visibility, owner, secretSalt, hashAlgorithm);
+        this.id = id;
+        this.name = name;
+        this.orgId = orgId;
+        this.orgName = orgName;
+        this.type = type;
+        this.encryptedBy = encryptedBy;
+        this.storeType = storeType;
+        this.visibility = visibility;
+        this.owner = owner;
+        this.secretSalt = secretSalt;
+        this.hashAlgorithm = hashAlgorithm;
         this.projects = projects;
         this.createdAt = createdAt;
         this.lastUpdatedAt = lastUpdatedAt;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
+    }
+
+    public String getOrgName() {
+        return orgName;
+    }
+
+    public SecretType getType() {
+        return type;
+    }
+
+    public SecretEncryptedByType getEncryptedBy() {
+        return encryptedBy;
+    }
+
+    public String getStoreType() {
+        return storeType;
+    }
+
+    public SecretVisibility getVisibility() {
+        return visibility;
+    }
+
+    public EntityOwner getOwner() {
+        return owner;
+    }
+
+    public byte[] getSecretSalt() {
+        return secretSalt;
+    }
+
+    public HashAlgorithm getHashAlgorithm() {
+        return hashAlgorithm;
     }
 
     public Set<ProjectEntry> getProjects() {

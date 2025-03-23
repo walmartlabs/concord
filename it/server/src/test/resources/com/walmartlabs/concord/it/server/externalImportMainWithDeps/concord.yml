@@ -4,7 +4,7 @@ imports:
 
 configuration:
   dependencies:
-    - "mvn://org.python:jython-standalone:2.7.1"
+    - "mvn://org.python:jython-standalone:2.7.4"
 
 flows:
   default:

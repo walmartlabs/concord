@@ -34,7 +34,7 @@ import java.util.UUID;
 /**
  * Handles the initialization of {@link RequestContext} for each request.
  */
-@WebFilter({"/api/*", "/logs/*", "/forms/*"})
+@WebFilter({"/api/*", "/forms/*"})
 public class RequestContextFilter implements Filter {
 
     private static final String REQUEST_ID_KEY = "_requestId";

@@ -27,27 +27,21 @@ import com.google.common.cache.LoadingCache;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-import java.util.Optional;
+import java.io.Serial;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
-@Named
-@Singleton
 public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.ProcessKeyCache {
 
-    private final ProcessQueueDao queueDao;
     private final LoadingCache<UUID, ProcessKey> cache;
 
     @Inject
     public ProcessKeyCache(ProcessQueueDao queueDao) {
-        this.queueDao = queueDao;
         this.cache = CacheBuilder.newBuilder()
                 .maximumSize(10 * 1024L)
                 .concurrencyLevel(32)
                 .recordStats()
-                .build(new CacheLoader<UUID, ProcessKey>() {
+                .build(new CacheLoader<>() {
                     @Override
                     public ProcessKey load(UUID key) throws ProcessNotFoundException {
                         ProcessKey pk = queueDao.getKey(key);
@@ -75,6 +69,7 @@ public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.Proce
         }
     }
 
+    @Override
     public ProcessKey assertKey(UUID instanceId) {
         ProcessKey processKey = get(instanceId);
         if (processKey == null) {
@@ -83,11 +78,9 @@ public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.Proce
         return processKey;
     }
 
-    public Optional<ProcessKey> getUncached(UUID instanceId) {
-        return Optional.ofNullable(queueDao.getKey(instanceId));
-    }
-
     private static class ProcessNotFoundException extends Exception {
+
+        @Serial
         private static final long serialVersionUID = 1L;
     }
 }

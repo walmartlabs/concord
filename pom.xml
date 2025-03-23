@@ -41,7 +41,6 @@
         <module>imports</module>
         <module>forms</module>
         <module>server</module>
-        <module>client</module>
         <module>client2</module>
         <module>runtime/common</module>
         <module>runtime/v1</module>
