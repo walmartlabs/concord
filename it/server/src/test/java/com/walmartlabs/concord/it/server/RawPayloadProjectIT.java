@@ -26,7 +26,10 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.walmartlabs.concord.client2.ProjectEntry.RawPayloadModeEnum.DISABLED;
+import static com.walmartlabs.concord.client2.ProjectEntry.RawPayloadModeEnum.ORG_MEMBERS;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class RawPayloadProjectIT extends AbstractServerIT {
@@ -39,6 +42,10 @@ public class RawPayloadProjectIT extends AbstractServerIT {
         String projectName = "project_" + System.currentTimeMillis();
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName));
+
+        ProjectEntry projectEntry = projectsApi.getProject(orgName, projectName);
+        // check the defaults
+        assertEquals(DISABLED, projectEntry.getRawPayloadMode());
 
         // ---
 

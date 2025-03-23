@@ -167,21 +167,11 @@ public class ProjectManager {
 
     private UUID insert(UUID orgId, String orgName, ProjectEntry entry) {
         UserEntry owner = getOwner(entry.getOwner(), UserPrincipal.assertCurrent().getUser());
-
         policyManager.checkEntity(orgId, null, EntityType.PROJECT, EntityAction.CREATE, owner, PolicyUtils.projectToMap(orgId, orgName, entry));
 
         byte[] encryptedKey = encryptedValueManager.createEncryptedSecretKey();
-
-        RawPayloadMode rawPayloadMode;
-        if (entry.getRawPayloadMode() == null) {
-            rawPayloadMode = RawPayloadMode.ORG_MEMBERS;
-        } else {
-            rawPayloadMode = entry.getRawPayloadMode();
-        }
-
         Map<String, ProcessDefinition> processDefinitions = loadProcessDefinitions(orgId, null, entry);
-
-        UUID id = projectDao.txResult(tx -> insert(tx, orgId, owner, entry, rawPayloadMode, encryptedKey, processDefinitions));
+        UUID id = projectDao.txResult(tx -> insert(tx, orgId, owner, entry, encryptedKey, processDefinitions));
 
         Map<String, Object> changes = DiffUtils.compare(null, entry);
         addAuditLog(
@@ -195,9 +185,9 @@ public class ProjectManager {
         return id;
     }
 
-    private UUID insert(DSLContext tx, UUID orgId, UserEntry owner, ProjectEntry entry, RawPayloadMode rawPayloadMode, byte[] encryptedKey, Map<String, ProcessDefinition> processDefinitions) {
+    private UUID insert(DSLContext tx, UUID orgId, UserEntry owner, ProjectEntry entry, byte[] encryptedKey, Map<String, ProcessDefinition> processDefinitions) {
         UUID id = projectDao.insert(tx, orgId, entry.getName(), entry.getDescription(), owner.getId(), entry.getCfg(),
-                entry.getVisibility(), rawPayloadMode, encryptedKey, entry.getMeta(), entry.getOutVariablesMode(), entry.getProcessExecMode());
+                entry.getVisibility(), entry.getRawPayloadMode(), encryptedKey, entry.getMeta(), entry.getOutVariablesMode(), entry.getProcessExecMode());
 
         Map<String, RepositoryEntry> repos = entry.getRepositories();
         if (repos != null) {
