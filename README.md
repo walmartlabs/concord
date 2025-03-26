@@ -44,7 +44,7 @@ Available Maven profiles:
 
 Profiles can be combined, e.g.
 
-```
+```shell
 ./mvnw clean install -Pdocker -Pit -Pjdk17-aarch64
 ```
 
@@ -104,21 +104,21 @@ See the [examples](examples) directory.
 ## How To Release New Versions
 
 - perform a regular Maven release:
-  ```
+  ```shell
   $ ./mvnw release:prepare release:perform
   ```
 - update and commit the CHANGELOG.md file
-  ```
+  ```shell
   $ git add CHANGELOG.md
   $ git commit -m 'update changelog'
   ```
 - push the new tag and the master branch:
-  ```
+  ```shell
   $ git push origin RELEASE_TAG
   $ git push origin master
   ```
 - build and push the Docker images:
-  ```
+  ```shell
   $ git checkout RELEASE_TAG
   $ ./mvnw -f docker-images clean package -Pdocker
   $ ./docker-images/push.sh RELEASE_TAG
@@ -129,7 +129,7 @@ See the [examples](examples) directory.
   https://repo.maven.apache.org/maven2/com/walmartlabs/concord/parent/RELEASE_TAG
   ```
 - once the sync is complete, push the `latest` Docker images:
-  ```
+  ```shell
   $ ./docker-images/push.sh latest
   ```
 
