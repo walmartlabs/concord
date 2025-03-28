@@ -12,7 +12,7 @@ WORKDIR /workspace
 
 COPY galaxy_requirements.yml galaxy_requirements.yml
 
-RUN DEBIAN_FRONTEND=${DEBIAN_FRONTEND} apt-get -y install \
+RUN DEBIAN_FRONTEND=${DEBIAN_FRONTEND} eatmydata apt-get -y install \
     gcc \
     g++ \
     libkrb5-dev \
@@ -30,7 +30,7 @@ ENV PATH=/usr/local/bin/concord_venv/bin:${PATH}
 ENV VIRTUAL_ENV=/usr/local/bin/concord_venv
 
 RUN umask 0022 && \
-    pip3 install --no-cache-dir --upgrade --break-system-packages --ignore-installed \
+    eatmydata pip3 install --no-cache-dir --upgrade --break-system-packages --ignore-installed \
         "cryptography<=3.4.8" \
         "ansible-core>=2.14,<2.15" \
         "Appium-Python-Client<1.0" \
@@ -52,6 +52,6 @@ RUN umask 0022 && \
         virtualenv
 
 RUN umask 0022 && \
-    ansible-galaxy collection install -p /usr/share/ansible/collections -r galaxy_requirements.yml
+    eatmydata ansible-galaxy collection install -p /usr/share/ansible/collections -r galaxy_requirements.yml
 
 USER concord

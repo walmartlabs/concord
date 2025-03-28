@@ -10,7 +10,7 @@ ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
 USER root
 
-RUN DEBIAN_FRONTEND=${DEBIAN_FRONTEND} apt-get -y install \
+RUN DEBIAN_FRONTEND=${DEBIAN_FRONTEND} eatmydata apt-get -y install \
     ca-certificates \
     gnupg \
     lsb-release
@@ -23,7 +23,7 @@ RUN echo \
       $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
       apt-get update
       
-RUN DEBIAN_FRONTEND=${DEBIAN_FRONTEND} apt-get -y install \
+RUN DEBIAN_FRONTEND=${DEBIAN_FRONTEND} eatmydata apt-get -y install \
     uuid \
     docker-ce-cli \
     && apt-get clean

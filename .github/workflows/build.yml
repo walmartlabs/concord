@@ -50,6 +50,9 @@ jobs:
     runs-on: ${{ matrix.runs_on }}
 
     steps:
+      - name: Install build-time utilities
+        run: $(which sudo) bash -c 'apt-get install -y eatmydata'
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
@@ -74,4 +77,4 @@ jobs:
       - name: Build and test with Maven
         env:
           SKIP_DOCKER_TESTS: "true"
-        run: ./mvnw -s .github/settings.xml -B clean install -Pgha -Pdocker -Pit -P${{ matrix.profile }}
+        run: /usr/bin/eatmydata ./mvnw -s .github/settings.xml -B clean install -Pgha -Pdocker -Pit -P${{ matrix.profile }}
