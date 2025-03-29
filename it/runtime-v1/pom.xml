@@ -111,6 +111,9 @@
                         <server.image>${server.image}</server.image>
                         <agent.image>${agent.image}</agent.image>
                         <ryuk.image>${ryuk.image}</ryuk.image>
+                        <junit.jupiter.execution.parallel.enabled>true</junit.jupiter.execution.parallel.enabled>
+                        <junit.jupiter.execution.parallel.mode.default>concurrent</junit.jupiter.execution.parallel.mode.default>
+                        <junit.jupiter.execution.parallel.mode.classes.default>same_thread</junit.jupiter.execution.parallel.mode.classes.default>
                     </systemProperties>
                 </configuration>
             </plugin>

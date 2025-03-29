@@ -29,6 +29,7 @@ import com.walmartlabs.concord.it.common.GitUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.parallel.Execution;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.nio.file.Path;
@@ -40,7 +41,9 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
+@Execution(SAME_THREAD) // TODO address parallelism issues
 public class GitHubTriggersV2IT extends AbstractTest {
 
     @RegisterExtension
