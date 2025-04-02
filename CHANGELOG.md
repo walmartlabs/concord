@@ -5,7 +5,9 @@
 ### Changed
 
 - runtime-v2: set lowercase loop mode value in schema
-([#1122](https://github.com/walmartlabs/concord/pull/1122)).
+([#1122](https://github.com/walmartlabs/concord/pull/1122));
+- http-tasks: refactor tests, support for parallel tests
+([#1123](https://github.com/walmartlabs/concord/pull/1123)).
 
 
 
