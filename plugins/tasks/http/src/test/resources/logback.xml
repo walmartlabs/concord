@@ -5,6 +5,9 @@
         </encoder>
     </appender>
 
+    <logger name="org.eclipse.jetty" level="ERROR"/>
+    <logger name="com.walmartlabs.concord" level="INFO"/>
+
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
