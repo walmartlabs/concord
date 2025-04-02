@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.26.0] - Unreleased
+
+### Changed
+
+- runtime-v2: set lowercase loop mode value in schema
+([#1122](https://github.com/walmartlabs/concord/pull/1122)).
+
+
+
 ## [2.25.0] - 2025-03-23
 
 ### Changed
