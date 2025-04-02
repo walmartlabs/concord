@@ -33,6 +33,7 @@ public interface LoopMixIn {
     Object items();
 
     @JsonProperty("mode")
+    @JsonSchemaInject(json = "{\"enum\" : [\"serial\", \"parallel\"]}")
     Loop.Mode mode();
 
     @JsonProperty("parallelism")
