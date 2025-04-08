@@ -122,6 +122,9 @@ public class OidcRealm extends AuthorizingRealm {
 
         OidcToken token = principals.oneByType(OidcToken.class);
 
+        System.out.println("token: " + token);
+        System.out.println("cfg.getRoleMapping(): " + cfg.getRoleMapping());
+
         List<String> roles = new ArrayList<>();
         for (Map.Entry<String, List<PluginConfiguration.Source>> e : cfg.getRoleMapping().entrySet()) {
             if (match(token.getProfile(), e.getValue())) {
@@ -136,6 +139,7 @@ public class OidcRealm extends AuthorizingRealm {
             String attr = source.getAttribute();
             String pattern = source.getPattern();
             Object attrValue = profile.getAttribute(attr);
+            System.out.println("attr: " + attr + ", pattern: " + pattern + ", attrValue: " + attrValue);
             if (Matcher.matches(attrValue, pattern)) {
                 return true;
             }
