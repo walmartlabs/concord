@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.plugins.oidc;
  */
 
 import com.walmartlabs.concord.common.Matcher;
+import com.walmartlabs.concord.server.events.GithubEventResource;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
@@ -35,12 +36,16 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.pac4j.oidc.profile.OidcProfile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class OidcRealm extends AuthorizingRealm {
+
+    private static final Logger log = LoggerFactory.getLogger(OidcRealm.class);
 
     private static final String REALM_NAME = "oidc";
 
@@ -107,6 +112,9 @@ public class OidcRealm extends AuthorizingRealm {
                     .filter(o -> !newTeams.contains(o))
                     .collect(Collectors.toList());
             userDao.excludeFromTeams(tx, u.getId(), toRemove);
+
+            log.info("email: '{}', groups: {}, current-teams: {}, new-teams: {}, to-remove: {}",
+                    profile.getEmail(), profile.getAttribute("groups"), currentTeams, newTeams, toRemove);
         });
 
         UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, u);
@@ -122,15 +130,13 @@ public class OidcRealm extends AuthorizingRealm {
 
         OidcToken token = principals.oneByType(OidcToken.class);
 
-        System.out.println("token: " + token);
-        System.out.println("cfg.getRoleMapping(): " + cfg.getRoleMapping());
-
         List<String> roles = new ArrayList<>();
         for (Map.Entry<String, List<PluginConfiguration.Source>> e : cfg.getRoleMapping().entrySet()) {
             if (match(token.getProfile(), e.getValue())) {
                 roles.add(e.getKey());
             }
         }
+        log.info("user: '{}', roles: {}", token.getProfile().getEmail(), roles);
         return SecurityUtils.toAuthorizationInfo(principals, roles);
     }
 
@@ -139,7 +145,6 @@ public class OidcRealm extends AuthorizingRealm {
             String attr = source.getAttribute();
             String pattern = source.getPattern();
             Object attrValue = profile.getAttribute(attr);
-            System.out.println("attr: " + attr + ", pattern: " + pattern + ", attrValue: " + attrValue);
             if (Matcher.matches(attrValue, pattern)) {
                 return true;
             }
