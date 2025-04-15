@@ -96,24 +96,44 @@ class ResourceTaskCommonTest {
 
     @Test
     void testFromYamlString() throws Exception {
-        String yamlString = "stringKey: stringValue\nlistKey: [1, 2, 3]\nlist:\n - a\n - b\n - c\nmap:\n key: value\n list:\n  - 1\n  - 2\n listOfMaps:\n   - key1: value1\n   - key2:\n       key22: value2";
-        Path workDir = Paths.get(System.getProperty("user.dir"));
+        var yamlString = """
+                stringKey: stringValue
+                numList: [1, 2, 3]
+                strList:
+                  - a
+                  - b
+                  - c
+                map:
+                 key: value
+                 list:
+                   - 1
+                   - 2
+                 listOfMaps:
+                   - key1: value1
+                   - key2:
+                       key22: value2""";
 
-        ResourceTaskCommon rsc = new ResourceTaskCommon(workDir,
+        var workDir = Paths.get(System.getProperty("user.dir"));
+        var rsc = new ResourceTaskCommon(workDir,
                 (prefix, suffix) -> createTempFile(workDir, prefix, suffix), null);
-        Object obj = rsc.fromYamlString(yamlString);
 
-        assertTrue(obj instanceof Map);
-        assertEquals("stringValue", ((Map) obj).get("stringKey"));
-        List l = (List) ((Map) obj).get("listKey");
-        List l2 = (List) ((Map) obj).get("list");
-        Map m1 = (Map) ((Map) obj).get("map");
-        List l3 = (List) ((Map) ((Map) obj).get("map")).get("listOfMaps");
-        assertEquals(3, l.size());
-        assertEquals(2, l.get(1));
-        assertEquals("a", l2.get(0));
-        assertEquals("value", m1.get("key"));
-        assertEquals("value2", ((Map)((Map)(l3.get(1))).get("key2")).get("key22"));
+        var fromYaml = assertInstanceOf(Map.class, rsc.fromYamlString(yamlString));
+        assertEquals("stringValue", fromYaml.get("stringKey"));
+
+        var numList = assertInstanceOf(List.class, fromYaml.get("numList"));
+        assertEquals(3, numList.size());
+        assertEquals(2, numList.get(1));
+
+        var strList = assertInstanceOf(List.class, fromYaml.get("strList"));
+        assertEquals("a", strList.get(0));
+
+        var map = assertInstanceOf(Map.class, fromYaml.get("map"));
+        var listOfMaps = assertInstanceOf(List.class, map.get("listOfMaps"));
+        assertEquals("value", map.get("key"));
+
+        var secondMap = assertInstanceOf(Map.class, listOfMaps.get(1));
+        var nestedMap = assertInstanceOf(Map.class, secondMap.get("key2"));
+        assertEquals("value2", nestedMap.get("key22"));
     }
 
     @Test
