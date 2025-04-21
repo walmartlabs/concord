@@ -424,9 +424,8 @@ public class ProcessStateManager extends AbstractDao {
                         int unixMode = rs.getInt(2);
                         boolean encrypted = rs.getBoolean(3);
                         try (InputStream in = rs.getBinaryStream(4);
-                             InputStream processed = encrypted ? decrypt(in) : in;
-                             InputStream filtered = StateManagerUtils.stateFilter(n, processed)) {
-                            consumer.accept(n, unixMode, filtered);
+                             InputStream processed = encrypted ? decrypt(in) : in) {
+                            consumer.accept(n, unixMode, processed);
                         }
                     }
                 }
@@ -803,10 +802,11 @@ public class ProcessStateManager extends AbstractDao {
         public void accept(String name, int unixMode, InputStream src) {
             ZipArchiveEntry entry = new ZipArchiveEntry(name);
             entry.setUnixMode(unixMode);
-
+            // filter before zip to download
+            InputStream filtered = StateManagerUtils.stateFilter(name, src);
             try {
                 dst.putArchiveEntry(entry);
-                IOUtils.copy(src, dst);
+                IOUtils.copy(filtered, dst);
                 dst.closeArchiveEntry();
             } catch (IOException e) {
                 throw new RuntimeException(e);
