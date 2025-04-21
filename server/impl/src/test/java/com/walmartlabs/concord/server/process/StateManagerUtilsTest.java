@@ -18,7 +18,7 @@ public class StateManagerUtilsTest {
         String jsonInput = "{\"arguments\": \"value\", \"otherKey\": \"otherValue\"}";
         InputStream inputStream = new ByteArrayInputStream(jsonInput.getBytes(StandardCharsets.UTF_8));
 
-        InputStream result = StateManagerUtils.filter("_main.json", inputStream);
+        InputStream result = StateManagerUtils.stateFilter("_main.json", inputStream);
         String text = new String(result.readAllBytes(), StandardCharsets.UTF_8);
 
         ObjectMapper mapper = new ObjectMapper();
@@ -33,12 +33,12 @@ public class StateManagerUtilsTest {
         String yamlInput = "arguments: value\notherKey: otherValue";
         InputStream inputStream = new ByteArrayInputStream(yamlInput.getBytes(StandardCharsets.UTF_8));
 
-        InputStream result = StateManagerUtils.filter("test.yaml", inputStream);
+        InputStream result = StateManagerUtils.stateFilter("test.yaml", inputStream);
 
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         Map<String, Object> resultMap = mapper.readValue(result, Map.class);
 
-        // return the same if to filter items not present
+        // return the same if to stateFilter items not present
         assertEquals(2, resultMap.size());
         assertEquals("otherValue", resultMap.get("otherKey"));
     }
@@ -48,7 +48,7 @@ public class StateManagerUtilsTest {
         String input = "key: value";
         InputStream inputStream = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8));
 
-        InputStream result = StateManagerUtils.filter("file.txt", inputStream);
+        InputStream result = StateManagerUtils.stateFilter("file.txt", inputStream);
         String text = new String(result.readAllBytes(), StandardCharsets.UTF_8);
 
         assertEquals(input, text);
@@ -60,7 +60,7 @@ public class StateManagerUtilsTest {
         String input = "";
         InputStream inputStream = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8));
 
-        InputStream result = StateManagerUtils.filter("_main.json", inputStream);
+        InputStream result = StateManagerUtils.stateFilter("_main.json", inputStream);
         String text = new String(result.readAllBytes(), StandardCharsets.UTF_8);
 
         assertEquals(input, text);
@@ -72,7 +72,7 @@ public class StateManagerUtilsTest {
         String jsonInput = "{\"key\": \"value\"}";
         InputStream inputStream = new ByteArrayInputStream(jsonInput.getBytes(StandardCharsets.UTF_8));
 
-        InputStream result = StateManagerUtils.filter("unknown.json", inputStream);
+        InputStream result = StateManagerUtils.stateFilter("unknown.json", inputStream);
         String text = new String(result.readAllBytes(), StandardCharsets.UTF_8);
 
         assertEquals(jsonInput, text);
@@ -83,7 +83,7 @@ public class StateManagerUtilsTest {
     void testFilterWithNullInput() throws Exception {
         String jsonInput = "{\"key\": \"value\"}";
         InputStream inputStream = null;
-        InputStream result = StateManagerUtils.filter("unknown.json", inputStream);
+        InputStream result = StateManagerUtils.stateFilter("unknown.json", inputStream);
 
         assertNull(result);
     }

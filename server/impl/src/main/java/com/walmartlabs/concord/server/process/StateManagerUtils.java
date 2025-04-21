@@ -2,7 +2,6 @@ package com.walmartlabs.concord.server.process;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.walmartlabs.concord.server.security.Roles;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -19,15 +18,6 @@ public final class StateManagerUtils {
     private static final List<String> ALLOWED_EXTENSIONS = List.of("json", "yaml", "yml");
 
     public static InputStream stateFilter(String file, InputStream in) {
-        // do not apply filter for admins
-        if (Roles.isAdmin()) {
-            return in;
-        }
-
-        return filter(file, in);
-    }
-
-    public static InputStream filter(String file, InputStream in) {
         try {
             String extension = getFileExtension(file);
             if (!ALLOWED_EXTENSIONS.contains(extension) || STATE_FILTER.get(file) == null) {
