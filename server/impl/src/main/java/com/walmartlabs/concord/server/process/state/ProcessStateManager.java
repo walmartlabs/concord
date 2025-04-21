@@ -34,6 +34,7 @@ import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.policy.PolicyException;
 import com.walmartlabs.concord.server.policy.PolicyManager;
+import com.walmartlabs.concord.server.process.StateManagerUtils;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
@@ -423,8 +424,9 @@ public class ProcessStateManager extends AbstractDao {
                         int unixMode = rs.getInt(2);
                         boolean encrypted = rs.getBoolean(3);
                         try (InputStream in = rs.getBinaryStream(4);
-                             InputStream processed = encrypted ? decrypt(in) : in) {
-                            consumer.accept(n, unixMode, processed);
+                             InputStream processed = encrypted ? decrypt(in) : in;
+                             InputStream filtered = StateManagerUtils.stateFilter(n, processed)) {
+                            consumer.accept(n, unixMode, filtered);
                         }
                     }
                 }
