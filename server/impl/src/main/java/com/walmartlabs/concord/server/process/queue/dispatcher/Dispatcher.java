@@ -54,7 +54,7 @@ import javax.inject.Inject;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.regex.PatternSyntaxException;
 
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
@@ -131,7 +131,7 @@ public class Dispatcher extends PeriodicTask {
 
         List<Request> l = requests.entrySet().stream()
                 .map(e -> new Request(e.getKey(), e.getValue()))
-                .collect(Collectors.toList());
+                .toList();
 
         // prepare all responses in a single transaction
         // take a global lock to avoid races
@@ -182,7 +182,9 @@ public class Dispatcher extends PeriodicTask {
 
                 // "startingProcesses" are the currently collected "matches"
                 // we keep them in a separate collection to simplify the filtering
-                List<ProcessQueueEntry> startingProcesses = matches.stream().map(m -> m.response).collect(Collectors.toList());
+                List<ProcessQueueEntry> startingProcesses = matches.stream()
+                        .map(Match::response)
+                        .toList();
 
                 if (pass(tx, e, startingProcesses)) {
                     matches.add(new Match(req, e));
@@ -211,28 +213,37 @@ public class Dispatcher extends PeriodicTask {
         return matches;
     }
 
-    private static Request findRequest(ProcessQueueEntry candidate, List<Request> requests) {
-        for (Request req : requests) {
-            Map<String, Object> capabilities = req.request.getCapabilities();
-            Map<String, Object> m = getAgentRequirements(candidate);
-            if (m.isEmpty() || Matcher.matches(capabilities, m)) {
-                return req;
-            }
-        }
-
-        return null;
+    static Request findRequest(ProcessQueueEntry candidate, List<Request> requests) {
+        return requests.stream()
+                .filter(req -> isRequestMatch(candidate, req))
+                .findFirst()
+                .orElse(null);
     }
 
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> getAgentRequirements(ProcessQueueEntry entry) {
+    private static boolean isRequestMatch(ProcessQueueEntry candidate, Request req) {
+        try {
+            var capabilities = req.request.getCapabilities();
+            var requirements = getAgentRequirements(candidate);
+
+            return requirements.isEmpty() || Matcher.matches(capabilities, requirements);
+        } catch (PatternSyntaxException pse) {
+            log.error("Invalid regex in requested agent capabilities for instanceId: {}", candidate.key().getInstanceId());
+        } catch (Exception e) {
+            log.error("Error matching process requirements: {}", e.getMessage());
+        }
+
+        return false;
+    }
+
+    private static Map<?, ?> getAgentRequirements(ProcessQueueEntry entry) {
         Map<String, Object> requirements = entry.requirements();
         if (requirements == null) {
             return Collections.emptyMap();
         }
 
         Object agent = requirements.get("agent");
-        if (agent instanceof Map) {
-            return (Map<String, Object>) agent;
+        if (agent instanceof Map<?, ?> agentMap) {
+            return agentMap;
         }
 
         return Collections.emptyMap();
@@ -367,36 +378,15 @@ public class Dispatcher extends PeriodicTask {
         }
     }
 
-    private static final class Request {
+    record Request(WebSocketChannel channel, ProcessRequest request) {
 
-        private final WebSocketChannel channel;
-        private final ProcessRequest request;
-
-        private Request(WebSocketChannel channel, ProcessRequest request) {
-            this.channel = channel;
-            this.request = request;
-        }
     }
 
-    private static final class Match {
+    private record Match(Request request, ProcessQueueEntry response) {
 
-        private final Request request;
-        private final ProcessQueueEntry response;
-
-        private Match(Request request, ProcessQueueEntry response) {
-            this.request = request;
-            this.response = response;
-        }
     }
 
-    private static final class SecretReference {
+    private record SecretReference(String orgName, String secretName) {
 
-        private final String orgName;
-        private final String secretName;
-
-        private SecretReference(String orgName, String secretName) {
-            this.orgName = orgName;
-            this.secretName = secretName;
-        }
     }
 }
