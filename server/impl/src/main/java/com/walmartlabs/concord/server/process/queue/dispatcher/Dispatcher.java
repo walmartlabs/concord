@@ -175,7 +175,16 @@ public class Dispatcher extends PeriodicTask {
             // filter out the candidates that shouldn't be dispatched at the moment (e.g. due to concurrency limits)
             for (ProcessQueueEntry e : candidates) {
                 // find request/agent who can handle process
-                Request req = findRequest(e, inbox);
+                Request req = findRequest(e, inbox, (queueEntry, ex) -> {
+                    if (ex instanceof PatternSyntaxException) {
+                        logManager.error(queueEntry.key(), "Invalid regex in requested agent capabilities.");
+                    } else {
+                        logManager.error(queueEntry.key(), "Error matching process request requirements.");
+                    }
+
+                    queueManager.updateStatus(tx, queueEntry.key(), ProcessStatus.FAILED);
+                });
+
                 if (req == null) {
                     continue;
                 }
@@ -213,14 +222,14 @@ public class Dispatcher extends PeriodicTask {
         return matches;
     }
 
-    static Request findRequest(ProcessQueueEntry candidate, List<Request> requests) {
+    static Request findRequest(ProcessQueueEntry candidate, List<Request> requests, RequirementsMatcherErrorHandler errHandler) {
         return requests.stream()
-                .filter(req -> isRequestMatch(candidate, req))
+                .filter(req -> isRequestMatch(candidate, req, errHandler))
                 .findFirst()
                 .orElse(null);
     }
 
-    private static boolean isRequestMatch(ProcessQueueEntry candidate, Request req) {
+    private static boolean isRequestMatch(ProcessQueueEntry candidate, Request req, RequirementsMatcherErrorHandler errHandler) {
         try {
             var capabilities = req.request.getCapabilities();
             var requirements = getAgentRequirements(candidate);
@@ -228,8 +237,11 @@ public class Dispatcher extends PeriodicTask {
             return requirements.isEmpty() || Matcher.matches(capabilities, requirements);
         } catch (PatternSyntaxException pse) {
             log.error("Invalid regex in requested agent capabilities for instanceId: {}", candidate.key().getInstanceId());
+            errHandler.handle(candidate, pse);
         } catch (Exception e) {
-            log.error("Error matching process requirements: {}", e.getMessage());
+            var errMsg = String.format("Error matching process requirements for instanceId: %s", candidate.key().getInstanceId());
+            log.error(errMsg, e);
+            errHandler.handle(candidate, e);
         }
 
         return false;
@@ -389,4 +401,14 @@ public class Dispatcher extends PeriodicTask {
     private record SecretReference(String orgName, String secretName) {
 
     }
+
+    /**
+     * Handles errors encountered while matching a process queue request with an
+     * agent. Typically, this is due to regular expression issues, but may be something
+     * unexpected.
+     */
+    interface RequirementsMatcherErrorHandler {
+        void handle(ProcessQueueEntry queueEntry, Exception e);
+    }
+
 }

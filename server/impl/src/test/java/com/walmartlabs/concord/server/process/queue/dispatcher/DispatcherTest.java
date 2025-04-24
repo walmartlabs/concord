@@ -25,16 +25,26 @@ import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
+@ExtendWith(MockitoExtension.class)
 class DispatcherTest {
 
     private static List<Dispatcher.Request> requests;
+
+    @Mock
+    private Dispatcher.RequirementsMatcherErrorHandler errHandler;
 
     @BeforeAll
     static void setup() {
@@ -45,13 +55,15 @@ class DispatcherTest {
     @Test
     void testInvalidInvalidRegex() {
         var candidate = generateCandidate("*invalidRegex*");
-        assertNull(Dispatcher.findRequest(candidate, requests));
+        assertNull(Dispatcher.findRequest(candidate, requests, errHandler));
+        verify(errHandler, times(1)).handle(any(), any());
     }
 
     @Test
     void testValid() {
         var candidate = generateCandidate(".*default.*");
-        assertNotNull(Dispatcher.findRequest(candidate, requests));
+        assertNotNull(Dispatcher.findRequest(candidate, requests, errHandler));
+        verify(errHandler, times(0)).handle(any(), any());
     }
 
     private static ProcessQueueEntry generateCandidate(String flavor) {
