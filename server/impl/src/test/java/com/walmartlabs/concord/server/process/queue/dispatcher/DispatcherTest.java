@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,6 +47,9 @@ class DispatcherTest {
     @Mock
     private Dispatcher.RequirementsMatcherErrorHandler errHandler;
 
+    @Mock
+    private DSLContext tx;
+
     @BeforeAll
     static void setup() {
         var request = new ProcessRequest(Map.of("flavor", "default"));
@@ -55,15 +59,15 @@ class DispatcherTest {
     @Test
     void testInvalidInvalidRegex() {
         var candidate = generateCandidate("*invalidRegex*");
-        assertNull(Dispatcher.findRequest(candidate, requests, errHandler));
-        verify(errHandler, times(1)).handle(any(), any());
+        assertNull(Dispatcher.findRequest(candidate, requests, tx, errHandler));
+        verify(errHandler, times(1)).handleError(any(), any(), any());
     }
 
     @Test
     void testValid() {
         var candidate = generateCandidate(".*default.*");
-        assertNotNull(Dispatcher.findRequest(candidate, requests, errHandler));
-        verify(errHandler, times(0)).handle(any(), any());
+        assertNotNull(Dispatcher.findRequest(candidate, requests, tx, errHandler));
+        verify(errHandler, times(0)).handleError(any(), any(), any());
     }
 
     private static ProcessQueueEntry generateCandidate(String flavor) {
