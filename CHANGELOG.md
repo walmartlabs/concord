@@ -9,7 +9,10 @@
 - http-tasks: refactor tests, support for parallel tests
 ([#1123](https://github.com/walmartlabs/concord/pull/1123));
 - project: update bouncycastle dependency versions
-([#1127](https://github.com/walmartlabs/concord/pull/1127)).
+([#1127](https://github.com/walmartlabs/concord/pull/1127));
+- concord-server: handle invalid regex in dispatcher
+requirements
+([#1128](https://github.com/walmartlabs/concord/pull/1128)).
 
 
 
