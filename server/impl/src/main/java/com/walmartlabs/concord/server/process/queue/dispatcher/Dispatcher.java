@@ -54,7 +54,7 @@ import javax.inject.Inject;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.regex.PatternSyntaxException;
 
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
@@ -88,6 +88,7 @@ public class Dispatcher extends PeriodicTask {
     private final Timer responseTimer;
 
     private final SessionTokenCreator sessionTokenCreator;
+    private final RequirementsMatcherErrorHandler requirementsMatcherErrorHandler;
 
     @Inject
     public Dispatcher(Locks locks,
@@ -110,6 +111,7 @@ public class Dispatcher extends PeriodicTask {
         this.queueManager = queueManager;
         this.filters = filters;
         this.importsNormalizerFactory = importsNormalizerFactory;
+        this.requirementsMatcherErrorHandler = new DefaultRequirementsMatcherErrorHandler(queueManager, logManager);
 
         this.batchSize = cfg.getDispatcherBatchSize();
         this.sessionTokenCreator = sessionTokenCreator;
@@ -131,7 +133,7 @@ public class Dispatcher extends PeriodicTask {
 
         List<Request> l = requests.entrySet().stream()
                 .map(e -> new Request(e.getKey(), e.getValue()))
-                .collect(Collectors.toList());
+                .toList();
 
         // prepare all responses in a single transaction
         // take a global lock to avoid races
@@ -175,14 +177,17 @@ public class Dispatcher extends PeriodicTask {
             // filter out the candidates that shouldn't be dispatched at the moment (e.g. due to concurrency limits)
             for (ProcessQueueEntry e : candidates) {
                 // find request/agent who can handle process
-                Request req = findRequest(e, inbox);
+                Request req = findRequest(e, inbox, tx, requirementsMatcherErrorHandler);
+
                 if (req == null) {
                     continue;
                 }
 
                 // "startingProcesses" are the currently collected "matches"
                 // we keep them in a separate collection to simplify the filtering
-                List<ProcessQueueEntry> startingProcesses = matches.stream().map(m -> m.response).collect(Collectors.toList());
+                List<ProcessQueueEntry> startingProcesses = matches.stream()
+                        .map(Match::response)
+                        .toList();
 
                 if (pass(tx, e, startingProcesses)) {
                     matches.add(new Match(req, e));
@@ -211,28 +216,48 @@ public class Dispatcher extends PeriodicTask {
         return matches;
     }
 
-    private static Request findRequest(ProcessQueueEntry candidate, List<Request> requests) {
-        for (Request req : requests) {
-            Map<String, Object> capabilities = req.request.getCapabilities();
-            Map<String, Object> m = getAgentRequirements(candidate);
-            if (m.isEmpty() || Matcher.matches(capabilities, m)) {
-                return req;
-            }
-        }
+    static Request findRequest(ProcessQueueEntry candidate,
+                               List<Request> requests,
+                               DSLContext tx,
+                               RequirementsMatcherErrorHandler errHandler) {
 
-        return null;
+        return requests.stream()
+                .filter(req -> isRequestMatch(candidate, req, tx, errHandler))
+                .findFirst()
+                .orElse(null);
     }
 
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> getAgentRequirements(ProcessQueueEntry entry) {
+    private static boolean isRequestMatch(ProcessQueueEntry candidate,
+                                          Request req,
+                                          DSLContext tx,
+                                          RequirementsMatcherErrorHandler errHandler) {
+
+        Map<String, Object> capabilities = req.request.getCapabilities();
+        Map<?, ?> requirements = getAgentRequirements(candidate);
+
+        try {
+            return requirements.isEmpty() || Matcher.matches(capabilities, requirements);
+        } catch (PatternSyntaxException pse) {
+            log.error("Invalid regex in requested agent capabilities for instanceId: {}", candidate.key().getInstanceId());
+            errHandler.handleError(tx, candidate, pse);
+        } catch (Exception e) {
+            String errMsg = String.format("Error matching process requirements for instanceId: %s", candidate.key().getInstanceId());
+            log.error(errMsg, e);
+            errHandler.handleError(tx, candidate, e);
+        }
+
+        return false;
+    }
+
+    private static Map<?, ?> getAgentRequirements(ProcessQueueEntry entry) {
         Map<String, Object> requirements = entry.requirements();
         if (requirements == null) {
             return Collections.emptyMap();
         }
 
         Object agent = requirements.get("agent");
-        if (agent instanceof Map) {
-            return (Map<String, Object>) agent;
+        if (agent instanceof Map<?, ?> agentMap) {
+            return agentMap;
         }
 
         return Collections.emptyMap();
@@ -367,36 +392,47 @@ public class Dispatcher extends PeriodicTask {
         }
     }
 
-    private static final class Request {
+    record Request(WebSocketChannel channel, ProcessRequest request) {
 
-        private final WebSocketChannel channel;
-        private final ProcessRequest request;
+    }
 
-        private Request(WebSocketChannel channel, ProcessRequest request) {
-            this.channel = channel;
-            this.request = request;
+    private record Match(Request request, ProcessQueueEntry response) {
+
+    }
+
+    private record SecretReference(String orgName, String secretName) {
+
+    }
+
+    /**
+     * Handles errors encountered while matching a process queue request with an
+     * agent. Typically, this is due to regular expression issues
+     * (e.g. non-compilable pattern), but may be something unexpected.
+     */
+    interface RequirementsMatcherErrorHandler {
+        void handleError(DSLContext tx, ProcessQueueEntry queueEntry, Exception e);
+    }
+
+    static class DefaultRequirementsMatcherErrorHandler implements RequirementsMatcherErrorHandler {
+
+        private final ProcessQueueManager queueManager;
+        private final ProcessLogManager logManager;
+
+        public DefaultRequirementsMatcherErrorHandler(ProcessQueueManager queueManager, ProcessLogManager logManager) {
+            this.queueManager = queueManager;
+            this.logManager = logManager;
+        }
+
+        @Override
+        public void handleError(DSLContext tx, ProcessQueueEntry queueEntry, Exception e) {
+            if (e instanceof PatternSyntaxException) {
+                logManager.error(queueEntry.key(), "Invalid regex in requested agent capabilities.");
+            } else {
+                logManager.error(queueEntry.key(), "Error matching process request requirements.");
+            }
+
+            queueManager.updateStatus(tx, queueEntry.key(), ProcessStatus.FAILED);
         }
     }
 
-    private static final class Match {
-
-        private final Request request;
-        private final ProcessQueueEntry response;
-
-        private Match(Request request, ProcessQueueEntry response) {
-            this.request = request;
-            this.response = response;
-        }
-    }
-
-    private static final class SecretReference {
-
-        private final String orgName;
-        private final String secretName;
-
-        private SecretReference(String orgName, String secretName) {
-            this.orgName = orgName;
-            this.secretName = secretName;
-        }
-    }
 }
