@@ -1,5 +1,21 @@
 # Change Log
 
+## [2.25.1] - Unreleased
+
+### Changed
+
+- runtime-v2: set lowercase loop mode value in schema
+([#1122](https://github.com/walmartlabs/concord/pull/1122));
+- http-tasks: refactor tests, support for parallel tests
+([#1123](https://github.com/walmartlabs/concord/pull/1123));
+- project: update bouncycastle dependency versions
+([#1127](https://github.com/walmartlabs/concord/pull/1127));
+- concord-server: handle invalid regex in dispatcher
+requirements
+([#1128](https://github.com/walmartlabs/concord/pull/1128)).
+
+
+
 ## [2.25.0] - 2025-03-23
 
 ### Changed
