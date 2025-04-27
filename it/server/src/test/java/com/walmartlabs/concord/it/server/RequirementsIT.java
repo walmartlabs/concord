@@ -35,15 +35,15 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 // requires an agent with custom "capabilities" configured
-public class RequirementsIT extends AbstractServerIT {
+class RequirementsIT extends AbstractServerIT {
 
     @BeforeAll
-    public static void setUp() {
+    static void setUp() {
         assumeTrue(System.getenv("IT_CUSTOM_AGENTS") != null);
     }
 
     @Test
-    public void testForkWithRequirements() throws Exception {
+    void testRequirementsRegex() throws Exception {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
@@ -57,7 +57,78 @@ public class RequirementsIT extends AbstractServerIT {
                 .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkWithRequirements").toURI());
+        byte[] payload = archive(RequirementsIT.class.getResource("processRequirements").toURI());
+        Map<String, Object> input = Map.of(
+                "archive", payload,
+                "org", orgName,
+                "project", projectName
+        );
+
+        StartProcessResponse spr = start(input);
+
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertNotNull(pe.getRequirements());
+        assertFalse(pe.getRequirements().isEmpty());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pe.getInstanceId());
+        assertLog(".*Hello from a process with requirements.*", ab);
+    }
+
+    @Test
+    void testRequirementsInvalidRegex() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
+
+        String projectName = "project_" + randomString();
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+
+        byte[] payload = archive(RequirementsIT.class.getResource("processRequirements").toURI());
+        Map<String, Object> input = Map.of(
+                "archive", payload,
+                "org", orgName,
+                "project", projectName,
+                "activeProfiles", "invalidRegex"
+        );
+
+        StartProcessResponse spr = start(input);
+
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertNotNull(pe.getRequirements());
+        assertFalse(pe.getRequirements().isEmpty());
+        assertEquals(ProcessEntry.StatusEnum.FAILED, pe.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pe.getInstanceId());
+        assertLog(".*Invalid regex in requested agent capabilities.*", ab);
+    }
+
+    @Test
+    void testForkWithRequirements() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
+
+        String projectName = "project_" + randomString();
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+
+        byte[] payload = archive(RequirementsIT.class.getResource("concordTaskForkWithRequirements").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("org", orgName);

@@ -105,7 +105,7 @@
         <metrics.version>4.2.25</metrics.version>
         <mockito.version>4.9.0</mockito.version>
         <mustache.version>0.9.10</mustache.version>
-        <nimbus.jwt.version>10.0.2</nimbus.jwt.version>
+        <nimbus.jwt.version>8.23</nimbus.jwt.version>
         <pac4j.version>4.5.8</pac4j.version>
         <parc.version>0.1.2</parc.version>
         <picocli.version>4.7.0</picocli.version>
