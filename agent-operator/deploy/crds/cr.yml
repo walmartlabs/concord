@@ -116,10 +116,10 @@ spec:
               name: process-tmp
           resources:
             requests:
-              cpu: "1"
+              cpu: 1
               memory: "1G"
             limits:
-              cpu: "2"
+              cpu: 2
               memory: "2G"
           env:
             - name: CONCORD_TMP_DIR
