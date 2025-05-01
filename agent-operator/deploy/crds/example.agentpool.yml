@@ -12,7 +12,7 @@
 apiVersion: concord.walmartlabs.com/v1alpha1
 kind: AgentPool
 metadata:
-  name: example-agentpool
+  name: example
 spec:
   queueSelector:
     agent:
@@ -150,7 +150,7 @@ spec:
             preStop:
               exec:
                 command:
-                  - "sh"
+                  - "/bin/bash"
                   - "/opt/concord/hooks/preStopHook.sh"
       volumes:
         - name: cfg
