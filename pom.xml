@@ -106,6 +106,9 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.14.0</version>
+                <configuration>
+                    <compilerArgs>-proc:full</compilerArgs>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
