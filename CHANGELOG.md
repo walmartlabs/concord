@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.26.0] - Unreleased
+
+### Added
+
+- resource-task: add fromYamlString method interface
+([#1125](https://github.com/walmartlabs/concord/pull/1125)).
+
+
+
 ## [2.25.1] - 2025-04-26
 
 ### Changed
