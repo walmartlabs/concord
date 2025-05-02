@@ -2305,7 +2305,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
 
     @Test
     public void test1801() throws Exception {
-        String msg = "(001.yml): Error @ line: 3, col: 5. Unknown options: ['trash' [ARRAY] @ line: 3, col: 5], expected: [concord]. Remove invalid options and/or fix indentation\n" +
+        String msg = "(001.yml): Error @ line: 3, col: 5. Unknown options: ['trash' [ARRAY] @ line: 3, col: 5], expected: [concord, concordCli]. Remove invalid options and/or fix indentation\n" +
                 "\twhile processing steps:\n" +
                 "\t'resources' @ line: 1, col: 1";
 

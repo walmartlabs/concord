@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 
 @Value.Immutable
@@ -38,14 +37,57 @@ import java.util.List;
 @JsonDeserialize(as = ImmutableResources.class)
 public interface Resources extends Serializable {
 
+    List<String> DEFAULT_CONCORD_RESOURCES = List.of("glob:concord/{**/,}{*.,}concord.{yml,yaml}");
+    List<String> DEFAULT_CONCORD_CLI_INCLUDES = List.of("glob:*", "glob:**/*");
+    List<String> DEFAULT_CONCORD_CLI_EXCLUDES = List.of("glob:target/**");
+
     long serialVersionUID = 1L;
 
+    /**
+     * List of files (glob patterns, regexes or plain paths) that the runtime uses.
+     * By default, the runtime loads the root concord.yaml or .yml file and all files in concord/ subdirectory
+     * with the .concord.y?ml extension.
+     */
     @Value.Default
     default List<String> concord() {
-        return Collections.singletonList("glob:concord/{**/,}{*.,}concord.{yml,yaml}");
+        return DEFAULT_CONCORD_RESOURCES;
+    }
+
+    /**
+     * List of files that the CLI copies into the ${workDir} before starting the runtime.
+     * By default, the CLI copies all files in the current directory except for the ./target/ directory.
+     */
+    @Value.Default
+    default ConcordCliResources concordCli() {
+        return ImmutableConcordCliResources.builder().build();
     }
 
     static ImmutableResources.Builder builder() {
         return ImmutableResources.builder();
+    }
+
+    @Value.Immutable
+    @Value.Style(jdkOnly = true)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonSerialize(as = ImmutableConcordCliResources.class)
+    @JsonDeserialize(as = ImmutableConcordCliResources.class)
+    interface ConcordCliResources extends Serializable {
+
+        /**
+         * Include patterns.
+         */
+        @Value.Default
+        default List<String> includes() {
+            return DEFAULT_CONCORD_CLI_INCLUDES;
+        }
+
+        /**
+         * Exclude patterns.
+         */
+        @Value.Default
+        default List<String> excludes() {
+            return DEFAULT_CONCORD_CLI_EXCLUDES;
+        }
     }
 }

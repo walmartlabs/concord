@@ -3,3 +3,9 @@ resources:
     - "glob:abc"
     - "regex:boo"
     - "concord/myfile.yml"
+  concordCli:
+    includes:
+      - "glob:*.foo"
+      - "bar.baz"
+    excludes:
+      - "qux"
