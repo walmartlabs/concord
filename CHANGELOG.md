@@ -1,6 +1,6 @@
 # Change Log
 
-## [2.25.1] - Unreleased
+## [2.25.1] - 2025-04-26
 
 ### Changed
 
@@ -12,7 +12,9 @@
 ([#1127](https://github.com/walmartlabs/concord/pull/1127));
 - concord-server: handle invalid regex in dispatcher
 requirements
-([#1128](https://github.com/walmartlabs/concord/pull/1128)).
+([#1128](https://github.com/walmartlabs/concord/pull/1128));
+- project: downgrade nimbus-jose-jwt
+([#1129](https://github.com/walmartlabs/concord/pull/1129)).
 
 
 
