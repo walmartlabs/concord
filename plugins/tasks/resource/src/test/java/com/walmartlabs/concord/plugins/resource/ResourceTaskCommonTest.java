@@ -95,6 +95,48 @@ class ResourceTaskCommonTest {
     }
 
     @Test
+    void testFromYamlString() throws Exception {
+        var yamlString = """
+                stringKey: stringValue
+                numList: [1, 2, 3]
+                strList:
+                  - a
+                  - b
+                  - c
+                map:
+                 key: value
+                 list:
+                   - 1
+                   - 2
+                 listOfMaps:
+                   - key1: value1
+                   - key2:
+                       key22: value2""";
+
+        var workDir = Paths.get(System.getProperty("user.dir"));
+        var rsc = new ResourceTaskCommon(workDir,
+                (prefix, suffix) -> createTempFile(workDir, prefix, suffix), null);
+
+        var fromYaml = assertInstanceOf(Map.class, rsc.fromYamlString(yamlString));
+        assertEquals("stringValue", fromYaml.get("stringKey"));
+
+        var numList = assertInstanceOf(List.class, fromYaml.get("numList"));
+        assertEquals(3, numList.size());
+        assertEquals(2, numList.get(1));
+
+        var strList = assertInstanceOf(List.class, fromYaml.get("strList"));
+        assertEquals("a", strList.get(0));
+
+        var map = assertInstanceOf(Map.class, fromYaml.get("map"));
+        var listOfMaps = assertInstanceOf(List.class, map.get("listOfMaps"));
+        assertEquals("value", map.get("key"));
+
+        var secondMap = assertInstanceOf(Map.class, listOfMaps.get(1));
+        var nestedMap = assertInstanceOf(Map.class, secondMap.get("key2"));
+        assertEquals("value2", nestedMap.get("key22"));
+    }
+
+    @Test
     void testAsProperties() throws Exception {
         Path workDir = Paths.get(System.getProperty("user.dir"));
 
