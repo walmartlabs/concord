@@ -112,6 +112,19 @@ public class ResourceTaskCommon {
         }
     }
 
+    public Object fromYamlString(String yamlString) throws IOException {
+        return fromYamlString(yamlString, false);
+    }
+
+    public Object fromYamlString(String yamlString, boolean eval) throws IOException {
+        Object result = createObjectMapper(new YAMLFactory()).readValue(yamlString, Object.class);
+        if (eval) {
+            return evaluator.eval(result);
+        } else {
+            return result;
+        }
+    }
+
     public Object asYaml(String path) throws IOException {
         return asYaml(path, false);
     }
