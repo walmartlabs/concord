@@ -7,6 +7,12 @@
 - resource-task: add fromYamlString method interface
 ([#1125](https://github.com/walmartlabs/concord/pull/1125)).
 
+### Changed
+
+- concord-agent, concord-agent-operator: better shutdown hook,
+handle SIGTERM
+([#1130](https://github.com/walmartlabs/concord/pull/1130)).
+
 
 
 ## [2.25.1] - 2025-04-26
