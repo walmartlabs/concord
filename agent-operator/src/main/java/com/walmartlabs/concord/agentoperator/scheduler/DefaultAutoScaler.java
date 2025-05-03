@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 
 public class DefaultAutoScaler implements AutoScaler {
@@ -93,7 +92,8 @@ public class DefaultAutoScaler implements AutoScaler {
 
         AgentPoolConfiguration cfg = i.getResource().getSpec();
 
-        if (!canBeScaledUp.apply(i) && !canBeScaledDown.apply(i)) {
+        boolean canBeScaled = canBeScaledUp.apply(i) || canBeScaledDown.apply(i);
+        if (!canBeScaled) {
             // was updated recently, skipping
             return i;
         }
@@ -222,7 +222,6 @@ public class DefaultAutoScaler implements AutoScaler {
     private static int getProcessCount(AgentPoolConfiguration cfg, List<ProcessQueueEntry> processQueueEntries) {
         return (int) processQueueEntries.stream()
                 .map(ProcessQueueEntry::getRequirements)
-                .filter(Objects::nonNull)
                 .filter(a -> isEmpty(cfg.getQueueSelector()) || Matcher.matches(a, cfg.getQueueSelector()))
                 .count();
     }

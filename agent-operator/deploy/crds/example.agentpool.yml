@@ -12,7 +12,7 @@
 apiVersion: concord.walmartlabs.com/v1alpha1
 kind: AgentPool
 metadata:
-  name: example-agentpool
+  name: example
 spec:
   queueSelector:
     agent:
@@ -116,10 +116,10 @@ spec:
               name: process-tmp
           resources:
             requests:
-              cpu: "1"
+              cpu: 1
               memory: "1G"
             limits:
-              cpu: "2"
+              cpu: 2
               memory: "2G"
           env:
             - name: CONCORD_TMP_DIR
@@ -150,7 +150,7 @@ spec:
             preStop:
               exec:
                 command:
-                  - "sh"
+                  - "/bin/bash"
                   - "/opt/concord/hooks/preStopHook.sh"
       volumes:
         - name: cfg

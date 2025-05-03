@@ -77,16 +77,25 @@ public class Agent {
     }
 
     public void start() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            log.info("Received SIGTERM, stopping...");
+            Agent.this.stop();
+        }, "shutdown-hook"));
+
         executor.submit(() -> {
             run();
             return null;
         });
+
+        log.info("start -> done");
     }
 
     @SuppressWarnings("unused")
     public void stop() {
         queueClient.stop();
         executor.shutdownNow();
+
+        log.info("stop -> done");
     }
 
     private void run() throws Exception {
