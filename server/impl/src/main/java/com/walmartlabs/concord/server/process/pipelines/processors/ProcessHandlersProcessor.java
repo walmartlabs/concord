@@ -27,7 +27,6 @@ import com.walmartlabs.concord.server.process.Payload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -38,7 +37,6 @@ import java.util.Set;
  * configured. If there is a relevant flow defined and it is not disabled in
  * the process arguments, it will be added to the list of the process' handlers.
  */
-@Named
 public class ProcessHandlersProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessHandlersProcessor.class);

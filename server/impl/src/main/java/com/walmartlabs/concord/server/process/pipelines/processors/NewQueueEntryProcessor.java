@@ -25,9 +25,7 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
-@Named
 public class NewQueueEntryProcessor implements PayloadProcessor {
 
     private final ProcessQueueManager queueManager;

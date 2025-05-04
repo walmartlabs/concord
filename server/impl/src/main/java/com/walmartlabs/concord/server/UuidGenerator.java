@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,30 +20,30 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import javax.xml.bind.DatatypeConverter;
-import java.io.Serializable;
-import java.util.Calendar;
+import com.fasterxml.uuid.Generators;
+import com.fasterxml.uuid.NoArgGenerator;
+
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.UUID;
 
 /**
- * @deprecated use {@link OffsetDateTimeParam}.
+ * Generates UUID v7 values.
  */
-@Deprecated
-public class IsoDateParam implements Serializable {
+public class UuidGenerator {
 
-    private static final long serialVersionUID = 1L;
+    private final NoArgGenerator generator;
 
-    public static IsoDateParam valueOf(String s) {
-        Calendar calendar = DatatypeConverter.parseDateTime(s);
-        return new IsoDateParam(calendar);
+    public UuidGenerator() {
+        try {
+            var rng = SecureRandom.getInstanceStrong();
+            this.generator = Generators.timeBasedEpochGenerator(rng);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public IsoDateParam(Calendar value) {
-        this.value = value;
-    }
-
-    private final Calendar value;
-
-    public Calendar getValue() {
-        return value;
+    public UUID generate() {
+        return generator.generate();
     }
 }

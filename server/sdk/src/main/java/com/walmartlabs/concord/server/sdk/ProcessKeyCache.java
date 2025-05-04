@@ -24,5 +24,7 @@ import java.util.UUID;
 
 public interface ProcessKeyCache {
 
+    ProcessKey assertKey(UUID instanceId);
+
     ProcessKey get(UUID instanceId);
 }

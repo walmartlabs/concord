@@ -118,5 +118,4 @@
     <include file="v2.21.0.xml" relativeToChangelogFile="true"/>
     <include file="v2.22.0.xml" relativeToChangelogFile="true"/>
     <include file="v2.23.0.xml" relativeToChangelogFile="true"/>
-
 </databaseChangeLog>

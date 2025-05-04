@@ -41,14 +41,13 @@ import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryE
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
-import org.jooq.Record;
 import org.jooq.*;
+import org.jooq.Record;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.jooq.util.postgres.PostgresDSL;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -63,7 +62,6 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QU
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class ProcessQueueDao extends AbstractDao {
 
     public static final String ENQUEUED_NOW_METRIC = "ENQUEUED_NOW";

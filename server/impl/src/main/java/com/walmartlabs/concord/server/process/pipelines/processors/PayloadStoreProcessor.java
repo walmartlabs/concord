@@ -33,7 +33,6 @@ import com.walmartlabs.concord.server.security.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -47,7 +46,6 @@ import java.util.stream.Collectors;
  * It will be restored by {@link com.walmartlabs.concord.server.process.pipelines.EnqueueProcessPipeline},
  * when the process transitions from NEW to ENQUEUED.
  */
-@Named
 public class PayloadStoreProcessor implements PayloadProcessor {
 
     private static final Set<String> EXCLUDED_HEADERS = new HashSet<>(Arrays.asList(Payload.POLICY.name(), Payload.REPOSITORY_SNAPSHOT.name()));

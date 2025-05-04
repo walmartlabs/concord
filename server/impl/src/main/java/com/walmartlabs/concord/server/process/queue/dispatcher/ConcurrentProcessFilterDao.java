@@ -26,10 +26,8 @@ import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 import org.jooq.Record1;
 
-import javax.inject.Named;
 import java.util.*;
 
-@Named
 public class ConcurrentProcessFilterDao {
 
     private static final List<ProcessStatus> RUNNING_PROCESS_STATUSES = Arrays.asList(

@@ -28,11 +28,9 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import static java.util.Objects.requireNonNull;
 
-@Named
 public class AuthorizationProcessor implements PayloadProcessor {
 
     private final ProjectDao projectDao;

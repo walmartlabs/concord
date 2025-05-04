@@ -27,15 +27,11 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.sql.CallableStatement;
 
 /**
  * Locking mechanism based on DB (advisory) locks
  */
-@Named
-@Singleton
 public class Locks {
 
     private static final String LOCK_SQL = "{ call pg_advisory_xact_lock(?) }";
@@ -61,7 +57,6 @@ public class Locks {
         });
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     private long hash(String key) {
         HashCode hc = HashCode.fromBytes(key.getBytes());
         return Hashing.consistentHash(hc, cfg.getMaxAdvisoryLocks());

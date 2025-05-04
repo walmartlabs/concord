@@ -101,15 +101,6 @@ public class ConcordDnsSrvLdapContextFactory implements LdapContextFactory {
     }
 
     @Override
-    public LdapContext getLdapContext(String username, String password) {
-        try {
-            return withRetry(() -> this.delegate.getLdapContext(username, password));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
     public LdapContext getLdapContext(Object principal, Object credentials) {
         try {
             return withRetry(() -> this.delegate.getLdapContext(principal, credentials));

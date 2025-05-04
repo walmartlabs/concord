@@ -24,7 +24,6 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 
-import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 import java.util.*;
@@ -33,7 +32,6 @@ import java.util.*;
  * Responsible for gathering process request parameters and converting
  * them into the process configuration.
  */
-@Named
 public class RequestParametersProcessor implements PayloadProcessor {
 
     private static final Set<String> EXCLUDED_HEADERS = new HashSet<>(Arrays.asList(HttpHeaders.COOKIE, HttpHeaders.AUTHORIZATION));

@@ -20,34 +20,31 @@ package com.walmartlabs.concord.plugins.http;
  * =====
  */
 
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.Fault;
-import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
-import com.github.tomakehurst.wiremock.junit5.WireMockTest;
-import com.walmartlabs.concord.sdk.Context;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.mockito.stubbing.Answer;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.when;
 
-@WireMockTest
-public abstract class AbstractHttpTaskTest {
+public abstract class WiremockTest {
 
-    protected HttpTask task;
-    /**
-     * This will be use to hold the response when {@link HttpTask} calls the {@link Context#setVariable(String, Object)}
-     */
-    protected Map<String, Object> response;
+    private WireMockServer wireMockServer;
+
+    @TempDir
+    protected Path workDir;
 
     @BeforeEach
-    public void setup(WireMockRuntimeInfo wmRuntimeInfo) {
-        task = new HttpTask();
+    public void setup() {
+        wireMockServer = new WireMockServer(WireMockConfiguration.options()
+                .dynamicPort());
+        wireMockServer.start();
 
         stubForJsonResponse();
         stubForStringResponse();
@@ -65,60 +62,72 @@ public abstract class AbstractHttpTaskTest {
         stubForFault();
         stubForRequestTimeout();
         stubForInvalidJsonResponse();
-        stubForFollowRedirect(wmRuntimeInfo);
-        stubForFollowRedirectPost(wmRuntimeInfo);
+        stubForFollowRedirect();
+        stubForFollowRedirectPost();
     }
 
     @AfterEach
     public void tearDown() {
-        response = null;
+        wireMockServer.shutdown();
     }
 
-    protected void initCxtForRequest(Context ctx, Object requestMethod, Object requestType, Object responseType,
-                                     Object url, Object ignoreErrors, Object requestTimeout, Object followRedirects) {
-        initCxtForRequest(ctx, requestMethod, null, requestType, responseType, url, ignoreErrors, requestTimeout, followRedirects);
+    protected WireMockServer wireMockServer() {
+        return this.wireMockServer;
     }
 
-    @SuppressWarnings("unchecked")
-    protected void initCxtForRequest(Context ctx, Object requestMethod, Object query, Object requestType, Object responseType,
-                                     Object url, Object ignoreErrors, Object requestTimeout, Object followRedirects) {
-        when(ctx.getVariable("url")).thenReturn(url);
-        when(ctx.getVariable("method")).thenReturn(requestMethod);
-        when(ctx.getVariable("query")).thenReturn(query);
-        when(ctx.getVariable("request")).thenReturn(requestType);
-        when(ctx.getVariable("response")).thenReturn(responseType);
-        when(ctx.getVariable("out")).thenReturn("rsp");
-        when(ctx.getVariable("ignoreErrors")).thenReturn(ignoreErrors);
-        when(ctx.getVariable("requestTimeout")).thenReturn(requestTimeout);
-        when(ctx.getVariable("followRedirects")).thenReturn(followRedirects);
+    protected Configuration initCfgForRequest(String requestMethod, String requestType,
+                                              String responseType, String url,
+                                              boolean ignoreErrors, int requestTimeout,
+                                              boolean followRedirects) throws Exception {
 
-        doAnswer((Answer<Void>) invocation -> {
-            response = (Map<String, Object>) invocation.getArguments()[1];
-            return null;
-        }).when(ctx).setVariable(anyString(), any());
+        return initCfgForRequest(requestMethod, requestType, responseType, url,
+                ignoreErrors, requestTimeout, followRedirects, Map.of());
+    }
+
+    protected Configuration initCfgForRequest(String requestMethod, String requestType,
+                                              String responseType, String url,
+                                              boolean ignoreErrors, int requestTimeout,
+                                              boolean followRedirects, Map<String, Object> extra) throws Exception {
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("url", url);
+        input.put("method", requestMethod);
+        input.put("request", requestType);
+        input.put("response", responseType);
+        input.put("ignoreErrors", ignoreErrors);
+        input.put("requestTimeout", requestTimeout);
+        input.put("followRedirects", followRedirects);
+
+        if (extra != null) {
+            input.putAll(extra);
+        }
+
+        return Configuration.custom()
+                .build(workDir.toString(), input, false);
     }
 
     protected void stubForJsonResponse() {
-        stubFor(get(urlEqualTo("/json"))
+        wireMockServer.stubFor(get(urlEqualTo("/json"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withHeader("Accept", "application/json")
-                        .withBody("[\n" +
-                                  "    {\n" +
-                                  "        \"id\": 1,\n" +
-                                  "        \"version\": \"1.0\"\n" +
-                                  "    },\n" +
-                                  "    {\n" +
-                                  "        \"id\": 2,\n" +
-                                  "        \"test\": \"1.1\"\n" +
-                                  "    }\n" +
-                                  "]"))
+                        .withBody("""
+                                [
+                                    {
+                                        "id": 1,
+                                        "version": "1.0"
+                                    },
+                                    {
+                                        "id": 2,
+                                        "test": "1.1"
+                                    }
+                                ]"""))
         );
     }
 
     protected void stubForInvalidJsonResponse() {
-        stubFor(get(urlEqualTo("/invalid/json"))
+        wireMockServer.stubFor(get(urlEqualTo("/invalid/json"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -128,7 +137,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForFault() {
-        stubFor(get(urlEqualTo("/fault"))
+        wireMockServer.stubFor(get(urlEqualTo("/fault"))
                 .willReturn(aResponse()
                         .withFault(Fault.EMPTY_RESPONSE)
                         .withHeader("Content-Type", "text/plain")
@@ -137,7 +146,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForStringResponse() {
-        stubFor(get(urlEqualTo("/string"))
+        wireMockServer.stubFor(get(urlEqualTo("/string"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/plain")
@@ -147,19 +156,20 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForPostRequest() {
-        stubFor(post(urlEqualTo("/post"))
+        wireMockServer.stubFor(post(urlEqualTo("/post"))
                 .willReturn(aResponse()
                         .withStatus(201)
                         .withHeader("Content-Type", "application/json")
                         .withHeader("Accept", "application/json")
-                        .withBody("{\n" +
-                                  "  \"message\": \"Success\"\n" +
-                                  "}"))
+                        .withBody("""
+                                {
+                                  "message": "Success"
+                                }"""))
         );
     }
 
     protected void stubForGetSecureEndpoint() {
-        stubFor(get(urlEqualTo("/secure"))
+        wireMockServer.stubFor(get(urlEqualTo("/secure"))
                 .withBasicAuth("cn=test", "password")
                 .willReturn(aResponse()
                         .withStatus(401)
@@ -168,7 +178,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForGetWithQueryParams() {
-        stubFor(get(urlPathEqualTo("/query"))
+        wireMockServer.stubFor(get(urlPathEqualTo("/query"))
                 .withQueryParam("key", equalTo("value with space"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -177,7 +187,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForPostSecureEndpoint() {
-        stubFor(post(urlEqualTo("/secure"))
+        wireMockServer.stubFor(post(urlEqualTo("/secure"))
                 .withBasicAuth("cn=test", "password")
                 .willReturn(aResponse()
                         .withStatus(201)
@@ -186,23 +196,24 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForPostRequestForRequestTypeFile() {
-        stubFor(post(urlEqualTo("/file"))
+        wireMockServer.stubFor(post(urlEqualTo("/file"))
                 .withHeader("Content-Type", equalTo("application/octet-stream"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("{\n" +
-                                  "  \"testObject\": {\n" +
-                                  "    \"testString\": \"hello\",\n" +
-                                  "    \"testInteger\": \"2\"\n" +
-                                  "  }\n" +
-                                  "}"))
+                        .withBody("""
+                                {
+                                  "testObject": {
+                                    "testString": "hello",
+                                    "testInteger": "2"
+                                  }
+                                }"""))
         );
     }
 
 
     protected void stubForGetRequestForResponseTypeStringFile() {
-        stubFor(get(urlEqualTo("/stringFile"))
+        wireMockServer.stubFor(get(urlEqualTo("/stringFile"))
                 .withHeader("Accept", equalTo("*/*"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -212,7 +223,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForGetRequestForResponseTypeStringFileWithNoFilename() {
-        stubFor(get(urlEqualTo("/fileUrlWithoutName/"))
+        wireMockServer.stubFor(get(urlEqualTo("/fileUrlWithoutName/"))
                 .withHeader("Accept", equalTo("*/*"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -222,7 +233,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForGetRequestForResponseTypeJSONFile() {
-        stubFor(get(urlEqualTo("/JSONFile"))
+        wireMockServer.stubFor(get(urlEqualTo("/JSONFile"))
                 .withHeader("Accept", equalTo("*/*"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -233,7 +244,7 @@ public abstract class AbstractHttpTaskTest {
 
 
     protected void stubForUnsuccessfulResponse() {
-        stubFor(get(urlEqualTo("/unsuccessful"))
+        wireMockServer.stubFor(get(urlEqualTo("/unsuccessful"))
                 .willReturn(aResponse()
                         .withStatus(400)
                         .withBody("Error string"))
@@ -241,31 +252,33 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForDeleteRequest() {
-        stubFor(delete(urlEqualTo("/delete"))
+        wireMockServer.stubFor(delete(urlEqualTo("/delete"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withHeader("Accept", "application/json")
-                        .withBody("{\n" +
-                                  "  \"message\": \"Success\"\n" +
-                                  "}"))
+                        .withBody("""
+                                {
+                                  "message": "Success"
+                                }"""))
         );
     }
 
     protected void stubForPatchRequest() {
-        stubFor(patch(urlEqualTo("/patch"))
+        wireMockServer.stubFor(patch(urlEqualTo("/patch"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withHeader("Accept", "application/json")
-                        .withBody("{\n" +
-                                  "  \"message\": \"Success\"\n" +
-                                  "}"))
+                        .withBody("""
+                                {
+                                  "message": "Success"
+                                }"""))
         );
     }
 
     protected void stubForRequestTimeout() {
-        stubFor(get(urlEqualTo("/requestTimeout"))
+        wireMockServer.stubFor(get(urlEqualTo("/requestTimeout"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/plain")
@@ -275,23 +288,23 @@ public abstract class AbstractHttpTaskTest {
         );
     }
 
-    protected void stubForFollowRedirect(WireMockRuntimeInfo wmRuntimeInfo) {
-        stubFor(get(urlEqualTo("/followRedirects"))
-                .willReturn(permanentRedirect(url(wmRuntimeInfo, "/string")))
+    protected void stubForFollowRedirect() {
+        wireMockServer.stubFor(get(urlEqualTo("/followRedirects"))
+                .willReturn(permanentRedirect(url(wireMockServer(), "/string")))
         );
     }
 
-    protected void stubForFollowRedirectPost(WireMockRuntimeInfo wmRuntimeInfo) {
-        stubFor(post(urlEqualTo("/followRedirectsPost"))
-                .willReturn(permanentRedirect(url(wmRuntimeInfo, "/string")))
+    protected void stubForFollowRedirectPost() {
+        wireMockServer.stubFor(post(urlEqualTo("/followRedirectsPost"))
+                .willReturn(permanentRedirect(url(wireMockServer(), "/string")))
         );
     }
 
-    private static String url(WireMockRuntimeInfo wmRuntimeInfo, String path) {
+    private static String url(WireMockServer wireMockServer, String path) {
         if (!path.startsWith("/")) {
             path = "/" + path;
         }
 
-        return String.format("%s%s", wmRuntimeInfo.getHttpBaseUrl(), path);
+        return String.format("%s%s", "http://localhost:" + wireMockServer.port(), path);
     }
 }

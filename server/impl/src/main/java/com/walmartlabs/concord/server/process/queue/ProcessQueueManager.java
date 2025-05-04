@@ -36,13 +36,11 @@ import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-@Named
 public class ProcessQueueManager {
 
     private final ProcessQueueDao queueDao;

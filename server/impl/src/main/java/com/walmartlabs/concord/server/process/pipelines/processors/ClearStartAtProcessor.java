@@ -25,7 +25,6 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,7 +34,6 @@ import java.util.Map;
  * any sense to re-use the same "startAt" value which might be in the past
  * already.
  */
-@Named
 public class ClearStartAtProcessor implements PayloadProcessor {
 
     private final ProcessQueueDao queueDao;

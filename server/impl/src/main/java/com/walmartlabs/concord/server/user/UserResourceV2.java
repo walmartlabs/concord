@@ -30,15 +30,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.UUID;
 
-@Named
-@Singleton
 @Path("/api/v2/user")
 @Tag(name = "UserV2")
 public class UserResourceV2 implements Resource {

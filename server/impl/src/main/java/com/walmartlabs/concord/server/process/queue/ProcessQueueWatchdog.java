@@ -43,7 +43,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -289,7 +288,6 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         }
     }
 
-    @Named
     private static final class WatchdogDao extends AbstractDao {
 
         private final ConcordObjectMapper objectMapper;

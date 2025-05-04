@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
 import java.io.IOException;
 
-@WebFilter({"/api/*", "/logs/*", "/forms/*", "/cfg.js"})
+@WebFilter({"/api/*", "/forms/*", "/cfg.js"})
 public class NoCacheFilter implements Filter {
 
     private static final Logger log = LoggerFactory.getLogger(NoCacheFilter.class);

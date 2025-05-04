@@ -31,14 +31,12 @@ import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.user.UserManager;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.core.Response.Status;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@Named
 public class AssertWorkspaceArchiveProcessor implements PayloadProcessor {
 
     private static final Set<String> PROJECT_ROOT_FILE_NAMES = new HashSet<>(Arrays.asList(Constants.Files.PROJECT_ROOT_FILE_NAMES));

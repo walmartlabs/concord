@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 
-import javax.inject.Named;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -32,7 +31,6 @@ import java.util.Set;
 /**
  * Updates the fork's list of handlers according to the process arguments.
  */
-@Named
 public class ForkHandlersProcessor implements PayloadProcessor {
 
     @Override

@@ -24,13 +24,11 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.server.process.pipelines.processors.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 
 /**
  * Initial handling of processes. Creates queue entries in the NEW status.
  */
-@Named
 public class NewProcessPipeline extends Pipeline {
 
     private final ExceptionProcessor exceptionProcessor;

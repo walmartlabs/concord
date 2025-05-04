@@ -36,7 +36,6 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.Serializable;
@@ -50,7 +49,6 @@ import java.util.function.Function;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.exclude;
 
-@Named
 public class PayloadManager {
 
     private static final String FORMS_PATH_PATTERN = String.format("%s/%s/%s/.*", Constants.Files.JOB_ATTACHMENTS_DIR_NAME,

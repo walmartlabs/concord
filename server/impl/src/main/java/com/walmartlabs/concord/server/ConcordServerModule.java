@@ -45,8 +45,11 @@ import com.walmartlabs.concord.server.security.SecurityModule;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyModule;
 import com.walmartlabs.concord.server.task.TaskSchedulerModule;
 import com.walmartlabs.concord.server.template.TemplateModule;
+import com.walmartlabs.concord.server.user.UserModule;
+import com.walmartlabs.concord.server.websocket.WebSocketModule;
 
 import javax.inject.Named;
+import java.security.SecureRandom;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
@@ -69,7 +72,9 @@ public class ConcordServerModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        binder.bind(UuidGenerator.class).in(SINGLETON);
         binder.bind(ObjectMapper.class).toProvider(ObjectMapperProvider.class);
+        binder.bind(ConcordObjectMapper.class).in(SINGLETON);
 
         binder.install(new ConfigurationModule(config));
         binder.install(new MetricModule());
@@ -79,6 +84,9 @@ public class ConcordServerModule implements Module {
 
         binder.install(new TaskSchedulerModule());
         binder.bind(BackgroundTasks.class).in(SINGLETON);
+
+        binder.bind(Listeners.class).in(SINGLETON);
+        binder.bind(SecureRandom.class).toProvider(SecureRandomProvider.class);
 
         binder.bind(DependencyManagerConfiguration.class).toProvider(DependencyManagerConfigurationProvider.class);
 
@@ -96,6 +104,8 @@ public class ConcordServerModule implements Module {
         binder.install(new RoleModule());
         binder.install(new SecurityModule());
         binder.install(new TemplateModule());
+        binder.install(new UserModule());
+        binder.install(new WebSocketModule());
 
         bindJaxRsResource(binder, ServerResource.class);
     }

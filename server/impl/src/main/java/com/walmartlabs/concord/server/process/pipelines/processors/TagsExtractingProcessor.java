@@ -25,11 +25,9 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 
-import javax.inject.Named;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Named
 public class TagsExtractingProcessor implements PayloadProcessor {
 
     @Override

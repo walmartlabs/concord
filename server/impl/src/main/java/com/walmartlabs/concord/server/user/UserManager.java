@@ -33,13 +33,11 @@ import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.core.Response;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.user.UserInfoProvider.UserInfo;
 
-@Named
 public class UserManager {
 
     private final UserDao userDao;

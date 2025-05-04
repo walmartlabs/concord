@@ -55,7 +55,6 @@ public class ConcordFilterChainConfigurator implements FilterChainConfigurator {
         manager.addFilter("concord", concordAuthenticatingFilter);
         manager.createChain("/api/**", "concord");
         manager.createChain("/forms/**", "concord");
-        manager.createChain("/logs/**", "concord");
 
         // special auth for GitHub
         manager.addFilter("github", githubAuthenticatingFilter);

@@ -34,8 +34,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -47,12 +45,9 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
-
-@Named
-@Singleton
 @Path("/api/v1/userldapgroup")
 @Tag(name = "UserLdapGroup")
-public class UserLdapGroup implements Resource {
+public class UserLdapGroupResource implements Resource {
 
     private final UserManager userManager;
     private final LdapUserInfoProvider ldapUserInfoProvider;
@@ -60,7 +55,7 @@ public class UserLdapGroup implements Resource {
     private final LdapManager ldapManager;
 
     @Inject
-    public UserLdapGroup(UserManager userManager, LdapUserInfoProvider ldapUserInfoProvider, LdapGroupDao ldapGroupsDao, LdapManager ldapManager) {
+    public UserLdapGroupResource(UserManager userManager, LdapUserInfoProvider ldapUserInfoProvider, LdapGroupDao ldapGroupsDao, LdapManager ldapManager) {
         this.userManager = userManager;
         this.ldapUserInfoProvider = ldapUserInfoProvider;
         this.ldapGroupsDao = ldapGroupsDao;

@@ -26,7 +26,6 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 
-import javax.inject.Named;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +34,6 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 
-@Named
 public class ResumeConfigurationProcessor implements PayloadProcessor {
 
     @Override
