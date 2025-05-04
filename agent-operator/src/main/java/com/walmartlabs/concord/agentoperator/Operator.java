@@ -20,8 +20,6 @@ package com.walmartlabs.concord.agentoperator;
  * =====
  */
 
-
-import com.walmartlabs.concord.agentoperator.agent.AgentClientFactory;
 import com.walmartlabs.concord.agentoperator.crd.AgentPool;
 import com.walmartlabs.concord.agentoperator.crd.AgentPoolList;
 import com.walmartlabs.concord.agentoperator.scheduler.AutoScalerFactory;
