@@ -20,11 +20,10 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import com.google.inject.*;
 import com.google.inject.Module;
-import com.google.inject.TypeLiteral;
+import com.walmartlabs.concord.common.SystemTimeProvider;
+import com.walmartlabs.concord.common.TimeProvider;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InjectorUtils;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
@@ -54,14 +53,17 @@ public class InjectorFactory {
     public static Injector createDefault(RunnerConfiguration runnerCfg) {
         Path src = Paths.get(System.getProperty("user.dir"));
 
-        Provider<ProcessConfiguration> processCfgProvider = new DefaultProcessConfigurationProvider(src);
+        TimeProvider timeProvider = new SystemTimeProvider();
+
+        Provider<ProcessConfiguration> processCfgProvider = new DefaultProcessConfigurationProvider(src, timeProvider);
         WorkingDirectory workDir = new WorkingDirectory(src);
 
         return new InjectorFactory(workDir,
                 runnerCfg,
                 processCfgProvider,
                 new DefaultRunnerModule(), // bind default services
-                new ProcessDependenciesModule(workDir.getValue(), runnerCfg.dependencies(), runnerCfg.debug())) // grab process dependencies
+                new ProcessDependenciesModule(workDir.getValue(), runnerCfg.dependencies(), runnerCfg.debug()), // grab process dependencies,
+                new TimeProviderModule(timeProvider)) // use regular clock
                 .create();
     }
 

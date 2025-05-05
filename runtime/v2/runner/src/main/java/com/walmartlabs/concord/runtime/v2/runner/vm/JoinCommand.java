@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.common.TimeProvider;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
@@ -96,7 +97,7 @@ public class JoinCommand<T extends Step> extends StepCommand<T> {
 
             // some children are still running, wait for a bit and then check again
             try {
-                Thread.sleep(BUSY_WAIT_SLEEP);
+                runtime.getService(TimeProvider.class).sleep(BUSY_WAIT_SLEEP);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

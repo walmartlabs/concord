@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.client2.LockResult;
 import com.walmartlabs.concord.client2.ProcessLocksApi;
+import com.walmartlabs.concord.common.TimeProvider;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.sdk.LockService;
 import org.slf4j.Logger;
@@ -41,11 +42,13 @@ public class DefaultLockService implements LockService {
 
     private final InstanceId instanceId;
     private final ApiClient apiClient;
+    private final TimeProvider timeProvider;
 
     @Inject
-    public DefaultLockService(InstanceId instanceId, ApiClient apiClient) {
+    public DefaultLockService(InstanceId instanceId, ApiClient apiClient, TimeProvider timeProvider) {
         this.instanceId = instanceId;
         this.apiClient = apiClient;
+        this.timeProvider = timeProvider;
     }
 
     @Override
@@ -75,9 +78,9 @@ public class DefaultLockService implements LockService {
         log.info("unlocking '{}' with scope '{}' -> done", lockName, LockScope.PROJECT);
     }
 
-    private static void sleep(long t) {
+    private void sleep(long t) {
         try {
-            Thread.sleep(t);
+            timeProvider.sleep(t);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

@@ -27,6 +27,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.TimeProvider;
 import com.walmartlabs.concord.runtime.common.FormService;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
@@ -96,6 +97,8 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
 
     private Class<? extends PersistenceService> persistenceServiceClass;
 
+    private TestTimeProvider timeProvider;
+
     public TestRuntimeV2 withPersistenceService(Class<? extends PersistenceService> persistenceServiceClass) {
         this.persistenceServiceClass = persistenceServiceClass;
         return this;
@@ -110,6 +113,8 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
         setUp(!ignoreSerializationAssert);
 
         this.testClass = context.getTestClass().orElseThrow(() -> new IllegalStateException("No test class found"));
+
+        this.timeProvider = new TestTimeProvider();
     }
 
     @Override
@@ -147,6 +152,10 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
 
     public void setWorkDir(Path newWorkDir) {
         this.workDir = newWorkDir;
+    }
+
+    public TestTimeProvider timeProvider() {
+        return timeProvider;
     }
 
     public void deploy(String resource) throws URISyntaxException, IOException {
@@ -234,7 +243,8 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
                     runnerCfg.build(),
                     () -> processConfiguration,
                     testServices,
-                    runtimeModule)
+                    runtimeModule,
+                    new TimeProviderModule(timeProvider))
                     .create();
             injector.getInstance(Main.class).execute();
         } catch (UserDefinedException | ParallelExecutionException e) { // see {@link com.walmartlabs.concord.runtime.v2.runner.Main#main}

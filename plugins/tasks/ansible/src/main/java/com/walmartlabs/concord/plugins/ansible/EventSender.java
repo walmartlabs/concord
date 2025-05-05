@@ -25,6 +25,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.walmartlabs.concord.client2.ApiException;
 import com.walmartlabs.concord.client2.ProcessEventRequest;
 import com.walmartlabs.concord.client2.ProcessEventsApi;
+import com.walmartlabs.concord.common.TimeProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +58,7 @@ public class EventSender {
     private final UUID instanceId;
     private final Path eventsFile;
     private final ProcessEventsApi eventsApi;
+    private final TimeProvider timeProvider;
 
     private final ObjectMapper objectMapper = createObjectMapper();
 
@@ -70,11 +72,12 @@ public class EventSender {
 
     private volatile boolean stop = false;
 
-    public EventSender(boolean debug, UUID instanceId, Path eventsFile, ProcessEventsApi eventsApi) {
+    public EventSender(boolean debug, UUID instanceId, Path eventsFile, ProcessEventsApi eventsApi, TimeProvider timeProvider) {
         this.debug = debug;
         this.instanceId = instanceId;
         this.eventsFile = eventsFile;
         this.eventsApi = eventsApi;
+        this.timeProvider = timeProvider;
     }
 
     public Future<?> start() {
@@ -137,7 +140,7 @@ public class EventSender {
         }
     }
 
-    private static void flush(Batch b) {
+    private void flush(Batch b) {
         try {
             b.flush();
         } catch (ApiException e) {
@@ -146,9 +149,9 @@ public class EventSender {
         }
     }
 
-    private static void sleep(long ms) {
+    private void sleep(long ms) {
         try {
-            Thread.sleep(ms);
+            timeProvider.sleep(ms);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

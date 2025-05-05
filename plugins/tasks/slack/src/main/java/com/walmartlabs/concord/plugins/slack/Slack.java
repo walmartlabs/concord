@@ -20,6 +20,7 @@ package com.walmartlabs.concord.plugins.slack;
  * =====
  */
 
+import com.walmartlabs.concord.common.TimeProvider;
 import com.walmartlabs.concord.plugins.slack.SlackClient.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ public class Slack {
     private static final Logger log = LoggerFactory.getLogger(Slack.class);
 
     public static Response sendMessage(SlackConfiguration slackCfg,
+                                       TimeProvider timeProvider,
                                        String channelId,
                                        String ts,
                                        boolean replyBroadcast,
@@ -39,7 +41,7 @@ public class Slack {
                                        String username,
                                        Collection<Object> attachments) throws Exception {
 
-        try (SlackClient client = new SlackClient(slackCfg)) {
+        try (SlackClient client = new SlackClient(slackCfg, timeProvider)) {
             Response r = client.message(channelId, ts, replyBroadcast, text, iconEmoji, username, attachments);
             if (!r.isOk()) {
                 log.warn("Error sending a Slack message: {}", r.getError());

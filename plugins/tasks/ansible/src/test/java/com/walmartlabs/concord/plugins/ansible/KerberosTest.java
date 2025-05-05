@@ -20,6 +20,7 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
+import com.walmartlabs.concord.common.SystemTimeProvider;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +38,7 @@ public class KerberosTest {
 
         String username = "USER";
         String password = "PASSWORD";
-        KerberosAuth kerberos = new KerberosAuth(username, password, tmpPath, false);
+        KerberosAuth kerberos = new KerberosAuth(new SystemTimeProvider(), username, password, tmpPath, false);
 
         kerberos.prepare();
 

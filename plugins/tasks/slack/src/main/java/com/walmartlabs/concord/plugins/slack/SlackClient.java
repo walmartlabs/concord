@@ -22,6 +22,7 @@ package com.walmartlabs.concord.plugins.slack;
 
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.TimeProvider;
 import org.apache.http.*;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -77,13 +78,15 @@ public class SlackClient implements AutoCloseable {
 
     private final SlackConfiguration slackCfg;
     private final int retryCount;
+    private final TimeProvider timeProvider;
     private final PoolingHttpClientConnectionManager connManager;
     private final CloseableHttpClient client;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public SlackClient(SlackConfiguration cfg) {
+    public SlackClient(SlackConfiguration cfg, TimeProvider timeProvider) {
         this.retryCount = cfg.getRetryCount();
+        this.timeProvider = timeProvider;
         this.connManager = createConnManager();
         this.client = createClient(cfg, connManager);
         this.slackCfg = cfg;
@@ -243,9 +246,9 @@ public class SlackClient implements AutoCloseable {
         }
     }
 
-    private static void sleep(long t) {
+    private void sleep(long t) {
         try {
-            Thread.sleep(t);
+            timeProvider.sleep(t);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

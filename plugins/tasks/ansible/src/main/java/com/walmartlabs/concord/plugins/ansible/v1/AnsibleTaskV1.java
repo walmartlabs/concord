@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.ansible.v1;
  */
 
 import com.walmartlabs.concord.client2.ApiClientFactory;
+import com.walmartlabs.concord.common.TimeProvider;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.DockerService;
 import com.walmartlabs.concord.sdk.SecretService;
@@ -35,8 +36,9 @@ public class AnsibleTaskV1 extends RunPlaybookTask2 {
     public AnsibleTaskV1(ApiClientFactory apiClientFactory,
                          ApiConfiguration apiCfg,
                          SecretService secretService,
-                         DockerService dockerService) {
+                         DockerService dockerService,
+                         TimeProvider timeProvider) {
 
-        super(apiClientFactory, apiCfg, secretService, dockerService);
+        super(apiClientFactory, apiCfg, secretService, dockerService, timeProvider);
     }
 }

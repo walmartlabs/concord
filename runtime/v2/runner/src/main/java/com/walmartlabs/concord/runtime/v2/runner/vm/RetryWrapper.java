@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.common.TimeProvider;
 import com.walmartlabs.concord.runtime.v2.model.Retry;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
@@ -152,7 +153,7 @@ public class RetryWrapper implements Command {
             log.warn("Last error: {}. Waiting for {}ms before retry (attempt #{})", lastError, delay.toMillis(), attemptNo);
 
             try {
-                Thread.sleep(delay.toMillis());
+                runtime.getService(TimeProvider.class).sleep(delay.toMillis());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
+import com.walmartlabs.concord.common.TimeProvider;
 import org.apache.kerby.KOptions;
 import org.apache.kerby.kerberos.kerb.KrbException;
 import org.apache.kerby.kerberos.kerb.ccache.CredentialCache;
@@ -49,6 +50,7 @@ public class KerberosAuth implements AnsibleAuth {
     private static final long ERROR_RETRY = TimeUnit.SECONDS.toMillis(30);
     private static final long RENEW = TimeUnit.MINUTES.toMillis(1);
 
+    private final TimeProvider timeProvider;
     private final String username;
     private final String password;
     private final Path tgtCacheFile;
@@ -56,7 +58,8 @@ public class KerberosAuth implements AnsibleAuth {
 
     private Thread renewThread;
 
-    public KerberosAuth(String username, String password, Path tmpDir, boolean debug) {
+    public KerberosAuth(TimeProvider timeProvider, String username, String password, Path tmpDir, boolean debug) {
+        this.timeProvider = timeProvider;
         this.username = username;
         this.password = password;
         this.tgtCacheFile = tmpDir.resolve("tgt-ticket");
@@ -71,8 +74,7 @@ public class KerberosAuth implements AnsibleAuth {
         String dockerImage = getString(context.args(), TaskParams.DOCKER_IMAGE_KEY.getKey());
         if (dockerImage != null) {
             env.put("KRB5CCNAME", Paths.get("/workspace").resolve(context.workDir().relativize(tgtCacheFile)).toString());
-        }
-        else {
+        } else {
             env.put("KRB5CCNAME", tgtCacheFile.toString());
         }
         return this;
@@ -183,7 +185,7 @@ public class KerberosAuth implements AnsibleAuth {
 
         private void sleep(long ms) {
             try {
-                Thread.sleep(ms);
+                timeProvider.sleep(ms);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

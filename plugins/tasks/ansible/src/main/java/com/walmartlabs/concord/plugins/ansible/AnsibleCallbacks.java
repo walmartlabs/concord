@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.ansible;
  */
 
 import com.walmartlabs.concord.client2.ProcessEventsApi;
+import com.walmartlabs.concord.common.TimeProvider;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -157,13 +158,13 @@ public class AnsibleCallbacks {
         return this;
     }
 
-    public AnsibleCallbacks startEventSender(UUID instanceId, ProcessEventsApi eventsApi) throws IOException {
+    public AnsibleCallbacks startEventSender(UUID instanceId, ProcessEventsApi eventsApi, TimeProvider timeProvider) throws IOException {
         if (disabled || !eventsEnabled) {
             return this;
         }
 
         this.eventsFile = Files.createTempFile(tmpDir, "events", ".log");
-        this.eventSender = new EventSender(debug, instanceId, eventsFile, eventsApi);
+        this.eventSender = new EventSender(debug, instanceId, eventsFile, eventsApi, timeProvider);
         this.eventSenderFuture = eventSender.start();
 
         return this;

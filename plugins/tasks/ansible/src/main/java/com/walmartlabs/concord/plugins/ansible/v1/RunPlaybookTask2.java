@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.ansible.v1;
  */
 
 import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.common.TimeProvider;
 import com.walmartlabs.concord.plugins.ansible.*;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.*;
@@ -46,6 +47,7 @@ public class RunPlaybookTask2 implements Task {
     private final ApiConfiguration apiCfg;
     private final SecretService secretService;
     private final DockerService dockerService;
+    private final TimeProvider timeProvider;
 
     @InjectVariable(Constants.Context.CONTEXT_KEY)
     Context context;
@@ -60,12 +62,14 @@ public class RunPlaybookTask2 implements Task {
     public RunPlaybookTask2(ApiClientFactory apiClientFactory,
                             ApiConfiguration apiCfg,
                             SecretService secretService,
-                            DockerService dockerService) {
+                            DockerService dockerService,
+                            TimeProvider timeProvider) {
 
         this.apiClientFactory = apiClientFactory;
         this.apiCfg = apiCfg;
         this.secretService = secretService;
         this.dockerService = dockerService;
+        this.timeProvider = timeProvider;
     }
 
     public void run(String dockerImageName, Map<String, Object> args, String payloadPath) throws Exception {
@@ -100,8 +104,9 @@ public class RunPlaybookTask2 implements Task {
         AnsibleSecretServiceV1 ansibleSecretService = new AnsibleSecretServiceV1(context, secretService);
 
         AnsibleTask task = new AnsibleTask(apiClient,
-                new AnsibleAuthFactory(ansibleSecretService),
-                ansibleSecretService);
+                new AnsibleAuthFactory(ansibleSecretService, timeProvider),
+                ansibleSecretService,
+                timeProvider);
 
         Map<String, Object> projectInfo = getMap(context, Constants.Request.PROJECT_INFO_KEY, null);
         String orgName = projectInfo != null ? (String) projectInfo.get("orgName") : null;

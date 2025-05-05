@@ -20,6 +20,7 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
+import com.walmartlabs.concord.common.TimeProvider;
 import com.walmartlabs.concord.plugins.ansible.secrets.AnsibleSecretService;
 import com.walmartlabs.concord.plugins.ansible.secrets.KeyPair;
 import com.walmartlabs.concord.plugins.ansible.secrets.UsernamePassword;
@@ -41,9 +42,11 @@ public class AnsibleAuthFactory {
     private static final Logger log = LoggerFactory.getLogger(AnsibleAuthFactory.class);
 
     private final AnsibleSecretService secretService;
+    private final TimeProvider timeProvider;
 
-    public AnsibleAuthFactory(AnsibleSecretService secretService) {
+    public AnsibleAuthFactory(AnsibleSecretService secretService, TimeProvider timeProvider) {
         this.secretService = secretService;
+        this.timeProvider = timeProvider;
     }
 
     public AnsibleAuth create(AnsibleContext context) {
@@ -62,7 +65,7 @@ public class AnsibleAuthFactory {
                 try {
                     UsernamePassword cred = parseKerberosAuth(secretService, auth.getValue());
                     log.info("Using the kerberos username: {}", cred.username());
-                    return new KerberosAuth(cred.username(), cred.password(), context.tmpDir(), context.debug());
+                    return new KerberosAuth(timeProvider, cred.username(), cred.password(), context.tmpDir(), context.debug());
                 } catch (Exception e) {
                     log.error("Error while fetching the kerberos credentials: {}", e.getMessage(), e);
                     throw new RuntimeException("Error while fetching the kerberos credentials: " + e.getMessage());

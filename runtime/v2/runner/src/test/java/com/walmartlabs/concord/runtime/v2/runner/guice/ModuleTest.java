@@ -22,12 +22,10 @@ package com.walmartlabs.concord.runtime.v2.runner.guice;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.walmartlabs.concord.common.SystemTimeProvider;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
-import com.walmartlabs.concord.runtime.v2.runner.EventReportingService;
-import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
-import com.walmartlabs.concord.runtime.v2.runner.PersistenceService;
-import com.walmartlabs.concord.runtime.v2.runner.ProcessStatusCallback;
+import com.walmartlabs.concord.runtime.v2.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointUploader;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingClient;
@@ -70,7 +68,8 @@ class ModuleTest {
                 runnerCfg,
                 () -> processConfiguration,
                 new DefaultRunnerModule(), // bind default services
-                new ProcessDependenciesModule(tempDir, runnerCfg.dependencies(), runnerCfg.debug())) // grab process dependencies
+                new ProcessDependenciesModule(tempDir, runnerCfg.dependencies(), runnerCfg.debug()),
+                new TimeProviderModule(new SystemTimeProvider())) // grab process dependencies
                 .create();
 
         return injector.getInstance(Validator.class);
@@ -97,7 +96,7 @@ class ModuleTest {
         private final CheckpointUploader checkpointUploader;
         private final CheckpointService checkpointService;
         private final DependencyManager dependencyManager;
-        private final DockerService DockerService;
+        private final DockerService dockerService;
         private final FileService fileService;
         private final EventReportingService eventReportingService;
         private final LockService lockService;
@@ -123,7 +122,7 @@ class ModuleTest {
             this.checkpointUploader = checkpointUploader;
             this.checkpointService = checkpointService;
             this.dependencyManager = dependencyManager;
-            this.DockerService = DockerService;
+            this.dockerService = DockerService;
             this.fileService = fileService;
             this.eventReportingService = eventReportingService;
             this.lockService = lockService;
@@ -138,7 +137,7 @@ class ModuleTest {
             assertNotNull(checkpointUploader);
             assertNotNull(checkpointService);
             assertNotNull(dependencyManager);
-            assertNotNull(DockerService);
+            assertNotNull(dockerService);
             assertNotNull(fileService);
             assertNotNull(eventReportingService);
             assertNotNull(lockService);

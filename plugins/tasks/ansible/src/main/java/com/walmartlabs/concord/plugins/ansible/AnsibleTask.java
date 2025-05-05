@@ -23,6 +23,7 @@ package com.walmartlabs.concord.plugins.ansible;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.common.TimeProvider;
 import com.walmartlabs.concord.plugins.ansible.secrets.AnsibleSecretService;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.Constants;
@@ -53,14 +54,17 @@ public class AnsibleTask {
     private final ApiClient apiClient;
     private final AnsibleAuthFactory ansibleAuthFactory;
     private final AnsibleSecretService secretService;
+    private final TimeProvider timeProvider;
 
     public AnsibleTask(ApiClient apiClient,
                        AnsibleAuthFactory ansibleAuthFactory,
-                       AnsibleSecretService secretService) {
+                       AnsibleSecretService secretService,
+                       TimeProvider timeProvider) {
 
         this.apiClient = apiClient;
         this.ansibleAuthFactory = ansibleAuthFactory;
         this.secretService = secretService;
+        this.timeProvider = timeProvider;
     }
 
     public TaskResult.SimpleResult run(AnsibleContext context,
@@ -77,7 +81,7 @@ public class AnsibleTask {
                 .enrich(env);
 
         AnsibleCallbacks callbacks = AnsibleCallbacks.process(context, cfg)
-                .startEventSender(context.instanceId(), new ProcessEventsApi(apiClient))
+                .startEventSender(context.instanceId(), new ProcessEventsApi(apiClient), timeProvider)
                 .enrich(env);
 
         AnsibleLibs.process(context, env);

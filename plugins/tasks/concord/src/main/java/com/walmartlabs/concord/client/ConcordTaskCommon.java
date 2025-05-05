@@ -23,6 +23,7 @@ package com.walmartlabs.concord.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.TimeProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.sdk.Constants;
@@ -71,8 +72,10 @@ public class ConcordTaskCommon {
     private final Path workDir;
     private final boolean globalDebug;
     private final boolean dryRun;
+    private final TimeProvider timeProvider;
 
-    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, UUID currentProcessId, String currentOrgName, Path workDir, boolean globalDebug, boolean dryRun) {
+    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, UUID currentProcessId, String currentOrgName, Path workDir,
+                             boolean globalDebug, boolean dryRun, TimeProvider timeProvider) {
         this.sessionToken = sessionToken;
         this.apiClientFactory = apiClientFactory;
         this.currentProcessId = currentProcessId;
@@ -80,6 +83,7 @@ public class ConcordTaskCommon {
         this.workDir = workDir;
         this.globalDebug = globalDebug;
         this.dryRun = dryRun;
+        this.timeProvider = timeProvider;
     }
 
     public TaskResult execute(ConcordTaskParams in) throws Exception {
@@ -154,7 +158,7 @@ public class ConcordTaskCommon {
                             }
                         }
 
-                        Thread.sleep(DEFAULT_POLL_DELAY);
+                        timeProvider.sleep(DEFAULT_POLL_DELAY);
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);

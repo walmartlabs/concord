@@ -20,6 +20,7 @@ package com.walmartlabs.concord.plugins.slack;
  * =====
  */
 
+import com.walmartlabs.concord.common.TimeProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,8 +68,8 @@ public class SlackTaskCommon {
         }
     }
 
-    public Map<String, Object> sendJsonMessage(SlackConfiguration slackCfg, String json, boolean ignoreErrors, boolean update) {
-        try (SlackClient client = new SlackClient(slackCfg)) {
+    public Map<String, Object> sendJsonMessage(SlackConfiguration slackCfg, TimeProvider timeProvider, String json, boolean ignoreErrors, boolean update) {
+        try (SlackClient client = new SlackClient(slackCfg, timeProvider)) {
             SlackClient.Response r;
             if (update) {
                 r = client.updateJsonMessage(json);
@@ -90,6 +91,7 @@ public class SlackTaskCommon {
     }
 
     public Map<String, Object> sendMessage(SlackConfiguration slackCfg,
+                            TimeProvider timeProvider,
                             String channelId,
                             String ts,
                             boolean replyBroadcast,
@@ -100,7 +102,7 @@ public class SlackTaskCommon {
                             boolean ignoreErrors) {
 
         try {
-            SlackClient.Response r = Slack.sendMessage(slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments);
+            SlackClient.Response r = Slack.sendMessage(slackCfg, timeProvider, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments);
             return result(r);
         } catch (Exception e) {
             if (!ignoreErrors) {

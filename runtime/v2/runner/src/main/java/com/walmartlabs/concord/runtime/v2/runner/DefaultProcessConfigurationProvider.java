@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.TimeProvider;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
@@ -43,9 +44,11 @@ public class DefaultProcessConfigurationProvider implements Provider<ProcessConf
     private static final Logger log = LoggerFactory.getLogger(DefaultProcessConfigurationProvider.class);
 
     private final Path workDir;
+    private final TimeProvider timeProvider;
 
-    public DefaultProcessConfigurationProvider(Path workDir) {
+    public DefaultProcessConfigurationProvider(Path workDir, TimeProvider timeProvider) {
         this.workDir = workDir;
+        this.timeProvider = timeProvider;
     }
 
     @Override
@@ -65,8 +68,7 @@ public class DefaultProcessConfigurationProvider implements Provider<ProcessConf
      * Waits until an instanceId file appears in the specified directory
      * then reads it and parses as UUID.
      */
-    @SuppressWarnings("BusyWait")
-    private static UUID waitForInstanceId(Path workDir) {
+    private UUID waitForInstanceId(Path workDir) {
         Path p = workDir.resolve(Constants.Files.INSTANCE_ID_FILE_NAME);
         while (true) {
             byte[] id = readIfExists(p);
@@ -81,7 +83,7 @@ public class DefaultProcessConfigurationProvider implements Provider<ProcessConf
 
             // we are not using WatchService as it has issues when running in Docker
             try {
-                Thread.sleep(1000);
+                timeProvider.sleep(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

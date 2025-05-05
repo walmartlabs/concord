@@ -23,11 +23,13 @@ package com.walmartlabs.concord.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.TimeProvider;
 import com.walmartlabs.concord.sdk.*;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
@@ -114,6 +116,13 @@ public class ConcordTask extends AbstractConcordTask {
 
     @InjectVariable("concord")
     Map<String, Object> defaults;
+
+    private final TimeProvider timeProvider;
+
+    @Inject
+    public ConcordTask(TimeProvider timeProvider) {
+        this.timeProvider = timeProvider;
+    }
 
     @Override
     public void execute(Context ctx) throws Exception {
@@ -216,7 +225,7 @@ public class ConcordTask extends AbstractConcordTask {
                             }
                         }
 
-                        Thread.sleep(DEFAULT_POLL_DELAY);
+                        timeProvider.sleep(DEFAULT_POLL_DELAY);
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);

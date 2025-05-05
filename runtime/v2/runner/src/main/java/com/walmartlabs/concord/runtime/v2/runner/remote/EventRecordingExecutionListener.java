@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
  */
 
 import com.walmartlabs.concord.client2.ProcessEventRequest;
+import com.walmartlabs.concord.common.TimeProvider;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.EventReportingService;
@@ -39,12 +40,16 @@ public class EventRecordingExecutionListener implements ExecutionListener {
 
     private final EventConfiguration eventConfiguration;
     private final EventReportingService eventReportingService;
+    private final TimeProvider timeProvider;
 
     @Inject
     public EventRecordingExecutionListener(ProcessConfiguration processConfiguration,
-                                           EventReportingService eventReportingService) {
+                                           EventReportingService eventReportingService,
+                                           TimeProvider timeProvider) {
+
         this.eventConfiguration = processConfiguration.events();
         this.eventReportingService = eventReportingService;
+        this.timeProvider = timeProvider;
     }
 
     @Override
@@ -76,7 +81,7 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         ProcessEventRequest req = new ProcessEventRequest();
         req.setEventType("ELEMENT"); // TODO constants
         req.setData(m);
-        req.setEventDate(Instant.now().atOffset(ZoneOffset.UTC));
+        req.setEventDate(timeProvider.now().atOffset(ZoneOffset.UTC));
 
         eventReportingService.report(req);
 

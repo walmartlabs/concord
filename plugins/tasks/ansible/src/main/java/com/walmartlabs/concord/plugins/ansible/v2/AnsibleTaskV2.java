@@ -22,6 +22,7 @@ package com.walmartlabs.concord.plugins.ansible.v2;
 
 import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.common.TimeProvider;
 import com.walmartlabs.concord.plugins.ansible.*;
 import com.walmartlabs.concord.plugins.ansible.secrets.AnsibleSecretService;
 import com.walmartlabs.concord.runtime.v2.sdk.ProjectInfo;
@@ -41,12 +42,14 @@ public class AnsibleTaskV2 implements Task {
 
     private final Context context;
     private final ApiClient apiClient;
+    private final TimeProvider timeProvider;
     private final Map<String, Object> defaults;
 
     @Inject
-    public AnsibleTaskV2(ApiClient apiClient, Context context) {
+    public AnsibleTaskV2(ApiClient apiClient, Context context, TimeProvider timeProvider) {
         this.context = context;
         this.apiClient = apiClient;
+        this.timeProvider = timeProvider;
         this.defaults = context.defaultVariables().toMap();
     }
 
@@ -59,7 +62,7 @@ public class AnsibleTaskV2 implements Task {
                 .create(in);
 
         AnsibleSecretService secretService = new AnsibleSecretServiceV2(context.secretService());
-        AnsibleTask task = new AnsibleTask(apiClient, new AnsibleAuthFactory(secretService), secretService);
+        AnsibleTask task = new AnsibleTask(apiClient, new AnsibleAuthFactory(secretService, timeProvider), secretService, timeProvider);
 
         UUID instanceId = Objects.requireNonNull(context.processInstanceId());
         Path tmpDir = context.fileService().createTempDirectory("ansible");
