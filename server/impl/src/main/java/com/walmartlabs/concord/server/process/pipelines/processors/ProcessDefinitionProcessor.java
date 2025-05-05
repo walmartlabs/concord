@@ -24,6 +24,7 @@ import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.ImportProcessingException;
 import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
+import com.walmartlabs.concord.process.loader.ConcordProjectLoader;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.sdk.Constants;
@@ -45,7 +46,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static com.walmartlabs.concord.process.loader.ProjectLoader.CONCORD_V1_RUNTIME_TYPE;
+import static com.walmartlabs.concord.process.loader.ConcordProjectLoader.CONCORD_V1_RUNTIME_TYPE;
 
 /**
  * Loads the process definition using the working directory and configured {@code imports}.
@@ -83,7 +84,7 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
 
         try {
             String runtime = getRuntimeType(payload);
-            ProjectLoader.Result result = projectLoader.loadProject(workDir, runtime, importsNormalizer.forProject(projectId),
+            ConcordProjectLoader.Result result = projectLoader.loadProject(workDir, runtime, importsNormalizer.forProject(projectId),
                     new ProcessImportsListener(processKey));
 
             List<Snapshot> snapshots = result.snapshots();
@@ -138,7 +139,7 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
         }
 
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
-        return ProjectLoader.getRuntimeType(workDir, CONCORD_V1_RUNTIME_TYPE);
+        return ConcordProjectLoader.getRuntimeType(workDir, CONCORD_V1_RUNTIME_TYPE);
     }
 
     class ProcessImportsListener implements ImportsListener {
