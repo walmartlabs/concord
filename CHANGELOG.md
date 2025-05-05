@@ -17,7 +17,9 @@ handle SIGTERM
 - project: update testcontainers-concord version
 ([#1135](https://github.com/walmartlabs/concord/pull/1135));
 - concord-server: use ProjectLoader interface, bind explicitly
-([#1136](https://github.com/walmartlabs/concord/pull/1136)).
+([#1136](https://github.com/walmartlabs/concord/pull/1136));
+- concord-server: split ProcessSecurityContext
+([#1137](https://github.com/walmartlabs/concord/pull/1137)).
 
 
 
