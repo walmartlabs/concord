@@ -20,11 +20,14 @@ package com.walmartlabs.concord.cli;
  * =====
  */
 
+import org.fusesource.jansi.AnsiConsole;
 import picocli.CommandLine;
 
 public class Main {
 
     public static void main(String[] args) {
+        AnsiConsole.systemInstall();
+
         CommandLine cli = new CommandLine(new App());
         int code = cli.execute(args);
         System.exit(code);

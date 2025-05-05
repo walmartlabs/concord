@@ -28,6 +28,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import static org.fusesource.jansi.Ansi.ansi;
+
 /**
  * Implements a simple "vault" system.
  * When using {@code crypto.decryptString} in a flow executed by the CLI,
@@ -66,7 +68,7 @@ public class VaultProvider {
         }
 
         if (!items.containsKey(key)) {
-            System.out.println("There are no key '" + key + "' in vault '" + id + "'");
+            System.out.println(ansi().fgRed().a("There are no key '").a(key).a("' in vault '").a(id).a("'").reset());
         }
 
         return items.get(key);
@@ -86,7 +88,7 @@ public class VaultProvider {
             }
             return result;
         } catch (IOException e) {
-            System.out.println("Error loading vault file '" + file + "':" + e.getMessage());
+            System.out.println(ansi().fgBrightRed().a("Error loading vault file '").a(file).a("': ").a(e.getMessage()).reset());
             throw new RuntimeException(e.getMessage());
         }
     }

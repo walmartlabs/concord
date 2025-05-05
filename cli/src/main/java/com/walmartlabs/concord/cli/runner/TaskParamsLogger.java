@@ -25,11 +25,14 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import org.fusesource.jansi.Ansi;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.fusesource.jansi.Ansi.ansi;
 
 public class TaskParamsLogger implements TaskCallListener {
 
@@ -39,12 +42,12 @@ public class TaskParamsLogger implements TaskCallListener {
         Map<String, Object> outVars = asMapOrNull(event.result());
 
         if (TaskCallEvent.Phase.PRE.equals(event.phase())) {
-            System.out.println("     in: " + inVars);
+            System.out.println(ansi().fgCyan().a("     in: " + inVars).reset());
         } else {
-            System.out.println("     out: " + outVars);
-            System.out.println("     duration: " + event.duration() + "ms");
+            System.out.println(ansi().fgCyan().a("     out: ").a(outVars).reset());
+            System.out.println(ansi().fgCyan().a("     duration: ").a(event.duration()).a("ms").reset());
             if (event.error() != null) {
-                System.out.println("    error: " + event.error());
+                System.out.println(ansi().fgBrightRed().a("    error: ").a(event.error()).reset());
             }
         }
     }
