@@ -28,6 +28,7 @@ import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.FileVisitor;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.ResourceUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
@@ -39,6 +40,7 @@ import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
 import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.model.Resources.ConcordCliResources;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
@@ -62,6 +64,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
+
+import static com.walmartlabs.concord.runtime.v2.model.Resources.DEFAULT_CONCORD_CLI_INCLUDES;
 
 @Command(name = "run", description = "Run the current directory as a Concord process")
 public class Run implements Callable<Integer> {
@@ -145,6 +149,11 @@ public class Run implements Callable<Integer> {
 
             Files.copy(src, targetDir.resolve("concord.yml"), StandardCopyOption.REPLACE_EXISTING);
         } else if (Files.isDirectory(sourceDir)) {
+            ConcordCliResources resources = getConcordCliResources(sourceDir);
+            if (verbosity.verbose()) {
+                System.out.println("Using CLI resources:\n\t" + resources);
+            }
+
             targetDir = sourceDir.resolve("target");
             if (cleanup && Files.exists(targetDir)) {
                 if (verbosity.verbose()) {
@@ -154,7 +163,8 @@ public class Run implements Callable<Integer> {
             }
 
             // copy everything into target except target
-            IOUtils.copy(sourceDir, targetDir, "^target$", new CopyNotifier(verbosity.verbose() ? 0 : 100), StandardCopyOption.REPLACE_EXISTING);
+            CopyNotifier notifier = new CopyNotifier(verbosity.verbose() ? 0 : 100);
+            ResourceUtils.copyResources(sourceDir, resources.includes(), resources.excludes(), targetDir, notifier, StandardCopyOption.REPLACE_EXISTING);
         } else {
             throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
         }
@@ -294,6 +304,26 @@ public class Run implements Callable<Integer> {
         System.out.println("...done!");
 
         return 0;
+    }
+
+    private static ConcordCliResources getConcordCliResources(Path sourceDir) {
+        // try to load the root concord.y?ml and get the concordCli resources config from there
+
+        Path rootConcordFile = sourceDir.resolve("concord.yml");
+        if (!Files.exists(rootConcordFile)) {
+            rootConcordFile = sourceDir.resolve("concord.yaml");
+        }
+        if (!Files.exists(rootConcordFile)) {
+            return ImmutableConcordCliResources.builder().build();
+        }
+
+        try {
+            ProjectLoaderV2.Result result = new ProjectLoaderV2(new NoopImportManager())
+                    .loadFromFile(rootConcordFile);
+            return result.getProjectDefinition().resources().concordCli();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load root Concord file from " + rootConcordFile, e);
+        }
     }
 
     @SuppressWarnings("unchecked")

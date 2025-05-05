@@ -55,3 +55,9 @@ forms:
 resources:
   concord:
   - "glob:concord/{**/,}{*.,}concord.{yml,yaml}"
+  concordCli:
+    includes:
+    - "glob:*"
+    - "glob:**/*"
+    excludes:
+    - "glob:target/**"

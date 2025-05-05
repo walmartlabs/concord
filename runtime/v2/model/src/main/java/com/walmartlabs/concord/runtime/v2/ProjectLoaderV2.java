@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.ResourceUtils;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.Imports;
@@ -32,9 +33,12 @@ import com.walmartlabs.concord.runtime.v2.parser.YamlParserV2;
 import com.walmartlabs.concord.sdk.Constants;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Stream;
+
+import static com.walmartlabs.concord.runtime.v2.model.Resources.DEFAULT_CONCORD_RESOURCES;
 
 public class ProjectLoaderV2 {
 
@@ -57,7 +61,7 @@ public class ProjectLoaderV2 {
             snapshots = importManager.process(imports, baseDir, listener);
         }
 
-        List<Path> files = loadResources(baseDir, root != null ? root.resources() : Resources.builder().build());
+        List<Path> files = ResourceUtils.findResources(baseDir, root != null ? root.resources().concord() : DEFAULT_CONCORD_RESOURCES);
         Collections.sort(files);
 
         List<ProcessDefinition> definitions = new ArrayList<>();
@@ -85,19 +89,19 @@ public class ProjectLoaderV2 {
         Resources resources = root != null ? root.resources() : Resources.builder().build();
         boolean hasImports = root != null && root.imports() != null && !root.imports().isEmpty();
         if (!hasImports) {
-            copyResources(baseDir, resources, destDir, options);
+            ResourceUtils.copyResources(baseDir, resources.concord(), destDir, options);
             return;
         }
 
         Path tmpDir = null;
         try {
             tmpDir = IOUtils.createTempDir("concord-export");
-            copyResources(baseDir, resources, tmpDir, options);
+            ResourceUtils.copyResources(baseDir, resources.concord(), tmpDir, options);
 
             Imports imports = importsNormalizer.normalize(root.imports());
             importManager.process(imports, tmpDir, listener);
 
-            copyResources(tmpDir, resources, destDir, options);
+            ResourceUtils.copyResources(tmpDir, resources.concord(), destDir, options);
         } finally {
             if (tmpDir != null) {
                 IOUtils.deleteRecursively(tmpDir);
@@ -122,44 +126,8 @@ public class ProjectLoaderV2 {
         if (Files.notExists(path)) {
             throw new IllegalStateException("Can't find Concord process definition file: " + path);
         }
-
-        return new Result(Collections.emptyList(), parser.parse(path.getParent(), path));
-    }
-
-    private static List<Path> loadResources(Path baseDir, Resources resources) throws IOException {
-        List<Path> result = new ArrayList<>();
-        for (String pattern : resources.concord()) {
-            PathMatcher pathMatcher = parsePattern(baseDir, pattern);
-            if (pathMatcher != null) {
-                try (Stream<Path> w = Files.walk(baseDir)) {
-                    w.filter(pathMatcher::matches).forEach(result::add);
-                }
-            } else {
-                Path path = Paths.get(concat(baseDir, pattern.trim()));
-                if (Files.exists(path)) {
-                    result.add(path);
-                }
-            }
-        }
-        return result;
-    }
-
-    private static PathMatcher parsePattern(Path baseDir, String pattern) {
-        String normalizedPattern = null;
-
-        pattern = pattern.trim();
-
-        if (pattern.startsWith("glob:")) {
-            normalizedPattern = "glob:" + concat(baseDir, pattern.substring("glob:".length()));
-        } else if (pattern.startsWith("regex:")) {
-            normalizedPattern = "regex:" + concat(baseDir, pattern.substring("regex:".length()));
-        }
-
-        if (normalizedPattern != null) {
-            return FileSystems.getDefault().getPathMatcher(normalizedPattern);
-        }
-
-        return null;
+        ProcessDefinition pd = parser.parse(path.getParent(), path);
+        return new Result(List.of(), pd);
     }
 
     private static ProcessDefinition merge(List<ProcessDefinition> definitions) {
@@ -204,39 +172,6 @@ public class ProjectLoaderV2 {
                 .forms(forms)
                 .resources(Resources.builder().concord(resources).build())
                 .build();
-    }
-
-    private static String concat(Path path, String str) {
-        String separator = "/";
-        if (str.startsWith("/")) {
-            separator = "";
-        }
-        return path.toAbsolutePath() + separator + str;
-    }
-
-    private static void copyResources(Path baseDir, Resources resources, Path destDir, CopyOption... options) throws IOException {
-        List<Path> files = loadResources(baseDir, resources);
-        for (String fileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
-            Path p = baseDir.resolve(fileName);
-            files.add(p);
-        }
-        copy(new HashSet<>(files), baseDir, destDir, options);
-    }
-
-    private static void copy(Set<Path> files, Path baseDir, Path dest, CopyOption... options) throws IOException {
-        for (Path f : files) {
-            if (Files.notExists(f)) {
-                continue;
-            }
-
-            Path src = baseDir.relativize(f);
-            Path dst = dest.resolve(src);
-            Path dstParent = dst.getParent();
-            if (dstParent != null && Files.notExists(dstParent)) {
-                Files.createDirectories(dstParent);
-            }
-            Files.copy(f, dst, options);
-        }
     }
 
     public static class Result {

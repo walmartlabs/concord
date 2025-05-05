@@ -21,8 +21,10 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.fasterxml.jackson.core.JsonToken;
+import com.walmartlabs.concord.runtime.v2.model.ImmutableConcordCliResources;
 import com.walmartlabs.concord.runtime.v2.model.ImmutableResources;
 import com.walmartlabs.concord.runtime.v2.model.Resources;
+import com.walmartlabs.concord.runtime.v2.model.Resources.ConcordCliResources;
 import io.takari.parc.Parser;
 
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
@@ -32,11 +34,20 @@ import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.stringArrayVal
 
 public final class ResourcesGrammar {
 
+    private static final Parser<Atom, ConcordCliResources> concordCliResources =
+            betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
+                    with(ImmutableConcordCliResources::builder,
+                            o -> options(
+                                    optional("includes", stringArrayVal.map(o::includes)),
+                                    optional("excludes", stringArrayVal.map(o::excludes))))
+                            .map(ImmutableConcordCliResources.Builder::build));
+
     private static final Parser<Atom, Resources> resources =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                     with(ImmutableResources::builder,
                             o -> options(
-                                    optional("concord", stringArrayVal.map(o::concord))))
+                                    optional("concord", stringArrayVal.map(o::concord)),
+                                    optional("concordCli", concordCliResources.map(o::concordCli))))
                             .map(ImmutableResources.Builder::build));
 
     public static final Parser<Atom, Resources> resourcesVal =

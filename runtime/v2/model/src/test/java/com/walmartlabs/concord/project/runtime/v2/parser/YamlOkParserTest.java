@@ -497,12 +497,18 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test015() throws Exception {
         ProcessDefinition pd = load("015.yml");
 
-        Resources resources = pd.resources();
-        assertEquals(3, resources.concord().size());
+        List<String> concordResources = pd.resources().concord();
+        assertEquals(3, concordResources.size());
+        assertEquals("glob:abc", concordResources.get(0));
+        assertEquals("regex:boo", concordResources.get(1));
+        assertEquals("concord/myfile.yml", concordResources.get(2));
 
-        assertEquals("glob:abc", resources.concord().get(0));
-        assertEquals("regex:boo", resources.concord().get(1));
-        assertEquals("concord/myfile.yml", resources.concord().get(2));
+        Resources.ConcordCliResources cliResources = pd.resources().concordCli();
+        assertEquals(2, cliResources.includes().size());
+        assertEquals("glob:*.foo", cliResources.includes().get(0));
+        assertEquals("bar.baz", cliResources.includes().get(1));
+        assertEquals(1, cliResources.excludes().size());
+        assertEquals("qux", cliResources.excludes().get(0));
     }
 
     // set variables definition
