@@ -5,7 +5,9 @@
 ### Added
 
 - resource-task: add fromYamlString method interface
-([#1125](https://github.com/walmartlabs/concord/pull/1125)).
+([#1125](https://github.com/walmartlabs/concord/pull/1125));
+- concord-cli: use jansi, add colors to run output
+([#1138](https://github.com/walmartlabs/concord/pull/1138)).
 
 ### Changed
 
