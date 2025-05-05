@@ -39,7 +39,10 @@ handle SIGTERM
 requirements
 ([#1128](https://github.com/walmartlabs/concord/pull/1128));
 - project: downgrade nimbus-jose-jwt
-([#1129](https://github.com/walmartlabs/concord/pull/1129)).
+([#1129](https://github.com/walmartlabs/concord/pull/1129));
+- project: enable full annotation
+processing
+([#1131](https://github.com/walmartlabs/concord/pull/1131)).
 
 
 
