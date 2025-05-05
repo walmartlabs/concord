@@ -15,7 +15,9 @@ handle SIGTERM
 - project: fix concord-runner-v2 test discovery
 ([#1133](https://github.com/walmartlabs/concord/pull/1133));
 - project: update testcontainers-concord version
-([#1135](https://github.com/walmartlabs/concord/pull/1135)).
+([#1135](https://github.com/walmartlabs/concord/pull/1135));
+- concord-server: use ProjectLoader interface, bind explicitly
+([#1136](https://github.com/walmartlabs/concord/pull/1136)).
 
 
 
