@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.walmartlabs.concord.process.loader.ProjectLoader.ProjectLoaderConfiguration;
+import com.walmartlabs.concord.process.loader.ConcordProjectLoader;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 
 import javax.inject.Inject;
@@ -28,17 +28,17 @@ import javax.inject.Provider;
 import java.util.Optional;
 import java.util.Set;
 
-public class ProjectLoaderConfigurationProvider implements Provider<ProjectLoaderConfiguration> {
+public class ConcordProjectLoaderConfigurationProvider implements Provider<ConcordProjectLoader.Configuration> {
 
     private final Set<String> extraRuntimes;
 
     @Inject
-    public ProjectLoaderConfigurationProvider(ProcessConfiguration cfg) {
+    public ConcordProjectLoaderConfigurationProvider(ProcessConfiguration cfg) {
         this.extraRuntimes = Optional.ofNullable(cfg.getExtraRuntimes()).map(Set::copyOf).orElse(Set.of());
     }
 
     @Override
-    public ProjectLoaderConfiguration get() {
-        return new ProjectLoaderConfiguration(Set.copyOf(extraRuntimes));
+    public ConcordProjectLoader.Configuration get() {
+        return new ConcordProjectLoader.Configuration(Set.copyOf(extraRuntimes));
     }
 }
