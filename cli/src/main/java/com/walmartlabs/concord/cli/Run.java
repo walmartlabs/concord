@@ -47,6 +47,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelExecutionException;
+import org.fusesource.jansi.Ansi;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -62,6 +63,10 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
+
+import static org.fusesource.jansi.Ansi.Color.GREEN;
+import static org.fusesource.jansi.Ansi.Color.YELLOW;
+import static org.fusesource.jansi.Ansi.ansi;
 
 @Command(name = "run", description = "Run the current directory as a Concord process")
 public class Run implements Callable<Integer> {
@@ -253,7 +258,7 @@ public class Run implements Callable<Integer> {
             return 0;
         }
 
-        System.out.println("Starting...");
+        System.out.println(ansi().fgBrightGreen().a("Starting...").reset());
 
         if (dryRunMode) {
             System.out.println("Running in the dry-run mode.");
@@ -291,7 +296,7 @@ public class Run implements Callable<Integer> {
             return 1;
         }
 
-        System.out.println("...done!");
+        System.out.println(ansi().fgBrightGreen().a("...done!").reset());
 
         return 0;
     }
@@ -408,8 +413,8 @@ public class Run implements Callable<Integer> {
     private static void dumpArguments(Map<String, Object> args) {
         ObjectMapper om = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
         try {
-            System.out.println("Process arguments:");
-            System.out.println(om.writerWithDefaultPrettyPrinter().writeValueAsString(args));
+            System.out.print(ansi().fgYellow().a("\nProcess arguments:\n\t"));
+            System.out.println(om.writerWithDefaultPrettyPrinter().writeValueAsString(args).replace("\n", "\n\t"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -417,10 +422,10 @@ public class Run implements Callable<Integer> {
 
     private static void logException(Verbosity verbosity, Exception e) {
         if (verbosity.verbose()) {
-            System.err.print("Error: ");
+            System.err.print(ansi().fgBrightRed().a("Error: "));
             e.printStackTrace(System.err);
         } else {
-            System.err.println("Error: " + e.getMessage());
+            System.err.println("Error: " + e.getMessage()); // TODO
         }
     }
 
@@ -441,7 +446,7 @@ public class Run implements Callable<Integer> {
             }
 
             if (currentCount == notifyOnCount) {
-                System.out.println("Copying files into the target directory...");
+                System.out.println(ansi().fgBrightBlack().a("Copying files into the target directory..."));
                 currentCount = -1;
                 return;
             }

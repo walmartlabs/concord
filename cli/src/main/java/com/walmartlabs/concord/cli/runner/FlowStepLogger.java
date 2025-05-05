@@ -29,6 +29,8 @@ import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
+import static org.fusesource.jansi.Ansi.ansi;
+
 public class FlowStepLogger implements ExecutionListener {
 
     @Override
@@ -45,7 +47,8 @@ public class FlowStepLogger implements ExecutionListener {
 
         Location loc = s.getStep().getLocation();
 
-        System.out.println(">>> '" + getDescription(runtime, state, threadId, s.getStep()) + "' @ " + loc.fileName() + ":" + loc.lineNum());
+        System.out.println(ansi().fgBrightCyan().bold().a(">>> '").a(getDescription(runtime, state, threadId, s.getStep())).boldOff()
+                .a("' @ ").a(loc.fileName()).a(":").a(loc.lineNum()).reset());
 
         return Result.CONTINUE;
     }
