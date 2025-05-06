@@ -14,6 +14,8 @@
 - concord-agent, concord-agent-operator: better shutdown hook,
 handle SIGTERM
 ([#1130](https://github.com/walmartlabs/concord/pull/1130));
+- project: enable full annotation processing
+([#1131](https://github.com/walmartlabs/concord/pull/1131));
 - project: fix concord-runner-v2 test discovery
 ([#1133](https://github.com/walmartlabs/concord/pull/1133));
 - project: update testcontainers-concord version
