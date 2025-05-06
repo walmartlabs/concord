@@ -302,10 +302,35 @@ public class GitClient {
     private String updateUrl(String url, Secret secret) {
         url = url.trim();
 
-        if (secret != null || cfg.oauthToken() == null || url.contains("@") || !url.startsWith("https://")) {
+        int hostnameStart = url.indexOf("://") + 3;
+        int hostnameEnd = url.indexOf("/", hostnameStart);
+
+        if(hostnameStart==2 || hostnameEnd < 0) {
+            // probably this is invalid, but I don't know what proper handling of this looks like
+            // however you definitely don't want to give credentials to whatever this git url looks like.
             return url;
         }
 
+        String hostname = url.substring(hostnameStart, hostnameEnd);
+
+        List<String> allowedDefaultHosts = cfg.authorizedGitHosts();
+
+        if(secret == null && allowedDefaultHosts!= null && !allowedDefaultHosts.contains(hostname)) {
+            // in this case the user has not provided authentication AND the host is not in the whitelist of hosts
+            // which may use the default git credentials. return the url un-modified to attempt anonymous auth;
+            // if it fails
+            System.out.println("Forbidden host for default credentials: " + hostname);
+            return url;
+        }
+
+        if (secret != null || cfg.oauthToken() == null || url.contains("@") || !url.startsWith("https://")) {
+            // provided url already has credentials OR there are no default credentials to use.
+            // anonymous auth is the only viable option.
+            return url;
+        }
+
+        // using default credentials
+        System.out.println("Using default credentials: " + "https://" + cfg.oauthToken() + "@" + url.substring("https://".length()));
         return "https://" + cfg.oauthToken() + "@" + url.substring("https://".length());
     }
 
