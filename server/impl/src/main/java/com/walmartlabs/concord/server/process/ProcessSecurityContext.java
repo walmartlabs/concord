@@ -26,12 +26,7 @@ import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.security.SecurityUtils;
-import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.security.internal.InternalRealm;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
-import com.walmartlabs.concord.server.user.UserEntry;
-import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
@@ -40,7 +35,6 @@ import org.apache.shiro.util.ThreadContext;
 
 import javax.inject.Inject;
 import java.util.Collection;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -52,13 +46,11 @@ public class ProcessSecurityContext {
     private final SecurityManager securityManager;
     private final ProcessStateManager stateManager;
     private final Cache<PartialProcessKey, PrincipalCollection> principalCache;
-    private final UserManager userManager;
 
     @Inject
-    public ProcessSecurityContext(SecurityManager securityManager, ProcessStateManager stateManager, UserManager userManager) {
+    public ProcessSecurityContext(SecurityManager securityManager, ProcessStateManager stateManager) {
         this.securityManager = securityManager;
         this.stateManager = stateManager;
-        this.userManager = userManager;
         this.principalCache = CacheBuilder.newBuilder()
                 .expireAfterAccess(1, TimeUnit.MINUTES)
                 .build();
@@ -105,33 +97,10 @@ public class ProcessSecurityContext {
                 .orElse(null);
     }
 
-    public <T> T runAs(UUID userID, Callable<T> c) throws Exception {
-        UserEntry u = userManager.get(userID).orElse(null);
-        if (u == null) {
-            throw new UnauthorizedException("User '" + userID + "'not found");
-        }
-
-        try {
-            ThreadContext.bind(securityManager);
-
-            SimplePrincipalCollection principals = new SimplePrincipalCollection();
-            principals.add(new UserPrincipal(InternalRealm.REALM_NAME, u), InternalRealm.REALM_NAME);
-
-            Subject subject = new Subject.Builder()
-                    .sessionCreationEnabled(false)
-                    .authenticated(true)
-                    .principals(principals)
-                    .buildSubject();
-
-            ThreadContext.bind(subject);
-
-            return c.call();
-        } finally {
-            ThreadContext.unbindSubject();
-            ThreadContext.unbindSecurityManager();
-        }
-    }
-
+    /**
+     * Run the specified {@link Callable} as if it was started by the current user (e.g. initiator)
+     * of the specified process.
+     */
     public <T> T runAsCurrentUser(ProcessKey processKey, Callable<T> c) throws Exception {
         PrincipalCollection principals = getPrincipals(processKey);
 

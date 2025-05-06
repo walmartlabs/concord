@@ -1,5 +1,7 @@
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- we should not use Jansi in tests, tests override System.out and System.err to capture output of CLI commands -->
+        <withJansi>false</withJansi>
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %msg%n</pattern>
         </encoder>

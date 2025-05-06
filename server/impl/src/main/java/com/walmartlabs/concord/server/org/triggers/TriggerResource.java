@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org.triggers;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
+import com.walmartlabs.concord.process.loader.ConcordProjectLoader;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
@@ -154,7 +155,7 @@ public class TriggerResource implements Resource {
         try {
             pd = repositoryManager.withLock(repo.getUrl(), () -> {
                 Repository repository = repositoryManager.fetch(repo.getProjectId(), repo);
-                ProjectLoader.Result result = projectLoader.loadProject(repository.path(), importsNormalizerFactory.forProject(repo.getProjectId()), ImportsListener.NOP_LISTENER);
+                ConcordProjectLoader.Result result = projectLoader.loadProject(repository.path(), importsNormalizerFactory.forProject(repo.getProjectId()), ImportsListener.NOP_LISTENER);
                 return result.projectDefinition();
             });
 

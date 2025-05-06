@@ -101,6 +101,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.fusesource.jansi</groupId>
+            <artifactId>jansi</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
@@ -123,21 +128,23 @@
                     <include>**/*</include>
                 </includes>
             </resource>
-            <resource>
+        </resources>
+        <testResources>
+            <testResource>
                 <filtering>false</filtering>
                 <directory>${project.basedir}/src/test/resources</directory>
                 <includes>
                     <include>**/*</include>
                 </includes>
-            </resource>
-            <resource>
+            </testResource>
+            <testResource>
                 <filtering>true</filtering>
                 <directory>${project.basedir}/src/test/filtered-resources</directory>
                 <includes>
                     <include>**/*</include>
                 </includes>
-            </resource>
-        </resources>
+            </testResource>
+        </testResources>
 
         <plugins>
             <plugin>

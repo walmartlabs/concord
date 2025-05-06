@@ -37,6 +37,7 @@ import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
+import com.walmartlabs.concord.server.security.UserSecurityContext;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyEntry;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -65,7 +66,7 @@ public class TriggerScheduler implements ScheduledTask {
     private final TriggerScheduleDao scheduleDao;
     private final RepositoryDao repositoryDao;
     private final ProcessManager processManager;
-    private final ProcessSecurityContext processSecurityContext;
+    private final UserSecurityContext userSecurityContext;
     private final TriggersConfiguration triggerCfg;
     private final SecretManager secretManager;
     private final UserManager userManager;
@@ -76,7 +77,7 @@ public class TriggerScheduler implements ScheduledTask {
     public TriggerScheduler(TriggerScheduleDao scheduleDao,
                             RepositoryDao repositoryDao,
                             ProcessManager processManager,
-                            ProcessSecurityContext processSecurityContext,
+                            UserSecurityContext userSecurityContext,
                             TriggersConfiguration triggerCfg,
                             SecretManager secretManager,
                             UserManager userManager,
@@ -91,7 +92,7 @@ public class TriggerScheduler implements ScheduledTask {
         this.scheduleDao = scheduleDao;
         this.repositoryDao = repositoryDao;
         this.processManager = processManager;
-        this.processSecurityContext = processSecurityContext;
+        this.userSecurityContext = userSecurityContext;
         this.triggerCfg = triggerCfg;
     }
 
@@ -188,7 +189,7 @@ public class TriggerScheduler implements ScheduledTask {
         }
 
         try {
-            processSecurityContext.runAs(initiator.id(), () -> processManager.start(payload));
+            userSecurityContext.runAs(initiator.id(), () -> processManager.start(payload));
         } catch (Exception e) {
             log.error("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error starting process",
                     triggerId, orgId, projectId, repoId, entryPoint, e);
@@ -212,7 +213,7 @@ public class TriggerScheduler implements ScheduledTask {
 
     private void logFailedToStart(TriggerEntry t, String msg) {
         try {
-            processSecurityContext.runAs(CRON.id(), () -> {
+            userSecurityContext.runAs(CRON.id(), () -> {
                 AuditLog.withActionSource(ActionSource.SYSTEM, Collections.emptyMap(), () -> auditLog.add(AuditObject.PROCESS, AuditAction.CREATE)
                         .field("orgId", t.getOrgId())
                         .field("projectId", t.getProjectId())
@@ -232,7 +233,7 @@ public class TriggerScheduler implements ScheduledTask {
             return CRON;
         }
 
-        ApiKeyEntry apiKey = processSecurityContext.runAs(CRON.id(), () -> secretManager.assertApiKey(SecretManager.AccessScope.project(t.getProjectId()), t.getOrgId(), runAs.secretName(), null));
+        ApiKeyEntry apiKey = userSecurityContext.runAs(CRON.id(), () -> secretManager.assertApiKey(SecretManager.AccessScope.project(t.getProjectId()), t.getOrgId(), runAs.secretName(), null));
         UserEntry u = userManager.get(apiKey.getUserId()).orElse(null);
         if (u == null) {
             throw new RuntimeException("Can't find user with API token from secret '" + runAs.secretName() + "'");
