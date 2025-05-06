@@ -1,5 +1,32 @@
 # Change Log
 
+## [2.26.0] - Unreleased
+
+### Added
+
+- resource-task: add fromYamlString method interface
+([#1125](https://github.com/walmartlabs/concord/pull/1125));
+- concord-cli: use jansi, add colors to run output
+([#1138](https://github.com/walmartlabs/concord/pull/1138)).
+
+### Changed
+
+- concord-agent, concord-agent-operator: better shutdown hook,
+handle SIGTERM
+([#1130](https://github.com/walmartlabs/concord/pull/1130));
+- project: enable full annotation processing
+([#1131](https://github.com/walmartlabs/concord/pull/1131));
+- project: fix concord-runner-v2 test discovery
+([#1133](https://github.com/walmartlabs/concord/pull/1133));
+- project: update testcontainers-concord version
+([#1135](https://github.com/walmartlabs/concord/pull/1135));
+- concord-server: use ProjectLoader interface, bind explicitly
+([#1136](https://github.com/walmartlabs/concord/pull/1136));
+- concord-server: split ProcessSecurityContext
+([#1137](https://github.com/walmartlabs/concord/pull/1137)).
+
+
+
 ## [2.25.1] - 2025-04-26
 
 ### Changed
