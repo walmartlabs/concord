@@ -32,6 +32,7 @@ public interface GitClientConfiguration {
 
     @Nullable
     String oauthToken();
+    
     @Nullable
     List<String> authorizedGitHosts();
 
