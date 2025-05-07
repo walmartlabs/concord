@@ -319,7 +319,6 @@ public class GitClient {
             // in this case the user has not provided authentication AND the host is not in the whitelist of hosts
             // which may use the default git credentials. return the url un-modified to attempt anonymous auth;
             // if it fails
-            System.out.println("Forbidden host for default credentials: " + hostname);
             return url;
         }
 
@@ -330,7 +329,6 @@ public class GitClient {
         }
 
         // using default credentials
-        System.out.println("Using default credentials: " + "https://" + cfg.oauthToken() + "@" + url.substring("https://".length()));
         return "https://" + cfg.oauthToken() + "@" + url.substring("https://".length());
     }
 
