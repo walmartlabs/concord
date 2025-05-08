@@ -302,20 +302,11 @@ public class GitClient {
     private String updateUrl(String url, Secret secret) {
         url = url.trim();
 
-        int hostnameStart = url.indexOf("://") + 3;
-        int hostnameEnd = url.indexOf("/", hostnameStart);
-
-        if(hostnameStart==2 || hostnameEnd < 0) {
-            // probably this is invalid, but I don't know what proper handling of this looks like
-            // however you definitely don't want to give credentials to whatever this git url looks like.
-            return url;
-        }
-
-        String hostname = url.substring(hostnameStart, hostnameEnd);
+        URI uri = URI.create(url);
 
         List<String> allowedDefaultHosts = cfg.authorizedGitHosts();
 
-        if(secret == null && allowedDefaultHosts!= null && !allowedDefaultHosts.contains(hostname)) {
+        if(secret == null && allowedDefaultHosts!= null && !allowedDefaultHosts.contains(uri.getHost())) {
             // in this case the user has not provided authentication AND the host is not in the whitelist of hosts
             // which may use the default git credentials. return the url un-modified to attempt anonymous auth;
             // if it fails
