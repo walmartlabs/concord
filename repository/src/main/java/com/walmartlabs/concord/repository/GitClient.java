@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.*;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -302,10 +303,24 @@ public class GitClient {
     private String updateUrl(String url, Secret secret) {
         url = url.trim();
 
-        if (secret != null || cfg.oauthToken() == null || url.contains("@") || !url.startsWith("https://")) {
+        URI uri = URI.create(url);
+
+        List<String> allowedDefaultHosts = cfg.authorizedGitHosts();
+
+        if(secret == null && allowedDefaultHosts!= null && !allowedDefaultHosts.contains(uri.getHost())) {
+            // in this case the user has not provided authentication AND the host is not in the whitelist of hosts
+            // which may use the default git credentials. return the url un-modified to attempt anonymous auth;
+            // if it fails
             return url;
         }
 
+        if (secret != null || cfg.oauthToken() == null || url.contains("@") || !url.startsWith("https://")) {
+            // provided url already has credentials OR there are no default credentials to use.
+            // anonymous auth is the only viable option.
+            return url;
+        }
+
+        // using default credentials
         return "https://" + cfg.oauthToken() + "@" + url.substring("https://".length());
     }
 
