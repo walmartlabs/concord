@@ -26,6 +26,7 @@ import org.eclipse.sisu.Nullable;
 import javax.inject.Inject;
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.List;
 
 public class GitConfiguration implements Serializable {
 
@@ -35,6 +36,11 @@ public class GitConfiguration implements Serializable {
     @Config("git.oauth")
     @Nullable
     private String oauthToken;
+
+    @Inject
+    @Config("git.authorizedGitHosts")
+    @Nullable
+    private List<String> authorizedGitHosts;
 
     @Inject
     @Config("git.shallowClone")
@@ -86,6 +92,10 @@ public class GitConfiguration implements Serializable {
 
     public String getOauthToken() {
         return oauthToken;
+    }
+
+    public List<String> getAuthorizedGitHosts() {
+        return authorizedGitHosts;
     }
 
     public int getHttpLowSpeedLimit() {
