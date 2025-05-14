@@ -1,5 +1,16 @@
 # Change Log
 
+## [2.27.0] - Unreleased
+
+### Added
+
+- concord-server: default Git credentials hostname whitelist
+([#1139](https://github.com/walmartlabs/concord/pull/1139));
+- concord-server: log listening address, starting tasks
+([#1141](https://github.com/walmartlabs/concord/pull/1141)).
+
+
+
 ## [2.26.0] - 2025-05-05
 
 ### Added
