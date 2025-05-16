@@ -20,12 +20,14 @@ package com.walmartlabs.concord.cli;
  * =====
  */
 
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class CliConfigTest {
@@ -33,28 +35,27 @@ public class CliConfigTest {
     @Test
     public void parse() throws Exception {
         var cfg = load("testConfig.yaml");
-        assertEquals("foo", cfg.secrets().localFiles().vaultId());
+        assertEquals("foo", cfg.secrets().vault().id());
     }
 
     @Test
     public void checkDefaults() throws Exception {
         var cfg = load("configWithDefaults.yaml");
-        assertNotNull(cfg.secrets().localFiles().vaultDir());
-        assertTrue(cfg.secrets().localFiles().vaultDir().toString().contains("/vaults"));
+        assertNotNull(cfg.secrets().vault().dir());
+        assertTrue(cfg.secrets().vault().dir().toString().contains("/vaults"));
     }
 
     @Test
     public void withOverrides() throws Exception {
         var cfg = load("testConfig.yaml")
                 .withOverrides(new CliConfig.Overrides(Path.of("/barbaz"), Path.of("/foobar"), "qux"));
-        assertEquals("/barbaz", cfg.secrets().localFiles().secretStoreDir().toString());
-        assertEquals("/foobar", cfg.secrets().localFiles().vaultDir().toString());
-        assertEquals("qux", cfg.secrets().localFiles().vaultId());
+        assertEquals("/barbaz", cfg.secrets().local().dir().toString());
+        assertEquals("/foobar", cfg.secrets().vault().dir().toString());
+        assertEquals("qux", cfg.secrets().vault().id());
     }
 
-    private static CliConfig load(String resource) throws IOException {
-        var src = CliConfigTest.class.getResource(resource);
-        assertNotNull(src, "Resource not found: " + resource);
-        return new YAMLMapper().readValue(src, CliConfig.class);
+    private static CliConfig load(String resource) throws IOException, URISyntaxException {
+        var src = Paths.get(requireNonNull(CliConfigTest.class.getResource(resource)).toURI());;
+        return CliConfig.load(src);
     }
 }

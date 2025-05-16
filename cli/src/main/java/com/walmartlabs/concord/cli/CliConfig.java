@@ -20,16 +20,41 @@ package com.walmartlabs.concord.cli;
  * =====
  */
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public record CliConfig(SecretsConfiguration secrets) {
 
+    public static CliConfig load(Path path) throws IOException {
+        var mapper = new YAMLMapper();
+
+        JsonNode defaults = mapper.readTree(readDefaultConfig());
+
+        JsonNode cfg;
+        try (var reader = Files.newBufferedReader(path)) {
+            cfg = mapper.readTree(reader);
+        }
+
+        var merged = mapper.updateValue(defaults, cfg);
+        return mapper.convertValue(merged, CliConfig.class);
+    }
+
     public static CliConfig create() {
-        var secrets = SecretsConfiguration.create();
-        return new CliConfig(secrets);
+        var mapper = new YAMLMapper();
+        try {
+            return mapper.readValue(readDefaultConfig(), CliConfig.class);
+        } catch (IOException e) {
+            throw new IllegalStateException("Can't parse the default CLI config file. " + e.getMessage());
+        }
     }
 
     public CliConfig withOverrides(Overrides overrides) {
@@ -37,52 +62,57 @@ public record CliConfig(SecretsConfiguration secrets) {
         return new CliConfig(secrets);
     }
 
-    public CliConfig(@Nullable SecretsConfiguration secrets) {
-        this.secrets = Optional.ofNullable(secrets).orElseGet(SecretsConfiguration::create);
-    }
-
     public record Overrides(@Nullable Path secretStoreDir, @Nullable Path vaultDir, @Nullable String vaultId) {
     }
 
-    public record SecretsConfiguration(FileSecretsProviderConfiguration localFiles) {
-
-        public static SecretsConfiguration create() {
-            var localFiles = FileSecretsProviderConfiguration.create();
-            return new SecretsConfiguration(localFiles);
-        }
+    public record SecretsConfiguration(VaultConfiguration vault,
+                                       FileSecretsProviderConfiguration local,
+                                       RemoteSecretsProviderConfiguration remote) {
 
         public SecretsConfiguration withOverrides(Overrides overrides) {
-            var localFiles = this.localFiles().withOverrides(overrides);
-            return new SecretsConfiguration(localFiles);
+            var vault = this.vault().withOverrides(overrides);
+            var localFiles = this.local().withOverrides(overrides);
+            return new SecretsConfiguration(vault, localFiles, this.remote);
         }
 
-        public record FileSecretsProviderConfiguration(Path secretStoreDir, Path vaultDir, String vaultId) {
+        public record VaultConfiguration(Path dir, String id) {
 
-            public static FileSecretsProviderConfiguration create() {
-                return new FileSecretsProviderConfiguration(null, null, null);
+            public VaultConfiguration withOverrides(Overrides overrides) {
+                return new VaultConfiguration(
+                        Optional.ofNullable(overrides.vaultDir()).orElse(this.dir()),
+                        Optional.ofNullable(overrides.vaultId()).orElse(this.id()));
             }
+        }
 
-            public FileSecretsProviderConfiguration(Path secretStoreDir, Path vaultDir, String vaultId) {
-                this.secretStoreDir = Optional.ofNullable(secretStoreDir)
-                        .orElseGet(() -> dotConcordPath("secrets"));
-
-                this.vaultDir = Optional.ofNullable(vaultDir)
-                        .orElseGet(() -> dotConcordPath("vaults"));
-
-                this.vaultId = Optional.ofNullable(vaultId)
-                        .orElse("default");
-            }
+        public record FileSecretsProviderConfiguration(boolean enabled, boolean writable, Path dir) {
 
             public FileSecretsProviderConfiguration withOverrides(Overrides overrides) {
                 return new FileSecretsProviderConfiguration(
-                        Optional.ofNullable(overrides.secretStoreDir()).orElse(this.secretStoreDir()),
-                        Optional.ofNullable(overrides.vaultDir()).orElse(this.vaultDir()),
-                        Optional.ofNullable(overrides.vaultId()).orElse(this.vaultId()));
+                        this.enabled,
+                        this.writable,
+                        Optional.ofNullable(overrides.secretStoreDir()).orElse(this.dir()));
             }
+        }
+
+        public record RemoteSecretsProviderConfiguration(boolean enabled,
+                                                         boolean writable,
+                                                         @Nullable String baseUrl,
+                                                         @Nullable String apiKey) {
         }
     }
 
-    private static Path dotConcordPath(String path) {
-        return Paths.get(System.getProperty("user.home")).resolve(".concord").resolve(path);
+    private static String readDefaultConfig() {
+        try (var in = CliConfig.class.getResourceAsStream("defaultCliConfig.yaml")) {
+            if (in == null) {
+                throw new IllegalStateException("defaultCliConfig.yaml resource not found");
+            }
+            var ab = in.readAllBytes();
+            var s = new String(ab, UTF_8);
+
+            var dotConcordPath = Paths.get(System.getProperty("user.home")).resolve(".concord");
+            return s.replace("${configDir}", dotConcordPath.normalize().toAbsolutePath().toString());
+        } catch (IOException e) {
+            throw new IllegalStateException("Can't load the default CLI config file. " + e.getMessage());
+        }
     }
 }
