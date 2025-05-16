@@ -1,5 +1,10 @@
 secrets:
-  localFiles:
-    secretStoreDir: "/my-secrets"
-    vaultDir: "/my-vault"
-    vaultId: "foo"
+  vault:
+    dir: "/my-vault"
+    id: "foo"
+  local:
+    dir: "/my-secrets"
+  remote:
+    enabled: true
+    baseUrl: "http://localhost:8001"
+    apiKey: "foobar"

@@ -26,6 +26,7 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.cli.CliConfig;
 import com.walmartlabs.concord.cli.Verbosity;
+import com.walmartlabs.concord.cli.runner.secrets.CliSecretService;
 import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.runtime.v2.runner.*;
@@ -73,10 +74,7 @@ public class CliServicesModule extends AbstractModule {
 
         bind(RunnerLogger.class).to(SimpleLogger.class);
 
-        var localFileSecrets = cliConfig.secrets().localFiles();
-        SecretsProvider secretsProvider = new FileSecretsProvider(workDir, localFileSecrets.secretStoreDir());
-        VaultProvider vaultProvider = new VaultProvider(localFileSecrets.vaultDir(), localFileSecrets.vaultId());
-        bind(SecretService.class).toInstance(new CliSecretService(secretsProvider, vaultProvider));
+        bind(SecretService.class).toInstance(CliSecretService.create(cliConfig, workDir, verbosity));
 
         bind(DockerService.class).to(CliDockerService.class);
 

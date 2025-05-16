@@ -23,7 +23,6 @@ package com.walmartlabs.concord.cli;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
@@ -59,7 +58,6 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -70,7 +68,6 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
-import static java.util.Objects.requireNonNullElseGet;
 import static org.fusesource.jansi.Ansi.ansi;
 
 @Command(name = "run", description = "Run the current directory as a Concord process")
@@ -434,9 +431,8 @@ public class Run implements Callable<Integer> {
             log.info("Using CLI configuration file: {}", cfgFile);
         }
 
-        try (BufferedReader reader = Files.newBufferedReader(cfgFile)) {
-            var cfg = new YAMLMapper().readValue(reader, CliConfig.class);
-            return requireNonNullElseGet(cfg, CliConfig::create).withOverrides(overrides);
+        try {
+            return CliConfig.load(cfgFile).withOverrides(overrides);
         } catch (IOException e) {
             System.out.println(ansi().fgRed().a("Failed to read the CLI configuration file ").a(cfgFile.toAbsolutePath()).a(": ").a(e.getMessage()));
             System.exit(1);
