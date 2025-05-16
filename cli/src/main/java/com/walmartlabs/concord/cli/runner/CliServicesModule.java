@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.walmartlabs.concord.cli.CliConfig;
 import com.walmartlabs.concord.cli.Verbosity;
 import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
@@ -47,24 +48,21 @@ import java.util.function.Supplier;
 
 public class CliServicesModule extends AbstractModule {
 
-    private final Path secretStoreDir;
+    private final CliConfig cliConfig;
     private final Path workDir;
     private final Path defaultTaskVars;
-    private final VaultProvider vaultProvider;
     private final DependencyManager dependencyManager;
     private final Verbosity verbosity;
 
-    public CliServicesModule(Path secretStoreDir,
+    public CliServicesModule(CliConfig cliConfig,
                              Path workDir,
                              Path defaultTaskVars,
-                             VaultProvider vaultProvider,
                              DependencyManager dependencyManager,
                              Verbosity verbosity) {
 
-        this.secretStoreDir = secretStoreDir;
+        this.cliConfig = cliConfig;
         this.workDir = workDir;
         this.defaultTaskVars = defaultTaskVars;
-        this.vaultProvider = vaultProvider;
         this.dependencyManager = dependencyManager;
         this.verbosity = verbosity;
     }
@@ -75,7 +73,9 @@ public class CliServicesModule extends AbstractModule {
 
         bind(RunnerLogger.class).to(SimpleLogger.class);
 
-        SecretsProvider secretsProvider = new FileSecretsProvider(workDir, secretStoreDir);
+        var localFileSecrets = cliConfig.secrets().localFiles();
+        SecretsProvider secretsProvider = new FileSecretsProvider(workDir, localFileSecrets.secretStoreDir());
+        VaultProvider vaultProvider = new VaultProvider(localFileSecrets.vaultDir(), localFileSecrets.vaultId());
         bind(SecretService.class).toInstance(new CliSecretService(secretsProvider, vaultProvider));
 
         bind(DockerService.class).to(CliDockerService.class);

@@ -1,0 +1,5 @@
+secrets:
+  localFiles:
+    secretStoreDir: "/my-secrets"
+    vaultDir: "/my-vault"
+    vaultId: "foo"

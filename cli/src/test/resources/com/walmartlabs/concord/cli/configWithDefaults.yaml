@@ -1,0 +1,3 @@
+secrets:
+  localFiles:
+    vaultId: "foo"

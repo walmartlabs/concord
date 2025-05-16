@@ -23,6 +23,7 @@ package com.walmartlabs.concord.cli;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
@@ -50,12 +51,15 @@ import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelExecutionException;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -66,11 +70,13 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNullElseGet;
 import static org.fusesource.jansi.Ansi.ansi;
 
 @Command(name = "run", description = "Run the current directory as a Concord process")
 public class Run implements Callable<Integer> {
 
+    private static final Logger log = LoggerFactory.getLogger(Run.class);
     @Spec
     private CommandSpec spec;
 
@@ -93,13 +99,13 @@ public class Run implements Callable<Integer> {
     Path repoCacheDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("repoCache");
 
     @Option(names = {"--secret-dir"}, description = "secret store dir")
-    Path secretStoreDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("secrets");
+    Path secretStoreDir;
 
     @Option(names = {"--vault-dir"}, description = "vault dir")
-    Path vaultDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("vaults");
+    Path vaultDir;
 
     @Option(names = {"--vault-id"}, description = "vault id")
-    String vaultId = "default";
+    String vaultId;
 
     @Option(names = {"--imports-source"}, description = "default imports source")
     String importsSource = "https://github.com";
@@ -138,6 +144,8 @@ public class Run implements Callable<Integer> {
     @Override
     public Integer call() throws Exception {
         Verbosity verbosity = new Verbosity(this.verbosity);
+
+        CliConfig cliConfig = loadCliConfig(verbosity);
 
         sourceDir = sourceDir.normalize().toAbsolutePath();
         Path targetDir;
@@ -274,7 +282,7 @@ public class Run implements Callable<Integer> {
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(secretStoreDir, targetDir, defaultTaskVars, new VaultProvider(vaultDir, vaultId), dependencyManager, verbosity))
+                new CliServicesModule(cliConfig, targetDir, defaultTaskVars, dependencyManager, verbosity))
                 .create();
 
         // Just to notify listeners
@@ -408,6 +416,32 @@ public class Run implements Callable<Integer> {
             return DependencyManagerConfiguration.of(depsCacheDir, DependencyManagerRepositories.get(cfgFile));
         }
         return DependencyManagerConfiguration.of(depsCacheDir);
+    }
+
+    private CliConfig loadCliConfig(Verbosity verbosity) throws IOException {
+        var overrides = new CliConfig.Overrides(secretStoreDir, vaultDir, vaultId);
+
+        Path baseDir = Paths.get(System.getProperty("user.home"), ".concord");
+        Path cfgFile = baseDir.resolve("cli.yaml");
+        if (!Files.exists(cfgFile)) {
+            cfgFile = baseDir.resolve("cli.yml");
+        }
+        if (!Files.exists(cfgFile)) {
+            return CliConfig.create().withOverrides(overrides);
+        }
+
+        if (verbosity.verbose()) {
+            log.info("Using CLI configuration file: {}", cfgFile);
+        }
+
+        try (BufferedReader reader = Files.newBufferedReader(cfgFile)) {
+            var cfg = new YAMLMapper().readValue(reader, CliConfig.class);
+            return requireNonNullElseGet(cfg, CliConfig::create).withOverrides(overrides);
+        } catch (IOException e) {
+            System.out.println(ansi().fgRed().a("Failed to read the CLI configuration file ").a(cfgFile.toAbsolutePath()).a(": ").a(e.getMessage()));
+            System.exit(1);
+            return null;
+        }
     }
 
     private static void dumpArguments(Map<String, Object> args) {
