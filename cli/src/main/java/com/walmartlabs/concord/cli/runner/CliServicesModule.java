@@ -74,7 +74,10 @@ public class CliServicesModule extends AbstractModule {
         install(new BaseRunnerModule());
 
         bind(RunnerLogger.class).to(SimpleLogger.class);
-        bind(SecretService.class).toInstance(new CliSecretService(workDir, secretStoreDir, vaultProvider));
+
+        SecretsProvider secretsProvider = new FileSecretsProvider(workDir, secretStoreDir);
+        bind(SecretService.class).toInstance(new CliSecretService(secretsProvider, vaultProvider));
+
         bind(DockerService.class).to(CliDockerService.class);
 
         bind(CheckpointService.class).to(CliCheckpointService.class);
