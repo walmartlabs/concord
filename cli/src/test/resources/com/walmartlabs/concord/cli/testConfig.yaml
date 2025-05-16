@@ -1,0 +1,10 @@
+secrets:
+  vault:
+    dir: "/my-vault"
+    id: "foo"
+  local:
+    dir: "/my-secrets"
+  remote:
+    enabled: true
+    baseUrl: "http://localhost:8001"
+    apiKey: "foobar"

@@ -38,16 +38,20 @@ import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
-import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.model.Flow;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.Profile;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
+import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelExecutionException;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelExecutionException;
-import org.fusesource.jansi.Ansi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -64,13 +68,12 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
-import static org.fusesource.jansi.Ansi.Color.GREEN;
-import static org.fusesource.jansi.Ansi.Color.YELLOW;
 import static org.fusesource.jansi.Ansi.ansi;
 
 @Command(name = "run", description = "Run the current directory as a Concord process")
 public class Run implements Callable<Integer> {
 
+    private static final Logger log = LoggerFactory.getLogger(Run.class);
     @Spec
     private CommandSpec spec;
 
@@ -93,13 +96,13 @@ public class Run implements Callable<Integer> {
     Path repoCacheDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("repoCache");
 
     @Option(names = {"--secret-dir"}, description = "secret store dir")
-    Path secretStoreDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("secrets");
+    Path secretStoreDir;
 
     @Option(names = {"--vault-dir"}, description = "vault dir")
-    Path vaultDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("vaults");
+    Path vaultDir;
 
     @Option(names = {"--vault-id"}, description = "vault id")
-    String vaultId = "default";
+    String vaultId;
 
     @Option(names = {"--imports-source"}, description = "default imports source")
     String importsSource = "https://github.com";
@@ -138,6 +141,8 @@ public class Run implements Callable<Integer> {
     @Override
     public Integer call() throws Exception {
         Verbosity verbosity = new Verbosity(this.verbosity);
+
+        CliConfig cliConfig = loadCliConfig(verbosity);
 
         sourceDir = sourceDir.normalize().toAbsolutePath();
         Path targetDir;
@@ -274,7 +279,7 @@ public class Run implements Callable<Integer> {
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(secretStoreDir, targetDir, defaultTaskVars, new VaultProvider(vaultDir, vaultId), dependencyManager, verbosity))
+                new CliServicesModule(cliConfig, targetDir, defaultTaskVars, dependencyManager, verbosity))
                 .create();
 
         // Just to notify listeners
@@ -408,6 +413,31 @@ public class Run implements Callable<Integer> {
             return DependencyManagerConfiguration.of(depsCacheDir, DependencyManagerRepositories.get(cfgFile));
         }
         return DependencyManagerConfiguration.of(depsCacheDir);
+    }
+
+    private CliConfig loadCliConfig(Verbosity verbosity) throws IOException {
+        var overrides = new CliConfig.Overrides(secretStoreDir, vaultDir, vaultId);
+
+        Path baseDir = Paths.get(System.getProperty("user.home"), ".concord");
+        Path cfgFile = baseDir.resolve("cli.yaml");
+        if (!Files.exists(cfgFile)) {
+            cfgFile = baseDir.resolve("cli.yml");
+        }
+        if (!Files.exists(cfgFile)) {
+            return CliConfig.create().withOverrides(overrides);
+        }
+
+        if (verbosity.verbose()) {
+            log.info("Using CLI configuration file: {}", cfgFile);
+        }
+
+        try {
+            return CliConfig.load(cfgFile).withOverrides(overrides);
+        } catch (IOException e) {
+            System.out.println(ansi().fgRed().a("Failed to read the CLI configuration file ").a(cfgFile.toAbsolutePath()).a(": ").a(e.getMessage()));
+            System.exit(1);
+            return null;
+        }
     }
 
     private static void dumpArguments(Map<String, Object> args) {
