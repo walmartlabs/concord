@@ -35,9 +35,11 @@ public class TaskParams {
     private static final String VISIBILITY_KEY = "visibility";
     private static final String ORG_KEY = "org";
     private static final String PROJECT_KEY = "project";
-    private static final String KEY_PAIR_KEY = "keyPair";
-    private static final String USERNAME_PASSWORD_KEY = "usernamePassword";
-    private static final String DATA_KEY = "data";
+
+    static final String KEY_PAIR_KEY = "keyPair";
+    static final String USERNAME_PASSWORD_KEY = "usernamePassword";
+    static final String DATA_KEY = "data";
+    static final String STRING_VALUE_KEY = "stringValue";
 
     private final Variables variables;
 
@@ -91,6 +93,10 @@ public class TaskParams {
 
     public String data() {
         return variables.getString(DATA_KEY);
+    }
+
+    public String stringValue() {
+        return variables.getString(STRING_VALUE_KEY);
     }
 
     public UsernamePassword usernamePassword() {

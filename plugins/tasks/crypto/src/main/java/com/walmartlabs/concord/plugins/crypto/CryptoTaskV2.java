@@ -20,8 +20,6 @@ package com.walmartlabs.concord.plugins.crypto;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.sdk.ProjectInfo;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService.KeyPair;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService.SecretCreationResult;
@@ -37,6 +35,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.walmartlabs.concord.plugins.crypto.TaskParams.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Named("crypto")
 @SuppressWarnings("unused")
@@ -155,22 +156,42 @@ public class CryptoTaskV2 implements Task {
                 .build();
 
         String data = in.data();
+        String stringValue = in.stringValue();
         TaskParams.KeyPair kp = in.keyPair();
         TaskParams.UsernamePassword up = in.usernamePassword();
 
+        if (data != null && stringValue != null) {
+            throw new IllegalArgumentException("The 'data' parameter and 'stringValue' are mutually exclusive.");
+        }
+
+
         if (data != null) {
             if (dryRunMode) {
-                log.info("Dry-run mode enabled: Skipping creating of data secret '{}'", in.secretName());
+                log.info("Dry-run mode enabled: Skipping creation of a data secret '{}'", in.secretName());
                 return null;
             }
 
-            return secretService.createData(secret, readFile(toPath(data)));
+            Path file = toPath(data);
+            if (Files.notExists(file)) {
+                throw new RuntimeException("Can't create a data secret. File '%s' not found".formatted(file));
+            }
+
+            byte[] ab = Files.readAllBytes(file);
+            return secretService.createData(secret, ab);
+        } else if (stringValue != null) {
+            if (dryRunMode) {
+                log.info("Dry-run mode enabled: Skipping creation of a string secret '{}'", in.secretName());
+                return null;
+            }
+
+            byte[] ab = stringValue.getBytes(UTF_8);
+            return secretService.createData(secret, ab);
         } else if (kp != null) {
             Path publicKey = toPath(kp.publicKey());
             Path privateKey = toPath(kp.privateKey());
 
             if (dryRunMode) {
-                log.info("Dry-run mode enabled: Skipping creating of key-pair secret '{}'", in.secretName());
+                log.info("Dry-run mode enabled: Skipping creation of a key-pair secret '{}'", in.secretName());
                 return null;
             }
 
@@ -180,13 +201,14 @@ public class CryptoTaskV2 implements Task {
                     .build());
         } else if (up != null) {
             if (dryRunMode) {
-                log.info("Dry-run mode enabled: Skipping creating of username secret '{}'", in.secretName());
+                log.info("Dry-run mode enabled: Skipping creation of a username/password secret '{}'", in.secretName());
                 return null;
             }
 
             return secretService.createUsernamePassword(secret, UsernamePassword.of(up.username(), up.password()));
         } else {
-            throw new IllegalArgumentException("A path to the secret's data, a key pair or a username/password pair must be specified.");
+            throw new IllegalArgumentException("One of '%s', '%s', '%s' or '%s' is required"
+                    .formatted(DATA_KEY, STRING_VALUE_KEY, KEY_PAIR_KEY, USERNAME_PASSWORD_KEY));
         }
     }
 
@@ -194,7 +216,7 @@ public class CryptoTaskV2 implements Task {
         Path p = workDir.resolve(value).normalize();
 
         if (!p.startsWith(workDir)) {
-            throw new IllegalArgumentException("Can't use paths outside of the working directory: " + p.toAbsolutePath());
+            throw new IllegalArgumentException("Can't use paths outside of the working directory: %s".formatted(p.toAbsolutePath()));
         }
 
         return p;
