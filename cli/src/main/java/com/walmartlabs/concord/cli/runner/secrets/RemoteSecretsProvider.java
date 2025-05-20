@@ -20,6 +20,7 @@ package com.walmartlabs.concord.cli.runner.secrets;
  * =====
  */
 
+import com.walmartlabs.concord.cli.Version;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
@@ -45,6 +46,8 @@ public class RemoteSecretsProvider implements SecretsProvider {
                 .create(ApiClientConfiguration.builder()
                         .apiKey(requireNonNull(apiKey))
                         .build());
+        apiClient.setUserAgent("Concord-Cli (%s)".formatted(Version.getVersion()));
+
         this.secretClient = new SecretClient(apiClient);
     }
 

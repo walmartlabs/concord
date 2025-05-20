@@ -20,7 +20,6 @@ package com.walmartlabs.concord.cli.runner.secrets;
  * =====
  */
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
@@ -40,9 +39,6 @@ import static com.walmartlabs.concord.cli.runner.secrets.UncheckedIO.*;
  * Secrets stored unencrypted in ${dir}/${orgName}/${secretName}.
  */
 public class FileSecretsProvider implements SecretsProvider {
-
-    private static final TypeReference<Map<String, String>> MAP_OF_STRINGS = new TypeReference<>() {
-    };
 
     private final Path workDir;
     private final Path secretStoreDir;
