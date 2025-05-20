@@ -154,7 +154,7 @@ public class FileSecretsProvider implements SecretsProvider {
     private Optional<Path> getSecret(String orgName, String secretName) {
         var secretPath = toSecretPath(orgName, secretName);
         if (Files.notExists(secretPath)) {
-            throw new RuntimeException("Secret '%s' not found".formatted(secretPath));
+            return Optional.empty();
         }
         return Optional.of(secretPath);
     }
