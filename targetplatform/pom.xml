@@ -182,7 +182,7 @@
             </dependency>
             <dependency>
                 <groupId>com.walmartlabs.concord.runtime</groupId>
-                <artifactId>concord-process-loader</artifactId>
+                <artifactId>concord-runtime-loader</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
