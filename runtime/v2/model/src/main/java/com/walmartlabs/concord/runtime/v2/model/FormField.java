@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.model;
  */
 
 import com.walmartlabs.concord.forms.FormField.Cardinality;
+import com.walmartlabs.concord.runtime.model.Location;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;

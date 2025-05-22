@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.process.loader.model;
+package com.walmartlabs.concord.runtime.model;
 
 /*-
  * *****
@@ -20,28 +20,9 @@ package com.walmartlabs.concord.process.loader.model;
  * =====
  */
 
-import com.walmartlabs.concord.common.AllowNulls;
-import org.immutables.serial.Serial;
-import org.immutables.value.Value;
+import java.io.OutputStream;
 
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.Map;
+public interface EffectiveProcessDefinitionProvider {
 
-@Value.Immutable
-@Value.Style(jdkOnly = true)
-@Serial.Version(1)
-public interface ExpressionStep extends Step {
-
-    String expression();
-
-    @Value.Default
-    @AllowNulls
-    default Map<String, Serializable> input() {
-        return Collections.emptyMap();
-    }
-
-    static ImmutableExpressionStep.Builder builder() {
-        return ImmutableExpressionStep.builder();
-    }
+    void serialize(Options options, OutputStream out) throws Exception;
 }

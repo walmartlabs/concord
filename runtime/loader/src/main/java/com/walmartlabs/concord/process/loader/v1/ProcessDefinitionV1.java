@@ -21,7 +21,7 @@ package com.walmartlabs.concord.process.loader.v1;
  */
 
 import com.walmartlabs.concord.imports.Imports;
-import com.walmartlabs.concord.process.loader.model.*;
+import com.walmartlabs.concord.runtime.model.*;
 import io.takari.bpm.model.form.FormDefinition;
 
 import java.io.Serializable;

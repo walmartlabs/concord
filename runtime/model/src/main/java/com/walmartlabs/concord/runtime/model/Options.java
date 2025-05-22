@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.process.loader.model;
+package com.walmartlabs.concord.runtime.model;
 
 /*-
  * *****
@@ -20,11 +20,13 @@ package com.walmartlabs.concord.process.loader.model;
  * =====
  */
 
-import com.walmartlabs.concord.common.AllowNulls;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)

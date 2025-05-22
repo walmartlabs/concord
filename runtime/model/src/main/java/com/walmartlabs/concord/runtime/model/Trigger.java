@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.process.loader.model;
+package com.walmartlabs.concord.runtime.model;
 
 /*-
  * *****
@@ -20,12 +20,34 @@ package com.walmartlabs.concord.process.loader.model;
  * =====
  */
 
-import java.io.Serializable;
-import java.util.List;
+import org.immutables.value.Value;
 
-public interface FlowDefinition extends Serializable {
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Map;
+
+@Value.Immutable
+@Value.Style(jdkOnly = true)
+public interface Trigger {
 
     String name();
 
-    List<Step> steps();
+    @Nullable
+    Map<String, Object> arguments();
+
+    @Nullable
+    Map<String, Object> conditions();
+
+    @Nullable
+    Map<String, Object> configuration();
+
+    @Nullable
+    List<String> activeProfiles();
+
+    @Nullable
+    SourceMap sourceMap();
+
+    static ImmutableTrigger.Builder builder() {
+        return ImmutableTrigger.builder();
+    }
 }

@@ -20,10 +20,10 @@ package com.walmartlabs.concord.process.loader.v1;
  * =====
  */
 
-import com.walmartlabs.concord.process.loader.model.ExpressionStep;
-import com.walmartlabs.concord.process.loader.model.FlowDefinition;
-import com.walmartlabs.concord.process.loader.model.Step;
-import com.walmartlabs.concord.process.loader.model.TaskCallStep;
+import com.walmartlabs.concord.runtime.model.ExpressionStep;
+import com.walmartlabs.concord.runtime.model.FlowDefinition;
+import com.walmartlabs.concord.runtime.model.Step;
+import com.walmartlabs.concord.runtime.model.TaskCallStep;
 import io.takari.bpm.model.*;
 
 import java.io.Serializable;

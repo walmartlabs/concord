@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.process.loader.model;
+package com.walmartlabs.concord.runtime.model;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,27 +20,14 @@ package com.walmartlabs.concord.process.loader.model;
  * =====
  */
 
-import org.immutables.value.Value;
-
-import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
-@Value.Immutable
-@Value.Style(jdkOnly = true)
-public interface Form {
+public interface Configuration {
 
-    String name();
+    Map<String, Object> asMap();
 
-    @Value.Default
-    default List<FormField> fields() {
-        return Collections.emptyList();
-    }
+    List<String> dependencies();
 
-    @Nullable
-    SourceMap location();
-
-    static ImmutableForm.Builder builder() {
-        return ImmutableForm.builder();
-    }
+    List<String> extraDependencies();
 }

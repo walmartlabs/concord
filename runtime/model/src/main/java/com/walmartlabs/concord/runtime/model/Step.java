@@ -1,17 +1,17 @@
-package com.walmartlabs.concord.process.loader.model;
+package com.walmartlabs.concord.runtime.model;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,9 +20,9 @@ package com.walmartlabs.concord.process.loader.model;
  * =====
  */
 
-import java.io.OutputStream;
+import java.io.Serializable;
 
-public interface EffectiveProcessDefinitionProvider {
+public interface Step extends Serializable {
 
-    void serialize(Options options, OutputStream out) throws Exception;
+    SourceMap location();
 }

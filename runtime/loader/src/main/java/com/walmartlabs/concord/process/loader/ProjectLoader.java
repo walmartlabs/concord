@@ -21,7 +21,7 @@ package com.walmartlabs.concord.process.loader;
  */
 
 import com.walmartlabs.concord.imports.ImportsListener;
-import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.model.ProcessDefinition;
 import com.walmartlabs.concord.repository.Snapshot;
 
 import java.nio.file.Path;

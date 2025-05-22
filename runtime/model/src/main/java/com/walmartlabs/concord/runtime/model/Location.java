@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.model;
+package com.walmartlabs.concord.runtime.model;
 
 /*-
  * *****

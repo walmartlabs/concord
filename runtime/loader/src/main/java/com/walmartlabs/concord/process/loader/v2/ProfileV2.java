@@ -20,9 +20,9 @@ package com.walmartlabs.concord.process.loader.v2;
  * =====
  */
 
-import com.walmartlabs.concord.process.loader.model.Configuration;
-import com.walmartlabs.concord.process.loader.model.FlowDefinition;
-import com.walmartlabs.concord.process.loader.model.Profile;
+import com.walmartlabs.concord.runtime.model.Configuration;
+import com.walmartlabs.concord.runtime.model.FlowDefinition;
+import com.walmartlabs.concord.runtime.model.Profile;
 
 import java.io.Serializable;
 import java.util.*;

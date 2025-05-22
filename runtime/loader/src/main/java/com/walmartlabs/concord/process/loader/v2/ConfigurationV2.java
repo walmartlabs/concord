@@ -23,7 +23,7 @@ package com.walmartlabs.concord.process.loader.v2;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.walmartlabs.concord.process.loader.model.Configuration;
+import com.walmartlabs.concord.runtime.model.Configuration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;

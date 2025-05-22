@@ -20,7 +20,7 @@ package com.walmartlabs.concord.process.loader.v1;
  * =====
  */
 
-import com.walmartlabs.concord.process.loader.model.Configuration;
+import com.walmartlabs.concord.runtime.model.Configuration;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 

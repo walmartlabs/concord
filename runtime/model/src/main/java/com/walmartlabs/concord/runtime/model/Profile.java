@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.process.loader.model;
+package com.walmartlabs.concord.runtime.model;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,28 +20,14 @@ package com.walmartlabs.concord.process.loader.model;
  * =====
  */
 
-import com.walmartlabs.concord.common.AllowNulls;
-import org.immutables.serial.Serial;
-import org.immutables.value.Value;
-
-import java.io.Serializable;
-import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
-@Value.Immutable
-@Value.Style(jdkOnly = true)
-@Serial.Version(1)
-public interface TaskCallStep extends Step {
+public interface Profile {
 
-    String name();
+    Configuration configuration();
 
-    @Value.Default
-    @AllowNulls
-    default Map<String, Serializable> input() {
-        return Collections.emptyMap();
-    }
+    Set<String> publicFlows();
 
-    static ImmutableTaskCallStep.Builder builder() {
-        return ImmutableTaskCallStep.builder();
-    }
+    Map<String, FlowDefinition> flows();
 }

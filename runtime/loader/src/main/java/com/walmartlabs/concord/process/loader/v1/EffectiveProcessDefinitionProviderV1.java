@@ -20,8 +20,8 @@ package com.walmartlabs.concord.process.loader.v1;
  * =====
  */
 
-import com.walmartlabs.concord.process.loader.model.EffectiveProcessDefinitionProvider;
-import com.walmartlabs.concord.process.loader.model.Options;
+import com.walmartlabs.concord.runtime.model.EffectiveProcessDefinitionProvider;
+import com.walmartlabs.concord.runtime.model.Options;
 
 import java.io.OutputStream;
 

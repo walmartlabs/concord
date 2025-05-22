@@ -42,6 +42,7 @@
         <module>forms</module>
         <module>server</module>
         <module>client2</module>
+        <module>runtime/model</module>
         <module>runtime/common</module>
         <module>runtime/v1</module>
         <module>runtime/v2</module>

@@ -20,6 +20,8 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.model.Location;
+
 public class ExitStep implements Step {
 
     // for backward compatibility (java8 concord 1.92.0 version)

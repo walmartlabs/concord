@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.process.loader.model;
+package com.walmartlabs.concord.runtime.model;
 
 /*-
  * *****
@@ -20,34 +20,30 @@ package com.walmartlabs.concord.process.loader.model;
  * =====
  */
 
-import org.immutables.value.Value;
+import com.walmartlabs.concord.imports.Imports;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-@Value.Immutable
-@Value.Style(jdkOnly = true)
-public interface Trigger {
+/**
+ * Common interface for v1 and v2 process definitions.
+ */
+public interface ProcessDefinition extends EffectiveProcessDefinitionProvider {
 
-    String name();
+    String runtime();
 
-    @Nullable
-    Map<String, Object> arguments();
+    Configuration configuration();
 
-    @Nullable
-    Map<String, Object> conditions();
+    Map<String, FlowDefinition> flows();
 
-    @Nullable
-    Map<String, Object> configuration();
+    Set<String> publicFlows();
 
-    @Nullable
-    List<String> activeProfiles();
+    Map<String, Profile> profiles();
 
-    @Nullable
-    SourceMap sourceMap();
+    List<Trigger> triggers();
 
-    static ImmutableTrigger.Builder builder() {
-        return ImmutableTrigger.builder();
-    }
+    Imports imports();
+
+    List<Form> forms();
 }

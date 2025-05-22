@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.process.loader.model;
+package com.walmartlabs.concord.runtime.model;
 
 /*-
  * *****
@@ -21,40 +21,27 @@ package com.walmartlabs.concord.process.loader.model;
  */
 
 import com.walmartlabs.concord.common.AllowNulls;
+import org.immutables.serial.Serial;
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
-public interface FormField {
+@Serial.Version(1)
+public interface TaskCallStep extends Step {
 
     String name();
 
-    @Nullable
-    String label();
-
-    String type();
-
-    @Nullable
-    Serializable defaultValue();
-
-    @Nullable
-    Serializable allowedValue();
-
     @Value.Default
     @AllowNulls
-    default Map<String, Serializable> options() {
+    default Map<String, Serializable> input() {
         return Collections.emptyMap();
     }
 
-    @Nullable
-    SourceMap location();
-
-    static ImmutableFormField.Builder builder() {
-        return ImmutableFormField.builder();
+    static ImmutableTaskCallStep.Builder builder() {
+        return ImmutableTaskCallStep.builder();
     }
 }

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.process.loader.model;
+package com.walmartlabs.concord.runtime.model;
 
 /*-
  * *****
@@ -20,14 +20,8 @@ package com.walmartlabs.concord.process.loader.model;
  * =====
  */
 
-import java.util.List;
-import java.util.Map;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
 
-public interface Configuration {
-
-    Map<String, Object> asMap();
-
-    List<String> dependencies();
-
-    List<String> extraDependencies();
-}
+@Target({ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.TYPE_USE})
+public @interface AllowNulls {}

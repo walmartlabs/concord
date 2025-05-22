@@ -21,8 +21,8 @@ package com.walmartlabs.concord.process.loader.v2;
  */
 
 import com.walmartlabs.concord.imports.Imports;
-import com.walmartlabs.concord.process.loader.model.EffectiveProcessDefinitionProvider;
-import com.walmartlabs.concord.process.loader.model.Options;
+import com.walmartlabs.concord.runtime.model.EffectiveProcessDefinitionProvider;
+import com.walmartlabs.concord.runtime.model.Options;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.sdk.Constants;

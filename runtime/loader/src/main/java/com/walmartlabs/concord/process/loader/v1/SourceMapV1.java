@@ -20,7 +20,7 @@ package com.walmartlabs.concord.process.loader.v1;
  * =====
  */
 
-import com.walmartlabs.concord.process.loader.model.SourceMap;
+import com.walmartlabs.concord.runtime.model.SourceMap;
 
 import java.io.Serializable;
 

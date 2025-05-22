@@ -21,8 +21,8 @@ package com.walmartlabs.concord.process.loader.v2;
  */
 
 
-import com.walmartlabs.concord.process.loader.model.SourceMap;
-import com.walmartlabs.concord.process.loader.model.Trigger;
+import com.walmartlabs.concord.runtime.model.SourceMap;
+import com.walmartlabs.concord.runtime.model.Trigger;
 
 import java.io.Serializable;
 import java.util.List;

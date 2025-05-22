@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.process.loader.model;
+package com.walmartlabs.concord.runtime.model;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,36 +20,27 @@ package com.walmartlabs.concord.process.loader.model;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.model.Location;
 import org.immutables.serial.Serial;
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.Map;
 
 @Value.Immutable
-@Serial.Version(1)
 @Value.Style(jdkOnly = true)
-public interface SourceMap extends Serializable {
+@Serial.Version(1)
+public interface ExpressionStep extends Step {
 
-    static SourceMap from(Location location) {
-        return SourceMap.builder()
-                .source(location.fileName() != null ? location.fileName() : "n/a")
-                .line(location.lineNum())
-                .column(location.column())
-                .build();
+    String expression();
+
+    @Value.Default
+    @AllowNulls
+    default Map<String, Serializable> input() {
+        return Collections.emptyMap();
     }
 
-    String source();
-
-    int line();
-
-    int column();
-
-    @Nullable
-    String description();
-
-    static ImmutableSourceMap.Builder builder() {
-        return ImmutableSourceMap.builder();
+    static ImmutableExpressionStep.Builder builder() {
+        return ImmutableExpressionStep.builder();
     }
 }

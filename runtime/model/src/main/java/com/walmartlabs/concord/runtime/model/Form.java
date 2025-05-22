@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.process.loader.model;
+package com.walmartlabs.concord.runtime.model;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,30 +20,27 @@ package com.walmartlabs.concord.process.loader.model;
  * =====
  */
 
-import com.walmartlabs.concord.imports.Imports;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-/**
- * Common interface for v1 and v2 process definitions.
- */
-public interface ProcessDefinition extends EffectiveProcessDefinitionProvider {
+@Value.Immutable
+@Value.Style(jdkOnly = true)
+public interface Form {
 
-    String runtime();
+    String name();
 
-    Configuration configuration();
+    @Value.Default
+    default List<FormField> fields() {
+        return Collections.emptyList();
+    }
 
-    Map<String, FlowDefinition> flows();
+    @Nullable
+    SourceMap location();
 
-    Set<String> publicFlows();
-
-    Map<String, Profile> profiles();
-
-    List<Trigger> triggers();
-
-    Imports imports();
-
-    List<Form> forms();
+    static ImmutableForm.Builder builder() {
+        return ImmutableForm.builder();
+    }
 }

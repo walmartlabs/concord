@@ -20,7 +20,7 @@ package com.walmartlabs.concord.process.loader.v2;
  * =====
  */
 
-import com.walmartlabs.concord.process.loader.model.*;
+import com.walmartlabs.concord.runtime.model.*;
 import com.walmartlabs.concord.runtime.v2.model.Expression;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 
