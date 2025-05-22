@@ -9,6 +9,11 @@
 - concord-server: log listening address, starting tasks
 ([#1141](https://github.com/walmartlabs/concord/pull/1141)).
 
+### Changed
+
+- oidc: validate team and role mappings
+([#1144](https://github.com/walmartlabs/concord/pull/1144)).
+
 
 
 ## [2.26.0] - 2025-05-05
