@@ -12,7 +12,9 @@
 ### Changed
 
 - oidc: validate team and role mappings
-([#1144](https://github.com/walmartlabs/concord/pull/1144)).
+([#1144](https://github.com/walmartlabs/concord/pull/1144));
+- concord-server-db: use session locks in Liquibase
+([#1145](https://github.com/walmartlabs/concord/pull/1145)).
 
 
 
