@@ -56,6 +56,10 @@
             <artifactId>liquibase-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.github.blagerweij</groupId>
+            <artifactId>liquibase-sessionlock</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
