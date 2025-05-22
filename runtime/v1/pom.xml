@@ -15,7 +15,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>project-model</module>
+        <module>model</module>
         <module>impl</module>
     </modules>
 </project>

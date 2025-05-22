@@ -26,7 +26,7 @@
         <!-- v1 dependencies -->
         <dependency>
             <groupId>com.walmartlabs.concord.runtime.v1</groupId>
-            <artifactId>concord-project-model-v1</artifactId>
+            <artifactId>concord-runtime-model-v1</artifactId>
         </dependency>
 
         <!-- v2 dependencies -->

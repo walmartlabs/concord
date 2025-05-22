@@ -10,8 +10,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <!-- TODO rename to concord-runtime-model-v1 -->
-    <artifactId>concord-project-model-v1</artifactId>
+    <artifactId>concord-runtime-model-v1</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>
