@@ -21,14 +21,6 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-sdk</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-imports</artifactId>
         </dependency>
         <dependency>

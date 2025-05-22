@@ -8,10 +8,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
+import static com.walmartlabs.concord.process.loader.StandardRuntimeTypes.PROJECT_ROOT_FILE_NAMES;
+
 public class ProjectLoaderUtils {
 
     public static Optional<String> getRuntimeType(Path workDir) throws IOException {
-        for (var filename : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
+        for (var filename : PROJECT_ROOT_FILE_NAMES) {
             var src = workDir.resolve(filename);
             if (Files.exists(src)) {
                 var mapper = new YAMLMapper();
@@ -40,7 +42,7 @@ public class ProjectLoaderUtils {
     }
 
     public static boolean isConcordFileExists(Path repoPath) {
-        for (String projectFileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
+        for (String projectFileName : PROJECT_ROOT_FILE_NAMES) {
             Path projectFile = repoPath.resolve(projectFileName);
             if (Files.exists(projectFile)) {
                 return true;

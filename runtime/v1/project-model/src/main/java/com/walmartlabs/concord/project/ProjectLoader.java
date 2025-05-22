@@ -47,6 +47,8 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
+import static com.walmartlabs.concord.process.loader.StandardRuntimeTypes.PROJECT_ROOT_FILE_NAMES;
+
 public class ProjectLoader {
 
     private final ImportManager importManager;
@@ -95,7 +97,7 @@ public class ProjectLoader {
             }
         }
 
-        for (String n : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
+        for (String n : PROJECT_ROOT_FILE_NAMES) {
             Path p = assertLocal(workDir, workDir.resolve(n));
             if (Files.exists(p)) {
                 b.addProjectFile(workDir, p);
@@ -139,7 +141,7 @@ public class ProjectLoader {
     private ProjectDefinition initialLoad(Path baseDir) throws IOException {
         ProjectDefinitionBuilder b = new ProjectDefinitionBuilder(parser);
 
-        for (String n : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
+        for (String n : PROJECT_ROOT_FILE_NAMES) {
             Path p = baseDir.resolve(n);
             if (Files.exists(p)) {
                 b.addProjectFile(baseDir, p);

@@ -40,6 +40,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.process.loader.StandardRuntimeTypes.CONCORD_V2_RUNTIME_TYPE;
+import static com.walmartlabs.concord.process.loader.StandardRuntimeTypes.PROJECT_ROOT_FILE_NAMES;
 
 public class ProjectLoaderV2 implements ProjectLoader {
 
@@ -123,7 +124,7 @@ public class ProjectLoaderV2 implements ProjectLoader {
     }
 
     private ProcessDefinition loadRoot(YamlParserV2 parser, Path baseDir) throws IOException {
-        for (String fileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
+        for (String fileName : PROJECT_ROOT_FILE_NAMES) {
             Path p = baseDir.resolve(fileName);
             if (Files.exists(p)) {
                 ProcessDefinition result = parser.parse(baseDir, p);
@@ -233,7 +234,7 @@ public class ProjectLoaderV2 implements ProjectLoader {
 
     private static void copyResources(Path baseDir, Resources resources, Path destDir, CopyOption... options) throws IOException {
         List<Path> files = loadResources(baseDir, resources);
-        for (String fileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
+        for (String fileName : PROJECT_ROOT_FILE_NAMES) {
             Path p = baseDir.resolve(fileName);
             files.add(p);
         }
