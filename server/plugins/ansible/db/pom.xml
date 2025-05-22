@@ -14,7 +14,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <db.image>library/postgres:10.4-alpine</db.image>
+        <db.image>library/postgres:14.18-alpine</db.image>
         <db.baseDir>${project.build.directory}/db</db.baseDir>
         <db.changeLogPath>com/walmartlabs/concord/server/plugins/ansible/db/liquibase.xml</db.changeLogPath>
         <db.host>localhost</db.host>
