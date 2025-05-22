@@ -30,9 +30,9 @@ import java.util.List;
 public interface ProjectLoader {
 
     /**
-     * Loads the directory as a project. The runtime is detected based on the directory's content.
+     * Returns true if the current loader can load a project of the specified runtime.
      */
-    Result loadProject(Path workDir, ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception;
+    boolean supports(String runtime);
 
     /**
      * Loads the directory as a project of the specified runtime.

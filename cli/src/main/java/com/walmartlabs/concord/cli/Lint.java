@@ -23,11 +23,13 @@ package com.walmartlabs.concord.cli;
 import com.walmartlabs.concord.cli.lint.*;
 import com.walmartlabs.concord.cli.lint.LintResult.Type;
 import com.walmartlabs.concord.cli.runner.CliImportsListener;
+import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.NoopImportManager;
-import com.walmartlabs.concord.process.loader.ConcordProjectLoader;
-import com.walmartlabs.concord.process.loader.ProjectLoader;
+import com.walmartlabs.concord.process.loader.DelegatingProjectLoader;
 import com.walmartlabs.concord.runtime.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.model.SourceMap;
+import com.walmartlabs.concord.runtime.v1.ProjectLoaderV1;
+import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import org.fusesource.jansi.Ansi;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
@@ -41,6 +43,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import static org.fusesource.jansi.Ansi.ansi;
@@ -68,7 +71,10 @@ public class Lint implements Callable<Integer> {
             throw new IllegalArgumentException("Not a directory: " + targetDir);
         }
 
-        ProjectLoader loader = new ConcordProjectLoader(new NoopImportManager());
+        ImportManager importManager = new NoopImportManager();
+        ProjectLoaderV1 v1 = new ProjectLoaderV1(importManager);
+        ProjectLoaderV2 v2 = new ProjectLoaderV2(importManager);
+        DelegatingProjectLoader loader = new DelegatingProjectLoader(Set.of(v1, v2));
         ProcessDefinition pd = loader.loadProject(targetDir, new DummyImportsNormalizer(), verbose ? new CliImportsListener() : null).projectDefinition();
 
         List<LintResult> lintResults = new ArrayList<>();

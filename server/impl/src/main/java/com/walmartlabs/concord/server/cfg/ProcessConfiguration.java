@@ -151,8 +151,4 @@ public class ProcessConfiguration implements Serializable {
     public boolean isCheckLogPermissions() {
         return checkLogPermissions;
     }
-
-    public List<String> getExtraRuntimes() {
-        return extraRuntimes;
-    }
 }

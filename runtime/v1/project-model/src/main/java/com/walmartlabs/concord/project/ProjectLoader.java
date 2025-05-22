@@ -132,17 +132,6 @@ public class ProjectLoader {
         return new Result(snapshots, pd);
     }
 
-    public static boolean isConcordFileExists(Path repoPath) {
-        for (String projectFileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
-            Path projectFile = repoPath.resolve(projectFileName);
-            if (Files.exists(projectFile)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     /**
      * Performs the initial load of the project files. Loads only the root concord.yml
      * (if available), doesn't process imports, templates, etc.

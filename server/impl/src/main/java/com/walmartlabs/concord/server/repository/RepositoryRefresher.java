@@ -25,6 +25,7 @@ import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.imports.ImportsListener;
+import com.walmartlabs.concord.process.loader.DelegatingProjectLoader;
 import com.walmartlabs.concord.process.loader.ImportsNormalizer;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.runtime.model.ProcessDefinition;
@@ -62,7 +63,7 @@ public class RepositoryRefresher extends AbstractDao {
     private final RepositoryManager repositoryManager;
     private final RepositoryDao repositoryDao;
     private final ProjectDao projectDao;
-    private final ProjectLoader projectLoader;
+    private final DelegatingProjectLoader projectLoader;
     private final ImportsNormalizerFactory importsNormalizerFactory;
     private final SecretManager secretManager;
 
@@ -74,7 +75,7 @@ public class RepositoryRefresher extends AbstractDao {
                                RepositoryManager repositoryManager,
                                RepositoryDao repositoryDao,
                                ProjectDao projectDao,
-                               ProjectLoader projectLoader,
+                               DelegatingProjectLoader projectLoader,
                                ImportsNormalizerFactory importsNormalizerFactory,
                                SecretManager secretManager) {
 
