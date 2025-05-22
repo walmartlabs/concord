@@ -32,7 +32,7 @@ import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
 import com.walmartlabs.concord.imports.*;
-import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
+import com.walmartlabs.concord.runtime.v2.wrapper.ProcessDefinitionV2;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
