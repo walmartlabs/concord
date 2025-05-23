@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.el.resolvers;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,10 +23,13 @@ package com.walmartlabs.concord.runtime.v2.runner.el.resolvers;
 import com.walmartlabs.concord.runtime.v2.runner.SensitiveDataHolder;
 import com.walmartlabs.concord.runtime.v2.sdk.SensitiveData;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.*;
 
 public class SensitiveDataProcessor {
+
+    private static final int MAX_DEPTH = 10;
 
     public static void processFirstMatch(Object value, List<Method> methods) {
         Method method = methods.stream().filter(SensitiveDataProcessor::isSensitiveData).findFirst().orElse(null);
@@ -53,8 +56,38 @@ public class SensitiveDataProcessor {
                 Object v = m.get(key);
                 if (v instanceof String) {
                     SensitiveDataHolder.getInstance().add((String) v);
+                } else if (a.includeNestedValues() && v instanceof Map<?,?> nested) {
+                    processNestedValues(nested, 0);
                 }
             }
+        }
+    }
+
+    private static void processNestedValues(Object obj, int depth) {
+        if (depth > MAX_DEPTH) {
+            return;
+        }
+
+        if (obj instanceof Map<?, ?> map) {
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                processNestedValues(entry.getValue(), depth + 1);
+            }
+        } else if (obj instanceof List<?> list) {
+            for (Object o : list) {
+                processNestedValues(o, depth + 1);
+            }
+        } else if (obj instanceof Set<?> set) {
+            for (Object item : set) {
+                processNestedValues(item, depth + 1);
+            }
+        } else if (obj != null && obj.getClass().isArray()) {
+            var len = Array.getLength(obj);
+            for (var i = 0; i < len; i++) {
+                var item = Array.get(obj, i);
+                processNestedValues(item, depth + 1);
+            }
+        } else if (obj instanceof String str) {
+            SensitiveDataHolder.getInstance().add(str);
         }
     }
 
