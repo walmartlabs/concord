@@ -20,7 +20,7 @@ package com.walmartlabs.concord.cli.runner.secrets;
  * =====
  */
 
-import com.walmartlabs.concord.cli.CliConfig;
+import com.walmartlabs.concord.cli.CliConfig.CliConfigContext;
 import com.walmartlabs.concord.cli.Verbosity;
 import com.walmartlabs.concord.cli.runner.VaultProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
@@ -38,22 +38,22 @@ public class CliSecretService implements SecretService {
     private final VaultProvider vaultProvider;
     private final Verbosity verbosity;
 
-    public static CliSecretService create(CliConfig cliConfig, Path workDir, Verbosity verbosity) {
+    public static CliSecretService create(CliConfigContext cliConfigContext, Path workDir, Verbosity verbosity) {
         var providers = new ArrayList<SecretsProviderRef>();
 
-        var local = cliConfig.secrets().local();
+        var local = cliConfigContext.secrets().local();
         if (local.enabled()) {
             var provider = new FileSecretsProvider(workDir, local.dir());
             providers.add(new SecretsProviderRef("localFile", provider, local.writable()));
         }
 
-        var remote = cliConfig.secrets().remote();
+        var remote = cliConfigContext.secrets().remote();
         if (remote.enabled()) {
             var provider = new RemoteSecretsProvider(workDir, remote.baseUrl(), remote.apiKey());
             providers.add(new SecretsProviderRef("remote", provider, remote.writable()));
         }
 
-        var vault = cliConfig.secrets().vault();
+        var vault = cliConfigContext.secrets().vault();
         return new CliSecretService(providers, new VaultProvider(vault.dir(), vault.id()), verbosity);
     }
 

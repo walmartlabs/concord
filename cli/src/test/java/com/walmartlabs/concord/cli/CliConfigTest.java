@@ -35,27 +35,42 @@ public class CliConfigTest {
     @Test
     public void parse() throws Exception {
         var cfg = load("testConfig.yaml");
-        assertEquals("foo", cfg.secrets().vault().id());
+        var defaultCtx = cfg.contexts().get("default");
+        assertNotNull(defaultCtx);
+        assertEquals("foo", defaultCtx.secrets().vault().id());
     }
 
     @Test
     public void checkDefaults() throws Exception {
         var cfg = load("configWithDefaults.yaml");
-        assertNotNull(cfg.secrets().vault().dir());
-        assertTrue(cfg.secrets().vault().dir().toString().contains("/vaults"));
+        var defaultCtx = cfg.contexts().get("default");
+        assertNotNull(defaultCtx);
+        assertNotNull(defaultCtx.secrets().vault().dir());
+        assertTrue(defaultCtx.secrets().vault().dir().toString().contains("/vaults"));
     }
 
     @Test
     public void withOverrides() throws Exception {
-        var cfg = load("testConfig.yaml")
-                .withOverrides(new CliConfig.Overrides(Path.of("/barbaz"), Path.of("/foobar"), "qux"));
-        assertEquals("/barbaz", cfg.secrets().local().dir().toString());
-        assertEquals("/foobar", cfg.secrets().vault().dir().toString());
-        assertEquals("qux", cfg.secrets().vault().id());
+        var cfg = load("testConfig.yaml");
+        var defaultCtx = cfg.contexts().get("default");
+        assertNotNull(defaultCtx);
+        var ctxWithOverrides = defaultCtx.withOverrides(new CliConfig.Overrides(Path.of("/barbaz"), Path.of("/foobar"), "qux"));
+        assertEquals("/barbaz", ctxWithOverrides.secrets().local().dir().toString());
+        assertEquals("/foobar", ctxWithOverrides.secrets().vault().dir().toString());
+        assertEquals("qux", ctxWithOverrides.secrets().vault().id());
+    }
+
+    @Test
+    public void multiContexts() throws Exception {
+        var cfg = load("multiContextConfig.yaml");
+        var anotherCtx = cfg.contexts().get("another");
+        assertNotNull(anotherCtx);
+        assertEquals("bar", anotherCtx.secrets().vault().id());
+        assertEquals("qux", anotherCtx.secrets().vault().dir().toString());
     }
 
     private static CliConfig load(String resource) throws IOException, URISyntaxException {
-        var src = Paths.get(requireNonNull(CliConfigTest.class.getResource(resource)).toURI());;
+        var src = Paths.get(requireNonNull(CliConfigTest.class.getResource(resource)).toURI());
         return CliConfig.load(src);
     }
 }

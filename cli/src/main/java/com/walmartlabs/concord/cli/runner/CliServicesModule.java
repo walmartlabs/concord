@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import com.walmartlabs.concord.cli.CliConfig;
+import com.walmartlabs.concord.cli.CliConfig.CliConfigContext;
 import com.walmartlabs.concord.cli.Verbosity;
 import com.walmartlabs.concord.cli.runner.secrets.CliSecretService;
 import com.walmartlabs.concord.client2.ApiClient;
@@ -49,19 +49,19 @@ import java.util.function.Supplier;
 
 public class CliServicesModule extends AbstractModule {
 
-    private final CliConfig cliConfig;
+    private final CliConfigContext cliConfigContext;
     private final Path workDir;
     private final Path defaultTaskVars;
     private final DependencyManager dependencyManager;
     private final Verbosity verbosity;
 
-    public CliServicesModule(CliConfig cliConfig,
+    public CliServicesModule(CliConfigContext cliConfigContext,
                              Path workDir,
                              Path defaultTaskVars,
                              DependencyManager dependencyManager,
                              Verbosity verbosity) {
 
-        this.cliConfig = cliConfig;
+        this.cliConfigContext = cliConfigContext;
         this.workDir = workDir;
         this.defaultTaskVars = defaultTaskVars;
         this.dependencyManager = dependencyManager;
@@ -74,7 +74,7 @@ public class CliServicesModule extends AbstractModule {
 
         bind(RunnerLogger.class).to(SimpleLogger.class);
 
-        bind(SecretService.class).toInstance(CliSecretService.create(cliConfig, workDir, verbosity));
+        bind(SecretService.class).toInstance(CliSecretService.create(cliConfigContext, workDir, verbosity));
 
         bind(DockerService.class).to(CliDockerService.class);
 

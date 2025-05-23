@@ -1,3 +1,5 @@
-secrets:
-  vault:
-    id: "foo"
+contexts:
+  default:
+    secrets:
+      vault:
+        id: "foo"
