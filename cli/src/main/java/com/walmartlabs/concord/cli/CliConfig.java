@@ -20,7 +20,9 @@ package com.walmartlabs.concord.cli;
  * =====
  */
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import javax.annotation.Nullable;
@@ -28,11 +30,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Optional;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public record CliConfig(SecretsConfiguration secrets) {
+public record CliConfig(Map<String, CliConfigContext> contexts) {
 
     public static CliConfig load(Path path) throws IOException {
         var mapper = new YAMLMapper();
@@ -44,8 +47,43 @@ public record CliConfig(SecretsConfiguration secrets) {
             cfg = mapper.readTree(reader);
         }
 
-        var merged = mapper.updateValue(defaults, cfg);
-        return mapper.convertValue(merged, CliConfig.class);
+        // merge the loaded config file with the default built-in config
+        var cfgWithDefaults = mapper.updateValue(defaults, cfg);
+
+        // merge each non-default context with the default context
+        var contexts = assertContexts(cfgWithDefaults);
+
+        var defaultCtx = contexts.get("default");
+        if (defaultCtx == null) {
+            throw new IllegalArgumentException("Missing 'default' context.");
+        }
+
+        contexts.fieldNames().forEachRemaining(ctxName -> {
+            if ("default".equals(ctxName)) {
+                return;
+            }
+
+            var ctx = contexts.get(ctxName);
+            try {
+                var mergedCtx = mapper.updateValue(defaultCtx, ctx);
+                contexts.set(ctxName, mergedCtx);
+            } catch (JsonMappingException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        return mapper.convertValue(cfgWithDefaults, CliConfig.class);
+    }
+
+    private static ObjectNode assertContexts(JsonNode cfg) {
+        var maybeContexts = cfg.get("contexts");
+        if (maybeContexts == null) {
+            throw new IllegalArgumentException("Missing 'contexts' object.");
+        }
+        if (!maybeContexts.isObject()) {
+            throw new IllegalArgumentException("The 'contexts' field must be an object.");
+        }
+        return (ObjectNode) maybeContexts;
     }
 
     public static CliConfig create() {
@@ -57,12 +95,15 @@ public record CliConfig(SecretsConfiguration secrets) {
         }
     }
 
-    public CliConfig withOverrides(Overrides overrides) {
-        var secrets = this.secrets().withOverrides(overrides);
-        return new CliConfig(secrets);
+    public record Overrides(@Nullable Path secretStoreDir, @Nullable Path vaultDir, @Nullable String vaultId) {
     }
 
-    public record Overrides(@Nullable Path secretStoreDir, @Nullable Path vaultDir, @Nullable String vaultId) {
+    public record CliConfigContext(SecretsConfiguration secrets) {
+
+        public CliConfigContext withOverrides(Overrides overrides) {
+            var secrets = this.secrets().withOverrides(overrides);
+            return new CliConfigContext(secrets);
+        }
     }
 
     public record SecretsConfiguration(VaultConfiguration vault,
