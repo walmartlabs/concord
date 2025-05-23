@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.28.0] - Unreleased
+
+### Added
+
+- concord-server: add more repository-level GitHub events
+([#1149](https://github.com/walmartlabs/concord/pull/1149)).
+
+
+
 ## [2.27.0] - 2025-05-22
 
 ### Added
