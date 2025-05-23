@@ -47,6 +47,7 @@ import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.jooq.util.postgres.PostgresDSL;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -138,7 +139,7 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
+    public void updateAgentId(DSLContext tx, ProcessKey processKey, @Nullable String agentId, ProcessStatus status) {
         UUID instanceId = processKey.getInstanceId();
 
         int i = tx.update(PROCESS_QUEUE)
