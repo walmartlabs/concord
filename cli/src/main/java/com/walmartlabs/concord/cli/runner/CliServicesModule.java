@@ -24,7 +24,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.walmartlabs.concord.cli.CliConfig.CliConfigContext;
 import com.walmartlabs.concord.cli.Verbosity;
+import com.walmartlabs.concord.cli.runner.secrets.CliSecretService;
 import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.runtime.v2.runner.*;
@@ -47,24 +49,21 @@ import java.util.function.Supplier;
 
 public class CliServicesModule extends AbstractModule {
 
-    private final Path secretStoreDir;
+    private final CliConfigContext cliConfigContext;
     private final Path workDir;
     private final Path defaultTaskVars;
-    private final VaultProvider vaultProvider;
     private final DependencyManager dependencyManager;
     private final Verbosity verbosity;
 
-    public CliServicesModule(Path secretStoreDir,
+    public CliServicesModule(CliConfigContext cliConfigContext,
                              Path workDir,
                              Path defaultTaskVars,
-                             VaultProvider vaultProvider,
                              DependencyManager dependencyManager,
                              Verbosity verbosity) {
 
-        this.secretStoreDir = secretStoreDir;
+        this.cliConfigContext = cliConfigContext;
         this.workDir = workDir;
         this.defaultTaskVars = defaultTaskVars;
-        this.vaultProvider = vaultProvider;
         this.dependencyManager = dependencyManager;
         this.verbosity = verbosity;
     }
@@ -74,7 +73,9 @@ public class CliServicesModule extends AbstractModule {
         install(new BaseRunnerModule());
 
         bind(RunnerLogger.class).to(SimpleLogger.class);
-        bind(SecretService.class).toInstance(new CliSecretService(workDir, secretStoreDir, vaultProvider));
+
+        bind(SecretService.class).toInstance(CliSecretService.create(cliConfigContext, workDir, verbosity));
+
         bind(DockerService.class).to(CliDockerService.class);
 
         bind(CheckpointService.class).to(CliCheckpointService.class);
