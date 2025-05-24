@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el.resolvers;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2023 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ public class SensitiveDataProcessor {
     private static final int MAX_DEPTH = 10;
 
     public static void processFirstMatch(Object value, List<Method> methods) {
-        Method method = methods.stream().filter(SensitiveDataProcessor::isSensitiveData).findFirst().orElse(null);
+        var method = methods.stream().filter(SensitiveDataProcessor::isSensitiveData).findFirst().orElse(null);
         if (method == null) {
             return;
         }
@@ -41,19 +41,18 @@ public class SensitiveDataProcessor {
     }
 
     public static void process(Object value, Method method) {
-        SensitiveData a = method.getAnnotation(SensitiveData.class);
+        var a = method.getAnnotation(SensitiveData.class);
         if (a == null) {
             return;
         }
 
         if (value instanceof String) {
             SensitiveDataHolder.getInstance().add((String) value);
-        } else if (value instanceof Map) {
-            Map<?, ?> m = (Map<?, ?>) value;
-            Set<?> keys = a.keys() != null && a.keys().length > 0 ? new HashSet<Object>(Arrays.asList(a.keys())) : m.keySet();
+        } else if (value instanceof Map<?, ?> m) {
+            var keys = a.keys() != null && a.keys().length > 0 ? new HashSet<Object>(Arrays.asList(a.keys())) : m.keySet();
 
-            for (Object key : keys) {
-                Object v = m.get(key);
+            for (var key : keys) {
+                var v = m.get(key);
                 if (v instanceof String) {
                     SensitiveDataHolder.getInstance().add((String) v);
                 } else if (a.includeNestedValues() && v instanceof Map<?,?> nested) {
@@ -69,15 +68,15 @@ public class SensitiveDataProcessor {
         }
 
         if (obj instanceof Map<?, ?> map) {
-            for (Map.Entry<?, ?> entry : map.entrySet()) {
+            for (var entry : map.entrySet()) {
                 processNestedValues(entry.getValue(), depth + 1);
             }
         } else if (obj instanceof List<?> list) {
-            for (Object o : list) {
+            for (var o : list) {
                 processNestedValues(o, depth + 1);
             }
         } else if (obj instanceof Set<?> set) {
-            for (Object item : set) {
+            for (var item : set) {
                 processNestedValues(item, depth + 1);
             }
         } else if (obj != null && obj.getClass().isArray()) {
