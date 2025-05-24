@@ -27,20 +27,24 @@ import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
+import static org.fusesource.jansi.Ansi.ansi;
 
 public class RemoteSecretsProvider implements SecretsProvider {
 
     private final Path workDir;
     private final SecretClient secretClient;
+    private final boolean confirmAccess;
 
-    public RemoteSecretsProvider(Path workDir, String baseUrl, String apiKey) {
+    public RemoteSecretsProvider(Path workDir, String baseUrl, String apiKey, boolean confirmAccess) {
         this.workDir = requireNonNull(workDir);
+        this.confirmAccess = confirmAccess;
 
         var apiClient = new DefaultApiClientFactory(requireNonNull(baseUrl))
                 .create(ApiClientConfiguration.builder()
@@ -120,6 +124,8 @@ public class RemoteSecretsProvider implements SecretsProvider {
     }
 
     private Optional<KeyPair> getKeyPair(String orgName, String secretName, String secretPassword) throws Exception {
+        askForAccessConfirmation(orgName, secretName);
+
         try {
             return Optional.of(secretClient.getData(orgName, secretName, secretPassword, SecretEntryV2.TypeEnum.KEY_PAIR));
         } catch (com.walmartlabs.concord.client2.SecretNotFoundException e) {
@@ -128,6 +134,8 @@ public class RemoteSecretsProvider implements SecretsProvider {
     }
 
     private Optional<BinaryDataSecret> getBinaryDataSecret(String orgName, String secretName, String secretPassword) throws Exception {
+        askForAccessConfirmation(orgName, secretName);
+
         try {
             return Optional.of(secretClient.getData(orgName, secretName, secretPassword, SecretEntryV2.TypeEnum.DATA));
         } catch (com.walmartlabs.concord.client2.SecretNotFoundException e) {
@@ -136,6 +144,8 @@ public class RemoteSecretsProvider implements SecretsProvider {
     }
 
     private Optional<UsernamePassword> getUsernamePassword(String orgName, String secretName, String secretPassword) throws Exception {
+        askForAccessConfirmation(orgName, secretName);
+
         try {
             return Optional.of(secretClient.getData(orgName, secretName, secretPassword, SecretEntryV2.TypeEnum.USERNAME_PASSWORD));
         } catch (com.walmartlabs.concord.client2.SecretNotFoundException e) {
@@ -167,5 +177,21 @@ public class RemoteSecretsProvider implements SecretsProvider {
         }
 
         return builder;
+    }
+
+    private void askForAccessConfirmation(String orgName, String secretName) throws IOException {
+        if (!confirmAccess) {
+            return;
+        }
+
+        System.out.println(ansi().fgBrightYellow().bold().a("Fetching remote secret ").a(orgName).a("/").a(secretName)
+                .a(". Are you sure you want to proceed? (y/N)").reset());
+
+        int response = System.in.read();
+        // y == 121, Y == 89
+        if (response != 121 && response != 89) {
+            System.out.println(ansi().fgRed().a("Aborting.").reset());
+            System.exit(-1);
+        }
     }
 }
