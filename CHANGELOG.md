@@ -7,6 +7,11 @@
 - concord-server: add more repository-level GitHub events
 ([#1149](https://github.com/walmartlabs/concord/pull/1149)).
 
+### cHANGED
+
+- examples: update description
+([#1153](https://github.com/walmartlabs/concord/pull/1153)).
+
 
 
 ## [2.27.0] - 2025-05-22
