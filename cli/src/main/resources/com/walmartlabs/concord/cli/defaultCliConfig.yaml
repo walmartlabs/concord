@@ -11,3 +11,4 @@ contexts:
       remote:
         enabled: false
         writable: false
+        confirmAccess: true

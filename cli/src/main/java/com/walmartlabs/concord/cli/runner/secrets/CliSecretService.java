@@ -49,7 +49,7 @@ public class CliSecretService implements SecretService {
 
         var remote = cliConfigContext.secrets().remote();
         if (remote.enabled()) {
-            var provider = new RemoteSecretsProvider(workDir, remote.baseUrl(), remote.apiKey());
+            var provider = new RemoteSecretsProvider(workDir, remote.baseUrl(), remote.apiKey(), remote.confirmAccess());
             providers.add(new SecretsProviderRef("remote", provider, remote.writable()));
         }
 

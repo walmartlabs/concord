@@ -138,7 +138,8 @@ public record CliConfig(Map<String, CliConfigContext> contexts) {
         public record RemoteSecretsProviderConfiguration(boolean enabled,
                                                          boolean writable,
                                                          @Nullable String baseUrl,
-                                                         @Nullable String apiKey) {
+                                                         @Nullable String apiKey,
+                                                         boolean confirmAccess) {
         }
     }
 
