@@ -9,9 +9,9 @@ package com.walmartlabs.concord.cli.runner.secrets;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -150,19 +150,22 @@ public class RemoteSecretsProvider implements SecretsProvider {
                 .build();
     }
 
-    private ImmutableCreateSecretRequest.Builder secretRequest(SecretService.SecretParams secret) {
-        SecretService.SecretParams.Visibility visibility = secret.visibility();
-        ImmutableCreateSecretRequest.Builder result = CreateSecretRequest.builder()
-                .org(secret.orgName())
-                .name(secret.secretName())
-                .generatePassword(secret.generatePassword())
-                .storePassword(secret.storePassword())
-                .visibility(visibility != null ? SecretEntryV2.VisibilityEnum.fromValue(visibility.name()) : null);
+    private ImmutableCreateSecretRequest.Builder secretRequest(SecretService.SecretParams params) {
+        var builder = CreateSecretRequest.builder()
+                .org(params.orgName())
+                .name(params.secretName())
+                .generatePassword(params.generatePassword())
+                .storePassword(params.storePassword());
 
-        if (secret.project() != null) {
-            result.addProjectNames(Objects.requireNonNull(secret.project()));
+        var visibility = params.visibility();
+        if (visibility != null) {
+            builder.visibility(SecretEntryV2.VisibilityEnum.fromValue(visibility.name()));
         }
 
-        return result;
+        if (params.project() != null) {
+            builder.addProjectNames(Objects.requireNonNull(params.project()));
+        }
+
+        return builder;
     }
 }
