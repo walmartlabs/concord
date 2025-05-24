@@ -1,5 +1,21 @@
 # Change Log
 
+## [2.28.0] - Unreleased
+
+### Added
+
+- concord-server: add more repository-level GitHub events
+([#1149](https://github.com/walmartlabs/concord/pull/1149));
+- runtime-v2: allow marking nested values as sensitive data
+([#1151](https://github.com/walmartlabs/concord/pull/1151)).
+
+### cHANGED
+
+- examples: update description
+([#1153](https://github.com/walmartlabs/concord/pull/1153)).
+
+
+
 ## [2.27.0] - 2025-05-22
 
 ### Added
