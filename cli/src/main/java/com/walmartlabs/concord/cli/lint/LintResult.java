@@ -20,7 +20,7 @@ package com.walmartlabs.concord.cli.lint;
  * =====
  */
 
-import com.walmartlabs.concord.process.loader.model.SourceMap;
+import com.walmartlabs.concord.runtime.model.SourceMap;
 
 public class LintResult {
 

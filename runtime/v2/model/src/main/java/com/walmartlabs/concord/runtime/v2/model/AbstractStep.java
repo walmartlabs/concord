@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.model.Location;
 import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
 
 import javax.annotation.Nullable;

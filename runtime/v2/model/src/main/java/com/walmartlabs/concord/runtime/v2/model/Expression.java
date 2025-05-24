@@ -20,6 +20,8 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.model.Location;
+
 public class Expression extends AbstractStep<ExpressionOptions> {
 
     public static Expression shortForm(Location location, String expr) {

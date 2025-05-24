@@ -26,22 +26,40 @@ import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.imports.ImportsListener;
+import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.YamlParserV2;
+import com.walmartlabs.concord.runtime.v2.wrapper.ProcessDefinitionV2;
 import com.walmartlabs.concord.sdk.Constants;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class ProjectLoaderV2 {
+import static com.walmartlabs.concord.process.loader.StandardRuntimeTypes.CONCORD_V2_RUNTIME_TYPE;
+import static com.walmartlabs.concord.process.loader.StandardRuntimeTypes.PROJECT_ROOT_FILE_NAMES;
+
+public class ProjectLoaderV2 implements ProjectLoader {
 
     private final ImportManager importManager;
 
+    @Inject
     public ProjectLoaderV2(ImportManager importManager) {
         this.importManager = importManager;
+    }
+
+    @Override
+    public boolean supports(String runtime) {
+        return CONCORD_V2_RUNTIME_TYPE.equals(runtime);
+    }
+
+    @Override
+    public ProjectLoader.Result loadProject(Path workDir, String runtime, com.walmartlabs.concord.process.loader.ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception {
+        var v2Result = load(workDir, importsNormalizer::normalize, listener);
+        return toCommonResultType(v2Result);
     }
 
     public Result load(Path baseDir, ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception {
@@ -106,7 +124,7 @@ public class ProjectLoaderV2 {
     }
 
     private ProcessDefinition loadRoot(YamlParserV2 parser, Path baseDir) throws IOException {
-        for (String fileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
+        for (String fileName : PROJECT_ROOT_FILE_NAMES) {
             Path p = baseDir.resolve(fileName);
             if (Files.exists(p)) {
                 ProcessDefinition result = parser.parse(baseDir, p);
@@ -216,7 +234,7 @@ public class ProjectLoaderV2 {
 
     private static void copyResources(Path baseDir, Resources resources, Path destDir, CopyOption... options) throws IOException {
         List<Path> files = loadResources(baseDir, resources);
-        for (String fileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
+        for (String fileName : PROJECT_ROOT_FILE_NAMES) {
             Path p = baseDir.resolve(fileName);
             files.add(p);
         }
@@ -256,5 +274,22 @@ public class ProjectLoaderV2 {
         public ProcessDefinition getProjectDefinition() {
             return projectDefinition;
         }
+    }
+
+    private static ProjectLoader.Result toCommonResultType(Result r) {
+        List<Snapshot> snapshots = r.getSnapshots();
+        com.walmartlabs.concord.runtime.model.ProcessDefinition pd = new ProcessDefinitionV2(r.getProjectDefinition());
+
+        return new ProjectLoader.Result() {
+            @Override
+            public List<Snapshot> snapshots() {
+                return snapshots;
+            }
+
+            @Override
+            public com.walmartlabs.concord.runtime.model.ProcessDefinition projectDefinition() {
+                return pd;
+            }
+        };
     }
 }

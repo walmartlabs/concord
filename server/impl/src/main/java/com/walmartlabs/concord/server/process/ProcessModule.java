@@ -23,8 +23,10 @@ package com.walmartlabs.concord.server.process;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.walmartlabs.concord.imports.ImportManager;
-import com.walmartlabs.concord.process.loader.ConcordProjectLoader;
+import com.walmartlabs.concord.process.loader.DelegatingProjectLoader;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
+import com.walmartlabs.concord.runtime.v1.ProjectLoaderV1;
+import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointResource;
 import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointV2Resource;
 import com.walmartlabs.concord.server.process.event.ProcessEventDao;
@@ -75,8 +77,8 @@ public class ProcessModule implements Module {
         binder.bind(ProcessStateManager.class).in(SINGLETON);
         binder.bind(ProcessWaitManager.class).in(SINGLETON);
 
-        binder.bind(ConcordProjectLoader.Configuration.class).toProvider(ConcordProjectLoaderConfigurationProvider.class);
-        binder.bind(ProjectLoader.class).to(ConcordProjectLoader.class);
+        newSetBinder(binder, ProjectLoader.class).addBinding().to(ProjectLoaderV1.class);
+        newSetBinder(binder, ProjectLoader.class).addBinding().to(ProjectLoaderV2.class);
 
         bindSingletonScheduledTask(binder, ProcessCleaner.class);
         bindSingletonScheduledTask(binder, ProcessLocksWatchdog.class);
