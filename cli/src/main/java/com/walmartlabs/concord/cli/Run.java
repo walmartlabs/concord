@@ -514,7 +514,7 @@ public class Run implements Callable<Integer> {
             }
 
             if (currentCount == notifyOnCount) {
-                System.out.println(ansi().fgBrightBlack().a("Copying files into the target directory..."));
+                System.out.println(ansi().fgBrightBlack().a("Copying files into ./target/ directory..."));
                 currentCount = -1;
                 return;
             }
