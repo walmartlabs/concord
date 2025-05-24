@@ -16,7 +16,7 @@
     <properties>
         <it.local.mode>false</it.local.mode>
         <maxParallelTestThreads>3</maxParallelTestThreads>
-        <db.image>library/postgres:10</db.image>
+        <db.image>library/postgres:14.18-alpine</db.image>
         <server.image>walmartlabs/concord-server</server.image>
         <agent.image>walmartlabs/concord-agent</agent.image>
         <ryuk.image>testcontainers/ryuk:0.6.0</ryuk.image>
