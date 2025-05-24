@@ -69,7 +69,7 @@
     },
     "scripts": {
         "start": "export SET NODE_OPTIONS=--openssl-legacy-provider && react-scripts start",
-        "build": "export SET NODE_OPTIONS=--openssl-legacy-provider && ./npm.sh run hack:remove-sui-css-dep && react-scripts build",
+        "build": "export SET NODE_OPTIONS=--openssl-legacy-provider && ./npm.sh run hack:remove-sui-css-dep && export SET BUILD_PATH='./target/classes/META-INF/console2' && react-scripts build",
         "hack:remove-sui-css-dep": "shx --silent sed -i @import /*import node_modules/semantic-ui-css/semantic.min.css > /dev/null 2>&1",
         "dev": "export SET NODE_OPTIONS=--openssl-legacy-provider && babel-node --presets es2015 scripts/devServer.js",
         "test": "react-scripts test",

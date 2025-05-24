@@ -40,22 +40,6 @@ The dev mode has the following limitations:
 In order to use those features, you need to run the UI in production
 mode (see below).
 
-## Building and Running in Production Mode
-
-```bash
-../mvnw clean install
-```
-
-Specify the path to the `build` directory when you start
-[the Server](../server/dist):
-```
-BASE_RESOURCE_PATH=/path/to/repository/concord/console2/build
-```
-
-The UI will be accessible on http://localhost:8080
-
-**Note:** avoid using symlinks in BASE_RESOURCE_PATH.
-
 ## Custom Server URL
 
 The `proxy` property in the [package.json](./package.json) file is used to
