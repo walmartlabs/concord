@@ -11,6 +11,7 @@ flows:
 
     - log: "map: ${sensitiveTask.getSensitiveMap('XXX-MAP')}"
     - log: "map: ${sensitiveTask.getSensitiveMapStrict('XXX-MAP')}"
+    - log: "map.nested: ${sensitiveTask.getSensitiveMapWithNested('top-secret-nested-value')}"
 
     - log: "plain: ${sensitiveTask.getPlain('plain')}"
 
