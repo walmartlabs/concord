@@ -1384,12 +1384,14 @@ public class MainTest  {
 
         byte[] log = run();
         assertLog(log, ".*" + Pattern.quote("1. sensitive: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("1. also sensitive: ******") + ".*");
         assertLog(log, ".*" + Pattern.quote("1. non sensitive: NOT_SECRET") + ".*");
 
         assertLog(log, ".*" + Pattern.quote("2. base64 encode sensitive: ******") + ".*");
         assertLog(log, ".*" + Pattern.quote("2. base64 encode non sensitive: Tk9UX1NFQ1JFVA==") + ".*");
 
         assertLog(log, ".*" + Pattern.quote("3. base64 decode sensitive: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("3. base64 decode base64 sensitive: ******") + ".*");
         assertLog(log, ".*" + Pattern.quote("3. base64 decode non sensitive: NOT_SECRET") + ".*");
     }
 
