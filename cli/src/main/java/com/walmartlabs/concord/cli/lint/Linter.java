@@ -20,7 +20,7 @@ package com.walmartlabs.concord.cli.lint;
  * =====
  */
 
-import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.model.ProcessDefinition;
 
 import java.util.List;
 

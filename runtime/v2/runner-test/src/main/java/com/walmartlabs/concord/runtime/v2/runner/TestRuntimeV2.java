@@ -71,6 +71,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.walmartlabs.concord.process.loader.StandardRuntimeTypes.PROJECT_ROOT_FILE_NAMES;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -158,7 +159,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
     }
 
     public ImmutableProcessConfiguration.Builder cfgFromDeployment() throws IOException {
-        for (String fileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
+        for (String fileName : PROJECT_ROOT_FILE_NAMES) {
             Path p = workDir.resolve(fileName);
             if (Files.exists(p)) {
                 var result = new ProjectLoaderV2((imports, dest, listener) -> List.of()).loadFromFile(p);

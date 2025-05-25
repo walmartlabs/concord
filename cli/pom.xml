@@ -23,6 +23,12 @@
             <artifactId>concord-runtime-common</artifactId>
         </dependency>
 
+        <!-- v1 dependencies -->
+        <dependency>
+            <groupId>com.walmartlabs.concord.runtime.v1</groupId>
+            <artifactId>concord-runtime-model-v1</artifactId>
+        </dependency>
+
         <!-- v2 dependencies -->
         <dependency>
             <groupId>com.walmartlabs.concord.runtime.v2</groupId>
@@ -47,7 +53,7 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.runtime</groupId>
-            <artifactId>concord-process-loader</artifactId>
+            <artifactId>concord-runtime-loader</artifactId>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>

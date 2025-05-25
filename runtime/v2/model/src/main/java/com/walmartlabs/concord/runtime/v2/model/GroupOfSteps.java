@@ -20,6 +20,8 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.model.Location;
+
 import java.util.List;
 
 public class GroupOfSteps extends AbstractStep<GroupOfStepsOptions> {
