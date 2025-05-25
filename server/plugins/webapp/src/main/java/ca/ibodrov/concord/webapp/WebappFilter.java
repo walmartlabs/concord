@@ -4,7 +4,7 @@ package ca.ibodrov.concord.webapp;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2024 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,10 @@ package ca.ibodrov.concord.webapp;
  * =====
  */
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.ByteStreams;
 
 import javax.annotation.Priority;
 import javax.servlet.FilterChain;
@@ -57,6 +59,7 @@ public class WebappFilter extends HttpFilter {
     @Override
     protected void doFilter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain)
             throws ServletException, IOException {
+
         var uri = req.getRequestURI();
         if (uri.startsWith("/api")) {
             chain.doFilter(req, resp);
@@ -88,27 +91,22 @@ public class WebappFilter extends HttpFilter {
             path = "index.html";
         }
 
+        var resource = Optional.ofNullable(webapp.resources().get(path))
+                .orElseGet(() -> webapp.resources().get(webapp.indexHtmlRelativePath()));
+
+        resp.setHeader("Content-Type", resource.contentType());
+        resp.setHeader("ETag", resource.eTag());
+
+        var ifNoneMatch = req.getHeader("If-None-Match");
+        if (resource.eTag().equals(ifNoneMatch)) {
+            resp.setStatus(304);
+            return;
+        }
+
+        var content = webapp.getContent(resource);
         try {
-            var resource = Optional.ofNullable(webapp.resources().get(path))
-                    .orElseGet(() -> webapp.resources().get(webapp.indexHtmlRelativePath()));
-
-            var filePath = webapp.resourceRoot() + resource.path();
-            try (var in = WebappFilter.class.getClassLoader().getResourceAsStream(filePath)) {
-                if (in == null) {
-                    throw new RuntimeException("Resource not found: " + filePath);
-                }
-
-                resp.setHeader("Content-Type", resource.contentType());
-                resp.setHeader("ETag", resource.eTag());
-
-                var ifNoneMatch = req.getHeader("If-None-Match");
-                if (resource.eTag().equals(ifNoneMatch)) {
-                    resp.setStatus(304);
-                } else {
-                    resp.setStatus(200);
-                    ByteStreams.copy(in, resp.getOutputStream());
-                }
-            }
+            resp.setStatus(200);
+            resp.getOutputStream().write(content);
         } catch (IOException e) {
             throw new WebApplicationException(INTERNAL_SERVER_ERROR);
         }
@@ -121,7 +119,7 @@ public class WebappFilter extends HttpFilter {
             classLoader.getResources("META-INF/concord/webapp.properties")
                     .asIterator()
                     .forEachRemaining(source -> {
-                        var webapp = Webapp.parse(source);
+                        var webapp = new Webapp(source);
                         result.add(webapp);
                     });
         } catch (Exception e) {
@@ -130,24 +128,58 @@ public class WebappFilter extends HttpFilter {
         return new WebappCollection(result);
     }
 
-    private record Webapp(String path,
-                          Map<String, StaticResource> resources,
-                          String resourceRoot,
-                          String indexHtmlRelativePath) {
+    private static final class Webapp {
 
-        public static Webapp parse(URL source) {
+        private static final int CACHE_SIZE = 1000;
+
+        private final String path;
+        private final Map<String, StaticResource> resources;
+        private final String indexHtmlRelativePath;
+        private final LoadingCache<String, byte[]> contentCache;
+
+        private Webapp(URL propertiesSource) {
             var props = new Properties();
-            try (var in = source.openStream()) {
+            try (var in = propertiesSource.openStream()) {
                 props.load(in);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
 
-            var path = assertString(source, props, "path");
-            var resources = loadResources(assertString(source, props, "checksumsFileResourcePath"));
-            var resourceRoot = assertString(source, props, "resourceRoot");
-            var indexHtmlRelativePath = assertString(source, props, "indexHtmlRelativePath");
-            return new Webapp(path, resources, resourceRoot, indexHtmlRelativePath);
+            this.path = assertString(propertiesSource, props, "path");
+            this.resources = loadResources(assertString(propertiesSource, props, "checksumsFileResourcePath"));
+            this.indexHtmlRelativePath = assertString(propertiesSource, props, "indexHtmlRelativePath");
+
+            var resourceRoot = assertString(propertiesSource, props, "resourceRoot");
+            this.contentCache = CacheBuilder.newBuilder()
+                    .maximumSize(CACHE_SIZE)
+                    .build(new CacheLoader<>() {
+                        @Override
+                        public byte[] load(String key) throws Exception {
+                            var filePath = resourceRoot + key;
+                            try (var in = WebappFilter.class.getClassLoader().getResourceAsStream(filePath)) {
+                                if (in == null) {
+                                    throw new IllegalStateException("Resource not found: " + filePath);
+                                }
+                                return in.readAllBytes();
+                            }
+                        }
+                    });
+        }
+
+        public String path() {
+            return path;
+        }
+
+        public Map<String, StaticResource> resources() {
+            return resources;
+        }
+
+        public String indexHtmlRelativePath() {
+            return indexHtmlRelativePath;
+        }
+
+        public byte[] getContent(StaticResource resource) {
+            return contentCache.getUnchecked(resource.path());
         }
     }
 
