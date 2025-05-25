@@ -9,8 +9,10 @@
 - runtime-v2: allow marking nested values as sensitive data
 ([#1151](https://github.com/walmartlabs/concord/pull/1151)).
 
-### cHANGED
+### Changed
 
+- runtime-v1, runtime-v2: refactor loader structure
+([#1147](https://github.com/walmartlabs/concord/pull/1147));
 - examples: update description
 ([#1153](https://github.com/walmartlabs/concord/pull/1153)).
 
