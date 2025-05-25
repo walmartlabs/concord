@@ -9,9 +9,9 @@ package ca.ibodrov.concord.webapp;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,8 +24,10 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
+import com.walmartlabs.concord.server.sdk.rest.ApiDescriptor;
 
 import javax.annotation.Priority;
+import javax.inject.Inject;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebFilter;
@@ -41,6 +43,8 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static java.util.Comparator.comparing;
+import static java.util.Comparator.reverseOrder;
+import static java.util.Objects.requireNonNull;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 
 /**
@@ -51,9 +55,21 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 public class WebappFilter extends HttpFilter {
 
     private final WebappCollection webapps;
+    private final List<String> apiPrefixes;
 
-    public WebappFilter() {
+    @Inject
+    public WebappFilter(Set<ApiDescriptor> apiDescriptors) {
         this.webapps = loadWebapps();
+        this.apiPrefixes = requireNonNull(apiDescriptors).stream()
+                .flatMap(descriptor -> Arrays.stream(descriptor.paths()))
+                .map(prefix -> {
+                    if (prefix.endsWith("/*")) {
+                        return prefix.substring(0, prefix.length() - 1);
+                    }
+                    return prefix;
+                })
+                .sorted(reverseOrder())
+                .toList();
     }
 
     @Override
@@ -61,7 +77,7 @@ public class WebappFilter extends HttpFilter {
             throws ServletException, IOException {
 
         var uri = req.getRequestURI();
-        if (uri.startsWith("/api")) {
+        if (apiPrefixes.stream().anyMatch(uri::startsWith)) {
             chain.doFilter(req, resp);
             return;
         }

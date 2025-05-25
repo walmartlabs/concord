@@ -22,6 +22,7 @@ package ca.ibodrov.concord.webapp;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.walmartlabs.concord.server.sdk.rest.ApiDescriptor;
 
 import javax.inject.Named;
 import javax.servlet.Filter;
@@ -33,6 +34,7 @@ public class WebappPluginModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        newSetBinder(binder, ApiDescriptor.class);
         newSetBinder(binder, Filter.class).addBinding().to(WebappFilter.class);
     }
 }
