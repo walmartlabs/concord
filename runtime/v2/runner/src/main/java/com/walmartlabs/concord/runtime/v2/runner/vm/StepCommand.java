@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.model.Location;
+import com.walmartlabs.concord.runtime.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;

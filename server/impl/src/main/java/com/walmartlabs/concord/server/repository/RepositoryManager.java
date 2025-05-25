@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.repository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
-import com.walmartlabs.concord.process.loader.ConcordProjectLoader;
 import com.walmartlabs.concord.repository.*;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.cfg.GitConfiguration;
@@ -44,6 +43,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+
+import static com.walmartlabs.concord.process.loader.ProjectLoaderUtils.isConcordFileExists;
 
 public class RepositoryManager {
 
@@ -108,7 +109,7 @@ public class RepositoryManager {
                             .build(), path);
 
             if (repoCfg.isConcordFileValidationEnabled()) {
-                if (!ConcordProjectLoader.isConcordFileExists(repo.path())) {
+                if (!isConcordFileExists(repo.path())) {
                     throw new InvalidRepositoryPathException("Invalid repository path: `concord.yml` or `.concord.yml` is missing!");
                 }
             }
