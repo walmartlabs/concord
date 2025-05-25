@@ -37,9 +37,12 @@ public class Payload {
      */
     private static final Set<String> REPOSITORY_EVENTS = Set.of(
             "check_run",
+            "check_suite",
+            "code_scanning_alert",
             "commit_comment",
             "create",
             "delete",
+            "dependabot_alert",
             "fork",
             "issue_comment",
             "issues",
@@ -51,9 +54,14 @@ public class Payload {
             "push",
             "release",
             "repository",
+            "secret_scanning_alert",
+            "secret_scanning_alert_location",
+            "star",
             "status",
             "team",
             "team_add",
+            "watch",
+            "workflow_dispatch",
             "workflow_job",
             "workflow_run"
     );
