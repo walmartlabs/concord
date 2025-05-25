@@ -45,15 +45,9 @@ public class Base64TaskV2 implements Task {
      * Encodes bytes of a UTF-8 string as a base64 string.
      */
     public String encode(String raw) {
-        return encode(raw, false);
-    }
-
-    /**
-     * Encodes bytes of a UTF-8 string as a base64 string and marks the result as sensitive data if required.
-     */
-    public String encode(String raw, boolean sensitive) {
         var result = Base64.getEncoder().encodeToString(raw.getBytes(UTF_8));
-        if (sensitive) {
+        var isSensitive = sensitiveDataHolder.get().contains(raw);
+        if (isSensitive) {
             sensitiveDataHolder.add(result);
         }
         return result;
@@ -63,17 +57,12 @@ public class Base64TaskV2 implements Task {
      * Decodes a base64-encoded string.
      */
     public String decode(String base64) {
-        return decode(base64, false);
-    }
-
-    /**
-     * Decodes a base64-encoded string and marks the result as sensitive data if required.
-     */
-    public String decode(String base64, boolean sensitive) {
         var result = new String(Base64.getDecoder().decode(base64), UTF_8);
-        if (sensitive) {
+        var isSensitive = sensitiveDataHolder.get().contains(base64);
+        if (isSensitive) {
             sensitiveDataHolder.add(result);
         }
         return result;
+
     }
 }
