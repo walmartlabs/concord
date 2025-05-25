@@ -21,8 +21,10 @@ package com.walmartlabs.concord.plugins.misc;
  */
 
 import com.walmartlabs.concord.runtime.v2.sdk.DryRunReady;
+import com.walmartlabs.concord.runtime.v2.sdk.SensitiveDataHolder;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Base64;
 
@@ -32,17 +34,46 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @DryRunReady
 public class Base64TaskV2 implements Task {
 
+    private final SensitiveDataHolder sensitiveDataHolder;
+
+    @Inject
+    public Base64TaskV2(SensitiveDataHolder sensitiveDataHolder) {
+        this.sensitiveDataHolder = sensitiveDataHolder;
+    }
+
     /**
      * Encodes bytes of a UTF-8 string as a base64 string.
      */
     public String encode(String raw) {
-        return Base64.getEncoder().encodeToString(raw.getBytes(UTF_8));
+        return encode(raw, false);
+    }
+
+    /**
+     * Encodes bytes of a UTF-8 string as a base64 string and marks the result as sensitive data if required.
+     */
+    public String encode(String raw, boolean sensitive) {
+        var result = Base64.getEncoder().encodeToString(raw.getBytes(UTF_8));
+        if (sensitive) {
+            sensitiveDataHolder.add(result);
+        }
+        return result;
     }
 
     /**
      * Decodes a base64-encoded string.
      */
     public String decode(String base64) {
-        return new String(Base64.getDecoder().decode(base64), UTF_8);
+        return decode(base64, false);
+    }
+
+    /**
+     * Decodes a base64-encoded string and marks the result as sensitive data if required.
+     */
+    public String decode(String base64, boolean sensitive) {
+        var result = new String(Base64.getDecoder().decode(base64), UTF_8);
+        if (sensitive) {
+            sensitiveDataHolder.add(result);
+        }
+        return result;
     }
 }

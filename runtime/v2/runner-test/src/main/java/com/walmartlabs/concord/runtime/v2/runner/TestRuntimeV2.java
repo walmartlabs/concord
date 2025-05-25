@@ -50,6 +50,7 @@ import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelExecutionException;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
+import com.walmartlabs.concord.runtime.v2.sdk.SensitiveDataHolder;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
@@ -402,7 +403,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
                 executionListeners.addBinding().toInstance(new ExecutionListener() {
                     @Override
                     public void beforeProcessStart(Runtime runtime, State state) {
-                        SensitiveDataHolder.getInstance().get().clear();
+                        runtime.getService(SensitiveDataHolder.class).get().clear();
                     }
                 });
                 executionListeners.addBinding().to(StackTraceCollector.class);

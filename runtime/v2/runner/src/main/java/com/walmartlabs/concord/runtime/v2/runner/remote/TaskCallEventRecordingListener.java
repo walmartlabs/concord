@@ -23,12 +23,12 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
 import com.walmartlabs.concord.client2.ProcessEventRequest;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.common.ObjectTruncater;
+import com.walmartlabs.concord.runtime.common.SensitiveDataMasker;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.EventConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.EventReportingService;
-import com.walmartlabs.concord.runtime.v2.runner.SensitiveDataHolder;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
@@ -45,12 +45,15 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
     private final EventConfiguration eventConfiguration;
     private final EventReportingService eventReportingService;
+    private final SensitiveDataHolder sensitiveDataHolder;
 
     @Inject
     public TaskCallEventRecordingListener(ProcessConfiguration processConfiguration,
-                                          EventReportingService eventReportingService) {
+                                          EventReportingService eventReportingService,
+                                          SensitiveDataHolder sensitiveDataHolder) {
         this.eventConfiguration = processConfiguration.events();
         this.eventReportingService = eventReportingService;
+        this.sensitiveDataHolder = sensitiveDataHolder;
     }
 
     @Override
@@ -106,6 +109,10 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
             m.put("duration", event.duration());
         }
         send(m);
+    }
+
+    private Map<String, Object> processSensitiveData(Map<String, Object> input) {
+        return SensitiveDataMasker.mask(input, sensitiveDataHolder.get());
     }
 
     private static Map<String, Object> event(TaskCallEvent event) {
@@ -175,34 +182,6 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
             }
         }
         return result;
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    static <T> T processSensitiveData(T v) {
-        Set<String> sensitiveStrings = SensitiveDataHolder.getInstance().get();
-        if (sensitiveStrings.isEmpty()) {
-            return v;
-        }
-
-        if (v instanceof String s) {
-            for (String sensitiveString : sensitiveStrings) {
-                s = s.replace(sensitiveString, MASK);
-            }
-            return (T) s;
-        } else if (v instanceof List<?> l) {
-            List<Object> result = new ArrayList<>(l.size());
-            for (Object vv : l) {
-                vv = processSensitiveData(vv);
-                result.add(vv);
-            }
-            return (T) result;
-        } else if (v instanceof Map m) {
-            Map<String, Object> result = new HashMap<>(m);
-            result.replaceAll((k, vv) -> processSensitiveData(vv));
-            return (T) result;
-        }
-
-        return v;
     }
 
     @SuppressWarnings("unchecked")
