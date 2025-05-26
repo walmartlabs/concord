@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.pipelines;
  */
 
 import com.google.inject.Injector;
+import com.walmartlabs.concord.server.process.InflightProcessTracker;
 import com.walmartlabs.concord.server.process.pipelines.processors.*;
 
 import javax.inject.Inject;
@@ -33,6 +34,8 @@ public class NewProcessPipeline extends Pipeline {
 
     private final ExceptionProcessor exceptionProcessor;
     private final FinalizerProcessor finalizerProcessor;
+    private final Runnable beforeStartHandler;
+    private final Runnable afterEndHandler;
 
     @Inject
     public NewProcessPipeline(Injector injector) {
@@ -50,6 +53,9 @@ public class NewProcessPipeline extends Pipeline {
 
         this.exceptionProcessor = injector.getInstance(FailProcessor.class);
         this.finalizerProcessor = injector.getInstance(CleanupProcessor.class);
+
+        this.beforeStartHandler = injector.getInstance(InflightProcessTracker.StartBeginTracker.class);
+        this.afterEndHandler = injector.getInstance(InflightProcessTracker.StartDoneTracker.class);
     }
 
     @Override
@@ -60,5 +66,15 @@ public class NewProcessPipeline extends Pipeline {
     @Override
     protected FinalizerProcessor getFinalizerProcessor() {
         return finalizerProcessor;
+    }
+
+    @Override
+    protected Runnable getBeforeStartHandler() {
+        return beforeStartHandler;
+    }
+
+    @Override
+    protected Runnable getAfterEndHandler() {
+        return afterEndHandler;
     }
 }

@@ -127,6 +127,8 @@ public class ProcessModule implements Module {
         binder.bind(TemplateScriptProcessor.class).in(SINGLETON);
         binder.bind(ProcessKeyCache.class).to(com.walmartlabs.concord.server.process.queue.ProcessKeyCache.class).in(SINGLETON);
 
+        binder.bind(InflightProcessTracker.class).in(SINGLETON);
+
         binder.install(new ExclusiveGroupProcessor.ModeProcessorModule());
         binder.install(new FormModule());
         binder.install(new ProcessQueueGaugeModule());

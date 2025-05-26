@@ -32,6 +32,11 @@ public abstract class Pipeline extends Chain {
 
     @Override
     public Payload process(Payload payload) {
+        Runnable beforeStart = getBeforeStartHandler();
+        if (beforeStart != null) {
+            beforeStart.run();
+        }
+
         try {
             return super.process(payload);
         } catch (Exception e) {
@@ -45,6 +50,11 @@ public abstract class Pipeline extends Chain {
             if (p != null) {
                 p.process(payload);
             }
+
+            Runnable afterEnd = getAfterEndHandler();
+            if (afterEnd != null) {
+                afterEnd.run();
+            }
         }
     }
 
@@ -53,6 +63,14 @@ public abstract class Pipeline extends Chain {
     }
 
     protected FinalizerProcessor getFinalizerProcessor() {
+        return null;
+    }
+
+    protected Runnable getBeforeStartHandler() {
+        return null;
+    }
+
+    protected Runnable getAfterEndHandler() {
         return null;
     }
 }

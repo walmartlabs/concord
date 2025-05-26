@@ -20,13 +20,14 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.boot.BackgroundTasks;
+import com.walmartlabs.concord.server.process.InflightProcessTracker;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.task.TaskScheduler;
 import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 import org.jooq.Configuration;
+import org.jooq.DSLContext;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -34,7 +35,8 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.time.OffsetDateTime;
+
+import static java.util.Objects.requireNonNull;
 
 @Path("/api/v1/server")
 public class ServerResource implements Resource {
@@ -42,25 +44,28 @@ public class ServerResource implements Resource {
     private final TaskScheduler taskScheduler;
     private final BackgroundTasks backgroundTasks;
     private final WebSocketChannelManager webSocketChannelManager;
-    private final PingDao pingDao;
+    private final InflightProcessTracker inflightProcessTracker;
+    private final DSLContext dsl;
 
     @Inject
     public ServerResource(TaskScheduler taskScheduler,
                           BackgroundTasks backgroundTasks,
                           WebSocketChannelManager webSocketChannelManager,
-                          PingDao pingDao) {
+                          InflightProcessTracker inflightProcessTracker,
+                          @MainDB Configuration cfg) {
 
-        this.taskScheduler = taskScheduler;
-        this.backgroundTasks = backgroundTasks;
-        this.webSocketChannelManager = webSocketChannelManager;
-        this.pingDao = pingDao;
+        this.taskScheduler = requireNonNull(taskScheduler);
+        this.backgroundTasks = requireNonNull(backgroundTasks);
+        this.webSocketChannelManager = requireNonNull(webSocketChannelManager);
+        this.inflightProcessTracker = requireNonNull(inflightProcessTracker);
+        this.dsl = requireNonNull(cfg).dsl();
     }
 
     @GET
     @Path("/ping")
     @Produces(MediaType.APPLICATION_JSON)
     public PingResponse ping() {
-        pingDao.ping();
+        dsl.selectOne().execute();
         return new PingResponse(true);
     }
 
@@ -74,32 +79,23 @@ public class ServerResource implements Resource {
 
     @POST
     @Path("/maintenance-mode")
-    public void maintenanceMode() {
-        backgroundTasks.stop();
+    @Produces(MediaType.APPLICATION_JSON)
+    public MaintenanceModeResponse maintenanceMode() {
+        int inflightProcesses = inflightProcessTracker.getStarting() + inflightProcessTracker.getResuming();
 
+        if (inflightProcesses > 0) {
+            // do not enable the maintenance mode when processes start or resume
+            // such processes will fail if the server stops
+            return new MaintenanceModeResponse(false, inflightProcesses);
+        }
+
+        backgroundTasks.stop();
         webSocketChannelManager.shutdown();
         taskScheduler.stop();
+
+        return new MaintenanceModeResponse(true, 0);
     }
 
-    @GET
-    @Path("/test")
-    @Produces(MediaType.APPLICATION_JSON)
-    public TestBean test() {
-        return new TestBean(OffsetDateTime.now());
-    }
-
-    static class PingDao extends AbstractDao {
-
-        @Inject
-        public PingDao(@MainDB Configuration cfg) {
-            super(cfg);
-        }
-
-        public void ping() {
-            dsl().selectOne().execute();
-        }
-    }
-
-    public record TestBean(OffsetDateTime now) {
+    public record MaintenanceModeResponse(boolean enabled, int inflightProcesses) {
     }
 }
