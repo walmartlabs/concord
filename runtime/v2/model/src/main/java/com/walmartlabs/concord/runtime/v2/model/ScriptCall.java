@@ -20,6 +20,8 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.model.Location;
+
 public class ScriptCall extends AbstractStep<ScriptCallOptions> {
 
     private static final long serialVersionUID = 1L;

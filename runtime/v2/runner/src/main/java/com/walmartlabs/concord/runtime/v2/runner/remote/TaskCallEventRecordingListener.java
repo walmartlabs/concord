@@ -26,7 +26,7 @@ import com.walmartlabs.concord.runtime.common.ObjectTruncater;
 import com.walmartlabs.concord.runtime.common.SensitiveDataMasker;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.EventConfiguration;
-import com.walmartlabs.concord.runtime.v2.model.Location;
+import com.walmartlabs.concord.runtime.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.EventReportingService;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
