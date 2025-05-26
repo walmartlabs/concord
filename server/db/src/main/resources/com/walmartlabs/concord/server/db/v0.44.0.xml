@@ -5,6 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
     <!-- enable UUID generation -->
+    <!-- deprecated, starting from 2.25.0 we use server-generated UUIDs v7 -->
     <changeSet id="44000-init" author="ibodrov@gmail.com">
         <preConditions onFail="MARK_RAN">
             <changeLogPropertyDefined property="createExtensionAvailable" value="true"/>

@@ -203,43 +203,9 @@ public class PluginConfiguration {
         }
     }
 
-    public static class Source {
-
-        private final String attribute;
-
-        private final String pattern;
-
-        public Source(String attribute, String pattern) {
-            this.attribute = attribute;
-            this.pattern = pattern;
-        }
-
-        public String getAttribute() {
-            return attribute;
-        }
-
-        public String getPattern() {
-            return pattern;
-        }
+    public record Source(String attribute, String pattern) {
     }
 
-    public static class TeamMapping {
-
-        private final List<Source> sources;
-
-        private final TeamRole role;
-
-        public TeamMapping(List<Source> sources, TeamRole role) {
-            this.sources = sources;
-            this.role = role;
-        }
-
-        public List<Source> getSources() {
-            return sources;
-        }
-
-        public TeamRole getRole() {
-            return role;
-        }
+    public record TeamMapping(List<Source> sources, TeamRole role) {
     }
 }

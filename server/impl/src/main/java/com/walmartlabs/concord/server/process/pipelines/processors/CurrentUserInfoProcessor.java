@@ -26,9 +26,7 @@ import com.walmartlabs.concord.server.process.pipelines.processors.signing.Signi
 import com.walmartlabs.concord.server.user.UserManager;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
-@Named
 public class CurrentUserInfoProcessor extends UserInfoProcessor {
 
     @Inject

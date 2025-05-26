@@ -27,7 +27,6 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -35,7 +34,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.ListIterator;
 
-@Named
 public class StateImportingProcessor implements PayloadProcessor {
 
     private static final String PASS_THROUGH_PATH = "forms/";

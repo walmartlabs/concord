@@ -37,7 +37,6 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -52,7 +51,6 @@ import static org.jooq.impl.DSL.*;
  * determines whether the process can continue to run or should be cancelled.
  * The processor uses a global (DB) lock {@link Locks}.
  */
-@Named
 public class ExclusiveGroupProcessor implements PayloadProcessor {
 
     private final ProcessLogManager logManager;
@@ -237,7 +235,6 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
         }
     }
 
-    @Named
     static class CancelModeDao extends AbstractDao {
 
         private static final List<ProcessStatus> RUNNING_STATUSES = Arrays.asList(
@@ -277,7 +274,6 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
         }
     }
 
-    @Named
     static class CancelOldModeDao extends AbstractDao {
 
         private static final List<ProcessStatus> CANCELLABLE_STATUSES = Arrays.asList(

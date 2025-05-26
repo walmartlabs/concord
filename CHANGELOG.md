@@ -1,5 +1,144 @@
 # Change Log
 
+## [2.27.0] - 2025-05-22
+
+### Added
+
+- concord-server: default Git credentials hostname whitelist
+([#1139](https://github.com/walmartlabs/concord/pull/1139));
+- concord-server: log listening address, starting tasks
+([#1141](https://github.com/walmartlabs/concord/pull/1141));
+
+### Changed
+
+- oidc: validate team and role mappings
+([#1144](https://github.com/walmartlabs/concord/pull/1144));
+- concord-server-db: use session locks in Liquibase
+([#1145](https://github.com/walmartlabs/concord/pull/1145));
+- concord-server: handle SIGTERM
+([#1146](https://github.com/walmartlabs/concord/pull/1146)).
+
+
+
+## [2.26.0] - 2025-05-05
+
+### Added
+
+- resource-task: add fromYamlString method interface
+([#1125](https://github.com/walmartlabs/concord/pull/1125));
+- concord-cli: use jansi, add colors to run output
+([#1138](https://github.com/walmartlabs/concord/pull/1138)).
+
+### Changed
+
+- concord-agent, concord-agent-operator: better shutdown hook,
+handle SIGTERM
+([#1130](https://github.com/walmartlabs/concord/pull/1130));
+- project: enable full annotation processing
+([#1131](https://github.com/walmartlabs/concord/pull/1131));
+- project: fix concord-runner-v2 test discovery
+([#1133](https://github.com/walmartlabs/concord/pull/1133));
+- project: update testcontainers-concord version
+([#1135](https://github.com/walmartlabs/concord/pull/1135));
+- concord-server: use ProjectLoader interface, bind explicitly
+([#1136](https://github.com/walmartlabs/concord/pull/1136));
+- concord-server: split ProcessSecurityContext
+([#1137](https://github.com/walmartlabs/concord/pull/1137)).
+
+
+
+## [2.25.1] - 2025-04-26
+
+### Changed
+
+- runtime-v2: set lowercase loop mode value in schema
+([#1122](https://github.com/walmartlabs/concord/pull/1122));
+- http-tasks: refactor tests, support for parallel tests
+([#1123](https://github.com/walmartlabs/concord/pull/1123));
+- project: update bouncycastle dependency versions
+([#1127](https://github.com/walmartlabs/concord/pull/1127));
+- concord-server: handle invalid regex in dispatcher
+requirements
+([#1128](https://github.com/walmartlabs/concord/pull/1128));
+- project: downgrade nimbus-jose-jwt
+([#1129](https://github.com/walmartlabs/concord/pull/1129)).
+
+
+
+## [2.25.0] - 2025-03-23
+
+### Changed
+
+- concord-agent: replace simple immutables with records
+([#1091](https://github.com/walmartlabs/concord/pull/1091));
+- concord-server, concord-server-db: generate UUIDs on
+the server, use UUID v7
+([#1106](https://github.com/walmartlabs/concord/pull/1106));
+- concord-server: upgrade Shiro to 2.x
+([#1107](https://github.com/walmartlabs/concord/pull/1107));
+- concord-server, concord-client2: uncomment valid code
+([#1108](https://github.com/walmartlabs/concord/pull/1108));
+- concord-server: remove more @Named usage
+([#1110](https://github.com/walmartlabs/concord/pull/1110));
+- concord-server: remove deprecated SecretEntry
+([#1111](https://github.com/walmartlabs/concord/pull/1111));
+- concord-server: remove deprecated /logs/* endpoint
+([#1113](https://github.com/walmartlabs/concord/pull/1113));
+- project: update dependencies
+([#1114](https://github.com/walmartlabs/concord/pull/1114));
+- project: update README
+([#1115](https://github.com/walmartlabs/concord/pull/1115));
+- docker-images: update JDK versions
+([#1116](https://github.com/walmartlabs/concord/pull/1116));
+- project: update dependencies
+([#1118](https://github.com/walmartlabs/concord/pull/1118));
+- project: remove unused dependencies
+([#1119](https://github.com/walmartlabs/concord/pull/1119)).
+
+### Breaking
+
+- project: remove client1
+([#1013](https://github.com/walmartlabs/concord/pull/1013));
+- concord-server: remove deprecated features
+([#1112](https://github.com/walmartlabs/concord/pull/1112)).
+
+
+
+## [2.24.0] - 2025-03-15
+
+### Added
+
+- plugins: new env and collections tasks
+([#1092](https://github.com/walmartlabs/concord/pull/1092));
+- slack-tasks: modern bot token support
+([#1093](https://github.com/walmartlabs/concord/pull/1093));
+- plugins: allow suspend/resume process from concord task
+([#1094](https://github.com/walmartlabs/concord/pull/1094));
+- concord-server: default message for unexpected errors
+([#1096](https://github.com/walmartlabs/concord/pull/1096));
+- concord-server, concord-console2: add support for
+processExecMode
+([#1102](https://github.com/walmartlabs/concord/pull/1102)).
+
+### Changed
+
+- runtime-v2: restrict regex github trigger attributes to
+string value
+([#1097](https://github.com/walmartlabs/concord/pull/1097));
+- mock-tasks: correctly handle mocks in `set variables` step
+([#1098](https://github.com/walmartlabs/concord/pull/1098));
+- concord-console2: handle non-existent root parent
+([#1100](https://github.com/walmartlabs/concord/pull/1100));
+- concord-server: disable deprecated process start endpoints
+([#1101](https://github.com/walmartlabs/concord/pull/1101));
+- concord-plugin: set dry-run mode for subprocesses by
+default if the parent process was started in dry-run mode
+([#1104](https://github.com/walmartlabs/concord/pull/1104));
+- project: update Maven plugin versions
+([#1105](https://github.com/walmartlabs/concord/pull/1105)).
+
+
+
 ## [2.23.0] - 2025-02-26
 
 ### Added
@@ -26,6 +165,7 @@ array
 ([#1087](https://github.com/walmartlabs/concord/pull/1087));
 - concord-server: handle request without cookies
 ([#1090](https://github.com/walmartlabs/concord/pull/1090)).
+
 
 
 ## [2.22.0] - 2025-02-14

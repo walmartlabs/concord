@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -159,8 +158,7 @@ public class EnqueuedTask extends PeriodicTask {
         }
     }
 
-    @Named
-    private static class Dao extends AbstractDao {
+    static class Dao extends AbstractDao {
 
         @Inject
         public Dao(@MainDB Configuration cfg) {

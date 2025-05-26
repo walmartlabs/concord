@@ -52,7 +52,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.core.Response.Status;
 import java.io.*;
 import java.util.*;
@@ -61,7 +60,6 @@ import java.util.stream.Collectors;
 import static com.walmartlabs.concord.server.agent.AgentManager.KeyAndAgent;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 
-@Named
 public class ProcessManager {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessManager.class);

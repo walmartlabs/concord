@@ -155,13 +155,13 @@ public class TestingConcordServer implements AutoCloseable {
             server.start();
             System.out.printf("""
                             ==============================================================
-                                        
+                            
                               UI: http://localhost:8001/
                               DB:
                                 JDBC URL: %s
                                 username: %s
                                 password: %s
-                                        
+                            
                               admin API key: %s
                               agent API key: %s
                             %n""", db.getJdbcUrl(),

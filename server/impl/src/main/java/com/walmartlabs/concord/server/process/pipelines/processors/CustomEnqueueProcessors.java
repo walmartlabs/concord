@@ -23,12 +23,10 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.server.sdk.process.CustomEnqueueProcessor;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-@Named
 public class CustomEnqueueProcessors {
 
     private final Collection<CustomEnqueueProcessor> processors;

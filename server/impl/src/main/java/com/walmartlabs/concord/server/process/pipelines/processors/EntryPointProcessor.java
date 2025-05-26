@@ -20,18 +20,16 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
-import com.walmartlabs.concord.process.loader.model.Profile;
+import com.walmartlabs.concord.runtime.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.model.Profile;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.*;
 
-@Named
 public class EntryPointProcessor implements PayloadProcessor {
 
     private final ProcessLogManager logManager;

@@ -62,7 +62,6 @@ public class ApiServerModule implements Module {
 
         // HttpServlet
 
-        newSetBinder(binder, HttpServlet.class).addBinding().to(LogServlet.class).in(SINGLETON);
         newSetBinder(binder, HttpServlet.class).addBinding().to(ConcordWebSocketServlet.class).in(SINGLETON);
 
         // ServletHolder

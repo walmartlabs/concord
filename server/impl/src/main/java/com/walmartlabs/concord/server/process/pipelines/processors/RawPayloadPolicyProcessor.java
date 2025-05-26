@@ -31,13 +31,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.core.Response;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Objects;
 
-@Named
 public class RawPayloadPolicyProcessor implements PayloadProcessor{
 
     private static final String DEFAULT_POLICY_MESSAGE = "Raw payload size too big: current {0} byte(s), limit {1} byte(s)";

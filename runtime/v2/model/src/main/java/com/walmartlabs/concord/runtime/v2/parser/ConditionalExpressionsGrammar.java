@@ -20,9 +20,9 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.model.Location;
 import com.walmartlabs.concord.runtime.v2.exception.YamlProcessingException;
 import com.walmartlabs.concord.runtime.v2.model.IfStep;
-import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.SwitchStep;
 import io.takari.parc.Parser;

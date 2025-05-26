@@ -31,8 +31,6 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.template.TemplateAliasDao;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -43,8 +41,6 @@ import java.util.Optional;
 /**
  * Extracts template files into the workspace.
  */
-@Named
-@Singleton
 public class TemplateFilesProcessor implements PayloadProcessor {
 
     private final ProcessLogManager logManager;

@@ -160,7 +160,7 @@ public class ConcordTaskV2 implements ReentrantTask {
         UUID instanceId = context.processInstanceId();
         ProjectInfo projectInfo = context.processConfiguration().projectInfo();
         return new ConcordTaskCommon(sessionToken, apiClientFactory, instanceId, projectInfo.orgName(),
-                context.workingDirectory(), context.processConfiguration().debug());
+                context.workingDirectory(), context.processConfiguration().debug(), context.processConfiguration().dryRun());
     }
 
     private static List<UUID> toUUIDs(List<String> ids) {

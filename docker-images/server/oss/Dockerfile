@@ -14,5 +14,5 @@ RUN mkdir -p /opt/concord/server/logs && \
 
 USER concord
 
-ENV BASE_RESOURCE_PATH /opt/concord/console/
+ENV BASE_RESOURCE_PATH=/opt/concord/console/
 CMD ["bash", "/opt/concord/server/start.sh"]

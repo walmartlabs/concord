@@ -29,7 +29,6 @@ import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 import org.jooq.Configuration;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -89,8 +88,7 @@ public class ServerResource implements Resource {
         return new TestBean(OffsetDateTime.now());
     }
 
-    @Named
-    public static class PingDao extends AbstractDao {
+    static class PingDao extends AbstractDao {
 
         @Inject
         public PingDao(@MainDB Configuration cfg) {

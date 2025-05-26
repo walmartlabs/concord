@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -334,7 +333,6 @@ public class EnqueuedBatchTask extends PeriodicTask {
         }
     }
 
-    @Named
     static class Dao extends AbstractDao {
 
         @Inject

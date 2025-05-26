@@ -31,15 +31,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 
-@Named
-@Singleton
 public class Listeners {
 
     private static final Logger log = LoggerFactory.getLogger(Listeners.class);

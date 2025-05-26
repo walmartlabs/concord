@@ -1,0 +1,15 @@
+configuration:
+  requirements:
+    agent:
+      type: "t.*t"
+
+profiles:
+  invalidRegex:
+    configuration:
+      requirements:
+        agent:
+          type: "*test*"
+
+flows:
+  default:
+    - log: "Hello from a process with requirements!"

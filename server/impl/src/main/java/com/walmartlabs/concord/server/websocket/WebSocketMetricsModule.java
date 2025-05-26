@@ -26,10 +26,8 @@ import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import com.walmartlabs.concord.server.sdk.metrics.GaugeProvider;
 
-import javax.inject.Named;
 import javax.inject.Provider;
 
-@Named
 public class WebSocketMetricsModule extends AbstractModule {
 
     @Override
@@ -42,7 +40,7 @@ public class WebSocketMetricsModule extends AbstractModule {
     }
 
     private static GaugeProvider<Integer> createGauge(Provider<WebSocketChannelManager> channelManagerProvider) {
-        return new GaugeProvider<Integer>() {
+        return new GaugeProvider<>() {
             @Override
             public String name() {
                 return "websocket-clients";
@@ -56,7 +54,7 @@ public class WebSocketMetricsModule extends AbstractModule {
     }
 
     private static GaugeProvider<Integer> create(Provider<WebSocketChannelManager> channelManagerProvider) {
-        return new GaugeProvider<Integer>() {
+        return new GaugeProvider<>() {
             @Override
             public String name() {
                 return "agent-workers-available";

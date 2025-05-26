@@ -34,13 +34,9 @@ import com.walmartlabs.concord.server.process.form.FormServiceV1;
 import com.walmartlabs.concord.server.process.form.FormSubmitResult;
 import com.walmartlabs.concord.server.process.form.FormUtils;
 import com.walmartlabs.concord.server.process.form.FormUtils.ValidationException;
-import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.sdk.PartialProcessKey;
-import com.walmartlabs.concord.server.sdk.ProcessKey;
-import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.sdk.*;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.model.form.FormDefinition;
@@ -116,7 +112,7 @@ public class CustomFormServiceV1 {
     public FormSessionResponse startSession(@PathParam("processInstanceId") UUID processInstanceId,
                                             @PathParam("formName") String formName) {
 
-        ProcessKey processKey = assertKey(processInstanceId);
+        ProcessKey processKey = processKeyCache.assertKey(processInstanceId);
         return startSession(processKey, formName);
     }
 
@@ -168,7 +164,7 @@ public class CustomFormServiceV1 {
                                     @PathParam("formName") String formName,
                                     MultivaluedMap<String, String> data) {
 
-        ProcessKey processKey = assertKey(processInstanceId);
+        ProcessKey processKey = processKeyCache.assertKey(processInstanceId);
         return continueSession(uriInfo, headers, processKey, formName, FormUtils.convert(data));
     }
 
@@ -183,7 +179,7 @@ public class CustomFormServiceV1 {
                                     MultipartInput data) {
 
         try {
-            ProcessKey processKey = assertKey(processInstanceId);
+            ProcessKey processKey = processKeyCache.assertKey(processInstanceId);
             return continueSession(uriInfo, headers, processKey, formName, MultipartUtils.toMap(data));
         } finally {
             data.close();
@@ -375,11 +371,6 @@ public class CustomFormServiceV1 {
 
         String resource = FormServiceV1.FORMS_RESOURCES_PATH + "/" + SHARED_DIR_NAME;
         stateManager.exportDirectory(processKey, resource, copyTo(sharedDir));
-    }
-
-    private ProcessKey assertKey(UUID processInstanceId) {
-        Optional<ProcessKey> pk = processKeyCache.getUncached(processInstanceId);
-        return pk.orElseThrow(() -> new ConcordApplicationException("Process not found: " + processInstanceId, Status.NOT_FOUND));
     }
 
     private static Response redirectToForm(UriInfo uriInfo, HttpHeaders headers,

@@ -53,6 +53,7 @@ public class HttpServer {
     private static final Logger log = LoggerFactory.getLogger(HttpServlet.class);
 
     private final Server server;
+    private final int port;
 
     @Inject
     public HttpServer(ServerConfiguration cfg,
@@ -84,7 +85,8 @@ public class HttpServer {
         int selectors = -1; // use the default value
         ServerConnector http = new ServerConnector(server, acceptors, selectors, new HttpConnectionFactory(httpCfg));
         http.setName("http");
-        http.setPort(cfg.getPort());
+        this.port = cfg.getPort();
+        http.setPort(port);
         // TODO remove once the '/' escaping is fixed in clients
         http.getConnectionFactory(HttpConnectionFactory.class)
                 .getHttpConfiguration()
@@ -204,6 +206,7 @@ public class HttpServer {
 
     public void start() throws Exception {
         this.server.start();
+        log.info("start -> listening on http://0.0.0.0:{}", port);
     }
 
     public void stop() throws Exception {

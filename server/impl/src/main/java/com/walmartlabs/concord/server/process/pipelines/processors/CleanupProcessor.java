@@ -27,12 +27,10 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.slf4j.MDC;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-@Named
 public class CleanupProcessor implements FinalizerProcessor {
 
     private final ProcessLogManager logManager;

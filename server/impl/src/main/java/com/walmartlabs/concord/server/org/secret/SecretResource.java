@@ -181,8 +181,8 @@ public class SecretResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Deprecated
-    public SecretEntry get(@PathParam("orgName") @ConcordKey String orgName,
-                           @PathParam("secretName") @ConcordKey String secretName) {
+    public SecretEntryV2 get(@PathParam("orgName") @ConcordKey String orgName,
+                             @PathParam("secretName") @ConcordKey String secretName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return secretManager.assertAccess(org.getId(), null, secretName, ResourceAccessLevel.READER, false);
@@ -261,12 +261,12 @@ public class SecretResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
     @Deprecated
-    public List<SecretEntry> list(@PathParam("orgName") @ConcordKey String orgName,
-                                  @QueryParam("offset") int offset,
-                                  @QueryParam("limit") int limit,
-                                  @QueryParam("filter") String filter) {
+    public List<SecretEntryV2> list(@PathParam("orgName") @ConcordKey String orgName,
+                                    @QueryParam("offset") int offset,
+                                    @QueryParam("limit") int limit,
+                                    @QueryParam("filter") String filter) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        return secretManager.list(org.getId(), offset, limit, filter).stream().map(e -> (SecretEntry) e).collect(Collectors.toList());
+        return secretManager.list(org.getId(), offset, limit, filter);
     }
 
     @DELETE
