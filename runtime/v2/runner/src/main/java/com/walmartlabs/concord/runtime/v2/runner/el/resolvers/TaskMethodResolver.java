@@ -44,9 +44,12 @@ public class TaskMethodResolver extends ELResolver {
 
     private final List<CustomTaskMethodResolver> resolvers = new ArrayList<>();
     private final Context context;
+    private final SensitiveDataProcessor sensitiveDataProcessor;
 
     public TaskMethodResolver(List<CustomTaskMethodResolver> customResolvers,
-                              Context context) {
+                              Context context,
+                              SensitiveDataProcessor sensitiveDataProcessor) {
+        this.sensitiveDataProcessor = sensitiveDataProcessor;
         this.resolvers.addAll(customResolvers);
         this.resolvers.add(new DefaultTaskMethodResolver());
         this.context = context;
@@ -82,7 +85,7 @@ public class TaskMethodResolver extends ELResolver {
         try {
             return interceptor.invoke(callContext, Method.of(invocation.taskClass(), method.toString(), Arrays.asList(params)),
                     () -> {
-                        var result = invocation.invoke(new DefaultInvocationContext(elContext));
+                        var result = invocation.invoke(new DefaultInvocationContext(elContext, sensitiveDataProcessor));
                         elContext.setPropertyResolved(true);
                         return result;
                     });

@@ -88,7 +88,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
 
             if (result instanceof TaskResult.SimpleResult simpleResult) {
                 var m = ReflectionUtil.findMethod(t.getClass(), "execute", new Class[]{Variables.class}, new Variables[]{input});
-                SensitiveDataProcessor.process(simpleResult.values(), m);
+                runtime.getService(SensitiveDataProcessor.class).process(simpleResult.values(), m);
             }
         } catch (TaskException e) {
             result = TaskResult.fail(e.getCause());
