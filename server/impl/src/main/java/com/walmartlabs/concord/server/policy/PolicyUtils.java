@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.policy;
  * =====
  */
 
-import com.walmartlabs.concord.process.loader.model.Trigger;
+import com.walmartlabs.concord.runtime.model.Trigger;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.jsonstore.JsonStoreEntry;
 import com.walmartlabs.concord.server.org.jsonstore.JsonStoreVisibility;

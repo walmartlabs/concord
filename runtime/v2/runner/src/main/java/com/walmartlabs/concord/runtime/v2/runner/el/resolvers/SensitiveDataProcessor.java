@@ -20,8 +20,9 @@ package com.walmartlabs.concord.runtime.v2.runner.el.resolvers;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.runner.SensitiveDataHolder;
+import com.google.inject.Inject;
 import com.walmartlabs.concord.runtime.v2.sdk.SensitiveData;
+import com.walmartlabs.concord.runtime.v2.sdk.SensitiveDataHolder;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
@@ -31,7 +32,14 @@ public class SensitiveDataProcessor {
 
     private static final int MAX_DEPTH = 10;
 
-    public static void processFirstMatch(Object value, List<Method> methods) {
+    private final SensitiveDataHolder sensitiveDataHolder;
+
+    @Inject
+    public SensitiveDataProcessor(SensitiveDataHolder sensitiveDataHolder) {
+        this.sensitiveDataHolder = sensitiveDataHolder;
+    }
+
+    public void processFirstMatch(Object value, List<Method> methods) {
         var method = methods.stream().filter(SensitiveDataProcessor::isSensitiveData).findFirst().orElse(null);
         if (method == null) {
             return;
@@ -40,21 +48,21 @@ public class SensitiveDataProcessor {
         process(value, method);
     }
 
-    public static void process(Object value, Method method) {
+    public void process(Object value, Method method) {
         var a = method.getAnnotation(SensitiveData.class);
         if (a == null) {
             return;
         }
 
         if (value instanceof String) {
-            SensitiveDataHolder.getInstance().add((String) value);
+            sensitiveDataHolder.add((String) value);
         } else if (value instanceof Map<?, ?> m) {
             var keys = a.keys() != null && a.keys().length > 0 ? new HashSet<Object>(Arrays.asList(a.keys())) : m.keySet();
 
             for (var key : keys) {
                 var v = m.get(key);
                 if (v instanceof String) {
-                    SensitiveDataHolder.getInstance().add((String) v);
+                    sensitiveDataHolder.add((String) v);
                 } else if (a.includeNestedValues() && v instanceof Map<?,?> nested) {
                     processNestedValues(nested, 0);
                 }
@@ -62,7 +70,7 @@ public class SensitiveDataProcessor {
         }
     }
 
-    private static void processNestedValues(Object obj, int depth) {
+    private void processNestedValues(Object obj, int depth) {
         if (depth > MAX_DEPTH) {
             return;
         }
@@ -86,7 +94,7 @@ public class SensitiveDataProcessor {
                 processNestedValues(item, depth + 1);
             }
         } else if (obj instanceof String str) {
-            SensitiveDataHolder.getInstance().add(str);
+            sensitiveDataHolder.add(str);
         }
     }
 

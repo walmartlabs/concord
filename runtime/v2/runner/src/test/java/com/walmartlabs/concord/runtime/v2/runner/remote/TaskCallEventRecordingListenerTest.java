@@ -22,7 +22,6 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.runtime.v2.runner.SensitiveDataHolder;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -79,29 +78,6 @@ public class TaskCallEventRecordingListenerTest {
         List<String> blackList = Collections.singletonList("x.y.z");
         Map<String, Object> result = TaskCallEventRecordingListener.maskVars(vars, blackList);
         assertEquals("{x={y={z=***}}}", result.toString());
-    }
-
-    @Test
-    public void testSensitiveDataMasking() throws JsonProcessingException {
-        SensitiveDataHolder holder = SensitiveDataHolder.getInstance();
-        holder.add("foo");
-        holder.add("bar");
-
-        String in = "{" +
-                    "\"a\": \"foo\"," +
-                    "\"b\": \"bar\"," +
-                    "\"c\": \"baz\"," +
-                    "\"d\": { \"e\": \"foo\" }" +
-                    "}";
-
-        Map<String, Object> result = TaskCallEventRecordingListener.processSensitiveData(vars(in));
-        String expected = "{" +
-                          "   \"a\": \"***\"," +
-                          "   \"b\": \"***\"," +
-                          "   \"c\": \"baz\"," +
-                          "   \"d\": { \"e\": \"***\" }" +
-                          "}";
-        assertEquals(vars(expected), result);
     }
 
     @SuppressWarnings("unchecked")

@@ -11,17 +11,13 @@
     </parent>
 
     <groupId>com.walmartlabs.concord.runtime</groupId>
-    <artifactId>concord-process-loader</artifactId>
+    <artifactId>concord-runtime-loader</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-sdk</artifactId>
+            <groupId>com.walmartlabs.concord.runtime</groupId>
+            <artifactId>concord-runtime-model</artifactId>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
@@ -30,14 +26,6 @@
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-repository</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.runtime.v1</groupId>
-            <artifactId>concord-project-model-v1</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.runtime.v2</groupId>
-            <artifactId>concord-runtime-model-v2</artifactId>
         </dependency>
 
         <dependency>
