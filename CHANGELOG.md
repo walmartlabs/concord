@@ -7,7 +7,10 @@
 - concord-server: add more repository-level GitHub events
 ([#1149](https://github.com/walmartlabs/concord/pull/1149));
 - runtime-v2: allow marking nested values as sensitive data
-([#1151](https://github.com/walmartlabs/concord/pull/1151)).
+([#1151](https://github.com/walmartlabs/concord/pull/1151));
+- misc-tasks, runtime-v2: support masking when base64
+encoding/decoding sensitive data
+([#1155](https://github.com/walmartlabs/concord/pull/1155)).
 
 ### Changed
 
