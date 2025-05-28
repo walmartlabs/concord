@@ -17,7 +17,10 @@ encoding/decoding sensitive data
 - runtime-v1, runtime-v2: refactor loader structure
 ([#1147](https://github.com/walmartlabs/concord/pull/1147));
 - examples: update description
-([#1153](https://github.com/walmartlabs/concord/pull/1153)).
+([#1153](https://github.com/walmartlabs/concord/pull/1153));
+- concord-server-it: make dependency resolver timeout same
+as in runtime-v2 ITs
+([#1156](https://github.com/walmartlabs/concord/pull/1156)).
 
 
 
