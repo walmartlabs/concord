@@ -50,6 +50,7 @@ public class Worker implements Runnable {
     private final JobRequest jobRequest;
 
     private JobInstance jobInstance;
+    private boolean throwOnFailure;
 
     @Inject
     public Worker(RepositoryManager repositoryManager,
@@ -119,6 +120,10 @@ public class Worker implements Runnable {
         jobInstance.cancel();
     }
 
+    public void setThrowOnFailure(boolean throwOnFailure) {
+        this.throwOnFailure = throwOnFailure;
+    }
+
     private void handleError(UUID instanceId, Throwable error) {
         StatusEnum status = StatusEnum.FAILED;
 
@@ -131,6 +136,13 @@ public class Worker implements Runnable {
 
         onStatusChange(instanceId, status);
         log.info("handleError ['{}'] -> done", instanceId);
+
+        if (throwOnFailure) {
+            if (error instanceof RuntimeException re) {
+                throw re;
+            }
+            throw new RuntimeException(error);
+        }
     }
 
     private void onStatusChange(UUID instanceId, StatusEnum status) {
