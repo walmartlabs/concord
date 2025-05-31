@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.boot.resteasy;
+package com.walmartlabs.concord.server.sdk.rest;
 
 /*-
  * *****
@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.boot.resteasy;
  */
 
 /**
- * Declares an API.
+ * Declares a list of prefixes that should be served as JAX-RS resources.
  */
 public interface ApiDescriptor {
 
