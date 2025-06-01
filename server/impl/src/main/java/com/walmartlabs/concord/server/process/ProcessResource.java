@@ -747,15 +747,17 @@ public class ProcessResource implements Resource {
             content = @Content(mediaType = "application/zip",
                     schema = @Schema(type = "string", format = "binary"))
     )
-    public Response downloadState(@PathParam("id") UUID instanceId) {
+    public Response downloadState(@PathParam("id") UUID instanceId, @Context HttpServletRequest request) {
         ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
         assertProcessAccess(entry, "state");
 
+        boolean applyFilter = assertApplyFilter(request);
+
         StreamingOutput out = output -> {
             try (ZipArchiveOutputStream dst = new ZipArchiveOutputStream(output)) {
-                stateManager.export(processKey, new ProcessStateManager.FilteringConsumer(zipTo(dst), s -> {
+                stateManager.export(processKey, new ProcessStateManager.FilteringConsumer(zipTo(dst, applyFilter), s -> {
                     if (!isSessionResource(s)) {
                         return true;
                     }
@@ -767,6 +769,21 @@ public class ProcessResource implements Resource {
         return Response.ok(out, "application/zip")
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + instanceId + ".zip\"")
                 .build();
+    }
+
+    private boolean assertApplyFilter(HttpServletRequest request) {
+        // do not filter request from admins
+        if (Roles.isAdmin()) {
+            return false;
+        }
+
+        // do not filter request from agent
+        String userAgent = request.getHeader("User-Agent");
+        if (userAgent.startsWith("Concord-Agent")) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
