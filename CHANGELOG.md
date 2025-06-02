@@ -20,7 +20,9 @@ encoding/decoding sensitive data
 ([#1153](https://github.com/walmartlabs/concord/pull/1153));
 - concord-server-it: make dependency resolver timeout same
 as in runtime-v2 ITs
-([#1156](https://github.com/walmartlabs/concord/pull/1156)).
+([#1156](https://github.com/walmartlabs/concord/pull/1156));
+- docker-images: update JDK versions
+([#1158](https://github.com/walmartlabs/concord/pull/1158)).
 
 
 
