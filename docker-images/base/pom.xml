@@ -13,6 +13,8 @@
     <artifactId>concord-base</artifactId>
     <packaging>pom</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <properties>
         <base.image>${docker.namespace}/concord-base</base.image>
         <docker.tagbase>${base.image}</docker.tagbase>

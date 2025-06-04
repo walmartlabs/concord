@@ -13,6 +13,8 @@
     <artifactId>concord-compat-it</artifactId>
     <packaging>jar</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <properties>
         <!-- version of Agent to use in tests -->
         <!-- should be one or more release versions behind the current version -->

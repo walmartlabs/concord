@@ -12,8 +12,9 @@
 
     <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
     <artifactId>parent</artifactId>
-
     <packaging>pom</packaging>
+
+    <name>${project.groupId}:${project.artifactId}</name>
 
     <modules>
         <module>db</module>

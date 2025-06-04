@@ -13,6 +13,8 @@
     <artifactId>concord-runner-v2-test</artifactId>
     <packaging>jar</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord.runtime.v2</groupId>

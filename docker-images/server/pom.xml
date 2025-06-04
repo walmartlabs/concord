@@ -12,6 +12,8 @@
     <artifactId>concord-server</artifactId>
     <packaging>pom</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <properties>
         <server.image>${docker.namespace}/concord-server</server.image>
         <docker.tagbase>${server.image}</docker.tagbase>
