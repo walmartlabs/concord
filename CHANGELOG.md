@@ -1,5 +1,31 @@
 # Change Log
 
+## [2.28.0] - Unreleased
+
+### Added
+
+- concord-server: add more repository-level GitHub events
+([#1149](https://github.com/walmartlabs/concord/pull/1149));
+- runtime-v2: allow marking nested values as sensitive data
+([#1151](https://github.com/walmartlabs/concord/pull/1151));
+- misc-tasks, runtime-v2: support masking when base64
+encoding/decoding sensitive data
+([#1155](https://github.com/walmartlabs/concord/pull/1155)).
+
+### Changed
+
+- runtime-v1, runtime-v2: refactor loader structure
+([#1147](https://github.com/walmartlabs/concord/pull/1147));
+- examples: update description
+([#1153](https://github.com/walmartlabs/concord/pull/1153));
+- concord-server-it: make dependency resolver timeout same
+as in runtime-v2 ITs
+([#1156](https://github.com/walmartlabs/concord/pull/1156));
+- docker-images: update JDK versions
+([#1158](https://github.com/walmartlabs/concord/pull/1158)).
+
+
+
 ## [2.27.0] - 2025-05-22
 
 ### Added
