@@ -1363,6 +1363,7 @@ public class MainTest  {
 
         assertLog(log, ".*" + Pattern.quote("map: {nonSecretButMasked=******, secret=******}") + ".*");
         assertLog(log, ".*" + Pattern.quote("map: {nonSecret=non secret value, secret=******}") + ".*");
+        assertLog(log, ".*" + Pattern.quote("map.nested: {nonSecret=non secret value, secret={top-secret=******}}") + ".*");
 
         assertLog(log, ".*" + Pattern.quote("plain: plain") + ".*");
 
@@ -1372,6 +1373,26 @@ public class MainTest  {
 
         log = resume("ev1", ProcessConfiguration.builder().build());
         assertLog(log, ".*" + Pattern.quote("mySecret after suspend: ******") + ".*");
+    }
+
+    @Test
+    public void testBse64SensitiveData() throws Exception {
+        deploy("base64Sensitive");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("1. sensitive: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("1. also sensitive: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("1. non sensitive: NOT_SECRET") + ".*");
+
+        assertLog(log, ".*" + Pattern.quote("2. base64 encode sensitive: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("2. base64 encode non sensitive: Tk9UX1NFQ1JFVA==") + ".*");
+
+        assertLog(log, ".*" + Pattern.quote("3. base64 decode sensitive: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("3. base64 decode base64 sensitive: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("3. base64 decode non sensitive: NOT_SECRET") + ".*");
     }
 
     @Test

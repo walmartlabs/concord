@@ -31,6 +31,12 @@ import java.lang.reflect.Method;
  */
 public class BeanELResolver extends javax.el.BeanELResolver {
 
+    private final SensitiveDataProcessor sensitiveDataProcessor;
+
+    public BeanELResolver(SensitiveDataProcessor sensitiveDataProcessor) {
+        this.sensitiveDataProcessor = sensitiveDataProcessor;
+    }
+
     @Override
     public Object invoke(ELContext context, Object base, Object method, Class<?>[] paramTypes, Object[] params) {
         if (base == null || method == null) {
@@ -47,7 +53,7 @@ public class BeanELResolver extends javax.el.BeanELResolver {
 
             if (context.isPropertyResolved()) {
                 Method m = ReflectionUtil.findMethod(base.getClass(), method.toString(), paramTypes, params);
-                SensitiveDataProcessor.process(result, m);
+                sensitiveDataProcessor.process(result, m);
             }
 
             return result;

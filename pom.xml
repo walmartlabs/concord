@@ -42,13 +42,11 @@
         <module>forms</module>
         <module>server</module>
         <module>client2</module>
+        <module>runtime/model</module>
         <module>runtime/common</module>
+        <module>runtime/loader</module>
         <module>runtime/v1</module>
         <module>runtime/v2</module>
-        <!-- TODO fix the build order/directory structure -->
-        <!-- runtime/loader only needs models, but runtime folder itself logically depends on server -->
-        <!-- which depends on loader -->
-        <module>runtime/loader</module>
         <module>plugins</module>
         <module>agent</module>
         <module>console2</module>
