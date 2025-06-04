@@ -13,6 +13,8 @@
     <artifactId>concord-cli</artifactId>
     <packaging>jar</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <properties>
         <main.class>com.walmartlabs.concord.cli.Main</main.class>
     </properties>
@@ -191,25 +193,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>com.oneops.maven.plugins</groupId>
-                <artifactId>really-executable-jar-maven-plugin</artifactId>
-                <version>1.4.2</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>really-executable-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <flags>-Xmx128m -client</flags>
-                    <classifier>uber</classifier>
-                    <outputClassifier>executable</outputClassifier>
-                    <allowOtherTypes>true</allowOtherTypes>
-                </configuration>
             </plugin>
         </plugins>
     </build>

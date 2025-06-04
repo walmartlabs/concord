@@ -13,6 +13,8 @@
     <artifactId>concord-console-it</artifactId>
     <packaging>jar</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <properties>
         <!-- pin down the version of DB and Selenium images -->
         <db.image>library/postgres:10.4-alpine</db.image>

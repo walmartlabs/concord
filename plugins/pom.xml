@@ -14,6 +14,8 @@
 
     <packaging>pom</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <modules>
         <module>tasks/ansible</module>
         <module>tasks/asserts</module>

@@ -12,6 +12,8 @@
     <artifactId>concord-ansible</artifactId>
     <packaging>pom</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <properties>
         <ansible.image>${docker.namespace}/concord-ansible</ansible.image>
         <docker.tagbase>${ansible.image}</docker.tagbase>

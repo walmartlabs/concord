@@ -13,6 +13,8 @@
     <artifactId>concord-runtime-v2-it</artifactId>
     <packaging>jar</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <properties>
         <it.local.mode>false</it.local.mode>
         <db.image>library/postgres:10</db.image>

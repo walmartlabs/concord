@@ -13,6 +13,8 @@
     <artifactId>concord-ansible-plugin-db</artifactId>
     <packaging>jar</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <properties>
         <db.image>library/postgres:10.4-alpine</db.image>
         <db.baseDir>${project.build.directory}/db</db.baseDir>

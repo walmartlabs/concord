@@ -13,6 +13,8 @@
     <artifactId>concord-runtime-vm-v2</artifactId>
     <packaging>jar</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>

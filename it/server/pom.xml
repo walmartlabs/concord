@@ -13,6 +13,8 @@
     <artifactId>concord-server-it</artifactId>
     <packaging>jar</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <properties>
         <agent.image>walmartlabs/concord-agent</agent.image>
         <ansible.image>walmartlabs/concord-ansible</ansible.image>

@@ -14,6 +14,8 @@
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <modules>
         <module>vm</module>
         <module>sdk</module>
