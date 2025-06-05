@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.SensitiveDataProcessor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import org.junit.jupiter.api.Test;
@@ -396,7 +397,7 @@ public class ExpressionEvaluatorTest {
     }
 
     private static ExpressionEvaluator expressionEvaluator(TaskProviders taskProviders) {
-        return new DefaultExpressionEvaluator(taskProviders, List.of(), List.of());
+        return new DefaultExpressionEvaluator(taskProviders, List.of(), List.of(), mock(SensitiveDataProcessor.class));
     }
 
     public static class TestTask implements Task {

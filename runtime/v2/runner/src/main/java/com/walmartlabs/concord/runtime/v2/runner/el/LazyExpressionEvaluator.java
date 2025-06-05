@@ -47,11 +47,14 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     private final FunctionMapper functionMapper;
     private final List<CustomTaskMethodResolver> taskMethodResolvers;
     private final List<CustomBeanMethodResolver> beanMethodResolvers;
+    private final SensitiveDataProcessor sensitiveDataProcessor;
 
     public LazyExpressionEvaluator(TaskProviders taskProviders,
                                    List<CustomTaskMethodResolver> taskMethodResolvers,
-                                   List<CustomBeanMethodResolver> beanMethodResolvers) {
+                                   List<CustomBeanMethodResolver> beanMethodResolvers,
+                                   SensitiveDataProcessor sensitiveDataProcessor) {
         this.taskProviders = taskProviders;
+        this.sensitiveDataProcessor = sensitiveDataProcessor;
         this.functionMapper = createFunctionMapper();
         this.taskMethodResolvers = taskMethodResolvers;
         this.beanMethodResolvers = beanMethodResolvers;
@@ -188,15 +191,15 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         }
         r.add(expressionFactory.getStreamELResolver());
         r.add(new StaticFieldELResolver());
-        r.add(new MapELResolver());
-        r.add(new MethodAccessorResolver());
+        r.add(new MapELResolver(sensitiveDataProcessor));
+        r.add(new MethodAccessorResolver(sensitiveDataProcessor));
         r.add(new ResourceBundleELResolver());
         r.add(new ListELResolver());
         r.add(new ArrayELResolver());
         if (evalContext.context() != null) {
-            r.add(new TaskMethodResolver(taskMethodResolvers, evalContext.context()));
+            r.add(new TaskMethodResolver(taskMethodResolvers, evalContext.context(), sensitiveDataProcessor));
         }
-        r.add(new CompositeBeanELResolver(taskMethodResolvers, beanMethodResolvers));
+        r.add(new CompositeBeanELResolver(taskMethodResolvers, beanMethodResolvers, sensitiveDataProcessor));
         return r;
     }
 

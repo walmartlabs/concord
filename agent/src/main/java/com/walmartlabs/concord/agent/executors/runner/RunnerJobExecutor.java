@@ -63,6 +63,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -165,12 +166,15 @@ public class RunnerJobExecutor implements JobExecutor {
             if (cfg.dependencyResolveTimeout() != null) {
                 Duration timeout = Objects.requireNonNull(cfg.dependencyResolveTimeout());
                 RunnerJob finalJob = job;
+
+                Instant startedAt = Instant.now();
                 Future<Collection<String>> future = executor.submit(() -> resolveDeps(finalJob));
                 try {
                     resolvedDeps = future.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
                 } catch (InterruptedException | TimeoutException e) {
                     future.cancel(true);
-                    throw new RuntimeException("Timeout resolving dependencies");
+                    Duration elapsed = Duration.between(startedAt, Instant.now());
+                    throw new RuntimeException("Timeout resolving dependencies (timeout=%sms, elapsed=%sms)".formatted(timeout.toMillis(), elapsed.toMillis()));
                 }
             } else {
                 resolvedDeps = resolveDeps(job);

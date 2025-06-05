@@ -34,13 +34,16 @@ public class CompositeBeanELResolver extends javax.el.BeanELResolver {
     private final List<CustomTaskMethodResolver> customTaskMethodResolvers;
     private final List<CustomBeanMethodResolver> customBeanMethodResolvers;
     private final BeanELResolver defaultResolver;
+    private final SensitiveDataProcessor sensitiveDataProcessor;
 
     public CompositeBeanELResolver(
             List<CustomTaskMethodResolver> customTaskMethodResolvers,
-            List<CustomBeanMethodResolver> customBeanMethodResolvers) {
+            List<CustomBeanMethodResolver> customBeanMethodResolvers,
+            SensitiveDataProcessor sensitiveDataProcessor) {
         this.customTaskMethodResolvers = customTaskMethodResolvers;
         this.customBeanMethodResolvers = customBeanMethodResolvers;
-        this.defaultResolver = new BeanELResolver();
+        this.defaultResolver = new BeanELResolver(sensitiveDataProcessor);
+        this.sensitiveDataProcessor = sensitiveDataProcessor;
     }
 
     @Override
@@ -52,7 +55,7 @@ public class CompositeBeanELResolver extends javax.el.BeanELResolver {
         var invocation = findInvocation(base, method, paramTypes, params);
         if (invocation != null) {
             elContext.setPropertyResolved(base, method);
-            return invocation.invoke(new DefaultInvocationContext(elContext));
+            return invocation.invoke(new DefaultInvocationContext(elContext, sensitiveDataProcessor));
         }
 
         return defaultResolver.invoke(elContext, base, method, paramTypes, params);
