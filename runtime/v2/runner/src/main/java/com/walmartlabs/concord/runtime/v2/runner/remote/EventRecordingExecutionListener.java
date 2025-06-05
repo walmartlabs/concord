@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
  */
 
 import com.walmartlabs.concord.client2.ProcessEventRequest;
+import com.walmartlabs.concord.runtime.model.Location;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.EventReportingService;

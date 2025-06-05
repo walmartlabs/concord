@@ -5,7 +5,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>parent</artifactId>
-    <version>2.27.1-SNAPSHOT</version>
+    <version>2.28.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -42,13 +42,11 @@
         <module>forms</module>
         <module>server</module>
         <module>client2</module>
+        <module>runtime/model</module>
         <module>runtime/common</module>
+        <module>runtime/loader</module>
         <module>runtime/v1</module>
         <module>runtime/v2</module>
-        <!-- TODO fix the build order/directory structure -->
-        <!-- runtime/loader only needs models, but runtime folder itself logically depends on server -->
-        <!-- which depends on loader -->
-        <module>runtime/loader</module>
         <module>plugins</module>
         <module>agent</module>
         <module>console2</module>
@@ -203,6 +201,15 @@
         <pluginManagement>
             <plugins>
                 <plugin>
+                    <groupId>org.sonatype.central</groupId>
+                    <artifactId>central-publishing-maven-plugin</artifactId>
+                    <version>0.7.0</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <publishingServerId>central</publishingServerId>
+                    </configuration>
+                </plugin>
+                <plugin>
                     <groupId>com.github.eirslett</groupId>
                     <artifactId>frontend-maven-plugin</artifactId>
                     <version>${frontend.plugin.version}</version>
@@ -231,7 +238,7 @@
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                         <pushChanges>false</pushChanges>
                         <useReleaseProfile>false</useReleaseProfile>
-                        <goals>deploy</goals>
+                        <goals>install org.sonatype.central:central-publishing-maven-plugin:publish</goals>
                         <arguments>--batch-mode -DskipTests -Pconcord-release</arguments>
                     </configuration>
                 </plugin>

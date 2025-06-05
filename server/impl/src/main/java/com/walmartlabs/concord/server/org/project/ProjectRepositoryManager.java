@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.model.ProcessDefinition;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;

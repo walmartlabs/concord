@@ -34,9 +34,7 @@ import com.walmartlabs.concord.runtime.v2.runner.guice.DefaultRunnerModule;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.logging.CustomLayout;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.V2;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import org.eclipse.sisu.wire.WireModule;
 
 import javax.inject.Inject;
@@ -127,6 +125,10 @@ public class InjectorFactory {
             if (runnerCfg.logging().workDirMasking()) {
                 CustomLayout.enableWorkingDirectoryMasking(workDir);
             }
+
+            var holder = com.walmartlabs.concord.runtime.v2.runner.SensitiveDataHolder.getInstance();
+            bind(com.walmartlabs.concord.runtime.v2.sdk.SensitiveDataHolder.class).toInstance(holder);
+            CustomLayout.setSensitiveDataHolder(holder);
 
             bind(RunnerConfiguration.class).toInstance(runnerCfg);
             bind(ProcessConfiguration.class).toProvider(processCfgProvider);

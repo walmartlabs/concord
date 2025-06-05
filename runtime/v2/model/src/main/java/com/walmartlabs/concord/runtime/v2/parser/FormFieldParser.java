@@ -21,9 +21,9 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.walmartlabs.concord.forms.FormField.Cardinality;
+import com.walmartlabs.concord.runtime.model.Location;
 import com.walmartlabs.concord.runtime.v2.exception.*;
 import com.walmartlabs.concord.runtime.v2.model.FormField;
-import com.walmartlabs.concord.runtime.v2.model.Location;
 
 import java.io.Serializable;
 import java.util.*;

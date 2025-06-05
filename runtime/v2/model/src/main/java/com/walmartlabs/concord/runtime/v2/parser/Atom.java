@@ -23,7 +23,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import com.walmartlabs.concord.runtime.v2.model.Location;
+import com.walmartlabs.concord.runtime.model.Location;
 
 import java.io.IOException;
 import java.io.Serializable;

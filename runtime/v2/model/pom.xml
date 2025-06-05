@@ -6,14 +6,24 @@
     <parent>
         <groupId>com.walmartlabs.concord.runtime.v2</groupId>
         <artifactId>parent</artifactId>
-        <version>2.27.1-SNAPSHOT</version>
+        <version>2.28.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-runtime-model-v2</artifactId>
     <packaging>jar</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <dependencies>
+        <dependency>
+            <groupId>com.walmartlabs.concord.runtime</groupId>
+            <artifactId>concord-runtime-model</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.runtime</groupId>
+            <artifactId>concord-runtime-loader</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-sdk</artifactId>
@@ -58,6 +68,10 @@
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jdk8</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
         <dependency>
             <groupId>io.takari</groupId>
