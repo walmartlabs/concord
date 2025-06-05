@@ -36,8 +36,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
 
-import static ch.qos.logback.classic.ClassicConstants.FINALIZE_SESSION_MARKER;
-
 public class SegmentedLogger implements RunnerLogger {
 
     private static final long SYSTEM_SEGMENT_ID = 0;
@@ -52,11 +50,11 @@ public class SegmentedLogger implements RunnerLogger {
     }
 
     @Override
-    public Long createSegment(String segmentName, UUID correlationId) {
+    public Long createSegment(String segmentName, UUID correlationId, Long parentSegmentId, Map<String, Object> meta) {
         if (SYSTEM_SEGMENT_NAME.equals(segmentName)) {
             return SYSTEM_SEGMENT_ID;
         }
-        return loggingClient.createSegment(correlationId, segmentName);
+        return loggingClient.createSegment(correlationId, segmentName, parentSegmentId, meta);
     }
 
     @Override

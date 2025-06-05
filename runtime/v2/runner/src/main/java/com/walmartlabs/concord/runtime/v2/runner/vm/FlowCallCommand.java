@@ -28,6 +28,7 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -66,6 +67,9 @@ public class FlowCallCommand extends StepCommand<FlowCall> implements ElementEve
 
         FlowCallOptions opts = Objects.requireNonNull(call.getOptions());
         Map<String, Object> input = VMUtils.prepareInput(ecf, ee, ctx, opts.input(), opts.inputExpression());
+
+        input = new HashMap<>(input);
+        input.put("parentSegmentId", LogSegmentUtils.getLogSegmentId(state, threadId));
 
         // the call's frame should be a "root" frame
         // all local variables will have this frame as their base
