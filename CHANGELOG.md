@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.29.0] - Unreleased
+
+### Changed
+
+- runtime-v2: add extra check to testThrowParallelWithPayload
+([#1157](https://github.com/walmartlabs/concord/pull/1157)).
+
+
+
 ## [2.28.0] - 2025-06-04
 
 ### Added
