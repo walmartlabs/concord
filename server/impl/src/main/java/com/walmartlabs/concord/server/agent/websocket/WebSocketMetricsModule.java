@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.websocket;
+package com.walmartlabs.concord.server.agent.websocket;
 
 /*-
  * *****
@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.websocket;
 import com.codahale.metrics.Gauge;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
+import com.walmartlabs.concord.server.message.MessageChannelManager;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import com.walmartlabs.concord.server.sdk.metrics.GaugeProvider;
 
@@ -32,14 +33,15 @@ public class WebSocketMetricsModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        Provider<WebSocketChannelManager> channelManagerProvider = getProvider(WebSocketChannelManager.class);
+        Provider<MessageChannelManager> channelManagerProvider = getProvider(MessageChannelManager.class);
 
+        @SuppressWarnings("rawtypes")
         Multibinder<GaugeProvider> gauges = Multibinder.newSetBinder(binder(), GaugeProvider.class);
         gauges.addBinding().toInstance(createGauge(channelManagerProvider));
         gauges.addBinding().toInstance(create(channelManagerProvider));
     }
 
-    private static GaugeProvider<Integer> createGauge(Provider<WebSocketChannelManager> channelManagerProvider) {
+    private static GaugeProvider<Integer> createGauge(Provider<MessageChannelManager> channelManagerProvider) {
         return new GaugeProvider<>() {
             @Override
             public String name() {
@@ -53,7 +55,7 @@ public class WebSocketMetricsModule extends AbstractModule {
         };
     }
 
-    private static GaugeProvider<Integer> create(Provider<WebSocketChannelManager> channelManagerProvider) {
+    private static GaugeProvider<Integer> create(Provider<MessageChannelManager> channelManagerProvider) {
         return new GaugeProvider<>() {
             @Override
             public String name() {

@@ -25,7 +25,7 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.boot.BackgroundTasks;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.task.TaskScheduler;
-import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
+import com.walmartlabs.concord.server.message.MessageChannelManager;
 import org.jooq.Configuration;
 
 import javax.inject.Inject;
@@ -41,18 +41,18 @@ public class ServerResource implements Resource {
 
     private final TaskScheduler taskScheduler;
     private final BackgroundTasks backgroundTasks;
-    private final WebSocketChannelManager webSocketChannelManager;
+    private final MessageChannelManager messageChannelManager;
     private final PingDao pingDao;
 
     @Inject
     public ServerResource(TaskScheduler taskScheduler,
                           BackgroundTasks backgroundTasks,
-                          WebSocketChannelManager webSocketChannelManager,
+                          MessageChannelManager messageChannelManager,
                           PingDao pingDao) {
 
         this.taskScheduler = taskScheduler;
         this.backgroundTasks = backgroundTasks;
-        this.webSocketChannelManager = webSocketChannelManager;
+        this.messageChannelManager = messageChannelManager;
         this.pingDao = pingDao;
     }
 
@@ -75,9 +75,8 @@ public class ServerResource implements Resource {
     @POST
     @Path("/maintenance-mode")
     public void maintenanceMode() {
+        messageChannelManager.shutdown();
         backgroundTasks.stop();
-
-        webSocketChannelManager.shutdown();
         taskScheduler.stop();
     }
 
@@ -88,7 +87,8 @@ public class ServerResource implements Resource {
         return new TestBean(OffsetDateTime.now());
     }
 
-    static class PingDao extends AbstractDao {
+    @SuppressWarnings("resource")
+    public static class PingDao extends AbstractDao {
 
         @Inject
         public PingDao(@MainDB Configuration cfg) {
