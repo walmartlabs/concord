@@ -2,6 +2,11 @@
 
 ## [2.29.0] - Unreleased
 
+### Added
+
+- concord-agent: one-shot mode
+([#1150](https://github.com/walmartlabs/concord/pull/1150)).
+
 ### Changed
 
 - runtime-v2: add extra check to testThrowParallelWithPayload
