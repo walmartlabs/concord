@@ -1,6 +1,6 @@
 # Change Log
 
-## [2.28.0] - Unreleased
+## [2.28.0] - 2025-06-04
 
 ### Added
 
@@ -22,7 +22,9 @@ encoding/decoding sensitive data
 as in runtime-v2 ITs
 ([#1156](https://github.com/walmartlabs/concord/pull/1156));
 - docker-images: update JDK versions
-([#1158](https://github.com/walmartlabs/concord/pull/1158)).
+([#1158](https://github.com/walmartlabs/concord/pull/1158));
+- project: use central-publishing-maven-plugin
+([#1160](https://github.com/walmartlabs/concord/pull/1160)).
 
 
 
