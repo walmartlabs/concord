@@ -20,6 +20,7 @@ package com.walmartlabs.concord.it.testingserver;
  * =====
  */
 
+import ca.ibodrov.concord.webapp.WebappPluginModule;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
 import com.typesafe.config.Config;
@@ -73,7 +74,8 @@ public class TestingConcordServer implements AutoCloseable {
 
         var config = prepareConfig(db);
         var system = new ConcordServerModule(config);
-        var allModules = Stream.concat(extraModules.stream().map(f -> f.apply(config)), Stream.of(system)).toList();
+        var webapp = new WebappPluginModule();
+        var allModules = Stream.concat(extraModules.stream().map(f -> f.apply(config)), Stream.of(system, webapp)).toList();
         server = ConcordServer.withModules(allModules)
                 .start();
 

@@ -22,5 +22,6 @@
         <module>oidc</module>
         <module>oneops</module>
         <module>pfed-sso</module>
+        <module>webapp</module>
     </modules>
 </project>

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.boot.resteasy;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.walmartlabs.concord.server.sdk.rest.ApiDescriptor;
 import com.walmartlabs.concord.server.sdk.rest.Component;
 
 import javax.servlet.ServletContextListener;

@@ -350,6 +350,16 @@
                 <artifactId>concord-oneops-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord</groupId>
+                <artifactId>concord-console2</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.server.plugins</groupId>
+                <artifactId>webapp</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <!-- deprecated -->
             <dependency>
                 <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>

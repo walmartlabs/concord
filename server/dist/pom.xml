@@ -43,6 +43,16 @@
             <artifactId>oidc</artifactId>
         </dependency>
 
+        <!-- ui -->
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-console2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.server.plugins</groupId>
+            <artifactId>webapp</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
