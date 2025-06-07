@@ -5,7 +5,9 @@
 ### Added
 
 - concord-agent: one-shot mode
-([#1150](https://github.com/walmartlabs/concord/pull/1150)).
+([#1150](https://github.com/walmartlabs/concord/pull/1150));
+- slack-tasks: allow send blocks instead of simple text
+([#1161](https://github.com/walmartlabs/concord/pull/1161)).
 
 ### Changed
 
