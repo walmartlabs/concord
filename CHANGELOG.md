@@ -1,5 +1,24 @@
 # Change Log
 
+## [2.29.0] - Unreleased
+
+### Added
+
+- concord-agent: one-shot mode
+([#1150](https://github.com/walmartlabs/concord/pull/1150));
+- slack-tasks: allow send blocks instead of simple text
+([#1161](https://github.com/walmartlabs/concord/pull/1161)).
+
+### Changed
+
+- runtime-v2: add extra check to testThrowParallelWithPayload
+([#1157](https://github.com/walmartlabs/concord/pull/1157));
+- concord-server-it: reduce agent and server poll delays to
+speed up tests
+([#1159](https://github.com/walmartlabs/concord/pull/1159)).
+
+
+
 ## [2.28.0] - 2025-06-04
 
 ### Added
