@@ -10,7 +10,10 @@
 ### Changed
 
 - runtime-v2: add extra check to testThrowParallelWithPayload
-([#1157](https://github.com/walmartlabs/concord/pull/1157)).
+([#1157](https://github.com/walmartlabs/concord/pull/1157));
+- concord-server-it: reduce agent and server poll delays to
+speed up tests
+([#1159](https://github.com/walmartlabs/concord/pull/1159)).
 
 
 
