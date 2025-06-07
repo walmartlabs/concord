@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.slack;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,7 +63,7 @@ public class SlackTaskCommon {
         if (json != null) {
             return sendJsonMessage(slackCfg, json, in.ignoreErrors(), update);
         } else {
-            return sendMessage(slackCfg, in.channelId(), in.ts(), in.replyBroadcast(), in.text(), in.iconEmoji(), in.username(), in.attachments(), in.ignoreErrors());
+            return sendMessage(slackCfg, in.channelId(), in.ts(), in.replyBroadcast(), in.text(), in.iconEmoji(), in.username(), in.attachments(), in.blocks(), in.ignoreErrors());
         }
     }
 
@@ -97,10 +97,11 @@ public class SlackTaskCommon {
                             String iconEmoji,
                             String username,
                             Collection<Object> attachments,
+                            Collection<Object> blocks,
                             boolean ignoreErrors) {
 
         try {
-            SlackClient.Response r = Slack.sendMessage(slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments);
+            SlackClient.Response r = Slack.sendMessage(slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments, blocks);
             return result(r);
         } catch (Exception e) {
             if (!ignoreErrors) {
