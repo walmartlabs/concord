@@ -15,7 +15,10 @@
 ([#1157](https://github.com/walmartlabs/concord/pull/1157));
 - concord-server-it: reduce agent and server poll delays to
 speed up tests
-([#1159](https://github.com/walmartlabs/concord/pull/1159)).
+([#1159](https://github.com/walmartlabs/concord/pull/1159));
+- concord-runtime-v1/v2-it: reduce agent and server poll
+delays to speed up tests
+([#1163](https://github.com/walmartlabs/concord/pull/1163).
 
 
 
