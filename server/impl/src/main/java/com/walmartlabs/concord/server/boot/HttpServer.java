@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.boot;
  * =====
  */
 
-import com.walmartlabs.concord.server.boot.resteasy.ApiDescriptor;
+import com.walmartlabs.concord.server.sdk.rest.ApiDescriptor;
 import com.walmartlabs.concord.server.cfg.ServerConfiguration;
 import org.eclipse.jetty.ee8.nested.SessionHandler;
 import org.eclipse.jetty.ee8.servlet.FilterHolder;
