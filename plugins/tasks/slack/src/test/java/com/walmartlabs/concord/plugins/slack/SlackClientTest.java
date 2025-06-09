@@ -124,7 +124,7 @@ public class SlackClientTest {
         SlackClient client = new SlackClient(SlackConfiguration.from(new SlackConfigurationParams(new MapBackedVariables(cfgMap))));
 
         String channelId = TestParams.TEST_CHANNEL;
-        SlackClient.Response response = client.message(channelId, null, false, "Hello from Concord!", null, null, null);
+        SlackClient.Response response = client.message(channelId, null, false, "Hello from Concord!", null, null, null, null);
         assertTrue(response.isOk());
     }
 }
