@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-server: refactor WebSocketChannelManager, allow
+message sources in plugins
+([#1056](https://github.com/walmartlabs/concord/pull/1056));
 - concord-agent: one-shot mode
 ([#1150](https://github.com/walmartlabs/concord/pull/1150));
 - slack-tasks: allow send blocks instead of simple text
