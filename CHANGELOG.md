@@ -11,6 +11,8 @@
 
 ### Changed
 
+- concord-server, concord-console2: use webapp plugin
+([#1154](https://github.com/walmartlabs/concord/pull/1154));
 - runtime-v2: add extra check to testThrowParallelWithPayload
 ([#1157](https://github.com/walmartlabs/concord/pull/1157));
 - concord-server-it: reduce agent and server poll delays to
