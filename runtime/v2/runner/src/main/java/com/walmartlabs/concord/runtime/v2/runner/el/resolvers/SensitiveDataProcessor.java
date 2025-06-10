@@ -39,17 +39,12 @@ public class SensitiveDataProcessor {
         this.sensitiveDataHolder = sensitiveDataHolder;
     }
 
-    public void processFirstMatch(Object value, List<Method> methods) {
-        var method = methods.stream().filter(SensitiveDataProcessor::isSensitiveData).findFirst().orElse(null);
-        if (method == null) {
+    public void process(Object value, Method method) {
+        if (value == null || method == null) {
             return;
         }
 
-        process(value, method);
-    }
-
-    public void process(Object value, Method method) {
-        var a = method.getAnnotation(SensitiveData.class);
+        var a = findSensitiveDataAnnotation(method);
         if (a == null) {
             return;
         }
@@ -98,7 +93,33 @@ public class SensitiveDataProcessor {
         }
     }
 
-    private static boolean isSensitiveData(Method method) {
-        return method.getAnnotation(SensitiveData.class) != null;
+    private SensitiveData findSensitiveDataAnnotation(Method method) {
+        if (method.isBridge()) {
+            return findAnnotationFromBridgedMethod(method);
+        }
+        return method.getAnnotation(SensitiveData.class);
+    }
+
+    /**
+     * This is a simple bridge resolution mechanism suitable for sensitive data processing.
+     */
+    private static SensitiveData findAnnotationFromBridgedMethod(Method bridgeMethod) {
+        var declaringClass = bridgeMethod.getDeclaringClass();
+        for (var candidate : declaringClass.getDeclaredMethods()) {
+            if (isBridgedCandidateFor(bridgeMethod, candidate)) {
+                var result = candidate.getAnnotation(SensitiveData.class);
+                if (result != null) {
+                    return result;
+                }
+            }
+        }
+        return bridgeMethod.getAnnotation(SensitiveData.class);
+    }
+
+    private static boolean isBridgedCandidateFor(Method bridge, Method candidate) {
+        return !candidate.isBridge() &&
+                !candidate.equals(bridge) &&
+                candidate.getName().equals(bridge.getName()) &&
+                candidate.getParameterCount() == bridge.getParameterCount();
     }
 }
