@@ -44,8 +44,9 @@ import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import com.walmartlabs.concord.server.websocket.WebSocketChannel;
-import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
+import com.walmartlabs.concord.server.message.MessageChannel;
+import com.walmartlabs.concord.server.message.MessageChannelManager;
+import com.walmartlabs.concord.server.agent.websocket.WebSocketChannel;
 import org.jooq.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +77,7 @@ public class Dispatcher extends PeriodicTask {
 
     private final Locks locks;
     private final DispatcherDao dao;
-    private final WebSocketChannelManager channelManager;
+    private final MessageChannelManager channelManager;
     private final ProcessLogManager logManager;
     private final ProcessQueueManager queueManager;
     private final Set<Filter> filters;
@@ -93,7 +94,7 @@ public class Dispatcher extends PeriodicTask {
     @Inject
     public Dispatcher(Locks locks,
                       DispatcherDao dao,
-                      WebSocketChannelManager channelManager,
+                      MessageChannelManager channelManager,
                       ProcessLogManager logManager,
                       ProcessQueueManager queueManager,
                       Set<Filter> filters,
@@ -126,7 +127,7 @@ public class Dispatcher extends PeriodicTask {
         // TODO the WebSocketChannelManager business can be replaced with an async jax-rs endpoint and an "inbox" queue
 
         // grab the requests w/o responses
-        Map<WebSocketChannel, ProcessRequest> requests = this.channelManager.getRequests(MessageType.PROCESS_REQUEST);
+        Map<MessageChannel, ProcessRequest> requests = this.channelManager.getRequests(MessageType.PROCESS_REQUEST);
         if (requests.isEmpty()) {
             return false;
         }
@@ -210,7 +211,8 @@ public class Dispatcher extends PeriodicTask {
             ProcessQueueEntry candidate = m.response;
 
             // mark the process as STARTING
-            queueManager.updateAgentId(tx, candidate.key(), m.request.channel.getAgentId(), ProcessStatus.STARTING);
+            String agentId = m.request.channel.getAgentId();
+            queueManager.updateAgentId(tx, candidate.key(), agentId, ProcessStatus.STARTING);
         }
 
         return matches;
@@ -274,7 +276,6 @@ public class Dispatcher extends PeriodicTask {
     }
 
     private void sendResponse(Match match) {
-        WebSocketChannel channel = match.request.channel;
         long correlationId = match.request.request.getCorrelationId();
         ProcessQueueEntry item = match.response;
 
@@ -291,6 +292,7 @@ public class Dispatcher extends PeriodicTask {
             ProcessResponse resp = new ProcessResponse(correlationId,
                     sessionTokenCreator.create(item.key()),
                     item.key().getInstanceId(),
+                    item.key().getCreatedAt(),
                     secret != null ? secret.orgName : null,
                     item.repoUrl(),
                     item.repoPath(),
@@ -299,16 +301,22 @@ public class Dispatcher extends PeriodicTask {
                     secret != null ? secret.secretName : null,
                     imports);
 
-            if (!channelManager.sendResponse(channel.getChannelId(), resp)) {
+            MessageChannel channel = match.request.channel;
+            if (!channelManager.sendMessage(channel.getChannelId(), resp)) {
                 log.warn("sendResponse ['{}'] -> failed", correlationId);
             }
 
-            logManager.info(item.key(), "Acquired by: " + channel.getUserAgent());
+            // TODO a way to avoid instanceof here
+            String userAgent = channel instanceof WebSocketChannel ? ((WebSocketChannel) channel).getUserAgent() : null;
+            if (userAgent != null) {
+                logManager.info(item.key(), "Acquired by: " + userAgent);
+            }
         } catch (Exception e) {
             log.error("sendResponse ['{}'] -> failed (instanceId: {})", correlationId, item.key().getInstanceId());
         }
     }
 
+    @SuppressWarnings("resource")
     public static class DispatcherDao extends AbstractDao {
 
         private final ConcordObjectMapper objectMapper;
@@ -339,20 +347,20 @@ public class Dispatcher extends PeriodicTask {
 
             SelectJoinStep<Record14<UUID, OffsetDateTime, UUID, UUID, UUID, UUID, String, String, String, UUID, JSONB, JSONB, JSONB, String>> s =
                     tx.select(
-                            q.INSTANCE_ID,
-                            q.CREATED_AT,
-                            q.PROJECT_ID,
-                            orgIdField,
-                            q.INITIATOR_ID,
-                            q.PARENT_INSTANCE_ID,
-                            q.REPO_PATH,
-                            q.REPO_URL,
-                            q.COMMIT_ID,
-                            q.REPO_ID,
-                            q.IMPORTS,
-                            q.REQUIREMENTS,
-                            q.EXCLUSIVE,
-                            q.COMMIT_BRANCH)
+                                    q.INSTANCE_ID,
+                                    q.CREATED_AT,
+                                    q.PROJECT_ID,
+                                    orgIdField,
+                                    q.INITIATOR_ID,
+                                    q.PARENT_INSTANCE_ID,
+                                    q.REPO_PATH,
+                                    q.REPO_URL,
+                                    q.COMMIT_ID,
+                                    q.REPO_ID,
+                                    q.IMPORTS,
+                                    q.REQUIREMENTS,
+                                    q.EXCLUSIVE,
+                                    q.COMMIT_BRANCH)
                             .from(q);
 
             s.where(q.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString())
@@ -392,8 +400,7 @@ public class Dispatcher extends PeriodicTask {
         }
     }
 
-    record Request(WebSocketChannel channel, ProcessRequest request) {
-
+    record Request(MessageChannel channel, ProcessRequest request) {
     }
 
     private record Match(Request request, ProcessQueueEntry response) {

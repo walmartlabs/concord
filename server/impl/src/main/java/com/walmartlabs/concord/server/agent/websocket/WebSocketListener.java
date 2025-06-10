@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.websocket;
+package com.walmartlabs.concord.server.agent.websocket;
 
 /*-
  * *****
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.websocket;
  * =====
  */
 
+import com.walmartlabs.concord.server.message.MessageChannelManager;
 import com.walmartlabs.concord.server.queueclient.MessageSerializer;
 import org.eclipse.jetty.ee8.websocket.api.Session;
 import org.eclipse.jetty.ee8.websocket.api.WebSocketPingPongListener;
@@ -27,28 +28,31 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
-import java.util.UUID;
+
+import static java.util.Objects.requireNonNull;
 
 public class WebSocketListener implements org.eclipse.jetty.ee8.websocket.api.WebSocketListener, WebSocketPingPongListener {
 
     private static final Logger log = LoggerFactory.getLogger(WebSocketListener.class);
 
-    private final WebSocketChannelManager channelManager;
+    private final MessageChannelManager channelManager;
 
-    private final UUID channelId;
+    private final String channelId;
     private final String agentId;
     private final String userAgent;
 
-    public WebSocketListener(WebSocketChannelManager channelManager, UUID channelId, String agentId, String userAgent) {
-        this.channelManager = channelManager;
-        this.channelId = channelId;
-        this.agentId = agentId;
+    public WebSocketListener(MessageChannelManager channelManager, String channelId, String agentId, String userAgent) {
+        this.channelManager = requireNonNull(channelManager);
+        this.channelId = requireNonNull(channelId);
+        this.agentId = requireNonNull(agentId);
         this.userAgent = sanitize(userAgent);
     }
 
     @Override
     public void onWebSocketPing(ByteBuffer payload) {
-        channelManager.pong(channelId);
+        channelManager.getChannel(channelId, WebSocketChannel.class)
+                .ifPresentOrElse(WebSocketChannel::pong,
+                        () -> log.warn("onWebSocketPing ['{}'] -> channel not found", channelId));
     }
 
     @Override
@@ -64,8 +68,9 @@ public class WebSocketListener implements org.eclipse.jetty.ee8.websocket.api.We
 
     @Override
     public void onWebSocketText(String message) {
-        channelManager.onRequest(channelId, MessageSerializer.deserialize(message));
-        log.debug("onWebSocketText ['{}', '{}'] -> ok", channelId, message);
+        channelManager.getChannel(channelId, WebSocketChannel.class)
+                .ifPresentOrElse(c -> c.onRequest(MessageSerializer.deserialize(message)),
+                        () -> log.warn("onWebSocketText ['{}', '{}'] -> channel not found", channelId, message));
     }
 
     @Override
@@ -76,7 +81,8 @@ public class WebSocketListener implements org.eclipse.jetty.ee8.websocket.api.We
 
     @Override
     public void onWebSocketConnect(Session session) {
-        channelManager.add(channelId, new WebSocketChannel(channelId, agentId, session, userAgent));
+        var channel = new WebSocketChannel(channelId, agentId, session, userAgent);
+        channelManager.add(channel);
         log.debug("onWebSocketConnect ['{}'] -> '{}'", channelId, userAgent);
     }
 
@@ -85,13 +91,13 @@ public class WebSocketListener implements org.eclipse.jetty.ee8.websocket.api.We
         log.warn("onWebSocketError ['{}', '{}'] -> error: {}", channelId, userAgent, cause.getMessage());
     }
 
-    private static String sanitize(String log) {
-        if (log == null || log.isEmpty()) {
-            return log;
+    private static String sanitize(String s) {
+        if (s == null || s.isEmpty()) {
+            return s;
         }
-        if (log.length() > 128) {
-            log = log.substring(0, 128) + "...cut";
+        if (s.length() > 128) {
+            s = s.substring(0, 128) + "...cut";
         }
-        return log.replace("\n", "\\n");
+        return s.replace("\n", "\\n");
     }
 }

@@ -22,7 +22,6 @@ package com.walmartlabs.concord.agent;
 
 
 import com.google.inject.Guice;
-import com.google.inject.Injector;
 import org.eclipse.sisu.space.BeanScanning;
 import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
@@ -30,12 +29,24 @@ import org.eclipse.sisu.wire.WireModule;
 
 public class Main {
 
-    public static void main(String[] args) {
-        ClassLoader cl = Main.class.getClassLoader();
+    public static void main(String[] args) throws Exception {
+        // auto-wire all modules
+        var classLoader = Main.class.getClassLoader();
+        var modules = new WireModule(new SpaceModule(new URLClassSpace(classLoader), BeanScanning.GLOBAL_INDEX));
+        var injector = Guice.createInjector(modules);
 
-        Injector injector = Guice.createInjector(new WireModule(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX)));
-
-        Agent a = injector.getInstance(Agent.class);
-        a.start();
+        if (args.length == 1) {
+            // one-shot mode - read ProcessResponse directly from the command line, execute the process and exit
+            // the current $PWD will be used as ${workDir}
+            var oneShotRunner = injector.getInstance(OneShotRunner.class);
+            oneShotRunner.run(args[0]);
+        } else if (args.length == 0) {
+            // agent mode - connect to the server's websocket and handle ProcessResponses
+            var agent = injector.getInstance(Agent.class);
+            agent.start();
+        } else {
+            throw new IllegalArgumentException("Specify the entire ProcessResponse JSON as the first argument to run in " +
+                                               "the one-shot mode or run without arguments for the default (agent) mode.");
+        }
     }
 }

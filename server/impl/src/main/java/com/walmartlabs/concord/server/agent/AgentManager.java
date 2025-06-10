@@ -20,12 +20,13 @@ package com.walmartlabs.concord.server.agent;
  * =====
  */
 
+import com.walmartlabs.concord.server.message.MessageChannel;
+import com.walmartlabs.concord.server.message.MessageChannelManager;
+import com.walmartlabs.concord.server.agent.websocket.WebSocketChannel;
 import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
-import com.walmartlabs.concord.server.websocket.WebSocketChannel;
-import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
@@ -40,12 +41,13 @@ import static java.util.Objects.requireNonNull;
 public class AgentManager {
 
     private final AgentCommandsDao commandQueue;
-    private final WebSocketChannelManager channelManager;
+    private final MessageChannelManager channelManager;
     private final UuidGenerator uuidGenerator;
 
     @Inject
     public AgentManager(AgentCommandsDao commandQueue,
-                        WebSocketChannelManager channelManager, UuidGenerator uuidGenerator) {
+                        MessageChannelManager channelManager,
+                        UuidGenerator uuidGenerator) {
 
         this.commandQueue = requireNonNull(commandQueue);
         this.channelManager = requireNonNull(channelManager);
@@ -53,12 +55,13 @@ public class AgentManager {
     }
 
     public Collection<AgentWorkerEntry> getAvailableAgents() {
-        Map<WebSocketChannel, ProcessRequest> reqs = channelManager.getRequests(MessageType.PROCESS_REQUEST);
+        Map<MessageChannel, ProcessRequest> reqs = channelManager.getRequests(MessageType.PROCESS_REQUEST);
         return reqs.entrySet().stream()
+                .filter(r -> r.getKey() instanceof WebSocketChannel) // TODO a better way
                 .map(r -> AgentWorkerEntry.builder()
                         .channelId(r.getKey().getChannelId())
                         .agentId(r.getKey().getAgentId())
-                        .userAgent(r.getKey().getUserAgent())
+                        .userAgent(((WebSocketChannel) r.getKey()).getUserAgent())
                         .capabilities(r.getValue().getCapabilities())
                         .build())
                 .collect(Collectors.toList());

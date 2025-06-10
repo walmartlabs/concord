@@ -22,20 +22,6 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-console2</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
         <!-- dependency tree fix for mvnd -->
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
@@ -74,14 +60,6 @@
                                     <type>tar.gz</type>
                                     <classifier>dist</classifier>
                                     <destFileName>server.tar.gz</destFileName>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord</groupId>
-                                    <artifactId>concord-console2</artifactId>
-                                    <version>${project.version}</version>
-                                    <type>tar.gz</type>
-                                    <classifier>dist</classifier>
-                                    <destFileName>console.tar.gz</destFileName>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
