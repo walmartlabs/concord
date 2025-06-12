@@ -142,7 +142,8 @@ public class OidcRealm extends AuthorizingRealm {
             }
         }
 
-        log.info("user: '{}', roles: {}", token.getProfile().getEmail(), roles);
+        log.info("user: '{}', oidc groups: {}, roles: {}",
+                token.getProfile().getEmail(), token.getProfile().getAttribute("groups"), roles);
 
         return SecurityUtils.toAuthorizationInfo(principals, roles);
     }
