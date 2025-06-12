@@ -142,8 +142,11 @@ public class OidcRealm extends AuthorizingRealm {
             }
         }
 
-        log.info("user: '{}', oidc groups: {}, roles: {}",
-                token.getProfile().getEmail(), token.getProfile().getAttribute("groups"), roles);
+        log.info("user: '{}', oidc groups: {}, roleMapping: {}, roles: {}",
+                token.getProfile().getEmail(),
+                token.getProfile().getAttribute("groups"),
+                roleMapping,
+                roles);
 
         return SecurityUtils.toAuthorizationInfo(principals, roles);
     }
@@ -153,8 +156,9 @@ public class OidcRealm extends AuthorizingRealm {
             String attr = source.attribute();
             String pattern = source.pattern();
             Object attrValue = profile.getAttribute(attr);
-            log.info("attr ({}): {}, pattern ({}): {}, value ({}): {}", attr.getClass(), attr, pattern.getClass(), pattern, attrValue != null ? attrValue.getClass() : null, attrValue);
-            if (Matcher.matches(attrValue, pattern)) {
+            var result = Matcher.matches(attrValue, pattern);
+            log.info("attr ({}): {}, pattern ({}): {}, value ({}): {} -> {}", attr.getClass(), attr, pattern.getClass(), pattern, attrValue != null ? attrValue.getClass() : null, attrValue, result);
+            if (result) {
                 return true;
             }
         }
