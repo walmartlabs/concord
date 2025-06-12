@@ -100,10 +100,10 @@ public final class DataSourceUtils {
                 long start = System.currentTimeMillis();
                 while (!tryLock(conn, logTable)) {
                     if (System.currentTimeMillis() - start >= MAX_LOCK_WAIT_TIME.toMillis()) {
-                        throw new Exception("Timeout to obtain the lock for " + logPath);
+                        throw new Exception("Timeout to obtain the lock for " + logTable);
                     }
 
-                    log.info("migrateDb -> waiting for the lock for {}", logPath);
+                    log.info("migrateDb -> waiting for the lock for {}", logTable);
                     Thread.sleep(FAILED_LOCK_ATTEMPT_DELAY.toMillis());
                 }
 
