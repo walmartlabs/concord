@@ -94,7 +94,6 @@
         <kubernetes.client.version>7.0.1</kubernetes.client.version>
         <launcher.version>0.128</launcher.version>
         <liquibase.version>4.29.2</liquibase.version>
-        <liquibase.sessionlock.version>1.6.9</liquibase.sessionlock.version>
         <logback.version>1.5.18</logback.version>
         <maven.annotation.version>3.5</maven.annotation.version>
         <maven.api.version>3.0.5</maven.api.version>
@@ -1283,11 +1282,6 @@
                 <groupId>org.fusesource.jansi</groupId>
                 <artifactId>jansi</artifactId>
                 <version>${jansi.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.blagerweij</groupId>
-                <artifactId>liquibase-sessionlock</artifactId>
-                <version>${liquibase.sessionlock.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
