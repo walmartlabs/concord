@@ -24,6 +24,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
 import java.util.Base64;
@@ -44,10 +46,17 @@ public class MigrationTest {
         dbImage = props.getProperty("db.image");
     }
 
+    @SuppressWarnings("resource")
+    private PostgreSQLContainer<?> createDbContainer() {
+        return new PostgreSQLContainer<>(DockerImageName.parse(dbImage)
+                .asCompatibleSubstituteFor("postgres"))
+                .waitingFor(Wait.forListeningPort());
+    }
+
     @Test
     @Timeout(value = 1, unit = TimeUnit.MINUTES)
     public void regularMigration() {
-        try (var db = new PostgreSQLContainer<>(dbImage)) {
+        try (var db = createDbContainer()) {
             db.start();
             applyMigrations(db);
         }
@@ -56,7 +65,7 @@ public class MigrationTest {
     @Test
     @Timeout(value = 1, unit = TimeUnit.MINUTES)
     public void concurrentMigrations() {
-        try (var db = new PostgreSQLContainer<>(dbImage)) {
+        try (var db = createDbContainer()) {
             db.start();
 
             var threads = new Thread[5];

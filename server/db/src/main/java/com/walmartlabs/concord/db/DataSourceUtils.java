@@ -167,7 +167,9 @@ public final class DataSourceUtils {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     boolean result = rs.getBoolean(1);
-                    log.info("tryLock -> successfully grabbed the lock for {}", logTable);
+                    if (result) {
+                        log.info("tryLock -> successfully grabbed the lock for {}", logTable);
+                    }
                     return result;
                 }
             }
