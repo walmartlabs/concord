@@ -29,7 +29,10 @@ delays to speed up tests
 ([#1163](https://github.com/walmartlabs/concord/pull/1163));
 - runtime-v2: improve handling of @SensitiveData on bridge
 methods
-([#1164](https://github.com/walmartlabs/concord/pull/1164)).
+([#1164](https://github.com/walmartlabs/concord/pull/1164));
+- concord-server-db: use our own implementation of session
+locks
+([#1169](https://github.com/walmartlabs/concord/pull/1169)).
 
 
 
