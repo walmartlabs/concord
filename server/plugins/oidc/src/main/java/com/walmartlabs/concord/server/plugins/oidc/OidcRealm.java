@@ -170,8 +170,6 @@ public class OidcRealm extends AuthorizingRealm {
     }
 
     private static Map<String, List<PluginConfiguration.Source>> validateRoleMapping(Map<String, List<PluginConfiguration.Source>> input, RoleDao roleDao) {
-        Map<String, List<PluginConfiguration.Source>> output = new HashMap<>();
-
         for (Map.Entry<String, List<PluginConfiguration.Source>> entry : input.entrySet()) {
             String roleName = entry.getKey();
             if (roleDao.getId(roleName) == null) {
@@ -179,7 +177,7 @@ public class OidcRealm extends AuthorizingRealm {
             }
         }
 
-        return output;
+        return input;
     }
 
     private static Map<UUID, TeamMapping> validateTeamMapping(Map<UUID, TeamMapping> input, TeamDao teamDao) {
