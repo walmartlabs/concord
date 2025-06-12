@@ -1,7 +1,8 @@
 call: "flow"
 in:
   in-1: "v1"
-out: "${myOutExpr}"
+out:
+  o1: "${o.one}"
 withItems:
 - "item1"
 - "item2"

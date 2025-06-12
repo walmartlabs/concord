@@ -1,0 +1,45 @@
+flows:
+  default:
+    - checkpoint: "first"
+    - call: testOutAsArray
+    - call: testOutAsMap
+    - call: testOutAsArrayWithLoop
+    - call: testOutAsMapWithLoop
+
+  testOutAsArray:
+    - call: myFlow
+      out:  ["myFlowOut", "myFlowOut2"]
+
+    - log: "out as array: ${myFlowOut}"
+
+  testOutAsMap:
+    - call: myFlow
+      out:
+        myResult: "${myFlowOut}"
+
+    - log: "out as map: ${myResult}"
+
+  testOutAsArrayWithLoop:
+    - call: myFlow
+      out: ["myFlowOut"]
+      loop:
+        items: [1, 2]
+
+    - log: "out as array with loop: ${myFlowOut}"
+
+  testOutAsMapWithLoop:
+    - call: myFlow
+      out:
+        myResult: "${myFlowOut}_${itemIndex}"
+      loop:
+        items: [1, 2]
+
+    - log: "out as map with loop: ${myResult}"
+
+  ##
+  #  out:
+  #    myFlowOut: string, mandatory
+  ##
+  myFlow:
+    - set:
+        myFlowOut: "abc"

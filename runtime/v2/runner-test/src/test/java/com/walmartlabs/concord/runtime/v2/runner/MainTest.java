@@ -1723,6 +1723,40 @@ public class MainTest  {
         assertLog(log, ".*myValue: 42.*");
     }
 
+    @Test
+    public void flowCallOutExpression() throws Exception {
+        deploy("flowCallOutExpression");
+
+        save(ProcessConfiguration.builder()
+                .dryRun(true)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("out as expression (array): abc") + ".*");
+        assertLog(log, ".*" + Pattern.quote("out as expression (map): abc") + ".*");
+        assertLog(log, ".*" + Pattern.quote("out as expression (array) with loop: [abc, abc]") + ".*");
+        assertLog(log, ".*" + Pattern.quote("out as expression (map) with loop: [abc_0, abc_1]") + ".*");
+    }
+
+    @Test
+    public void flowCallOutExpressionCompat() throws Exception {
+        deploy("flowCallOutCompat");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        // checkpoint with state before changes
+        runtime.checkpointService().put("first", Paths.get(MainTest.class.getResource("flowCallOutCompat/first.zip").toURI()));
+        runtime.checkpointService().restore("first", runtime.workDir());
+
+        run();
+
+        assertLog(runtime.allLogs(), ".*" + Pattern.quote("out as array: abc") + ".*");
+        assertLog(runtime.allLogs(), ".*" + Pattern.quote("out as map: abc") + ".*");
+        assertLog(runtime.allLogs(), ".*" + Pattern.quote("out as array with loop: [abc, abc]") + ".*");
+        assertLog(runtime.allLogs(), ".*" + Pattern.quote("out as map with loop: [abc_0, abc_1]") + ".*");
+    }
+
     private void deploy(String name) throws URISyntaxException, IOException {
         runtime.deploy(name);
     }
