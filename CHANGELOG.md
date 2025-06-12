@@ -10,7 +10,10 @@ message sources in plugins
 - concord-agent: one-shot mode
 ([#1150](https://github.com/walmartlabs/concord/pull/1150));
 - slack-tasks: allow send blocks instead of simple text
-([#1161](https://github.com/walmartlabs/concord/pull/1161)).
+([#1161](https://github.com/walmartlabs/concord/pull/1161));
+- concord-server, concord-console2: add console.cfgFile
+config parameter
+([#1166](https://github.com/walmartlabs/concord/pull/1166)).
 
 ### Changed
 
