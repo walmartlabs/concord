@@ -30,6 +30,8 @@ delays to speed up tests
 - runtime-v2: improve handling of @SensitiveData on bridge
 methods
 ([#1164](https://github.com/walmartlabs/concord/pull/1164));
+- webapp: fix prefix matching
+([#1167](https://github.com/walmartlabs/concord/pull/1167));
 - concord-server-db: use our own implementation of session
 locks
 ([#1169](https://github.com/walmartlabs/concord/pull/1169)).
