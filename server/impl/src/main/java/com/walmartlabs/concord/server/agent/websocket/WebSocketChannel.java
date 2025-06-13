@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.websocket;
+package com.walmartlabs.concord.server.agent.websocket;
 
 /*-
  * *****
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.websocket;
  * =====
  */
 
+import com.walmartlabs.concord.server.message.MessageChannel;
 import com.walmartlabs.concord.server.queueclient.MessageSerializer;
 import com.walmartlabs.concord.server.queueclient.message.Message;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
@@ -29,28 +30,29 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class WebSocketChannel {
+public class WebSocketChannel implements MessageChannel {
 
     private static final Logger log = LoggerFactory.getLogger(WebSocketChannel.class);
 
-    private final UUID channelId;
+    private final String channelId;
     private final String agentId;
     private final String userAgent;
     private final Session session;
 
     private final Map<Long, Message> requests = new ConcurrentHashMap<>();
 
-    public WebSocketChannel(UUID channelId, String agentId, Session session, String userAgent) {
+    public WebSocketChannel(String channelId, String agentId, Session session, String userAgent) {
         this.channelId = channelId;
         this.agentId = agentId;
         this.session = session;
         this.userAgent = userAgent;
     }
 
-    public UUID getChannelId() {
+    @Override
+    public String getChannelId() {
         return channelId;
     }
 
@@ -66,18 +68,11 @@ public class WebSocketChannel {
         return session;
     }
 
-    public void onRequest(Message request) {
-        Message old = requests.put(request.getCorrelationId(), request);
-        if (old != null) {
-            log.error("request ['{}', '{}'] -> duplicate request. closing channel", channelId, request);
-            close();
-        }
-    }
-
     /**
      * Sends the response and removes the associated request from the queue.
      */
-    public boolean sendResponse(Message response) {
+    @Override
+    public boolean offerMessage(Message response) {
         if (!session.isOpen()) {
             log.warn("response ['{}', '{}'] -> session is closed", channelId, response);
             return false;
@@ -98,22 +93,14 @@ public class WebSocketChannel {
         }
     }
 
-    public boolean pong() {
-        try {
-            session.getRemote().sendPong(ByteBuffer.wrap("pong".getBytes()));
-            return true;
-        } catch (Exception e) {
-            log.error("pong ['{}'] -> error", channelId, e);
-            return false;
-        }
-    }
-
-    public Message getRequest(MessageType requestType) {
+    @Override
+    public Optional<Message> getMessage(MessageType requestType) {
         return requests.values().stream()
                 .filter(m -> m.getMessageType() == requestType)
-                .findAny().orElse(null);
+                .findAny();
     }
 
+    @Override
     public void close() {
         if (!session.isOpen()) {
             return;
@@ -124,6 +111,22 @@ public class WebSocketChannel {
             session.disconnect();
         } catch (Exception e) {
             log.warn("close ['{}'] -> error", channelId, e);
+        }
+    }
+
+    void onRequest(Message request) {
+        Message old = requests.put(request.getCorrelationId(), request);
+        if (old != null) {
+            log.error("request ['{}', '{}'] -> duplicate request. closing channel", channelId, request);
+            close();
+        }
+    }
+
+    void pong() {
+        try {
+            session.getRemote().sendPong(ByteBuffer.wrap("pong".getBytes()));
+        } catch (Exception e) {
+            log.warn("pong ['{}'] -> error", channelId, e);
         }
     }
 }

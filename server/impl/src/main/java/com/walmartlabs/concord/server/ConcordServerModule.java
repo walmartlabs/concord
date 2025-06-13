@@ -29,12 +29,14 @@ import com.walmartlabs.concord.config.ConfigModule;
 import com.walmartlabs.concord.db.DatabaseModule;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.server.agent.AgentModule;
+import com.walmartlabs.concord.server.agent.websocket.WebSocketModule;
 import com.walmartlabs.concord.server.audit.AuditLogModule;
 import com.walmartlabs.concord.server.boot.BackgroundTasks;
 import com.walmartlabs.concord.server.cfg.ConfigurationModule;
 import com.walmartlabs.concord.server.cfg.DatabaseConfigurationModule;
 import com.walmartlabs.concord.server.console.ConsoleModule;
 import com.walmartlabs.concord.server.events.EventModule;
+import com.walmartlabs.concord.server.message.MessageChannelManager;
 import com.walmartlabs.concord.server.metrics.MetricModule;
 import com.walmartlabs.concord.server.org.OrganizationModule;
 import com.walmartlabs.concord.server.policy.PolicyModule;
@@ -46,7 +48,6 @@ import com.walmartlabs.concord.server.security.apikey.ApiKeyModule;
 import com.walmartlabs.concord.server.task.TaskSchedulerModule;
 import com.walmartlabs.concord.server.template.TemplateModule;
 import com.walmartlabs.concord.server.user.UserModule;
-import com.walmartlabs.concord.server.websocket.WebSocketModule;
 
 import javax.inject.Named;
 import java.security.SecureRandom;
@@ -88,10 +89,11 @@ public class ConcordServerModule implements Module {
         binder.bind(Listeners.class).in(SINGLETON);
         binder.bind(SecureRandom.class).toProvider(SecureRandomProvider.class);
 
+        binder.bind(MessageChannelManager.class).in(SINGLETON);
+
         binder.bind(DependencyManagerConfiguration.class).toProvider(DependencyManagerConfigurationProvider.class);
 
         binder.install(new ApiServerModule());
-
         binder.install(new AgentModule());
         binder.install(new ApiKeyModule());
         binder.install(new AuditLogModule());

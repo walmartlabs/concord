@@ -22,6 +22,8 @@ $ ../mvnw com.github.eirslett:frontend-maven-plugin:npm -Darguments=install
 
 ## Running in Dev Mode
 
+In the dev mode the UI is served by running `npm start`.
+
 First time:
 ```bash
 $ npm ci
@@ -40,21 +42,33 @@ The dev mode has the following limitations:
 In order to use those features, you need to run the UI in production
 mode (see below).
 
-## Building and Running in Production Mode
+## Running in Production Mode
 
-```bash
-../mvnw clean install
-```
+In the production mode the UI is served by concord-server from the JAR file
+created during concord-console2 [build](./pom.xml).
 
-Specify the path to the `build` directory when you start
+When running locally, it is available at http://localhost:8001.
+
+## Configuration
+
+Specify the path to the `cfg.js` file when you start
 [the Server](../server/dist):
+
 ```
-BASE_RESOURCE_PATH=/path/to/repository/concord/console2/build
+CONSOLE_CFG_FILE=/path/to/cfg.js
 ```
 
-The UI will be accessible on http://localhost:8080
+or using concord-server.conf:
 
-**Note:** avoid using symlinks in BASE_RESOURCE_PATH.
+```
+concord-server {
+  console {
+     cfgFile = "/path/to/cfg.js"
+  }
+}
+```
+
+Use [./public/cfg.js](./public/cfg.js) as an example.
 
 ## Custom Server URL
 

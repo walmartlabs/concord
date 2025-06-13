@@ -42,10 +42,13 @@ import java.util.stream.Collectors;
 @Deprecated
 public abstract class WithItemsWrapper implements Command {
 
-    public static WithItemsWrapper of(Command cmd, WithItems withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions, Step step) {
+    public static WithItemsWrapper of(Command cmd, WithItems withItems,
+                                      Collection<String> outVariables,
+                                      Map<String, Serializable> outMapping,
+                                      Step step) {
         Collection<String> out = Collections.emptyList();
-        if (!outExpressions.isEmpty()) {
-            out = new HashSet<>(outExpressions.keySet());
+        if (!outMapping.isEmpty()) {
+            out = new HashSet<>(outMapping.keySet());
         } else if (!outVariables.isEmpty()) {
             out = outVariables;
         }

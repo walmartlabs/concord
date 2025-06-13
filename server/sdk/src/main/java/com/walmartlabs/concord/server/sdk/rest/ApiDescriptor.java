@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.websocket;
+package com.walmartlabs.concord.server.sdk.rest;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2025 Walmart Inc.
+ * Copyright (C) 2017 - 2024 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,16 +20,13 @@ package com.walmartlabs.concord.server.websocket;
  * =====
  */
 
-import com.google.inject.Binder;
-import com.google.inject.Module;
+/**
+ * Declares a list of prefixes that should be served as JAX-RS resources.
+ */
+public interface ApiDescriptor {
 
-import static com.google.inject.Scopes.SINGLETON;
-
-public class WebSocketModule implements Module {
-
-    @Override
-    public void configure(Binder binder) {
-        binder.bind(WebSocketChannelManager.class).in(SINGLETON);
-        binder.install(new WebSocketMetricsModule());
-    }
+    /**
+     * Path patterns of the API. E.g. {@code "/api/*"} or {@code "/events/foo"}.
+     */
+    String[] paths();
 }

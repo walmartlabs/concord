@@ -57,7 +57,7 @@ public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
 
         Loop loop = options.loop();
         if (loop != null) {
-            cmd = LoopWrapper.of(context, cmd, loop, Collections.emptyList(), Collections.emptyMap(), step);
+            cmd = LoopWrapper.of(context, cmd, loop, Collections.emptyList(), Collections.emptyMap(), null, step);
         }
 
         List<Step> errorSteps = options.errorSteps();
