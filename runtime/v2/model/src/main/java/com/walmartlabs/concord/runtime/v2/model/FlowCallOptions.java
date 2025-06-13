@@ -59,7 +59,7 @@ public interface FlowCallOptions extends StepOptions {
         return Collections.emptyMap();
     }
 
-    @Deprecated(forRemoval = true, since = "2.28.0")
+    @Deprecated(forRemoval = true, since = "2.29.0")
     @Value.Default
     @AllowNulls
     default Map<String, Serializable> outExpr() {
