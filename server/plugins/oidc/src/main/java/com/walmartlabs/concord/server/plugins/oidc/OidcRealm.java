@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.plugins.oidc.PluginConfiguration.TeamMappi
 import com.walmartlabs.concord.server.role.RoleDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
+import com.walmartlabs.concord.server.sdk.security.MappedRoles;
 import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.*;
@@ -117,7 +118,7 @@ public class OidcRealm extends AuthorizingRealm {
         });
 
         UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, u);
-        return new SimpleAccount(Arrays.asList(userPrincipal, t), t, getName());
+        return new SimpleAccount(Arrays.asList(userPrincipal, t, new MappedRoles()), t, getName());
     }
 
     @Override
@@ -138,6 +139,12 @@ public class OidcRealm extends AuthorizingRealm {
                 roles.add(roleName);
             }
         }
+
+        MappedRoles mappedRoles = principals.oneByType(MappedRoles.class);
+        if (mappedRoles != null) {
+            mappedRoles.addRoles(roles);
+        }
+
         return SecurityUtils.toAuthorizationInfo(principals, roles);
     }
 

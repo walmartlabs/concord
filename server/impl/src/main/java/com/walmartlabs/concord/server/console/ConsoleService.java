@@ -44,6 +44,7 @@ import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.security.MappedRoles;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
@@ -150,11 +151,21 @@ public class ConsoleService implements Resource {
                 .map(LdapPrincipal::getGroups)
                 .orElse(Set.of());
 
+        Set<String> roles = new HashSet<>();
+
+        // roles from the DB
+        u.getRoles().forEach(r -> roles.add(r.getName()));
+
+        // roles from the security realm
+        Optional.ofNullable(SecurityUtils.getCurrent(MappedRoles.class))
+                .map(MappedRoles::getRoles)
+                .ifPresent(roles::addAll);
+
         return UserInfoResponse.builder()
                 .id(u.getId())
                 .displayName(displayName(u, p))
                 .teams(consoleServiceDao.listTeams(p.getId()))
-                .roles(u.getRoles().stream().map(RoleEntry::getName).toList())
+                .roles(roles.stream().sorted().toList())
                 .ldapGroups(userLdapGroups)
                 .build();
     }
