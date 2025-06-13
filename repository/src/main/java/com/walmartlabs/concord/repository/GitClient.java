@@ -305,6 +305,12 @@ public class GitClient {
 
         URI uri = URI.create(url);
 
+        if(!isRepoUriAllowed(uri)) {
+            String msg = String.format("Provided repository ('%s') contains an unsupported URI scheme.", url);
+            log.warn(msg);
+            throw new RepositoryException(msg);
+        }
+
         List<String> allowedDefaultHosts = cfg.authorizedGitHosts();
 
         if(secret == null && allowedDefaultHosts!= null && !allowedDefaultHosts.contains(uri.getHost())) {
@@ -505,6 +511,24 @@ public class GitClient {
             log.error("exec ['{}'] -> error", hideSensitiveData(String.join(" ", cmd)), e);
             throw new RepositoryException("git operation error: " + e.getMessage());
         }
+    }
+
+
+    private boolean isRepoUriAllowed(URI uri) {
+        String providedScheme = uri.getScheme();
+        Set<String> allowedProtocols = Set.of("https", "http", "ssh", "classpath");
+
+        // the provided repo string is definitely an allowed protocol.
+        if(allowedProtocols.contains(providedScheme)) {
+            return true;
+        }
+
+        // the provided repo string has no explicit scheme, should be understood to use an ssh connection
+        if(providedScheme.isEmpty() && uri.getUserInfo() != null) {
+            return true;
+        }
+
+        return false;
     }
 
     private String execWithCredentials(Command cmd, Secret secret) {
