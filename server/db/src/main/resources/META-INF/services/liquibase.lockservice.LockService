@@ -1,1 +1,1 @@
-com.github.blagerweij.sessionlock.PGLockService
+com.walmartlabs.concord.server.liquibase.ext.NoopLockService
