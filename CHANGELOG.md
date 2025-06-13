@@ -1,5 +1,48 @@
 # Change Log
 
+## [2.29.0] - Unreleased
+
+### Added
+
+- concord-server: refactor WebSocketChannelManager, allow
+message sources in plugins
+([#1056](https://github.com/walmartlabs/concord/pull/1056));
+- concord-agent: one-shot mode
+([#1150](https://github.com/walmartlabs/concord/pull/1150));
+- slack-tasks: allow send blocks instead of simple text
+([#1161](https://github.com/walmartlabs/concord/pull/1161));
+- concord-server, concord-console2: add console.cfgFile
+config parameter
+([#1166](https://github.com/walmartlabs/concord/pull/1166));
+- runtime-v2: support expressions for output variables in
+call step
+([#1170](https://github.com/walmartlabs/concord/pull/1170)).
+
+### Changed
+
+- concord-server, concord-console2: use webapp plugin
+([#1154](https://github.com/walmartlabs/concord/pull/1154));
+- runtime-v2: add extra check to testThrowParallelWithPayload
+([#1157](https://github.com/walmartlabs/concord/pull/1157));
+- concord-server-it: reduce agent and server poll delays to
+speed up tests
+([#1159](https://github.com/walmartlabs/concord/pull/1159));
+- concord-runtime-v1/v2-it: reduce agent and server poll
+delays to speed up tests
+([#1163](https://github.com/walmartlabs/concord/pull/1163));
+- runtime-v2: improve handling of @SensitiveData on bridge
+methods
+([#1164](https://github.com/walmartlabs/concord/pull/1164));
+- webapp: fix prefix matching
+([#1167](https://github.com/walmartlabs/concord/pull/1167));
+- oidc: fix role mapping validation
+([#1168](https://github.com/walmartlabs/concord/pull/1168));
+- concord-server-db: use our own implementation of session
+locks
+([#1169](https://github.com/walmartlabs/concord/pull/1169)).
+
+
+
 ## [2.28.0] - 2025-06-04
 
 ### Added
