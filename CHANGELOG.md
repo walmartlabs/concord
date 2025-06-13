@@ -13,7 +13,10 @@ message sources in plugins
 ([#1161](https://github.com/walmartlabs/concord/pull/1161));
 - concord-server, concord-console2: add console.cfgFile
 config parameter
-([#1166](https://github.com/walmartlabs/concord/pull/1166)).
+([#1166](https://github.com/walmartlabs/concord/pull/1166));
+- runtime-v2: support expressions for output variables in
+call step
+([#1170](https://github.com/walmartlabs/concord/pull/1170)).
 
 ### Changed
 
