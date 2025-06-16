@@ -16,6 +16,9 @@ flows:
     - log: "plain: ${sensitiveTask.getPlain('plain')}"
 
     - log: "secret from map: ${sensitiveTask.mySecretKey}"
+    - set:
+        fromGet: ${sensitiveTask.get('mySecretKey2')}
+    - log: "secret from map with get method: ${fromGet}"
 
     - task: sensitiveTask
       out: taskResult

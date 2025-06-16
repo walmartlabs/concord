@@ -45,6 +45,7 @@ public class ConfigurationModule implements Module {
         binder.bind(ApiKeyConfiguration.class).in(SINGLETON);
         binder.bind(AuditConfiguration.class).in(SINGLETON);
         binder.bind(ConcordSecretStoreConfiguration.class).in(SINGLETON);
+        binder.bind(ConsoleConfiguration.class).in(SINGLETON);
         binder.bind(CustomFormConfiguration.class).in(SINGLETON);
         binder.bind(DependenciesConfiguration.class).in(SINGLETON);
         binder.bind(EmailNotifierConfiguration.class).in(SINGLETON);

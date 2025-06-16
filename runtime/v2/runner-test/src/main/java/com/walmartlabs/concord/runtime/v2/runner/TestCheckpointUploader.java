@@ -41,6 +41,8 @@ public class TestCheckpointUploader implements CheckpointUploader {
         Path tmpFile = IOUtils.createTempDir("unittests").resolve(archivePath.getFileName());
         Files.move(archivePath, tmpFile);
         checkpoints.put(name, tmpFile);
+
+        System.out.println(checkpoints);
     }
 
     public void put(String name, Path archivePath) {

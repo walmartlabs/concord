@@ -1,0 +1,56 @@
+flows:
+  default:
+    - call: testOutAsArrayExpression
+    - call: testOutAsMapExpression
+    - call: testOutAsArrayExpressionWithLoop
+    - call: testOutAsMapExpressionWithLoop
+
+  testOutAsArrayExpression:
+    - set:
+        outArray: ["myFlowOut", "myFlowOut2"]
+
+    - call: myFlow
+      out: "${outArray}"
+
+    - log: "out as expression (array): ${myFlowOut}"
+
+  testOutAsMapExpression:
+    - set:
+        outMap:
+          myResult: "\\${myFlowOut}"
+
+    - call: myFlow
+      out: "${outMap}"
+
+    - log: "out as expression (map): ${myResult}"
+
+  testOutAsArrayExpressionWithLoop:
+    - set:
+        outArray: ["myFlowOut"]
+
+    - call: myFlow
+      out: "${outArray}"
+      loop:
+        items: [1, 2]
+
+    - log: "out as expression (array) with loop: ${myFlowOut}"
+
+  testOutAsMapExpressionWithLoop:
+    - set:
+        outMap:
+          myResult: "\\${myFlowOut}_\\${itemIndex}"
+
+    - call: myFlow
+      out: "${outMap}"
+      loop:
+        items: [1, 2]
+
+    - log: "out as expression (map) with loop: ${myResult}"
+
+  ##
+  #  out:
+  #    myFlowOut: string, mandatory
+  ##
+  myFlow:
+    - set:
+        myFlowOut: "abc"

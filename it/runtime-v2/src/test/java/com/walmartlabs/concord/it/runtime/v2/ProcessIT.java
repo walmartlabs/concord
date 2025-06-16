@@ -742,6 +742,10 @@ public class ProcessIT extends AbstractTest {
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
+
+        proc.assertLogAtLeast(".*BOOM1.*", 1);
+        proc.assertLogAtLeast(".*BOOM2.*", 1);
+
         Map<String, Object> data = proc.getOutVariables();
         List<Map<String, Object>> exceptions = MapUtils.getList(data, "exceptions", List.of());
 
