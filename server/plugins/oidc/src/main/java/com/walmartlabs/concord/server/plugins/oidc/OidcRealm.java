@@ -191,11 +191,11 @@ public class OidcRealm extends AuthorizingRealm {
                 }
             }
 
-            if (valid) {
+//            if (valid) {
                 output.put(teamId, teamMapping);
-            } else {
-                log.warn("validateTeamMapping -> removing invalid teamId={} to mapping={}. It will not be considered during user authorization.", teamId, teamMapping);
-            }
+//            } else {
+//                log.warn("validateTeamMapping -> removing invalid teamId={} to mapping={}. It will not be considered during user authorization.", teamId, teamMapping);
+//            }
         }
 
         return output;
