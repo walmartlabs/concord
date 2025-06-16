@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.30.0] - Unreleased
+
+### Changed
+
+- concord-cli: produce an executable binary again
+([#1171](https://github.com/walmartlabs/concord/pull/1171)).
+
+
+
 ## [2.29.0] - 2025-06-13
 
 ### Added
