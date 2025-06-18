@@ -5,7 +5,9 @@
 ### Changed
 
 - concord-cli: produce an executable binary again
-([#1171](https://github.com/walmartlabs/concord/pull/1171)).
+([#1171](https://github.com/walmartlabs/concord/pull/1171));
+- concord-server: allow get user for concordSystemReader role
+([#1173](https://github.com/walmartlabs/concord/pull/1173)).
 
 
 
