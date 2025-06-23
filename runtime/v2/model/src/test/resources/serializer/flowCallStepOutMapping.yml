@@ -1,0 +1,18 @@
+call: "flow"
+in:
+  in-1: "v1"
+out:
+  o1: "${o.one}"
+withItems:
+- "item1"
+- "item2"
+retry:
+  times: "${times}"
+  delay: "${delay}"
+  in:
+    retry-input: "v1"
+error:
+- checkpoint: "chp1"
+  meta:
+    meta-1: "v1"
+    meta-2: "v2"

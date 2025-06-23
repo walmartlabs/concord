@@ -76,10 +76,10 @@ public class UserResourceV2 implements Resource {
 
         UUID authenticatedId = loggedIn.getId();
 
-        if(!authenticatedId.equals(id) && !Roles.isAdmin()) {
-            throw new UnauthorizedException("Users can only view their own information or must have admin privileges.");
+        if (authenticatedId.equals(id) || Roles.isAdmin() || Roles.isGlobalReader()) {
+            return userDao.get(id);
         }
 
-        return userDao.get(id);
+        throw new UnauthorizedException("Users can only view their own information or must have admin privileges.");
     }
 }

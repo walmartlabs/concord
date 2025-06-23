@@ -39,6 +39,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.time.Duration;
 import java.util.Map;
 
 public final class DataSourceUtils {
@@ -46,7 +50,9 @@ public final class DataSourceUtils {
     private static final Logger log = LoggerFactory.getLogger(DataSourceUtils.class);
 
     private static final int MIGRATION_MAX_RETRIES = 10;
-    private static final int MIGRATION_RETRY_DELAY = 10000;
+    private static final Duration MIGRATION_RETRY_DELAY = Duration.ofSeconds(10);
+    private static final Duration MAX_LOCK_WAIT_TIME = Duration.ofMinutes(5);
+    private static final Duration FAILED_LOCK_ATTEMPT_DELAY = Duration.ofSeconds(3);
 
     public static DataSource createDataSource(DatabaseConfiguration cfg,
                                               String poolName,
@@ -72,22 +78,37 @@ public final class DataSourceUtils {
     /**
      * Migrate a database using the provided changelog and Liquibase parameters.
      *
-     * @param dataSource        datasource to use for migration
+     * @param cfg               database config
      * @param changeLogProvider provider of the changelog
-     * @param changeLogParams   Liquibase parameters to use during the migration
      */
-    public static void migrateDb(DataSource dataSource,
-                                 DatabaseChangeLogProvider changeLogProvider,
-                                 Map<String, Object> changeLogParams) {
+    public static void migrateDb(DatabaseConfiguration cfg,
+                                 DatabaseChangeLogProvider changeLogProvider) {
+
+        try {
+            Class.forName(cfg.driverClassName());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize the JDBC driver: " + e.getMessage());
+        }
 
         int retries = MIGRATION_MAX_RETRIES;
         for (int i = 0; i < retries; i++) {
-            try (Connection c = dataSource.getConnection()) {
-                log.info("migrateDb -> performing '{}' migration...", changeLogProvider);
+            try (Connection conn = DriverManager.getConnection(cfg.url(), cfg.username(), cfg.password())) {
                 String logPath = changeLogProvider.getChangeLogPath();
                 String logTable = changeLogProvider.getChangeLogTable();
                 String lockTable = changeLogProvider.getLockTable();
-                migrateDb(c, logPath, logTable, lockTable, changeLogParams);
+
+                long start = System.currentTimeMillis();
+                while (!tryLock(conn, logTable)) {
+                    if (System.currentTimeMillis() - start >= MAX_LOCK_WAIT_TIME.toMillis()) {
+                        throw new Exception("Timeout to obtain the lock for " + logTable);
+                    }
+
+                    log.info("migrateDb -> waiting for the lock for {}", logTable);
+                    Thread.sleep(FAILED_LOCK_ATTEMPT_DELAY.toMillis());
+                }
+
+                log.info("migrateDb -> performing '{}' migration...", changeLogProvider);
+                applyMigrations(conn, logPath, logTable, lockTable, cfg.changeLogParameters());
                 log.info("migrateDb -> completed '{}' migration..", changeLogProvider);
                 break;
             } catch (Exception e) {
@@ -98,7 +119,7 @@ public final class DataSourceUtils {
 
                 log.warn("migrateDb -> db migration error, retrying in {}ms: {}", MIGRATION_RETRY_DELAY, e.getMessage());
                 try {
-                    Thread.sleep(MIGRATION_RETRY_DELAY);
+                    Thread.sleep(MIGRATION_RETRY_DELAY.toMillis());
                 } catch (InterruptedException ee) {
                     Thread.currentThread().interrupt();
                 }
@@ -117,11 +138,11 @@ public final class DataSourceUtils {
                 .set(SQLDialect.POSTGRES);
     }
 
-    private static void migrateDb(Connection conn,
-                                  String logPath,
-                                  String logTable,
-                                  String lockTable,
-                                  Map<String, Object> params) throws Exception {
+    private static void applyMigrations(Connection conn,
+                                        String logPath,
+                                        String logTable,
+                                        String lockTable,
+                                        Map<String, Object> params) throws Exception {
 
         Database db = DatabaseFactory.getInstance()
                 .findCorrectDatabaseImplementation(new JdbcConnection(conn));
@@ -137,6 +158,23 @@ public final class DataSourceUtils {
 
         Scope.enter(Map.of(Scope.Attr.ui.name(), new LoggerUIService()));
         lb.update((String) null);
+    }
+
+    private static boolean tryLock(Connection conn, String logTable) throws Exception {
+        log.info("tryLock -> trying to take the lock for {}", logTable);
+        try (PreparedStatement ps = conn.prepareStatement("SELECT pg_try_advisory_lock(?)")) {
+            ps.setInt(1, logTable.hashCode());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    boolean result = rs.getBoolean(1);
+                    if (result) {
+                        log.info("tryLock -> successfully grabbed the lock for {}", logTable);
+                    }
+                    return result;
+                }
+            }
+        }
+        return false;
     }
 
     private DataSourceUtils() {
