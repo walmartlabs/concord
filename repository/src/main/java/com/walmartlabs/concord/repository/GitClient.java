@@ -517,7 +517,6 @@ public class GitClient {
     private boolean isRepoUriAllowed(URI uri) {
         String providedScheme = uri.getScheme();
         Set<String> allowedProtocols = cfg.allowedSchemes();
-        System.out.println("Allowed protocols: " + allowedProtocols.toString());
         boolean hasScheme = providedScheme != null && (!providedScheme.isEmpty());
 
         // the provided repo string is definitely an allowed protocol.
