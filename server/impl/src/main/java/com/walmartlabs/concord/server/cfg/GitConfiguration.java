@@ -77,7 +77,7 @@ public class GitConfiguration implements Serializable {
 
     @Inject
     @Config("git.allowedSchemes")
-    private Set<String> allowedSchemes;
+    private List<String> allowedSchemes;
 
     public boolean isShallowClone() {
         return shallowClone;
@@ -119,5 +119,5 @@ public class GitConfiguration implements Serializable {
         return sshTimeoutRetryCount;
     }
 
-    public Set<String> getAllowedSchemes() { return allowedSchemes; }
+    public List<String> getAllowedSchemes() { return allowedSchemes; }
 }

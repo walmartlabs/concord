@@ -25,6 +25,7 @@ import com.typesafe.config.Config;
 import javax.inject.Inject;
 import java.time.Duration;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
@@ -41,7 +42,7 @@ public class GitConfiguration {
     private final Duration sshTimeout;
     private final int sshTimeoutRetryCount;
     private final boolean skip;
-    private final Set<String> allowedSchemes;
+    private final List<String> allowedSchemes;
 
 
     @Inject
@@ -56,7 +57,7 @@ public class GitConfiguration {
         this.sshTimeout = cfg.getDuration("git.sshTimeout");
         this.sshTimeoutRetryCount = cfg.getInt("git.sshTimeoutRetryCount");
         this.skip = cfg.getBoolean("git.skip");
-        this.allowedSchemes = new HashSet<String>(cfg.getStringList("git.allowedSchemes"));
+        this.allowedSchemes = cfg.getStringList("git.allowedSchemes");
     }
 
     public String getToken() {
@@ -99,5 +100,5 @@ public class GitConfiguration {
         return skip;
     }
 
-    public Set<String> getAllowedSchemes() { return allowedSchemes; }
+    public List<String> getAllowedSchemes() { return allowedSchemes; }
 }
