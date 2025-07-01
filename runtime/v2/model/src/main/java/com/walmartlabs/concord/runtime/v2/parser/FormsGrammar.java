@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.fasterxml.jackson.core.JsonToken;
+import com.walmartlabs.concord.runtime.v2.exception.InvalidValueException;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import io.takari.parc.Parser;
 import io.takari.parc.Seq;
@@ -69,7 +70,21 @@ public final class FormsGrammar {
     private static final Parser<Atom, Map<String, Form>> forms =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                     many(form).map(Seq::toList)
-                            .map(f -> f.stream().collect(Collectors.toMap(Form::name, Function.identity()))));
+                            .map(f -> f.stream().collect(Collectors.toMap(FormsGrammar::assertFormName, Function.identity()))));
+
+    private static String assertFormName(Form form) {
+        // Form names in project doc root 'forms' configs are not expressions. We can
+        // validate while linting before execution begins
+        if (!form.name().matches("^[A-Za-z0-9_$]+$")) {
+            throw InvalidValueException.builder()
+                    .location(form.location())
+                    .actual(form.name())
+                    .expected("String matching regex \"^[A-Za-z0-9_$]+$\"")
+                    .build();
+        }
+
+        return form.name();
+    }
 
     private static Parser<Atom, ImmutableFormCallOptions.Builder> formCallFieldsOption(ImmutableFormCallOptions.Builder o) {
         return orError(or(formFieldsArray.map(o::fields), maybeExpression.map(o::fieldsExpression)), YamlValueType.FORM_CALL_FIELDS);

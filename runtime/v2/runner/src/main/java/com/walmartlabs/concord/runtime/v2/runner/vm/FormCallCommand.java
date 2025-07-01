@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.forms.FormOptions;
 import com.walmartlabs.concord.runtime.common.FormService;
+import com.walmartlabs.concord.runtime.v2.exception.InvalidValueException;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.FormFieldParser;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
@@ -57,6 +58,14 @@ public class FormCallCommand extends StepCommand<FormCall> implements ElementEve
         FormCall call = getStep();
         ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
         String formName = expressionEvaluator.eval(evalContext, call.getName(), String.class);
+
+        if (!formName.matches("^[A-Za-z0-9_$]+$")) {
+            throw InvalidValueException.builder()
+                    .location(call.getLocation())
+                    .actual(formName)
+                    .expected("name matching regex \"^[A-Za-z0-9_$]+$\"")
+                    .build();
+        }
 
         ProcessDefinition processDefinition = runtime.getService(ProcessDefinition.class);
         ProcessConfiguration processConfiguration = runtime.getService(ProcessConfiguration.class);

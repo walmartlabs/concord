@@ -1,7 +1,9 @@
 flows:
   default:
+    - set:
+        formName: "myForm"
     - log: "Before"
-    - form: myForm
+    - form: "${formName}"
     - log: "After: ${myForm}"
 
 forms:
