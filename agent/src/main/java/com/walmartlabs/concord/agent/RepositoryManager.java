@@ -62,6 +62,7 @@ public class RepositoryManager {
                 .fetchTimeout(gitCfg.getFetchTimeout())
                 .httpLowSpeedLimit(gitCfg.getHttpLowSpeedLimit())
                 .httpLowSpeedTime(gitCfg.getHttpLowSpeedTime())
+                .allowedSchemes(gitCfg.getAllowedSchemes())
                 .sshTimeout(gitCfg.getSshTimeout())
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
                 .build();

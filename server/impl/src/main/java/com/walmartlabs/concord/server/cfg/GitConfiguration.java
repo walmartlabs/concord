@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
 
 public class GitConfiguration implements Serializable {
 
@@ -74,6 +75,10 @@ public class GitConfiguration implements Serializable {
     @Config("git.sshTimeoutRetryCount")
     private int sshTimeoutRetryCount;
 
+    @Inject
+    @Config("git.allowedSchemes")
+    private Set<String> allowedSchemes;
+
     public boolean isShallowClone() {
         return shallowClone;
     }
@@ -113,4 +118,6 @@ public class GitConfiguration implements Serializable {
     public int getSshTimeoutRetryCount() {
         return sshTimeoutRetryCount;
     }
+
+    public Set<String> getAllowedSchemes() { return allowedSchemes; }
 }
