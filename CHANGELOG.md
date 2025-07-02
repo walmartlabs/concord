@@ -2,6 +2,12 @@
 
 ## [2.30.0] - Unreleased
 
+### Added
+
+- http-task: support sending int values in multipart
+requests
+([#1174]https://github.com/walmartlabs/concord/pull/1174)).
+
 ### Changed
 
 - concord-cli: produce an executable binary again
