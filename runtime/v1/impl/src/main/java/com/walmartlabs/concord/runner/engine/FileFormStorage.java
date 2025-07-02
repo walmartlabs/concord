@@ -45,6 +45,7 @@ public class FileFormStorage implements FormStorage {
 
     @Override
     public void save(Form form) throws ExecutionException {
+        assertValidFormName(form);
         UUID id = form.getFormInstanceId();
         Path p = dir.resolve(form.getFormDefinition().getName());
         try {
@@ -74,6 +75,13 @@ public class FileFormStorage implements FormStorage {
             return (Form) out.readObject();
         } catch (ClassNotFoundException | IOException e) {
             throw new ExecutionException("Error while reading a form", e);
+        }
+    }
+
+    private static void assertValidFormName(Form form) {
+        String name = form.getFormDefinition().getName();
+        if (!name.matches("^[A-Za-z0-9_ $]+$")) {
+            throw new IllegalArgumentException(String.format("Invalid form name: '%s'", name));
         }
     }
 }
