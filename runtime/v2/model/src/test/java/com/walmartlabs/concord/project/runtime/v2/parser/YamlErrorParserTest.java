@@ -1632,7 +1632,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test913() throws Exception {
         String msg =
-                "(013.yml): Error @ line: 2, col: 3. Invalid value: invalid.name, expected: [String matching regex \"^[A-Za-z0-9_$]+$\"]\n" +
+                "(013.yml): Error @ line: 2, col: 3. Invalid value: invalid.name, expected: [String matching regex \"^[A-Za-z0-9_ $]+$\"]\n" +
                         "\twhile processing steps:\n" +
                         "\t'forms' @ line: 1, col: 1";
 

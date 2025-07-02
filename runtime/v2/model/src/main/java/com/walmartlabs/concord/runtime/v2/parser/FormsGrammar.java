@@ -75,11 +75,11 @@ public final class FormsGrammar {
     private static String assertFormName(Form form) {
         // Form names in project doc root 'forms' configs are not expressions. We can
         // validate while linting before execution begins
-        if (!form.name().matches("^[A-Za-z0-9_$]+$")) {
+        if (!form.name().matches("^[A-Za-z0-9_ $]+$")) {
             throw InvalidValueException.builder()
                     .location(form.location())
                     .actual(form.name())
-                    .expected("String matching regex \"^[A-Za-z0-9_$]+$\"")
+                    .expected("String matching regex \"^[A-Za-z0-9_ $]+$\"")
                     .build();
         }
 
