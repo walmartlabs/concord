@@ -200,7 +200,7 @@ public class Run implements Callable<Integer> {
         }
 
         // "deps" are the "dependencies" of the last profile in the list of active profiles (if present)
-        Map<String, Object> overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), profiles);
+        Map<String, Object> overlayCfg = ProcessDefinitionUtils.getEffectiveConfiguration(new ProcessDefinitionV2(processDefinition), profiles);
         List<String> deps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
 
         // "extraDependencies" are additive: ALL extra dependencies from ALL ACTIVE profiles are added to the list
