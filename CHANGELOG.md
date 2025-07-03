@@ -15,7 +15,9 @@ requests
 - concord-server: allow get user for concordSystemReader role
 ([#1173](https://github.com/walmartlabs/concord/pull/1173));
 - concord-server: do not log session token
-([#1177](https://github.com/walmartlabs/concord/pull/1177)).
+([#1177](https://github.com/walmartlabs/concord/pull/1177));
+- runtime-v1: validate form name constraints as documented
+([#1181](https://github.com/walmartlabs/concord/pull/1181)).
 
 
 
