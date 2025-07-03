@@ -13,7 +13,9 @@ requests
 - concord-cli: produce an executable binary again
 ([#1171](https://github.com/walmartlabs/concord/pull/1171));
 - concord-server: allow get user for concordSystemReader role
-([#1173](https://github.com/walmartlabs/concord/pull/1173)).
+([#1173](https://github.com/walmartlabs/concord/pull/1173));
+- concord-server: do not log session token
+([#1177](https://github.com/walmartlabs/concord/pull/1177)).
 
 
 
