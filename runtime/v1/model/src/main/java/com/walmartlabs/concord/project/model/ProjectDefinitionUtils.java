@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.model;
  * =====
  */
 
-import com.walmartlabs.concord.common.ConfigurationUtils;
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.form.FormDefinition;
 
@@ -47,14 +46,6 @@ public final class ProjectDefinitionUtils {
 
         Map<String, FormDefinition> view = overlay(forms, profiles, activeProfiles, Profile::getForms);
         return view.get(formName);
-    }
-
-    public static Map<String, Object> getVariables(ProjectDefinition project, Collection<String> activeProfiles) {
-        Map<String, Object> variables = project.getConfiguration();
-        Map<String, Profile> profiles = project.getProfiles();
-
-        return overlay(variables, profiles, activeProfiles, Profile::getConfiguration,
-                ConfigurationUtils::deepMerge);
     }
 
     private static <T> Map<String, T> overlay(Map<String, T> initial,
