@@ -9,7 +9,10 @@ requests
 ([#1174](https://github.com/walmartlabs/concord/pull/1174));
 - concord-server: config option to disable template script
 processing
-([#1176](https://github.com/walmartlabs/concord/pull/1176)).
+([#1176](https://github.com/walmartlabs/concord/pull/1176));
+- common, runtime-v1: add method to assert given path string
+resolves in expected parent
+([#1179](https://github.com/walmartlabs/concord/pull/1179)).
 
 ### Changed
 
