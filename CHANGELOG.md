@@ -6,7 +6,10 @@
 
 - http-task: support sending int values in multipart
 requests
-([#1174]https://github.com/walmartlabs/concord/pull/1174)).
+([#1174](https://github.com/walmartlabs/concord/pull/1174));
+- concord-server: config option to disable template script
+processing
+([#1176](https://github.com/walmartlabs/concord/pull/1176)).
 
 ### Changed
 
