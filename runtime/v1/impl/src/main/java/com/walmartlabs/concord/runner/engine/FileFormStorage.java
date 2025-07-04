@@ -47,8 +47,8 @@ public class FileFormStorage implements FormStorage {
     public void save(Form form) throws ExecutionException {
         assertValidFormName(form);
         UUID id = form.getFormInstanceId();
-        Path p = dir.resolve(form.getFormDefinition().getName());
         try {
+            Path p = IOUtils.assertInPath(dir, form.getFormDefinition().getName());
             Path tmp = IOUtils.createTempFile(id.toString(), "form");
             try (OutputStream out = Files.newOutputStream(tmp)) {
                 SerializationUtils.serialize(out, form);
