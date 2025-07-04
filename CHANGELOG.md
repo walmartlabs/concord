@@ -16,8 +16,11 @@ requests
 ([#1173](https://github.com/walmartlabs/concord/pull/1173));
 - concord-server: do not log session token
 ([#1177](https://github.com/walmartlabs/concord/pull/1177));
+- runtime-v2: validate form name constraints as documented
+([#1180](https://github.com/walmartlabs/concord/pull/1180));
 - runtime-v1: validate form name constraints as documented
 ([#1181](https://github.com/walmartlabs/concord/pull/1181)).
+
 
 
 
