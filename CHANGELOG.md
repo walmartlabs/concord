@@ -22,6 +22,9 @@ resolves in expected parent
 ([#1173](https://github.com/walmartlabs/concord/pull/1173));
 - concord-server: do not log session token
 ([#1177](https://github.com/walmartlabs/concord/pull/1177));
+- concord-server: kill process when resume fails with no
+state
+([#1178](https://github.com/walmartlabs/concord/pull/1178));
 - runtime-v2: validate form name constraints as documented
 ([#1180](https://github.com/walmartlabs/concord/pull/1180));
 - runtime-v1: validate form name constraints as documented
