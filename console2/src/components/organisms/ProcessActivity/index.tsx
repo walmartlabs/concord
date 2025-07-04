@@ -106,6 +106,23 @@ const buildDefinitionLinkBase = (process?: ProcessEntry) => {
     }
 };
 
+const getLogType = (process?: ProcessEntry): 'v1' | 'v2' | undefined => {
+    if (!process) {
+        return;
+    }
+
+    const logType = process.meta?._system?.uiLogType;
+    if (logType === 'v1' || logType === 'v2') {
+        return logType;
+    }
+
+    if (process.runtime === 'concord-v1') {
+        return 'v1';
+    } else {
+        return 'v2';
+    }
+}
+
 const ProcessActivity = (props: ExternalProps) => {
     const stickyRef = useRef(null);
 
@@ -174,6 +191,8 @@ const ProcessActivity = (props: ExternalProps) => {
     const { instanceId, activeTab } = props;
 
     const baseUrl = `/process/${instanceId}`;
+
+    const logType = getLogType(process);
 
     return (
         <div ref={stickyRef}>
@@ -254,8 +273,7 @@ const ProcessActivity = (props: ExternalProps) => {
                     />
                 </Route>
                 <Route path={`${baseUrl}/log`} exact={true}>
-                    {process &&
-                        (process.runtime === 'concord-v1') && (
+                    {logType && logType === 'v1' && (
                             <ProcessLogActivity
                                 instanceId={instanceId}
                                 processStatus={process ? process.status : undefined}
@@ -264,7 +282,7 @@ const ProcessActivity = (props: ExternalProps) => {
                                 dataFetchInterval={dataFetchInterval}
                             />
                         )}
-                    {process && (process.runtime === 'concord-v2' || process.runtime === undefined) && (
+                    {logType && logType === 'v2' && (
                         <ProcessLogActivityV2
                             instanceId={instanceId}
                             processStatus={process ? process.status : undefined}
