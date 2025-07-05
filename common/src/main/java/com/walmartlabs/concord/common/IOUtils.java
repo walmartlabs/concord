@@ -26,6 +26,7 @@ import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -343,6 +344,26 @@ public final class IOUtils {
         if (!f.delete()) {
             log.warn("delete ['{}'] -> failed", f.getAbsolutePath());
         }
+    }
+
+    /**
+     * Resolves a child path within a parent, asserting the normalized child
+     * starts with the parent path to avoid relative path escaping (e.g.
+     * {@code "../../not/in/parent"}).
+     * @param parent parent path within which child must exist when resolved
+     * @param child filename or path to resolve as a child of {@code parent}
+     * @return normalized child path
+     * @throws IOException when the child does not resolve to an absolute path within the parent path
+     */
+    public static Path assertInPath(@NotNull Path parent, @NotNull String child) throws IOException {
+        Path normalizedParent = parent.normalize().toAbsolutePath();
+        Path normalizedChild = normalizedParent.resolve(child).normalize().toAbsolutePath();
+
+        if (!normalizedChild.startsWith(normalizedParent)) {
+            throw new IOException("Child path resolves outside of parent path: " + child);
+        }
+
+        return normalizedChild;
     }
 
     private static String getEnv(String key, String defaultValue) {
