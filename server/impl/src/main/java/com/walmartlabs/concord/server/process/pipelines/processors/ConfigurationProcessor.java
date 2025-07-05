@@ -194,7 +194,7 @@ public class ConfigurationProcessor implements PayloadProcessor {
             return Collections.emptyMap();
         }
 
-        Map<String, Object> m = ProcessDefinitionUtils.getProfilesOverlayCfg(pd, activeProfiles);
+        Map<String, Object> m = ProcessDefinitionUtils.getEffectiveConfiguration(pd, activeProfiles);
         return m != null ? m : Collections.emptyMap();
     }
 

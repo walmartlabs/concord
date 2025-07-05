@@ -35,11 +35,11 @@ public interface ProcessDefinition extends EffectiveProcessDefinitionProvider {
 
     Configuration configuration();
 
-    Map<String, FlowDefinition> flows();
+    Map<String, ? extends FlowDefinition> flows();
 
     Set<String> publicFlows();
 
-    Map<String, Profile> profiles();
+    Map<String, ? extends Profile> profiles();
 
     List<Trigger> triggers();
 

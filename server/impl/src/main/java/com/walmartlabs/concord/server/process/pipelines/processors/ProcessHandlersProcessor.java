@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.walmartlabs.concord.runtime.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import org.slf4j.Logger;
@@ -31,6 +30,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import static com.walmartlabs.concord.runtime.model.ProcessDefinitionUtils.hasFlow;
 
 /**
  * Determines whether the process has onFailure/onCancel/onTimeout/etc handlers
@@ -62,19 +63,17 @@ public class ProcessHandlersProcessor implements PayloadProcessor {
     }
 
     private static void update(Payload payload, ProcessDefinition pd, Collection<String> profiles, Set<String> handlers, String flow, String disableFlag) {
-        if (hasFlow(pd, profiles, flow)) {
-            boolean suppressed = getBoolean(payload, disableFlag);
-            if (suppressed) {
-                log.debug("process -> {} is suppressed, skipping...", flow);
-            } else {
-                handlers.add(flow);
-                log.debug("process -> added {} handler", flow);
-            }
+        if (!hasFlow(pd, profiles, flow)) {
+            return;
         }
-    }
 
-    private static boolean hasFlow(ProcessDefinition pd, Collection<String> profiles, String key) {
-        return ProcessDefinitionUtils.getFlow(pd, profiles, key) != null;
+        boolean suppressed = getBoolean(payload, disableFlag);
+        if (suppressed) {
+            log.debug("process -> {} is suppressed, skipping...", flow);
+        } else {
+            handlers.add(flow);
+            log.debug("process -> added {} handler", flow);
+        }
     }
 
     private static boolean getBoolean(Payload payload, String key) {
