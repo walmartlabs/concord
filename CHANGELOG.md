@@ -29,6 +29,8 @@ state
 ([#1180](https://github.com/walmartlabs/concord/pull/1180));
 - runtime-v1: validate form name constraints as documented
 ([#1181](https://github.com/walmartlabs/concord/pull/1181));
+- runtime-v2: remove unused imports, dead code
+([#1185](https://github.com/walmartlabs/concord/pull/1185));
 - concord-console2: sort variables in task call details
 ([#1186](https://github.com/walmartlabs/concord/pull/1186)).
 
