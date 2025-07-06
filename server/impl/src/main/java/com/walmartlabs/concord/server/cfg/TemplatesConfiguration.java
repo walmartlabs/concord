@@ -1,17 +1,17 @@
-package com.walmartlabs.concord.runtime.v2.runner;
+package com.walmartlabs.concord.server.cfg;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2024 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,12 +20,18 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.client2.ProcessEventRequest;
+import com.walmartlabs.concord.config.Config;
 
-public interface EventReportingService {
+import javax.inject.Inject;
 
-    /**
-     * Report a process event to the server.
-     */
-    void report(ProcessEventRequest req);
+public class TemplatesConfiguration {
+
+    @Inject
+    @Config("templates.allowScripting")
+    private boolean allowScripting;
+
+    public boolean isAllowScripting() {
+        return allowScripting;
+    }
+
 }
