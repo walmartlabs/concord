@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.walmartlabs.concord.client2.ProcessEventRequest;
-import com.walmartlabs.concord.svm.ExecutionListener;
 
 public interface EventReportingService {
 
