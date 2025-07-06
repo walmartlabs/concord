@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.CycleChecker;
+import com.walmartlabs.concord.server.cfg.TemplatesConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
@@ -54,21 +55,17 @@ public class TemplateScriptProcessor implements PayloadProcessor {
     private final ScriptEngine scriptEngine;
 
     @Inject
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public TemplateScriptProcessor(ProcessLogManager logManager) {
+    public TemplateScriptProcessor(ProcessLogManager logManager, TemplatesConfiguration cfg) {
         this.logManager = logManager;
-
-        // workaround for:
-        // Javascript array is converted in Java to an empty map #214 (https://github.com/oracle/graaljs/issues/214)
-        HostAccess access = HostAccess.newBuilder(HostAccess.ALL)
-                .targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build();
-        this.scriptEngine = GraalJSScriptEngine.create(null,
-                Context.newBuilder("js")
-                        .allowHostAccess(access));
+        this.scriptEngine = cfg.isAllowScripting() ? createScriptEngine() : null;
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
+        if (scriptEngine == null) {
+            return chain.process(payload);
+        }
+
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
         // process _main.js
@@ -92,6 +89,17 @@ public class TemplateScriptProcessor implements PayloadProcessor {
         payload = payload.putHeader(Payload.CONFIGURATION, merged);
 
         return chain.process(payload);
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private ScriptEngine createScriptEngine() {
+        // workaround for:
+        // Javascript array is converted in Java to an empty map #214 (https://github.com/oracle/graaljs/issues/214)
+        HostAccess access = HostAccess.newBuilder(HostAccess.ALL)
+                .targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build();
+        return GraalJSScriptEngine.create(null,
+                Context.newBuilder("js")
+                        .allowHostAccess(access));
     }
 
     @SuppressWarnings("unchecked")

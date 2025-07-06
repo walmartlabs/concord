@@ -1,10 +1,12 @@
 flows:
   default:
+    - set:
+        formName: "my Form"
     - log: "Before"
-    - form: myForm
-    - log: "After: ${myForm}"
+    - form: "${formName}"
+    - log: "After: ${allVariables()['my Form']}"
 
 forms:
-  myForm:
+  "my Form":
     - fullName: { label: "Name", type: "string", pattern: ".* .*", readonly: true, placeholder: "Place name here" }
     - age: { label: "Age", type: "int", min: 21, max: 100 }

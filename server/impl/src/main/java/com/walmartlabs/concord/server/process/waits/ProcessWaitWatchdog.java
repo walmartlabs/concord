@@ -28,9 +28,7 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.cfg.ProcessWaitWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessWaitConditions;
-import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.PayloadManager;
-import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -43,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -159,7 +158,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             try {
                 boolean updated = processWaitManager.txResult(tx -> {
                     // TODO: better way
-                    // Right now, we have only one result action, and it moves the process to enqueued status. 
+                    // Right now, we have only one result action, and it moves the process to enqueued status.
                     // If the process moves to enqueued, it means it's no longer waiting for anything, so isWaiting should be false
                     boolean isWaiting = !resultWaits.isEmpty() && resumeEvents.isEmpty() && resultActions.isEmpty();
                     boolean up = processWaitManager.setWait(tx, p.processKey(), resultWaits, isWaiting, p.version());
@@ -202,6 +201,13 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         Payload payload;
         try {
             payload = payloadManager.createResumePayload(key, events, null);
+        } catch (ProcessException e) {
+            if (e.getStatus() == Response.Status.NOT_FOUND) {
+                log.info("resumeProcess ['{}'] -> can't resume: {}. killing process", key, e.getMessage());
+                processManager.kill(key);
+                return;
+            }
+            throw e;
         } catch (IOException e) {
             throw new RuntimeException("Error creating a payload", e);
         }

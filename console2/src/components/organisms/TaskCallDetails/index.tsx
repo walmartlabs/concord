@@ -126,7 +126,7 @@ const renderDetailsV2 = (label: string, data: {}) => (
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {Object.keys(data).map((key, index) =>
+                    {Object.keys(data).sort().map((key, index) =>
                         renderVariablesV2(key, data[key], index)
                     )}
                 </Table.Body>

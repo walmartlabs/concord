@@ -63,17 +63,6 @@ public class TaskProviders {
         return null;
     }
 
-    public Class<? extends Task> getTaskClass(Context ctx, String key) {
-        for (TaskProvider p : taskProviders) {
-            Class<? extends Task> t = p.getTaskClass(ctx, key);
-            if (t != null) {
-                return t;
-            }
-        }
-
-        return null;
-    }
-
     public boolean hasTask(String key) {
         for (TaskProvider p : taskProviders) {
             if (p.hasTask(key)) {
