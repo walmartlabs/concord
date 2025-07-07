@@ -21,8 +21,6 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.client2.LockResult;
-import com.walmartlabs.concord.client2.ProcessLocksApi;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.sdk.LockService;
 import org.slf4j.Logger;
