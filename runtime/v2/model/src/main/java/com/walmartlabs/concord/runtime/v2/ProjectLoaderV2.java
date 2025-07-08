@@ -31,7 +31,6 @@ import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.YamlParserV2;
 import com.walmartlabs.concord.runtime.v2.wrapper.ProcessDefinitionV2;
-import com.walmartlabs.concord.sdk.Constants;
 
 import javax.inject.Inject;
 import java.io.IOException;
