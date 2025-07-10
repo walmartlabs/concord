@@ -49,7 +49,7 @@ public class CronIT extends AbstractServerIT {
 
     @Test
     public void testProfiles() throws Exception {
-        String gitUrl = initRepo("cronProfiles");
+        String gitUrl = "file://" + initRepo("cronProfiles");
 
         // ---
 
@@ -118,7 +118,7 @@ public class CronIT extends AbstractServerIT {
 
     @Test
     public void testRunAs() throws Exception {
-        String gitUrl = initRepo("cronRunAs");
+        String gitUrl = "file://" + initRepo("cronRunAs");
 
         // ---
 
