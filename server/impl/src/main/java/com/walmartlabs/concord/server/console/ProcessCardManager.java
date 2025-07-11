@@ -326,7 +326,7 @@ public class ProcessCardManager {
             Users u = USERS.as("u");
             UiProcessCards c = UI_PROCESS_CARDS.as("c");
 
-            return txResult(tx -> select(
+            return txResult(tx -> tx.select(
                     c.OWNER_ID,
                     u.USER_ID,
                     u.USERNAME,
