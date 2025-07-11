@@ -581,7 +581,7 @@ public class ExternalImportsIT extends AbstractServerIT {
             repo.add().addFilepattern(".").call();
             repo.commit().setMessage("import").call();
             repo.branchCreate().setName("main").call();
-            return tmpDir.toAbsolutePath().toString();
+            return "file://" + tmpDir.toAbsolutePath().toString();
         }
     }
 
