@@ -20,6 +20,8 @@ resolves in expected parent
 ([#1171](https://github.com/walmartlabs/concord/pull/1171));
 - concord-server: allow get user for concordSystemReader role
 ([#1173](https://github.com/walmartlabs/concord/pull/1173));
+- runtime-v2: return copies in ObjectMapperProvider
+([#1175](https://github.com/walmartlabs/concord/pull/1175));
 - concord-server: do not log session token
 ([#1177](https://github.com/walmartlabs/concord/pull/1177));
 - concord-server: kill process when resume fails with no
