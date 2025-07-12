@@ -41,7 +41,7 @@ public abstract class FlowElementLinter implements Linter {
     public List<LintResult> apply(ProcessDefinition pd) {
         notify(">> " + getStartMessage());
 
-        Map<String, FlowDefinition> flows = pd.flows();
+        Map<String, ? extends FlowDefinition> flows = pd.flows();
         if (flows == null || flows.isEmpty()) {
             return Collections.emptyList();
         }

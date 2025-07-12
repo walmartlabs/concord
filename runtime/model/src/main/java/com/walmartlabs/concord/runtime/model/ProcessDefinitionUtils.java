@@ -26,25 +26,46 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public final class ProcessDefinitionUtils {
 
-    public static FlowDefinition getFlow(ProcessDefinition project, Collection<String> activeProfiles, String flowName) {
-        Map<String, FlowDefinition> flows = project.flows();
-        Map<String, Profile> profiles = project.profiles();
+    public static boolean hasFlow(ProcessDefinition project, Collection<String> activeProfiles, String flowName) {
+        if (project.flows() != null && project.flows().containsKey(flowName)) {
+            return true;
+        }
 
-        Map<String, FlowDefinition> view = overlay(flows, profiles, activeProfiles, Profile::flows);
-        return view.get(flowName);
+        for (String activeProfile : activeProfiles) {
+            Profile profile = project.profiles().get(activeProfile);
+            if (profile != null && profile.flows().containsKey(flowName)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    public static Map<String, Object> getProfilesOverlayCfg(ProcessDefinition project, Collection<String> activeProfiles) {
+    public static Map<String, Object> getEffectiveConfiguration(ProcessDefinition project, Collection<String> activeProfiles) {
         Map<String, Object> cfg = asMap(project.configuration());
-        Map<String, Profile> profiles = project.profiles();
+        Map<String, ? extends Profile> profiles = project.profiles();
 
-        return overlay(cfg, profiles, activeProfiles, p -> asMap(p.configuration()),
-                ConfigurationUtils::deepMerge);
+        Map<String, Object> view = new LinkedHashMap<>(cfg != null ? cfg : Collections.emptyMap());
+        if (profiles == null || activeProfiles == null) {
+            return view;
+        }
+
+        for (String n : activeProfiles) {
+            Profile p1 = profiles.get(n);
+            if (p1 == null) {
+                continue;
+            }
+
+            Map<String, Object> overlays = asMap(p1.configuration());
+            if (overlays != null) {
+                view = ConfigurationUtils.deepMerge(view, overlays);
+            }
+        }
+
+        return view;
     }
 
     private static Map<String, Object> asMap(Configuration cfg) {
@@ -53,43 +74,6 @@ public final class ProcessDefinitionUtils {
         }
 
         return cfg.asMap();
-    }
-
-    private static <T> Map<String, T> overlay(Map<String, T> initial,
-                                              Map<String, Profile> profiles,
-                                              Collection<String> activeProfiles,
-                                              Function<Profile, Map<String, T>> selector) {
-
-        return overlay(initial, profiles, activeProfiles, selector, (a, b) -> {
-            a.putAll(b);
-            return a;
-        });
-    }
-
-    private static <T> Map<String, T> overlay(Map<String, T> initial,
-                                              Map<String, Profile> profiles,
-                                              Collection<String> activeProfiles,
-                                              Function<Profile, Map<String, T>> selector,
-                                              BiFunction<Map<String, T>, Map<String, T>, Map<String, T>> mergeFn) {
-
-        Map<String, T> view = new LinkedHashMap<>(initial != null ? initial : Collections.emptyMap());
-        if (profiles == null || activeProfiles == null) {
-            return view;
-        }
-
-        for (String n : activeProfiles) {
-            Profile p = profiles.get(n);
-            if (p == null) {
-                continue;
-            }
-
-            Map<String, T> overlays = selector.apply(p);
-            if (overlays != null) {
-                view = mergeFn.apply(view, overlays);
-            }
-        }
-
-        return view;
     }
 
     private ProcessDefinitionUtils() {
