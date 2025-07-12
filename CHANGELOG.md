@@ -35,6 +35,8 @@ state
 ([#1185](https://github.com/walmartlabs/concord/pull/1185));
 - concord-console2: sort variables in task call details
 ([#1186](https://github.com/walmartlabs/concord/pull/1186));
+- http-task: allow send long multipart with debug enabled
+([#1188](https://github.com/walmartlabs/concord/pull/1188));
 - concord-server: fix tx in process card dao
 ([#1189](https://github.com/walmartlabs/concord/pull/1189)).
 
