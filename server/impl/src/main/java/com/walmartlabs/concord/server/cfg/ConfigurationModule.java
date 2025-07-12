@@ -67,6 +67,7 @@ public class ConfigurationModule implements Module {
         binder.bind(RepositoryConfiguration.class).in(SINGLETON);
         binder.bind(SecretStoreConfiguration.class).in(SINGLETON);
         binder.bind(ServerConfiguration.class).in(SINGLETON);
+        binder.bind(TemplatesConfiguration.class).in(SINGLETON);
         binder.bind(TriggersConfiguration.class).in(SINGLETON);
         binder.bind(WorkerMetricsConfiguration.class).in(SINGLETON);
     }

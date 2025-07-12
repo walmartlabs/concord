@@ -266,7 +266,7 @@ public class MainTest  {
         assertEquals(1, forms.size());
 
         Form myForm = forms.get(0);
-        assertEquals("myForm", myForm.name());
+        assertEquals("my Form", myForm.name());
 
         // resume the process using the saved form
 
@@ -274,7 +274,7 @@ public class MainTest  {
         data.put("fullName", "John Smith");
         data.put("age", 33);
 
-        log = resume(myForm.eventName(), ProcessConfiguration.builder().arguments(Collections.singletonMap("myForm", data)).build());
+        log = resume(myForm.eventName(), ProcessConfiguration.builder().arguments(Collections.singletonMap("my Form", data)).build());
         assertLog(log, ".*After.*John Smith.*");
     }
 
@@ -647,7 +647,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testParallelWithItemsTask() throws Exception {
         deploy("parallelWithItemsTask");
 
@@ -660,7 +659,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testParallelLoopTask() throws Exception {
         deploy("parallelLoopTask");
 
@@ -673,7 +671,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testParallelWithError() throws Exception {
         deploy("parallelWithError");
 
@@ -909,7 +906,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testParallelIn() throws Exception {
         deploy("parallelIn");
 
@@ -927,7 +923,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testParallelOut() throws Exception {
         deploy("parallelOut");
 
@@ -951,7 +946,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testParallelLoopEmptyCall() throws Exception {
         deploy("parallelEmptyCall");
 
@@ -963,7 +957,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testParallelOutExpr() throws Exception {
         deploy("parallelOutExpr");
 
@@ -1167,7 +1160,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testFormsParallel() throws Exception {
         deploy("parallelForm");
 
@@ -1323,7 +1315,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void loopItemSerialization() throws Exception {
         deploy("loopSerializationError");
 
@@ -1664,7 +1655,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testParallelLoopItemIndex() throws Exception {
         deploy("parallelLoopItemIndex");
 
@@ -1698,7 +1688,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testThreadLocals() throws Exception {
         deploy("threadLocals");
 

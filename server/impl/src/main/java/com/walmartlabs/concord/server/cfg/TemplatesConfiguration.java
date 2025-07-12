@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.runtime.v2.runner;
+package com.walmartlabs.concord.server.cfg;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2024 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,18 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.walmartlabs.concord.config.Config;
 
-@Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})
-@Retention(RetentionPolicy.RUNTIME)
-public @interface IgnoreSerializationAssert {
+import javax.inject.Inject;
+
+public class TemplatesConfiguration {
+
+    @Inject
+    @Config("templates.allowScripting")
+    private boolean allowScripting;
+
+    public boolean isAllowScripting() {
+        return allowScripting;
+    }
+
 }
