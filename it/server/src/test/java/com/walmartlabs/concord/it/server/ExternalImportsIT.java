@@ -45,7 +45,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
     @Test
     public void testExternalImportWithForm() throws Exception {
-        String repoUrl = initRepo("externalImportWithForm");
+        String repoUrl = "file://" + initRepo("externalImportWithForm");
 
         // prepare the payload
         Path payloadDir = createPayload("externalImportMain", repoUrl);
@@ -85,7 +85,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
     @Test
     public void testExternalImportWithDefaults() throws Exception {
-        String repoUrl = initRepo("externalImport");
+        String repoUrl = "file://" + initRepo("externalImport");
 
         // prepare the payload
         Path payloadDir = createPayload("externalImportMain", repoUrl);
@@ -115,7 +115,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
     @Test
     public void testExternalImportWithPath() throws Exception {
-        String repoUrl = initRepo("externalImportWithDir");
+        String repoUrl = "file://" + initRepo("externalImportWithDir");
 
         // prepare the payload
         Path payloadDir = createPayload("externalImportMainWithPath", repoUrl);
@@ -145,7 +145,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
     @Test
     public void testExternalImportWithConfigurationInImport() throws Exception {
-        String repoUrl = initRepo("externalImportWithConfiguration");
+        String repoUrl = "file://" + initRepo("externalImportWithConfiguration");
 
         // prepare the payload
         Path payloadDir = createPayload("externalImportMain", repoUrl);
@@ -177,7 +177,7 @@ public class ExternalImportsIT extends AbstractServerIT {
     // concord.yml from import will use.
     @Test
     public void testExternalImportWithConcordDirReplace() throws Exception {
-        String repoUrl = initRepo("externalImport");
+        String repoUrl = "file://" + initRepo("externalImport");
 
         // prepare the payload
         Path payloadDir = createPayload("externalImportMainWithFlow", repoUrl);
@@ -209,7 +209,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         String repoUrl = initRepo("externalImportFailHandler");
 
         // prepare the payload
-        Path payloadDir = createPayload("externalImportMainFailed", repoUrl);
+        Path payloadDir = createPayload("externalImportMainFailed", "file://" + repoUrl);
         byte[] payload = archive(payloadDir.toUri());
 
         // start the process
@@ -233,7 +233,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
     @Test
     public void testExternalImportWithForks() throws Exception {
-        String repoUrl = initRepo("externalImportWithForks");
+        String repoUrl = "file://" +  initRepo("externalImportWithForks");
 
         // prepare the payload
         Path payloadDir = createPayload("externalImportMainWithForks", repoUrl);
@@ -264,12 +264,12 @@ public class ExternalImportsIT extends AbstractServerIT {
         String importRepoUrl = initRepo("externalImport");
 
         String userRepoUrl = initRepo("externalImportTriggerReference");
-        replace(Paths.get(userRepoUrl, "concord.yml"), "{{gitUrl}}", importRepoUrl);
+        replace(Paths.get(userRepoUrl, "concord.yml"), "{{gitUrl}}", "file://" + importRepoUrl);
         commit(Paths.get(userRepoUrl).toFile());
 
         // ---
 
-        assertExternalImportValidation(userRepoUrl);
+        assertExternalImportValidation("file://" + userRepoUrl);
     }
 
     @Test
@@ -287,12 +287,12 @@ public class ExternalImportsIT extends AbstractServerIT {
         });
 
         String userRepoUrl = initRepo("externalImportTriggerReference");
-        replace(Paths.get(userRepoUrl, "concord.yml"), "{{gitUrl}}", importRepoUrl);
+        replace(Paths.get(userRepoUrl, "concord.yml"), "{{gitUrl}}", "file://" + importRepoUrl);
         commit(Paths.get(userRepoUrl).toFile());
 
         // ---
 
-        assertExternalImportValidation(userRepoUrl);
+        assertExternalImportValidation("file://" + userRepoUrl);
     }
 
     private void assertExternalImportValidation(String userRepoUrl) throws Exception {
@@ -307,7 +307,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .url(userRepoUrl)
+                        .url("file://" + userRepoUrl)
                         .branch("master"))));
 
         RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
@@ -319,7 +319,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
     @Test
     public void testExternalImportWithExcludeFullDir() throws Exception {
-        String repoUrl = initRepo("externalImportWithDir");
+        String repoUrl = "file://" +  initRepo("externalImportWithDir");
 
         // prepare the payload
         Path payloadDir = createPayload("externalImportMainWithExclude", repoUrl, "dir");
@@ -349,7 +349,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
     @Test
     public void testExternalImportWithExcludeFileFromDir() throws Exception {
-        String repoUrl = initRepo("externalImportWithDir");
+        String repoUrl = "file://" + initRepo("externalImportWithDir");
 
         // prepare the payload
         Path payloadDir = createPayload("externalImportMainWithExclude", repoUrl, "dir/concord.yml");
@@ -382,7 +382,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         String repoUrl = initRepo("externalImportWithDir");
 
         // prepare the payload
-        Path payloadDir = createPayload("externalImportMainWithExclude", repoUrl, "concord.yml");
+        Path payloadDir = createPayload("externalImportMainWithExclude", "file://" + repoUrl, "concord.yml");
         byte[] payload = archive(payloadDir.toUri());
 
         // start the process
@@ -410,7 +410,7 @@ public class ExternalImportsIT extends AbstractServerIT {
     @Test
     public void testImportWithTriggers() throws Exception {
         String importRepoUrl = initRepo("testTrigger");
-        String clientRepoUrl = initRepo("importATrigger", "concord.yml", "{{gitUrl}}", importRepoUrl);
+        String clientRepoUrl = initRepo("importATrigger", "concord.yml", "{{gitUrl}}", "file://" + importRepoUrl);
 
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
@@ -423,7 +423,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .url(clientRepoUrl)
+                        .url("file://" + clientRepoUrl)
                         .branch("master"))));
 
         // ---
@@ -477,7 +477,7 @@ public class ExternalImportsIT extends AbstractServerIT {
     public void testDependencyMerging() throws Exception {
         String repoUrl = initRepo("externalImportWithDeps");
 
-        Path payloadDir = createPayload("externalImportMainWithDeps", repoUrl, "concord.yml");
+        Path payloadDir = createPayload("externalImportMainWithDeps", "file://" + repoUrl, "concord.yml");
         byte[] payload = archive(payloadDir.toUri());
 
         // ---
@@ -499,7 +499,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         String repoUrl = initRepo("externalImportWithDir");
 
         // prepare the payload
-        Path payloadDir = createPayload("externalImportMainStateTest", repoUrl);
+        Path payloadDir = createPayload("externalImportMainStateTest", "file://" + repoUrl);
         byte[] payload = archive(payloadDir.toUri());
 
         // start the process
@@ -531,7 +531,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // prepare the payload
         Map<String, String> replacements = new HashMap<>();
-        replacements.put("{{gitUrl}}", repoUrl);
+        replacements.put("{{gitUrl}}", "file://" + repoUrl);
         replacements.put("{{version}}", commitId);
         Path payloadDir = createPayload("externalImportMainWithVersion", replacements);
         byte[] payload = archive(payloadDir.toUri());
@@ -581,7 +581,7 @@ public class ExternalImportsIT extends AbstractServerIT {
             repo.add().addFilepattern(".").call();
             repo.commit().setMessage("import").call();
             repo.branchCreate().setName("main").call();
-            return "file://" + tmpDir.toAbsolutePath().toString();
+            return tmpDir.toAbsolutePath().toString();
         }
     }
 
