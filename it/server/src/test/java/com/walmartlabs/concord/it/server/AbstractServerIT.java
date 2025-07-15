@@ -210,7 +210,7 @@ public abstract class AbstractServerIT {
             repo.commit().setMessage("import").call();
         }
 
-        return tmpDir.toAbsolutePath().toString();
+        return "file://" + tmpDir.toAbsolutePath().toString();
     }
 
     protected static String env(String k, String def) {
