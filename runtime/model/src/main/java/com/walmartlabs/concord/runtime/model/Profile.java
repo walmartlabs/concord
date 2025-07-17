@@ -29,5 +29,5 @@ public interface Profile {
 
     Set<String> publicFlows();
 
-    Map<String, FlowDefinition> flows();
+    Map<String, ? extends FlowDefinition> flows();
 }
