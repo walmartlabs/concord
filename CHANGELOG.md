@@ -1,5 +1,15 @@
 # Change Log
 
+## [2.30.1] - Unreleased
+
+### Changed
+
+- concord-runtime-model: more flexible interfaces, simplify
+code
+([#1184](https://github.com/walmartlabs/concord/pull/1184)).
+
+
+
 ## [2.30.0] - 2025-07-12
 
 ### Added
