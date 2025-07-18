@@ -4,9 +4,10 @@
 
 ### Changed
 
-- concord-runtime-model: more flexible interfaces, simplify
-code
-([#1184](https://github.com/walmartlabs/concord/pull/1184)).
+- concord-runtime-model: more flexible interfaces, simplify code
+([#1184](https://github.com/walmartlabs/concord/pull/1184));
+- runtime-v2: additional error logging when cloning state fails
+([#1192](https://github.com/walmartlabs/concord/pull/1192)).
 
 
 
