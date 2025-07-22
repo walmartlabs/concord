@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
 
     protected static String toRepoName(Path p) {
-        return p.getParent().getFileName() + "/" + p.getFileName();
+        return p.toAbsolutePath().toString();
     }
 
     protected Path initRepo(String resource) throws Exception {
