@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.checkpoints;
  * =====
  */
 
+import com.google.common.annotations.VisibleForTesting;
 import com.walmartlabs.concord.common.ObjectInputStreamWithClassLoader;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
@@ -32,10 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -107,15 +105,23 @@ public class DefaultCheckpointService implements CheckpointService {
         }
     }
 
-    private static State clone(State state, ClassLoader cl) throws Exception {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(state);
+    @VisibleForTesting
+    @SuppressWarnings("unchecked")
+    static <T> T clone(T object, ClassLoader cl) throws Exception {
+        byte[] ab;
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(object);
+            ab = baos.toByteArray();
         }
 
-        try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(ab);
              ObjectInputStream ois = new ObjectInputStreamWithClassLoader(bais, cl)) {
-            return (State) ois.readObject();
+            return (T) ois.readObject();
+        } catch (OptionalDataException odx) {
+            log.error("Error while cloning an instance of {} (eof={}, length={}) using the provided class loader (name={}, class={})", object.getClass(), odx.eof, odx.length, cl.getName(), cl.getClass());
+            throw odx;
         }
     }
 }

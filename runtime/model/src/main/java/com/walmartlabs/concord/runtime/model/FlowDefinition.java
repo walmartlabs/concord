@@ -27,5 +27,5 @@ public interface FlowDefinition extends Serializable {
 
     String name();
 
-    List<Step> steps();
+    List<? extends Step> steps();
 }

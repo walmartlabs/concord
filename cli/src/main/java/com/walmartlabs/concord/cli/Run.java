@@ -34,7 +34,7 @@ import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
 import com.walmartlabs.concord.imports.*;
 import com.walmartlabs.concord.runtime.v2.wrapper.ProcessDefinitionV2;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
-import com.walmartlabs.concord.runtime.model.ProcessDefinitionUtils;
+import com.walmartlabs.concord.runtime.model.EffectiveConfiguration;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
@@ -200,7 +200,7 @@ public class Run implements Callable<Integer> {
         }
 
         // "deps" are the "dependencies" of the last profile in the list of active profiles (if present)
-        Map<String, Object> overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), profiles);
+        Map<String, Object> overlayCfg = EffectiveConfiguration.getEffectiveConfiguration(new ProcessDefinitionV2(processDefinition), profiles);
         List<String> deps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
 
         // "extraDependencies" are additive: ALL extra dependencies from ALL ACTIVE profiles are added to the list
