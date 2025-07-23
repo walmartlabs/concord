@@ -66,22 +66,18 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         String orgXName = "orgX_" + randomString();
         orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgXName));
 
-        Path repo = initRepo("githubTests/repos/v2/defaultTrigger");
-        String branch = "branch_" + randomString();
-        createNewBranch(repo, branch, "githubTests/repos/v2/defaultTriggerWithSender");
-
         // Project A
         // master branch + a default trigger
         String projectAName = "projectA_" + randomString();
         String repoAName = "repoA_" + randomString();
-        Path projectARepo = initProjectAndRepo(orgXName, projectAName, repoAName, null, initRepo("githubTests/repos/v2/defaultTrigger"));
+        Path projectARepo = initProjectAndRepo(orgXName, projectAName, repoAName, null, initRepo("githubTests/repos/v2/defaultTriggerWithSender"));
         refreshRepo(orgXName, projectAName, repoAName);
 
         // Project G
         // accepts only specific commit authors
         String projectGName = "projectG_" + randomString();
         String repoGName = "repoG_" + randomString();
-        Path projectBRepo = initProjectAndRepo(orgXName, projectGName, repoGName, null, initRepo("githubTests/repos/v2/defaultTriggerWithSender"));
+        Path projectGRepo = initProjectAndRepo(orgXName, projectGName, repoGName, null, initRepo("githubTests/repos/v2/defaultTriggerWithSender"));
         refreshRepo(orgXName, projectGName, repoGName);
 
         // ---
@@ -106,7 +102,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         // ---
 
         sendEvent("githubTests/events/direct_branch_push.json", "push",
-                "_FULL_REPO_NAME", toRepoName(projectBRepo),
+                "_FULL_REPO_NAME", toRepoName(projectGRepo),
                 "_REF", "refs/heads/master",
                 "_USER_NAME", "somecooldude",
                 "_USER_LDAP_DN", "");
@@ -118,6 +114,18 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         expectNoProceses(orgXName, projectAName, now);
 
         // ---
+
+        /*
+            unclear how this test is meant to function:
+                - launch process A (no filter on sender in definitions) with a sender who would be blocked if the filter sender definitions were used, but they aren't so??
+                - wait for process A trigger to create a process
+                - expect project A to have no processes (???)
+                - launch process G (filter on sender in definitions) with a sender who is allowed through the sender filter
+                - wait for process G to start
+                - check for no project A processes?? But project A doesn't filter out by sender, and the sender used in the second event would be allowed through them anyways
+                - this test obviously runs on other branches, what am I missing here
+
+         */
 
         deleteOrg(orgXName);
     }
