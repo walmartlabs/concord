@@ -113,37 +113,6 @@ public final class GithubUtils {
         return uri.getPath();
     }
 
-    private static String removeSchema(String repoUrl) {
-        int index = repoUrl.indexOf("://");
-        if (index > 0) {
-            return repoUrl.substring(index + "://".length());
-        }
-        index = repoUrl.indexOf("@");
-        if (index > 0) {
-            return repoUrl.substring(index + "@".length());
-        }
-        return repoUrl;
-    }
-
-    private static String removeHost(String repoUrl) {
-        int index = repoUrl.indexOf(":");
-        if (index > 0) {
-            int portEndIndex = repoUrl.indexOf("/", index);
-            if (portEndIndex > 0) {
-                String port = repoUrl.substring(index + 1, portEndIndex);
-                if (isPort(port)) {
-                    return repoUrl.substring(portEndIndex + "/".length());
-                }
-            }
-            return repoUrl.substring(index + ":".length());
-        }
-        index = repoUrl.indexOf("/");
-        if (index > 0) {
-            return repoUrl.substring(index + "/".length());
-        }
-        return repoUrl;
-    }
-
     private static String name(String str) {
         return str.replaceAll("^\\W+|\\.git$", "");
     }
