@@ -70,7 +70,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         // master branch + a default trigger
         String projectAName = "projectA_" + randomString();
         String repoAName = "repoA_" + randomString();
-        Path projectARepo = initProjectAndRepo(orgXName, projectAName, repoAName, null, initRepo("githubTests/repos/v2/defaultTriggerWithSender"));
+        Path projectARepo = initProjectAndRepo(orgXName, projectAName, repoAName, null, initRepo("githubTests/repos/v2/defaultTrigger"));
         refreshRepo(orgXName, projectAName, repoAName);
 
         // Project G
