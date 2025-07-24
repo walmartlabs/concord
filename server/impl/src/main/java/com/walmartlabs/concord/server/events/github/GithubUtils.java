@@ -99,18 +99,55 @@ public final class GithubUtils {
     }
 
     private static String getRepoPath(String repoUrl) {
-        // tests support
-        URI uri = URI.create(repoUrl);
 
-        if(uri.getScheme().equals("file")) {
-            String[] folders = uri.getPath().split("/");
-            if(folders.length < 2) {
-                return repoUrl;
+        // assuming ssh proto for repoUrls that start with "git@"
+        // since URI cannot parse them without an explicit scheme.
+        String path = null;
+//        if(repoUrl.startsWith("git@")) {
+//        } else {
+
+            URI uri = null;
+            try {
+                uri = URI.create(repoUrl);
+            } catch (Exception ignored) {
+                // the repoUrl is not a valid URL.
             }
-            return folders[folders.length - 2] + "/" + folders[folders.length - 1];
+            String scheme = uri != null ? uri.getScheme() : null;
+
+            if(scheme != null && scheme.equals("file")) {
+                String[] folders = uri.getPath().split("/");
+                if(folders.length < 2) {
+                    path = uri.getPath();
+                }
+                path = folders[folders.length - 2] + "/" + folders[folders.length - 1];
+            } else if (scheme != null && scheme.equals("git")) {
+                path = uri.getPath().substring(1);
+            } else if(scheme != null && (scheme.equals("http") || scheme.equals("https") || scheme.equals("git+https"))) {
+                path = uri.getPath().substring(1);
+            } else {
+                // ??? unknown URI scheme.
+                // test examples parse them
+                int last_colon = repoUrl.lastIndexOf(':');
+                int first_fslash = repoUrl.lastIndexOf('/');
+                int second_fslash = repoUrl.lastIndexOf('/', first_fslash - 1);
+                int start_index = (second_fslash != -1 ? second_fslash : last_colon );
+
+                if(start_index == -1) {
+                    // there was no colon, and less than two forward slashes
+                    // I don't know how to parse this. genuinely I'm out of ideas.
+                    // comparing to 0 because we added 1
+                    return null;
+                }
+                path = repoUrl.substring(start_index + 1);
+            }
+
+//        }
+
+        if(path.toLowerCase().endsWith(".git")) {
+            path = path.substring(0, path.length() - ".git".length());
         }
 
-        return uri.getPath();
+        return path;
     }
 
     private static String name(String str) {
