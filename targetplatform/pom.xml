@@ -41,15 +41,15 @@
         <bouncycastle.version>1.80</bouncycastle.version>
         <bpm.version>1.0.3</bpm.version>
         <bytebuddy.version>1.14.9</bytebuddy.version>
-        <commons.beanutils.version>1.9.4</commons.beanutils.version>
+        <commons.beanutils.version>1.11.0</commons.beanutils.version>
         <commons.codec.version>1.17.1</commons.codec.version>
         <commons.collections.version>3.2.2</commons.collections.version>
         <commons.compress.version>1.27.1</commons.compress.version>
         <commons.email.version>1.5</commons.email.version>
         <commons.io.version>2.16.1</commons.io.version>
-        <commons.lang.version>3.16.0</commons.lang.version>
+        <commons.lang.version>3.18.0</commons.lang.version>
         <commons.text.version>1.12.0</commons.text.version>
-        <commons.validator.version>1.7</commons.validator.version>
+        <commons.validator.version>1.10.0</commons.validator.version>
         <config.version>1.4.2</config.version>
         <cronutils.version>9.2.0</cronutils.version>
         <errorproneannotations.version>2.28.0</errorproneannotations.version>
@@ -81,7 +81,7 @@
         <jcl-over-slf4j.version>1.7.36</jcl-over-slf4j.version>
         <jetbrain.annotations.version>23.0.0</jetbrain.annotations.version>
         <jetty.version>12.0.16</jetty.version>
-        <jgit.version>5.13.3.202401111512-r</jgit.version>
+        <jgit.version>6.10.1.202505221210-r</jgit.version>
         <jna.version>5.13.0</jna.version>
         <jooq.version>3.14.0</jooq.version>
         <jsch.version>0.1.55</jsch.version>
@@ -89,7 +89,7 @@
         <json.smart.version>2.5.2</json.smart.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>5.9.1</junit.version>
-        <kafka.client.version>3.7.1</kafka.client.version>
+        <kafka.client.version>3.9.1</kafka.client.version>
         <kerby.version>2.0.1</kerby.version>
         <kubernetes.client.version>7.0.1</kubernetes.client.version>
         <launcher.version>0.128</launcher.version>
