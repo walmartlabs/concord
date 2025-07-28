@@ -37,6 +37,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
@@ -92,6 +93,7 @@ public class ConcordTaskCommon {
                 kill((KillParams) in);
                 yield TaskResult.success();
             }
+            case CREATEAPIKEY -> createApiKey((CreateApiKeyParams) in);
         };
     }
 
@@ -175,6 +177,55 @@ public class ConcordTaskCommon {
                 waitForCompletion(Collections.singletonList(id), DEFAULT_KILL_TIMEOUT, Function.identity());
             }
         }
+    }
+
+    public TaskResult createApiKey(CreateApiKeyParams in) throws Exception {
+        return withClient(in.baseUrl(), in.apiKey(), client -> {
+            log.info("Creating a new API key in {}", client.getBaseUri());
+            UUID userId = in.userId();
+            if (userId == null) {
+                String username = in.username();
+                if (username == null) {
+                    throw new IllegalArgumentException("User ID or user name is required");
+                }
+
+                UsersApi usersApi = new UsersApi(client);
+                UserEntry user = usersApi.findByUsername(username);
+                if (user == null) {
+                    throw new IllegalArgumentException("User '" + username + "' not found.");
+                }
+                userId = user.getId();
+            }
+
+            String keyName = in.name();
+            if (keyName != null) {
+                ApiKeysApi api = new ApiKeysApi(client);
+                List<ApiKeyEntry> existingKeys = api.listUserApiKeys(userId);
+                Optional<ApiKeyEntry> maybeExistingKey = existingKeys.stream().filter(k -> k.getName().equals(keyName)).findFirst();
+                if (maybeExistingKey.isPresent()) {
+                    if (in.ignoreExisting()) {
+                        log.info("API key '{}' already exists, nothing to do.", keyName);
+                        ApiKeyEntry existingKey = maybeExistingKey.get();
+                        return TaskResult.success()
+                                .value("id", existingKey.getId())
+                                .value("expiredAt", Optional.ofNullable(existingKey.getExpiredAt()).map(OffsetDateTime::toString).orElse(null));
+                    } else {
+                        throw new IllegalArgumentException("API key '" + keyName + "' already exists.");
+                    }
+                }
+            }
+
+            ApiKeysApi apiKeysApi = new ApiKeysApi(client);
+            CreateApiKeyResponse response = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
+                    .name(keyName)
+                    .userId(userId)
+                    .userDomain(in.userDomain())
+                    .userType(in.userType()));
+
+            return TaskResult.success()
+                    .value("id", response.getId())
+                    .value("key", response.getKey());
+        });
     }
 
     public Map<String, Map<String, Object>> getOutVars(String baseUrl, String apiKey, List<UUID> ids, long timeout) {
