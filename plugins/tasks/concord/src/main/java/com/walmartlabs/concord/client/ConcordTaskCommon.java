@@ -84,23 +84,15 @@ public class ConcordTaskCommon {
 
     public TaskResult execute(ConcordTaskParams in) throws Exception {
         Action action = in.action();
-        switch (action) {
-            case START: {
-                return startChildProcess((StartParams) in);
-            }
-            case STARTEXTERNAL: {
-                return startExternalProcess((StartExternalParams) in);
-            }
-            case FORK: {
-                return fork((ForkParams) in);
-            }
-            case KILL: {
+        return switch (action) {
+            case START -> startChildProcess((StartParams) in);
+            case STARTEXTERNAL -> startExternalProcess((StartExternalParams) in);
+            case FORK -> fork((ForkParams) in);
+            case KILL -> {
                 kill((KillParams) in);
-                return TaskResult.success();
+                yield TaskResult.success();
             }
-            default:
-                throw new IllegalArgumentException("Unsupported action type: " + action);
-        }
+        };
     }
 
     public List<ProcessEntry> listSubProcesses(ListSubProcesses in) throws Exception {
