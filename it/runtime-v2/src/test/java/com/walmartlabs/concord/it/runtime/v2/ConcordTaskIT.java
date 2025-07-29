@@ -28,9 +28,11 @@ import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import java.util.List;
+import java.util.UUID;
+
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ConcordTaskIT extends AbstractTest {
 
@@ -212,5 +214,33 @@ public class ConcordTaskIT extends AbstractTest {
 
         // ---
         proc.assertLog(".*Done!.*");
+    }
+
+
+    @Test
+    public void testCreateApiKey() throws Exception {
+        String apiKeyName = "test_" + randomString();
+
+        Payload payload = new Payload()
+                .archive(resource("concord/createApiKey"))
+                .arg("apiKeyName", apiKeyName);
+
+        // ---
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+
+        proc.assertLog(".*result1=.*");
+        proc.assertNoLog(".*result2=.*");
+        proc.assertLog(".*error=.*");
+        proc.assertLog(".*result3=.*");
+
+        // ---
+
+        ApiKeysApi apiKeysApi = new ApiKeysApi(concord.apiClient());
+        List<ApiKeyEntry> apiKeys = apiKeysApi.listUserApiKeys(UUID.fromString("230c5c9c-d9a7-11e6-bcfd-bb681c07b26c"));// admin
+        assertTrue(apiKeys.stream().anyMatch(k -> k.getName().equals(apiKeyName)));
     }
 }
