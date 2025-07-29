@@ -438,6 +438,7 @@ public class ConcordTaskParams {
         private static final String USER_TYPE_KEY = "userType";
         private static final String NAME_KEY = "name";
         private static final String IGNORE_EXISTING_KEY = "ignoreExisting";
+        private static final String KEY = "key";
 
         CreateApiKeyParams(Variables variables) {
             super(variables);
@@ -491,6 +492,10 @@ public class ConcordTaskParams {
 
         public boolean ignoreExisting() {
             return variables.getBoolean(IGNORE_EXISTING_KEY, false);
+        }
+
+        public String key() {
+            return variables.getString(KEY);
         }
     }
 

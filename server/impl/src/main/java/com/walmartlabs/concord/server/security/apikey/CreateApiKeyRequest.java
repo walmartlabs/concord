@@ -25,11 +25,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.user.UserType;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.UUID;
 
 public class CreateApiKeyRequest implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final UUID userId;
@@ -38,18 +40,21 @@ public class CreateApiKeyRequest implements Serializable {
     private final UserType userType;
     @ConcordKey
     private final String name;
+    private final String key;
 
     @JsonCreator
     public CreateApiKeyRequest(@JsonProperty("userId") UUID userId,
                                @JsonProperty("username") String username,
                                @JsonProperty("userDomain") String userDomain,
                                @JsonProperty("userType") UserType userType,
-                               @JsonProperty("name") String name) {
+                               @JsonProperty("name") String name,
+                               @JsonProperty("key") String key) {
         this.userId = userId;
         this.username = username;
         this.userDomain = userDomain;
         this.userType = userType;
         this.name = name;
+        this.key = key;
     }
 
     public UUID getUserId() {
@@ -70,6 +75,10 @@ public class CreateApiKeyRequest implements Serializable {
 
     public String getName() {
         return name;
+    }
+
+    public String getKey() {
+        return key;
     }
 
     @Override
