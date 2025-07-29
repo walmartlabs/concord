@@ -112,7 +112,7 @@ public class ApiKeyResource implements Resource {
     public CreateApiKeyResponse create(@Valid CreateApiKeyRequest req) {
         String key = req.getKey();
 
-        if (!Permission.isPermitted(Permission.API_KEY_SPECIFY_VALUE)) {
+        if (key != null && !Permission.API_KEY_SPECIFY_VALUE.isPermitted()) {
             throw new UnauthorizedException("Not allowed to specify the API key value.");
         }
 
