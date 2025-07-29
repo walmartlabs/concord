@@ -1,6 +1,11 @@
 # Change Log
 
-## [2.30.1] - Unreleased
+## [2.31.0] - Unreleased
+
+### Added
+
+- concord-tasks: add createApiKey action
+([#1194](https://github.com/walmartlabs/concord/pull/1194)).
 
 ### Changed
 
