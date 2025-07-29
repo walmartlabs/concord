@@ -295,7 +295,7 @@ public class OrganizationManager {
     }
 
     private static void assertPermission(Permission p) {
-        if (Permission.isPermitted(p)) {
+        if (p.isPermitted()) {
             return;
         }
 

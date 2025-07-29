@@ -58,7 +58,7 @@ public enum Permission {
         return key;
     }
 
-    public static boolean isPermitted(Permission p) {
-        return SecurityUtils.isPermitted(p.getKey());
+    public boolean isPermitted() {
+        return SecurityUtils.isPermitted(this.getKey());
     }
 }
