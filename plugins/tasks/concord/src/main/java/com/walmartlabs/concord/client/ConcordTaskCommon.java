@@ -220,7 +220,8 @@ public class ConcordTaskCommon {
                     .name(keyName)
                     .userId(userId)
                     .userDomain(in.userDomain())
-                    .userType(in.userType()));
+                    .userType(in.userType())
+                    .key(in.key()));
 
             return TaskResult.success()
                     .value("id", response.getId())

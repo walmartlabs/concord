@@ -44,6 +44,7 @@ import org.jooq.exception.DataAccessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.ws.rs.*;
@@ -99,7 +100,7 @@ public class ApiKeyResource implements Resource {
             throw new ValidationErrorsException("API Token with name '" + name + "' already exists");
         }
 
-        return createApiKey(null, name);
+        return createApiKey(null, name, null);
     }
 
     @POST
@@ -129,7 +130,9 @@ public class ApiKeyResource implements Resource {
             throw new ValidationErrorsException("API Token with name '" + name + "' already exists");
         }
 
-        return createApiKey(userId, name);
+        String key = req.getKey();
+
+        return createApiKey(userId, name, key);
     }
 
     @DELETE
@@ -154,8 +157,10 @@ public class ApiKeyResource implements Resource {
         return new GenericOperationResult(OperationResult.DELETED);
     }
 
-    private CreateApiKeyResponse createApiKey(UUID userId, String name) {
-        String key = apiKeyDao.newApiKey();
+    private CreateApiKeyResponse createApiKey(UUID userId, String name, @Nullable String key) {
+        if (key == null) {
+            key = apiKeyDao.newApiKey();
+        }
 
         OffsetDateTime expiredAt = null;
         if (cfg.isExpirationEnabled()) {
