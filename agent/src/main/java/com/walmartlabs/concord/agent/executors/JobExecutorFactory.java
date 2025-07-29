@@ -35,7 +35,6 @@ import com.walmartlabs.concord.sdk.MapUtils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -47,8 +46,7 @@ public class JobExecutorFactory {
     private final DockerConfiguration dockerCfg;
     private final PreForkConfiguration preForkCfg;
 
-    private final RunnerV1Configuration runnerV1Cfg;
-    private final RunnerV2Configuration runnerV2Cfg;
+    private final RuntimeConfiguration runtimeCfg;
 
     private final DependencyManager dependencyManager;
     private final DefaultDependencies defaultDependencies;
@@ -64,8 +62,7 @@ public class JobExecutorFactory {
                               ServerConfiguration serverCfg,
                               DockerConfiguration dockerCfg,
                               PreForkConfiguration preForkCfg,
-                              RunnerV1Configuration runnerV1Cfg,
-                              RunnerV2Configuration runnerV2Cfg,
+                              RuntimeConfiguration runtimeCfg,
                               DependencyManager dependencyManager,
                               DefaultDependencies defaultDependencies,
                               ProcessPool processPool,
@@ -77,10 +74,7 @@ public class JobExecutorFactory {
         this.serverCfg = serverCfg;
         this.dockerCfg = dockerCfg;
         this.preForkCfg = preForkCfg;
-
-        this.runnerV1Cfg = runnerV1Cfg;
-        this.runnerV2Cfg = runnerV2Cfg;
-
+        this.runtimeCfg = runtimeCfg;
         this.dependencyManager = dependencyManager;
         this.defaultDependencies = defaultDependencies;
         this.processPool = processPool;
@@ -97,37 +91,34 @@ public class JobExecutorFactory {
         }
 
         return jobRequest -> {
-            AbstractRunnerConfiguration runnerCfg = runnerV1Cfg;
+            String runtimeName = getRuntimeName(jobRequest);
 
-            boolean segmentedLogs = false;
-            if (isV2(jobRequest)) {
-                runnerCfg = runnerV2Cfg;
-                segmentedLogs = true;
-            }
+            RuntimeConfiguration.Entry runtimeCfg = this.runtimeCfg.getForRuntime(runtimeName)
+                    .orElseThrow(() -> new IllegalStateException("Runner configuration for '%s' not found.".formatted(runtimeName)));
 
-            processLog.info("Runtime: {}", runnerCfg.getRuntimeName());
+            processLog.info("Runtime: {}", runtimeName);
 
             RunnerJobExecutor.RunnerJobExecutorConfiguration runnerExecutorCfg = RunnerJobExecutor.RunnerJobExecutorConfiguration.builder()
                     .agentId(agentCfg.getAgentId())
                     .serverApiBaseUrl(serverCfg.getApiBaseUrl())
-                    .javaCmd(runnerCfg.getJavaCmd())
-                    .jvmParams(runnerCfg.getJvmParams())
+                    .javaCmd(runtimeCfg.javaCmd())
+                    .jvmParams(runtimeCfg.jvmParams())
                     .dependencyListDir(agentCfg.getDependencyListsDir())
                     .dependencyCacheDir(agentCfg.getDependencyCacheDir())
                     .dependencyResolveTimeout(agentCfg.getDependencyResolveTimeout())
                     .workDirBase(agentCfg.getWorkDirBase())
-                    .runnerPath(runnerCfg.getPath())
-                    .runnerCfgDir(runnerCfg.getCfgDir())
-                    .runnerSecurityManagerEnabled(runnerCfg.isSecurityManagerEnabled())
-                    .runnerMainClass(runnerCfg.getMainClass())
+                    .runnerPath(runtimeCfg.path())
+                    .runnerCfgDir(runtimeCfg.cfgDir())
+                    .runnerSecurityManagerEnabled(false) // SecurityManager is deprecated and should not be used
+                    .runnerMainClass(runtimeCfg.mainClass())
                     .extraDockerVolumes(dockerCfg.getExtraVolumes())
                     .exposeDockerDaemon(dockerCfg.exposeDockerDaemon())
                     .maxHeartbeatInterval(serverCfg.getMaxNoHeartbeatInterval())
-                    .segmentedLogs(segmentedLogs)
+                    .segmentedLogs(runtimeCfg.segmentedLogs())
                     .workDirMasking(agentCfg.isWorkDirMaskings())
-                    .persistentWorkDir(runnerCfg.getPersistentWorkDir())
+                    .persistentWorkDir(runtimeCfg.persistentWorkDir())
                     .preforkEnabled(preForkCfg.isEnabled())
-                    .cleanRunnerDescendants(runnerCfg.getCleanRunnerDescendants())
+                    .cleanRunnerDescendants(runtimeCfg.cleanRunnerDescendants())
                     .build();
 
             JobExecutor delegate = new RunnerJobExecutor(runnerExecutorCfg, dependencyManager, defaultDependencies, attachmentsUploader, processPool, processLogFactory, executor);
@@ -135,9 +126,7 @@ public class JobExecutorFactory {
         };
     }
 
-    private static boolean isV2(ConfiguredJobRequest req) {
-        Map<String, Object> m = req.getProcessCfg();
-        String s = MapUtils.getString(m, Constants.Request.RUNTIME_KEY, "concord-v1"); // TODO constants
-        return "concord-v2".equals(s);
+    private static String getRuntimeName(ConfiguredJobRequest req) {
+        return MapUtils.getString(req.getProcessCfg(), Constants.Request.RUNTIME_KEY, "concord-v1");
     }
 }
