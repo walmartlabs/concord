@@ -32,6 +32,7 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
+import com.walmartlabs.concord.server.security.Permission;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -109,6 +110,12 @@ public class ApiKeyResource implements Resource {
     @Validate
     @Operation(description = "Create a new API key", operationId = "createUserApiKey")
     public CreateApiKeyResponse create(@Valid CreateApiKeyRequest req) {
+        String key = req.getKey();
+
+        if (!Permission.isPermitted(Permission.API_KEY_SPECIFY_VALUE)) {
+            throw new UnauthorizedException("Not allowed to specify the API key value.");
+        }
+
         UUID userId = assertUserId(req.getUserId());
         if (userId == null) {
             userId = assertUsername(req.getUsername(), req.getUserDomain(), req.getUserType());
@@ -129,8 +136,6 @@ public class ApiKeyResource implements Resource {
         if (apiKeyDao.getId(userId, name) != null) {
             throw new ValidationErrorsException("API Token with name '" + name + "' already exists");
         }
-
-        String key = req.getKey();
 
         return createApiKey(userId, name, key);
     }
