@@ -115,6 +115,9 @@ public class OidcRealm extends AuthorizingRealm {
                     .filter(o -> !newTeams.contains(o))
                     .collect(Collectors.toList());
             userDao.excludeFromTeams(tx, userId, toRemove);
+
+            log.info("email: '{}', groups: {}, current-teams: {}, new-teams: {}, to-remove: {}",
+                    profile.getEmail(), profile.getAttribute("groups"), currentTeams, newTeams, toRemove);
         });
 
         UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, u);
@@ -139,6 +142,13 @@ public class OidcRealm extends AuthorizingRealm {
                 roles.add(roleName);
             }
         }
+
+        log.info("user: '{}', oidc groups: {}, roleMapping: {}, roles: {}",
+                token.getProfile().getEmail(),
+                token.getProfile().getAttribute("groups"),
+                roleMapping,
+                roles);
+        
         return SecurityUtils.toAuthorizationInfo(principals, roles);
     }
 
@@ -191,11 +201,11 @@ public class OidcRealm extends AuthorizingRealm {
                 }
             }
 
-            if (valid) {
+//            if (valid) {
                 output.put(teamId, teamMapping);
-            } else {
-                log.warn("validateTeamMapping -> removing invalid teamId={} to mapping={}. It will not be considered during user authorization.", teamId, teamMapping);
-            }
+//            } else {
+//                log.warn("validateTeamMapping -> removing invalid teamId={} to mapping={}. It will not be considered during user authorization.", teamId, teamMapping);
+//            }
         }
 
         return output;
