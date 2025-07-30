@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.runtime.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.model.ProcessDefinitionUtils;
+import com.walmartlabs.concord.runtime.model.EffectiveConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
@@ -194,7 +194,7 @@ public class ConfigurationProcessor implements PayloadProcessor {
             return Collections.emptyMap();
         }
 
-        Map<String, Object> m = ProcessDefinitionUtils.getProfilesOverlayCfg(pd, activeProfiles);
+        Map<String, Object> m = EffectiveConfiguration.getEffectiveConfiguration(pd, activeProfiles);
         return m != null ? m : Collections.emptyMap();
     }
 

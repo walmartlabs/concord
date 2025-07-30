@@ -534,8 +534,12 @@ public class SimpleHttpClient {
         requestInfo.put("url", request.getURI().toString());
 
         if ((config.getRequestType() != RequestType.FILE) && (request instanceof HttpEntityEnclosingRequest)) {
-            String rsp = EntityUtils.toString(((HttpEntityEnclosingRequest) request).getEntity());
-            requestInfo.put("body", rsp);
+            try {
+                String rsp = EntityUtils.toString(((HttpEntityEnclosingRequest) request).getEntity());
+                requestInfo.put("body", rsp);
+            } catch (ContentTooLongException e) {
+                requestInfo.put("body", "...too long to dump...");
+            }
         }
 
         return requestInfo;

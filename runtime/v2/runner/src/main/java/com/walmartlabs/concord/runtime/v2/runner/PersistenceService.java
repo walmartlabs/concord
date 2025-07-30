@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.file.OpenOption;
-import java.nio.file.StandardOpenOption;
 
 public interface PersistenceService {
 

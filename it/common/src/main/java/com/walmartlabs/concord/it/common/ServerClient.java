@@ -49,6 +49,10 @@ public class ServerClient {
         return client;
     }
 
+    public ApiClient getClientForApiKey(String apiKey) {
+        return createClient(client.getBaseUrl(), apiKey, null);
+    }
+
     public void resetApiKey() {
         setApiKey(DEFAULT_API_KEY);
     }

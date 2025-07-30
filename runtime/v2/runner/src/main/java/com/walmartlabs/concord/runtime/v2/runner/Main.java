@@ -66,6 +66,7 @@ public class Main {
     private final ProcessConfiguration processCfg;
     private final WorkingDirectory workDir;
     private final TaskProviders taskProviders;
+    private final ObjectMapper objectMapper;
     private final ClassLoader classLoader;
 
     @Inject
@@ -74,6 +75,7 @@ public class Main {
                 ProcessConfiguration processCfg,
                 WorkingDirectory workDir,
                 TaskProviders taskProviders,
+                ObjectMapper objectMapper,
                 @Named("runtime") ClassLoader classLoader) {
 
         this.runner = runner;
@@ -81,6 +83,7 @@ public class Main {
         this.processCfg = processCfg;
         this.workDir = workDir;
         this.taskProviders = taskProviders;
+        this.objectMapper = objectMapper;
         this.classLoader = classLoader;
     }
 
@@ -117,8 +120,8 @@ public class Main {
 
         if (args.length > 0) {
             Path src = Paths.get(args[0]);
-            ObjectMapper om = ObjectMapperProvider.getInstance();
             try (InputStream in = Files.newInputStream(src)) {
+                ObjectMapper om = new ObjectMapperProvider().get();
                 result = om.readValue(in, RunnerConfiguration.class);
             }
         }
@@ -208,9 +211,8 @@ public class Main {
         m.put(Constants.Context.WORK_DIR_KEY, workDir.getValue().toAbsolutePath().toString());
 
         // save processInfo and projectInfo variables
-        ObjectMapper om = ObjectMapperProvider.getInstance();
-        m.put(Constants.Request.PROCESS_INFO_KEY, om.convertValue(cfg.processInfo(), Map.class));
-        m.put(Constants.Request.PROJECT_INFO_KEY, om.convertValue(cfg.projectInfo(), Map.class));
+        m.put(Constants.Request.PROCESS_INFO_KEY, objectMapper.convertValue(cfg.processInfo(), Map.class));
+        m.put(Constants.Request.PROJECT_INFO_KEY, objectMapper.convertValue(cfg.projectInfo(), Map.class));
 
         return m;
     }

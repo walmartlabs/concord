@@ -75,7 +75,6 @@ public class LogExceptionsTest {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void shouldLogExceptionStackTraceWhenTaskThrowsExceptionFromParallel() throws Exception {
         runtime.deploy("logExceptionTests/fromParallel");
 
@@ -145,7 +144,6 @@ public class LogExceptionsTest {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void noStacktraceForUserDefinedExceptionFromTaskParallel() throws Exception {
         runtime.deploy("logExceptionTests/userDefinedExceptionFromTaskParallel");
 
@@ -257,7 +255,6 @@ public class LogExceptionsTest {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void noStacktraceForUserDefinedExceptionFromTaskParallelParallel() throws Exception {
         runtime.deploy("logExceptionTests/fromParallelParallel");
 

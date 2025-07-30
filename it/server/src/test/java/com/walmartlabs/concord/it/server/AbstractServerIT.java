@@ -62,6 +62,10 @@ public abstract class AbstractServerIT {
         return serverClient.getClient();
     }
 
+    protected ApiClient getApiClientForKey(String apiKey) {
+        return serverClient.getClientForApiKey(apiKey);
+    }
+
     protected StartProcessResponse start(String orgName, String projectName, String repoName, String entryPoint, byte[] payload) throws ApiException {
         Map<String, Object> input = new HashMap<>();
         if (orgName != null) {

@@ -37,6 +37,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
@@ -84,23 +85,16 @@ public class ConcordTaskCommon {
 
     public TaskResult execute(ConcordTaskParams in) throws Exception {
         Action action = in.action();
-        switch (action) {
-            case START: {
-                return startChildProcess((StartParams) in);
-            }
-            case STARTEXTERNAL: {
-                return startExternalProcess((StartExternalParams) in);
-            }
-            case FORK: {
-                return fork((ForkParams) in);
-            }
-            case KILL: {
+        return switch (action) {
+            case START -> startChildProcess((StartParams) in);
+            case STARTEXTERNAL -> startExternalProcess((StartExternalParams) in);
+            case FORK -> fork((ForkParams) in);
+            case KILL -> {
                 kill((KillParams) in);
-                return TaskResult.success();
+                yield TaskResult.success();
             }
-            default:
-                throw new IllegalArgumentException("Unsupported action type: " + action);
-        }
+            case CREATEAPIKEY -> createApiKey((CreateApiKeyParams) in);
+        };
     }
 
     public List<ProcessEntry> listSubProcesses(ListSubProcesses in) throws Exception {
@@ -183,6 +177,55 @@ public class ConcordTaskCommon {
                 waitForCompletion(Collections.singletonList(id), DEFAULT_KILL_TIMEOUT, Function.identity());
             }
         }
+    }
+
+    public TaskResult createApiKey(CreateApiKeyParams in) throws Exception {
+        return withClient(in.baseUrl(), in.apiKey(), client -> {
+            log.info("Creating a new API key in {}", client.getBaseUri());
+            UUID userId = in.userId();
+            if (userId == null) {
+                String username = in.username();
+                if (username == null) {
+                    throw new IllegalArgumentException("User ID or user name is required");
+                }
+
+                UsersApi usersApi = new UsersApi(client);
+                UserEntry user = usersApi.findByUsername(username);
+                if (user == null) {
+                    throw new IllegalArgumentException("User '" + username + "' not found.");
+                }
+                userId = user.getId();
+            }
+
+            String keyName = in.name();
+            if (keyName != null) {
+                ApiKeysApi api = new ApiKeysApi(client);
+                List<ApiKeyEntry> existingKeys = api.listUserApiKeys(userId);
+                Optional<ApiKeyEntry> maybeExistingKey = existingKeys.stream().filter(k -> k.getName().equals(keyName)).findFirst();
+                if (maybeExistingKey.isPresent()) {
+                    if (in.ignoreExisting()) {
+                        log.info("API key '{}' already exists, nothing to do.", keyName);
+                        ApiKeyEntry existingKey = maybeExistingKey.get();
+                        return TaskResult.success()
+                                .value("id", existingKey.getId())
+                                .value("expiredAt", Optional.ofNullable(existingKey.getExpiredAt()).map(OffsetDateTime::toString).orElse(null));
+                    } else {
+                        throw new IllegalArgumentException("API key '" + keyName + "' already exists.");
+                    }
+                }
+            }
+
+            ApiKeysApi apiKeysApi = new ApiKeysApi(client);
+            CreateApiKeyResponse response = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
+                    .name(keyName)
+                    .userId(userId)
+                    .userDomain(in.userDomain())
+                    .userType(in.userType()));
+
+            return TaskResult.success()
+                    .value("id", response.getId())
+                    .value("key", response.getKey());
+        });
     }
 
     public Map<String, Map<String, Object>> getOutVars(String baseUrl, String apiKey, List<UUID> ids, long timeout) {

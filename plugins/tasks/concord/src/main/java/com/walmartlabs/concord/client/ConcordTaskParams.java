@@ -20,6 +20,7 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
+import com.walmartlabs.concord.client2.CreateApiKeyRequest;
 import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
@@ -36,23 +37,13 @@ public class ConcordTaskParams {
         Variables variables = new MapBackedVariables(variablesMap);
 
         ConcordTaskParams p = new ConcordTaskParams(variables);
-        switch (p.action()) {
-            case START: {
-                return new StartParams(variables);
-            }
-            case STARTEXTERNAL: {
-                return new StartExternalParams(variables);
-            }
-            case FORK: {
-                return new ForkParams(variables);
-            }
-            case KILL: {
-                return new KillParams(variables);
-            }
-            default: {
-                throw new IllegalArgumentException("Unsupported action type: " + p.action());
-            }
-        }
+        return switch (p.action()) {
+            case START -> new StartParams(variables);
+            case STARTEXTERNAL -> new StartExternalParams(variables);
+            case FORK -> new ForkParams(variables);
+            case KILL -> new KillParams(variables);
+            case CREATEAPIKEY -> new CreateApiKeyParams(variables);
+        };
     }
 
     protected final Variables variables;
@@ -437,6 +428,72 @@ public class ConcordTaskParams {
         }
     }
 
+    public static class CreateApiKeyParams extends ConcordTaskParams {
+
+        private static final String BASE_URL_KEY = "baseUrl";
+        private static final String API_KEY = "apiKey";
+        private static final String USER_ID_KEY = "userId";
+        private static final String USERNAME_KEY = "username";
+        private static final String USER_DOMAIN_KEY = "userDomain";
+        private static final String USER_TYPE_KEY = "userType";
+        private static final String NAME_KEY = "name";
+        private static final String IGNORE_EXISTING_KEY = "ignoreExisting";
+
+        CreateApiKeyParams(Variables variables) {
+            super(variables);
+        }
+
+        public String baseUrl() {
+            return variables.getString(BASE_URL_KEY);
+        }
+
+        public String apiKey() {
+            return variables.getString(API_KEY);
+        }
+
+        public UUID userId() {
+            String value = variables.getString(USER_ID_KEY);
+            if (value == null) {
+                return null;
+            }
+            try {
+                return UUID.fromString(value);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Expected a user ID, got: " + value);
+            }
+        }
+
+        public String username() {
+            return variables.getString(USERNAME_KEY);
+        }
+
+        public String userDomain() {
+            return variables.getString(USER_DOMAIN_KEY);
+        }
+
+        public CreateApiKeyRequest.UserTypeEnum userType() {
+            String value = variables.getString(USER_TYPE_KEY);
+            if (value == null) {
+                return null;
+            }
+            try {
+                return CreateApiKeyRequest.UserTypeEnum.valueOf(value.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                String validTypes = Arrays.stream(CreateApiKeyRequest.UserTypeEnum.values())
+                        .map(CreateApiKeyRequest.UserTypeEnum::toString).collect(Collectors.joining(", "));
+                throw new IllegalArgumentException("Invalid user type. Expected one of " + validTypes + ", got: " + value);
+            }
+        }
+
+        public String name() {
+            return variables.getString(NAME_KEY);
+        }
+
+        public boolean ignoreExisting() {
+            return variables.getBoolean(IGNORE_EXISTING_KEY, false);
+        }
+    }
+
     private static UUID toUUID(Object v) {
         if (v instanceof String) {
             return UUID.fromString(v.toString());
@@ -472,7 +529,8 @@ public class ConcordTaskParams {
         START,
         STARTEXTERNAL,
         FORK,
-        KILL
+        KILL,
+        CREATEAPIKEY
     }
 
     private static class DelegateVariables implements Variables {

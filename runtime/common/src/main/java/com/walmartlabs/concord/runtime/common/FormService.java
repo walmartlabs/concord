@@ -52,8 +52,8 @@ public class FormService {
     }
 
     public void save(Form form) {
-        Path p = dir.resolve(form.name());
         try {
+            Path p = IOUtils.assertInPath(dir, form.name());
             Path tmp = IOUtils.createTempFile(form.name(), "form");
             try (OutputStream out = Files.newOutputStream(tmp)) {
                 SerializationUtils.serialize(out, form);

@@ -143,16 +143,13 @@ public final class HttpTaskUtils {
             String k = e.getKey();
             Object v = e.getValue();
 
-            if (v instanceof String) {
-                String value = (String) v;
+            if (v instanceof String value) {
                 if (value.startsWith("@")) {
                     builder.addPart(k, createContentBody(value, ContentType.APPLICATION_OCTET_STREAM));
                 } else {
                     builder.addPart(k, createContentBody(value, ContentType.TEXT_PLAIN));
                 }
-            }
-
-            if (v instanceof Map) {
+            } else if (v instanceof Map) {
                 Map<String, String> field = (Map<String, String>) v;
                 String type = field.get("type");
                 String data = field.get("data");
@@ -162,6 +159,10 @@ public final class HttpTaskUtils {
                 }
 
                 builder.addPart(k, createContentBody(data, ContentType.parse(type)));
+            } else if (v instanceof Number) {
+                builder.addPart(k, createContentBody(String.valueOf(v), ContentType.TEXT_PLAIN));
+            } else {
+                log.warn("Skipping value for key '{}': unsupported type {}. Expected String, Number, or Map<String, String>.", k, v == null ? "null" : v.getClass().getSimpleName());
             }
         }
 

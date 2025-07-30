@@ -1,5 +1,47 @@
 # Change Log
 
+## [2.30.0] - 2025-07-12
+
+### Added
+
+- http-task: support sending int values in multipart
+requests
+([#1174](https://github.com/walmartlabs/concord/pull/1174));
+- concord-server: config option to disable template script
+processing
+([#1176](https://github.com/walmartlabs/concord/pull/1176));
+- common, runtime-v1: add method to assert given path string
+resolves in expected parent
+([#1179](https://github.com/walmartlabs/concord/pull/1179)).
+
+### Changed
+
+- concord-cli: produce an executable binary again
+([#1171](https://github.com/walmartlabs/concord/pull/1171));
+- concord-server: allow get user for concordSystemReader role
+([#1173](https://github.com/walmartlabs/concord/pull/1173));
+- runtime-v2: return copies in ObjectMapperProvider
+([#1175](https://github.com/walmartlabs/concord/pull/1175));
+- concord-server: do not log session token
+([#1177](https://github.com/walmartlabs/concord/pull/1177));
+- concord-server: kill process when resume fails with no
+state
+([#1178](https://github.com/walmartlabs/concord/pull/1178));
+- runtime-v2: validate form name constraints as documented
+([#1180](https://github.com/walmartlabs/concord/pull/1180));
+- runtime-v1: validate form name constraints as documented
+([#1181](https://github.com/walmartlabs/concord/pull/1181));
+- runtime-v2: remove unused imports, dead code
+([#1185](https://github.com/walmartlabs/concord/pull/1185));
+- concord-console2: sort variables in task call details
+([#1186](https://github.com/walmartlabs/concord/pull/1186));
+- http-task: allow send long multipart with debug enabled
+([#1188](https://github.com/walmartlabs/concord/pull/1188));
+- concord-server: fix tx in process card dao
+([#1189](https://github.com/walmartlabs/concord/pull/1189)).
+
+
+
 ## [2.29.0] - 2025-06-13
 
 ### Added

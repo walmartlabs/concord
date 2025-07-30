@@ -1,0 +1,3 @@
+forms:
+  invalid.name:
+    - fullName: { type: "string+" }
