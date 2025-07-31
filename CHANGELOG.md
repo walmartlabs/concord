@@ -7,7 +7,9 @@
 - concord-tasks: add createApiKey action
 ([#1194](https://github.com/walmartlabs/concord/pull/1194));
 - concord-server: option to specify API key value
-([#1195](https://github.com/walmartlabs/concord/pull/1195)).
+([#1195](https://github.com/walmartlabs/concord/pull/1195));
+- concord-tasks: add createOrUpdateApiKey action
+([#1196](https://github.com/walmartlabs/concord/pull/1196)).
 
 ### Changed
 
