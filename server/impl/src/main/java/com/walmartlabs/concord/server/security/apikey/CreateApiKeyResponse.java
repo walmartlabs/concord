@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.security.apikey;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.walmartlabs.concord.server.OperationResult;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -33,11 +34,15 @@ public class CreateApiKeyResponse implements Serializable {
     private final boolean ok = true;
     private final UUID id;
     private final String key;
+    private final OperationResult result;
 
     @JsonCreator
-    public CreateApiKeyResponse(@JsonProperty("id") UUID id, @JsonProperty("key") String key) {
+    public CreateApiKeyResponse(@JsonProperty("id") UUID id,
+                                @JsonProperty("key") String key,
+                                @JsonProperty("result") OperationResult result) {
         this.id = id;
         this.key = key;
+        this.result = result;
     }
 
     public UUID getId() {
@@ -52,10 +57,15 @@ public class CreateApiKeyResponse implements Serializable {
         return ok;
     }
 
+    public OperationResult getResult() {
+        return result;
+    }
+
     @Override
     public String toString() {
         return "CreateApiKeyResponse{" +
                 "ok=" + ok +
+                ", result='" + result + '\'' +
                 ", id=" + id +
                 ", key='" + key + '\'' +
                 '}';
