@@ -93,7 +93,8 @@ public class ConcordTaskCommon {
                 kill((KillParams) in);
                 yield TaskResult.success();
             }
-            case CREATEAPIKEY -> createApiKey((CreateApiKeyParams) in);
+            case CREATEAPIKEY -> createApiKey((CreateOrUpdateApiKeyParams) in);
+            case CREATEORUPDATEAPIKEY -> createOrUpdateApiKey((CreateOrUpdateApiKeyParams) in);
         };
     }
 
@@ -179,23 +180,11 @@ public class ConcordTaskCommon {
         }
     }
 
-    public TaskResult createApiKey(CreateApiKeyParams in) throws Exception {
+    public TaskResult createApiKey(CreateOrUpdateApiKeyParams in) throws Exception {
         return withClient(in.baseUrl(), in.apiKey(), client -> {
             log.info("Creating a new API key in {}", client.getBaseUri());
-            UUID userId = in.userId();
-            if (userId == null) {
-                String username = in.username();
-                if (username == null) {
-                    throw new IllegalArgumentException("User ID or user name is required");
-                }
 
-                UsersApi usersApi = new UsersApi(client);
-                UserEntry user = usersApi.findByUsername(username);
-                if (user == null) {
-                    throw new IllegalArgumentException("User '" + username + "' not found.");
-                }
-                userId = user.getId();
-            }
+            UUID userId = assertUserId(client, in);
 
             String keyName = in.name();
             if (keyName != null) {
@@ -225,8 +214,49 @@ public class ConcordTaskCommon {
 
             return TaskResult.success()
                     .value("id", response.getId())
+                    .value("name", response.getName())
                     .value("key", response.getKey());
         });
+    }
+
+    public TaskResult createOrUpdateApiKey(CreateOrUpdateApiKeyParams in) throws Exception {
+        return withClient(in.baseUrl(), in.apiKey(), client -> {
+            log.info("Creating or updating an API key in {}", client.getBaseUri());
+
+            UUID userId = assertUserId(client, in);
+
+            ApiKeysV2Api apiKeysApi = new ApiKeysV2Api(client);
+            CreateApiKeyResponse response = apiKeysApi.createOrUpdateUserApiKey(new CreateApiKeyRequest()
+                    .name(in.name())
+                    .userId(userId)
+                    .userDomain(in.userDomain())
+                    .userType(in.userType())
+                    .key(in.key()));
+
+            return TaskResult.success()
+                    .value("id", response.getId())
+                    .value("name", response.getName())
+                    .value("key", response.getKey())
+                    .value("result", response.getResult().toString());
+        });
+    }
+
+    private UUID assertUserId(ApiClient client, CreateOrUpdateApiKeyParams in) throws ApiException {
+        UUID userId = in.userId();
+        if (userId == null) {
+            String username = in.username();
+            if (username == null) {
+                throw new IllegalArgumentException("User ID or user name is required");
+            }
+
+            UsersApi usersApi = new UsersApi(client);
+            UserEntry user = usersApi.findByUsername(username);
+            if (user == null) {
+                throw new IllegalArgumentException("User '" + username + "' not found.");
+            }
+            userId = user.getId();
+        }
+        return userId;
     }
 
     public Map<String, Map<String, Object>> getOutVars(String baseUrl, String apiKey, List<UUID> ids, long timeout) {
