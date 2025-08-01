@@ -46,7 +46,7 @@
         <commons.collections.version>3.2.2</commons.collections.version>
         <commons.compress.version>1.27.1</commons.compress.version>
         <commons.email.version>1.5</commons.email.version>
-        <commons.io.version>2.16.1</commons.io.version>
+        <commons.io.version>2.20.0</commons.io.version>
         <commons.lang.version>3.18.0</commons.lang.version>
         <commons.text.version>1.12.0</commons.text.version>
         <commons.validator.version>1.10.0</commons.validator.version>
@@ -76,7 +76,7 @@
         <javax.mail.version>1.6.2</javax.mail.version>
         <javax.validation.version>2.0.1.Final</javax.validation.version>
         <javax.ws.rs.version>2.0.1.Final</javax.ws.rs.version>
-        <javers.version>6.6.2</javers.version>
+        <javers.version>6.14.0</javers.version>
         <jboss.logging>3.4.2.Final</jboss.logging>
         <jcl-over-slf4j.version>1.7.36</jcl-over-slf4j.version>
         <jetbrain.annotations.version>23.0.0</jetbrain.annotations.version>
@@ -104,6 +104,7 @@
         <maven.resolver.version>1.9.20</maven.resolver.version>
         <maven.resolver.version.concord>0.0.4</maven.resolver.version.concord>
         <metrics.version>4.2.25</metrics.version>
+        <mime4j.version>0.8.13</mime4j.version>
         <mockito.version>4.9.0</mockito.version>
         <mustache.version>0.9.10</mustache.version>
         <nimbus.jwt.version>8.23</nimbus.jwt.version>
@@ -114,7 +115,7 @@
         <prometheus.simpleclient.version>0.16.0</prometheus.simpleclient.version>
         <reactive.streams.version>1.0.3</reactive.streams.version>
         <reflections.version>0.9.11</reflections.version>
-        <resteasy.version>4.7.9.Final</resteasy.version>
+        <resteasy.version>4.7.10.Final</resteasy.version>
         <selenium.version>4.8.1</selenium.version>
         <servlet.version>4.0.1</servlet.version>
         <shiro.version>2.0.2</shiro.version>
@@ -881,6 +882,11 @@
                 <groupId>org.jboss.spec.javax.ws.rs</groupId>
                 <artifactId>jboss-jaxrs-api_2.1_spec</artifactId>
                 <version>${javax.ws.rs.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-mime4j-core</artifactId>
+                <version>${mime4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.jooq</groupId>
