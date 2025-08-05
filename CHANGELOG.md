@@ -6,7 +6,9 @@
 
 - concord-cli: support for remote secrets, configurable secrets
 providers
-([#1143](https://github.com/walmartlabs/concord/pull/1143)).
+([#1143](https://github.com/walmartlabs/concord/pull/1143));
+- concord-agent: configurable list of runners
+([#1182](https://github.com/walmartlabs/concord/pull/1182)).
 
 
 
