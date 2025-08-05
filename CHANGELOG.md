@@ -1,5 +1,15 @@
 # Change Log
 
+## [2.32.0] - Unreleased
+
+### Added
+
+- concord-cli: support for remote secrets, configurable secrets
+providers
+([#1143](https://github.com/walmartlabs/concord/pull/1143)).
+
+
+
 ## [2.31.0] - 2025-08-04
 
 ### Added
