@@ -253,7 +253,7 @@ public class ProcessResourceV2 implements Resource {
         } else {
             // we got a query that is not limited to any specific org
             // let's check if we can return all processes from all orgs or if we should limit it to the user's orgs
-            boolean canSeeAllOrgs = Roles.isAdmin() || Permission.isPermitted(Permission.GET_PROCESS_QUEUE_ALL_ORGS);
+            boolean canSeeAllOrgs = Roles.isAdmin() || Permission.GET_PROCESS_QUEUE_ALL_ORGS.isPermitted();
             if (!canSeeAllOrgs) {
                 // non-admin users can only see their org's processes or processes w/o projects
                 orgIds = getCurrentUserOrgIds();
