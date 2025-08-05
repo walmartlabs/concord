@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <property name="apiKeySpecifyValuePermissionId" value="0198541b-c4a7-71f4-8a55-f367bd4bfe4c"/>
+
+    <changeSet id="2310000" author="ibodrov@gmail.com">
+        <insert tableName="PERMISSIONS">
+            <column name="PERMISSION_ID" value="${apiKeySpecifyValuePermissionId}"/>
+            <column name="PERMISSION_NAME" value="apiKeySpecifyValue"/>
+            <column name="DESCRIPTION" value="Allows users to specify the key value when creating new API keys"/>
+        </insert>
+
+        <sql>
+            insert into ROLE_PERMISSIONS values (
+                (select ROLE_ID from ROLES where ROLE_NAME = 'concordAdmin'),
+                '${apiKeySpecifyValuePermissionId}'
+            )
+        </sql>
+    </changeSet>
+</databaseChangeLog>
