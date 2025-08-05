@@ -1,5 +1,29 @@
 # Change Log
 
+## [2.31.0] - Unreleased
+
+### Added
+
+- concord-tasks: add createApiKey action
+([#1194](https://github.com/walmartlabs/concord/pull/1194));
+- concord-server: option to specify API key value
+([#1195](https://github.com/walmartlabs/concord/pull/1195));
+- concord-tasks: add createOrUpdateApiKey action
+([#1196](https://github.com/walmartlabs/concord/pull/1196)).
+
+### Changed
+
+- concord-runtime-model: more flexible interfaces, simplify code
+([#1184](https://github.com/walmartlabs/concord/pull/1184));
+- project: fix typo
+([#1191](https://github.com/walmartlabs/concord/pull/1191));
+- runtime-v2: additional error logging when cloning state fails
+([#1192](https://github.com/walmartlabs/concord/pull/1192));
+- project: update dependencies
+([#1193](https://github.com/walmartlabs/concord/pull/1193)).
+
+
+
 ## [2.30.0] - 2025-07-12
 
 ### Added
