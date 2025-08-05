@@ -68,10 +68,6 @@ public class GitHubTriggersV2IT extends AbstractTest {
         String orgXName = "orgX_" + randomString();
         concord.organizations().create(orgXName);
 
-        Path repo = initRepo("triggers/github/repos/v2/defaultTrigger");
-        String branch = "branch_" + randomString();
-        createNewBranch(repo, branch, "triggers/github/repos/v2/defaultTriggerWithSender");
-
         // Project A
         // master branch + a default trigger
         String projectAName = "projectA_" + randomString();
@@ -79,12 +75,12 @@ public class GitHubTriggersV2IT extends AbstractTest {
         Path projectARepo = initProjectAndRepo(orgXName, projectAName, repoAName, null, initRepo("triggers/github/repos/v2/defaultTrigger"));
         refreshRepo(orgXName, projectAName, repoAName);
 
-        // Project G
+        // Project B
         // accepts only specific commit authors
-        String projectGName = "projectG_" + randomString();
-        String repoGName = "repoG_" + randomString();
-        Path projectBRepo = initProjectAndRepo(orgXName, projectGName, repoGName, null, initRepo("triggers/github/repos/v2/defaultTriggerWithSender"));
-        refreshRepo(orgXName, projectGName, repoGName);
+        String projectBName = "projectG_" + randomString();
+        String repoBName = "repoG_" + randomString();
+        Path projectBRepo = initProjectAndRepo(orgXName, projectBName, repoBName, null, initRepo("triggers/github/repos/v2/defaultTriggerWithSender"));
+        refreshRepo(orgXName, projectBName, repoBName);
 
         // ---
 
@@ -96,7 +92,7 @@ public class GitHubTriggersV2IT extends AbstractTest {
 
         // A's triggers should be activated
         waitForAProcess(orgXName, projectAName, "github");
-        expectNoProcesses(orgXName, projectGName, null);
+        expectNoProcesses(orgXName, projectBName, null);
 
         // ---
 
@@ -114,7 +110,7 @@ public class GitHubTriggersV2IT extends AbstractTest {
                 "_USER_LDAP_DN", "");
 
         // G's triggers should be activated
-        waitForAProcess(orgXName, projectGName, "github");
+        waitForAProcess(orgXName, projectBName, "github");
 
         // no A's are expected
         expectNoProcesses(orgXName, projectAName, now);
@@ -216,7 +212,7 @@ public class GitHubTriggersV2IT extends AbstractTest {
 
         RepositoryEntry repo = new RepositoryEntry()
                 .branch(repoBranch != null ? repoBranch : "master")
-                .url(bareRepo.toAbsolutePath().toString());
+                .url("file://" + bareRepo.toAbsolutePath().toString());
 
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
