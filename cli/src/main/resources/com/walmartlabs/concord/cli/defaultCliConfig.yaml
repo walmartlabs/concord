@@ -1,0 +1,14 @@
+contexts:
+  default:
+    secrets:
+      vault:
+        dir: "${configDir}/vaults"
+        id: "default"
+      local:
+        enabled: true
+        writable: true
+        dir: "${configDir}/secrets"
+      remote:
+        enabled: false
+        writable: false
+        confirmAccess: true
