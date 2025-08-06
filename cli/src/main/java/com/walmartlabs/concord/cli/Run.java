@@ -21,7 +21,6 @@ package com.walmartlabs.concord.cli;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.google.inject.Injector;
@@ -34,7 +33,6 @@ import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
 import com.walmartlabs.concord.imports.*;
-import com.walmartlabs.concord.runtime.v2.wrapper.ProcessDefinitionV2;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.model.EffectiveConfiguration;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
@@ -50,10 +48,9 @@ import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelExecutionException;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
+import com.walmartlabs.concord.runtime.v2.wrapper.ProcessDefinitionV2;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -72,10 +69,9 @@ import java.util.stream.Stream;
 
 import static org.fusesource.jansi.Ansi.ansi;
 
-@Command(name = "run", description = "Run the current directory as a Concord process")
+@Command(name = "run", description = "Execute flows locally. Sends the specified <workDir> as the process payload.")
 public class Run implements Callable<Integer> {
 
-    private static final Logger log = LoggerFactory.getLogger(Run.class);
     @Spec
     private CommandSpec spec;
 
@@ -147,7 +143,8 @@ public class Run implements Callable<Integer> {
     public Integer call() throws Exception {
         Verbosity verbosity = new Verbosity(this.verbosity);
 
-        CliConfigContext cliConfigContext = loadCliConfig(verbosity, context);
+        CliConfigContext cliConfigContext = CliConfig.load(verbosity, context,
+                new CliConfig.Overrides(secretStoreDir, vaultDir, vaultId));
 
         sourceDir = sourceDir.normalize().toAbsolutePath();
         Path targetDir;
@@ -420,63 +417,6 @@ public class Run implements Callable<Integer> {
         return DependencyManagerConfiguration.of(depsCacheDir);
     }
 
-    private CliConfigContext loadCliConfig(Verbosity verbosity, String context) {
-        CliConfig.Overrides overrides = new CliConfig.Overrides(secretStoreDir, vaultDir, vaultId);
-
-        Path baseDir = Paths.get(System.getProperty("user.home"), ".concord");
-        Path cfgFile = baseDir.resolve("cli.yaml");
-        if (!Files.exists(cfgFile)) {
-            cfgFile = baseDir.resolve("cli.yml");
-        }
-        if (!Files.exists(cfgFile)) {
-            CliConfig cfg = CliConfig.create();
-            return assertCliConfigContext(cfg, context).withOverrides(overrides);
-        }
-
-        if (verbosity.verbose()) {
-            log.info("Using CLI configuration file: {} (\"{}\" context)", cfgFile, context);
-        }
-
-        try {
-            CliConfig cfg = CliConfig.load(cfgFile);
-            return assertCliConfigContext(cfg, context).withOverrides(overrides);
-        } catch (Exception e) {
-            handleCliConfigErrorAndBail(cfgFile.toAbsolutePath().toString(), e);
-            return null;
-        }
-    }
-
-    private static void handleCliConfigErrorAndBail(String cfgPath, Throwable e) {
-        // unwrap runtime exceptions
-        if (e instanceof RuntimeException ex) {
-            if (ex.getCause() instanceof IllegalArgumentException) {
-                e = ex.getCause();
-            }
-        }
-
-        // handle YAML errors
-        if (e instanceof IllegalArgumentException) {
-            if (e.getCause() instanceof UnrecognizedPropertyException ex) {
-                System.out.println(ansi().fgRed().a("Invalid format of the CLI configuration file ").a(cfgPath).a(". ").a(ex.getMessage()));
-                System.exit(1);
-            }
-            System.out.println(ansi().fgRed().a("Invalid format of the CLI configuration file ").a(cfgPath).a(". ").a(e.getMessage()));
-            System.exit(1);
-        }
-
-        // all other errors
-        System.out.println(ansi().fgRed().a("Failed to read the CLI configuration file ").a(cfgPath).a(". ").a(e.getMessage()));
-        System.exit(1);
-    }
-
-    private static CliConfigContext assertCliConfigContext(CliConfig config, String context) {
-        CliConfigContext result = config.contexts().get(context);
-        if (result == null) {
-            System.out.println(ansi().fgRed().a("Configuration context not found: ").a(context).a(". Check the CLI configuration file."));
-            System.exit(1);
-        }
-        return result;
-    }
 
     private static void dumpArguments(Map<String, Object> args) {
         ObjectMapper om = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
