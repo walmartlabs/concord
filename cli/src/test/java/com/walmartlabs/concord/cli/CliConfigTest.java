@@ -71,6 +71,6 @@ public class CliConfigTest {
 
     private static CliConfig load(String resource) throws IOException, URISyntaxException {
         var src = Paths.get(requireNonNull(CliConfigTest.class.getResource(resource)).toURI());
-        return CliConfig.load(src);
+        return CliConfig.loadConfigFile(src);
     }
 }

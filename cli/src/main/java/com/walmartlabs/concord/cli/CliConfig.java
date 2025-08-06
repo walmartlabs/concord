@@ -23,8 +23,12 @@ package com.walmartlabs.concord.cli;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -35,10 +39,71 @@ import java.util.Map;
 import java.util.Optional;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNull;
+import static org.fusesource.jansi.Ansi.ansi;
 
 public record CliConfig(Map<String, CliConfigContext> contexts) {
 
-    public static CliConfig load(Path path) throws IOException {
+    private static final Logger log = LoggerFactory.getLogger(CliConfig.class);
+
+    public static CliConfig.CliConfigContext load(Verbosity verbosity, String context, Overrides overrides) {
+        Path baseDir = Paths.get(System.getProperty("user.home"), ".concord");
+        Path cfgFile = baseDir.resolve("cli.yaml");
+        if (!Files.exists(cfgFile)) {
+            cfgFile = baseDir.resolve("cli.yml");
+        }
+        if (!Files.exists(cfgFile)) {
+            CliConfig cfg = CliConfig.create();
+            return assertCliConfigContext(cfg, context).withOverrides(overrides);
+        }
+
+        if (verbosity.verbose()) {
+            log.info("Using CLI configuration file: {} (\"{}\" context)", cfgFile, context);
+        }
+
+        try {
+            CliConfig cfg = loadConfigFile(cfgFile);
+            return assertCliConfigContext(cfg, context).withOverrides(overrides);
+        } catch (Exception e) {
+            handleCliConfigErrorAndBail(cfgFile.toAbsolutePath().toString(), e);
+            throw new IllegalStateException("should be unreachable");
+        }
+    }
+
+    private static void handleCliConfigErrorAndBail(String cfgPath, Throwable e) {
+        // unwrap runtime exceptions
+        if (e instanceof RuntimeException ex) {
+            if (ex.getCause() instanceof IllegalArgumentException) {
+                e = ex.getCause();
+            }
+        }
+
+        // handle YAML errors
+        if (e instanceof IllegalArgumentException) {
+            if (e.getCause() instanceof UnrecognizedPropertyException ex) {
+                System.out.println(ansi().fgRed().a("Invalid format of the CLI configuration file ").a(cfgPath).a(". ").a(ex.getMessage()));
+                System.exit(1);
+            }
+            System.out.println(ansi().fgRed().a("Invalid format of the CLI configuration file ").a(cfgPath).a(". ").a(e.getMessage()));
+            System.exit(1);
+        }
+
+        // all other errors
+        System.out.println(ansi().fgRed().a("Failed to read the CLI configuration file ").a(cfgPath).a(". ").a(e.getMessage()));
+        System.exit(1);
+    }
+
+    private static CliConfig.CliConfigContext assertCliConfigContext(CliConfig config, String context) {
+        CliConfig.CliConfigContext result = config.contexts().get(context);
+        if (result == null) {
+            System.out.println(ansi().fgRed().a("Configuration context not found: ").a(context).a(". Check the CLI configuration file."));
+            System.exit(1);
+        }
+        return result;
+    }
+
+    @VisibleForTesting
+    static CliConfig loadConfigFile(Path path) throws IOException {
         var mapper = new YAMLMapper()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -100,19 +165,43 @@ public record CliConfig(Map<String, CliConfigContext> contexts) {
     public record Overrides(@Nullable Path secretStoreDir, @Nullable Path vaultDir, @Nullable String vaultId) {
     }
 
-    public record CliConfigContext(SecretsConfiguration secrets) {
+    public record CliConfigContext(@Nullable RemoteRunConfiguration remoteRun, SecretsConfiguration secrets) {
 
-        public CliConfigContext withOverrides(Overrides overrides) {
+        public CliConfigContext withOverrides(@Nullable Overrides overrides) {
+            if (overrides == null) {
+                return this;
+            }
+            var remoteRun = this.remoteRun();
             var secrets = this.secrets().withOverrides(overrides);
-            return new CliConfigContext(secrets);
+            return new CliConfigContext(remoteRun, secrets);
         }
+    }
+
+    public record SecretRef(String orgName, String secretName) {
+
+        public SecretRef(String orgName, String secretName) {
+            this.orgName = orgName == null ? "Default" : orgName;
+            if (this.orgName.isBlank()) {
+                throw new IllegalArgumentException("'orgName' is required");
+            }
+            this.secretName = requireNonNull(secretName);
+            if (this.secretName.isBlank()) {
+                throw new IllegalArgumentException("'secretName' is required");
+            }
+        }
+    }
+
+    public record RemoteRunConfiguration(@Nullable String baseUrl, @Nullable SecretRef apiKeyRef) {
     }
 
     public record SecretsConfiguration(VaultConfiguration vault,
                                        FileSecretsProviderConfiguration local,
                                        RemoteSecretsProviderConfiguration remote) {
 
-        public SecretsConfiguration withOverrides(Overrides overrides) {
+        public SecretsConfiguration withOverrides(@Nullable Overrides overrides) {
+            if (overrides == null) {
+                return this;
+            }
             var vault = this.vault().withOverrides(overrides);
             var localFiles = this.local().withOverrides(overrides);
             return new SecretsConfiguration(vault, localFiles, this.remote);
@@ -120,7 +209,10 @@ public record CliConfig(Map<String, CliConfigContext> contexts) {
 
         public record VaultConfiguration(Path dir, String id) {
 
-            public VaultConfiguration withOverrides(Overrides overrides) {
+            public VaultConfiguration withOverrides(@Nullable Overrides overrides) {
+                if (overrides == null) {
+                    return this;
+                }
                 return new VaultConfiguration(
                         Optional.ofNullable(overrides.vaultDir()).orElse(this.dir()),
                         Optional.ofNullable(overrides.vaultId()).orElse(this.id()));
@@ -129,7 +221,10 @@ public record CliConfig(Map<String, CliConfigContext> contexts) {
 
         public record FileSecretsProviderConfiguration(boolean enabled, boolean writable, Path dir) {
 
-            public FileSecretsProviderConfiguration withOverrides(Overrides overrides) {
+            public FileSecretsProviderConfiguration withOverrides(@Nullable Overrides overrides) {
+                if (overrides == null) {
+                    return this;
+                }
                 return new FileSecretsProviderConfiguration(
                         this.enabled,
                         this.writable,
