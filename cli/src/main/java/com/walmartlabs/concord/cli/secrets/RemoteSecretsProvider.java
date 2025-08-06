@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.cli.runner.secrets;
+package com.walmartlabs.concord.cli.secrets;
 
 /*-
  * *****
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.cli.runner.secrets;
  * =====
  */
 
+import com.walmartlabs.concord.cli.Confirmation;
 import com.walmartlabs.concord.cli.Version;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
@@ -27,6 +28,7 @@ import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -42,8 +44,8 @@ public class RemoteSecretsProvider implements SecretsProvider {
     private final SecretClient secretClient;
     private final boolean confirmAccess;
 
-    public RemoteSecretsProvider(Path workDir, String baseUrl, String apiKey, boolean confirmAccess) {
-        this.workDir = requireNonNull(workDir);
+    public RemoteSecretsProvider(@Nullable Path workDir, String baseUrl, String apiKey, boolean confirmAccess) {
+        this.workDir = workDir;
         this.confirmAccess = confirmAccess;
 
         var apiClient = new DefaultApiClientFactory(requireNonNull(baseUrl))
@@ -59,7 +61,7 @@ public class RemoteSecretsProvider implements SecretsProvider {
     public Optional<SecretService.KeyPair> exportKeyAsFile(String orgName, String secretName, String secretPassword) throws Exception {
         return getKeyPair(orgName, secretName, secretPassword)
                 .map(keyPair -> {
-                    var tmpDir = UncheckedIO.assertTmpDir(workDir);
+                    var tmpDir = UncheckedIO.assertTmpDir(assertWorkDir());
 
                     var publicKeyPath = tmpDir.resolve(secretName + ".pub");
                     UncheckedIO.write(publicKeyPath, keyPair.getPublicKey(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
@@ -86,7 +88,7 @@ public class RemoteSecretsProvider implements SecretsProvider {
         return getBinaryDataSecret(orgName, secretName, secretPassword)
                 .map(BinaryDataSecret::getData)
                 .map(data -> {
-                    var tmpDir = UncheckedIO.assertTmpDir(workDir);
+                    var tmpDir = UncheckedIO.assertTmpDir(assertWorkDir());
                     var secretPath = tmpDir.resolve(secretName + ".bin");
                     UncheckedIO.write(secretPath, data, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
                     return secretPath;
@@ -184,14 +186,16 @@ public class RemoteSecretsProvider implements SecretsProvider {
             return;
         }
 
-        System.out.println(ansi().fgBrightYellow().bold().a("Fetching remote secret ").a(orgName).a("/").a(secretName)
-                .a(". Are you sure you want to proceed? (y/N)").reset());
-
-        int response = System.in.read();
-        // y == 121, Y == 89
-        if (response != 121 && response != 89) {
+        if (!Confirmation.confirm("Fetching remote secret %s/%s. Are you sure you want to proceed? (y/N)".formatted(orgName, secretName))) {
             System.out.println(ansi().fgRed().a("Aborting.").reset());
             System.exit(-1);
         }
+    }
+
+    private Path assertWorkDir() {
+        if (this.workDir == null) {
+            throw new RuntimeException("The workDir must be specified for the export functions to work");
+        }
+        return this.workDir;
     }
 }

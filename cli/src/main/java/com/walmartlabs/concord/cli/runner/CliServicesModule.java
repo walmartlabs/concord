@@ -26,7 +26,7 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.cli.CliConfig.CliConfigContext;
 import com.walmartlabs.concord.cli.Verbosity;
-import com.walmartlabs.concord.cli.runner.secrets.CliSecretService;
+import com.walmartlabs.concord.cli.secrets.CliSecretService;
 import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.runtime.v2.runner.*;
