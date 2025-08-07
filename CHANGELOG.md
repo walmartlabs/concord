@@ -8,7 +8,9 @@
 providers
 ([#1143](https://github.com/walmartlabs/concord/pull/1143));
 - concord-agent: configurable list of runners
-([#1182](https://github.com/walmartlabs/concord/pull/1182)).
+([#1182](https://github.com/walmartlabs/concord/pull/1182));
+- concord-cli: add self-update command
+([#1198](https://github.com/walmartlabs/concord/pull/1198)).
 
 
 
