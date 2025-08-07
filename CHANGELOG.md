@@ -12,6 +12,12 @@ providers
 - concord-cli: add self-update command
 ([#1198](https://github.com/walmartlabs/concord/pull/1198)).
 
+### Changed
+
+- concord-client2: add Concord-specific media type for
+validation errors
+([#1199](https://github.com/walmartlabs/concord/pull/1199)).
+
 
 
 ## [2.31.0] - 2025-08-04
