@@ -1,5 +1,25 @@
 # Change Log
 
+## [2.32.0] - Unreleased
+
+### Added
+
+- concord-cli: support for remote secrets, configurable secrets
+providers
+([#1143](https://github.com/walmartlabs/concord/pull/1143));
+- concord-agent: configurable list of runners
+([#1182](https://github.com/walmartlabs/concord/pull/1182));
+- concord-cli: add self-update command
+([#1198](https://github.com/walmartlabs/concord/pull/1198)).
+
+### Changed
+
+- concord-client2: add Concord-specific media type for
+validation errors
+([#1199](https://github.com/walmartlabs/concord/pull/1199)).
+
+
+
 ## [2.31.0] - 2025-08-04
 
 ### Added
