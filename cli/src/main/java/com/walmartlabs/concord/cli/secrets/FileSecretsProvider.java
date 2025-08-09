@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.cli.runner.secrets;
+package com.walmartlabs.concord.cli.secrets;
 
 /*-
  * *****
@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,7 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.cli.runner.secrets.UncheckedIO.*;
+import static com.walmartlabs.concord.cli.secrets.UncheckedIO.*;
 
 /**
  * Simple file-based secret provider.
@@ -44,7 +45,7 @@ public class FileSecretsProvider implements SecretsProvider {
     private final Path secretStoreDir;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public FileSecretsProvider(Path workDir, Path secretStoreDir) {
+    public FileSecretsProvider(@Nullable Path workDir, Path secretStoreDir) {
         this.workDir = workDir;
         this.secretStoreDir = secretStoreDir;
     }
@@ -58,7 +59,7 @@ public class FileSecretsProvider implements SecretsProvider {
             return Optional.empty();
         }
 
-        var tmpDir = UncheckedIO.assertTmpDir(workDir);
+        var tmpDir = UncheckedIO.assertTmpDir(assertWorkDir());
         var tmpPublicKey = tmpDir.resolve(secretName + ".pub");
         var tmpPrivateKey = tmpDir.resolve(secretName);
         Files.copy(publicKey, tmpPublicKey, StandardCopyOption.REPLACE_EXISTING);
@@ -84,7 +85,7 @@ public class FileSecretsProvider implements SecretsProvider {
     public Optional<Path> exportAsFile(String orgName, String secretName, String password) throws IOException {
         return getSecret(orgName, secretName)
                 .map(path -> {
-                    var tmpDir = assertTmpDir(workDir);
+                    var tmpDir = assertTmpDir(assertWorkDir());
                     var dest = createTempFile(tmpDir, "file", ".bin");
                     copy(path, dest, StandardCopyOption.REPLACE_EXISTING);
                     return dest;
@@ -183,5 +184,12 @@ public class FileSecretsProvider implements SecretsProvider {
         }
 
         return result;
+    }
+
+    private Path assertWorkDir() {
+        if (this.workDir == null) {
+            throw new RuntimeException("The workDir must be specified for the export functions to work");
+        }
+        return this.workDir;
     }
 }
