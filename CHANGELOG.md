@@ -16,7 +16,9 @@ providers
 
 - concord-client2: add Concord-specific media type for
 validation errors
-([#1199](https://github.com/walmartlabs/concord/pull/1199)).
+([#1199](https://github.com/walmartlabs/concord/pull/1199));
+- docker-images: use Debian 12
+([#1201](https://github.com/walmartlabs/concord/pull/1201)).
 
 
 
