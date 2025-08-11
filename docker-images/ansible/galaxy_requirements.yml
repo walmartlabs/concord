@@ -1,24 +1,24 @@
 ---
 collections:
-  - name: community.general
+  - name: "community.general"
     version: "7.0.1"
-  - name: ansible.windows
+  - name: "ansible.windows"
     version: "1.14.0"
-  - name: ansible.posix
+  - name: "ansible.posix"
     version: "1.5.4"
-  - name: community.windows
+  - name: "community.windows"
     version: "1.13.0"
-  - name: kubernetes.core
+  - name: "kubernetes.core"
     version: "2.4.0"
-  - name: community.crypto
+  - name: "community.crypto"
     version: "2.13.1"
-  - name: community.mysql
+  - name: "community.mysql"
     version: "3.7.1"
-  - name: openstack.cloud
+  - name: "openstack.cloud"
     version: "2.1.0"
-  - name: community.postgresql
+  - name: "community.postgresql"
     version: "2.4.1"
-  - name: community.docker
+  - name: "community.docker"
     version: "3.12.1"
   - name: "ansible.netcommon"
     version: "5.1.1"
