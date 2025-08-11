@@ -130,6 +130,7 @@
                     <processStartTag>*****</processStartTag>
                     <sectionDelimiter>-----</sectionDelimiter>
                     <processEndTag>=====</processEndTag>
+                    <trimHeaderLine>true</trimHeaderLine>
                     <roots>
                         <root>src/main/java</root>
                         <root>src/test/java</root>
