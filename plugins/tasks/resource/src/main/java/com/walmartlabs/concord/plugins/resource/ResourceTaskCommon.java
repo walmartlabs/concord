@@ -39,6 +39,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import static com.walmartlabs.concord.common.IOUtils.assertInPath;
+
+//import static com.walmartlabs.concord.common.IOUtils.assertInPath;
+
 public class ResourceTaskCommon {
 
     private static final String RESOURCE_PREFIX = "resource_";
@@ -232,26 +236,17 @@ public class ResourceTaskCommon {
         return s;
     }
 
-    private Path normalizePath(String path) {
+    private Path normalizePath(String path) throws IOException {
         Path p = Paths.get(path);
+        assertWorkDirPath(path);
         if (p.isAbsolute()) {
             return p;
         }
         return workDir.resolve(path);
     }
 
-    private Path assertWorkDirPath(String path) {
-        if (path == null) {
-            throw new IllegalArgumentException("Path cannot be null");
-        }
-        Path dst = Paths.get(path);
-        if (!dst.isAbsolute()) {
-            dst = workDir.resolve(path).normalize().toAbsolutePath();
-        }
-        if (!dst.startsWith(workDir)) {
-            throw new IllegalArgumentException("Invalid path: " + path);
-        }
-        return dst;
+    private Path assertWorkDirPath(String path) throws IOException {
+        return assertInPath(workDir, path);
     }
 
     private static ObjectWriter createYamlWriter() {
