@@ -21,7 +21,6 @@ RUN DEBIAN_FRONTEND=${DEBIAN_FRONTEND} apt-get -y install \
     libffi-dev \
     openssh-client \
     libssl-dev \
-    python3.8-dev \
     rsync \
     util-linux \
     && apt-get clean 
