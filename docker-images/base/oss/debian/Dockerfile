@@ -1,6 +1,6 @@
 ARG DEBIAN_FRONTEND=noninteractive
 
-FROM library/debian:stable
+FROM library/debian:12
 LABEL maintainer="amith.k.b@walmartlabs.com"
 
 ENTRYPOINT ["/usr/local/bin/concord_venv/bin/dumb-init", "--"]
