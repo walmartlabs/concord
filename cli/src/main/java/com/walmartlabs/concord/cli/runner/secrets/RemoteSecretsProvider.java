@@ -20,6 +20,7 @@ package com.walmartlabs.concord.cli.runner.secrets;
  * =====
  */
 
+import com.walmartlabs.concord.cli.AbortException;
 import com.walmartlabs.concord.cli.Version;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
@@ -190,8 +191,7 @@ public class RemoteSecretsProvider implements SecretsProvider {
         int response = System.in.read();
         // y == 121, Y == 89
         if (response != 121 && response != 89) {
-            System.out.println(ansi().fgRed().a("Aborting.").reset());
-            System.exit(-1);
+            throw new AbortException();
         }
     }
 }
