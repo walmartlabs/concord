@@ -25,7 +25,9 @@ validation errors
 file
 ([#1203](https://github.com/walmartlabs/concord/pull/1203));
 - project: enable trimHeaderLine in license-maven-plugin
-([#1205](https://github.com/walmartlabs/concord/pull/1205)).
+([#1205](https://github.com/walmartlabs/concord/pull/1205));
+- noderoster: optimize event list query
+([#1206](https://github.com/walmartlabs/concord/pull/1206)).
 
 
 
