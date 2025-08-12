@@ -18,7 +18,9 @@ providers
 validation errors
 ([#1199](https://github.com/walmartlabs/concord/pull/1199));
 - docker-images: use Debian 12
-([#1201](https://github.com/walmartlabs/concord/pull/1201)).
+([#1201](https://github.com/walmartlabs/concord/pull/1201));
+- project: enable trimHeaderLine in license-maven-plugin
+([#1205](https://github.com/walmartlabs/concord/pull/1205)).
 
 
 
