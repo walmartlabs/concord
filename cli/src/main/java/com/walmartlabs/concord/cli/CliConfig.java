@@ -20,6 +20,7 @@ package com.walmartlabs.concord.cli;
  * =====
  */
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -38,7 +39,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public record CliConfig(Map<String, CliConfigContext> contexts) {
 
     public static CliConfig load(Path path) throws IOException {
-        var mapper = new YAMLMapper();
+        var mapper = new YAMLMapper()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
         JsonNode defaults = mapper.readTree(readDefaultConfig());
 
