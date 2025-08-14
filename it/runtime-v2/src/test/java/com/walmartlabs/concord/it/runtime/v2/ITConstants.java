@@ -20,6 +20,8 @@ package com.walmartlabs.concord.it.runtime.v2;
  * =====
  */
 
+import com.google.common.base.Strings;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -27,10 +29,13 @@ import java.util.Properties;
 public final class ITConstants {
 
     public static final String PROJECT_VERSION;
+    public static final String DOCKER_ANSIBLE_IMAGE;
     public static final long DEFAULT_TEST_TIMEOUT = 120000;
 
     static {
         PROJECT_VERSION = getProperties("version.properties").getProperty("project.version");
+
+        DOCKER_ANSIBLE_IMAGE = env("IT_DOCKER_ANSIBLE_IMAGE", "walmartlabs/concord-ansible");
     }
 
     private static Properties getProperties(String path) {
@@ -41,6 +46,14 @@ public final class ITConstants {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static String env(String k, String def) {
+        String v = System.getenv(k);
+        if (Strings.isNullOrEmpty(v)) {
+            return def;
+        }
+        return v;
     }
 
     private ITConstants() {

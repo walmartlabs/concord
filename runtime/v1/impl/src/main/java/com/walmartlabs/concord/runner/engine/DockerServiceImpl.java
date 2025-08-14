@@ -79,12 +79,14 @@ public class DockerServiceImpl implements DockerService {
                 Process p = dp.start();
 
                 LogCapture c = new LogCapture(outCallback);
-                streamToLog(p.getInputStream(), c);
-                if (errCallback != null) {
-                    streamToLog(p.getErrorStream(), errCallback);
-                }
+                Thread outCaptureThread = startDockerOutThread(p.getInputStream(), c);
+                Thread errCaptureThread = startDockerOutThread(p.getErrorStream(), errCallback);
 
                 result = p.waitFor();
+
+                interruptThread(errCaptureThread);
+                interruptThread(outCaptureThread);
+
                 if (result == SUCCESS_EXIT_CODE || retryCount == 0 || tryCount >= retryCount) {
                     return result;
                 }
@@ -117,6 +119,30 @@ public class DockerServiceImpl implements DockerService {
         b.volumes((Collection<String>) ctx.interpolate(volumes));
 
         return b.build();
+    }
+
+    private static Thread startDockerOutThread(InputStream i, LogCallback c) {
+        if (c == null) {
+            return null;
+        }
+
+        Thread t = new Thread(() -> {
+            try {
+                streamToLog(i, c);
+            } catch (IOException e) {
+                log.error("Error reading docker log stream", e);
+            }
+        });
+
+        t.start();
+
+        return t;
+    }
+
+    private static void interruptThread(Thread t) {
+        if (t != null) {
+            t.interrupt();
+        }
     }
 
     private static Map<String, String> createEffectiveEnv(Map<String, String> env, boolean exposeDockerDaemon) {
