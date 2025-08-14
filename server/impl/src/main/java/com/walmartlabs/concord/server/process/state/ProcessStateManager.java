@@ -34,6 +34,7 @@ import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.policy.PolicyException;
 import com.walmartlabs.concord.server.policy.PolicyManager;
+import com.walmartlabs.concord.server.process.StateManagerUtils;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
@@ -510,8 +511,8 @@ public class ProcessStateManager extends AbstractDao {
      *
      * @param dst archive stream.
      */
-    public static ItemConsumer zipTo(ZipArchiveOutputStream dst) {
-        return new ZipConsumer(dst);
+    public static ItemConsumer zipTo(ZipArchiveOutputStream dst, boolean filterContents) {
+        return new ZipConsumer(dst, filterContents);
     }
 
     public static ItemConsumer exclude(ItemConsumer delegate, String... patterns) {
@@ -792,19 +793,22 @@ public class ProcessStateManager extends AbstractDao {
     public static final class ZipConsumer implements ItemConsumer {
 
         private final ZipArchiveOutputStream dst;
+        private final boolean filterContents;
 
-        private ZipConsumer(ZipArchiveOutputStream dst) {
+        private ZipConsumer(ZipArchiveOutputStream dst, boolean filterContents) {
             this.dst = dst;
+            this.filterContents = filterContents;
         }
 
         @Override
         public void accept(String name, int unixMode, InputStream src) {
             ZipArchiveEntry entry = new ZipArchiveEntry(name);
             entry.setUnixMode(unixMode);
-
+            // filter before zip to download
+            InputStream processed = filterContents ? StateManagerUtils.stateFilter(name, src) : src;
             try {
                 dst.putArchiveEntry(entry);
-                IOUtils.copy(src, dst);
+                IOUtils.copy(processed, dst);
                 dst.closeArchiveEntry();
             } catch (IOException e) {
                 throw new RuntimeException(e);
