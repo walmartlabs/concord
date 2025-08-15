@@ -73,7 +73,7 @@ public final class IOUtils {
         return PathUtils.createTempDir(prefix);
     }
 
-    public static boolean matches(Path p, String... filters) {
+    private static boolean matches(Path p, String... filters) {
         String n = p.getName(p.getNameCount() - 1).toString();
         for (String f : filters) {
             if (n.matches(f)) {
