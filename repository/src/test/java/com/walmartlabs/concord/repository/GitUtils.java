@@ -20,7 +20,6 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import org.eclipse.jgit.api.Git;
@@ -49,7 +48,7 @@ public final class GitUtils {
                 .call()) {
 
             // copy our files into the repository
-            IOUtils.copy(data, repo);
+            PathUtils.copy(data, repo);
 
             // add and commit copied files
             git.add().addFilepattern(".").call();
@@ -92,7 +91,7 @@ public final class GitUtils {
                 .setName(branch)
                 .call();
 
-        IOUtils.copy(src, dir, StandardCopyOption.REPLACE_EXISTING);
+        PathUtils.copy(src, dir, StandardCopyOption.REPLACE_EXISTING);
 
         git.add()
                 .addFilepattern(".")
@@ -122,7 +121,7 @@ public final class GitUtils {
                 .setURI(bareRepo.toAbsolutePath().toString())
                 .call();
 
-        IOUtils.copy(src, dir, StandardCopyOption.REPLACE_EXISTING);
+        PathUtils.copy(src, dir, StandardCopyOption.REPLACE_EXISTING);
 
         git.add()
                 .addFilepattern(".")

@@ -1,6 +1,5 @@
 package com.walmartlabs.concord.repository;
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
@@ -88,7 +87,7 @@ public class MavenRepositoryProvider implements RepositoryProvider {
         LastModifiedSnapshot snapshot = new LastModifiedSnapshot();
         List<String> allIgnorePatterns = new ArrayList<>();
         allIgnorePatterns.addAll(ignorePatterns);
-        IOUtils.copy(src, dst, allIgnorePatterns, snapshot, StandardCopyOption.REPLACE_EXISTING);
+        PathUtils.copy(src, dst, allIgnorePatterns, snapshot, StandardCopyOption.REPLACE_EXISTING);
         return snapshot;
     }
 }

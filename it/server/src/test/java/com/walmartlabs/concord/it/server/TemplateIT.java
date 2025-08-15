@@ -21,7 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -149,7 +149,7 @@ public class TemplateIT extends AbstractServerIT {
         Path tmpDir = createTempDir();
 
         File src = new File(TemplateIT.class.getResource("repositoryValidationTemplateRef").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
 
         Path concordYml = tmpDir.resolve("concord.yml");
         String s = new String(Files.readAllBytes(concordYml))

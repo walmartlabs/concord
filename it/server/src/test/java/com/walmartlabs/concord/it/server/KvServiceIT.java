@@ -22,7 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -170,7 +170,7 @@ public class KvServiceIT extends AbstractServerIT {
         Path src = Paths.get(KvServiceIT.class.getResource(process).toURI());
 
         Path tmpDir = createTempDir();
-        IOUtils.copy(src, tmpDir);
+        PathUtils.copy(src, tmpDir);
 
         Map<String, Object> req = ImmutableMap.of("entryPoint", entryPoint,
                 "arguments", args);

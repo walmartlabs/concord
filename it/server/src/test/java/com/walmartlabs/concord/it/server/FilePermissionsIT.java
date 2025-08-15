@@ -22,7 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.client2.StartProcessResponse;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.ZipUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.jupiter.api.Test;
@@ -46,7 +46,7 @@ public class FilePermissionsIT extends AbstractServerIT {
         Path src = Paths.get(FilePermissionsIT.class.getResource("filePerm").toURI());
 
         Path tmpDir = createTempDir();
-        IOUtils.copy(src, tmpDir);
+        PathUtils.copy(src, tmpDir);
 
         Path testFile = tmpDir.resolve("test.sh");
         Set<PosixFilePermission> permissions = new HashSet<>(Files.getPosixFilePermissions(testFile));

@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.repository;
  */
 
 import com.google.common.io.Resources;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.repository.*;
 
 import java.io.IOException;
@@ -67,7 +67,7 @@ public class ClasspathRepositoryProvider implements RepositoryProvider {
 
     @Override
     public Snapshot export(Path src, Path dst, List<String> ignorePatterns) throws IOException {
-        IOUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
+        PathUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
         return Snapshot.includeAll();
     }
 

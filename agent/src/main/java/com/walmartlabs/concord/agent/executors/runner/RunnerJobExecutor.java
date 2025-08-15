@@ -36,7 +36,6 @@ import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
@@ -240,7 +239,7 @@ public class RunnerJobExecutor implements JobExecutor {
             }
 
             log.info("exec ['{}'] -> persisting the payload directory into {}...", instanceId, dst);
-            IOUtils.copy(src, dst);
+            PathUtils.copy(src, dst);
 
             // persistentWorkDir is mostly useful when the Agent is running in a container
             // typically it is running as PID 456 - all files created by the process
@@ -496,7 +495,7 @@ public class RunnerJobExecutor implements JobExecutor {
         // the process' workDir
         Path dst = entry.getWorkDir();
         // TODO use move
-        IOUtils.copy(src, dst);
+        PathUtils.copy(src, dst);
 
         writeInstanceId(job.getInstanceId(), dst);
 
