@@ -254,6 +254,10 @@ public final class IOUtils {
         return PathUtils.deleteRecursively(p);
     }
 
+    /**
+     * @deprecated use {@link InputStream#readAllBytes()}
+     */
+    @Deprecated
     public static byte[] toByteArray(InputStream src) throws IOException {
         ByteArrayOutputStream dst = new ByteArrayOutputStream();
         copy(src, dst);
