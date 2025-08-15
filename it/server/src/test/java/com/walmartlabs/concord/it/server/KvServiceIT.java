@@ -23,6 +23,7 @@ package com.walmartlabs.concord.it.server;
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.jupiter.api.Test;
@@ -181,7 +182,7 @@ public class KvServiceIT extends AbstractServerIT {
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(baos)) {
-            IOUtils.zip(zip, tmpDir);
+            ZipUtils.zip(zip, tmpDir);
         }
 
         return baos.toByteArray();

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.common;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.eclipse.jgit.api.Git;
@@ -51,9 +52,9 @@ public final class ITUtils {
     public static byte[] archive(URI uri, String depsDir) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(out)) {
-            IOUtils.zip(zip, Paths.get(uri));
+            ZipUtils.zip(zip, Paths.get(uri));
             if (depsDir != null) {
-                IOUtils.zip(zip, Constants.Files.LIBRARIES_DIR_NAME + "/", Paths.get(depsDir));
+                ZipUtils.zip(zip, Constants.Files.LIBRARIES_DIR_NAME + "/", Paths.get(depsDir));
             }
         }
         return out.toByteArray();

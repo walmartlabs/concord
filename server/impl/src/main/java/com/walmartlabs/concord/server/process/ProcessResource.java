@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.policyengine.AttachmentsRule;
 import com.walmartlabs.concord.policyengine.CheckResult;
@@ -829,7 +830,7 @@ public class ProcessResource implements Resource {
             Files.copy(data, tmpIn, StandardCopyOption.REPLACE_EXISTING);
 
             tmpDir = PathUtils.createTempDir("attachments");
-            IOUtils.unzip(tmpIn, tmpDir);
+            ZipUtils.unzip(tmpIn, tmpDir);
 
             assertAttachmentsPolicy(tmpDir, entry);
 

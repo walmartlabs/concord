@@ -28,6 +28,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.jupiter.api.Test;
@@ -148,7 +149,7 @@ public class TemplateIT extends AbstractTest {
     private static Path createTemplate(Path templateDir) throws IOException {
         Path tmpZip = createTempFile("runtime-v2Template", ".zip");
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmpZip))) {
-            IOUtils.zip(zip, templateDir);
+            ZipUtils.zip(zip, templateDir);
         }
 
         if (!tmpZip.toFile().setReadable(true, false)) {

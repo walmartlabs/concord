@@ -20,8 +20,8 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointUploader;
 import com.walmartlabs.concord.sdk.Constants;
 
@@ -57,6 +57,6 @@ public class TestCheckpointUploader implements CheckpointUploader {
         PathUtils.deleteRecursively(workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME));
         PathUtils.deleteRecursively(workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
 
-        IOUtils.unzip(archive, workDir);
+        ZipUtils.unzip(archive, workDir);
     }
 }

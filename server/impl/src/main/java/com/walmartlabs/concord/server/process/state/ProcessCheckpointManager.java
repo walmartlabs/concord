@@ -20,9 +20,9 @@ package com.walmartlabs.concord.server.process.state;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
@@ -95,7 +95,7 @@ public class ProcessCheckpointManager {
             }
 
             try (TemporaryPath extractedDir = PathUtils.tempDir("unzipped-checkpoint")) {
-                IOUtils.unzip(checkpointArchive.path(), extractedDir.path());
+                ZipUtils.unzip(checkpointArchive.path(), extractedDir.path());
 
                 // TODO: only for v1 runtime
                 String eventName = readCheckpointEventName(extractedDir.path());
