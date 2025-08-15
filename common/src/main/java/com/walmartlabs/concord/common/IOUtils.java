@@ -26,7 +26,6 @@ import javax.validation.constraints.NotNull;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -229,21 +228,20 @@ public final class IOUtils {
         });
     }
 
+    /**
+     * @deprecated use {@link GrepUtils#grep(String, byte[])}
+     */
+    @Deprecated
     public static List<String> grep(String pattern, byte[] ab) throws IOException {
-        return grep(pattern, new ByteArrayInputStream(ab));
+        return GrepUtils.grep(pattern, ab);
     }
 
+    /**
+     * @deprecated use {@link GrepUtils#grep(String, InputStream)}
+     */
+    @Deprecated
     public static List<String> grep(String pattern, InputStream in) throws IOException {
-        List<String> result = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.matches(pattern)) {
-                    result.add(line);
-                }
-            }
-        }
-        return result;
+       return GrepUtils.grep(pattern, in);
     }
 
     /**
