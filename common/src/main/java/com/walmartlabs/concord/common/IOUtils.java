@@ -28,6 +28,10 @@ import java.nio.file.CopyOption;
 import java.nio.file.Path;
 import java.util.List;
 
+/**
+ * @deprecated use the alternatives in {@link PathUtils}, {@link ZipUtils}, {@link GrepUtils}, etc.
+ */
+@Deprecated
 public final class IOUtils {
 
     /**
