@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.process.form;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.form.ConcordFormFields;
 import com.walmartlabs.concord.common.form.ConcordFormValidatorLocale;
 import com.walmartlabs.concord.forms.ValidationError;
@@ -210,7 +210,7 @@ public final class FormUtils {
                 }
                 case ConcordFormFields.FileField.TYPE: {
                     try {
-                        Path tmp = IOUtils.createTempFile(f.getName(), ".tmp");
+                        Path tmp = PathUtils.createTempFile(f.getName(), ".tmp");
                         Files.write(tmp, s.getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
                         return tmp.toString();
                     } catch (IOException e) {
@@ -247,7 +247,7 @@ public final class FormUtils {
         } else if (v instanceof InputStream) {
             if (f.getType().equals(ConcordFormFields.FileField.TYPE)) {
                 try (InputStream is = (InputStream) v) {
-                    Path tmp = IOUtils.createTempFile(f.getName(), ".tmp");
+                    Path tmp = PathUtils.createTempFile(f.getName(), ".tmp");
                     Files.copy(is, tmp, REPLACE_EXISTING);
                     return tmp.toString();
                 } catch (IOException e) {

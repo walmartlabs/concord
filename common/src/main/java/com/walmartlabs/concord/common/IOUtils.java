@@ -23,8 +23,6 @@ package com.walmartlabs.concord.common;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.validation.constraints.NotNull;
 import java.io.*;
@@ -35,40 +33,44 @@ import java.util.*;
 
 public final class IOUtils {
 
-    private static final Logger log = LoggerFactory.getLogger(IOUtils.class);
-
-    public static final String TMP_DIR_KEY = "CONCORD_TMP_DIR";
-    public static final Path TMP_DIR = Paths.get(getEnv(TMP_DIR_KEY, System.getProperty("java.io.tmpdir")));
-
-    static {
-        try {
-            if (!Files.exists(TMP_DIR)) {
-                Files.createDirectories(TMP_DIR);
-            }
-            log.debug("Using {} as CONCORD_TMP_DIR", TMP_DIR);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+    /**
+     * @deprecated use {@link PathUtils#tempFile(String, String)}
+     */
+    @Deprecated
     public static TemporaryPath tempFile(String prefix, String suffix) throws IOException {
-        return new TemporaryPath(IOUtils.createTempFile(prefix, suffix));
+        return PathUtils.tempFile(prefix, suffix);
     }
 
+    /**
+     * @deprecated use {@link PathUtils#createTempFile(String, String)}
+     */
+    @Deprecated
     public static Path createTempFile(String prefix, String suffix) throws IOException {
-        return Files.createTempFile(TMP_DIR, prefix, suffix);
+        return PathUtils.createTempFile(prefix, suffix);
     }
 
+    /**
+     * @deprecated use {@link PathUtils#createTempDir(Path, String)}
+     */
+    @Deprecated
     public static Path createTempDir(Path dir, String prefix) throws IOException {
-        return Files.createTempDirectory(dir, prefix);
+        return PathUtils.createTempDir(dir, prefix);
     }
 
+    /**
+     * @deprecated use {@link PathUtils#tempDir(String)}
+     */
+    @Deprecated
     public static TemporaryPath tempDir(String prefix) throws IOException {
-        return new TemporaryPath(IOUtils.createTempDir(prefix));
+        return PathUtils.tempDir(prefix);
     }
 
+    /**
+     * @deprecated use {@link PathUtils#createTempDir(String)}
+     */
+    @Deprecated
     public static Path createTempDir(String prefix) throws IOException {
-        return Files.createTempDirectory(TMP_DIR, prefix);
+        return PathUtils.createTempDir(prefix);
     }
 
     public static boolean matches(Path p, String... filters) {
@@ -137,7 +139,7 @@ public final class IOUtils {
     }
 
     public static void unzip(InputStream in, Path targetDir, CopyOption... options) throws IOException {
-        try (TemporaryPath tmpZip = new TemporaryPath(IOUtils.createTempFile("unzip", "zip"))) {
+        try (TemporaryPath tmpZip = new TemporaryPath(PathUtils.createTempFile("unzip", "zip"))) {
             Files.copy(in, tmpZip.path(), StandardCopyOption.REPLACE_EXISTING);
             IOUtils.unzip(tmpZip.path(), targetDir, options);
         }
@@ -152,7 +154,7 @@ public final class IOUtils {
     }
 
     public static void unzip(InputStream in, Path targetDir, boolean skipExisting, FileVisitor visitor, CopyOption... options) throws IOException {
-        try (TemporaryPath tmpZip = new TemporaryPath(IOUtils.createTempFile("unzip", "zip"))) {
+        try (TemporaryPath tmpZip = new TemporaryPath(PathUtils.createTempFile("unzip", "zip"))) {
             Files.copy(in, tmpZip.path(), StandardCopyOption.REPLACE_EXISTING);
             IOUtils.unzip(tmpZip.path(), targetDir, skipExisting, visitor, options);
         }
@@ -303,31 +305,12 @@ public final class IOUtils {
         return result;
     }
 
+    /**
+     * @deprecated use {@link PathUtils#deleteRecursively(Path)}
+     */
+    @Deprecated
     public static boolean deleteRecursively(Path p) throws IOException {
-        if (!Files.exists(p)) {
-            return false;
-        }
-
-        if (!Files.isDirectory(p)) {
-            Files.delete(p);
-            return true;
-        }
-
-        Files.walkFileTree(p, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Files.delete(file);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                Files.delete(dir);
-                return FileVisitResult.CONTINUE;
-            }
-        });
-
-        return true;
+        return PathUtils.deleteRecursively(p);
     }
 
     public static byte[] toByteArray(InputStream src) throws IOException {
@@ -336,42 +319,20 @@ public final class IOUtils {
         return dst.toByteArray();
     }
 
+    /**
+     * @deprecated use {@link PathUtils#delete(File)}
+     */
+    @Deprecated
     public static void delete(File f) {
-        if (f == null || !f.exists()) {
-            return;
-        }
-
-        if (!f.delete()) {
-            log.warn("delete ['{}'] -> failed", f.getAbsolutePath());
-        }
+        PathUtils.delete(f);
     }
 
     /**
-     * Resolves a child path within a parent, asserting the normalized child
-     * starts with the parent path to avoid relative path escaping (e.g.
-     * {@code "../../not/in/parent"}).
-     * @param parent parent path within which child must exist when resolved
-     * @param child filename or path to resolve as a child of {@code parent}
-     * @return normalized child path
-     * @throws IOException when the child does not resolve to an absolute path within the parent path
+     * @deprecated use {@link PathUtils#assertInPath(Path, String)}
      */
+    @Deprecated
     public static Path assertInPath(@NotNull Path parent, @NotNull String child) throws IOException {
-        Path normalizedParent = parent.normalize().toAbsolutePath();
-        Path normalizedChild = normalizedParent.resolve(child).normalize().toAbsolutePath();
-
-        if (!normalizedChild.startsWith(normalizedParent)) {
-            throw new IOException("Child path resolves outside of parent path: " + child);
-        }
-
-        return normalizedChild;
-    }
-
-    private static String getEnv(String key, String defaultValue) {
-        String s = System.getenv(key);
-        if (s == null) {
-            return defaultValue;
-        }
-        return s;
+        return PathUtils.assertInPath(parent, child);
     }
 
     private static List<String> toList(String entry) {

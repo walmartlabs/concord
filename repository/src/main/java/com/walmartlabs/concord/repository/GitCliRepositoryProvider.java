@@ -21,6 +21,7 @@ package com.walmartlabs.concord.repository;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +63,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
             } catch (RepositoryException e) {
                 lastException = e;
                 try {
-                    IOUtils.deleteRecursively(request.destination());
+                    PathUtils.deleteRecursively(request.destination());
                 } catch (IOException ee) {
                     log.warn("fetch ['{}', '{}', '{}'] -> cleanup error: {}",
                             request.url(), request.version(), request.destination(), e.getMessage());

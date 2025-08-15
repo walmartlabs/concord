@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.MultipartUtils;
@@ -362,7 +363,7 @@ public final class PayloadBuilder {
         Path baseDir = payload.getHeader(Payload.BASE_DIR);
 
         if (baseDir == null) {
-            baseDir = IOUtils.createTempDir("payload");
+            baseDir = PathUtils.createTempDir("payload");
             payload = payload.putHeader(Payload.BASE_DIR, baseDir);
         }
 

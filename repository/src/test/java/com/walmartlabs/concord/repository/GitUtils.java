@@ -21,6 +21,7 @@ package com.walmartlabs.concord.repository;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -59,7 +60,7 @@ public final class GitUtils {
     }
 
     public static RevCommit addContent(Path bareRepo, Path file) throws Exception {
-        try (TemporaryPath tmp = IOUtils.tempDir("repo-tmp");
+        try (TemporaryPath tmp = PathUtils.tempDir("repo-tmp");
              Git git = Git.cloneRepository()
                      .setDirectory(tmp.path().toFile())
                      .setURI(bareRepo.toAbsolutePath().toString())

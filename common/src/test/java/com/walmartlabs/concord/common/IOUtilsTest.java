@@ -29,8 +29,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -50,7 +48,7 @@ public class IOUtilsTest {
             IOUtils.zip(zip, src);
         }
 
-        IOUtils.deleteRecursively(src);
+        PathUtils.deleteRecursively(src);
 
         Path dst = Files.createTempDirectory("test");
         IOUtils.unzip(archive, dst);
@@ -121,22 +119,5 @@ public class IOUtilsTest {
 
         Exception e = assertThrows(IOException.class, () -> IOUtils.copy(src, dst));
         assertTrue(e.getMessage().contains("Symlinks outside the base directory are not supported"));
-    }
-
-    @Test
-    public void testResolveNonChild() {
-        Path parent = Paths.get("/parent/path");
-        Exception e = assertThrows(IOException.class, () -> IOUtils.assertInPath(parent, "../child"));
-        assertTrue(e.getMessage().contains("Child path resolves outside of parent path"));
-    }
-
-    @Test
-    public void testResolveValidChild() {
-        Path parent = Paths.get("/parent/path");
-        assertDoesNotThrow(() -> IOUtils.assertInPath(parent, "child"));
-        assertDoesNotThrow(() -> IOUtils.assertInPath(parent, "another/child"));
-
-        Path p = assertDoesNotThrow(() -> IOUtils.assertInPath(parent, "odd/../but/valid"));
-        assertEquals("/parent/path/but/valid", p.toString());
     }
 }

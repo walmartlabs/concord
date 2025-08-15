@@ -21,6 +21,7 @@ package com.walmartlabs.concord.cli;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
@@ -53,7 +54,7 @@ class LintTest extends AbstractTest {
         URI uri = LintTest.class.getResource(payload).toURI();
         Path source = Paths.get(uri);
 
-        try (TemporaryPath dst = IOUtils.tempDir("cli-tests")) {
+        try (TemporaryPath dst = PathUtils.tempDir("cli-tests")) {
             IOUtils.copy(source, dst.path());
 
             App app = new App();

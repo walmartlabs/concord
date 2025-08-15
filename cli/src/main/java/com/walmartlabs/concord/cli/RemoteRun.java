@@ -29,6 +29,7 @@ import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.client2.ApiException;
 import com.walmartlabs.concord.client2.ProcessApi;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -190,7 +191,7 @@ public class RemoteRun implements Callable<Integer> {
             throw new IOException("Expected a path to a single concord.yaml (or .yml) file or a directory with flows, got " + src);
         }
 
-        var dst = IOUtils.tempFile("payload", ".zip");
+        var dst = PathUtils.tempFile("payload", ".zip");
 
         try (var zip = new ZipArchiveOutputStream(dst.path(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
             if (Files.isRegularFile(src)) {

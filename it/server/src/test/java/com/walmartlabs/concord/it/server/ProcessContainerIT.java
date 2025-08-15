@@ -23,6 +23,7 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.client2.StartProcessResponse;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +43,7 @@ public class ProcessContainerIT extends AbstractServerIT {
     @Test
     public void test() throws Exception {
         Path src = Paths.get(ProcessContainerIT.class.getResource("processContainer").toURI());
-        Path dst = IOUtils.createTempDir("test");
+        Path dst = PathUtils.createTempDir("test");
         IOUtils.copy(src, dst);
 
         Path concordYml = dst.resolve("concord.yml");

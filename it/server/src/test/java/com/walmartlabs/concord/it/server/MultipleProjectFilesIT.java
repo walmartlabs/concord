@@ -24,6 +24,7 @@ import com.walmartlabs.concord.client2.ProcessApi;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.client2.StartProcessResponse;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.jupiter.api.Test;
 
@@ -69,7 +70,7 @@ public class MultipleProjectFilesIT extends AbstractServerIT {
     }
 
     private static Path zip(Path src) throws IOException {
-        Path dst = IOUtils.createTempFile("template", ".zip");
+        Path dst = PathUtils.createTempFile("template", ".zip");
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(dst))) {
             IOUtils.zip(zip, src);
         }

@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.repository;
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +66,7 @@ public class MavenRepositoryProvider implements RepositoryProvider {
             return null;
         } catch (URISyntaxException | IOException e) {
             try {
-                IOUtils.deleteRecursively(request.destination());
+                PathUtils.deleteRecursively(request.destination());
             } catch (IOException ee) {
                 log.warn("fetch ['{}', '{}', '{}'] -> cleanup error: {}",
                         request.url(), request.version(), request.destination(), e.getMessage());

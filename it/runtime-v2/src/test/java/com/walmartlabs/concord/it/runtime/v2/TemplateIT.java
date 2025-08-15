@@ -47,7 +47,7 @@ import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static com.walmartlabs.concord.common.IOUtils.createTempFile;
+import static com.walmartlabs.concord.common.PathUtils.createTempFile;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 
 public class TemplateIT extends AbstractTest {

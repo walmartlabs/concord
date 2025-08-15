@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.MultipartUtils;
@@ -123,7 +123,7 @@ public class PayloadManager {
      * Creates a payload to resume a suspended process, pulling the necessary data from the state storage.
      */
     public Payload createResumePayload(ProcessKey processKey, Set<String> events, Map<String, Object> req) throws IOException {
-        Path tmpDir = IOUtils.createTempDir("payload");
+        Path tmpDir = PathUtils.createTempDir("payload");
         if (!stateManager.export(processKey, copyTo(tmpDir))) {
             throw new ProcessException(processKey, "Can't resume '" + processKey + "', state snapshot not found", Response.Status.NOT_FOUND);
         }
@@ -142,7 +142,7 @@ public class PayloadManager {
                               UUID initiatorId, String initiator, UUID projectId, Map<String, Object> req, String[] out,
                               Set<String> handlers, Imports imports) throws IOException {
 
-        Path tmpDir = IOUtils.createTempDir("payload");
+        Path tmpDir = PathUtils.createTempDir("payload");
 
         // skip forms and the parent process' arguments
         if (!stateManager.export(parentProcessKey, exclude(copyTo(tmpDir), FORMS_PATH_PATTERN))) {

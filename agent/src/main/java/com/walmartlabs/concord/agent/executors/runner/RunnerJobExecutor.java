@@ -37,6 +37,7 @@ import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
@@ -279,7 +280,7 @@ public class RunnerJobExecutor implements JobExecutor {
         Path workDir = pe.getWorkDir();
         try {
             log.info("exec ['{}'] -> removing the working directory: {}", instanceId, workDir);
-            IOUtils.deleteRecursively(workDir);
+            PathUtils.deleteRecursively(workDir);
         } catch (IOException e) {
             log.warn("exec ['{}'] -> can't remove the working directory: {}", instanceId, e.getMessage());
         }
@@ -486,7 +487,7 @@ public class RunnerJobExecutor implements JobExecutor {
         ProcessEntry entry = processPool.take(hc, () -> {
             // can't use workDirBase, "preforks" start before they receive their process payload
             // create a new temporary directory
-            Path workDir = IOUtils.createTempDir("workDir");
+            Path workDir = PathUtils.createTempDir("workDir");
             return start(workDir, cmd);
         });
 
