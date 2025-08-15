@@ -65,7 +65,7 @@ public final class ITUtils {
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (InputStream in = url.openStream()) {
-            IOUtils.copy(in, out);
+            in.transferTo(out);
         }
 
         return new String(out.toByteArray());

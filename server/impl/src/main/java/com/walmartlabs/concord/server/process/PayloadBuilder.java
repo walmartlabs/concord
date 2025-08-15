@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.sdk.Constants;
@@ -353,7 +352,7 @@ public final class PayloadBuilder {
         Path dst = ensureBaseDir().resolve(name);
         Files.createDirectories(dst.getParent());
         try (OutputStream out = Files.newOutputStream(dst)) {
-            IOUtils.copy(in, out);
+            in.transferTo(out);
         }
 
         attachments.put(name, dst);

@@ -147,6 +147,10 @@ public final class IOUtils {
         ZipUtils.unzip(in, targetDir, skipExisting, visitor, options);
     }
 
+    /**
+     * @deprecated use {@link InputStream#transferTo(OutputStream)}
+     */
+    @Deprecated
     public static void copy(InputStream in, OutputStream out) throws IOException {
         byte[] ab = new byte[4096];
         int read;

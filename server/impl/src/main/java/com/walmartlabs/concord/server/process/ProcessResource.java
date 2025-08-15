@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.process;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.imports.Imports;
@@ -557,7 +556,7 @@ public class ProcessResource implements Resource {
             try {
                 Path tmp = PathUtils.createTempFile("attachment", ".bin");
                 try (OutputStream dst = Files.newOutputStream(tmp)) {
-                    IOUtils.copy(src, dst);
+                    src.transferTo(dst);
                 }
                 return Optional.of(tmp);
             } catch (IOException e) {
@@ -573,7 +572,7 @@ public class ProcessResource implements Resource {
 
         return Response.ok((StreamingOutput) out -> {
             try (InputStream in = Files.newInputStream(tmp)) {
-                IOUtils.copy(in, out);
+                in.transferTo(out);
             } finally {
                 Files.delete(tmp);
             }
@@ -797,7 +796,7 @@ public class ProcessResource implements Resource {
                     .orElseThrow(() -> new ConcordApplicationException("State file not found: " + fileName, Status.NOT_FOUND));
 
             try (InputStream in = Files.newInputStream(tmp)) {
-                IOUtils.copy(in, output);
+                in.transferTo(output);
             } finally {
                 Files.delete(tmp);
             }
@@ -1037,7 +1036,7 @@ public class ProcessResource implements Resource {
         try {
             Path p = PathUtils.createTempFile("state", ".bin");
             try (OutputStream out = Files.newOutputStream(p)) {
-                IOUtils.copy(in, out);
+                in.transferTo(out);
             }
             return Optional.of(p);
         } catch (IOException e) {

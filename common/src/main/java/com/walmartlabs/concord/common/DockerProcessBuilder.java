@@ -214,7 +214,7 @@ public class DockerProcessBuilder {
 
             try (InputStream src = Objects.requireNonNull(DockerProcessBuilder.class.getResourceAsStream("dockerPasswd"));
                  OutputStream dst = Files.newOutputStream(tmp)) {
-                IOUtils.copy(src, dst);
+                src.transferTo(dst);
             }
             c.add("-v");
             c.add(tmp.toAbsolutePath() + ":/etc/passwd:ro");

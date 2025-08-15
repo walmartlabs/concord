@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.PrivilegedAction;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerContainerSpec;
@@ -209,7 +208,7 @@ public class DockerProcessBuilder {
             tmpPaths.add(tmp);
             try (InputStream src = Objects.requireNonNull(DockerProcessBuilder.class.getResourceAsStream("dockerPasswd"));
                  OutputStream dst = Files.newOutputStream(tmp)) {
-                IOUtils.copy(src, dst);
+                src.transferTo(dst);
             }
             c.add("-v");
             c.add(tmp.toAbsolutePath() + ":/etc/passwd:ro");
