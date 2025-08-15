@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner.checkpoints;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.common.ZipUtils;
@@ -75,7 +74,7 @@ public class StateArchive implements AutoCloseable {
                 Files.createDirectories(dst);
             }
 
-            IOUtils.copy(src, dst);
+            PathUtils.copy(src, dst);
         } catch (IOException e) {
             throw new RuntimeException("Error while copying the process' system directory: " + e.getMessage(), e);
         }

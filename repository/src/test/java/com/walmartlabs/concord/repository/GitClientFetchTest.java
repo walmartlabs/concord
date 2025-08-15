@@ -20,7 +20,6 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Secret;
@@ -59,7 +58,7 @@ public class GitClientFetchTest {
     public void testFetch1() throws Exception {
         Path tmpDir = PathUtils.createTempDir("test");
 
-        IOUtils.copy(resourceToPath("/test4"), tmpDir);
+        PathUtils.copy(resourceToPath("/test4"), tmpDir);
 
         // init repo
         Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();

@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
@@ -70,7 +70,7 @@ public class MainTest  {
         data.put("fullName", "John Smith");
 
         Path newWorkDir = Files.createTempDirectory("test-new");
-        IOUtils.copy(runtime.workDir(), newWorkDir);
+        PathUtils.copy(runtime.workDir(), newWorkDir);
         runtime.setWorkDir(newWorkDir);
 
         log = resume(myForm.eventName(), ProcessConfiguration.builder().arguments(Collections.singletonMap("myForm", data)).build());

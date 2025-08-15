@@ -28,7 +28,6 @@ import com.walmartlabs.concord.cli.CliConfig.CliConfigContext;
 import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.FileVisitor;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
@@ -167,7 +166,7 @@ public class Run implements Callable<Integer> {
             }
 
             // copy everything into target except target
-            IOUtils.copy(sourceDir, targetDir, "^target$", new CopyNotifier(verbosity.verbose() ? 0 : 100), StandardCopyOption.REPLACE_EXISTING);
+            PathUtils.copy(sourceDir, targetDir, "^target$", new CopyNotifier(verbosity.verbose() ? 0 : 100), StandardCopyOption.REPLACE_EXISTING);
         } else {
             throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
         }

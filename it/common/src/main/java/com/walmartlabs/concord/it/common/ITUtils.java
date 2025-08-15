@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.common;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.Constants;
@@ -84,7 +83,7 @@ public final class ITUtils {
 
     public static String createGitRepo(Path src) throws IOException, GitAPIException {
         Path tmpDir = createTempDir();
-        IOUtils.copy(src, tmpDir);
+        PathUtils.copy(src, tmpDir);
 
         Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();

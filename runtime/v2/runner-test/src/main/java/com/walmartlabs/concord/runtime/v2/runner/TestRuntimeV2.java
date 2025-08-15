@@ -26,7 +26,6 @@ import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import com.walmartlabs.concord.client2.ApiClient;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.runtime.common.FormService;
 import com.walmartlabs.concord.runtime.common.StateManager;
@@ -154,7 +153,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
         assertNotNull(res, "Resource not found: " + resource);
 
         Path src = Paths.get(res.toURI());
-        IOUtils.copy(src, workDir);
+        PathUtils.copy(src, workDir);
     }
 
     public ImmutableProcessConfiguration.Builder cfgFromDeployment() throws IOException {
