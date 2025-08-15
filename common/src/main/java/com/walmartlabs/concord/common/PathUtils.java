@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 
-public class PathUtils {
+public final class PathUtils {
 
     public static final String TMP_DIR_KEY = "CONCORD_TMP_DIR";
     public static final Path TMP_DIR = Paths.get(getEnv(TMP_DIR_KEY, System.getProperty("java.io.tmpdir")));
@@ -130,5 +130,8 @@ public class PathUtils {
             return defaultValue;
         }
         return s;
+    }
+
+    private PathUtils() {
     }
 }

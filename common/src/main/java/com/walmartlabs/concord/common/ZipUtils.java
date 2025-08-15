@@ -32,7 +32,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.Enumeration;
 import java.util.Set;
 
-public class ZipUtils {
+public final class ZipUtils {
 
     public static void zipFile(ZipArchiveOutputStream zip, Path src, String name) throws IOException {
         ZipArchiveEntry e = new ZipArchiveEntry(name) {
@@ -166,5 +166,8 @@ public class ZipUtils {
             }
         }
         return false;
+    }
+
+    private ZipUtils() {
     }
 }

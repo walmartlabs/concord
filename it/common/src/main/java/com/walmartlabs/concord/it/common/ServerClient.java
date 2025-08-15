@@ -29,7 +29,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.common.IOUtils.grep;
+import static com.walmartlabs.concord.common.GrepUtils.grep;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ServerClient {
