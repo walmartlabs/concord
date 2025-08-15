@@ -27,6 +27,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.runtime.common.FormService;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
@@ -435,7 +436,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
 
     private void tearDown() throws IOException {
         if (workDir != null) {
-            IOUtils.deleteRecursively(workDir);
+            PathUtils.deleteRecursively(workDir);
         }
 
         processConfiguration = null;

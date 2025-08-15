@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
@@ -78,7 +78,7 @@ public class DefaultPersistenceService implements PersistenceService {
 
     @Override
     public void deletePersistedFile(String name) throws IOException {
-        IOUtils.deleteRecursively(workingDirectory.getValue()
+        PathUtils.deleteRecursively(workingDirectory.getValue()
                 .resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(name));
     }

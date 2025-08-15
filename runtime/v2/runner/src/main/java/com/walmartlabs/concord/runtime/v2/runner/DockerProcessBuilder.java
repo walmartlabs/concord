@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.PrivilegedAction;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerContainerSpec;
 import org.slf4j.Logger;
@@ -204,7 +205,7 @@ public class DockerProcessBuilder {
             c.add(entryPoint);
         }
         if (generateUsers) {
-            Path tmp = IOUtils.createTempFile("passwd", ".docker"); // NOSONAR
+            Path tmp = PathUtils.createTempFile("passwd", ".docker"); // NOSONAR
             tmpPaths.add(tmp);
             try (InputStream src = Objects.requireNonNull(DockerProcessBuilder.class.getResourceAsStream("dockerPasswd"));
                  OutputStream dst = Files.newOutputStream(tmp)) {
@@ -444,7 +445,7 @@ public class DockerProcessBuilder {
         public void close() {
             for (Path p : tmpPaths) {
                 try {
-                    IOUtils.deleteRecursively(p);
+                    PathUtils.deleteRecursively(p);
                 } catch (IOException e) {
                     log.warn("delete '{}' -> error: {}", p, e.getMessage());
                 }

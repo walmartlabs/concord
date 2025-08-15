@@ -21,6 +21,7 @@ package com.walmartlabs.concord.it.common;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.eclipse.jgit.api.Git;
@@ -36,8 +37,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -72,7 +71,7 @@ public final class ITUtils {
     }
 
     public static Path createTempDir() throws IOException {
-        Path dir = IOUtils.createTempDir("test");
+        Path dir = PathUtils.createTempDir("test");
         Files.setPosixFilePermissions(dir, PosixFilePermissions.fromString("rwxr-xr-x"));
         return dir;
     }

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.state;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -86,14 +87,14 @@ public class ProcessCheckpointManager {
      * Restore process to a saved checkpoint.
      */
     public CheckpointInfo restoreCheckpoint(ProcessKey processKey, UUID checkpointId) {
-        try (TemporaryPath checkpointArchive = IOUtils.tempFile("checkpoint", ".zip")) {
+        try (TemporaryPath checkpointArchive = PathUtils.tempFile("checkpoint", ".zip")) {
 
             String checkpointName = export(processKey, checkpointId, checkpointArchive.path());
             if (checkpointName == null) {
                 return null;
             }
 
-            try (TemporaryPath extractedDir = IOUtils.tempDir("unzipped-checkpoint")) {
+            try (TemporaryPath extractedDir = PathUtils.tempDir("unzipped-checkpoint")) {
                 IOUtils.unzip(checkpointArchive.path(), extractedDir.path());
 
                 // TODO: only for v1 runtime

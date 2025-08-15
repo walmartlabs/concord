@@ -21,7 +21,7 @@ package com.walmartlabs.concord.repository;
  */
 
 import com.google.common.collect.ImmutableSet;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
@@ -577,7 +577,7 @@ public class GitClient {
     }
 
     private Path createUnixGitSSH(Path key) throws IOException {
-        Path ssh = IOUtils.createTempFile("ssh", ".sh");
+        Path ssh = PathUtils.createTempFile("ssh", ".sh");
 
         try (PrintWriter w = new PrintWriter(ssh.toFile(), Charset.defaultCharset().toString())) {
             w.println("#!/bin/sh");
@@ -601,7 +601,7 @@ public class GitClient {
     }
 
     private static Path createUnixStandardAskpass(UsernamePassword creds) throws IOException {
-        Path askpass = IOUtils.createTempFile("pass", ".sh");
+        Path askpass = PathUtils.createTempFile("pass", ".sh");
         try (PrintWriter w = new PrintWriter(askpass.toFile(), Charset.defaultCharset().toString())) {
             w.println("#!/bin/sh");
             w.println("case \"$1\" in");
@@ -614,7 +614,7 @@ public class GitClient {
     }
 
     private static Path createSshKeyFile(KeyPair keyPair) throws IOException {
-        Path keyFile = IOUtils.createTempFile("ssh", ".key");
+        Path keyFile = PathUtils.createTempFile("ssh", ".key");
 
         Files.write(keyFile, keyPair.getPrivateKey());
 

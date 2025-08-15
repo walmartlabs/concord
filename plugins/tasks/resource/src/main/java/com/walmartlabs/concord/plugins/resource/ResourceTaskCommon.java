@@ -38,7 +38,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import static com.walmartlabs.concord.common.IOUtils.assertInPath;
+import static com.walmartlabs.concord.common.PathUtils.assertInPath;
 
 public class ResourceTaskCommon {
 

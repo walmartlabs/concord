@@ -29,6 +29,7 @@ import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.FileVisitor;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
@@ -162,7 +163,7 @@ public class Run implements Callable<Integer> {
                 if (verbosity.verbose()) {
                     System.out.println("Cleaning target directory");
                 }
-                IOUtils.deleteRecursively(targetDir);
+                PathUtils.deleteRecursively(targetDir);
             }
 
             // copy everything into target except target

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.policyengine.AttachmentsRule;
 import com.walmartlabs.concord.policyengine.CheckResult;
@@ -553,7 +554,7 @@ public class ProcessResource implements Resource {
 
         Optional<Path> o = stateManager.get(processKey, resource, src -> {
             try {
-                Path tmp = IOUtils.createTempFile("attachment", ".bin");
+                Path tmp = PathUtils.createTempFile("attachment", ".bin");
                 try (OutputStream dst = Files.newOutputStream(tmp)) {
                     IOUtils.copy(src, dst);
                 }
@@ -824,10 +825,10 @@ public class ProcessResource implements Resource {
         Path tmpIn = null;
         Path tmpDir = null;
         try {
-            tmpIn = IOUtils.createTempFile("attachments", ".zip");
+            tmpIn = PathUtils.createTempFile("attachments", ".zip");
             Files.copy(data, tmpIn, StandardCopyOption.REPLACE_EXISTING);
 
-            tmpDir = IOUtils.createTempDir("attachments");
+            tmpDir = PathUtils.createTempDir("attachments");
             IOUtils.unzip(tmpIn, tmpDir);
 
             assertAttachmentsPolicy(tmpDir, entry);
@@ -852,7 +853,7 @@ public class ProcessResource implements Resource {
         } finally {
             if (tmpDir != null) {
                 try {
-                    IOUtils.deleteRecursively(tmpDir);
+                    PathUtils.deleteRecursively(tmpDir);
                 } catch (IOException e) {
                     log.warn("uploadAttachments -> cleanup error: {}", e.getMessage());
                 }
@@ -1033,7 +1034,7 @@ public class ProcessResource implements Resource {
 
     private static Optional<Path> copyToTmp(InputStream in) {
         try {
-            Path p = IOUtils.createTempFile("state", ".bin");
+            Path p = PathUtils.createTempFile("state", ".bin");
             try (OutputStream out = Files.newOutputStream(p)) {
                 IOUtils.copy(in, out);
             }

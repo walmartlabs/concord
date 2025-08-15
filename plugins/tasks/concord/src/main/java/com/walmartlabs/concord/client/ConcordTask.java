@@ -23,6 +23,7 @@ package com.walmartlabs.concord.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.sdk.*;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
@@ -763,7 +764,7 @@ public class ConcordTask extends AbstractConcordTask {
         }
 
         if (Files.isDirectory(path)) {
-            Path tmp = IOUtils.createTempFile("payload", ".zip");
+            Path tmp = PathUtils.createTempFile("payload", ".zip");
             try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
                 IOUtils.zip(out, path);
             }
