@@ -1,0 +1,21 @@
+flows:
+  default:
+    - set:
+        plain: "NOT_SECRET"
+
+    - expr: "${sensitiveTask.getSensitive('MASK_ME')}" # MASK_ME is sensitive data now
+      out: mySecret
+
+    - expr: "${sensitiveTask.getSensitive('QUxTT19TRU5TSVRJVkU=')}"
+      out: myBase64Secret
+
+    - log: "1. sensitive: ${mySecret}"
+    - log: "1. also sensitive: ${myBase64Secret}"
+    - log: "1. non sensitive: ${plain}"
+
+    - log: "2. base64 encode sensitive: ${base64.encode(mySecret)}"
+    - log: "2. base64 encode non sensitive: ${base64.encode(plain)}"
+
+    - log: "3. base64 decode sensitive: ${base64.decode(base64.encode(mySecret))}"
+    - log: "3. base64 decode base64 sensitive: ${base64.decode(myBase64Secret)}"
+    - log: "3. base64 decode non sensitive: ${base64.decode(base64.encode(plain))}"

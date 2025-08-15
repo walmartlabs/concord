@@ -35,6 +35,7 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -191,7 +192,7 @@ public class ProcessQueueManager {
     /**
      * Updates the process' agent ID and status.
      */
-    public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
+    public void updateAgentId(DSLContext tx, ProcessKey processKey, @Nullable String agentId, ProcessStatus status) {
         queueDao.updateAgentId(tx, processKey, agentId, status);
         notifyStatusChange(tx, processKey, status);
     }

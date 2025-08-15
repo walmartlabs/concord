@@ -29,14 +29,14 @@ import com.walmartlabs.concord.server.CommandType;
 import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.agent.AgentCommand;
 import com.walmartlabs.concord.server.agent.Commands;
+import com.walmartlabs.concord.server.message.MessageChannel;
+import com.walmartlabs.concord.server.message.MessageChannelManager;
 import com.walmartlabs.concord.server.cfg.AgentConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.records.AgentCommandsRecord;
 import com.walmartlabs.concord.server.queueclient.message.CommandRequest;
 import com.walmartlabs.concord.server.queueclient.message.CommandResponse;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import com.walmartlabs.concord.server.websocket.WebSocketChannel;
-import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;
@@ -61,12 +61,12 @@ public class Dispatcher extends PeriodicTask {
     private static final int BATCH_SIZE = 10;
 
     private final DispatcherDao dao;
-    private final WebSocketChannelManager channelManager;
+    private final MessageChannelManager channelManager;
 
     @Inject
     public Dispatcher(AgentConfiguration cfg,
                       DispatcherDao dao,
-                      WebSocketChannelManager channelManager) {
+                      MessageChannelManager channelManager) {
 
         super(cfg.getCommandPollDelay().toMillis(), ERROR_DELAY);
         this.dao = dao;
@@ -75,7 +75,7 @@ public class Dispatcher extends PeriodicTask {
 
     @Override
     protected boolean performTask() {
-        Map<WebSocketChannel, CommandRequest> requests = this.channelManager.getRequests(MessageType.COMMAND_REQUEST);
+        Map<MessageChannel, CommandRequest> requests = this.channelManager.getRequests(MessageType.COMMAND_REQUEST);
         if (requests.isEmpty()) {
             return false;
         }
@@ -148,7 +148,6 @@ public class Dispatcher extends PeriodicTask {
     }
 
     private void sendResponse(Match match, AgentCommand response) {
-        WebSocketChannel channel = match.request.channel;
         long correlationId = match.request.request.getCorrelationId();
 
         CommandType type = CommandType.valueOf((String) response.getData().remove(Commands.TYPE_KEY));
@@ -157,7 +156,8 @@ public class Dispatcher extends PeriodicTask {
         payload.put("type", type.toString());
         payload.putAll(response.getData());
 
-        boolean success = channelManager.sendResponse(channel.getChannelId(), CommandResponse.cancel(correlationId, payload));
+        MessageChannel channel = match.request.channel;
+        boolean success = channelManager.sendMessage(channel.getChannelId(), CommandResponse.cancel(correlationId, payload));
         if (success) {
             log.info("sendResponse ['{}'] -> done", correlationId);
         } else {
@@ -223,25 +223,10 @@ public class Dispatcher extends PeriodicTask {
         }
     }
 
-    private static final class Match {
+    private record Match(Request request, AgentCommand command) {
 
-        private final Request request;
-        private final AgentCommand command;
-
-        private Match(Request request, AgentCommand command) {
-            this.request = request;
-            this.command = command;
-        }
     }
 
-    private static final class Request {
-
-        private final WebSocketChannel channel;
-        private final CommandRequest request;
-
-        private Request(WebSocketChannel channel, CommandRequest request) {
-            this.channel = channel;
-            this.request = request;
-        }
+    private record Request(MessageChannel channel, CommandRequest request) {
     }
 }

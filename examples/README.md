@@ -28,8 +28,8 @@ Starting...
 * [in_variables](in_variables) - how to use IN-variables when calling a flow;
 * [jira](jira) - how to create an issue in JIRA;
 * [ldap](ldap) - how to query an AD/LDAP server;
+* [loglevel](loglevel) - how to use different logging levels;
 * [long_running](long_running) - a simple example of a long-running process using `sleep` task;
-* [looper](looper) - triggering Looper jobs from Concord;
 * [loops](loops) - how to iterate a collection;
 * [multiple_flows](multiple_flows) - multiple flows in a single YAML file;
 * [out](out) - how to use process OUT variables;
@@ -46,6 +46,7 @@ Starting...
 * [ansible_dynamic_inventory](ansible_dynamic_inventory) - using dynamic inventory scripts in Ansible;
 * [ansible_form](ansible_form) - using forms and Ansible in a single flow;
 * [ansible_form_as_inventory](ansible_form_as_inventory) - using forms to specify an Ansible inventory;
+* [ansible_kerberos](ansible_kerberos) - how to use Kerberos with Ansible;
 * [ansible_limit](ansible_limit) - how to use Ansible's limit/retry files;
 * [ansible_project](ansible_project) - an example of creating an running an Ansible project;
 * [ansible_remote](ansible_remote) - running an Ansible playbook an a remote host;
@@ -53,33 +54,34 @@ Starting...
 * [ansible_stats](ansible_stats) - shows how to get Ansible deployment stats back from a playbook run;
 * [ansible_template](ansible_template) - running an Ansible playbook using the Ansible template;
 * [ansible_vault](ansible_vault) - using Ansible Vault to store encrypted data;
+* [ansible_windows](ansible_windows) - how to use Ansible with Windows hosts;
+* [custom_form](custom_form) - using forms with custom HTML/CSS and a templating library;
+* [custom_form_basic](custom_form_basic) - a basic example of a custom form;
 * [docker](docker) - running a docker image with custom environment and arguments;
 * [docker_simple](docker_simple) - running a simple command inside of a docker container;
 * [error_handling](error_handling) - how to handle failures;
 * [external_script](external_script) - calling an external JavaScript file;
 * [form_and_long_process](form_and_long_process) - how to deal with long "background" processes;
-* [custom_form](custom_form) - using forms with custom HTML/CSS and a templating library;
-* [custom_form_basic](custom_form_basic) - a basic example of a custom form;
 * [forms_override](forms_override) - how to override default values in forms;
 * [groovy](groovy) - running a Groovy script from a flow;
 * [groovy_grape](groovy_grape) - how to use Groovy's `@Grab` in scripts;
 * [groovy_rest](groovy_rest) - calling a REST endpoint from a flow using Groovy;
 * [imports](imports) - how to use external GIT/http/mvn resources as project files;
-* [juel_java_steams](juel_java_steams) - using expressions, Groovy and Java Streams;
-* [profiles](profiles) - how to use profiles;
+* [juel_java_streams](juel_java_streams) - using expressions, Groovy and Java Streams;
+* [noderoster](noderoster) - how to use the Node Roster task;
 * [process_card_htmx](process_card_htmx) - how to use "process cards" and [HTMX](https://htmx.org/) to implement custom forms to start processes;
 * [process_card_jquery](process_card_jquery) - how to use "process cards" and [jQuery](https://jquery.com/) to implement custom forms to start processes;
+* [profiles](profiles) - how to use profiles;
 * [python_script](python_script) - running a Python script from a flow;
 * [ruby](ruby) - running a Ruby snippet from a flow;
 * [script_url](script_url) - running an external script file;
-* [smpt_html](smtp_html) - how to send a HTML email.
+* [smtp_html](smtp_html) - how to send a HTML email.
 
 
 ## Advanced
 
-* [ansible_gatekeeper](ansible_gatekeeper) - using Gatekeeper to gate an Ansible deployment;
 * [ansible_out_vars](ansible_out_vars) - saving Ansible variables as Concord flow variables;
-* [ansible_roles](#ansible_roles) - how to use external Ansible roles;
+* [ansible_roles](ansible_roles) - how to use external Ansible roles;
 * [approval](approval) - using forms and `runAs` to implement an approval process;
 * [context_injection](context_injection) - how to use automatic variable injection with custom tasks written in Groovy;
 * [custom_task](custom_task) - how to create a custom Concord task (plugin);
@@ -92,18 +94,18 @@ Starting...
 * [inventory_lookup](inventory_lookup) - using the inventory lookup plugin for Ansible;
 * [process_meta](process_meta) - exporting process variables as process metadata;
 * [secret_files](secret_files) - how to store and export secrets as files;
-* [secrets_lookup](secret_lookup) - using the secret lookup plugin for Ansible;
 * [secrets](secrets) - working with Concord's Secrets storage.
+* [secrets_lookup](secret_lookup) - using the secret lookup plugin for Ansible;
 
 ## Expert
 
-* [ansible_gatekeeper](ansible_gatekeeper) - how to forbid execution of certain Ansible steps;
-* [dynamic_forms](dynamic_forms) - how to create a form dynamically (in runtime);
+* [dynamic_form_fields](dynamic_form_fields) - how to define form fields at runtime;
+* [dynamic_forms](dynamic_forms) - how to create a form dynamically (at runtime);
 * [fork](fork) - starting a subprocess;
 * [fork_join](fork_join) - starting multiple subprocesses and waiting for completion;
 * [generic_triggers](generic_triggers) - how to use custom trigger events;
 * [logback_config](logback_config) - overriding logging configuration;
-- [mocking](mocking) - how to use Groovy to replace "real" tasks with "mock" versions for testing;
-* [process_from_a_process](process_from_a_process) - starting a new subprocess from a flow using a payload archive;
 * [process_from_a_process2](process_from_a_process2) - using output variables, starting a new subprocess from a project;
 * [process_from_a_process3](process_from_a_process3) - starting a new subprocess using a directory as the payload.
+* [process_from_a_process](process_from_a_process) - starting a new subprocess from a flow using a payload archive;
+- [mocking](mocking) - how to use Groovy to replace "real" tasks with "mock" versions for testing;

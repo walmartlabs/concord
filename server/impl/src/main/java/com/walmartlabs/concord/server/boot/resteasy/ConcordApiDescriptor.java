@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.boot.resteasy;
  * =====
  */
 
+import com.walmartlabs.concord.server.sdk.rest.ApiDescriptor;
+
 public class ConcordApiDescriptor implements ApiDescriptor {
 
     @Override

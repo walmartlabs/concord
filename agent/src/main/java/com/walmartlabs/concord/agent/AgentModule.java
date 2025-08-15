@@ -57,12 +57,11 @@ public class AgentModule implements Module {
 
         binder.bind(AgentConfiguration.class).in(SINGLETON);
         binder.bind(DockerConfiguration.class).in(SINGLETON);
+        binder.bind(RuntimeConfiguration.class).asEagerSingleton();
         binder.bind(GitConfiguration.class).in(SINGLETON);
         binder.bind(ImportConfiguration.class).in(SINGLETON);
         binder.bind(PreForkConfiguration.class).in(SINGLETON);
         binder.bind(RepositoryCacheConfiguration.class).in(SINGLETON);
-        binder.bind(RunnerV1Configuration.class).in(SINGLETON);
-        binder.bind(RunnerV2Configuration.class).in(SINGLETON);
         binder.bind(ServerConfiguration.class).in(SINGLETON);
 
         binder.bind(DefaultDependencies.class).in(SINGLETON);

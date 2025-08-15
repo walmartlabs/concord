@@ -5,14 +5,15 @@
     <parent>
         <groupId>com.walmartlabs.concord.server</groupId>
         <artifactId>parent</artifactId>
-        <version>2.26.1-SNAPSHOT</version>
+        <version>2.31.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>com.walmartlabs.concord.server.plugins</groupId>
     <artifactId>parent</artifactId>
-
     <packaging>pom</packaging>
+
+    <name>${project.groupId}:${project.artifactId}</name>
 
     <modules>
         <module>ansible</module>
@@ -21,5 +22,6 @@
         <module>oidc</module>
         <module>oneops</module>
         <module>pfed-sso</module>
+        <module>webapp</module>
     </modules>
 </project>

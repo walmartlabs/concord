@@ -20,9 +20,9 @@ package com.walmartlabs.concord.cli.lint;
  * =====
  */
 
-import com.walmartlabs.concord.process.loader.model.FlowDefinition;
-import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
-import com.walmartlabs.concord.process.loader.model.Step;
+import com.walmartlabs.concord.runtime.model.FlowDefinition;
+import com.walmartlabs.concord.runtime.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.model.Step;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,7 +41,7 @@ public abstract class FlowElementLinter implements Linter {
     public List<LintResult> apply(ProcessDefinition pd) {
         notify(">> " + getStartMessage());
 
-        Map<String, FlowDefinition> flows = pd.flows();
+        Map<String, ? extends FlowDefinition> flows = pd.flows();
         if (flows == null || flows.isEmpty()) {
             return Collections.emptyList();
         }

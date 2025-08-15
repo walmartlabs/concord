@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.model.Location;
+import com.walmartlabs.concord.runtime.model.Location;
 import com.walmartlabs.concord.svm.ThreadError;
 
 import java.io.PrintStream;

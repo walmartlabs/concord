@@ -344,16 +344,6 @@ public class Constants {
     public static class Files {
 
         /**
-         * Files that the runtime considers "root" project files.
-         */
-        public static final String[] PROJECT_ROOT_FILE_NAMES = {
-                ".concord.yml",
-                "concord.yml",
-                ".concord.yaml",
-                "concord.yaml"
-        };
-
-        /**
          * Directory which contains payload data.
          */
         @Deprecated

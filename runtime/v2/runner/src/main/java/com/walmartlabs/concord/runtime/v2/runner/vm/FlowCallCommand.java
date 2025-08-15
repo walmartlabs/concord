@@ -26,17 +26,20 @@ import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class FlowCallCommand extends StepCommand<FlowCall> implements ElementEventProducer {
 
     private static final String FLOW_NAME_VARIABLE = "__flowName__b6bc6c58-c2bc-434c-9a6b-b0092237720b";
 
     private static final long serialVersionUID = 1L;
+
+    private static final Logger log = LoggerFactory.getLogger(FlowCallCommand.class);
 
     public FlowCallCommand(UUID correlationId, FlowCall step) {
         super(correlationId, step);
@@ -75,18 +78,12 @@ public class FlowCallCommand extends StepCommand<FlowCall> implements ElementEve
                 .locals(input)
                 .build();
 
-        // an "out" handler:
-        // grab the out variable from the called flow's frame
-        // and put it into the callee's frame
-        Command processOutVars;
-        if (!opts.outExpr().isEmpty()) {
-            processOutVars = new EvalVariablesCommand(getStep(), opts.outExpr(), innerFrame);
-        } else {
-            processOutVars = new CopyVariablesCommand(opts.out(), innerFrame, VMUtils::assertNearestRoot);
-        }
+        Command processOutVars = outCommandOrNull(opts, ee, evalCtx, innerFrame);
 
         // push the out handler first so it executes after the called flow's frame is done
-        state.peekFrame(threadId).push(processOutVars);
+        if (processOutVars != null) {
+            state.peekFrame(threadId).push(processOutVars);
+        }
         state.pushFrame(threadId, innerFrame);
         VMUtils.putLocal(innerFrame, FLOW_NAME_VARIABLE, flowName);
     }
@@ -98,6 +95,33 @@ public class FlowCallCommand extends StepCommand<FlowCall> implements ElementEve
     @Override
     public String getDescription(State state, ThreadId threadId) {
         return "Flow call: " + getFlowName(state, threadId);
+    }
+
+    private Command outCommandOrNull(FlowCallOptions opts, ExpressionEvaluator ee, EvalContext evalCtx, Frame innerFrame) {
+        if (opts.outExpression() != null) {
+            Object outExpr = ee.eval(evalCtx, opts.outExpression(), Object.class);
+            if (outExpr instanceof List<?> l) {
+                return new CopyVariablesCommand(l.stream().filter(Objects::nonNull).map(Object::toString).toList(), innerFrame, VMUtils::assertNearestRoot);
+            } else if (outExpr instanceof Map<?,?> m) {
+                Map<String, Serializable> mm = m.entrySet().stream()
+                        .filter(e -> e.getKey() != null)
+                        .filter(e -> e.getValue() instanceof Serializable)
+                        .collect(Collectors.toMap(
+                                e -> e.getKey().toString(),
+                                e -> (Serializable)e.getValue(),
+                                (v1, v2) -> v1));
+                return new EvalVariablesCommand(getStep(), mm, innerFrame);
+            } else if (outExpr != null){
+                log.warn("Unexpected out expr type: {}, expected list or map", outExpr.getClass());
+            }
+            return null;
+        } else if (opts.outMapping() != null && !opts.outMapping().isEmpty()) {
+            return new EvalVariablesCommand(getStep(), opts.outMapping(), innerFrame);
+        } else if (opts.outExpr() != null && !opts.outExpr().isEmpty()) {
+            return new EvalVariablesCommand(getStep(), opts.outExpr(), innerFrame);
+        } else {
+            return new CopyVariablesCommand(opts.out(), innerFrame, VMUtils::assertNearestRoot);
+        }
     }
 
     private static class EvalVariablesCommand extends StepCommand<FlowCall> {
@@ -113,9 +137,9 @@ public class FlowCallCommand extends StepCommand<FlowCall> implements ElementEve
 
         private EvalVariablesCommand(FlowCall step, Map<String, Serializable> variables, Frame variablesFrame) {
             super(step);
-            this.step = step;
-            this.variables = variables;
-            this.variablesFrame = variablesFrame;
+            this.step = Objects.requireNonNull(step);
+            this.variables = Objects.requireNonNull(variables);
+            this.variablesFrame = Objects.requireNonNull(variablesFrame);
         }
 
         @Override

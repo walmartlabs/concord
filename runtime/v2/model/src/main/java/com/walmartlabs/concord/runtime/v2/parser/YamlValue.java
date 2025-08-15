@@ -20,8 +20,8 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.model.Location;
 import com.walmartlabs.concord.runtime.v2.exception.InvalidValueTypeException;
-import com.walmartlabs.concord.runtime.v2.model.Location;
 
 import java.io.Serializable;
 

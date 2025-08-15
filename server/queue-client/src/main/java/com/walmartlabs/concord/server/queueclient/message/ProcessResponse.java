@@ -21,15 +21,19 @@ package com.walmartlabs.concord.server.queueclient.message;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.imports.Imports;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public class ProcessResponse extends Message {
 
     private final String sessionToken;
     private final UUID processId;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    private final OffsetDateTime processCreatedAt;
     private final String orgName; // TODO rename to secretOrgName
     private final String repoUrl;
     private final String repoPath;
@@ -43,6 +47,7 @@ public class ProcessResponse extends Message {
             @JsonProperty("correlationId") long correlationId,
             @JsonProperty("sessionToken") String sessionToken,
             @JsonProperty("processId") UUID processId,
+            @JsonProperty("processCreatedAt") OffsetDateTime processCreatedAt,
             @JsonProperty("orgName") String orgName,
             @JsonProperty("repoUrl") String repoUrl,
             @JsonProperty("repoPath") String repoPath,
@@ -56,6 +61,7 @@ public class ProcessResponse extends Message {
         setCorrelationId(correlationId);
         this.sessionToken = sessionToken;
         this.processId = processId;
+        this.processCreatedAt = processCreatedAt;
         this.orgName = orgName;
         this.repoUrl = repoUrl;
         this.repoPath = repoPath;
@@ -71,6 +77,10 @@ public class ProcessResponse extends Message {
 
     public UUID getProcessId() {
         return processId;
+    }
+
+    public OffsetDateTime getProcessCreatedAt() {
+        return processCreatedAt;
     }
 
     public String getOrgName() {
@@ -104,8 +114,9 @@ public class ProcessResponse extends Message {
     @Override
     public String toString() {
         return "ProcessResponse{" +
-                "sessionToken='" + sessionToken + '\'' +
+                "sessionToken='***'" +
                 ", processId=" + processId +
+                ", processCreatedAt=" + processCreatedAt + '\'' +
                 ", orgName='" + orgName + '\'' +
                 ", repoUrl='" + repoUrl + '\'' +
                 ", repoPath='" + repoPath + '\'' +

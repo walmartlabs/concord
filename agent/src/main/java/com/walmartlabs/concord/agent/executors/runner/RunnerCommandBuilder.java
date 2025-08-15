@@ -119,7 +119,7 @@ public class RunnerCommandBuilder {
 
         // working directory
         if (workDir != null) {
-            l.add("-Duser.dir=" + workDir.toString());
+            l.add("-Duser.dir=" + workDir);
         }
 
         // default to UTF-8

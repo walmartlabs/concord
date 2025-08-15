@@ -362,6 +362,7 @@ public class {{classname}} {
     {{/bodyParam}}
     String acceptHeaderValue = "{{#hasProduces}}{{#produces}}{{mediaType}}{{^-last}}, {{/-last}}{{/produces}}{{/hasProduces}}{{#hasProduces}}{{^produces}}application/json{{/produces}}{{/hasProduces}}{{^hasProduces}}application/json{{/hasProduces}}";
     acceptHeaderValue += ",application/vnd.siesta-validation-errors-v1+json";
+    acceptHeaderValue += ",application/vnd.concord-validation-errors-v1+json";
     localVarRequestBuilder.header("Accept", acceptHeaderValue);
     {{#bodyParam}}
     {{#isString}}

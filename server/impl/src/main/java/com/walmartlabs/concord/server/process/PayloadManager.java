@@ -37,6 +37,7 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Path;
@@ -124,7 +125,7 @@ public class PayloadManager {
     public Payload createResumePayload(ProcessKey processKey, Set<String> events, Map<String, Object> req) throws IOException {
         Path tmpDir = IOUtils.createTempDir("payload");
         if (!stateManager.export(processKey, copyTo(tmpDir))) {
-            throw new ProcessException(processKey, "Can't resume '" + processKey + "', state snapshot not found");
+            throw new ProcessException(processKey, "Can't resume '" + processKey + "', state snapshot not found", Response.Status.NOT_FOUND);
         }
 
         return PayloadBuilder.resume(processKey)

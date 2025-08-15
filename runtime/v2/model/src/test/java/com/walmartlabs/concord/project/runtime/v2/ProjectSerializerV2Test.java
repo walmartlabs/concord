@@ -23,6 +23,7 @@ package com.walmartlabs.concord.project.runtime.v2;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.project.runtime.v2.parser.AbstractParserTest;
+import com.walmartlabs.concord.runtime.model.Location;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.SimpleOptions;
@@ -95,10 +96,24 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
     }
 
     @Test
-    public void testFlowCallOutExpr() throws Exception {
+    public void testFlowCallOutMapping() throws Exception {
         FlowCallOptions opts = FlowCallOptions.builder()
                 .putInput("in-1", "v1")
-                .putOutExpr("o1", "${o.one}")
+                .putOutMapping("o1", "${o.one}")
+                .withItems(withItems())
+                .retry(retry())
+                .errorSteps(steps())
+                .build();
+
+        String result = toYaml(new FlowCall(location(), "flow", opts));
+        assertResult("serializer/flowCallStepOutMapping.yml", result);
+    }
+
+    @Test
+    public void testFlowCallOutExpression() throws Exception {
+        FlowCallOptions opts = FlowCallOptions.builder()
+                .putInput("in-1", "v1")
+                .outExpression("${myOutExpr}")
                 .withItems(withItems())
                 .retry(retry())
                 .errorSteps(steps())

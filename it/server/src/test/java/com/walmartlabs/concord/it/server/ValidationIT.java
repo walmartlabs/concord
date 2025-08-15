@@ -21,12 +21,26 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import java.util.Map;
+
+import static com.walmartlabs.concord.it.common.ITUtils.archive;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ValidationIT extends AbstractServerIT {
+
+    @Test
+    public void testValidationExceptionMapping() throws Exception {
+        var processApi = new ProcessApi(getApiClient());
+        var input = Map.<String, Object>of(Constants.Multipart.ORG_NAME, "org_" + randomString(),
+                Constants.Multipart.PROJECT_NAME, "foo",
+                "archive", archive(ProcessIT.class.getResource("example").toURI()));
+        var ex = assertThrows(ApiException.class, () -> processApi.startProcess(input));
+        assertEquals(400, ex.getCode());
+        assertTrue(ex.getMessage().contains("Organization not found"));
+    }
 
     @Test
     public void testProjectCreation() throws Exception {

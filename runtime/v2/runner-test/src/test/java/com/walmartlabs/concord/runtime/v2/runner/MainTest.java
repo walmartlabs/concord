@@ -266,7 +266,7 @@ public class MainTest  {
         assertEquals(1, forms.size());
 
         Form myForm = forms.get(0);
-        assertEquals("myForm", myForm.name());
+        assertEquals("my Form", myForm.name());
 
         // resume the process using the saved form
 
@@ -274,7 +274,7 @@ public class MainTest  {
         data.put("fullName", "John Smith");
         data.put("age", 33);
 
-        log = resume(myForm.eventName(), ProcessConfiguration.builder().arguments(Collections.singletonMap("myForm", data)).build());
+        log = resume(myForm.eventName(), ProcessConfiguration.builder().arguments(Collections.singletonMap("my Form", data)).build());
         assertLog(log, ".*After.*John Smith.*");
     }
 
@@ -647,7 +647,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testParallelWithItemsTask() throws Exception {
         deploy("parallelWithItemsTask");
 
@@ -660,7 +659,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testParallelLoopTask() throws Exception {
         deploy("parallelLoopTask");
 
@@ -673,7 +671,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testParallelWithError() throws Exception {
         deploy("parallelWithError");
 
@@ -909,7 +906,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testParallelIn() throws Exception {
         deploy("parallelIn");
 
@@ -927,7 +923,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testParallelOut() throws Exception {
         deploy("parallelOut");
 
@@ -951,7 +946,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testParallelLoopEmptyCall() throws Exception {
         deploy("parallelEmptyCall");
 
@@ -963,7 +957,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testParallelOutExpr() throws Exception {
         deploy("parallelOutExpr");
 
@@ -1167,7 +1160,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testFormsParallel() throws Exception {
         deploy("parallelForm");
 
@@ -1323,7 +1315,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void loopItemSerialization() throws Exception {
         deploy("loopSerializationError");
 
@@ -1363,6 +1354,7 @@ public class MainTest  {
 
         assertLog(log, ".*" + Pattern.quote("map: {nonSecretButMasked=******, secret=******}") + ".*");
         assertLog(log, ".*" + Pattern.quote("map: {nonSecret=non secret value, secret=******}") + ".*");
+        assertLog(log, ".*" + Pattern.quote("map.nested: {nonSecret=non secret value, secret={top-secret=******}}") + ".*");
 
         assertLog(log, ".*" + Pattern.quote("plain: plain") + ".*");
 
@@ -1372,6 +1364,26 @@ public class MainTest  {
 
         log = resume("ev1", ProcessConfiguration.builder().build());
         assertLog(log, ".*" + Pattern.quote("mySecret after suspend: ******") + ".*");
+    }
+
+    @Test
+    public void testBse64SensitiveData() throws Exception {
+        deploy("base64Sensitive");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("1. sensitive: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("1. also sensitive: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("1. non sensitive: NOT_SECRET") + ".*");
+
+        assertLog(log, ".*" + Pattern.quote("2. base64 encode sensitive: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("2. base64 encode non sensitive: Tk9UX1NFQ1JFVA==") + ".*");
+
+        assertLog(log, ".*" + Pattern.quote("3. base64 decode sensitive: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("3. base64 decode base64 sensitive: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("3. base64 decode non sensitive: NOT_SECRET") + ".*");
     }
 
     @Test
@@ -1643,7 +1655,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testParallelLoopItemIndex() throws Exception {
         deploy("parallelLoopItemIndex");
 
@@ -1677,7 +1688,6 @@ public class MainTest  {
     }
 
     @Test
-    @IgnoreSerializationAssert
     public void testThreadLocals() throws Exception {
         deploy("threadLocals");
 
@@ -1700,6 +1710,40 @@ public class MainTest  {
 
         byte[] log = run();
         assertLog(log, ".*myValue: 42.*");
+    }
+
+    @Test
+    public void flowCallOutExpression() throws Exception {
+        deploy("flowCallOutExpression");
+
+        save(ProcessConfiguration.builder()
+                .dryRun(true)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("out as expression (array): abc") + ".*");
+        assertLog(log, ".*" + Pattern.quote("out as expression (map): abc") + ".*");
+        assertLog(log, ".*" + Pattern.quote("out as expression (array) with loop: [abc, abc]") + ".*");
+        assertLog(log, ".*" + Pattern.quote("out as expression (map) with loop: [abc_0, abc_1]") + ".*");
+    }
+
+    @Test
+    public void flowCallOutExpressionCompat() throws Exception {
+        deploy("flowCallOutCompat");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        // checkpoint with state before changes
+        runtime.checkpointService().put("first", Paths.get(MainTest.class.getResource("flowCallOutCompat/first.zip").toURI()));
+        runtime.checkpointService().restore("first", runtime.workDir());
+
+        run();
+
+        assertLog(runtime.allLogs(), ".*" + Pattern.quote("out as array: abc") + ".*");
+        assertLog(runtime.allLogs(), ".*" + Pattern.quote("out as map: abc") + ".*");
+        assertLog(runtime.allLogs(), ".*" + Pattern.quote("out as array with loop: [abc, abc]") + ".*");
+        assertLog(runtime.allLogs(), ".*" + Pattern.quote("out as map with loop: [abc_0, abc_1]") + ".*");
     }
 
     private void deploy(String name) throws URISyntaxException, IOException {

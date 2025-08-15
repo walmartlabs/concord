@@ -40,7 +40,13 @@ public enum Permission {
      * <p>
      * As in {@code com/walmartlabs/concord/server/db/v1.94.0.xml}
      */
-    UPDATE_ORG("updateOrg");
+    UPDATE_ORG("updateOrg"),
+    /**
+     * Allows users to specify API key values when creating new API keys.
+     * <p>
+     * As in {@code com/walmartlabs/concord/server/db/v2.31.0.xml}
+     */
+    API_KEY_SPECIFY_VALUE("apiKeySpecifyValue");
 
     private final String key;
 
@@ -52,7 +58,7 @@ public enum Permission {
         return key;
     }
 
-    public static boolean isPermitted(Permission p) {
-        return SecurityUtils.isPermitted(p.getKey());
+    public boolean isPermitted() {
+        return SecurityUtils.isPermitted(this.getKey());
     }
 }
