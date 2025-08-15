@@ -23,6 +23,7 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.client2.StartProcessResponse;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.jupiter.api.Test;
 
@@ -54,7 +55,7 @@ public class FilePermissionsIT extends AbstractServerIT {
 
         ByteArrayOutputStream payload = new ByteArrayOutputStream();
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(payload)) {
-            IOUtils.zip(zip, tmpDir);
+            ZipUtils.zip(zip, tmpDir);
         }
 
         // ---

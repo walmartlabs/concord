@@ -20,18 +20,29 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.apache.commons.compress.archivers.zip.ZipFile;
 
 import javax.validation.constraints.NotNull;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public final class IOUtils {
+
+    /**
+     * @deprecated use {@link PathUtils#TMP_DIR_KEY}
+     */
+    @Deprecated
+    public static final String TMP_DIR_KEY = PathUtils.TMP_DIR_KEY;
+
+    /**
+     * @deprecated use {@link PathUtils#TMP_DIR}
+     */
+    @Deprecated
+    public static final Path TMP_DIR = PathUtils.TMP_DIR;
 
     /**
      * @deprecated use {@link PathUtils#tempFile(String, String)}
@@ -73,138 +84,68 @@ public final class IOUtils {
         return PathUtils.createTempDir(prefix);
     }
 
-    private static boolean matches(Path p, String... filters) {
-        String n = p.getName(p.getNameCount() - 1).toString();
-        for (String f : filters) {
-            if (n.matches(f)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
+    /**
+     * @deprecated use {@link ZipUtils#zipFile(ZipArchiveOutputStream, Path, String)}
+     */
+    @Deprecated
     public static void zipFile(ZipArchiveOutputStream zip, Path src, String name) throws IOException {
-        ZipArchiveEntry e = new ZipArchiveEntry(name) {
-            @Override
-            public int getPlatform() {
-                return PLATFORM_UNIX;
-            }
-        };
-
-        Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(src);
-        e.setUnixMode(Posix.unixMode(permissions));
-
-        e.setSize(Files.size(src));
-
-        zip.putArchiveEntry(e);
-        Files.copy(src, zip);
-        zip.closeArchiveEntry();
+        ZipUtils.zipFile(zip, src, name);
     }
 
+    /**
+     * @deprecated use {@link ZipUtils#zip(ZipArchiveOutputStream, Path, String...)}
+     */
+    @Deprecated
     public static void zip(ZipArchiveOutputStream zip, Path srcDir, String... filters) throws IOException {
-        zip(zip, null, srcDir, filters);
+        ZipUtils.zip(zip, srcDir, filters);
     }
 
+    /**
+     * @deprecated use {@link ZipUtils#zip(ZipArchiveOutputStream, String, Path, String...)}
+     */
+    @Deprecated
     public static void zip(ZipArchiveOutputStream zip, String dstPrefix, Path srcDir, String... filters) throws IOException {
-        Files.walkFileTree(srcDir, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                if (dir.toAbsolutePath().equals(srcDir)) {
-                    return FileVisitResult.CONTINUE;
-                }
-
-                if (matches(dir, filters)) {
-                    return FileVisitResult.SKIP_SUBTREE;
-                }
-
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (matches(file, filters)) {
-                    return FileVisitResult.SKIP_SUBTREE;
-                }
-
-                String n = srcDir.relativize(file).toString();
-                if (dstPrefix != null) {
-                    n = dstPrefix + n;
-                }
-
-                zipFile(zip, file, n);
-
-                return FileVisitResult.CONTINUE;
-            }
-        });
+        ZipUtils.zip(zip, dstPrefix, srcDir, filters);
     }
 
+    /**
+     * @deprecated use {@link ZipUtils#unzip(InputStream, Path, CopyOption...)}
+     */
+    @Deprecated
     public static void unzip(InputStream in, Path targetDir, CopyOption... options) throws IOException {
-        try (TemporaryPath tmpZip = new TemporaryPath(PathUtils.createTempFile("unzip", "zip"))) {
-            Files.copy(in, tmpZip.path(), StandardCopyOption.REPLACE_EXISTING);
-            IOUtils.unzip(tmpZip.path(), targetDir, options);
-        }
+        ZipUtils.unzip(in, targetDir, options);
     }
 
+    /**
+     * @deprecated use {@link ZipUtils#unzip(Path, Path, CopyOption...)}
+     */
+    @Deprecated
     public static void unzip(Path in, Path targetDir, CopyOption... options) throws IOException {
-        unzip(in, targetDir, false, null, options);
+        ZipUtils.unzip(in, targetDir, options);
     }
 
+    /**
+     * @deprecated use {@link ZipUtils#unzip(Path, Path, boolean, CopyOption...)}
+     */
+    @Deprecated
     public static void unzip(Path in, Path targetDir, boolean skipExisting, CopyOption... options) throws IOException {
-        unzip(in, targetDir, skipExisting, null, options);
+        ZipUtils.unzip(in, targetDir, skipExisting, options);
     }
 
+    /**
+     * @deprecated use {@link ZipUtils#unzip(InputStream, Path, boolean, FileVisitor, CopyOption...)}
+     */
+    @Deprecated
     public static void unzip(InputStream in, Path targetDir, boolean skipExisting, FileVisitor visitor, CopyOption... options) throws IOException {
-        try (TemporaryPath tmpZip = new TemporaryPath(PathUtils.createTempFile("unzip", "zip"))) {
-            Files.copy(in, tmpZip.path(), StandardCopyOption.REPLACE_EXISTING);
-            IOUtils.unzip(tmpZip.path(), targetDir, skipExisting, visitor, options);
-        }
+        ZipUtils.unzip(in, targetDir, skipExisting, visitor, options);
     }
 
+    /**
+     * @deprecated use {@link ZipUtils#unzip(Path, Path, boolean, FileVisitor, CopyOption...)}
+     */
+    @Deprecated
     public static void unzip(Path in, Path targetDir, boolean skipExisting, FileVisitor visitor, CopyOption... options) throws IOException {
-        targetDir = targetDir.normalize().toAbsolutePath();
-
-        try (ZipFile zip = new ZipFile(in.toFile())) {
-            Enumeration<ZipArchiveEntry> entries = zip.getEntries();
-
-            while (entries.hasMoreElements()) {
-                ZipArchiveEntry e = entries.nextElement();
-
-                Path p = targetDir.resolve(e.getName());
-
-                // skip paths outside of targetDir
-                // (don't log anything to avoid "log bombing")
-                if (!p.normalize().toAbsolutePath().startsWith(targetDir)) {
-                    continue;
-                }
-
-                if (skipExisting && Files.exists(p)) {
-                    continue;
-                }
-
-                if (e.isDirectory()) {
-                    Files.createDirectories(p);
-                } else {
-                    Path parent = p.getParent();
-                    if (!Files.exists(parent)) {
-                        Files.createDirectories(parent);
-                    }
-
-                    try (InputStream src = zip.getInputStream(e)) {
-                        Files.copy(src, p, options);
-                    }
-
-                    int unixMode = e.getUnixMode();
-                    if (unixMode <= 0) {
-                        unixMode = Posix.DEFAULT_UNIX_MODE;
-                    }
-
-                    Files.setPosixFilePermissions(p, Posix.posix(unixMode));
-                    if (visitor != null) {
-                        visitor.visit(p, p);
-                    }
-                }
-            }
-        }
+        ZipUtils.unzip(in, targetDir, skipExisting, visitor, options);
     }
 
     public static void copy(InputStream in, OutputStream out) throws IOException {

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.eclipse.jgit.api.Git;
@@ -204,7 +205,7 @@ public class TemplateIT extends AbstractServerIT {
 
         Path tmpZip = createTempFile(".zip");
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmpZip))) {
-            IOUtils.zip(zip, tmpDir);
+            ZipUtils.zip(zip, tmpDir);
         }
 
         return tmpZip;

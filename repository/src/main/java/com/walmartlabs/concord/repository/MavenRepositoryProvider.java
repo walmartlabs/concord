@@ -2,6 +2,7 @@ package com.walmartlabs.concord.repository;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +63,7 @@ public class MavenRepositoryProvider implements RepositoryProvider {
         try {
             URI uri = new URI(request.url().concat(":").concat(request.version().value()));
             Path dependencyPath = dependencyManager.resolveSingle(uri).getPath();
-            IOUtils.unzip(dependencyPath, dst, false, StandardCopyOption.REPLACE_EXISTING);
+            ZipUtils.unzip(dependencyPath, dst, false, StandardCopyOption.REPLACE_EXISTING);
             return null;
         } catch (URISyntaxException | IOException e) {
             try {

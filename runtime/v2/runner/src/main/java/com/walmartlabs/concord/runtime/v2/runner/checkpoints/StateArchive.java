@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.checkpoints;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.sdk.Constants;
@@ -86,7 +87,7 @@ public class StateArchive implements AutoCloseable {
         Path dst = PathUtils.createTempFile("state", ".zip");
         try (OutputStream out = new BufferedOutputStream(Files.newOutputStream(dst));
              ZipArchiveOutputStream zip = new ZipArchiveOutputStream(out)) {
-            IOUtils.zip(zip, dir.path());
+            ZipUtils.zip(zip, dir.path());
         }
         return new TemporaryPath(dst);
     }
