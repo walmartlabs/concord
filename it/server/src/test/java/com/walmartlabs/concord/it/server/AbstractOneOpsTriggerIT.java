@@ -23,10 +23,8 @@ package com.walmartlabs.concord.it.server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.it.common.GitUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
@@ -78,17 +76,6 @@ public abstract class AbstractOneOpsTriggerIT extends AbstractServerIT {
             }
         }
         return ps;
-    }
-
-    protected static String resourceToString(String resource) throws Exception {
-        URL url = AbstractOneOpsTriggerIT.class.getResource(resource);
-
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try (InputStream in = url.openStream()) {
-            IOUtils.copy(in, out);
-        }
-
-        return new String(out.toByteArray());
     }
 
     @SuppressWarnings("unchecked")
