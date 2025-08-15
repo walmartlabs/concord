@@ -24,6 +24,7 @@ package com.walmartlabs.concord.server.events.github;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 
+import java.net.URI;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -98,49 +99,55 @@ public final class GithubUtils {
     }
 
     private static String getRepoPath(String repoUrl) {
-        // tests support
-        if (repoUrl.startsWith("/")) {
-            String[] folders = repoUrl.split("/");
-            if (folders.length < 2) {
-                return repoUrl;
+
+        // assuming ssh proto for repoUrls that start with "git@"
+        // since URI cannot parse them without an explicit scheme.
+        String path = null;
+//        if(repoUrl.startsWith("git@")) {
+//        } else {
+
+            URI uri = null;
+            try {
+                uri = URI.create(repoUrl);
+            } catch (Exception ignored) {
+                // the repoUrl is not a valid URL.
             }
-            return folders[folders.length - 2] + "/" + folders[folders.length - 1];
-        }
+            String scheme = uri != null ? uri.getScheme() : null;
 
-        String u = removeSchema(repoUrl);
-        u = removeHost(u);
-        return u;
-    }
-
-    private static String removeSchema(String repoUrl) {
-        int index = repoUrl.indexOf("://");
-        if (index > 0) {
-            return repoUrl.substring(index + "://".length());
-        }
-        index = repoUrl.indexOf("@");
-        if (index > 0) {
-            return repoUrl.substring(index + "@".length());
-        }
-        return repoUrl;
-    }
-
-    private static String removeHost(String repoUrl) {
-        int index = repoUrl.indexOf(":");
-        if (index > 0) {
-            int portEndIndex = repoUrl.indexOf("/", index);
-            if (portEndIndex > 0) {
-                String port = repoUrl.substring(index + 1, portEndIndex);
-                if (isPort(port)) {
-                    return repoUrl.substring(portEndIndex + "/".length());
+            if(scheme != null && scheme.equals("file")) {
+                String[] folders = uri.getPath().split("/");
+                if(folders.length < 2) {
+                    path = uri.getPath();
                 }
+                path = folders[folders.length - 2] + "/" + folders[folders.length - 1];
+            } else if (scheme != null && scheme.equals("git")) {
+                path = uri.getPath().substring(1);
+            } else if(scheme != null && (scheme.equals("http") || scheme.equals("https") || scheme.equals("git+https"))) {
+                path = uri.getPath().substring(1);
+            } else {
+                // ??? unknown URI scheme.
+                // test examples parse them
+                int last_colon = repoUrl.lastIndexOf(':');
+                int first_fslash = repoUrl.lastIndexOf('/');
+                int second_fslash = repoUrl.lastIndexOf('/', first_fslash - 1);
+                int start_index = (second_fslash != -1 ? second_fslash : last_colon );
+
+                if(start_index == -1) {
+                    // there was no colon, and less than two forward slashes
+                    // I don't know how to parse this. genuinely I'm out of ideas.
+                    // comparing to 0 because we added 1
+                    return null;
+                }
+                path = repoUrl.substring(start_index + 1);
             }
-            return repoUrl.substring(index + ":".length());
+
+//        }
+
+        if(path.toLowerCase().endsWith(".git")) {
+            path = path.substring(0, path.length() - ".git".length());
         }
-        index = repoUrl.indexOf("/");
-        if (index > 0) {
-            return repoUrl.substring(index + "/".length());
-        }
-        return repoUrl;
+
+        return path;
     }
 
     private static String name(String str) {
