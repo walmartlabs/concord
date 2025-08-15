@@ -24,6 +24,9 @@ validation errors
 - concord-cli: ignore unknown properties in the CLI config
 file
 ([#1203](https://github.com/walmartlabs/concord/pull/1203));
+- resource-task: Use the shared IOUtils assertInPath method
+for resource lookups
+([#1204](https://github.com/walmartlabs/concord/pull/1204));
 - project: enable trimHeaderLine in license-maven-plugin
 ([#1205](https://github.com/walmartlabs/concord/pull/1205));
 - noderoster: optimize event list query
