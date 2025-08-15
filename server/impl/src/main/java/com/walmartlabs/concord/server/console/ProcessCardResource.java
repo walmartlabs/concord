@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.console;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.GenericOperationResult;
@@ -255,7 +254,7 @@ public class ProcessCardResource implements Resource {
     private static Response toBinaryResponse(java.nio.file.Path file) {
         return Response.ok((StreamingOutput) out -> {
             try (InputStream in = Files.newInputStream(file)) {
-                IOUtils.copy(in, out);
+                in.transferTo(out);
             } finally {
                 Files.delete(file);
             }
