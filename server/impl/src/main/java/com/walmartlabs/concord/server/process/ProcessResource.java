@@ -723,7 +723,7 @@ public class ProcessResource implements Resource {
         ProcessKey processKey = assertProcessKey(instanceId);
 
         try {
-            byte[] ab = IOUtils.toByteArray(data);
+            byte[] ab = data.readAllBytes();
             int upper = logManager.log(processKey, ab);
 
             // whenever we accept logs from an external source (e.g. from an Agent) we need to check

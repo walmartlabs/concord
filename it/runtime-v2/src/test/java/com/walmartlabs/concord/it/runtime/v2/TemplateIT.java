@@ -27,7 +27,6 @@ import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -129,7 +128,7 @@ public class TemplateIT extends AbstractTest {
                     .willReturn(WireMock.aResponse()
                             .withStatus(200)
                             .withHeader("Content-Type", "application/octet-stream")
-                            .withBody(IOUtils.toByteArray(is))
+                            .withBody(is.readAllBytes())
                     )
             );
         } catch (Exception e) {
