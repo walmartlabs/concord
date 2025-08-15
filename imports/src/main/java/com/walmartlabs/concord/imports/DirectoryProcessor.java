@@ -20,7 +20,7 @@ package com.walmartlabs.concord.imports;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.imports.Import.DirectoryDefinition;
 import com.walmartlabs.concord.repository.LastModifiedSnapshot;
 import com.walmartlabs.concord.repository.Snapshot;
@@ -70,7 +70,7 @@ public class DirectoryProcessor implements ImportProcessor<DirectoryDefinition> 
         }
 
         LastModifiedSnapshot snapshot = new LastModifiedSnapshot();
-        IOUtils.copy(src, dest, Collections.emptyList(), snapshot, StandardCopyOption.REPLACE_EXISTING);
+        PathUtils.copy(src, dest, Collections.emptyList(), snapshot, StandardCopyOption.REPLACE_EXISTING);
         return snapshot;
     }
 }

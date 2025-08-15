@@ -20,8 +20,9 @@ package com.walmartlabs.concord.runtime.v2.runner.checkpoints;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.sdk.Constants;
@@ -38,7 +39,7 @@ public class StateArchive implements AutoCloseable {
     private final TemporaryPath dir;
 
     public StateArchive() throws IOException {
-        this.dir = IOUtils.tempDir("state-archive");
+        this.dir = PathUtils.tempDir("state-archive");
     }
 
     @Override
@@ -73,7 +74,7 @@ public class StateArchive implements AutoCloseable {
                 Files.createDirectories(dst);
             }
 
-            IOUtils.copy(src, dst);
+            PathUtils.copy(src, dst);
         } catch (IOException e) {
             throw new RuntimeException("Error while copying the process' system directory: " + e.getMessage(), e);
         }
@@ -82,10 +83,10 @@ public class StateArchive implements AutoCloseable {
     }
 
     public TemporaryPath zip() throws IOException {
-        Path dst = IOUtils.createTempFile("state", ".zip");
+        Path dst = PathUtils.createTempFile("state", ".zip");
         try (OutputStream out = new BufferedOutputStream(Files.newOutputStream(dst));
              ZipArchiveOutputStream zip = new ZipArchiveOutputStream(out)) {
-            IOUtils.zip(zip, dir.path());
+            ZipUtils.zip(zip, dir.path());
         }
         return new TemporaryPath(dst);
     }

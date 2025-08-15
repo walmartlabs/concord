@@ -28,8 +28,9 @@ import com.walmartlabs.concord.cli.secrets.CliSecretService;
 import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.client2.ApiException;
 import com.walmartlabs.concord.client2.ProcessApi;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import picocli.CommandLine.Command;
@@ -190,13 +191,13 @@ public class RemoteRun implements Callable<Integer> {
             throw new IOException("Expected a path to a single concord.yaml (or .yml) file or a directory with flows, got " + src);
         }
 
-        var dst = IOUtils.tempFile("payload", ".zip");
+        var dst = PathUtils.tempFile("payload", ".zip");
 
         try (var zip = new ZipArchiveOutputStream(dst.path(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
             if (Files.isRegularFile(src)) {
-                IOUtils.zipFile(zip, src, src.getFileName().toString());
+                ZipUtils.zipFile(zip, src, src.getFileName().toString());
             } else if (Files.isDirectory(src)) {
-                IOUtils.zip(zip, src, PAYLOAD_ARCHIVE_FILTERS);
+                ZipUtils.zip(zip, src, PAYLOAD_ARCHIVE_FILTERS);
             }
         }
 

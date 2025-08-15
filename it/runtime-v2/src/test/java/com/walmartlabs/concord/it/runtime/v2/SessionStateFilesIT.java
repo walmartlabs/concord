@@ -25,7 +25,7 @@ import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.Processes;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -120,7 +120,7 @@ public class SessionStateFilesIT extends AbstractTest {
 
     private static void assertNoFileInState(String file, InputStream state) throws IOException  {
         Path target = Files.createTempDirectory("state-unzip");
-        IOUtils.unzip(state, target, false, (sourceFile, dstFile) -> {
+        ZipUtils.unzip(state, target, false, (sourceFile, dstFile) -> {
             assertNotEquals(file, target.relativize(dstFile).toString());
         });
     }

@@ -20,8 +20,8 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.ObjectInputStreamWithClassLoader;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.runner.SerializationUtils;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.persistence.PersistenceManager;
@@ -53,7 +53,7 @@ public class FilePersistenceManager implements PersistenceManager {
         Path p = dir.resolve(state.getId().toString());
 
         try {
-            Path tmp = IOUtils.createTempFile(state.getId().toString(), "state");
+            Path tmp = PathUtils.createTempFile(state.getId().toString(), "state");
             try (OutputStream out = Files.newOutputStream(tmp)) {
                 SerializationUtils.serialize(out, state);
             }

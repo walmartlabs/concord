@@ -36,7 +36,7 @@ import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
@@ -239,7 +239,7 @@ public class RunnerJobExecutor implements JobExecutor {
             }
 
             log.info("exec ['{}'] -> persisting the payload directory into {}...", instanceId, dst);
-            IOUtils.copy(src, dst);
+            PathUtils.copy(src, dst);
 
             // persistentWorkDir is mostly useful when the Agent is running in a container
             // typically it is running as PID 456 - all files created by the process
@@ -279,7 +279,7 @@ public class RunnerJobExecutor implements JobExecutor {
         Path workDir = pe.getWorkDir();
         try {
             log.info("exec ['{}'] -> removing the working directory: {}", instanceId, workDir);
-            IOUtils.deleteRecursively(workDir);
+            PathUtils.deleteRecursively(workDir);
         } catch (IOException e) {
             log.warn("exec ['{}'] -> can't remove the working directory: {}", instanceId, e.getMessage());
         }
@@ -486,7 +486,7 @@ public class RunnerJobExecutor implements JobExecutor {
         ProcessEntry entry = processPool.take(hc, () -> {
             // can't use workDirBase, "preforks" start before they receive their process payload
             // create a new temporary directory
-            Path workDir = IOUtils.createTempDir("workDir");
+            Path workDir = PathUtils.createTempDir("workDir");
             return start(workDir, cmd);
         });
 
@@ -495,7 +495,7 @@ public class RunnerJobExecutor implements JobExecutor {
         // the process' workDir
         Path dst = entry.getWorkDir();
         // TODO use move
-        IOUtils.copy(src, dst);
+        PathUtils.copy(src, dst);
 
         writeInstanceId(job.getInstanceId(), dst);
 
@@ -540,7 +540,7 @@ public class RunnerJobExecutor implements JobExecutor {
 
         // TODO constants
         Map<String, String> env = b.environment();
-        env.put(IOUtils.TMP_DIR_KEY, IOUtils.TMP_DIR.toAbsolutePath().toString());
+        env.put(PathUtils.TMP_DIR_KEY, PathUtils.TMP_DIR.toAbsolutePath().toString());
         env.put("_CONCORD_ATTACHMENTS_DIR", workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .toAbsolutePath().toString());
 

@@ -28,7 +28,7 @@ import javax.xml.bind.DatatypeConverter;
 import java.io.InputStream;
 import java.util.*;
 
-import static com.walmartlabs.concord.common.IOUtils.grep;
+import static com.walmartlabs.concord.common.GrepUtils.grep;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.jupiter.api.Assertions.*;

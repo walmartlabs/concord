@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 
@@ -49,7 +49,7 @@ public class DependencyManagerConfigurationProvider implements Provider<Dependen
         try {
             String s = cfg.dependencyManager().cacheDir();
             if (s == null) {
-                return IOUtils.createTempDir("dependencyCache");
+                return PathUtils.createTempDir("dependencyCache");
             }
 
             Path p = Paths.get(s);

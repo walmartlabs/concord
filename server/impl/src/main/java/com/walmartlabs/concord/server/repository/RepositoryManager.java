@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.repository;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.repository.*;
 import com.walmartlabs.concord.sdk.Secret;
@@ -95,7 +95,7 @@ public class RepositoryManager {
     public void testConnection(UUID orgId, UUID projectId, String uri, String branch, String commitId, String path, String secretName) {
         Path tmpDir = null;
         try {
-            tmpDir = IOUtils.createTempDir("repository");
+            tmpDir = PathUtils.createTempDir("repository");
 
             Secret secret = getSecret(orgId, projectId, secretName);
 
@@ -119,7 +119,7 @@ public class RepositoryManager {
         } finally {
             if (tmpDir != null) {
                 try {
-                    IOUtils.deleteRecursively(tmpDir);
+                    PathUtils.deleteRecursively(tmpDir);
                 } catch (IOException e) {
                     log.warn("testConnection -> cleanup error: {}", e.getMessage());
                 }

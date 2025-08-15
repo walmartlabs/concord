@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.agent.cfg.AgentConfiguration;
 import com.walmartlabs.concord.agent.guice.WorkerModule;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
 
 import javax.inject.Inject;
@@ -49,7 +49,7 @@ public class OneShotRunner {
 
     public void run(String processResponseJson) throws Exception {
         var processResponse = objectMapper.readValue(processResponseJson, ProcessResponse.class);
-        var workDir = IOUtils.createTempDir(agentCfg.getPayloadDir(), "workDir");
+        var workDir = PathUtils.createTempDir(agentCfg.getPayloadDir(), "workDir");
         var jobRequest = JobRequest.from(processResponse, workDir);
 
         var workerModule = new WorkerModule(agentCfg.getAgentId(), jobRequest.getInstanceId(), jobRequest.getSessionToken());

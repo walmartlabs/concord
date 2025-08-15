@@ -20,7 +20,8 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointUploader;
 import com.walmartlabs.concord.sdk.Constants;
 
@@ -38,7 +39,7 @@ public class TestCheckpointUploader implements CheckpointUploader {
 
     @Override
     public void upload(UUID checkpointId, UUID correlationId, String name, Path archivePath) throws Exception {
-        Path tmpFile = IOUtils.createTempDir("unittests").resolve(archivePath.getFileName());
+        Path tmpFile = PathUtils.createTempDir("unittests").resolve(archivePath.getFileName());
         Files.move(archivePath, tmpFile);
         checkpoints.put(name, tmpFile);
 
@@ -53,9 +54,9 @@ public class TestCheckpointUploader implements CheckpointUploader {
         Path archive = checkpoints.get(name);
         assertNotNull(archive);
 
-        IOUtils.deleteRecursively(workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME));
-        IOUtils.deleteRecursively(workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
+        PathUtils.deleteRecursively(workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME));
+        PathUtils.deleteRecursively(workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
 
-        IOUtils.unzip(archive, workDir);
+        ZipUtils.unzip(archive, workDir);
     }
 }

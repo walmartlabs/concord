@@ -28,7 +28,7 @@ import com.walmartlabs.concord.cli.CliConfig.CliConfigContext;
 import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.FileVisitor;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
@@ -162,11 +162,11 @@ public class Run implements Callable<Integer> {
                 if (verbosity.verbose()) {
                     System.out.println("Cleaning target directory");
                 }
-                IOUtils.deleteRecursively(targetDir);
+                PathUtils.deleteRecursively(targetDir);
             }
 
             // copy everything into target except target
-            IOUtils.copy(sourceDir, targetDir, "^target$", new CopyNotifier(verbosity.verbose() ? 0 : 100), StandardCopyOption.REPLACE_EXISTING);
+            PathUtils.copy(sourceDir, targetDir, "^target$", new CopyNotifier(verbosity.verbose() ? 0 : 100), StandardCopyOption.REPLACE_EXISTING);
         } else {
             throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
         }
