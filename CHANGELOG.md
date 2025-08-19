@@ -30,7 +30,9 @@ for resource lookups
 - project: enable trimHeaderLine in license-maven-plugin
 ([#1205](https://github.com/walmartlabs/concord/pull/1205));
 - noderoster: optimize event list query
-([#1206](https://github.com/walmartlabs/concord/pull/1206)).
+([#1206](https://github.com/walmartlabs/concord/pull/1206));
+- concord-common: deprecate IOUtils
+([#1208](https://github.com/walmartlabs/concord/pull/1208)).
 
 
 
