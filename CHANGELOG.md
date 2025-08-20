@@ -1,5 +1,41 @@
 # Change Log
 
+## [2.32.0] - Unreleased
+
+### Added
+
+- concord-cli: support for remote secrets, configurable secrets
+providers
+([#1143](https://github.com/walmartlabs/concord/pull/1143));
+- concord-agent: configurable list of runners
+([#1182](https://github.com/walmartlabs/concord/pull/1182));
+- concord-cli: add self-update command
+([#1198](https://github.com/walmartlabs/concord/pull/1198)).
+
+### Changed
+
+- concord-client2: add Concord-specific media type for
+validation errors
+([#1199](https://github.com/walmartlabs/concord/pull/1199));
+- docker-images: use Debian 12
+([#1201](https://github.com/walmartlabs/concord/pull/1201));
+- concord-cli: do not call System.exit in RemoteSecretsProvider
+([#1202](https://github.com/walmartlabs/concord/pull/1202));
+- concord-cli: ignore unknown properties in the CLI config
+file
+([#1203](https://github.com/walmartlabs/concord/pull/1203));
+- resource-task: Use the shared IOUtils assertInPath method
+for resource lookups
+([#1204](https://github.com/walmartlabs/concord/pull/1204));
+- project: enable trimHeaderLine in license-maven-plugin
+([#1205](https://github.com/walmartlabs/concord/pull/1205));
+- noderoster: optimize event list query
+([#1206](https://github.com/walmartlabs/concord/pull/1206));
+- concord-common: deprecate IOUtils
+([#1208](https://github.com/walmartlabs/concord/pull/1208)).
+
+
+
 ## [2.31.0] - 2025-08-04
 
 ### Added
