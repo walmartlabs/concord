@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.cli.runner.secrets;
+package com.walmartlabs.concord.cli;
 
 /*-
  * *****
@@ -20,6 +20,19 @@ package com.walmartlabs.concord.cli.runner.secrets;
  * =====
  */
 
-public record SecretsProviderRef(String name, SecretsProvider provider, boolean writable) {
+import java.io.IOException;
 
+import static org.fusesource.jansi.Ansi.ansi;
+
+public final class Confirmation {
+
+    public static boolean confirm(String message) throws IOException {
+        System.out.println(ansi().fgBrightYellow().bold().a(message).reset());
+        int response = System.in.read();
+        // y == 121, Y == 89
+        return response == 121 || response == 89;
+    }
+
+    private Confirmation() {
+    }
 }

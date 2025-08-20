@@ -20,7 +20,7 @@ package com.walmartlabs.concord.imports;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.imports.Import.MvnDefinition;
 import com.walmartlabs.concord.repository.LastModifiedSnapshot;
@@ -58,7 +58,7 @@ public class MvnProcessor implements ImportProcessor<MvnDefinition> {
         }
 
         LastModifiedSnapshot snapshot = new LastModifiedSnapshot();
-        IOUtils.unzip(archivePath, dest, false, snapshot, StandardCopyOption.REPLACE_EXISTING);
+        ZipUtils.unzip(archivePath, dest, false, snapshot, StandardCopyOption.REPLACE_EXISTING);
         return snapshot;
     }
 }

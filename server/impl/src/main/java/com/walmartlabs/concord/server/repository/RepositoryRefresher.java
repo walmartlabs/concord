@@ -20,14 +20,13 @@ package com.walmartlabs.concord.server.repository;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.process.loader.DelegatingProjectLoader;
 import com.walmartlabs.concord.process.loader.ImportsNormalizer;
-import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.runtime.model.ProcessDefinition;
 import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.repository.RepositoryException;
@@ -149,7 +148,7 @@ public class RepositoryRefresher extends AbstractDao {
             branch = repositoryEntry.getBranch();
         }
 
-        try (TemporaryPath tmpRepoPath = IOUtils.tempDir("refreshRepo_")) {
+        try (TemporaryPath tmpRepoPath = PathUtils.tempDir("refreshRepo_")) {
             Path path = tmpRepoPath.path();
 
             Secret secret = getSecret(orgId, projectId, repositoryEntry);

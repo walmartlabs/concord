@@ -22,7 +22,7 @@ package com.walmartlabs.concord.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.Striped;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,7 +128,7 @@ public class RepositoryCache {
 
             if (repoPath != null) {
                 try {
-                    IOUtils.deleteRecursively(repoPath);
+                    PathUtils.deleteRecursively(repoPath);
                 } catch (IOException e) {
                     log.warn("cleanup ['{}'] -> delete error", i.repoPath(), e);
                 }

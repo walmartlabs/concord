@@ -20,7 +20,8 @@ package com.walmartlabs.concord.it.common;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.eclipse.jgit.api.Git;
@@ -36,8 +37,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -52,9 +51,9 @@ public final class ITUtils {
     public static byte[] archive(URI uri, String depsDir) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(out)) {
-            IOUtils.zip(zip, Paths.get(uri));
+            ZipUtils.zip(zip, Paths.get(uri));
             if (depsDir != null) {
-                IOUtils.zip(zip, Constants.Files.LIBRARIES_DIR_NAME + "/", Paths.get(depsDir));
+                ZipUtils.zip(zip, Constants.Files.LIBRARIES_DIR_NAME + "/", Paths.get(depsDir));
             }
         }
         return out.toByteArray();
@@ -65,14 +64,14 @@ public final class ITUtils {
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (InputStream in = url.openStream()) {
-            IOUtils.copy(in, out);
+            in.transferTo(out);
         }
 
         return new String(out.toByteArray());
     }
 
     public static Path createTempDir() throws IOException {
-        Path dir = IOUtils.createTempDir("test");
+        Path dir = PathUtils.createTempDir("test");
         Files.setPosixFilePermissions(dir, PosixFilePermissions.fromString("rwxr-xr-x"));
         return dir;
     }
@@ -84,7 +83,7 @@ public final class ITUtils {
 
     public static String createGitRepo(Path src) throws IOException, GitAPIException {
         Path tmpDir = createTempDir();
-        IOUtils.copy(src, tmpDir);
+        PathUtils.copy(src, tmpDir);
 
         Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();

@@ -23,7 +23,7 @@ package com.walmartlabs.concord.it.server;
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.it.common.GitHubUtils;
 import com.walmartlabs.concord.it.common.GitUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
@@ -78,7 +78,7 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
     }
 
     protected void updateConcordYml(Path bareRepo, Map<String, String> values) throws Exception {
-        Path dir = IOUtils.createTempDir("git");
+        Path dir = PathUtils.createTempDir("git");
 
         Git git = Git.cloneRepository()
                 .setDirectory(dir.toFile())

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.cli.runner.secrets;
+package com.walmartlabs.concord.cli.secrets;
 
 /*-
  * *****

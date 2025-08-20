@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.cfg;
+package com.walmartlabs.concord.cli;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,21 +20,9 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.concord.common.PathUtils;
+public class AbortException extends RuntimeException {
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-public final class Utils {
-
-    public static Path getPath(String s, String defaultPrefix) throws IOException {
-        if (s == null) {
-            return PathUtils.createTempDir(defaultPrefix);
-        }
-        return Paths.get(s);
-    }
-
-    private Utils() {
+    public AbortException() {
+        super("Aborted");
     }
 }
