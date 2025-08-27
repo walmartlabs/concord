@@ -30,7 +30,7 @@ With the example above Concord loads all files in the `extraFiles` directory
 with the `.my.yml` extension. Note that in this case Concord won't look in
 the subdirectories.
 
-Multiple pattens can be specified:
+Multiple patterns can be specified:
 
 ```yaml
 resources:

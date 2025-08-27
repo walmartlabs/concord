@@ -255,7 +255,7 @@ flows:
 ```
 
 - `isDebug` - returns `true` if process started with debug flag;
-- `isDryRun` - returns `true` if process stated in dry-run mode;
+- `isDryRun` - returns `true` if the process was started in dry-run mode;
 
 - `orDefault` - accepts a variable name (as a string parameter), default value and 
   returns variable value or default value;
@@ -1024,7 +1024,7 @@ Retry flow call:
 The default `in` and `retry` variables with the same values are overwritten.
 
 In the example below the value of `someVar` is overwritten to 321 in the
-`retry` block..
+`retry` block.
 
 
 ```yaml
