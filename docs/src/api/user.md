@@ -1,7 +1,7 @@
 # User
 
 A user represents an actual person using Concord to execute processes or
-adminstrate the server.
+administer the server.
 
 The REST API provides support for a number of operations:
 
@@ -45,7 +45,7 @@ using the specified username.
     }
     ```
 
-    The `created` paratemer indicates whether the user was created or updated.
+    The `created` parameter indicates whether the user was created or updated.
 
 <a name="find-user"/>
 
@@ -67,11 +67,10 @@ Find an existing user by name.
     {
       "id" : "...",
       "name" : "myUser"
-
     }
     ```
 
-    The `created` paratemer indicates whether the user was created or updated.
+    The `created` parameter indicates whether the user was created or updated.
 
 <a name="sync-ldap-groups-user"/>
 
@@ -102,4 +101,4 @@ Synchronize LDAP groups for a given user.
     ```
 
     The `UPDATED` result indicates the ldap groups for a specified username got synced successfully.
-    <p><strong>Note</strong>: Only administrators(role: concordAdmin) can synchronize user LDAP groups</p>
+    <p><strong>Note</strong>: Only administrators (role: concordAdmin) can synchronize user LDAP groups</p>

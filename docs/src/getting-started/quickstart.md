@@ -13,7 +13,7 @@ execution with a few simple steps:
 
 <a name="create-repository"/>
 
-## Create Git Repository
+## Create a Git Repository
 
 Concord process definitions and their resources are best managed and source
 controlled in a Git repository. Concord can automatically retrieve the contents
@@ -22,7 +22,7 @@ the content.
 
 Start with the following steps:
 
-- Create the repository in your Git management sytem, such as GitHub, using the
+- Create the repository in your Git management system, such as GitHub, using the
   user interface;
 - Clone the repository to your local workstation.
 
@@ -102,7 +102,7 @@ Everything is ready to kick off an execution of the flow - a process:
 - Press on the _Run_ button;
 - Confirm to start the process by clicking on _Yes_ in the dialog;
 
-A successful process execution results a message such as:
+A successful process execution results in a message such as:
 
 ```
 {

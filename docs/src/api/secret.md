@@ -101,7 +101,7 @@ generates the new key pair and returns the public key:
 }
 ```
 
-This key can be used a deploy key in the git repository of your project to
+This key can be used as a deploy key in the git repository of your project to
 establish the necessary trust between the Concord server and your git repository
 hosting system.
 
@@ -193,7 +193,7 @@ Updates parameters of an existing secret.
    - `type=data`:
        - `data` - a string or binary value(file).
    
-   `storePassword` should be mandatory to update a password protected secret.
+   `storePassword` is required to update a password-protected secret.
         
 * **Success response**
     ```
@@ -453,7 +453,7 @@ Moves the Secret to the specified Organization (through Organization name ID)
 * **Headers** `Authorization`, `Content-Type: application/json`
 * **Body**
     ```
-    Content-Tupe: application/json
+    Content-Type: application/json
     ```
 
     ```json

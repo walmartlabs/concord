@@ -1,7 +1,7 @@
 # Template 
 
 [Templates](../templates/index.md) allows sharing of common elements and
-process.
+processes.
 
 The REST API provides support for a number of operations:
 
@@ -60,7 +60,7 @@ Lists existing template aliases.
     ]
     ```
 
-<a name="delete-template-alias"
+<a name="delete-template-alias"/>
 ## Delete a Template Alias
 
 Removes an existing template alias.
