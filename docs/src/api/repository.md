@@ -82,7 +82,7 @@ parameters.
 
 ## Delete a Repository
 
-A DELETE request can be used to removes a repository.
+A DELETE request can be used to remove a repository.
 
 * **URI** `/api/v1/org/{orgName}/project/{projectName}/repository/{repositoryName}`
 * **Method** `DELETE`

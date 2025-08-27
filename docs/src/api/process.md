@@ -33,8 +33,8 @@ For simple user interaction with flows that include forms, a process can also be
 started [in a browser directly](#browser) and therefore via a link e.g. in an
 email or online documentation or even any web applicaion.
 
-Following is the full information about the API. It allows the user 
-to starts a new process using the provided files as request data.
+The following provides complete API information. It allows users
+to start a new process using the provided files as request data.
 Accepts multiple additional files, which are put into the process'
 working directory.
 

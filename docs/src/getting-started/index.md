@@ -19,7 +19,7 @@ A process can run in a [project](#projects), thus sharing configuration and
 resources (such as [the KV store]({{ site.concord_plugins_v2_docs }}/key-value.md)) with other
 processes in the same project.
 
-Processes can be suspended (typically using a [form](./forms.md) and resumed.
+Processes can be suspended (typically using a [form](./forms.md)) and resumed.
 While suspended processes are not consuming any resources apart from the DB
 disk space. See the [Process Overview](../processes-v2/index.md) section for
 more details about the lifecycle of Concord processes.
@@ -48,7 +48,7 @@ resources.
 
 ## Organizations
 
-Organizations are, basically, namespaces to which resources such as projects,
+Organizations are essentially namespaces to which resources such as projects,
 secrets, teams and others belong to. 
 
 # Components
