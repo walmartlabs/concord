@@ -40,7 +40,7 @@ imports:
       options
 ```
 
-Note, that `imports` is a top-level objects, similar to `configuration`.
+Note that `imports` is a top-level object, similar to `configuration`.
 In addition, only the main YAML file's, the root `concord.yml`, `imports` are
 allowed.
 

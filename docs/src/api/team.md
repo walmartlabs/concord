@@ -81,7 +81,7 @@ Updates parameters of an existing team.
     }
     ```
 
-<a name="list-teams">
+<a name="list-teams"/>
 ## List Teams
 
 Lists all existing teams.
