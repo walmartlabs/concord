@@ -25,6 +25,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
+import com.walmartlabs.concord.repository.auth.HttpAuthProvider;
 import com.walmartlabs.concord.sdk.Secret;
 import org.immutables.value.Value;
 import org.slf4j.Logger;
@@ -54,12 +55,14 @@ public class GitClient {
     private static final int SUCCESS_EXIT_CODE = 0;
 
     private final GitClientConfiguration cfg;
+    private final HttpAuthProvider authProvider;
 
     private final List<String> sensitiveData;
     private final ExecutorService executor;
 
-    public GitClient(GitClientConfiguration cfg) {
+    public GitClient(GitClientConfiguration cfg, HttpAuthProvider authProvider) {
         this.cfg = cfg;
+        this.authProvider = authProvider;
         this.sensitiveData = cfg.oauthToken() != null ? Collections.singletonList(cfg.oauthToken()) : Collections.emptyList();
         this.executor = Executors.newCachedThreadPool();
     }
@@ -311,23 +314,28 @@ public class GitClient {
             throw new RepositoryException(msg);
         }
 
-        List<String> allowedDefaultHosts = cfg.authorizedGitHosts();
-
-        if(secret == null && allowedDefaultHosts!= null && !allowedDefaultHosts.contains(uri.getHost())) {
-            // in this case the user has not provided authentication AND the host is not in the whitelist of hosts
-            // which may use the default git credentials. return the url un-modified to attempt anonymous auth;
-            // if it fails
+        if (secret == null && !authProvider.canHandle(uri.getHost())) {
+            // no user-provided auth
+            // no matching system-provided auth
             return url;
         }
 
-        if (secret != null || cfg.oauthToken() == null || url.contains("@") || !url.startsWith("https://")) {
+        if (url.contains("@") || !url.startsWith("https://")) {
+            // provided url already has credentials OR it's a non-https url
+            return url;
+        }
+
+        String token = authProvider.get(uri.getHost(), secret);
+
+        // TODO ....should token ever be null at this point?
+
+        if (token == null || cfg.oauthToken() == null || url.contains("@") || !url.startsWith("https://")) {
             // provided url already has credentials OR there are no default credentials to use.
             // anonymous auth is the only viable option.
             return url;
         }
 
-        // using default credentials
-        return "https://" + cfg.oauthToken() + "@" + url.substring("https://".length());
+        return "https://" + token + "@" + url.substring("https://".length());
     }
 
     private void updateSubmodules(Path workDir, Secret secret) {

@@ -26,11 +26,13 @@ import com.walmartlabs.concord.agent.cfg.RepositoryCacheConfiguration;
 import com.walmartlabs.concord.client2.SecretClient;
 import com.walmartlabs.concord.imports.Import.SecretDefinition;
 import com.walmartlabs.concord.repository.*;
+import com.walmartlabs.concord.repository.auth.HttpAuthProvider;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -45,6 +47,27 @@ public class RepositoryManager {
     private final RepositoryProviders providers;
     private final RepositoryCache repositoryCache;
     private final GitConfiguration gitCfg;
+
+    private static class AgentHttpAuthProvider implements HttpAuthProvider {
+
+        private final List<GitConfiguration.AuthConfig> authConfigs;
+
+        public AgentHttpAuthProvider(List<GitConfiguration.AuthConfig> authConfigs) {
+            this.authConfigs = authConfigs;
+        }
+
+        @Override
+        public boolean canHandle(String gitHost) {
+            return authConfigs.stream()
+                    .anyMatch(c -> c.gitHost().equals(gitHost));
+        }
+
+        @Override
+        public String get(String gitHost, @Nullable Secret secret) {
+            return "";
+        }
+    }
+
 
     @Inject
     public RepositoryManager(SecretClient secretClient,
@@ -67,7 +90,9 @@ public class RepositoryManager {
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
                 .build();
 
-        List<RepositoryProvider> providers = Arrays.asList(new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(clientCfg));
+        HttpAuthProvider authProvider = new AgentHttpAuthProvider(gitCfg.getAuthConfigs());
+
+        List<RepositoryProvider> providers = Arrays.asList(new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(clientCfg, authProvider));
         this.providers = new RepositoryProviders(providers);
 
         this.repositoryCache = new RepositoryCache(cacheCfg.getCacheDir(),

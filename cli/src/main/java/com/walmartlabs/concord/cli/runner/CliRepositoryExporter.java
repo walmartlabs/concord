@@ -23,13 +23,15 @@ package com.walmartlabs.concord.cli.runner;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.RepositoryExporter;
 import com.walmartlabs.concord.repository.*;
+import com.walmartlabs.concord.repository.auth.HttpAuthProvider;
 import com.walmartlabs.concord.sdk.Secret;
 
+import javax.annotation.Nullable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class CliRepositoryExporter implements RepositoryExporter {
@@ -59,7 +61,19 @@ public class CliRepositoryExporter implements RepositoryExporter {
                 .sshTimeoutRetryCount(SSH_TIMEOUT_RETRY_COUNT)
                 .build();
 
-        this.providers = new RepositoryProviders(Collections.singletonList(new GitCliRepositoryProvider(clientCfg)));
+        HttpAuthProvider authProvider = new HttpAuthProvider() {
+            @Override
+            public boolean canHandle(String gitHost) {
+                return false;
+            }
+
+            @Override
+            public String get(String gitHost, @Nullable Secret secret) {
+                throw new UnsupportedOperationException("Not supported");
+            }
+        };
+
+        this.providers = new RepositoryProviders(List.of(new GitCliRepositoryProvider(clientCfg, authProvider)));
     }
 
     @Override

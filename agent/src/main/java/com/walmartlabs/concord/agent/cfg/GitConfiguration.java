@@ -21,12 +21,12 @@ package com.walmartlabs.concord.agent.cfg;
  */
 
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigObject;
 
 import javax.inject.Inject;
 import java.time.Duration;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Objects;
 
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
 
@@ -43,6 +43,7 @@ public class GitConfiguration {
     private final int sshTimeoutRetryCount;
     private final boolean skip;
     private final List<String> allowedSchemes;
+    private final List<? extends ConfigObject> authConfigs;
 
 
     @Inject
@@ -58,6 +59,7 @@ public class GitConfiguration {
         this.sshTimeoutRetryCount = cfg.getInt("git.sshTimeoutRetryCount");
         this.skip = cfg.getBoolean("git.skip");
         this.allowedSchemes = cfg.getStringList("git.allowedSchemes");
+        this.authConfigs = cfg.getObjectList("git.authConfigs");
     }
 
     public String getToken() {
@@ -101,4 +103,46 @@ public class GitConfiguration {
     }
 
     public List<String> getAllowedSchemes() { return allowedSchemes; }
+
+    public List<AuthConfig> getAuthConfigs() {
+
+        return authConfigs.stream()
+                .map(o -> {
+                    String type = o.toConfig().getString("type");
+
+                    return (AuthConfig) switch (type) {
+                        case "oauth" -> OauthConfig.from(o.toConfig());
+                        case "appInstallation" -> AppInstallationConfig.from(o.toConfig());
+                        default -> null; //TODO error/warning?
+                    };
+                })
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    public interface AuthConfig {
+        String gitHost();
+    }
+
+    public record OauthConfig(String gitHost, String token) implements AuthConfig {
+
+        static OauthConfig from(Config cfg) {
+            return new OauthConfig(
+                    cfg.getString("gitHost"),
+                    cfg.getString("token")
+            );
+        }
+    }
+
+    public record AppInstallationConfig(String gitHost, int appId, String installationId, String privateKey) implements AuthConfig {
+
+        static AppInstallationConfig from(Config c) {
+            return new AppInstallationConfig(
+                    c.getString("gitHost"),
+                    c.getInt("appId"),
+                    c.getString("installationId"),
+                    c.getString("privateKey")
+            );
+        }
+    }
 }
