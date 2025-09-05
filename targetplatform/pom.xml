@@ -84,7 +84,7 @@
         <jgit.version>6.10.1.202505221210-r</jgit.version>
         <jna.version>5.13.0</jna.version>
         <jooq.version>3.14.0</jooq.version>
-        <jsch.version>0.1.55</jsch.version>
+        <jsch.version>2.27.3</jsch.version>
         <json.schema.validator.version>1.5.4</json.schema.validator.version>
         <json.smart.version>2.5.2</json.smart.version>
         <jsr305.version>3.0.2</jsr305.version>
@@ -593,7 +593,7 @@
                 <version>${graalvm.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.jcraft</groupId>
+                <groupId>com.github.mwiede</groupId>
                 <artifactId>jsch</artifactId>
                 <version>${jsch.version}</version>
             </dependency>
