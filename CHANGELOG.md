@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.32.1] - Unreleased
+
+### Changed
+
+- project: use JSch fork
+([#1210](https://github.com/walmartlabs/concord/pull/1210)).
+
+
+
 ## [2.32.0] - 2025-08-20
 
 ### Added
