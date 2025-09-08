@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server.cfg;
  */
 
 import com.walmartlabs.concord.config.Config;
+import com.walmartlabs.concord.repository.GitAuthProvider;
+
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
@@ -36,6 +38,11 @@ public class GitConfiguration implements Serializable {
     @Config("git.oauth")
     @Nullable
     private String oauthToken;
+
+    @Inject
+    @Config("git.systemGitAuthProviders")
+    @Nullable
+    private List<GitAuthProvider> systemGitAuthProviders;
 
     @Inject
     @Config("git.authorizedGitHosts")
@@ -92,6 +99,10 @@ public class GitConfiguration implements Serializable {
 
     public String getOauthToken() {
         return oauthToken;
+    }
+
+    public List<GitAuthProvider> getSystemGitAuthProviders() {
+        return systemGitAuthProviders;
     }
 
     public List<String> getAuthorizedGitHosts() {

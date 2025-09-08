@@ -58,6 +58,7 @@ public class RepositoryManager {
 
         GitClientConfiguration clientCfg = GitClientConfiguration.builder()
                 .oauthToken(gitCfg.getToken())
+                .systemGitAuthProviders(gitCfg.getSystemGitAuthProviders())
                 .defaultOperationTimeout(gitCfg.getDefaultOperationTimeout())
                 .fetchTimeout(gitCfg.getFetchTimeout())
                 .httpLowSpeedLimit(gitCfg.getHttpLowSpeedLimit())
