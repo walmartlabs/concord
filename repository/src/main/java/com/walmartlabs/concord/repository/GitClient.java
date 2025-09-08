@@ -308,13 +308,13 @@ public class GitClient {
 
         URI uri = URI.create(url);
 
-        if(!isRepoUriAllowed(uri)) {
+        if (!isRepoUriAllowed(uri)) {
             String msg = String.format("Provided repository ('%s') contains an unsupported URI scheme: '%s'.", url, uri.getScheme());
             log.warn(msg);
             throw new RepositoryException(msg);
         }
 
-        if (secret == null && !authProvider.canHandle(uri.getHost())) {
+        if (secret == null && !authProvider.canHandle(uri)) {
             // no user-provided auth
             // no matching system-provided auth
             return url;
@@ -325,7 +325,7 @@ public class GitClient {
             return url;
         }
 
-        String token = authProvider.get(uri.getHost(), secret);
+        String token = authProvider.get(uri.getHost(), uri, secret);
 
         // TODO ....should token ever be null at this point?
 

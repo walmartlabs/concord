@@ -28,6 +28,7 @@ import com.walmartlabs.concord.sdk.Secret;
 
 import javax.annotation.Nullable;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -63,12 +64,12 @@ public class CliRepositoryExporter implements RepositoryExporter {
 
         HttpAuthProvider authProvider = new HttpAuthProvider() {
             @Override
-            public boolean canHandle(String gitHost) {
+            public boolean canHandle(URI gitHost) {
                 return false;
             }
 
             @Override
-            public String get(String gitHost, @Nullable Secret secret) {
+            public String get(String gitHost, URI repo, @Nullable Secret secret) {
                 throw new UnsupportedOperationException("Not supported");
             }
         };

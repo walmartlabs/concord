@@ -22,11 +22,15 @@ package com.walmartlabs.concord.agent.cfg;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigObject;
+import com.walmartlabs.concord.repository.auth.AccessToken;
+import com.walmartlabs.concord.repository.auth.AppInstallation;
+import com.walmartlabs.concord.repository.auth.GitAuth;
 
 import javax.inject.Inject;
+import java.net.URI;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
-import java.util.Objects;
 
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
 
@@ -108,20 +112,25 @@ public class GitConfiguration {
 
         return authConfigs.stream()
                 .map(o -> {
-                    String type = o.toConfig().getString("type");
+                    GitAuthType type = GitAuthType.valueOf(o.toConfig().getString("type").toUpperCase());
 
                     return (AuthConfig) switch (type) {
-                        case "oauth" -> OauthConfig.from(o.toConfig());
-                        case "appInstallation" -> AppInstallationConfig.from(o.toConfig());
-                        default -> null; //TODO error/warning?
+                        case OAUTH -> OauthConfig.from(o.toConfig());
+                        case APP_INSTALLATION -> AppInstallationConfig.from(o.toConfig());
                     };
                 })
-                .filter(Objects::nonNull)
                 .toList();
+    }
+
+    enum GitAuthType {
+        OAUTH,
+        APP_INSTALLATION
     }
 
     public interface AuthConfig {
         String gitHost();
+
+        GitAuth toGitAuth();
     }
 
     public record OauthConfig(String gitHost, String token) implements AuthConfig {
@@ -132,17 +141,33 @@ public class GitConfiguration {
                     cfg.getString("token")
             );
         }
+
+        @Override
+        public GitAuth toGitAuth() {
+            return AccessToken.builder()
+                    .baseUrl(URI.create(this.gitHost()))
+                    .token(this.token())
+                    .build();
+        }
     }
 
-    public record AppInstallationConfig(String gitHost, int appId, String installationId, String privateKey) implements AuthConfig {
+    public record AppInstallationConfig(String gitHost, String clientId, String privateKey) implements AuthConfig {
 
         static AppInstallationConfig from(Config c) {
             return new AppInstallationConfig(
                     c.getString("gitHost"),
-                    c.getInt("appId"),
-                    c.getString("installationId"),
+                    c.getString("clientId"),
                     c.getString("privateKey")
             );
+        }
+
+        @Override
+        public GitAuth toGitAuth() {
+            return AppInstallation.builder()
+                    .baseUrl(URI.create(this.gitHost()))
+                    .clientId(this.clientId())
+                    .privateKey(Paths.get(this.privateKey()))
+                    .build();
         }
     }
 }

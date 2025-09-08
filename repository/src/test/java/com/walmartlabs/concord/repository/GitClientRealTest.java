@@ -24,10 +24,14 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
+import com.walmartlabs.concord.repository.auth.HttpAuthProvider;
 import com.walmartlabs.concord.sdk.Secret;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,6 +42,7 @@ import java.time.Duration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Disabled
+@ExtendWith(MockitoExtension.class)
 public class GitClientRealTest {
 
     private static final String HTTPS_REPO_URL = System.getenv("HTTPS_REPO_URL");
@@ -47,6 +52,9 @@ public class GitClientRealTest {
 
     private static final Secret USERNAME_PASSWORD = new UsernamePassword(System.getenv("GIT_TEST_USER"), System.getenv("GIT_TEST_USER_PASSWD").toCharArray());
     private static final Secret KEYPAIR = createKeypair();
+
+    @Mock
+    HttpAuthProvider authProvider;
 
     private static Secret createKeypair() {
         try {
@@ -69,7 +77,7 @@ public class GitClientRealTest {
                 .sshTimeoutRetryCount(1)
                 .httpLowSpeedLimit(1)
                 .httpLowSpeedTime(Duration.ofMinutes(10))
-                .build());
+                .build(), authProvider);
     }
 
     @Test

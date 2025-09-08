@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -57,13 +58,13 @@ public class RepositoryManager {
         }
 
         @Override
-        public boolean canHandle(String gitHost) {
+        public boolean canHandle(URI gitHost) {
             return authConfigs.stream()
                     .anyMatch(c -> c.gitHost().equals(gitHost));
         }
 
         @Override
-        public String get(String gitHost, @Nullable Secret secret) {
+        public String get(String gitHost, URI repository, @Nullable Secret secret) {
             return "";
         }
     }

@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -63,7 +62,8 @@ public class RepositoryManager {
                              RepositoryConfiguration repoCfg,
                              ProjectDao projectDao,
                              SecretManager secretManager,
-                             DependencyManager dependencyManager) throws IOException {
+                             DependencyManager dependencyManager,
+                             HttpAuthProviderImpl authProvider) throws IOException {
 
         GitClientConfiguration gitCliCfg = GitClientConfiguration.builder()
                 .oauthToken(gitCfg.getOauthToken())
@@ -77,7 +77,7 @@ public class RepositoryManager {
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
                 .build();
 
-        List<RepositoryProvider> providers = Arrays.asList(new ClasspathRepositoryProvider(), new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(gitCliCfg));
+        List<RepositoryProvider> providers = List.of(new ClasspathRepositoryProvider(), new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(gitCliCfg, authProvider));
 
         this.gitCfg = gitCfg;
         this.providers = new RepositoryProviders(providers);

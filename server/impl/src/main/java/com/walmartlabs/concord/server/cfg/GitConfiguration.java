@@ -21,13 +21,17 @@ package com.walmartlabs.concord.server.cfg;
  */
 
 import com.walmartlabs.concord.config.Config;
+import com.walmartlabs.concord.repository.auth.AccessToken;
+import com.walmartlabs.concord.repository.auth.AppInstallation;
+import com.walmartlabs.concord.repository.auth.GitAuth;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
 import java.io.Serializable;
+import java.net.URI;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
-import java.util.Set;
 
 public class GitConfiguration implements Serializable {
 
@@ -37,6 +41,10 @@ public class GitConfiguration implements Serializable {
     @Config("git.oauth")
     @Nullable
     private String oauthToken;
+
+    @Inject
+    @Config("git.systemAuth")
+    private List<com.typesafe.config.Config> authConfigs;
 
     @Inject
     @Config("git.authorizedGitHosts")
@@ -99,6 +107,17 @@ public class GitConfiguration implements Serializable {
         return oauthToken;
     }
 
+    public List<GitAuth> getAuthConfigs() {
+
+        return authConfigs.stream()
+                .map(o -> (AuthConfig) switch (GitAuthType.valueOf(o.getString("type").toUpperCase())) {
+                    case OAUTH -> OauthConfig.from(o);
+                    case APP_INSTALLATION -> AppInstallationConfig.from(o);
+                })
+                .map(AuthConfig::toGitAuth)
+                .toList();
+    }
+
     public List<String> getAuthorizedGitHosts() {
         return authorizedGitHosts;
     }
@@ -120,4 +139,56 @@ public class GitConfiguration implements Serializable {
     }
 
     public List<String> getAllowedSchemes() { return allowedSchemes; }
+
+    enum GitAuthType {
+        OAUTH,
+        APP_INSTALLATION
+    }
+
+    public interface AuthConfig {
+        String gitHost();
+
+        GitAuth toGitAuth();
+    }
+
+    public record OauthConfig(String gitHost, String token) implements AuthConfig {
+
+        static OauthConfig from(com.typesafe.config.Config cfg) {
+            return new OauthConfig(
+                    cfg.getString("gitHost"),
+                    cfg.getString("token")
+            );
+        }
+
+        @Override
+        public GitAuth toGitAuth() {
+            return AccessToken.builder()
+                    .baseUrl(URI.create(this.gitHost()))
+                    .token(this.token())
+                    .build();
+        }
+    }
+
+    public record AppInstallationConfig(String gitHost, String apiUrl, String clientId, String privateKey) implements AuthConfig {
+
+        static AppInstallationConfig from(com.typesafe.config.Config c) {
+            return new AppInstallationConfig(
+                    c.getString("gitHost"),
+                    c.getString("apiUrl"),
+                    c.getString("clientId"),
+                    c.getString("privateKey")
+            );
+        }
+
+        @Override
+        public GitAuth toGitAuth() {
+            return AppInstallation.builder()
+                    .baseUrl(URI.create(this.gitHost()))
+                    .clientId(this.clientId())
+                    .privateKey(Paths.get(this.privateKey()))
+                    .apiUrl(this.apiUrl())
+                    .build();
+        }
+    }
+
 }
