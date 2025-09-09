@@ -27,7 +27,6 @@ import com.walmartlabs.concord.repository.ImmutableGitAuthProvider;
 
 import javax.inject.Inject;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 

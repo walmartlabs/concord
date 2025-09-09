@@ -127,11 +127,14 @@ public final class SecretUtils {
     private SecretUtils() {
     }
 
-    private static String generateJwtToken(String clientId, PrivateKey privateKey, long expirationTimeInSeconds) {
+    public static String generateGitHubInstallationToken(String clientId, PrivateKey privateKey, String installationId) throws IOException, InterruptedException {
+
+        // Generate JWT token for GitHub App authentication (expires in 10 minutes)
         Date now = new Date();
+        long expirationTimeInSeconds = 3600;
         Date expiration = new Date(now.getTime() + (expirationTimeInSeconds * 1000));
 
-        return Jwts.builder()
+        String jwtToken = Jwts.builder()
                 .issuer(clientId)
                 .subject(clientId)
                 .audience().add("concord").and()
@@ -140,11 +143,6 @@ public final class SecretUtils {
                 .id(UUID.randomUUID().toString())
                 .signWith(privateKey)
                 .compact();
-    }
-
-    public static String generateGitHubInstallationToken(String appId, PrivateKey privateKey, String installationId) throws IOException, InterruptedException {
-        // Generate JWT token for GitHub App authentication (expires in 10 minutes)
-        String jwtToken = generateJwtToken(appId, privateKey, 3600);
 
         // Make API call to generate installation access token
         HttpClient client = HttpClient.newBuilder()

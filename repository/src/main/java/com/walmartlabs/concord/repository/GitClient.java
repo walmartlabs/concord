@@ -314,14 +314,16 @@ public class GitClient {
             return url;
         }
 
-        if (secret != null || cfg.oauthToken() == null || url.contains("@") || !url.startsWith("https://")) {
+        if (secret != null || (cfg.oauthToken() == null && cfg.systemGitAuthProviders() == null) || url.contains("@") || !url.startsWith("https://")) {
             // provided url already has credentials OR there are no default credentials to use.
             // anonymous auth is the only viable option.
             return url;
         }
 
-        // using default credentials
-        return "https://" + cfg.oauthToken() + "@" + url.substring("https://".length());
+        // SystemGitAuthProviders have precedence over git.oauth as default credentials.
+        String oauthToken = cfg.systemGitAuthProviders() != null ? GitAuthResolver.resolveOAuthToken(url, cfg) : cfg.oauthToken();
+
+        return "https://" + oauthToken + "@" + url.substring("https://".length());
     }
 
     private void updateSubmodules(Path workDir, Secret secret) {
@@ -575,6 +577,8 @@ public class GitClient {
         }
         return s;
     }
+
+
 
     private Path createUnixGitSSH(Path key) throws IOException {
         Path ssh = PathUtils.createTempFile("ssh", ".sh");
