@@ -49,8 +49,8 @@ public class GitConfiguration {
     @Inject
     public GitConfiguration(Config cfg) {
         this.token = getStringOrDefault(cfg, "git.oauth", () -> null);
-        this.systemGitAuthProviders = cfg.hasPath("systemGitAuthProviders")
-                ? cfg.getConfigList("systemGitAuthProviders").stream()
+        this.systemGitAuthProviders = cfg.hasPath("git.systemGitAuthProviders")
+                ? cfg.getConfigList("git.systemGitAuthProviders").stream()
                 .map(GitConfiguration::buildAuthProvider)
                 .collect(Collectors.toList())
                 : null;
