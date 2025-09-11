@@ -71,13 +71,7 @@ public class AgentHttpAuthProvider implements HttpAuthProvider {
 
                     throw new IllegalArgumentException("Unsupported GitAuth type for repo: " + repo);
                 })
-                .orElseGet(() -> {
-                    if (secret != null) {
-                        //TODO do we want to support regular secrets? I.e. username/password or keypair?
-                        return null;
-                    }
-                    throw new IllegalArgumentException("No matching auth config or secret found for host: " + gitHost);
-                });
+                .orElse(null); // TODO as long as we support git.oauth we wont throw an exception here
     }
 
     String fetchAccessToken(ConcordServer serverConfig, String gitHost, URI repository) {

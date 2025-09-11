@@ -327,9 +327,11 @@ public class GitClient {
 
         String token = authProvider.get(uri.getHost(), uri, secret);
 
-        // TODO ....should token ever be null at this point?
+        if(token == null && cfg.oauthToken() != null) {
+            token = cfg.oauthToken();
+        }
 
-        if (token == null || cfg.oauthToken() == null || url.contains("@") || !url.startsWith("https://")) {
+        if (token == null || url.contains("@") || !url.startsWith("https://")) {
             // provided url already has credentials OR there are no default credentials to use.
             // anonymous auth is the only viable option.
             return url;
