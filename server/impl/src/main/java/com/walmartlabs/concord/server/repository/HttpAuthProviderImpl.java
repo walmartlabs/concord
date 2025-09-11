@@ -51,11 +51,14 @@ import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class HttpAuthProviderImpl implements HttpAuthProvider {
 
     private final List<GitAuth> authConfigs;
     private final ObjectMapper objectMapper;
+
+    private final ConcurrentHashMap<String, AppInstallationAccessToken> tokenCache = new ConcurrentHashMap<>();
 
     @Inject
     public HttpAuthProviderImpl(GitConfiguration gitCfg,
@@ -84,31 +87,38 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
                          return token.token();
                     }
 
-
                     if (auth instanceof AppInstallation app) {
-                        // TODO cache
                         return getTokenFromAppInstall(app, repo);
                     }
 
-                    return null; // TODO error?
+                    throw new IllegalArgumentException("Unsupported GitAuth type for repo: " + repo);
                 })
-                .orElse(null); // TODO get from non-null secret
+                .orElseGet(() -> {
+                    if (secret != null) {
+                        //TODO do we want to support regular secrets? I.e. username/password or keypair?
+                        return null;
+                    }
+                    throw new IllegalArgumentException("No matching auth config or secret found for host: " + gitHost);
+                });
     }
 
     private String getTokenFromAppInstall(AppInstallation app, URI repo) {
-        // TODO do this more nicely? some folks give sloppy, but valid, urls like https://me123@github.com/my/repo.git/
-        String cleaned = repo.toString().replaceAll(".*" + app.baseUrl().toString(), "")
-                .replaceAll("\\.git$", "");
+        // Some folks give sloppy, but valid, urls like https://me123@github.com/my/repo.git/
+        String repoUrl = repo.toString();
+        String baseUrl = app.baseUrl().toString();
+        String cleanedPath = repoUrl.replaceFirst(".*" + baseUrl, "")
+                .replaceFirst("\\.git$", "");
 
 
-        var pathParts = Arrays.asList(cleaned.split("/")).stream()
+        // parse out the owner/repo from the path
+        var pathParts = Arrays.asList(cleanedPath.split("/")).stream()
                 .filter(e -> e != null && !e.isBlank())
                 .limit(2)
                 .toList();
 
 
         if (pathParts.size() != 2) {
-            return null; // TODO error?
+            throw new IllegalArgumentException("Failed to parse owner and repository from path: " + cleanedPath);
         }
 
         var ownerAndRepo = pathParts.get(0) + "/" + pathParts.get(1);
@@ -118,21 +128,21 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
 
 
 
-
-
-
     public String getToken(AppInstallation app, String orgRepo) {
-//        if (!isExpired(lastToken, auth.refreshBufferSeconds())) {
-//            // not expiring within the buffer window, no need to create a new one
-//            return lastToken.token();
-//        }
+        String cacheKey = app.clientId() + ":" + orgRepo;
+        AppInstallationAccessToken cached = tokenCache.get(cacheKey);
+
+        // Make sure we have at least 60 seconds before expiry
+        if (cached != null && !isExpired(cached, 60)) {
+            return cached.token();
+        }
 
         try {
             var jwt = generateJWT(app);
             var accessTokenUrl = accessTokenUrl(app.apiUrl(), orgRepo, jwt);
-            var lastToken = createAccessToken(accessTokenUrl, jwt);
-
-            return lastToken.token();
+            var newToken = createAccessToken(accessTokenUrl, jwt);
+            tokenCache.put(cacheKey, newToken);
+            return newToken.token();
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate JWT token", e);
         }

@@ -24,6 +24,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigObject;
 import com.walmartlabs.concord.repository.auth.AccessToken;
 import com.walmartlabs.concord.repository.auth.AppInstallation;
+import com.walmartlabs.concord.repository.auth.ConcordServer;
 import com.walmartlabs.concord.repository.auth.GitAuth;
 
 import javax.inject.Inject;
@@ -117,6 +118,7 @@ public class GitConfiguration {
                     return (AuthConfig) switch (type) {
                         case OAUTH -> OauthConfig.from(o.toConfig());
                         case APP_INSTALLATION -> AppInstallationConfig.from(o.toConfig());
+                        case CONCORD_SERVER -> ConcordServerConfig.from(o.toConfig());
                     };
                 })
                 .toList();
@@ -124,7 +126,8 @@ public class GitConfiguration {
 
     enum GitAuthType {
         OAUTH,
-        APP_INSTALLATION
+        APP_INSTALLATION,
+        CONCORD_SERVER
     }
 
     public interface AuthConfig {
@@ -167,6 +170,27 @@ public class GitConfiguration {
                     .baseUrl(URI.create(this.gitHost()))
                     .clientId(this.clientId())
                     .privateKey(Paths.get(this.privateKey()))
+                    .build();
+        }
+    }
+
+    public record ConcordServerConfig(String gitHost, String concordServerHost, String tokenEndpointUrl) implements AuthConfig {
+
+        static ConcordServerConfig from(Config cfg) {
+            return new ConcordServerConfig(
+                    cfg.getString("gitHost"),
+                    cfg.getString("concordServerHost"),
+                    cfg.getString("tokenEndpointUrl")
+            );
+        }
+
+        @Override
+        public GitAuth toGitAuth() {
+            return ConcordServer.builder()
+                    .baseUrl(URI.create(this.gitHost()))
+                    .concordServerHost(this.concordServerHost())
+                    .tokenEndpointUrl(this.tokenEndpointUrl())
+
                     .build();
         }
     }

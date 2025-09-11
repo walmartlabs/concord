@@ -32,10 +32,8 @@ import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -48,27 +46,6 @@ public class RepositoryManager {
     private final RepositoryProviders providers;
     private final RepositoryCache repositoryCache;
     private final GitConfiguration gitCfg;
-
-    private static class AgentHttpAuthProvider implements HttpAuthProvider {
-
-        private final List<GitConfiguration.AuthConfig> authConfigs;
-
-        public AgentHttpAuthProvider(List<GitConfiguration.AuthConfig> authConfigs) {
-            this.authConfigs = authConfigs;
-        }
-
-        @Override
-        public boolean canHandle(URI gitHost) {
-            return authConfigs.stream()
-                    .anyMatch(c -> c.gitHost().equals(gitHost));
-        }
-
-        @Override
-        public String get(String gitHost, URI repository, @Nullable Secret secret) {
-            return "";
-        }
-    }
-
 
     @Inject
     public RepositoryManager(SecretClient secretClient,
@@ -91,7 +68,7 @@ public class RepositoryManager {
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
                 .build();
 
-        HttpAuthProvider authProvider = new AgentHttpAuthProvider(gitCfg.getAuthConfigs());
+        HttpAuthProvider authProvider = new AgentHttpAuthProvider(gitCfg.getAuthConfigs(), objectMapper);
 
         List<RepositoryProvider> providers = Arrays.asList(new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(clientCfg, authProvider));
         this.providers = new RepositoryProviders(providers);
