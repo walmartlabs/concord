@@ -44,6 +44,7 @@ public class SecretModule implements Module {
         bindJaxRsResource(binder, SecretStoreResource.class);
         bindJaxRsResource(binder, SecretResource.class);
         bindJaxRsResource(binder, SecretResourceV2.class);
+        bindJaxRsResource(binder, GitAuthResource.class);
 
         bindExceptionMapper(binder, SecretExceptionMapper.class);
     }

@@ -26,9 +26,6 @@ import org.immutables.value.Value;
 @Value.Style(jdkOnly = true)
 public interface ConcordServer extends GitAuth {
     // TODO rename to ConcordServerAuth?
-    String concordServerHost();
-    String tokenEndpointUrl();
-
     static ImmutableConcordServer.Builder builder() {
         return ImmutableConcordServer.builder();
     }

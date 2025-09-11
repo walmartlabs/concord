@@ -31,10 +31,7 @@ import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.walmartlabs.concord.common.ObjectMapperProvider;
-import com.walmartlabs.concord.repository.auth.AccessToken;
-import com.walmartlabs.concord.repository.auth.AppInstallation;
-import com.walmartlabs.concord.repository.auth.GitAuth;
-import com.walmartlabs.concord.repository.auth.HttpAuthProvider;
+import com.walmartlabs.concord.repository.auth.*;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.cfg.GitConfiguration;
 import org.immutables.value.Value;
@@ -58,7 +55,7 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
     private final List<GitAuth> authConfigs;
     private final ObjectMapper objectMapper;
 
-    private final ConcurrentHashMap<String, AppInstallationAccessToken> tokenCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ActiveAccessToken> tokenCache = new ConcurrentHashMap<>();
 
     @Inject
     public HttpAuthProviderImpl(GitConfiguration gitCfg,
@@ -74,17 +71,19 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
     }
 
     private static boolean canHandle(GitAuth auth, URI repoUri) {
-        return auth.baseUrl().getHost().equals(repoUri.getHost());
+        return auth.baseUrl().equals(repoUri.getHost());
     }
 
     @Override
-    public String get(String gitHost, URI repo, @Nullable Secret secret) {
-        return authConfigs.stream()
+    public ActiveAccessToken get(String gitHost, URI repo, @Nullable Secret secret) {
+        return (ActiveAccessToken) authConfigs.stream()
                 .filter(auth -> canHandle(auth, repo))
                 .findFirst()
                 .map(auth -> {
                     if (auth instanceof AccessToken token) {
-                         return token.token();
+                        return ImmutableActiveAccessToken.builder()
+                                .token(token.token())
+                                .build();
                     }
 
                     if (auth instanceof AppInstallation app) {
@@ -96,7 +95,7 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
                 .orElse(null); // TODO as long as we support git.oauth we wont throw an exception here
     }
 
-    private String getTokenFromAppInstall(AppInstallation app, URI repo) {
+    private ActiveAccessToken getTokenFromAppInstall(AppInstallation app, URI repo) {
         // Some folks give sloppy, but valid, urls like https://me123@github.com/my/repo.git/
         String repoUrl = repo.toString();
         String baseUrl = app.baseUrl().toString();
@@ -122,13 +121,13 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
 
 
 
-    public String getToken(AppInstallation app, String orgRepo) {
+    public ActiveAccessToken getToken(AppInstallation app, String orgRepo) {
         String cacheKey = app.clientId() + ":" + orgRepo;
-        AppInstallationAccessToken cached = tokenCache.get(cacheKey);
+        ActiveAccessToken cached = tokenCache.get(cacheKey);
 
         // Make sure we have at least 60 seconds before expiry
         if (cached != null && !isExpired(cached, 60)) {
-            return cached.token();
+            return cached;
         }
 
         try {
@@ -136,13 +135,13 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
             var accessTokenUrl = accessTokenUrl(app.apiUrl(), orgRepo, jwt);
             var newToken = createAccessToken(accessTokenUrl, jwt);
             tokenCache.put(cacheKey, newToken);
-            return newToken.token();
+            return newToken;
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate JWT token", e);
         }
     }
 
-    static boolean isExpired(AppInstallationAccessToken token, long buffer) {
+    static boolean isExpired(ActiveAccessToken token, long buffer) {
         if (token == null) {
             return true;
         }
@@ -167,7 +166,7 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
         }
     }
 
-    AppInstallationAccessToken createAccessToken(String accessTokenUrl, String jwt) {
+    ActiveAccessToken createAccessToken(String accessTokenUrl, String jwt) {
         var req = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .uri(URI.create(accessTokenUrl))
@@ -177,7 +176,7 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
                 .build();
 
         try {
-            return sendRequest(req, 201, AppInstallationAccessToken.class);
+            return sendRequest(req, 201, ActiveAccessToken.class);
         } catch (IOException e) {
             throw new RuntimeException("Error generating app access token", e);
         }
@@ -225,20 +224,6 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
         }
 
         throw new IllegalStateException("Unexpected error sending HTTP request");
-    }
-
-
-    @Value.Immutable
-    @Value.Style(jdkOnly = true)
-    @JsonDeserialize(as = ImmutableAppInstallationAccessToken.class)
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public interface AppInstallationAccessToken {
-
-        String token();
-
-        @JsonProperty("expires_at")
-        OffsetDateTime expiresAt();
-
     }
 
 

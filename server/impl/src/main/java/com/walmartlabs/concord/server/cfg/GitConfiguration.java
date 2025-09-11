@@ -163,7 +163,7 @@ public class GitConfiguration implements Serializable {
         @Override
         public GitAuth toGitAuth() {
             return AccessToken.builder()
-                    .baseUrl(URI.create(this.gitHost()))
+                    .baseUrl(this.gitHost())
                     .token(this.token())
                     .build();
         }
@@ -183,7 +183,7 @@ public class GitConfiguration implements Serializable {
         @Override
         public GitAuth toGitAuth() {
             return AppInstallation.builder()
-                    .baseUrl(URI.create(this.gitHost()))
+                    .baseUrl(this.gitHost())
                     .clientId(this.clientId())
                     .privateKey(Paths.get(this.privateKey()))
                     .apiUrl(this.apiUrl())

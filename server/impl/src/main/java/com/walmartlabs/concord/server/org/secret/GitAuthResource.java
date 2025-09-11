@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
+import com.walmartlabs.concord.repository.auth.ActiveAccessToken;
 import com.walmartlabs.concord.server.repository.HttpAuthProviderImpl;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.security.Roles;
@@ -47,11 +48,11 @@ public class GitAuthResource implements Resource {
      * Refresh repositories by their IDs.
      */
     @GET
-    @Path("/token/{gitHost}/{repoUri}")
+    @Path("/token")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Retrieves git token based on system auth configuration", operationId = "tokenGitAuth")
-    public String get(@PathParam("gitHost") String gitHost,
-                      @PathParam("repoUri") URI repoUri) {
+    public ActiveAccessToken get(@QueryParam("gitHost") String gitHost,
+                                 @QueryParam("repoUri") URI repoUri) {
         assertAgent();
 
         return httpAuthProviderImpl.get(gitHost, repoUri, null);

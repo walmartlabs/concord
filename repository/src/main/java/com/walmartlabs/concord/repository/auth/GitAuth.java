@@ -20,9 +20,7 @@ package com.walmartlabs.concord.repository.auth;
  * =====
  */
 
-import java.net.URI;
-
 public interface GitAuth {
-    URI baseUrl();
+    String baseUrl();
 
 }

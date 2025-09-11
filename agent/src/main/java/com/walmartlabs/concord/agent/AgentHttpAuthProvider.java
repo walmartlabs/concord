@@ -53,23 +53,23 @@ public class AgentHttpAuthProvider implements HttpAuthProvider {
     }
 
     @Override
-    public boolean canHandle(URI gitHost) {
+    public boolean canHandle(URI repoUri) {
         return authConfigs.stream()
-                .anyMatch(c -> c.gitHost().equals(gitHost));
+                .anyMatch(c -> c.gitHost().equals(repoUri.getHost()));
     }
 
     private static boolean canHandle(GitAuth auth, URI repoUri) {
-        return auth.baseUrl().getHost().equals(repoUri.getHost());
+        return auth.baseUrl().equals(repoUri.getHost());
     }
 
     @Override
-    public String get(String gitHost, URI repo, @Nullable Secret secret) {
+    public ActiveAccessToken get(String gitHost, URI repo, @Nullable Secret secret) {
         return authConfigs.stream()
                 .filter(auth -> canHandle(auth.toGitAuth(), repo))
                 .findFirst()
                 .map(auth -> {
-                    if (auth instanceof ConcordServer serverConfig) {
-                        return fetchAccessToken(serverConfig, gitHost, repo);
+                    if (auth instanceof GitConfiguration.ConcordServerConfig concordserver) {
+                        return fetchAccessToken(concordserver, gitHost, repo);
                     }
 
                     throw new IllegalArgumentException("Unsupported GitAuth type for repo: " + repo);
@@ -77,21 +77,21 @@ public class AgentHttpAuthProvider implements HttpAuthProvider {
                 .orElse(null); // TODO as long as we support git.oauth we wont throw an exception here
     }
 
-    String fetchAccessToken(ConcordServer serverConfig, String gitHost, URI repository) {
+    ActiveAccessToken fetchAccessToken(GitConfiguration.ConcordServerConfig serverConfig, String gitHost, URI repository) {
         if(serverCfg.getApiKey() == null) {
             throw new IllegalStateException("Agent apiKey is required to retrieve app installation token");
         }
         var req = HttpRequest.newBuilder().GET()
-                .uri(URI.create(serverConfig.concordServerHost() + "/" + serverConfig.tokenEndpointUrl() + "/"
-                                + gitHost + "/" + repository))
+                .uri(URI.create(serverCfg.getApiBaseUrl() + "/api/v1/secret/gitauth/token" +
+                        "?gitHost=" + gitHost +
+                        "&repoUri=" + repository.toString()
+                ))
                 .header("Authorization", serverCfg.getApiKey())
                 .header("Accept", "application/json")
                 .build();
 
         try {
-            AgentAppInstallationAccessToken accessToken =
-                    sendRequest(req, 201, AgentAppInstallationAccessToken.class);
-            return accessToken.token();
+            return sendRequest(req, 200, ActiveAccessToken.class);
         } catch (IOException e) {
             throw new RuntimeException("Error generating app access token", e);
         }

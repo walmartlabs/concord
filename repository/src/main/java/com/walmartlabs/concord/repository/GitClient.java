@@ -325,7 +325,7 @@ public class GitClient {
             return url;
         }
 
-        String token = authProvider.get(uri.getHost(), uri, secret);
+        String token = authProvider.get(uri.getHost(), uri, secret).token();
 
         if(token == null && cfg.oauthToken() != null) {
             token = cfg.oauthToken();
@@ -337,7 +337,7 @@ public class GitClient {
             return url;
         }
 
-        return "https://" + token + "@" + url.substring("https://".length());
+        return "https://x-access-token:" + token + "@" + url.substring("https://".length());
     }
 
     private void updateSubmodules(Path workDir, Secret secret) {
@@ -523,7 +523,7 @@ public class GitClient {
         }
     }
 
-
+    //TODO make sure that if allowedSchemes = [ "https", "ssh", "git", "file" ] is not present, allow all schemes
     private boolean isRepoUriAllowed(URI uri) {
         String providedScheme = uri.getScheme();
         Set<String> allowedProtocols = cfg.allowedSchemes();

@@ -64,7 +64,7 @@ public class GitConfiguration {
         this.sshTimeoutRetryCount = cfg.getInt("git.sshTimeoutRetryCount");
         this.skip = cfg.getBoolean("git.skip");
         this.allowedSchemes = cfg.getStringList("git.allowedSchemes");
-        this.authConfigs = cfg.getObjectList("git.authConfigs");
+        this.authConfigs = cfg.getObjectList("git.systemAuth"); //TODO rename variables to systemAuth, make sure it aligns with server
     }
 
     public String getToken() {
@@ -148,7 +148,7 @@ public class GitConfiguration {
         @Override
         public GitAuth toGitAuth() {
             return AccessToken.builder()
-                    .baseUrl(URI.create(this.gitHost()))
+                    .baseUrl(this.gitHost())
                     .token(this.token())
                     .build();
         }
@@ -167,30 +167,25 @@ public class GitConfiguration {
         @Override
         public GitAuth toGitAuth() {
             return AppInstallation.builder()
-                    .baseUrl(URI.create(this.gitHost()))
+                    .baseUrl(this.gitHost())
                     .clientId(this.clientId())
                     .privateKey(Paths.get(this.privateKey()))
                     .build();
         }
     }
 
-    public record ConcordServerConfig(String gitHost, String concordServerHost, String tokenEndpointUrl) implements AuthConfig {
+    public record ConcordServerConfig(String gitHost) implements AuthConfig {
 
         static ConcordServerConfig from(Config cfg) {
             return new ConcordServerConfig(
-                    cfg.getString("gitHost"),
-                    cfg.getString("concordServerHost"),
-                    cfg.getString("tokenEndpointUrl")
+                    cfg.getString("gitHost")
             );
         }
 
         @Override
         public GitAuth toGitAuth() {
             return ConcordServer.builder()
-                    .baseUrl(URI.create(this.gitHost()))
-                    .concordServerHost(this.concordServerHost())
-                    .tokenEndpointUrl(this.tokenEndpointUrl())
-
+                    .baseUrl(this.gitHost())
                     .build();
         }
     }

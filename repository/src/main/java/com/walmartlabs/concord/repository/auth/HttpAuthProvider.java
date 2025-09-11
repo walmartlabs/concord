@@ -29,6 +29,6 @@ public interface HttpAuthProvider {
 
     boolean canHandle(URI repo);
 
-    String get(String gitHost, URI repo, @Nullable Secret secret);
+    ActiveAccessToken get(String gitHost, URI repo, @Nullable Secret secret);
 
 }
