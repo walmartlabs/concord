@@ -23,6 +23,7 @@ package com.walmartlabs.concord.agent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.agent.cfg.GitConfiguration;
 import com.walmartlabs.concord.agent.cfg.RepositoryCacheConfiguration;
+import com.walmartlabs.concord.agent.cfg.ServerConfiguration;
 import com.walmartlabs.concord.client2.SecretClient;
 import com.walmartlabs.concord.imports.Import.SecretDefinition;
 import com.walmartlabs.concord.repository.*;
@@ -46,16 +47,19 @@ public class RepositoryManager {
     private final RepositoryProviders providers;
     private final RepositoryCache repositoryCache;
     private final GitConfiguration gitCfg;
+    private final ServerConfiguration serverCfg;
 
     @Inject
     public RepositoryManager(SecretClient secretClient,
                              GitConfiguration gitCfg,
                              RepositoryCacheConfiguration cacheCfg,
                              ObjectMapper objectMapper,
-                             DependencyManager dependencyManager) throws IOException {
+                             DependencyManager dependencyManager,
+                             ServerConfiguration serverCfg) throws IOException {
 
         this.secretClient = secretClient;
         this.gitCfg = gitCfg;
+        this.serverCfg = serverCfg;
 
         GitClientConfiguration clientCfg = GitClientConfiguration.builder()
                 .oauthToken(gitCfg.getToken())
@@ -68,7 +72,7 @@ public class RepositoryManager {
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
                 .build();
 
-        HttpAuthProvider authProvider = new AgentHttpAuthProvider(gitCfg.getAuthConfigs(), objectMapper);
+        HttpAuthProvider authProvider = new AgentHttpAuthProvider(gitCfg.getAuthConfigs(), objectMapper,serverCfg);
 
         List<RepositoryProvider> providers = Arrays.asList(new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(clientCfg, authProvider));
         this.providers = new RepositoryProviders(providers);

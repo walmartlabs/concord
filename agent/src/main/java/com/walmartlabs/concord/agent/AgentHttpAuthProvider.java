@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.walmartlabs.concord.agent.cfg.GitConfiguration;
+import com.walmartlabs.concord.agent.cfg.ServerConfiguration;
 import com.walmartlabs.concord.repository.auth.*;
 import com.walmartlabs.concord.sdk.Secret;
 import org.immutables.value.Value;
@@ -42,11 +43,13 @@ public class AgentHttpAuthProvider implements HttpAuthProvider {
 
     private final List<GitConfiguration.AuthConfig> authConfigs;
     private final ObjectMapper objectMapper;
+    private final ServerConfiguration serverCfg;
 
     public AgentHttpAuthProvider(List<GitConfiguration.AuthConfig> authConfigs,
-                                 ObjectMapper objectMapper) {
+                                 ObjectMapper objectMapper, ServerConfiguration serverCfg) {
         this.authConfigs = authConfigs;
         this.objectMapper = objectMapper;
+        this.serverCfg = serverCfg;
     }
 
     @Override
@@ -75,10 +78,13 @@ public class AgentHttpAuthProvider implements HttpAuthProvider {
     }
 
     String fetchAccessToken(ConcordServer serverConfig, String gitHost, URI repository) {
+        if(serverCfg.getApiKey() == null) {
+            throw new IllegalStateException("Agent apiKey is required to retrieve app installation token");
+        }
         var req = HttpRequest.newBuilder().GET()
                 .uri(URI.create(serverConfig.concordServerHost() + "/" + serverConfig.tokenEndpointUrl() + "/"
                                 + gitHost + "/" + repository))
-                .header("Authorization", "Bearer " + "JWT") //TODO what auth do we use for the agent to server?
+                .header("Authorization", serverCfg.getApiKey())
                 .header("Accept", "application/json")
                 .build();
 

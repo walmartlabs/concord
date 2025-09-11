@@ -52,13 +52,13 @@ public class GitAuthResource implements Resource {
     @Operation(description = "Retrieves git token based on system auth configuration", operationId = "tokenGitAuth")
     public String get(@PathParam("gitHost") String gitHost,
                       @PathParam("repoUri") URI repoUri) {
-        assertAdmin();
+        assertAgent();
 
         return httpAuthProviderImpl.get(gitHost, repoUri, null);
     }
 
-    private static void assertAdmin() {
-        if (!Roles.isAdmin()) {
+    private static void assertAgent() {
+        if (!Roles.isGlobalWriter()) { //TODO replace with specific agent role
             throw new UnauthorizedException("Not authorized, admin access required");
         }
     }
