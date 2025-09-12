@@ -21,7 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Ref;
@@ -43,7 +43,7 @@ public class ProjectIT extends AbstractServerIT {
         Path tmpDir = createTempDir();
 
         File src = new File(ProjectIT.class.getResource("project").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
 
         try (Git repo = initRepo(tmpDir)) {
             repo.add().addFilepattern(".").call();
@@ -81,7 +81,7 @@ public class ProjectIT extends AbstractServerIT {
         Path tmpDir = createTempDir();
 
         File src = new File(ProjectIT.class.getResource("projectEntryPoint").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
 
         try (Git repo = initRepo(tmpDir)) {
             repo.add().addFilepattern(".").call();
@@ -111,16 +111,16 @@ public class ProjectIT extends AbstractServerIT {
         Path tmpDir = createTempDir();
 
         File src = new File(ProjectIT.class.getResource("project").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
 
         try (Git repo = initRepo(tmpDir)) {
             repo.add().addFilepattern(".").call();
             repo.commit().setMessage("import").call();
 
             // commit-1
-            IOUtils.deleteRecursively(tmpDir.resolve("processes"));
+            PathUtils.deleteRecursively(tmpDir.resolve("processes"));
             src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
-            IOUtils.copy(src.toPath().resolve("1"), tmpDir);
+            PathUtils.copy(src.toPath().resolve("1"), tmpDir);
             Ref result = repo.checkout().setName("test-branch").setCreateBranch(true).call();
             assertNotNull(result);
 
@@ -130,9 +130,9 @@ public class ProjectIT extends AbstractServerIT {
 
             // commit-2
             result = repo.checkout().setName("master").call();
-            IOUtils.deleteRecursively(tmpDir.resolve("processes"));
+            PathUtils.deleteRecursively(tmpDir.resolve("processes"));
             src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
-            IOUtils.copy(src.toPath().resolve("2"), tmpDir);
+            PathUtils.copy(src.toPath().resolve("2"), tmpDir);
             assertNotNull(result);
             repo.add().addFilepattern(".").call();
             repo.commit().setMessage("commit-2").call();
@@ -164,7 +164,7 @@ public class ProjectIT extends AbstractServerIT {
         Path tmpDir = createTempDir();
 
         File src = new File(ProjectIT.class.getResource("project").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
 
         String tag = "tag_for_testing";
 
@@ -173,18 +173,18 @@ public class ProjectIT extends AbstractServerIT {
             repo.commit().setMessage("import").call();
 
             // commit-1
-            IOUtils.deleteRecursively(tmpDir.resolve("processes"));
+            PathUtils.deleteRecursively(tmpDir.resolve("processes"));
             src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
-            IOUtils.copy(src.toPath().resolve("1"), tmpDir);
+            PathUtils.copy(src.toPath().resolve("1"), tmpDir);
             repo.add().addFilepattern(".").call();
             repo.commit().setMessage("commit-1").call();
 
             repo.tag().setName(tag).call();
 
             // commit-2
-            IOUtils.deleteRecursively(tmpDir.resolve("processes"));
+            PathUtils.deleteRecursively(tmpDir.resolve("processes"));
             src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
-            IOUtils.copy(src.toPath().resolve("2"), tmpDir);
+            PathUtils.copy(src.toPath().resolve("2"), tmpDir);
             repo.add().addFilepattern(".").call();
             repo.commit().setMessage("commit-2").call();
         }
@@ -214,7 +214,7 @@ public class ProjectIT extends AbstractServerIT {
         Path tmpDir = createTempDir();
 
         File src = new File(ProjectIT.class.getResource("project-triggers").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
 
         try (Git repo = initRepo(tmpDir)) {
             repo.add().addFilepattern(".").call();
@@ -251,7 +251,7 @@ public class ProjectIT extends AbstractServerIT {
         Path tmpDir = createTempDir();
 
         File src = new File(ProjectIT.class.getResource("repositoryValidation").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
 
         try (Git repo = initRepo(tmpDir)) {
             repo.add().addFilepattern(".").call();
@@ -285,7 +285,7 @@ public class ProjectIT extends AbstractServerIT {
             Path tmpDir = createTempDir();
 
             File src = new File(ProjectIT.class.getResource("repositoryValidationEmptyFlow").toURI());
-            IOUtils.copy(src.toPath(), tmpDir);
+            PathUtils.copy(src.toPath(), tmpDir);
 
             try (Git repo = initRepo(tmpDir)) {
                 repo.add().addFilepattern(".").call();
@@ -320,7 +320,7 @@ public class ProjectIT extends AbstractServerIT {
             Path tmpDir = createTempDir();
 
             File src = new File(ProjectIT.class.getResource("repositoryValidationEmptyForm").toURI());
-            IOUtils.copy(src.toPath(), tmpDir);
+            PathUtils.copy(src.toPath(), tmpDir);
 
             try (Git repo = initRepo(tmpDir)) {
                 repo.add().addFilepattern(".").call();
@@ -355,7 +355,7 @@ public class ProjectIT extends AbstractServerIT {
             Path tmpDir = createTempDir();
 
             File src = new File(ProjectIT.class.getResource("ProcessDisabledRepo").toURI());
-            IOUtils.copy(src.toPath(), tmpDir);
+            PathUtils.copy(src.toPath(), tmpDir);
 
             try (Git repo = initRepo(tmpDir)) {
                 repo.add().addFilepattern(".").call();

@@ -20,7 +20,7 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.repository.auth.HttpAuthProvider;
 import com.walmartlabs.concord.sdk.Secret;
@@ -66,16 +66,16 @@ public class GitClientFetchTest {
 
     @Test
     public void testFetch1() throws Exception {
-        Path tmpDir = IOUtils.createTempDir("test");
+        Path tmpDir = PathUtils.createTempDir("test");
 
-        IOUtils.copy(resourceToPath("/test4"), tmpDir);
+        PathUtils.copy(resourceToPath("/test4"), tmpDir);
 
         // init repo
         Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();
         RevCommit initialCommit = commit(repo, "import");
 
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             URI tmpDirURI = URI.create(repoPath.toString());
             // --- fetch master
             String actualCommitId = fetch(tmpDir, "master", null, null, repoPath.path());
@@ -110,7 +110,7 @@ public class GitClientFetchTest {
         // fetch by commit + branch with clean repo
         for (int i = 0; i < 3; i++) {
             String commitId = commits.get(i).name();
-            try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+            try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
                 String result = fetch(repo, "master", commitId, null, repoPath.path());
                 assertContent(repoPath, i + "_concord.yml", i + "-concord-content");
                 assertEquals(commitId, result);
@@ -120,7 +120,7 @@ public class GitClientFetchTest {
         // fetch by commit with clean repo
         for (int i = 0; i < 3; i++) {
             String commitId = commits.get(i).name();
-            try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+            try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
                 String result = fetch(repo, null, commitId, null, repoPath.path());
                 assertContent(repoPath, i + "_concord.yml", i + "-concord-content");
                 assertEquals(commitId, result);
@@ -137,7 +137,7 @@ public class GitClientFetchTest {
         String commitId;
         String tagCommitId;
 
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             // fetch master
             fetch(repo, "master", null, null, repoPath.path());
             assertContent(repoPath, "master.txt", "master");
@@ -159,28 +159,28 @@ public class GitClientFetchTest {
         }
 
         // fetch by commit with clean repo
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             String result = fetch(repo, "branch-1", commitId, null, repoPath.path());
             assertContent(repoPath, "branch-1.txt", "branch-1");
             assertEquals(result, commitId);
         }
 
         // fetch by commit with clean repo
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             String result = fetch(repo, "tag-1", tagCommitId, null, repoPath.path());
             assertContent(repoPath, "tag-1.txt", "tag-1");
             assertEquals(result, tagCommitId);
         }
 
         // fetch by commit with clean repo and without branch -> should  fetch all repo and checkout commit-id
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             String result = fetch(repo, null, commitId, null, repoPath.path());
             assertContent(repoPath, "branch-1.txt", "branch-1");
             assertEquals(result, commitId);
         }
 
         // fetch same branch two times
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             // fetch branch
             fetch(repo, "branch-1", null, null, repoPath.path());
             assertContent(repoPath, "branch-1.txt", "branch-1");

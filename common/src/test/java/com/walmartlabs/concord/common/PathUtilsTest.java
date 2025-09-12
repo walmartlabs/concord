@@ -4,7 +4,7 @@ package com.walmartlabs.concord.common;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -29,35 +28,27 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class IOUtilsTest {
+public class PathUtilsTest {
 
     @Test
-    public void testZipUnzip() throws Exception {
-        Path src = Files.createTempDirectory("test-zip");
-        Files.createFile(src.resolve("a.txt"));
-        Files.createFile(src.resolve("b\\c.txt"));
-        Files.createDirectory(src.resolve("b"));
-        Files.createFile(src.resolve("b").resolve("c.txt"));
-
-        Path archive = Files.createTempFile("archive", "zip");
-
-        try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(archive))) {
-            IOUtils.zip(zip, src);
-        }
-
-        IOUtils.deleteRecursively(src);
-
-        Path dst = Files.createTempDirectory("test");
-        IOUtils.unzip(archive, dst);
-        assertTrue(Files.exists(dst.resolve("a.txt")));
-        assertTrue(Files.exists(dst.resolve("b\\c.txt")));
-        assertTrue(Files.exists(dst.resolve("b").resolve("c.txt")));
+    public void testResolveNonChild() {
+        Path parent = Paths.get("/parent/path");
+        Exception e = assertThrows(IOException.class, () -> PathUtils.assertInPath(parent, "../child"));
+        assertTrue(e.getMessage().contains("Child path resolves outside of parent path"));
     }
+
+    @Test
+    public void testResolveValidChild() {
+        Path parent = Paths.get("/parent/path");
+        assertDoesNotThrow(() -> PathUtils.assertInPath(parent, "child"));
+        assertDoesNotThrow(() -> PathUtils.assertInPath(parent, "another/child"));
+
+        Path p = assertDoesNotThrow(() -> PathUtils.assertInPath(parent, "odd/../but/valid"));
+        assertEquals("/parent/path/but/valid", p.toString());
+    }
+
 
     @Test
     public void testCopy() throws Exception {
@@ -74,7 +65,7 @@ public class IOUtilsTest {
 
         // ---
 
-        IOUtils.copy(src, dst);
+        PathUtils.copy(src, dst);
         assertTrue(Files.exists(dst.resolve("a/b/c.txt")));
     }
 
@@ -97,7 +88,7 @@ public class IOUtilsTest {
 
         // ---
 
-        IOUtils.copy(src, dst);
+        PathUtils.copy(src, dst);
 
         // ---
 
@@ -119,24 +110,7 @@ public class IOUtilsTest {
 
         // ---
 
-        Exception e = assertThrows(IOException.class, () -> IOUtils.copy(src, dst));
+        Exception e = assertThrows(IOException.class, () -> PathUtils.copy(src, dst));
         assertTrue(e.getMessage().contains("Symlinks outside the base directory are not supported"));
-    }
-
-    @Test
-    public void testResolveNonChild() {
-        Path parent = Paths.get("/parent/path");
-        Exception e = assertThrows(IOException.class, () -> IOUtils.assertInPath(parent, "../child"));
-        assertTrue(e.getMessage().contains("Child path resolves outside of parent path"));
-    }
-
-    @Test
-    public void testResolveValidChild() {
-        Path parent = Paths.get("/parent/path");
-        assertDoesNotThrow(() -> IOUtils.assertInPath(parent, "child"));
-        assertDoesNotThrow(() -> IOUtils.assertInPath(parent, "another/child"));
-
-        Path p = assertDoesNotThrow(() -> IOUtils.assertInPath(parent, "odd/../but/valid"));
-        assertEquals("/parent/path/but/valid", p.toString());
     }
 }

@@ -21,7 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
 import com.walmartlabs.concord.it.common.JGitUtils;
 import com.walmartlabs.concord.it.common.ServerClient;
@@ -203,7 +203,7 @@ public abstract class AbstractServerIT {
         Path tmpDir = createTempDir();
 
         File src = new File(AbstractServerIT.class.getResource(resource).toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
 
         try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
             repo.add().addFilepattern(".").call();

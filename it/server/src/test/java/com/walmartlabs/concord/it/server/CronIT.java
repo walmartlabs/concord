@@ -23,7 +23,7 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.client2.CreateSecretRequest;
 import com.walmartlabs.concord.client2.ProcessListFilter;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.walmartlabs.concord.common.IOUtils.grep;
+import static com.walmartlabs.concord.common.GrepUtils.grep;
 import static com.walmartlabs.concord.it.server.AbstractServerIT.DEFAULT_TEST_TIMEOUT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -194,7 +194,7 @@ public class CronIT extends AbstractServerIT {
         Path tmpDir = createTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource(initResource).toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
 
         try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
             repo.add().addFilepattern(".").call();

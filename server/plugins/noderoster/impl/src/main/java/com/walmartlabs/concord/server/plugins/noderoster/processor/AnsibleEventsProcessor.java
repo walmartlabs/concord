@@ -112,31 +112,45 @@ public class AnsibleEventsProcessor extends AbstractEventProcessor<AnsibleEvent>
             return txResult(tx -> {
                 ProcessQueue pq = PROCESS_QUEUE.as("pq");
                 ProcessEvents pe = PROCESS_EVENTS.as("pe");
-                Field<String> username = tx.select(USERS.USERNAME).from(USERS).where(USERS.USER_ID.eq(pq.INITIATOR_ID)).asField();
-
                 Field<Object> eventData = function("jsonb_strip_nulls", Object.class, pe.EVENT_DATA);
-                SelectConditionStep<Record9<UUID, Long, UUID, OffsetDateTime, OffsetDateTime, Object, String, UUID, UUID>> s = tx.select(
-                        pe.EVENT_ID,
-                        pe.EVENT_SEQ,
-                        pe.INSTANCE_ID,
-                        pe.INSTANCE_CREATED_AT,
-                        pe.EVENT_DATE,
-                        eventData,
-                        username,
-                        pq.INITIATOR_ID,
-                        pq.PROJECT_ID)
-                        .from(pe)
-                        .innerJoin(pq).on(pq.INSTANCE_ID.eq(pe.INSTANCE_ID).and(pq.CREATED_AT.eq(pe.INSTANCE_CREATED_AT)))
-                        .where(pe.EVENT_TYPE.eq("ANSIBLE")
-                                .and(pe.EVENT_SEQ.greaterThan(marker.eventSeq())));
+
+                SelectConditionStep<Record6<UUID, Long, UUID, OffsetDateTime, OffsetDateTime, Object>> selectEventsSubQuery =
+                        tx.select(pe.EVENT_ID,
+                                pe.EVENT_SEQ,
+                                pe.INSTANCE_ID,
+                                pe.INSTANCE_CREATED_AT,
+                                pe.EVENT_DATE,
+                                eventData.as("event_data"))
+                            .from(pe)
+                            .where(pe.EVENT_TYPE.eq("ANSIBLE"))
+                            .and(pe.EVENT_SEQ.greaterThan(marker.eventSeq()));
 
                 if (startTimestamp != null) {
-                    s.and(pe.INSTANCE_CREATED_AT.greaterOrEqual(startTimestamp));
+                    selectEventsSubQuery.and(pe.INSTANCE_CREATED_AT.greaterOrEqual(startTimestamp));
                 }
 
-                return s.orderBy(pe.EVENT_SEQ)
+                Table<Record6<UUID, Long, UUID, OffsetDateTime, OffsetDateTime, Object>> eventsAlias = selectEventsSubQuery
+                        .orderBy(pe.EVENT_SEQ)
                         .limit(count)
-                        .fetch(this::toEntity);
+                        .asTable("events_batch");
+
+                SelectOnConditionStep<Record9<UUID, Long, UUID, OffsetDateTime, OffsetDateTime, Object, String, UUID, UUID>> s = tx.select(
+                                eventsAlias.field("event_id", UUID.class),
+                                eventsAlias.field("event_seq", Long.class),
+                                eventsAlias.field("instance_id", UUID.class),
+                                eventsAlias.field("instance_created_at", OffsetDateTime.class),
+                                eventsAlias.field("event_date", OffsetDateTime.class),
+                                eventsAlias.field("event_data", Object.class),
+                                USERS.USERNAME,
+                                pq.INITIATOR_ID,
+                                pq.PROJECT_ID
+                        )
+                        .from(eventsAlias)
+                        .leftOuterJoin(pq)
+                                .on(pq.INSTANCE_ID.eq(eventsAlias.field("instance_id", UUID.class)))
+                        .leftOuterJoin(USERS).on(USERS.USER_ID.eq(pq.INITIATOR_ID));
+
+                return s.fetch(this::toEntity);
             });
         }
 

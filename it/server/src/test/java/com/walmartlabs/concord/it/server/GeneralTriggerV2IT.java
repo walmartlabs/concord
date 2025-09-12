@@ -21,7 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +42,7 @@ public class GeneralTriggerV2IT extends AbstractGeneralTriggerIT {
         Path tmpDir = createTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource(yamlPath).toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
 
         try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
             repo.add().addFilepattern(".").call();

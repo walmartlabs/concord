@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -30,7 +30,7 @@ public final class Utils {
 
     public static Path getPath(String s, String defaultPrefix) throws IOException {
         if (s == null) {
-            return IOUtils.createTempDir(defaultPrefix);
+            return PathUtils.createTempDir(defaultPrefix);
         }
         return Paths.get(s);
     }

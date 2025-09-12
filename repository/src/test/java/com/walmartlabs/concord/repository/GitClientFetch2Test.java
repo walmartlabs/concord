@@ -20,7 +20,7 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.repository.auth.HttpAuthProvider;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -68,7 +68,7 @@ public class GitClientFetch2Test {
         RevCommit commit0 = GitUtils.addContent(repo, resourceToPath("/test5/0_concord.yml"));
         GitUtils.addContent(repo, resourceToPath("/test5/1_concord.yml"));
 
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             // fetch master
             fetch(repo, "master", null, repoPath.path());
             assertContent(repoPath, "master.txt", "master");
@@ -87,7 +87,7 @@ public class GitClientFetch2Test {
         RevCommit commit0 = GitUtils.addContent(repo, resourceToPath("/test5/0_concord.yml"));
         GitUtils.addContent(repo, resourceToPath("/test5/1_concord.yml"));
 
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             // fetch master
             fetch(repo, "master", null, repoPath.path());
             assertContent(repoPath, "master.txt", "master");
@@ -108,7 +108,7 @@ public class GitClientFetch2Test {
         RevCommit commit0 = GitUtils.addContent(repo, resourceToPath("/test5/0_concord.yml"));
         GitUtils.addContent(repo, resourceToPath("/test5/1_concord.yml"));
 
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             // fetch master
             fetch(repo, "master", null, repoPath.path());
             assertContent(repoPath, "master.txt", "master");

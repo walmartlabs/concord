@@ -20,7 +20,7 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
@@ -111,7 +111,7 @@ public class GitClientRealTest {
 
         // with default oauth token
         Secret secret = null;
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             fetch(HTTPS_SUBMODULE_REPO_URL, branch, commitId, secret, repoPath.path());
 
             assertEquals("master", new String(Files.readAllBytes(repoPath.path().resolve("test"))).trim());
@@ -134,7 +134,7 @@ public class GitClientRealTest {
     }
 
     private void assertFetch(String url, String branch, String commitId, Secret secret, String expectedContent) throws IOException {
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             fetch(url, branch, commitId, secret, repoPath.path());
 
             assertEquals(expectedContent, new String(Files.readAllBytes(repoPath.path().resolve("test"))).trim());

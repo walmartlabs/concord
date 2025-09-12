@@ -20,7 +20,7 @@ package com.walmartlabs.concord.cli;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import picocli.CommandLine;
@@ -121,7 +121,7 @@ class RunTest extends AbstractTest {
         URI uri = RunTest.class.getResource(payload).toURI();
         Path source = Paths.get(uri);
 
-        IOUtils.copy(source, tempDir);
+        PathUtils.copy(source, tempDir);
 
         App app = new App();
         CommandLine cmd = new CommandLine(app);

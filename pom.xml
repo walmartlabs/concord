@@ -5,7 +5,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>parent</artifactId>
-    <version>2.31.1-SNAPSHOT</version>
+    <version>2.32.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -130,6 +130,7 @@
                     <processStartTag>*****</processStartTag>
                     <sectionDelimiter>-----</sectionDelimiter>
                     <processEndTag>=====</processEndTag>
+                    <trimHeaderLine>true</trimHeaderLine>
                     <roots>
                         <root>src/main/java</root>
                         <root>src/test/java</root>

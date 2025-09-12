@@ -22,7 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.client2.ProcessListFilter;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +33,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -566,7 +565,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         Path tmpDir = createTempDir();
 
         File src = new File(ExternalImportsIT.class.getResource(resourceName).toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
 
         // add more files
         fileAdder.accept(tmpDir);
@@ -599,7 +598,7 @@ public class ExternalImportsIT extends AbstractServerIT {
     private static Path createPayload(String resourceName, Map<String, String> replacements) throws Exception {
         Path tmpDir = createTempDir();
         File src = new File(ExternalImportsIT.class.getResource(resourceName).toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
         Path concordFile = tmpDir.resolve("concord.yml");
         replacements.forEach((k, v) -> replace(concordFile, k, v));
         return tmpDir;

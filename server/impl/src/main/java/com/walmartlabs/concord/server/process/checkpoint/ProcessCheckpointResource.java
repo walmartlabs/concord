@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process.checkpoint;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.process.ProcessEntry;
@@ -121,7 +121,7 @@ public class ProcessCheckpointResource implements Resource {
             UUID correlationId = MultipartUtils.assertUuid(input, "correlationId");
             String checkpointName = MultipartUtils.assertString(input, "name");
             try (InputStream data = MultipartUtils.assertStream(input, "data");
-                 TemporaryPath tmpIn = IOUtils.tempFile("checkpoint", ".zip")) {
+                 TemporaryPath tmpIn = PathUtils.tempFile("checkpoint", ".zip")) {
 
                 Files.copy(data, tmpIn.path(), StandardCopyOption.REPLACE_EXISTING);
                 checkpointManager.importCheckpoint(processKey, checkpointId, correlationId, checkpointName, tmpIn.path());
