@@ -22,7 +22,7 @@ package com.walmartlabs.concord.repository;
 
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
-import com.walmartlabs.concord.repository.auth.HttpAuthProvider;
+import com.walmartlabs.concord.repository.auth.GitAccessTokenProvider;
 import com.walmartlabs.concord.sdk.Secret;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,7 +64,7 @@ public class GitClientSpeedTest {
     private GitClient client;
 
     @Mock
-    HttpAuthProvider authProvider;
+    GitAccessTokenProvider authProvider;
 
     @BeforeEach
     public void init() {

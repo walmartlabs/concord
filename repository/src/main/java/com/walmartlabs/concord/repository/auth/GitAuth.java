@@ -20,7 +20,12 @@ package com.walmartlabs.concord.repository.auth;
  * =====
  */
 
+import java.util.Optional;
+
 public interface GitAuth {
+
     String baseUrl();
+
+    Optional<String> username(); // TODO Remove?
 
 }

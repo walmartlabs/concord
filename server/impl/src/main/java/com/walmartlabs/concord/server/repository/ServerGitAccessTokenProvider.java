@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.cache.Weigher;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -49,6 +50,8 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -63,9 +66,11 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BiFunction;
 
-public class HttpAuthProviderImpl implements HttpAuthProvider {
+@Named
+@Singleton
+public class ServerGitAccessTokenProvider implements GitAccessTokenProvider {
 
-    private static final Logger log = LoggerFactory.getLogger(HttpAuthProviderImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(ServerGitAccessTokenProvider.class);
 
     private final List<GitAuth> authConfigs;
     private final ObjectMapper objectMapper;
@@ -75,13 +80,29 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
     private record CacheKey(URI repoUri, Secret secret) {}
 
     @Inject
-    public HttpAuthProviderImpl(GitConfiguration gitCfg,
-                                ObjectMapper objectMapper) {
+    public ServerGitAccessTokenProvider(GitConfiguration gitCfg,
+                                        ObjectMapper objectMapper) {
         this.authConfigs = gitCfg.getAuthConfigs();
         this.objectMapper = objectMapper;
         this.cache = CacheBuilder.newBuilder()
                 .expireAfterWrite(gitCfg.getSystemAuthCacheDuration())
-                .maximumSize(gitCfg.getSystemAuthCacheMaxSize())
+                .recordStats()
+                .maximumWeight(1024 * 10L) // ~ 10MB
+                .weigher((Weigher<CacheKey, Optional<ActiveAccessToken>>) (key, value) -> {
+                        int weight = 1;
+
+                        if (key.secret() != null) {
+                            weight += 1;
+
+                            if (key.secret() instanceof BinaryDataSecret bds) {
+                                weight += bds.getData().length / 1024;
+                            } else if (key.secret() instanceof UsernamePassword up) {
+                                weight += (up.getUsername().length() + up.getPassword().length) / 1024;
+                            }
+                        }
+
+                        return weight;
+                })
                 .removalListener(k -> log.info("Removing token from cache: {}", k.getKey()))
                 .build(new CacheLoader<>() {
                     @Override
@@ -99,7 +120,7 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
     }
 
     private static boolean canHandle(GitAuth auth, URI repoUri) {
-        return auth.baseUrl().equals(repoUri.getHost());
+        return auth.baseUrl().matches(repoUri.getHost());
     }
 
     @Override
@@ -139,12 +160,12 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
              return fromSecret(repo, secret);
         }
 
-        return  authConfigs.stream()
+        return authConfigs.stream()
                 .filter(auth -> canHandle(auth, repo))
                 .findFirst()
                 .map(auth -> {
                     if (auth instanceof AccessToken token) {
-                        return ImmutableActiveAccessToken.builder()
+                        return ActiveAccessToken.builder()
                                 .token(token.token())
                                 .build();
                     }
@@ -160,18 +181,13 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
     private Optional<ActiveAccessToken> fromSecret(URI repo, @Nonnull Secret secret) {
         if (secret instanceof KeyPair) {
             return Optional.empty(); // we don't handle ssh keypairs here
-        } else if (secret instanceof UsernamePassword up) {
-            return Optional.ofNullable(fromCredentials(repo, up));
+        } else if (secret instanceof UsernamePassword) {
+            return Optional.empty(); // no need to cache
         } else if (secret instanceof BinaryDataSecret bds) {
             return Optional.ofNullable(fromBinaryData(repo, bds));
         }
 
         return Optional.empty();
-    }
-
-    private ActiveAccessToken fromCredentials(URI repo, UsernamePassword credentials) {
-        // TODO implement
-        return null;
     }
 
     private ActiveAccessToken fromBinaryData(URI repo, BinaryDataSecret bds) {

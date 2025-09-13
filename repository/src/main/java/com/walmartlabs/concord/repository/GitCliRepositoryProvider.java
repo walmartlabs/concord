@@ -21,7 +21,7 @@ package com.walmartlabs.concord.repository;
  */
 
 import com.walmartlabs.concord.common.PathUtils;
-import com.walmartlabs.concord.repository.auth.HttpAuthProvider;
+import com.walmartlabs.concord.repository.auth.GitAccessTokenProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +38,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
 
     private final GitClient client;
 
-    public GitCliRepositoryProvider(GitClientConfiguration cfg, HttpAuthProvider authProvider) {
+    public GitCliRepositoryProvider(GitClientConfiguration cfg, GitAccessTokenProvider authProvider) {
         this.client = new GitClient(cfg, authProvider);
     }
 

@@ -28,9 +28,9 @@ import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
 import java.io.Serializable;
-import java.net.URI;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.LinkedList;
 import java.util.List;
 
 public class GitConfiguration implements Serializable {
@@ -116,7 +116,23 @@ public class GitConfiguration implements Serializable {
     }
 
     public List<GitAuth> getAuthConfigs() {
+        // new, tighter, list of configs mapped to specific git hosts
+        var cfgs = new LinkedList<>(toGitAuth());
 
+        // Backwards compat for a single, global oauth token. We need to remove
+        // this eventually to keep things tidy, but migrating config and removing
+        // git.oauth is sufficiently secure
+        if (oauthToken != null) {
+            cfgs.add(AccessToken.builder()
+                    .baseUrl(".*")
+                    .token(oauthToken)
+                    .build());
+        }
+
+        return cfgs;
+    }
+
+    private List<GitAuth> toGitAuth() {
         return authConfigs.stream()
                 .map(o -> (AuthConfig) switch (GitAuthType.valueOf(o.getString("type").toUpperCase())) {
                     case OAUTH -> OauthConfig.from(o);

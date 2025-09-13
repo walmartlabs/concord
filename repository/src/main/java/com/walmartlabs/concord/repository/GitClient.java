@@ -26,7 +26,7 @@ import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.repository.auth.ActiveAccessToken;
-import com.walmartlabs.concord.repository.auth.HttpAuthProvider;
+import com.walmartlabs.concord.repository.auth.GitAccessTokenProvider;
 import com.walmartlabs.concord.sdk.Secret;
 import org.immutables.value.Value;
 import org.slf4j.Logger;
@@ -56,16 +56,23 @@ public class GitClient {
     private static final int SUCCESS_EXIT_CODE = 0;
 
     private final GitClientConfiguration cfg;
-    private final HttpAuthProvider authProvider;
+    private final GitAccessTokenProvider authProvider;
 
-    private final List<String> sensitiveData;
+    private final Set<Obfuscation> sensitiveData;
     private final ExecutorService executor;
 
-    public GitClient(GitClientConfiguration cfg, HttpAuthProvider authProvider) {
+    public GitClient(GitClientConfiguration cfg, GitAccessTokenProvider authProvider) {
         this.cfg = cfg;
         this.authProvider = authProvider;
-        this.sensitiveData = cfg.oauthToken() != null ? Collections.singletonList(cfg.oauthToken()) : Collections.emptyList();
         this.executor = Executors.newCachedThreadPool();
+        this.sensitiveData = new LinkedHashSet<>();
+
+        sensitiveData.add(new Obfuscation("(https://[^:]*:)[^@]+(@)", "$1***$2"));
+        sensitiveData.add(new Obfuscation("(https://x-access-token:)[^@]+(@)", "$1***$2"));
+
+        if (cfg.oauthToken() != null) {
+            sensitiveData.add(new Obfuscation(cfg.oauthToken(), "***"));
+        }
     }
 
     public FetchResult fetch(FetchRequest req) {
@@ -124,6 +131,8 @@ public class GitClient {
             throw new RepositoryException("Error while fetching a repository: " + e.getMessage());
         }
     }
+
+    record Obfuscation(String pattern, String replacement) {}
 
     private boolean alreadyFetched(Path workDir, Ref ref, NormalizedVersion version) {
         String head = revParse(workDir, "HEAD");
@@ -326,9 +335,17 @@ public class GitClient {
             return url;
         }
 
+        if (secret instanceof UsernamePassword up) {
+            return "https://" +
+                    (up.getUsername() == null ? "" : up.getUsername() + ":") +
+                    String.valueOf(up.getPassword()) +
+                    "@" +
+                    url.substring("https://".length());
+        }
+
         String token = authProvider.getAccessToken(uri.getHost(), uri, secret)
                 .map(ActiveAccessToken::token)
-                .orElse(cfg.oauthToken());
+                .orElse(null);
 
         if (token == null) {
             // provided url already has credentials OR there are no default credentials to use.
@@ -550,9 +567,7 @@ public class GitClient {
         env.put("GIT_TERMINAL_PROMPT", "0");
 
         try {
-            if (secret instanceof KeyPair) {
-                KeyPair keyPair = (KeyPair) secret;
-
+            if (secret instanceof KeyPair keyPair) {
                 key = createSshKeyFile(keyPair);
                 ssh = createUnixGitSSH(key);
 
@@ -565,18 +580,14 @@ public class GitClient {
                 }
 
                 log.info("using GIT_SSH to set credentials");
-            } else if (secret instanceof UsernamePassword) {
-                UsernamePassword userPass = (UsernamePassword) secret;
-
+            } else if (secret instanceof UsernamePassword userPass) {
                 askpass = createUnixStandardAskpass(userPass);
 
                 env.put("GIT_ASKPASS", askpass.toAbsolutePath().toString());
                 env.put("SSH_ASKPASS", askpass.toAbsolutePath().toString());
 
                 log.info("using GIT_ASKPASS to set credentials ");
-            } else if (secret instanceof BinaryDataSecret) {
-                BinaryDataSecret token = (BinaryDataSecret) secret;
-
+            } else if (secret instanceof BinaryDataSecret token) {
                 askpass = createUnixStandardAskpass(new UsernamePassword(new String(token.getData()), "".toCharArray()));
 
                 env.put("GIT_ASKPASS", askpass.toAbsolutePath().toString());
@@ -604,8 +615,8 @@ public class GitClient {
             return null;
         }
 
-        for (String p : sensitiveData) {
-            s = s.replaceAll(p, "***");
+        for (Obfuscation o : sensitiveData) {
+            s = s.replaceAll(o.pattern(), o.replacement());
         }
         return s;
     }

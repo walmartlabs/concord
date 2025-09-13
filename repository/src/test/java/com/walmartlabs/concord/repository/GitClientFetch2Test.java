@@ -22,7 +22,7 @@ package com.walmartlabs.concord.repository;
 
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
-import com.walmartlabs.concord.repository.auth.HttpAuthProvider;
+import com.walmartlabs.concord.repository.auth.GitAccessTokenProvider;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,7 +49,7 @@ public class GitClientFetch2Test {
     private GitClient client;
 
     @Mock
-    HttpAuthProvider authProvider;
+    GitAccessTokenProvider authProvider;
 
     @BeforeEach
     public void init() {

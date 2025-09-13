@@ -55,4 +55,8 @@ public interface ActiveAccessToken {
         return d.getSeconds();
     }
 
+    static ImmutableActiveAccessToken.Builder builder() {
+        return ImmutableActiveAccessToken.builder();
+    }
+
 }

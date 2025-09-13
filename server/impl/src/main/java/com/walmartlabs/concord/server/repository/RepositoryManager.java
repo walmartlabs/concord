@@ -63,7 +63,7 @@ public class RepositoryManager {
                              ProjectDao projectDao,
                              SecretManager secretManager,
                              DependencyManager dependencyManager,
-                             HttpAuthProviderImpl authProvider) throws IOException {
+                             ServerGitAccessTokenProvider authProvider) throws IOException {
 
         GitClientConfiguration gitCliCfg = GitClientConfiguration.builder()
                 .oauthToken(gitCfg.getOauthToken())

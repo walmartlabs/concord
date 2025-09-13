@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 import java.net.URI;
 import java.util.Optional;
 
-public interface HttpAuthProvider {
+public interface GitAccessTokenProvider {
 
     boolean canHandle(URI repo);
 

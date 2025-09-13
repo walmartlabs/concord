@@ -35,13 +35,13 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
-public class AgentHttpAuthProvider implements HttpAuthProvider {
+public class AgentGitAccessTokenProvider implements GitAccessTokenProvider {
 
     private final List<GitConfiguration.AuthConfig> authConfigs;
     private final ApiClient apiClient;
 
-    public AgentHttpAuthProvider(List<GitConfiguration.AuthConfig> authConfigs,
-                                 ApiClientFactory apiClientFactory) throws IOException {
+    public AgentGitAccessTokenProvider(List<GitConfiguration.AuthConfig> authConfigs,
+                                       ApiClientFactory apiClientFactory) throws IOException {
         this.authConfigs = authConfigs;
         this.apiClient = apiClientFactory.create(null);
     }
@@ -72,7 +72,7 @@ public class AgentHttpAuthProvider implements HttpAuthProvider {
                     }
 
                     if (auth instanceof GitConfiguration.OauthConfig oauth) {
-                        return ImmutableActiveAccessToken.builder()
+                        return ActiveAccessToken.builder()
                                 .token(oauth.token())
                                 .build();
                     }
@@ -96,7 +96,7 @@ public class AgentHttpAuthProvider implements HttpAuthProvider {
         try {
             var resp = systemApi.getSystemGitAuth(gitHost, repository);
 
-            return ImmutableActiveAccessToken.builder()
+            return ActiveAccessToken.builder()
                     .token(resp.getToken())
                     .expiresAt(resp.getExpiresAt())
                     .build();
