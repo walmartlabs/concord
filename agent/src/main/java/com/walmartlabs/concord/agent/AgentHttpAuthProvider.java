@@ -20,36 +20,30 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.walmartlabs.concord.agent.cfg.GitConfiguration;
-import com.walmartlabs.concord.agent.cfg.ServerConfiguration;
+import com.walmartlabs.concord.agent.remote.ApiClientFactory;
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ApiException;
+import com.walmartlabs.concord.client2.SystemApi;
 import com.walmartlabs.concord.repository.auth.*;
 import com.walmartlabs.concord.sdk.Secret;
-import org.immutables.value.Value;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public class AgentHttpAuthProvider implements HttpAuthProvider {
 
     private final List<GitConfiguration.AuthConfig> authConfigs;
-    private final ObjectMapper objectMapper;
-    private final ServerConfiguration serverCfg;
+    private final ApiClient apiClient;
 
     public AgentHttpAuthProvider(List<GitConfiguration.AuthConfig> authConfigs,
-                                 ObjectMapper objectMapper, ServerConfiguration serverCfg) {
+                                 ApiClientFactory apiClientFactory) throws IOException {
         this.authConfigs = authConfigs;
-        this.objectMapper = objectMapper;
-        this.serverCfg = serverCfg;
+        this.apiClient = apiClientFactory.create(null);
     }
 
     @Override
@@ -63,64 +57,52 @@ public class AgentHttpAuthProvider implements HttpAuthProvider {
     }
 
     @Override
-    public ActiveAccessToken get(String gitHost, URI repo, @Nullable Secret secret) {
+    public Optional<ActiveAccessToken> getAccessToken(String gitHost, URI repo, @Nullable Secret secret) {
+
+        if (secret != null) {
+            return fromSecret(repo, secret);
+        }
+
         return authConfigs.stream()
                 .filter(auth -> canHandle(auth.toGitAuth(), repo))
                 .findFirst()
                 .map(auth -> {
-                    if (auth instanceof GitConfiguration.ConcordServerConfig concordserver) {
-                        return fetchAccessToken(concordserver, gitHost, repo);
+                    if (auth instanceof GitConfiguration.ConcordServerConfig) { // TODO do this as default/fallback? actually, maybe we enrich it with a different api token from system?
+                        return fetchAccessToken(gitHost, repo);
+                    }
+
+                    if (auth instanceof GitConfiguration.OauthConfig oauth) {
+                        return ImmutableActiveAccessToken.builder()
+                                .token(oauth.token())
+                                .build();
                     }
 
                     throw new IllegalArgumentException("Unsupported GitAuth type for repo: " + repo);
-                })
-                .orElse(null); // TODO as long as we support git.oauth we wont throw an exception here
+                });
     }
 
-    ActiveAccessToken fetchAccessToken(GitConfiguration.ConcordServerConfig serverConfig, String gitHost, URI repository) {
-        if(serverCfg.getApiKey() == null) {
-            throw new IllegalStateException("Agent apiKey is required to retrieve app installation token");
-        }
-        var req = HttpRequest.newBuilder().GET()
-                .uri(URI.create(serverCfg.getApiBaseUrl() + "/api/v1/secret/gitauth/token" +
-                        "?gitHost=" + gitHost +
-                        "&repoUri=" + repository.toString()
-                ))
-                .header("Authorization", serverCfg.getApiKey())
-                .header("Accept", "application/json")
-                .build();
+    private Optional<ActiveAccessToken> fromSecret(URI repo, @Nonnull Secret secret) {
+        // TODO implement
+
+        // determine type (token, app installation, ssh keypair)
+        // if token or ssh keypair, return it..refactor ActiveAccessToken to support ssh keypair
+        // if app installation, do the jwt dance (or maybe make the server handle/cache?)
+        return Optional.empty();
+    }
+
+    ActiveAccessToken fetchAccessToken(String gitHost, URI repository) {
+        var systemApi = new SystemApi(apiClient);
 
         try {
-            return sendRequest(req, 200, ActiveAccessToken.class);
-        } catch (IOException e) {
-            throw new RuntimeException("Error generating app access token", e);
+            var resp = systemApi.getSystemGitAuth(gitHost, repository);
+
+            return ImmutableActiveAccessToken.builder()
+                    .token(resp.getToken())
+                    .expiresAt(resp.getExpiresAt())
+                    .build();
+        } catch (ApiException e) {
+            throw new RuntimeException("Error retrieving system git auth", e);
         }
     }
 
-    private <T> T sendRequest(HttpRequest httpRequest, int expectedCode, Class<T> clazz) throws IOException {
-        try {
-            var resp = HttpClient.newHttpClient().send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
-            if (resp.statusCode() != expectedCode) {
-                throw new RuntimeException("Failed to retrieve app installation info, status code: " + resp.statusCode());
-            }
-            return objectMapper.readValue(resp.body(), clazz);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        throw new IllegalStateException("Unexpected error sending HTTP request");
-    }
-
-    @Value.Immutable
-    @Value.Style(jdkOnly = true)
-    @JsonDeserialize(as = ImmutableAgentAppInstallationAccessToken.class)
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public interface AgentAppInstallationAccessToken {
-
-        String token();
-
-        @JsonProperty("expires_at")
-        OffsetDateTime expiresAt();
-
-    }
 }

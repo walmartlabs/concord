@@ -28,6 +28,7 @@ import com.walmartlabs.concord.common.ObjectMapperProvider;
 import com.walmartlabs.concord.config.ConfigModule;
 import com.walmartlabs.concord.db.DatabaseModule;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
+import com.walmartlabs.concord.repository.auth.HttpAuthProvider;
 import com.walmartlabs.concord.server.agent.AgentModule;
 import com.walmartlabs.concord.server.agent.websocket.WebSocketModule;
 import com.walmartlabs.concord.server.audit.AuditLogModule;
@@ -39,8 +40,10 @@ import com.walmartlabs.concord.server.events.EventModule;
 import com.walmartlabs.concord.server.message.MessageChannelManager;
 import com.walmartlabs.concord.server.metrics.MetricModule;
 import com.walmartlabs.concord.server.org.OrganizationModule;
+import com.walmartlabs.concord.server.org.secret.SystemResource;
 import com.walmartlabs.concord.server.policy.PolicyModule;
 import com.walmartlabs.concord.server.process.ProcessModule;
+import com.walmartlabs.concord.server.repository.HttpAuthProviderImpl;
 import com.walmartlabs.concord.server.repository.RepositoryModule;
 import com.walmartlabs.concord.server.role.RoleModule;
 import com.walmartlabs.concord.server.security.SecurityModule;
@@ -89,6 +92,8 @@ public class ConcordServerModule implements Module {
         binder.bind(Listeners.class).in(SINGLETON);
         binder.bind(SecureRandom.class).toProvider(SecureRandomProvider.class);
 
+        binder.bind(HttpAuthProvider.class).to(HttpAuthProviderImpl.class).in(SINGLETON);
+
         binder.bind(MessageChannelManager.class).in(SINGLETON);
 
         binder.bind(DependencyManagerConfiguration.class).toProvider(DependencyManagerConfigurationProvider.class);
@@ -110,6 +115,7 @@ public class ConcordServerModule implements Module {
         binder.install(new WebSocketModule());
 
         bindJaxRsResource(binder, ServerResource.class);
+        bindJaxRsResource(binder, SystemResource.class);
     }
 
     private static Config loadDefaultConfig() {

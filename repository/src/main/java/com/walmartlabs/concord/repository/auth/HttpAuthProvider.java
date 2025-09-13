@@ -20,15 +20,17 @@ package com.walmartlabs.concord.repository.auth;
  * =====
  */
 
+import com.walmartlabs.concord.repository.RepositoryException;
 import com.walmartlabs.concord.sdk.Secret;
 
 import javax.annotation.Nullable;
 import java.net.URI;
+import java.util.Optional;
 
 public interface HttpAuthProvider {
 
     boolean canHandle(URI repo);
 
-    ActiveAccessToken get(String gitHost, URI repo, @Nullable Secret secret);
+    Optional<ActiveAccessToken> getAccessToken(String gitHost, URI repo, @Nullable Secret secret) throws RepositoryException;
 
 }

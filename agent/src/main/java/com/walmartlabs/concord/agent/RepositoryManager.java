@@ -23,7 +23,7 @@ package com.walmartlabs.concord.agent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.agent.cfg.GitConfiguration;
 import com.walmartlabs.concord.agent.cfg.RepositoryCacheConfiguration;
-import com.walmartlabs.concord.agent.cfg.ServerConfiguration;
+import com.walmartlabs.concord.agent.remote.ApiClientFactory;
 import com.walmartlabs.concord.client2.SecretClient;
 import com.walmartlabs.concord.imports.Import.SecretDefinition;
 import com.walmartlabs.concord.repository.*;
@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 
 public class RepositoryManager {
@@ -47,7 +46,7 @@ public class RepositoryManager {
     private final RepositoryProviders providers;
     private final RepositoryCache repositoryCache;
     private final GitConfiguration gitCfg;
-    private final ServerConfiguration serverCfg;
+
 
     @Inject
     public RepositoryManager(SecretClient secretClient,
@@ -55,11 +54,10 @@ public class RepositoryManager {
                              RepositoryCacheConfiguration cacheCfg,
                              ObjectMapper objectMapper,
                              DependencyManager dependencyManager,
-                             ServerConfiguration serverCfg) throws IOException {
+                             ApiClientFactory apiClientFactory) throws IOException {
 
         this.secretClient = secretClient;
         this.gitCfg = gitCfg;
-        this.serverCfg = serverCfg;
 
         GitClientConfiguration clientCfg = GitClientConfiguration.builder()
                 .oauthToken(gitCfg.getToken())
@@ -72,11 +70,9 @@ public class RepositoryManager {
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
                 .build();
 
-        HttpAuthProvider authProvider = new AgentHttpAuthProvider(gitCfg.getAuthConfigs(), objectMapper,serverCfg);
+        HttpAuthProvider authProvider = new AgentHttpAuthProvider(gitCfg.getAuthConfigs(), apiClientFactory);
 
-        List<RepositoryProvider> providers = Arrays.asList(new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(clientCfg, authProvider));
-        this.providers = new RepositoryProviders(providers);
-
+        this.providers = new RepositoryProviders(List.of(new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(clientCfg, authProvider)));
         this.repositoryCache = new RepositoryCache(cacheCfg.getCacheDir(),
                 cacheCfg.getInfoDir(),
                 cacheCfg.getLockTimeout(),

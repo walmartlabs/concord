@@ -46,7 +46,11 @@ public enum Permission {
      * <p>
      * As in {@code com/walmartlabs/concord/server/db/v2.31.0.xml}
      */
-    API_KEY_SPECIFY_VALUE("apiKeySpecifyValue");
+    API_KEY_SPECIFY_VALUE("apiKeySpecifyValue"),
+    /**
+     * Allows users to access to system-provided git auth tokens.
+     */
+    SYSTEM_GIT_AUTH("systemGitAuth");
 
     private final String key;
 

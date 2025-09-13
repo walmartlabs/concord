@@ -21,8 +21,11 @@ package com.walmartlabs.concord.repository;
  */
 
 
+import java.io.Serial;
+
 public class RepositoryException extends RuntimeException {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     public RepositoryException(String message) {
@@ -31,5 +34,15 @@ public class RepositoryException extends RuntimeException {
 
     public RepositoryException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    public static class NotFoundException extends RepositoryException {
+        public NotFoundException(String message) {
+            super(message);
+        }
+
+        public NotFoundException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 }

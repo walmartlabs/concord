@@ -24,44 +24,72 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.walmartlabs.concord.common.ObjectMapperProvider;
+import com.walmartlabs.concord.common.secret.BinaryDataSecret;
+import com.walmartlabs.concord.common.secret.KeyPair;
+import com.walmartlabs.concord.common.secret.UsernamePassword;
+import com.walmartlabs.concord.repository.RepositoryException;
 import com.walmartlabs.concord.repository.auth.*;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.cfg.GitConfiguration;
 import org.immutables.value.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
-import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.function.BiFunction;
 
 public class HttpAuthProviderImpl implements HttpAuthProvider {
+
+    private static final Logger log = LoggerFactory.getLogger(HttpAuthProviderImpl.class);
 
     private final List<GitAuth> authConfigs;
     private final ObjectMapper objectMapper;
 
-    private final ConcurrentHashMap<String, ActiveAccessToken> tokenCache = new ConcurrentHashMap<>();
+    private final LoadingCache<CacheKey, Optional<ActiveAccessToken>> cache;
+
+    private record CacheKey(URI repoUri, Secret secret) {}
 
     @Inject
     public HttpAuthProviderImpl(GitConfiguration gitCfg,
-                                ObjectMapperProvider mapperProvider) {
+                                ObjectMapper objectMapper) {
         this.authConfigs = gitCfg.getAuthConfigs();
-        this.objectMapper = mapperProvider.get();
+        this.objectMapper = objectMapper;
+        this.cache = CacheBuilder.newBuilder()
+                .expireAfterWrite(gitCfg.getSystemAuthCacheDuration())
+                .maximumSize(gitCfg.getSystemAuthCacheMaxSize())
+                .removalListener(k -> log.info("Removing token from cache: {}", k.getKey()))
+                .build(new CacheLoader<>() {
+                    @Override
+                    public @Nonnull Optional<ActiveAccessToken> load(@Nonnull CacheKey key) {
+                        log.info("Loading token to cache: {}", key);
+                        return fetchToken(key.repoUri(), key.secret());
+                    }
+                });
     }
 
     @Override
@@ -75,8 +103,43 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
     }
 
     @Override
-    public ActiveAccessToken get(String gitHost, URI repo, @Nullable Secret secret) {
-        return (ActiveAccessToken) authConfigs.stream()
+    public Optional<ActiveAccessToken> getAccessToken(String gitHost, URI repo, @Nullable Secret secret) throws RepositoryException {
+        try {
+            var cacheKey = new CacheKey(repo, secret);
+            var activeToken = cache.get(cacheKey);
+
+            if (activeToken.isPresent() && activeToken.get().secondsUntilExpiration() < 10) {
+                // not enough time to be useful
+                cache.invalidate(cacheKey);
+                return cache.get(cacheKey);
+            }
+
+            // refresh cache if the token is expiring soon, doesn't affect current token
+            if (activeToken.isPresent() && activeToken.get().secondsUntilExpiration() < 300) {
+                cache.refresh(cacheKey);
+            }
+
+            return activeToken;
+        } catch (ExecutionException e) {
+            throw new RepositoryException("Error retrieving access token for repo: " + repo, e);
+        } catch (UncheckedExecutionException e) {
+            // unwrap from guava
+            if (e.getCause() instanceof RepositoryException repoEx) {
+                throw repoEx;
+            }
+
+            log.warn("getAccessToken ['{}'] -> error: {}", repo,  e.getMessage());
+
+            throw new RepositoryException("Unexpected error retrieving access token for repo: " + repo);
+        }
+    }
+
+    private Optional<ActiveAccessToken> fetchToken(URI repo, @Nullable Secret secret) {
+        if (secret != null) {
+             return fromSecret(repo, secret);
+        }
+
+        return  authConfigs.stream()
                 .filter(auth -> canHandle(auth, repo))
                 .findFirst()
                 .map(auth -> {
@@ -91,24 +154,44 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
                     }
 
                     throw new IllegalArgumentException("Unsupported GitAuth type for repo: " + repo);
-                })
-                .orElse(null); // TODO as long as we support git.oauth we wont throw an exception here
+                });
+    }
+
+    private Optional<ActiveAccessToken> fromSecret(URI repo, @Nonnull Secret secret) {
+        if (secret instanceof KeyPair) {
+            return Optional.empty(); // we don't handle ssh keypairs here
+        } else if (secret instanceof UsernamePassword up) {
+            return Optional.ofNullable(fromCredentials(repo, up));
+        } else if (secret instanceof BinaryDataSecret bds) {
+            return Optional.ofNullable(fromBinaryData(repo, bds));
+        }
+
+        return Optional.empty();
+    }
+
+    private ActiveAccessToken fromCredentials(URI repo, UsernamePassword credentials) {
+        // TODO implement
+        return null;
+    }
+
+    private ActiveAccessToken fromBinaryData(URI repo, BinaryDataSecret bds) {
+        // TODO implement
+        return null;
     }
 
     private ActiveAccessToken getTokenFromAppInstall(AppInstallation app, URI repo) {
         // Some folks give sloppy, but valid, urls like https://me123@github.com/my/repo.git/
-        String repoUrl = repo.toString();
-        String baseUrl = app.baseUrl().toString();
-        String cleanedPath = repoUrl.replaceFirst(".*" + baseUrl, "")
+        var repoUrl = repo.toString();
+        var baseUrl = app.baseUrl();
+        var cleanedPath = repoUrl.replaceFirst(".*" + baseUrl, "")
                 .replaceFirst("\\.git$", "");
 
 
         // parse out the owner/repo from the path
-        var pathParts = Arrays.asList(cleanedPath.split("/")).stream()
-                .filter(e -> e != null && !e.isBlank())
+        var pathParts = Arrays.stream(cleanedPath.split("/"))
+                .filter(e -> !e.isBlank())
                 .limit(2)
                 .toList();
-
 
         if (pathParts.size() != 2) {
             throw new IllegalArgumentException("Failed to parse owner and repository from path: " + cleanedPath);
@@ -119,38 +202,19 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
         return getToken(app, ownerAndRepo);
     }
 
-
-
-    public ActiveAccessToken getToken(AppInstallation app, String orgRepo) {
-        String cacheKey = app.clientId() + ":" + orgRepo;
-        ActiveAccessToken cached = tokenCache.get(cacheKey);
-
-        // Make sure we have at least 60 seconds before expiry
-        if (cached != null && !isExpired(cached, 60)) {
-            return cached;
-        }
-
+    public ActiveAccessToken getToken(AppInstallation app, String orgRepo) throws RepositoryException {
         try {
             var jwt = generateJWT(app);
-            var accessTokenUrl = accessTokenUrl(app.apiUrl(), orgRepo, jwt);
-            var newToken = createAccessToken(accessTokenUrl, jwt);
-            tokenCache.put(cacheKey, newToken);
-            return newToken;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to generate JWT token", e);
+            var accessTokenUrl = getAccessTokenUrl(app.apiUrl(), orgRepo, jwt);
+            return createAccessToken(accessTokenUrl, jwt);
+        } catch (JOSEException e) {
+            throw new RepositoryException("Error generating JWT for app: " + app, e);
+        } catch (IOException e) {
+            throw new RepositoryException("Error reading app private key: " + app, e);
         }
     }
 
-    static boolean isExpired(ActiveAccessToken token, long buffer) {
-        if (token == null) {
-            return true;
-        }
-
-        return OffsetDateTime.now()
-                .isAfter(token.expiresAt().minusSeconds(buffer));
-    }
-
-    String accessTokenUrl(String apiBaseUrl, String installationRepo, String jwt) {
+    String getAccessTokenUrl(String apiBaseUrl, String installationRepo, String jwt) throws RepositoryException {
         var req = HttpRequest.newBuilder().GET()
                 .uri(URI.create(apiBaseUrl + "/repos/" + installationRepo + "/installation"))
                 .header("Authorization", "Bearer " + jwt)
@@ -158,12 +222,18 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
                 .header("X-GitHub-Api-Version", "2022-11-28")
                 .build();
 
-        try {
-            var appInstallation = sendRequest(req, 200, GitHubAppInstallation.class);
+            var appInstallation = sendRequest(req, 200, GitHubAppInstallation.class, (code, body) -> {
+                log.warn("getAccessTokenUrl ['{}'] -> error: {} : {}", installationRepo, code, body);
+
+                if (code == 404) {
+                    // not possible to discern between repo not found and app not installed for existing (private) repo
+                    return new RepositoryException.NotFoundException("Repo not found or App installation not found for repo");
+                }
+
+                return new RepositoryException("Unexpected error locating repo installation: " + code);
+            });
+
             return appInstallation.accessTokensUrl();
-        } catch (Exception e) {
-            throw new RuntimeException("Error retrieving app installation", e);
-        }
     }
 
     ActiveAccessToken createAccessToken(String accessTokenUrl, String jwt) {
@@ -175,18 +245,20 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
                 .header("X-GitHub-Api-Version", "2022-11-28")
                 .build();
 
-        try {
-            return sendRequest(req, 201, ActiveAccessToken.class);
-        } catch (IOException e) {
-            throw new RuntimeException("Error generating app access token", e);
-        }
+        return sendRequest(req, 201, ActiveAccessToken.class, (code, body) -> {
+            log.warn("createAccessToken ['{}'] -> error: {} : {}", accessTokenUrl, code, body);
+
+            if (code == 404) {
+                // this would be pretty odd to hit, this means the url returned from the installation lookup is invalid
+                return new RepositoryException.NotFoundException("App access token url not found");
+            }
+
+            return new RepositoryException("Unexpected error creating app access token: " + code);
+        });
     }
 
-    static String generateJWT(AppInstallation auth) throws Exception {
-
-
+    static String generateJWT(AppInstallation auth) throws IOException, JOSEException {
         var pk = Files.readString(auth.privateKey());
-
         var rsaJWK = JWK.parseFromPEMEncodedObjects(pk).toRSAKey();
 
         // Create RSA-signer with the private key
@@ -196,7 +268,7 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
         var claimsSet = new JWTClaimsSet.Builder()
                 .issueTime(new Date())
                 .issuer(auth.clientId())
-                .expirationTime(new Date(new Date().getTime() + 60 * 10 * 1000))
+                .expirationTime(new Date(new Date().getTime() + 60 * 10 * 1000)) // TODO parameterize in config(s)
                 .build();
 
         var signedJWT = new SignedJWT(
@@ -212,13 +284,15 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
         return signedJWT.serialize();
     }
 
-    private <T> T sendRequest(HttpRequest httpRequest, int expectedCode, Class<T> clazz) throws IOException {
+    private <T> T sendRequest(HttpRequest httpRequest, int expectedCode, Class<T> clazz, BiFunction<Integer, String, RepositoryException> exFun) throws RepositoryException {
         try {
             var resp = HttpClient.newHttpClient().send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
             if (resp.statusCode() != expectedCode) {
-                throw new RuntimeException("Failed to retrieve app installation info, status code: " + resp.statusCode());
+                throw exFun.apply(resp.statusCode(), readBody(resp));
             }
             return objectMapper.readValue(resp.body(), clazz);
+        } catch (IOException e) {
+            throw new RepositoryException("Error sending request", e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -226,6 +300,11 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
         throw new IllegalStateException("Unexpected error sending HTTP request");
     }
 
+    String readBody(HttpResponse<InputStream> resp) throws IOException {
+        try (var is = resp.body()) {
+            return new String(is.readAllBytes());
+        }
+    }
 
     @Value.Immutable
     @Value.Style(jdkOnly = true)
@@ -235,7 +314,7 @@ public class HttpAuthProviderImpl implements HttpAuthProvider {
 
         /*
         This is all we **need**, even though there's other attributes. Some may differ
-        between GitHub "cloud" and GitHub Enterprise. So, be care if/when adding more.
+        between GitHub "cloud" and GitHub Enterprise/private. So, be care if/when adding more.
          */
         @JsonProperty("access_tokens_url")
         String accessTokensUrl();

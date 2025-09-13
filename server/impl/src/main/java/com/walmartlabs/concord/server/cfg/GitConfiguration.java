@@ -47,6 +47,14 @@ public class GitConfiguration implements Serializable {
     private List<com.typesafe.config.Config> authConfigs;
 
     @Inject
+    @Config("git.systemAuthCacheDuration")
+    private Duration systemAuthCacheDuration;
+
+    @Inject
+    @Config("git.systemAuthCacheMaxSize")
+    private int systemAuthCacheMaxSize;
+
+    @Inject
     @Config("git.authorizedGitHosts")
     @Nullable
     private List<String> authorizedGitHosts;
@@ -116,6 +124,14 @@ public class GitConfiguration implements Serializable {
                 })
                 .map(AuthConfig::toGitAuth)
                 .toList();
+    }
+
+    public Duration getSystemAuthCacheDuration() {
+        return systemAuthCacheDuration;
+    }
+
+    public int getSystemAuthCacheMaxSize() {
+        return systemAuthCacheMaxSize;
     }
 
     public List<String> getAuthorizedGitHosts() {

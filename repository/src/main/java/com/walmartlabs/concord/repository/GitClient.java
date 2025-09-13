@@ -25,6 +25,7 @@ import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
+import com.walmartlabs.concord.repository.auth.ActiveAccessToken;
 import com.walmartlabs.concord.repository.auth.HttpAuthProvider;
 import com.walmartlabs.concord.sdk.Secret;
 import org.immutables.value.Value;
@@ -325,13 +326,11 @@ public class GitClient {
             return url;
         }
 
-        String token = authProvider.get(uri.getHost(), uri, secret).token();
+        String token = authProvider.getAccessToken(uri.getHost(), uri, secret)
+                .map(ActiveAccessToken::token)
+                .orElse(cfg.oauthToken());
 
-        if(token == null && cfg.oauthToken() != null) {
-            token = cfg.oauthToken();
-        }
-
-        if (token == null || url.contains("@") || !url.startsWith("https://")) {
+        if (token == null) {
             // provided url already has credentials OR there are no default credentials to use.
             // anonymous auth is the only viable option.
             return url;
