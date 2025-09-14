@@ -43,6 +43,7 @@ import com.walmartlabs.concord.repository.RepositoryException;
 import com.walmartlabs.concord.repository.auth.*;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.cfg.GitConfiguration;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.immutables.value.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -157,6 +158,7 @@ public class ServerGitTokenProvider implements GitTokenProvider {
         return authConfigs.stream().anyMatch(auth -> auth.canHandle(repoUri));
     }
 
+    @WithTimer
     @Override
     public Optional<ActiveAccessToken> getAccessToken(String gitHost, URI repo, @Nullable Secret secret) {
         try {
@@ -268,7 +270,8 @@ public class ServerGitTokenProvider implements GitTokenProvider {
         }
     }
 
-    private ActiveAccessToken getTokenFromAppInstall(AppInstallation app, URI repo) {
+    @WithTimer
+    protected ActiveAccessToken getTokenFromAppInstall(AppInstallation app, URI repo) {
         // Some folks give sloppy, but valid, urls like https://me123@github.com/my/repo.git/
         var repoUrl = repo.toString();
         var baseUrl = app.baseUrl();
@@ -347,7 +350,7 @@ public class ServerGitTokenProvider implements GitTokenProvider {
     }
 
     static String generateJWT(AppInstallation auth) throws IOException, JOSEException {
-        var pk = auth.pkData();
+        var pk = auth.privateKey();
         var rsaJWK = JWK.parseFromPEMEncodedObjects(pk).toRSAKey();
 
         // Create RSA-signer with the private key

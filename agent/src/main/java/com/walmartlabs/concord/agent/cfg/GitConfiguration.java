@@ -28,6 +28,8 @@ import com.walmartlabs.concord.repository.auth.ConcordServer;
 import com.walmartlabs.concord.repository.auth.GitAuth;
 
 import javax.inject.Inject;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
@@ -165,11 +167,18 @@ public class GitConfiguration {
 
         @Override
         public GitAuth toGitAuth() {
-            return AppInstallation.builder()
-                    .baseUrl(this.gitHost())
-                    .clientId(this.clientId())
-                    .privateKey(Paths.get(this.privateKey()))
-                    .build();
+            try {
+                var pkData = Files.readString(Paths.get(this.privateKey()));
+
+                return AppInstallation.builder()
+                        .baseUrl(this.gitHost())
+                        .clientId(this.clientId())
+                        .privateKey(pkData)
+                        .apiUrl(null) // TODO fix
+                        .build();
+            } catch (IOException e) {
+                throw new RuntimeException("Error initializing Git App Installation auth", e);
+            }
         }
     }
 

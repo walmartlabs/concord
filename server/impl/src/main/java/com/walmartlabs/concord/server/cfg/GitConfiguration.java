@@ -27,7 +27,9 @@ import com.walmartlabs.concord.repository.auth.GitAuth;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
+import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.LinkedList;
@@ -214,12 +216,18 @@ public class GitConfiguration implements Serializable {
 
         @Override
         public GitAuth toGitAuth() {
-            return AppInstallation.builder()
-                    .baseUrl(this.gitHost())
-                    .clientId(this.clientId())
-                    .privateKey(Paths.get(this.privateKey()))
-                    .apiUrl(this.apiUrl())
-                    .build();
+            try {
+                var pkData = Files.readString(Paths.get(this.privateKey()));
+
+                return AppInstallation.builder()
+                        .baseUrl(this.gitHost())
+                        .clientId(this.clientId())
+                        .privateKey(pkData)
+                        .apiUrl(this.apiUrl())
+                        .build();
+            } catch (IOException e) {
+                throw new RuntimeException("Error initializing Git App Installation auth", e);
+            }
         }
     }
 
