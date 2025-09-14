@@ -28,7 +28,6 @@ import com.walmartlabs.concord.repository.auth.ConcordServer;
 import com.walmartlabs.concord.repository.auth.GitAuth;
 
 import javax.inject.Inject;
-import java.net.URI;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;

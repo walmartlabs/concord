@@ -316,13 +316,14 @@ public class GitClient {
     private String updateUrl(String url, Secret secret) {
         url = url.trim();
 
-        URI uri = URI.create(url);
+        if (!url.matches("^[A-Za-z][A-Za-z0-9+.-]+://.*")) {
+            // no scheme, assume ssh, e.g. from GitHub like 'git@github.com:owner/repo.git'
+            assertUriAllowed("ssh://" + url);
 
-        if (!isRepoUriAllowed(uri)) {
-            String msg = String.format("Provided repository ('%s') contains an unsupported URI scheme: '%s'.", url, uri.getScheme());
-            log.warn(msg);
-            throw new RepositoryException(msg);
+            return url; // return un-modified. git cli doesn't want the ssh scheme
         }
+
+        URI uri = assertUriAllowed(url);
 
         if (secret == null && !authProvider.canHandle(uri)) {
             // no user-provided auth
@@ -336,6 +337,7 @@ public class GitClient {
         }
 
         if (secret instanceof UsernamePassword up) {
+            // Secret contains static auth (token or username). No lookup needed.
             return "https://" +
                     (up.getUsername() == null ? "" : up.getUsername() + ":") +
                     String.valueOf(up.getPassword()) +
@@ -539,23 +541,34 @@ public class GitClient {
         }
     }
 
+    private URI assertUriAllowed(String rawUri) {
+        // make sure it's in valid format
+        URI uri = URI.create(rawUri);
+        assertUriAllowed(uri);
+
+        return uri;
+    }
+
     //TODO make sure that if allowedSchemes = [ "https", "ssh", "git", "file" ] is not present, allow all schemes
-    private boolean isRepoUriAllowed(URI uri) {
+    private void assertUriAllowed(URI uri) {
         String providedScheme = uri.getScheme();
         Set<String> allowedProtocols = cfg.allowedSchemes();
         boolean hasScheme = providedScheme != null && (!providedScheme.isEmpty());
 
         // the provided repo string is definitely an allowed protocol.
-        if(hasScheme && allowedProtocols.contains(providedScheme)) {
-            return true;
+        if (hasScheme && allowedProtocols.contains(providedScheme)) {
+            return;
         }
 
         // the provided repo string has no explicit scheme, should be understood to use an ssh connection
-        if(!hasScheme && uri.getUserInfo() != null) {
-            return true;
+        if (!hasScheme && uri.getUserInfo() != null) {
+            return;
         }
 
-        return false;
+        String msg = String.format("Provided repository ('%s') contains an unsupported URI scheme: '%s'.",
+                uri, uri.getScheme());
+        log.warn(msg);
+        throw new RepositoryException(msg);
     }
 
     private String execWithCredentials(Command cmd, Secret secret) {
