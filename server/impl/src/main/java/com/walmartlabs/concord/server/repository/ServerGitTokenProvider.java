@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.repository;
  * =====
  */
 
+import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,7 +60,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.file.Files;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -85,7 +86,8 @@ public class ServerGitTokenProvider implements GitTokenProvider {
 
     @Inject
     public ServerGitTokenProvider(GitConfiguration gitCfg,
-                                  ObjectMapper objectMapper) {
+                                  ObjectMapper objectMapper,
+                                  MetricRegistry metricRegistry) {
         this.authConfigs = gitCfg.getAuthConfigs();
         this.objectMapper = objectMapper;
         this.cache = CacheBuilder.newBuilder()
@@ -93,6 +95,7 @@ public class ServerGitTokenProvider implements GitTokenProvider {
                 .recordStats()
                 .maximumWeight(1024 * 10L) // ~ 10MB
                 .weigher((Weigher<CacheKey, Optional<ActiveAccessToken>>) (key, value) -> {
+                        log.info("Weighing cache entry: {}, {}", key, key.hashCode());
                         int weight = 1;
 
                         if (key.secret() != null) {
@@ -115,6 +118,7 @@ public class ServerGitTokenProvider implements GitTokenProvider {
                         return fetchToken(key.repoUri(), key.secret());
                     }
                 });
+        metricRegistry.gauge("git-token-cache-size", () -> cache::size);
     }
 
     @Override
@@ -360,7 +364,8 @@ public class ServerGitTokenProvider implements GitTokenProvider {
         var claimsSet = new JWTClaimsSet.Builder()
                 .issueTime(new Date())
                 .issuer(auth.clientId())
-                .expirationTime(new Date(new Date().getTime() + 60 * 10 * 1000)) // TODO parameterize in config(s)
+                // JWT expiration. GH requires less than 10 minutes
+                .expirationTime(new Date(new Date().getTime() + Duration.ofMinutes(10).toMillis()))
                 .build();
 
         var signedJWT = new SignedJWT(

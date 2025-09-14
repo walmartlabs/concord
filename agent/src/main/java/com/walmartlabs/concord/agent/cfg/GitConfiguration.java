@@ -110,7 +110,7 @@ public class GitConfiguration {
 
     public List<String> getAllowedSchemes() { return allowedSchemes; }
 
-    public List<AuthConfig> getAuthConfigs() {
+    public List<GitAuth> getAuthConfigs() {
 
         return authConfigs.stream()
                 .map(o -> {
@@ -122,6 +122,7 @@ public class GitConfiguration {
                         case CONCORD_SERVER -> ConcordServerConfig.from(o.toConfig());
                     };
                 })
+                .map(AuthConfig::toGitAuth)
                 .toList();
     }
 

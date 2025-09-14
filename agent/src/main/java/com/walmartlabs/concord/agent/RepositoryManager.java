@@ -70,9 +70,12 @@ public class RepositoryManager {
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
                 .build();
 
-        GitTokenProvider authProvider = new AgentGitTokenProvider(gitCfg.getAuthConfigs(), apiClientFactory);
+        GitTokenProvider authProvider = new AgentGitTokenProvider(gitCfg, apiClientFactory, objectMapper);
 
-        this.providers = new RepositoryProviders(List.of(new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(clientCfg, authProvider)));
+        this.providers = new RepositoryProviders(List.of(
+                new MavenRepositoryProvider(dependencyManager),
+                new GitCliRepositoryProvider(clientCfg, authProvider)
+        ));
         this.repositoryCache = new RepositoryCache(cacheCfg.getCacheDir(),
                 cacheCfg.getInfoDir(),
                 cacheCfg.getLockTimeout(),
