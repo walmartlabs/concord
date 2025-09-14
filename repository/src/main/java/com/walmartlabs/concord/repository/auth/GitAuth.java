@@ -20,12 +20,23 @@ package com.walmartlabs.concord.repository.auth;
  * =====
  */
 
-import java.util.Optional;
+import java.net.URI;
 
 public interface GitAuth {
 
+    /** Regex matching the host, optional port and path of a Git repository URL. */
     String baseUrl();
 
-    Optional<String> username(); // TODO Remove?
+    /**
+     * For compatibility with a {@link GitAuth} instance, a URI must match the
+     * {@link #baseUrl()} regex. The regex may match against the path to support
+     * either a Git host behind a reverse proxy or restricting the auth to specific
+     * org/repo patterns.
+     * @return {@code true} if this provider can handle the given repo URI, {@code false} otherwise.
+     */
+    default boolean canHandle(URI repo) {
+        String repoHostPortAndPath = repo.getHost() + (repo.getPort() == -1 ? "" : (":" + repo.getPort())) + (repo.getPath() == null ? "" : repo.getPath());
 
+        return repoHostPortAndPath.matches(baseUrl() + ".*");
+    }
 }

@@ -63,7 +63,7 @@ public class RepositoryManager {
                              ProjectDao projectDao,
                              SecretManager secretManager,
                              DependencyManager dependencyManager,
-                             ServerGitAccessTokenProvider authProvider) throws IOException {
+                             ServerGitTokenProvider authProvider) throws IOException {
 
         GitClientConfiguration gitCliCfg = GitClientConfiguration.builder()
                 .oauthToken(gitCfg.getOauthToken())
@@ -77,10 +77,13 @@ public class RepositoryManager {
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
                 .build();
 
-        List<RepositoryProvider> providers = List.of(new ClasspathRepositoryProvider(), new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(gitCliCfg, authProvider));
-
         this.gitCfg = gitCfg;
-        this.providers = new RepositoryProviders(providers);
+        this.providers =
+                new RepositoryProviders(List.of(
+                        new ClasspathRepositoryProvider(),
+                        new MavenRepositoryProvider(dependencyManager),
+                        new GitCliRepositoryProvider(gitCliCfg, authProvider)
+                ));
         this.secretManager = secretManager;
         this.projectDao = projectDao;
         this.repoCfg = repoCfg;

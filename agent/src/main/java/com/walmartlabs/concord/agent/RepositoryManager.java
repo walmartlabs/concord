@@ -27,7 +27,7 @@ import com.walmartlabs.concord.agent.remote.ApiClientFactory;
 import com.walmartlabs.concord.client2.SecretClient;
 import com.walmartlabs.concord.imports.Import.SecretDefinition;
 import com.walmartlabs.concord.repository.*;
-import com.walmartlabs.concord.repository.auth.GitAccessTokenProvider;
+import com.walmartlabs.concord.repository.auth.GitTokenProvider;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import org.slf4j.Logger;
@@ -70,7 +70,7 @@ public class RepositoryManager {
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
                 .build();
 
-        GitAccessTokenProvider authProvider = new AgentGitAccessTokenProvider(gitCfg.getAuthConfigs(), apiClientFactory);
+        GitTokenProvider authProvider = new AgentGitTokenProvider(gitCfg.getAuthConfigs(), apiClientFactory);
 
         this.providers = new RepositoryProviders(List.of(new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(clientCfg, authProvider)));
         this.repositoryCache = new RepositoryCache(cacheCfg.getCacheDir(),

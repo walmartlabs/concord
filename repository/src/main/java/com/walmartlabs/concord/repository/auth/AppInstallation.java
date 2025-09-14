@@ -20,19 +20,57 @@ package com.walmartlabs.concord.repository.auth;
  * =====
  */
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
+@JsonDeserialize(as = ImmutableAppInstallation.class)
 public interface AppInstallation extends GitAuth {
 
     String apiUrl();
 
     String clientId();
 
+    @Nullable
     Path privateKey();
+
+    @Nullable
+    String privateKeyData();
+
+    @Value.Derived
+    default String pkData() {
+        if (privateKeyData() != null) {
+            return privateKeyData();
+        }
+
+        var pk = privateKey();
+        if (pk == null) {
+            throw new IllegalStateException("Either 'privateKey' or 'privateKeyData' must be provided");
+        }
+
+        try {
+            return Files.readString(pk);
+        } catch (IOException e) {
+            throw new RuntimeException("Error reading the private key file: " + pk, e);
+        }
+    }
+
+    /**
+     * Validates object state before returned to caller.
+     */
+    @Value.Check
+    default void check() {
+        if (privateKey() == null && privateKeyData() == null) {
+            throw new IllegalStateException("Either 'privateKey' or 'privateKeyData' must be provided");
+        }
+    }
+
 
     static ImmutableAppInstallation.Builder builder() {
         return ImmutableAppInstallation.builder();

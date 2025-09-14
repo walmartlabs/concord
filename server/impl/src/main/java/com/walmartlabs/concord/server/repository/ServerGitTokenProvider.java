@@ -62,15 +62,18 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BiFunction;
+import java.util.regex.Pattern;
 
 @Named
 @Singleton
-public class ServerGitAccessTokenProvider implements GitAccessTokenProvider {
+public class ServerGitTokenProvider implements GitTokenProvider {
 
-    private static final Logger log = LoggerFactory.getLogger(ServerGitAccessTokenProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(ServerGitTokenProvider.class);
+    private static final Pattern START_JSON_OBJECT = Pattern.compile("^\\s*\\{.*", Pattern.DOTALL);
 
     private final List<GitAuth> authConfigs;
     private final ObjectMapper objectMapper;
@@ -80,8 +83,8 @@ public class ServerGitAccessTokenProvider implements GitAccessTokenProvider {
     private record CacheKey(URI repoUri, Secret secret) {}
 
     @Inject
-    public ServerGitAccessTokenProvider(GitConfiguration gitCfg,
-                                        ObjectMapper objectMapper) {
+    public ServerGitTokenProvider(GitConfiguration gitCfg,
+                                  ObjectMapper objectMapper) {
         this.authConfigs = gitCfg.getAuthConfigs();
         this.objectMapper = objectMapper;
         this.cache = CacheBuilder.newBuilder()
@@ -114,33 +117,53 @@ public class ServerGitAccessTokenProvider implements GitAccessTokenProvider {
     }
 
     @Override
-    public boolean canHandle(URI repoUri) {
-        return authConfigs.stream()
-                .anyMatch(auth -> canHandle(auth, repoUri));
+    public boolean canHandle(URI repo, @Nullable Secret secret) {
+        return validateSecret(secret) || systemSupports(repo);
     }
 
-    private static boolean canHandle(GitAuth auth, URI repoUri) {
-        return auth.baseUrl().matches(repoUri.getHost());
+    /**
+     * Validates given secret is usable enough to attempt a remote lookup. Not
+     * guaranteed to actually work, just a sanity check.
+     */
+    private boolean validateSecret(Secret secret) {
+        // secret must be one of:
+        // * plaintext token
+        // * JSON-formatted GitHub app installation details: clientId, privateKey, apiUrl
+
+        if (secret == null) {
+            return false;
+        }
+
+        if (!(secret instanceof BinaryDataSecret bds)) {
+            // this class is not the place for handling key pairs or username/password
+            return false;
+        } else {
+            String data = new String(bds.getData());
+            if (START_JSON_OBJECT.matcher(data).matches()) { // looks like JSON, starts with '{'
+                try {
+                    objectMapper.readValue(data, AppInstallation.class);
+                    return true;
+                } catch (IOException e) {
+                    return false;
+                }
+            } else {
+                // >0 length, printable ascii (no newlines, etc)
+                return data.matches("[ -~]+");
+            }
+        }
+    }
+
+    public boolean systemSupports(URI repoUri) {
+        return authConfigs.stream().anyMatch(auth -> auth.canHandle(repoUri));
     }
 
     @Override
-    public Optional<ActiveAccessToken> getAccessToken(String gitHost, URI repo, @Nullable Secret secret) throws RepositoryException {
+    public Optional<ActiveAccessToken> getAccessToken(String gitHost, URI repo, @Nullable Secret secret) {
         try {
             var cacheKey = new CacheKey(repo, secret);
             var activeToken = cache.get(cacheKey);
 
-            if (activeToken.isPresent() && activeToken.get().secondsUntilExpiration() < 10) {
-                // not enough time to be useful
-                cache.invalidate(cacheKey);
-                return cache.get(cacheKey);
-            }
-
-            // refresh cache if the token is expiring soon, doesn't affect current token
-            if (activeToken.isPresent() && activeToken.get().secondsUntilExpiration() < 300) {
-                cache.refresh(cacheKey);
-            }
-
-            return activeToken;
+            return activeToken.map(t -> refreshBeforeExpire(t, cacheKey));
         } catch (ExecutionException e) {
             throw new RepositoryException("Error retrieving access token for repo: " + repo, e);
         } catch (UncheckedExecutionException e) {
@@ -155,13 +178,38 @@ public class ServerGitAccessTokenProvider implements GitAccessTokenProvider {
         }
     }
 
+    /**
+     * Cache may return a token that's close to expiring. If it's too close,
+     * invalidate and get a new one. If it's just a little close, refresh the
+     * cache in the background and return the still-active token.
+     */
+    private ActiveAccessToken refreshBeforeExpire(@Nonnull ActiveAccessToken token, CacheKey cacheKey) {
+        if (token.secondsUntilExpiration() < 10) {
+            // not enough time to be useful. get a new token right now
+            cache.invalidate(cacheKey);
+            try {
+                return cache.get(cacheKey).orElse(null);
+            } catch (ExecutionException e) {
+                throw new RepositoryException("Error retrieving access token for repo: " + cacheKey.repoUri(), e);
+            }
+        }
+
+        // refresh cache if the token is expiring soon, doesn't affect current token
+        if (token.secondsUntilExpiration() < 300) {
+            cache.refresh(cacheKey);
+        }
+
+        return token;
+    }
+
     private Optional<ActiveAccessToken> fetchToken(URI repo, @Nullable Secret secret) {
         if (secret != null) {
              return fromSecret(repo, secret);
         }
 
+        // no secret, see if system config has something for this repo
         return authConfigs.stream()
-                .filter(auth -> canHandle(auth, repo))
+                .filter(auth -> auth.canHandle(repo))
                 .findFirst()
                 .map(auth -> {
                     if (auth instanceof AccessToken token) {
@@ -191,8 +239,33 @@ public class ServerGitAccessTokenProvider implements GitAccessTokenProvider {
     }
 
     private ActiveAccessToken fromBinaryData(URI repo, BinaryDataSecret bds) {
-        // TODO implement
-        return null;
+        var appInfo = parseAppInstallation(bds);
+        if (appInfo.isPresent()) {
+            return getTokenFromAppInstall(appInfo.get(), repo);
+        }
+
+        // should be a token
+        return ActiveAccessToken.builder()
+                .token(new String(bds.getData()).trim())
+                .build();
+    }
+
+    private Optional<AppInstallation> parseAppInstallation(BinaryDataSecret bds) {
+        Map<?, ?> base;
+
+        try { // find out if it's at least valid JSON.
+            base = objectMapper.readValue(bds.getData(), Map.class);
+        } catch (Exception e) {
+            // invalid JSON, may be a plaintext token
+            return Optional.empty();
+        }
+
+        try { // great, now convert it to the expected structure
+            return Optional.of(objectMapper.convertValue(base, AppInstallation.class));
+        } catch (IllegalArgumentException e) {
+            // doesn't match the expected structure
+            throw new RepositoryException("Invalid app installation definition.", e);
+        }
     }
 
     private ActiveAccessToken getTokenFromAppInstall(AppInstallation app, URI repo) {
@@ -224,9 +297,9 @@ public class ServerGitAccessTokenProvider implements GitAccessTokenProvider {
             var accessTokenUrl = getAccessTokenUrl(app.apiUrl(), orgRepo, jwt);
             return createAccessToken(accessTokenUrl, jwt);
         } catch (JOSEException e) {
-            throw new RepositoryException("Error generating JWT for app: " + app, e);
+            throw new RepositoryException("Error generating JWT for app: " + app.clientId(), e);
         } catch (IOException e) {
-            throw new RepositoryException("Error reading app private key: " + app, e);
+            throw new RepositoryException("Error reading app private key: " + app.clientId(), e);
         }
     }
 
@@ -274,7 +347,7 @@ public class ServerGitAccessTokenProvider implements GitAccessTokenProvider {
     }
 
     static String generateJWT(AppInstallation auth) throws IOException, JOSEException {
-        var pk = Files.readString(auth.privateKey());
+        var pk = auth.pkData();
         var rsaJWK = JWK.parseFromPEMEncodedObjects(pk).toRSAKey();
 
         // Create RSA-signer with the private key

@@ -22,7 +22,7 @@ package com.walmartlabs.concord.repository;
 
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
-import com.walmartlabs.concord.repository.auth.GitAccessTokenProvider;
+import com.walmartlabs.concord.repository.auth.GitTokenProvider;
 import com.walmartlabs.concord.sdk.Secret;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -51,7 +51,7 @@ public class GitClientFetchTest {
     private GitClient client;
 
     @Mock
-    GitAccessTokenProvider authProvider;
+    GitTokenProvider authProvider;
 
     @BeforeEach
     public void init() {

@@ -35,19 +35,19 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
-public class AgentGitAccessTokenProvider implements GitAccessTokenProvider {
+public class AgentGitTokenProvider implements GitTokenProvider {
 
     private final List<GitConfiguration.AuthConfig> authConfigs;
     private final ApiClient apiClient;
 
-    public AgentGitAccessTokenProvider(List<GitConfiguration.AuthConfig> authConfigs,
-                                       ApiClientFactory apiClientFactory) throws IOException {
+    public AgentGitTokenProvider(List<GitConfiguration.AuthConfig> authConfigs,
+                                 ApiClientFactory apiClientFactory) throws IOException {
         this.authConfigs = authConfigs;
         this.apiClient = apiClientFactory.create(null);
     }
 
     @Override
-    public boolean canHandle(URI repoUri) {
+    public boolean canHandle(URI repoUri, Secret secret) {
         return authConfigs.stream()
                 .anyMatch(c -> c.gitHost().equals(repoUri.getHost()));
     }
@@ -58,7 +58,6 @@ public class AgentGitAccessTokenProvider implements GitAccessTokenProvider {
 
     @Override
     public Optional<ActiveAccessToken> getAccessToken(String gitHost, URI repo, @Nullable Secret secret) {
-
         if (secret != null) {
             return fromSecret(repo, secret);
         }
@@ -75,6 +74,11 @@ public class AgentGitAccessTokenProvider implements GitAccessTokenProvider {
                         return ActiveAccessToken.builder()
                                 .token(oauth.token())
                                 .build();
+                    }
+
+                    if (auth instanceof GitConfiguration.AppInstallationConfig app) {
+                        // TODO implement
+                        throw new UnsupportedOperationException("Not implemented yet: " + app);
                     }
 
                     throw new IllegalArgumentException("Unsupported GitAuth type for repo: " + repo);

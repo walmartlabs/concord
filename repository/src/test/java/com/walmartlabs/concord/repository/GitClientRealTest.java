@@ -24,7 +24,7 @@ import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
-import com.walmartlabs.concord.repository.auth.GitAccessTokenProvider;
+import com.walmartlabs.concord.repository.auth.GitTokenProvider;
 import com.walmartlabs.concord.sdk.Secret;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -54,7 +54,7 @@ public class GitClientRealTest {
     private static final Secret KEYPAIR = createKeypair();
 
     @Mock
-    GitAccessTokenProvider authProvider;
+    GitTokenProvider authProvider;
 
     private static Secret createKeypair() {
         try {

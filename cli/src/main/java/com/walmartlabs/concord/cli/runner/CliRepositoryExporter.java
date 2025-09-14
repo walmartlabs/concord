@@ -24,7 +24,7 @@ import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.RepositoryExporter;
 import com.walmartlabs.concord.repository.*;
 import com.walmartlabs.concord.repository.auth.ActiveAccessToken;
-import com.walmartlabs.concord.repository.auth.GitAccessTokenProvider;
+import com.walmartlabs.concord.repository.auth.GitTokenProvider;
 import com.walmartlabs.concord.sdk.Secret;
 
 import javax.annotation.Nullable;
@@ -64,9 +64,9 @@ public class CliRepositoryExporter implements RepositoryExporter {
                 .sshTimeoutRetryCount(SSH_TIMEOUT_RETRY_COUNT)
                 .build();
 
-        GitAccessTokenProvider authProvider = new GitAccessTokenProvider() {
+        GitTokenProvider authProvider = new GitTokenProvider() {
             @Override
-            public boolean canHandle(URI gitHost) {
+            public boolean canHandle(URI gitHost, @Nullable Secret secret) {
                 return false;
             }
 

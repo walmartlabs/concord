@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.org.secret;
 
 import com.walmartlabs.concord.repository.RepositoryException;
 import com.walmartlabs.concord.repository.auth.ActiveAccessToken;
-import com.walmartlabs.concord.repository.auth.GitAccessTokenProvider;
+import com.walmartlabs.concord.repository.auth.GitTokenProvider;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.security.Permission;
@@ -39,11 +39,11 @@ import java.net.URI;
 @Tag(name = "System")
 public class SystemResource implements Resource {
 
-    private final GitAccessTokenProvider gitAccessTokenProvider;
+    private final GitTokenProvider gitTokenProvider;
 
     @Inject
-    public SystemResource(GitAccessTokenProvider gitAccessTokenProvider) {
-        this.gitAccessTokenProvider = gitAccessTokenProvider;
+    public SystemResource(GitTokenProvider gitTokenProvider) {
+        this.gitTokenProvider = gitTokenProvider;
     }
 
     /**
@@ -58,7 +58,7 @@ public class SystemResource implements Resource {
         assertSystemGitAuthPermission();
 
         try {
-            return gitAccessTokenProvider.getAccessToken(gitHost, repoUri, null)
+            return gitTokenProvider.getAccessToken(gitHost, repoUri, null)
                     .orElseThrow(() -> new ConcordApplicationException("No system-provided auth found for the given repository URI: " + repoUri, Response.Status.NOT_FOUND));
         } catch (RepositoryException.NotFoundException e) {
             throw new ConcordApplicationException(e.getMessage(), Response.Status.BAD_REQUEST);

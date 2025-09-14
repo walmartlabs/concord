@@ -26,7 +26,7 @@ import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.repository.auth.ActiveAccessToken;
-import com.walmartlabs.concord.repository.auth.GitAccessTokenProvider;
+import com.walmartlabs.concord.repository.auth.GitTokenProvider;
 import com.walmartlabs.concord.sdk.Secret;
 import org.immutables.value.Value;
 import org.slf4j.Logger;
@@ -56,12 +56,12 @@ public class GitClient {
     private static final int SUCCESS_EXIT_CODE = 0;
 
     private final GitClientConfiguration cfg;
-    private final GitAccessTokenProvider authProvider;
+    private final GitTokenProvider authProvider;
 
     private final Set<Obfuscation> sensitiveData;
     private final ExecutorService executor;
 
-    public GitClient(GitClientConfiguration cfg, GitAccessTokenProvider authProvider) {
+    public GitClient(GitClientConfiguration cfg, GitTokenProvider authProvider) {
         this.cfg = cfg;
         this.authProvider = authProvider;
         this.executor = Executors.newCachedThreadPool();
@@ -317,7 +317,7 @@ public class GitClient {
         url = url.trim();
 
         if (!url.matches("^[A-Za-z][A-Za-z0-9+.-]+://.*")) {
-            // no scheme, assume ssh, e.g. from GitHub like 'git@github.com:owner/repo.git'
+            // no scheme. Assume ssh, e.g. from GitHub like 'git@github.com:owner/repo.git'
             assertUriAllowed("ssh://" + url);
 
             return url; // return un-modified. git cli doesn't want the ssh scheme
@@ -325,7 +325,7 @@ public class GitClient {
 
         URI uri = assertUriAllowed(url);
 
-        if (secret == null && !authProvider.canHandle(uri)) {
+        if (secret == null && !authProvider.canHandle(uri, null)) {
             // no user-provided auth
             // no matching system-provided auth
             return url;
@@ -343,6 +343,9 @@ public class GitClient {
                     String.valueOf(up.getPassword()) +
                     "@" +
                     url.substring("https://".length());
+        } else if (!authProvider.canHandle(uri, secret)) {
+            // not compatible with auth provider
+            return url;
         }
 
         String token = authProvider.getAccessToken(uri.getHost(), uri, secret)

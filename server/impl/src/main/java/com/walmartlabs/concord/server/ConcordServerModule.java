@@ -28,7 +28,7 @@ import com.walmartlabs.concord.common.ObjectMapperProvider;
 import com.walmartlabs.concord.config.ConfigModule;
 import com.walmartlabs.concord.db.DatabaseModule;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
-import com.walmartlabs.concord.repository.auth.GitAccessTokenProvider;
+import com.walmartlabs.concord.repository.auth.GitTokenProvider;
 import com.walmartlabs.concord.server.agent.AgentModule;
 import com.walmartlabs.concord.server.agent.websocket.WebSocketModule;
 import com.walmartlabs.concord.server.audit.AuditLogModule;
@@ -43,7 +43,7 @@ import com.walmartlabs.concord.server.org.OrganizationModule;
 import com.walmartlabs.concord.server.org.secret.SystemResource;
 import com.walmartlabs.concord.server.policy.PolicyModule;
 import com.walmartlabs.concord.server.process.ProcessModule;
-import com.walmartlabs.concord.server.repository.ServerGitAccessTokenProvider;
+import com.walmartlabs.concord.server.repository.ServerGitTokenProvider;
 import com.walmartlabs.concord.server.repository.RepositoryModule;
 import com.walmartlabs.concord.server.role.RoleModule;
 import com.walmartlabs.concord.server.security.SecurityModule;
@@ -92,7 +92,7 @@ public class ConcordServerModule implements Module {
         binder.bind(Listeners.class).in(SINGLETON);
         binder.bind(SecureRandom.class).toProvider(SecureRandomProvider.class);
 
-        binder.bind(GitAccessTokenProvider.class).to(ServerGitAccessTokenProvider.class).in(SINGLETON);
+        binder.bind(GitTokenProvider.class).to(ServerGitTokenProvider.class).in(SINGLETON);
 
         binder.bind(MessageChannelManager.class).in(SINGLETON);
 
