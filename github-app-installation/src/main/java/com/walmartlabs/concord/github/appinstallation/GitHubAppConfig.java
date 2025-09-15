@@ -20,7 +20,7 @@ package com.walmartlabs.concord.github.appinstallation;
  * =====
  */
 
-import com.walmartlabs.concord.common.GitAuth;
+import com.walmartlabs.concord.common.cfg.GitAuth;
 import org.immutables.value.Value;
 
 import java.time.Duration;

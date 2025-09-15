@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.common;
+package com.walmartlabs.concord.common.cfg;
 
 /*-
  * *****
@@ -60,7 +60,5 @@ public interface GitAuth {
             return ImmutableConcordServer.builder();
         }
     }
-
-
 
 }

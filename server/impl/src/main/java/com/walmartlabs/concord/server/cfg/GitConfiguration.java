@@ -20,9 +20,9 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.concord.common.GitAuth;
+import com.walmartlabs.concord.common.cfg.GitAuth;
 import com.walmartlabs.concord.config.Config;
-import com.walmartlabs.concord.github.appinstallation.AppInstallation;
+import com.walmartlabs.concord.github.appinstallation.cfg.AppInstallation;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;

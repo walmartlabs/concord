@@ -38,16 +38,15 @@ import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.walmartlabs.concord.common.ExpiringToken;
-import com.walmartlabs.concord.common.GitAuth;
+import com.walmartlabs.concord.common.cfg.GitAuth;
 import com.walmartlabs.concord.common.GitTokenProvider;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
-import com.walmartlabs.concord.github.appinstallation.AppInstallation;
+import com.walmartlabs.concord.github.appinstallation.cfg.AppInstallation;
 import com.walmartlabs.concord.github.appinstallation.GitHubAppConfig;
 import com.walmartlabs.concord.github.appinstallation.GitHubAppInstallationTokenProvider;
 import com.walmartlabs.concord.github.appinstallation.GitHubInstallationToken;
-import com.walmartlabs.concord.github.appinstallation.StaticInstallation;
 import com.walmartlabs.concord.repository.RepositoryException;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.cfg.GitConfiguration;
@@ -231,7 +230,7 @@ public class ServerGitTokenProvider implements GitTokenProvider {
                 .filter(auth -> auth.canHandle(repo))
                 .findFirst()
                 .map(auth -> {
-                    if (auth instanceof StaticInstallation token) {
+                    if (auth instanceof GitAuth.Oauth token) {
                         return GitHubInstallationToken.builder()
                                 .token(token.token())
                                 .build();

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.github.appinstallation;
+package com.walmartlabs.concord.github.appinstallation.cfg;
 
 /*-
  * *****
@@ -21,7 +21,7 @@ package com.walmartlabs.concord.github.appinstallation;
  */
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.walmartlabs.concord.common.GitAuth;
+import com.walmartlabs.concord.common.cfg.GitAuth;
 import org.immutables.value.Value;
 
 @Value.Immutable

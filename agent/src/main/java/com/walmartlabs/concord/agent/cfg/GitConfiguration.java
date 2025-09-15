@@ -22,8 +22,8 @@ package com.walmartlabs.concord.agent.cfg;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigObject;
-import com.walmartlabs.concord.common.GitAuth;
-import com.walmartlabs.concord.github.appinstallation.AppInstallation;
+import com.walmartlabs.concord.common.cfg.GitAuth;
+import com.walmartlabs.concord.github.appinstallation.cfg.AppInstallation;
 
 import javax.inject.Inject;
 import java.io.IOException;
