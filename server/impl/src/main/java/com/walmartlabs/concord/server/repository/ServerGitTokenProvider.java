@@ -135,7 +135,7 @@ public class ServerGitTokenProvider implements GitTokenProvider {
     }
 
     @Override
-    public boolean canHandle(URI repo, @Nullable Secret secret) {
+    public boolean supports(URI repo, @Nullable Secret secret) {
         return validateSecret(secret) || systemSupports(repo);
     }
 

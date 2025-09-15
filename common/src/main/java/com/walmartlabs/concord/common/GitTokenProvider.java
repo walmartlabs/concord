@@ -33,7 +33,7 @@ public interface GitTokenProvider {
      *         with this provider's {@link #getAccessToken(String, URI, Secret)} method,
      *         {@code false} otherwise.
      */
-    boolean canHandle(URI repo, @Nullable Secret secret);
+    boolean supports(URI repo, @Nullable Secret secret);
 
     Optional<ExpiringToken> getAccessToken(String gitHost, URI repo, @Nullable Secret secret);
 

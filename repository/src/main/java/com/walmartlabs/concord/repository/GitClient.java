@@ -325,7 +325,7 @@ public class GitClient {
 
         URI uri = assertUriAllowed(url);
 
-        if (secret == null && !authProvider.canHandle(uri, null)) {
+        if (secret == null && !authProvider.supports(uri, null)) {
             // no user-provided auth
             // no matching system-provided auth
             return url;
@@ -343,7 +343,7 @@ public class GitClient {
                     String.valueOf(up.getPassword()) +
                     "@" +
                     url.substring("https://".length());
-        } else if (!authProvider.canHandle(uri, secret)) {
+        } else if (!authProvider.supports(uri, secret)) {
             // not compatible with auth provider
             return url;
         }

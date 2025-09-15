@@ -83,7 +83,7 @@ public class AgentGitTokenProvider implements GitTokenProvider {
     }
 
     @Override
-    public boolean canHandle(URI repo, Secret secret) {
+    public boolean supports(URI repo, Secret secret) {
         return validateSecret(secret) || systemSupports(repo);
     }
     /**
@@ -129,7 +129,7 @@ public class AgentGitTokenProvider implements GitTokenProvider {
         }
 
         return authConfigs.stream()
-                .filter(auth -> canHandle(repo, secret))
+                .filter(auth -> auth.canHandle(repo))
                 .findFirst()
                 .map(auth -> {
                     if (auth instanceof GitAuth.ConcordServer) { // TODO do this as default/fallback? actually, maybe we enrich it with a different api token from system?

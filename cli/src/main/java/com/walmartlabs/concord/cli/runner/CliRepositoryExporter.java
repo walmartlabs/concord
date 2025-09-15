@@ -66,7 +66,7 @@ public class CliRepositoryExporter implements RepositoryExporter {
 
         GitTokenProvider authProvider = new GitTokenProvider() {
             @Override
-            public boolean canHandle(URI gitHost, @Nullable Secret secret) {
+            public boolean supports(URI gitHost, @Nullable Secret secret) {
                 return false;
             }
 
