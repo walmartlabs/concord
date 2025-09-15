@@ -63,6 +63,26 @@ public class AnsibleIT extends AbstractServerIT {
     }
 
     @Test
+    public void testConfigFile() throws Exception {
+        URI dir = AnsibleIT.class.getResource("ansibleConfigFile").toURI();
+        byte[] payload = archive(dir);
+
+        // ---
+
+        StartProcessResponse spr = start(payload);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getInstanceId());
+        assertLog(".*\"msg\":.*Hello, world.*", ab);
+    }
+
+    @Test
     public void testSkipTags() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleSkipTags").toURI();
         byte[] payload = archive(dir);
