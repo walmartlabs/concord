@@ -31,6 +31,10 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-github-app-installation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-client2</artifactId>
         </dependency>
         <dependency>

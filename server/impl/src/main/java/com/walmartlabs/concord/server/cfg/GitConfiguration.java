@@ -20,10 +20,9 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
+import com.walmartlabs.concord.common.GitAuth;
 import com.walmartlabs.concord.config.Config;
-import com.walmartlabs.concord.repository.auth.AccessToken;
-import com.walmartlabs.concord.repository.auth.AppInstallation;
-import com.walmartlabs.concord.repository.auth.GitAuth;
+import com.walmartlabs.concord.github.appinstallation.AppInstallation;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
@@ -125,7 +124,7 @@ public class GitConfiguration implements Serializable {
         // this eventually to keep things tidy, but migrating config and removing
         // git.oauth is sufficiently secure
         if (oauthToken != null) {
-            cfgs.add(AccessToken.builder()
+            cfgs.add(GitAuth.Oauth.builder()
                     .baseUrl(".*")
                     .token(oauthToken)
                     .build());
@@ -138,7 +137,7 @@ public class GitConfiguration implements Serializable {
         return authConfigs.stream()
                 .map(o -> (AuthConfig) switch (GitAuthType.valueOf(o.getString("type").toUpperCase())) {
                     case OAUTH -> OauthConfig.from(o);
-                    case APP_INSTALLATION -> AppInstallationConfig.from(o);
+                    case GITHUB_APP_INSTALLATION -> AppInstallationConfig.from(o);
                 })
                 .map(AuthConfig::toGitAuth)
                 .toList();
@@ -176,7 +175,7 @@ public class GitConfiguration implements Serializable {
 
     enum GitAuthType {
         OAUTH,
-        APP_INSTALLATION
+        GITHUB_APP_INSTALLATION
     }
 
     public interface AuthConfig {
@@ -196,7 +195,7 @@ public class GitConfiguration implements Serializable {
 
         @Override
         public GitAuth toGitAuth() {
-            return AccessToken.builder()
+            return GitAuth.Oauth.builder()
                     .baseUrl(this.gitHost())
                     .token(this.token())
                     .build();

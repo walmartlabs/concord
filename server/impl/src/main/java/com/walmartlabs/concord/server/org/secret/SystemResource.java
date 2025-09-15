@@ -20,9 +20,9 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
+import com.walmartlabs.concord.common.ExpiringToken;
+import com.walmartlabs.concord.common.GitTokenProvider;
 import com.walmartlabs.concord.repository.RepositoryException;
-import com.walmartlabs.concord.repository.auth.ActiveAccessToken;
-import com.walmartlabs.concord.repository.auth.GitTokenProvider;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.security.Permission;
@@ -53,8 +53,8 @@ public class SystemResource implements Resource {
     @Path("/gitauth")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Retrieves system-provided auth for give repository URI. Requires systemGitAuth permission. ", operationId = "getSystemGitAuth")
-    public ActiveAccessToken get(@QueryParam("gitHost") String gitHost,
-                                 @QueryParam("repoUri") URI repoUri) {
+    public ExpiringToken get(@QueryParam("gitHost") String gitHost,
+                             @QueryParam("repoUri") URI repoUri) {
         assertSystemGitAuthPermission();
 
         try {

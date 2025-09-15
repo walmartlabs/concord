@@ -20,9 +20,9 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
+import com.walmartlabs.concord.common.GitTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
-import com.walmartlabs.concord.repository.auth.GitTokenProvider;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

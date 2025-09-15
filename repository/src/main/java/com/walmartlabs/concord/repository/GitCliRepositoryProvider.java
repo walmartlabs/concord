@@ -20,8 +20,8 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
+import com.walmartlabs.concord.common.GitTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
-import com.walmartlabs.concord.repository.auth.GitTokenProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

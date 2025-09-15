@@ -20,11 +20,11 @@ package com.walmartlabs.concord.cli.runner;
  * =====
  */
 
+import com.walmartlabs.concord.common.ExpiringToken;
+import com.walmartlabs.concord.common.GitTokenProvider;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.RepositoryExporter;
 import com.walmartlabs.concord.repository.*;
-import com.walmartlabs.concord.repository.auth.ActiveAccessToken;
-import com.walmartlabs.concord.repository.auth.GitTokenProvider;
 import com.walmartlabs.concord.sdk.Secret;
 
 import javax.annotation.Nullable;
@@ -71,7 +71,7 @@ public class CliRepositoryExporter implements RepositoryExporter {
             }
 
             @Override
-            public Optional<ActiveAccessToken> getAccessToken(String gitHost, URI repo, @Nullable Secret secret) throws RepositoryException {
+            public Optional<ExpiringToken> getAccessToken(String gitHost, URI repo, @Nullable Secret secret) throws RepositoryException {
                 throw new UnsupportedOperationException("Not supported");
             }
         };

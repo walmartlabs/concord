@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.repository.auth;
+package com.walmartlabs.concord.github.appinstallation;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.repository.auth;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,21 +20,22 @@ package com.walmartlabs.concord.repository.auth;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Secret;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.walmartlabs.concord.common.GitAuth;
+import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
-import java.net.URI;
-import java.util.Optional;
+@Value.Immutable
+@Value.Style(jdkOnly = true)
+@JsonDeserialize(as = ImmutableAppInstallation.class)
+public interface AppInstallation extends GitAuth {
 
-public interface GitTokenProvider {
+    String apiUrl();
 
-    /**
-     * @return {@code true} if this the given repo URI and secret are compatible
-     *         with this provider's {@link #getAccessToken(String, URI, Secret)} method,
-     *         {@code false} otherwise.
-     */
-    boolean canHandle(URI repo, @Nullable Secret secret);
+    String clientId();
 
-    Optional<ActiveAccessToken> getAccessToken(String gitHost, URI repo, @Nullable Secret secret);
+    String privateKey();
 
+    static ImmutableAppInstallation.Builder builder() {
+        return ImmutableAppInstallation.builder();
+    }
 }

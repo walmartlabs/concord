@@ -22,10 +22,8 @@ package com.walmartlabs.concord.agent.cfg;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigObject;
-import com.walmartlabs.concord.repository.auth.AccessToken;
-import com.walmartlabs.concord.repository.auth.AppInstallation;
-import com.walmartlabs.concord.repository.auth.ConcordServer;
-import com.walmartlabs.concord.repository.auth.GitAuth;
+import com.walmartlabs.concord.common.GitAuth;
+import com.walmartlabs.concord.github.appinstallation.AppInstallation;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -118,7 +116,7 @@ public class GitConfiguration {
 
                     return (AuthConfig) switch (type) {
                         case OAUTH -> OauthConfig.from(o.toConfig());
-                        case APP_INSTALLATION -> AppInstallationConfig.from(o.toConfig());
+                        case GITHUB_APP_INSTALLATION -> AppInstallationConfig.from(o.toConfig());
                         case CONCORD_SERVER -> ConcordServerConfig.from(o.toConfig());
                     };
                 })
@@ -128,7 +126,7 @@ public class GitConfiguration {
 
     enum GitAuthType {
         OAUTH,
-        APP_INSTALLATION,
+        GITHUB_APP_INSTALLATION,
         CONCORD_SERVER
     }
 
@@ -149,7 +147,7 @@ public class GitConfiguration {
 
         @Override
         public GitAuth toGitAuth() {
-            return AccessToken.builder()
+            return GitAuth.Oauth.builder()
                     .baseUrl(this.gitHost())
                     .token(this.token())
                     .build();
@@ -193,7 +191,7 @@ public class GitConfiguration {
 
         @Override
         public GitAuth toGitAuth() {
-            return ConcordServer.builder()
+            return GitAuth.ConcordServer.builder()
                     .baseUrl(this.gitHost())
                     .build();
         }

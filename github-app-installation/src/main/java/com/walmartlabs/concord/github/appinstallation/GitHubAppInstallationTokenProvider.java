@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.github.appinstallation;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,6 +24,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.Weigher;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -31,19 +35,11 @@ import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.walmartlabs.concord.agent.cfg.GitConfiguration;
-import com.walmartlabs.concord.agent.remote.ApiClientFactory;
-import com.walmartlabs.concord.client2.ApiClient;
-import com.walmartlabs.concord.client2.ApiException;
-import com.walmartlabs.concord.client2.SystemApi;
 import com.walmartlabs.concord.common.ExpiringToken;
 import com.walmartlabs.concord.common.GitAuth;
-import com.walmartlabs.concord.common.GitTokenProvider;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
-import com.walmartlabs.concord.github.appinstallation.AppInstallation;
-import com.walmartlabs.concord.repository.RepositoryException;
 import com.walmartlabs.concord.sdk.Secret;
 import org.immutables.value.Value;
 import org.slf4j.Logger;
@@ -51,12 +47,15 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -65,79 +64,64 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 
-public class AgentGitTokenProvider implements GitTokenProvider {
+public class GitHubAppInstallationTokenProvider {
 
-    private static final Logger log = LoggerFactory.getLogger(AgentGitTokenProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(GitHubAppInstallationTokenProvider.class);
     private static final Pattern START_JSON_OBJECT = Pattern.compile("^\\s*\\{.*", Pattern.DOTALL);
 
     private final List<GitAuth> authConfigs;
-    private final ApiClient apiClient;
     private final ObjectMapper objectMapper;
 
-    public AgentGitTokenProvider(GitConfiguration gitCfg,
-                                 ApiClientFactory apiClientFactory,
-                                 ObjectMapper objectMapper) throws IOException {
-        this.authConfigs = gitCfg.getAuthConfigs();
+    private final LoadingCache<CacheKey, Optional<ExpiringToken>> cache;
+
+    private record CacheKey(URI repoUri, Secret secret) {}
+
+    public GitHubAppInstallationTokenProvider(GitHubAppConfig cfg, ObjectMapper objectMapper) {
+        this.authConfigs = cfg.authConfigs();
         this.objectMapper = objectMapper;
-        this.apiClient = apiClientFactory.create(null);
+
+        this.cache = CacheBuilder.newBuilder()
+                .expireAfterWrite(cfg.systemAuthCacheDuration())
+                .recordStats()
+                .maximumWeight(1024 * 10L) // ~ 10MB
+                .weigher((Weigher<CacheKey, Optional<ExpiringToken>>) (key, value) -> {
+                    log.info("Weighing cache entry: {}, {}", key, key.hashCode());
+                    int weight = 1;
+
+                    if (key.secret() != null) {
+                        weight += 1;
+
+                        if (key.secret() instanceof BinaryDataSecret bds) {
+                            weight += bds.getData().length / 1024;
+                        } else if (key.secret() instanceof UsernamePassword up) {
+                            weight += (up.getUsername().length() + up.getPassword().length) / 1024;
+                        }
+                    }
+
+                    return weight;
+                })
+                .removalListener(k -> log.info("Removing token from cache: {}", k.getKey()))
+                .build(new CacheLoader<>() {
+                    @Override
+                    public @Nonnull Optional<ExpiringToken> load(@Nonnull CacheKey key) {
+                        log.info("Loading token to cache: {}", key);
+                        return fetchToken(key.repoUri(), key.secret());
+                    }
+                });
     }
 
-    @Override
-    public boolean canHandle(URI repo, Secret secret) {
-        return validateSecret(secret) || systemSupports(repo);
-    }
-    /**
-     * Validates given secret is usable enough to attempt a remote lookup. Not
-     * guaranteed to actually work, just a sanity check.
-     */
-    private boolean validateSecret(Secret secret) {
-        // secret must be one of:
-        // * plaintext token
-        // * JSON-formatted GitHub app installation details: clientId, privateKey, apiUrl
-
-        if (secret == null) {
-            return false;
-        }
-
-        if (!(secret instanceof BinaryDataSecret bds)) {
-            // this class is not the place for handling key pairs or username/password
-            return false;
-        } else {
-            String data = new String(bds.getData());
-            if (START_JSON_OBJECT.matcher(data).matches()) { // looks like JSON, starts with '{'
-                try {
-                    objectMapper.readValue(data, AppInstallation.class);
-                    return true;
-                } catch (IOException e) {
-                    return false;
-                }
-            } else {
-                // >0 length, printable ascii (no newlines, etc)
-                return data.matches("[ -~]+");
-            }
-        }
-    }
-
-    public boolean systemSupports(URI repoUri) {
-        return authConfigs.stream().anyMatch(auth -> auth.canHandle(repoUri));
-    }
-
-    @Override
-    public Optional<ExpiringToken> getAccessToken(String gitHost, URI repo, @Nullable Secret secret) {
+    private Optional<ExpiringToken> fetchToken(URI repo, @Nullable Secret secret) {
         if (secret != null) {
             return fromSecret(repo, secret);
         }
 
+        // no secret, see if system config has something for this repo
         return authConfigs.stream()
-                .filter(auth -> canHandle(repo, secret))
+                .filter(auth -> auth.canHandle(repo))
                 .findFirst()
                 .map(auth -> {
-                    if (auth instanceof GitAuth.ConcordServer) { // TODO do this as default/fallback? actually, maybe we enrich it with a different api token from system?
-                        return getTokenFromConcordServer(gitHost, repo);
-                    }
-
-                    if (auth instanceof GitAuth.Oauth token) {
-                        return ExpiringToken.StaticToken.builder()
+                    if (auth instanceof StaticInstallation token) {
+                        return GitHubInstallationToken.builder()
                                 .token(token.token())
                                 .build();
                     }
@@ -169,7 +153,7 @@ public class AgentGitTokenProvider implements GitTokenProvider {
         }
 
         // should be a token
-        return ExpiringToken.StaticToken.builder()
+        return GitHubInstallationToken.builder()
                 .token(new String(bds.getData()).trim())
                 .build();
     }
@@ -188,26 +172,11 @@ public class AgentGitTokenProvider implements GitTokenProvider {
             return Optional.of(objectMapper.convertValue(base, AppInstallation.class));
         } catch (IllegalArgumentException e) {
             // doesn't match the expected structure
-            throw new RepositoryException("Invalid app installation definition.", e);
+            throw new GitHubAppException("Invalid app installation definition.", e);
         }
     }
 
-    ExpiringToken getTokenFromConcordServer(String gitHost, URI repository) {
-        var systemApi = new SystemApi(apiClient);
-
-        try {
-            var resp = systemApi.getSystemGitAuth(gitHost, repository);
-
-            return ExpiringToken.Impl.builder()
-                    .token(resp.getToken())
-                    .expiresAt(resp.getExpiresAt())
-                    .build();
-        } catch (ApiException e) {
-            throw new RuntimeException("Error retrieving system git auth", e);
-        }
-    }
-
-    protected ExpiringToken getTokenFromAppInstall(AppInstallation app, URI repo) {
+    public ExpiringToken getTokenFromAppInstall(AppInstallation app, URI repo) {
         // Some folks give sloppy, but valid, urls like https://me123@github.com/my/repo.git/
         var repoUrl = repo.toString();
         var baseUrl = app.baseUrl();
@@ -229,20 +198,19 @@ public class AgentGitTokenProvider implements GitTokenProvider {
 
         return getToken(app, ownerAndRepo);
     }
-
-    public ExpiringToken getToken(AppInstallation app, String orgRepo) throws RepositoryException {
+    public ExpiringToken getToken(AppInstallation app, String orgRepo) throws GitHubAppException {
         try {
             var jwt = generateJWT(app);
             var accessTokenUrl = getAccessTokenUrl(app.apiUrl(), orgRepo, jwt);
             return createAccessToken(accessTokenUrl, jwt);
         } catch (JOSEException e) {
-            throw new RepositoryException("Error generating JWT for app: " + app.clientId(), e);
+            throw new GitHubAppException("Error generating JWT for app: " + app.clientId(), e);
         } catch (IOException e) {
-            throw new RepositoryException("Error reading app private key: " + app.clientId(), e);
+            throw new GitHubAppException("Error reading app private key: " + app.clientId(), e);
         }
     }
 
-    String getAccessTokenUrl(String apiBaseUrl, String installationRepo, String jwt) throws RepositoryException {
+    String getAccessTokenUrl(String apiBaseUrl, String installationRepo, String jwt) throws GitHubAppException {
         var req = HttpRequest.newBuilder().GET()
                 .uri(URI.create(apiBaseUrl + "/repos/" + installationRepo + "/installation"))
                 .header("Authorization", "Bearer " + jwt)
@@ -255,10 +223,10 @@ public class AgentGitTokenProvider implements GitTokenProvider {
 
             if (code == 404) {
                 // not possible to discern between repo not found and app not installed for existing (private) repo
-                return new RepositoryException.NotFoundException("Repo not found or App installation not found for repo");
+                return new GitHubAppException.NotFoundException("Repo not found or App installation not found for repo");
             }
 
-            return new RepositoryException("Unexpected error locating repo installation: " + code);
+            return new GitHubAppException("Unexpected error locating repo installation: " + code);
         });
 
         return appInstallation.accessTokensUrl();
@@ -278,10 +246,10 @@ public class AgentGitTokenProvider implements GitTokenProvider {
 
             if (code == 404) {
                 // this would be pretty odd to hit, this means the url returned from the installation lookup is invalid
-                return new RepositoryException.NotFoundException("App access token url not found");
+                return new GitHubAppException.NotFoundException("App access token url not found");
             }
 
-            return new RepositoryException("Unexpected error creating app access token: " + code);
+            return new GitHubAppException("Unexpected error creating app access token: " + code);
         });
     }
 
@@ -296,7 +264,8 @@ public class AgentGitTokenProvider implements GitTokenProvider {
         var claimsSet = new JWTClaimsSet.Builder()
                 .issueTime(new Date())
                 .issuer(auth.clientId())
-                .expirationTime(new Date(new Date().getTime() + 60 * 10 * 1000)) // TODO parameterize in config(s)
+                // JWT expiration. GH requires less than 10 minutes
+                .expirationTime(new Date(new Date().getTime() + Duration.ofMinutes(10).toMillis()))
                 .build();
 
         var signedJWT = new SignedJWT(
@@ -312,7 +281,7 @@ public class AgentGitTokenProvider implements GitTokenProvider {
         return signedJWT.serialize();
     }
 
-    private <T> T sendRequest(HttpRequest httpRequest, int expectedCode, Class<T> clazz, BiFunction<Integer, String, RepositoryException> exFun) throws RepositoryException {
+    private <T> T sendRequest(HttpRequest httpRequest, int expectedCode, Class<T> clazz, BiFunction<Integer, String, GitHubAppException> exFun) throws GitHubAppException {
         try {
             var resp = HttpClient.newHttpClient().send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
             if (resp.statusCode() != expectedCode) {
@@ -320,7 +289,7 @@ public class AgentGitTokenProvider implements GitTokenProvider {
             }
             return objectMapper.readValue(resp.body(), clazz);
         } catch (IOException e) {
-            throw new RepositoryException("Error sending request", e);
+            throw new GitHubAppException("Error sending request", e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -333,7 +302,6 @@ public class AgentGitTokenProvider implements GitTokenProvider {
             return new String(is.readAllBytes());
         }
     }
-
 
     @Value.Immutable
     @Value.Style(jdkOnly = true)

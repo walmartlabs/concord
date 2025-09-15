@@ -37,6 +37,7 @@
         <module>common</module>
         <module>policy-engine</module>
         <module>dependency-manager</module>
+        <module>github-app-installation</module>
         <module>repository</module>
         <module>imports</module>
         <module>forms</module>

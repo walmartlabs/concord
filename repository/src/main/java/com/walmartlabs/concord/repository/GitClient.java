@@ -21,12 +21,12 @@ package com.walmartlabs.concord.repository;
  */
 
 import com.google.common.collect.ImmutableSet;
+import com.walmartlabs.concord.common.ExpiringToken;
+import com.walmartlabs.concord.common.GitTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
-import com.walmartlabs.concord.repository.auth.ActiveAccessToken;
-import com.walmartlabs.concord.repository.auth.GitTokenProvider;
 import com.walmartlabs.concord.sdk.Secret;
 import org.immutables.value.Value;
 import org.slf4j.Logger;
@@ -349,7 +349,7 @@ public class GitClient {
         }
 
         String token = authProvider.getAccessToken(uri.getHost(), uri, secret)
-                .map(ActiveAccessToken::token)
+                .map(ExpiringToken::token)
                 .orElse(null);
 
         if (token == null) {
@@ -555,11 +555,19 @@ public class GitClient {
     //TODO make sure that if allowedSchemes = [ "https", "ssh", "git", "file" ] is not present, allow all schemes
     private void assertUriAllowed(URI uri) {
         String providedScheme = uri.getScheme();
-        Set<String> allowedProtocols = cfg.allowedSchemes();
+        Set<String> allowedSchemes = cfg.allowedSchemes();
         boolean hasScheme = providedScheme != null && (!providedScheme.isEmpty());
 
+        if (allowedSchemes.isEmpty()) {
+            return; // allow all
+        }
+
+        if (allowedSchemes.isEmpty()) {
+            return;
+        }
+
         // the provided repo string is definitely an allowed protocol.
-        if (hasScheme && allowedProtocols.contains(providedScheme)) {
+        if (hasScheme && allowedSchemes.contains(providedScheme)) {
             return;
         }
 

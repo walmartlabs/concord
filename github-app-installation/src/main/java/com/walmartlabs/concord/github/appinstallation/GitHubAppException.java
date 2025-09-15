@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.repository.auth;
+package com.walmartlabs.concord.github.appinstallation;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.repository.auth;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,15 +20,22 @@ package com.walmartlabs.concord.repository.auth;
  * =====
  */
 
-import org.immutables.value.Value;
+public class GitHubAppException extends RuntimeException {
+    public GitHubAppException(String message) {
+        super(message);
+    }
 
-@Value.Immutable
-@Value.Style(jdkOnly = true)
-public interface AccessToken extends GitAuth {
+    public GitHubAppException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-    String token();
+    static class NotFoundException extends GitHubAppException {
+        public NotFoundException(String message) {
+            super(message);
+        }
 
-    static ImmutableAccessToken.Builder builder() {
-        return ImmutableAccessToken.builder();
+        public NotFoundException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 }

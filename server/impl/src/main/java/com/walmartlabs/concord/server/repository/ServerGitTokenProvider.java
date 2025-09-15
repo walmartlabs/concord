@@ -37,11 +37,18 @@ import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.walmartlabs.concord.common.ExpiringToken;
+import com.walmartlabs.concord.common.GitAuth;
+import com.walmartlabs.concord.common.GitTokenProvider;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
+import com.walmartlabs.concord.github.appinstallation.AppInstallation;
+import com.walmartlabs.concord.github.appinstallation.GitHubAppConfig;
+import com.walmartlabs.concord.github.appinstallation.GitHubAppInstallationTokenProvider;
+import com.walmartlabs.concord.github.appinstallation.GitHubInstallationToken;
+import com.walmartlabs.concord.github.appinstallation.StaticInstallation;
 import com.walmartlabs.concord.repository.RepositoryException;
-import com.walmartlabs.concord.repository.auth.*;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.cfg.GitConfiguration;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -79,8 +86,9 @@ public class ServerGitTokenProvider implements GitTokenProvider {
 
     private final List<GitAuth> authConfigs;
     private final ObjectMapper objectMapper;
+    private final GitHubAppInstallationTokenProvider githubProvider;
 
-    private final LoadingCache<CacheKey, Optional<ActiveAccessToken>> cache;
+    private final LoadingCache<CacheKey, Optional<ExpiringToken>> cache;
 
     private record CacheKey(URI repoUri, Secret secret) {}
 
@@ -90,12 +98,17 @@ public class ServerGitTokenProvider implements GitTokenProvider {
                                   MetricRegistry metricRegistry) {
         this.authConfigs = gitCfg.getAuthConfigs();
         this.objectMapper = objectMapper;
+        var ghAppCfg = GitHubAppConfig.builder()
+                .authConfigs(gitCfg.getAuthConfigs())
+                .systemAuthCacheDuration(gitCfg.getSystemAuthCacheDuration())
+                .build();
+        this.githubProvider = new GitHubAppInstallationTokenProvider(ghAppCfg, objectMapper);
+
         this.cache = CacheBuilder.newBuilder()
                 .expireAfterWrite(gitCfg.getSystemAuthCacheDuration())
                 .recordStats()
                 .maximumWeight(1024 * 10L) // ~ 10MB
-                .weigher((Weigher<CacheKey, Optional<ActiveAccessToken>>) (key, value) -> {
-                        log.info("Weighing cache entry: {}, {}", key, key.hashCode());
+                .weigher((Weigher<CacheKey, Optional<ExpiringToken>>) (key, value) -> {
                         int weight = 1;
 
                         if (key.secret() != null) {
@@ -113,7 +126,7 @@ public class ServerGitTokenProvider implements GitTokenProvider {
                 .removalListener(k -> log.info("Removing token from cache: {}", k.getKey()))
                 .build(new CacheLoader<>() {
                     @Override
-                    public @Nonnull Optional<ActiveAccessToken> load(@Nonnull CacheKey key) {
+                    public @Nonnull Optional<ExpiringToken> load(@Nonnull CacheKey key) {
                         log.info("Loading token to cache: {}", key);
                         return fetchToken(key.repoUri(), key.secret());
                     }
@@ -164,7 +177,7 @@ public class ServerGitTokenProvider implements GitTokenProvider {
 
     @WithTimer
     @Override
-    public Optional<ActiveAccessToken> getAccessToken(String gitHost, URI repo, @Nullable Secret secret) {
+    public Optional<ExpiringToken> getAccessToken(String gitHost, URI repo, @Nullable Secret secret) {
         try {
             var cacheKey = new CacheKey(repo, secret);
             var activeToken = cache.get(cacheKey);
@@ -189,7 +202,7 @@ public class ServerGitTokenProvider implements GitTokenProvider {
      * invalidate and get a new one. If it's just a little close, refresh the
      * cache in the background and return the still-active token.
      */
-    private ActiveAccessToken refreshBeforeExpire(@Nonnull ActiveAccessToken token, CacheKey cacheKey) {
+    private ExpiringToken refreshBeforeExpire(@Nonnull ExpiringToken token, CacheKey cacheKey) {
         if (token.secondsUntilExpiration() < 10) {
             // not enough time to be useful. get a new token right now
             cache.invalidate(cacheKey);
@@ -208,7 +221,7 @@ public class ServerGitTokenProvider implements GitTokenProvider {
         return token;
     }
 
-    private Optional<ActiveAccessToken> fetchToken(URI repo, @Nullable Secret secret) {
+    private Optional<ExpiringToken> fetchToken(URI repo, @Nullable Secret secret) {
         if (secret != null) {
              return fromSecret(repo, secret);
         }
@@ -218,21 +231,21 @@ public class ServerGitTokenProvider implements GitTokenProvider {
                 .filter(auth -> auth.canHandle(repo))
                 .findFirst()
                 .map(auth -> {
-                    if (auth instanceof AccessToken token) {
-                        return ActiveAccessToken.builder()
+                    if (auth instanceof StaticInstallation token) {
+                        return GitHubInstallationToken.builder()
                                 .token(token.token())
                                 .build();
                     }
 
                     if (auth instanceof AppInstallation app) {
-                        return getTokenFromAppInstall(app, repo);
+                        return githubProvider.getTokenFromAppInstall(app, repo);
                     }
 
                     throw new IllegalArgumentException("Unsupported GitAuth type for repo: " + repo);
                 });
     }
 
-    private Optional<ActiveAccessToken> fromSecret(URI repo, @Nonnull Secret secret) {
+    private Optional<ExpiringToken> fromSecret(URI repo, @Nonnull Secret secret) {
         if (secret instanceof KeyPair) {
             return Optional.empty(); // we don't handle ssh keypairs here
         } else if (secret instanceof UsernamePassword) {
@@ -244,14 +257,14 @@ public class ServerGitTokenProvider implements GitTokenProvider {
         return Optional.empty();
     }
 
-    private ActiveAccessToken fromBinaryData(URI repo, BinaryDataSecret bds) {
+    private ExpiringToken fromBinaryData(URI repo, BinaryDataSecret bds) {
         var appInfo = parseAppInstallation(bds);
         if (appInfo.isPresent()) {
-            return getTokenFromAppInstall(appInfo.get(), repo);
+            return githubProvider.getTokenFromAppInstall(appInfo.get(), repo);
         }
 
         // should be a token
-        return ActiveAccessToken.builder()
+        return ExpiringToken.StaticToken.builder()
                 .token(new String(bds.getData()).trim())
                 .build();
     }
@@ -275,7 +288,7 @@ public class ServerGitTokenProvider implements GitTokenProvider {
     }
 
     @WithTimer
-    protected ActiveAccessToken getTokenFromAppInstall(AppInstallation app, URI repo) {
+    protected ExpiringToken getTokenFromAppInstall(AppInstallation app, URI repo) {
         // Some folks give sloppy, but valid, urls like https://me123@github.com/my/repo.git/
         var repoUrl = repo.toString();
         var baseUrl = app.baseUrl();
@@ -298,7 +311,7 @@ public class ServerGitTokenProvider implements GitTokenProvider {
         return getToken(app, ownerAndRepo);
     }
 
-    public ActiveAccessToken getToken(AppInstallation app, String orgRepo) throws RepositoryException {
+    public ExpiringToken getToken(AppInstallation app, String orgRepo) throws RepositoryException {
         try {
             var jwt = generateJWT(app);
             var accessTokenUrl = getAccessTokenUrl(app.apiUrl(), orgRepo, jwt);
@@ -332,7 +345,7 @@ public class ServerGitTokenProvider implements GitTokenProvider {
             return appInstallation.accessTokensUrl();
     }
 
-    ActiveAccessToken createAccessToken(String accessTokenUrl, String jwt) {
+    ExpiringToken createAccessToken(String accessTokenUrl, String jwt) {
         var req = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .uri(URI.create(accessTokenUrl))
@@ -341,7 +354,7 @@ public class ServerGitTokenProvider implements GitTokenProvider {
                 .header("X-GitHub-Api-Version", "2022-11-28")
                 .build();
 
-        return sendRequest(req, 201, ActiveAccessToken.class, (code, body) -> {
+        return sendRequest(req, 201, ExpiringToken.class, (code, body) -> {
             log.warn("createAccessToken ['{}'] -> error: {} : {}", accessTokenUrl, code, body);
 
             if (code == 404) {

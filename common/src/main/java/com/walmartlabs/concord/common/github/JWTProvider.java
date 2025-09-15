@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.repository.auth;
+package com.walmartlabs.concord.common.github;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.repository.auth;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,13 +20,12 @@ package com.walmartlabs.concord.repository.auth;
  * =====
  */
 
-import org.immutables.value.Value;
+import java.time.Instant;
 
-@Value.Immutable
-@Value.Style(jdkOnly = true)
-public interface ConcordServer extends GitAuth {
-    // TODO rename to ConcordServerAuth?
-    static ImmutableConcordServer.Builder builder() {
-        return ImmutableConcordServer.builder();
-    }
+public interface JWTProvider {
+
+    JwtWrapper getJWT(String baseUrl, String clientId, String privateKey);
+
+    record JwtWrapper(String token, Instant expiration) { }
+
 }

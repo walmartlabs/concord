@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.repository.auth;
+package com.walmartlabs.concord.common;
 
 /*-
  * *****
@@ -21,22 +21,16 @@ package com.walmartlabs.concord.repository.auth;
  */
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 
-@Value.Immutable
-@Value.Style(jdkOnly = true)
-@JsonDeserialize(as = ImmutableActiveAccessToken.class)
-@JsonSerialize(as = ImmutableActiveAccessToken.class)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public interface ActiveAccessToken {
+@JsonDeserialize(as = ImmutableImpl.class)
+public interface ExpiringToken {
 
     @JsonProperty("token")
     String token();
@@ -56,8 +50,33 @@ public interface ActiveAccessToken {
         return d.getSeconds();
     }
 
-    static ImmutableActiveAccessToken.Builder builder() {
-        return ImmutableActiveAccessToken.builder();
+    @Value.Immutable
+    @Value.Style(jdkOnly = true)
+    interface Impl extends ExpiringToken {
+        static ImmutableImpl.Builder builder() {
+            return ImmutableImpl.builder();
+        }
+    }
+
+    @Value.Immutable
+    @Value.Style(jdkOnly = true)
+    interface StaticToken extends ExpiringToken {
+
+        @Nullable
+        @Override
+        default OffsetDateTime expiresAt() {
+            return null;
+        }
+
+        @Value.Default
+        @Override
+        default long secondsUntilExpiration() {
+            return Long.MAX_VALUE;
+        }
+
+        static ImmutableStaticToken.Builder builder() {
+            return ImmutableStaticToken.builder();
+        }
     }
 
 }
