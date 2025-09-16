@@ -7,7 +7,9 @@
 - project: use JSch fork
 ([#1210](https://github.com/walmartlabs/concord/pull/1210));
 - slack-tasks: update readme with required oauth scope info
-([#1213](https://github.com/walmartlabs/concord/pull/1213)).
+([#1213](https://github.com/walmartlabs/concord/pull/1213));
+- it: do not archive deps.dir into payloads
+([#1214](https://github.com/walmartlabs/concord/pull/1214)).
 
 
 
