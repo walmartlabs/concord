@@ -270,65 +270,18 @@
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins.basic</groupId>
-                                    <artifactId>ansible-tasks</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>ansible-template</artifactId>
                                     <version>${project.version}</version>
                                     <destFileName>ansible-template.jar</destFileName>
                                 </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
-                                    <artifactId>concord-tasks</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
-                                    <artifactId>dynamic-tasks</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
 
-                                <!-- TODO this should be automated -->
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
-                                    <artifactId>noderoster-tasks</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
-                                    <artifactId>concord-noderoster-plugin-client2</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-
-                                <!-- TODO this should be automated -->
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
-                                    <artifactId>smtp-tasks</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>org.apache.commons</groupId>
-                                    <artifactId>commons-email</artifactId>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.sun.mail</groupId>
-                                    <artifactId>javax.mail</artifactId>
-                                </artifactItem>
-                                <dependency>
-                                    <groupId>com.sun.activation</groupId>
-                                    <artifactId>javax.activation</artifactId>
-                                </dependency>
-
-                                <!-- used by DependenciesIT as an example dependency -->
+                                <!-- used by DependenciesIT as example dependencies -->
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>example-tasks</artifactId>
                                     <version>${project.version}</version>
                                     <destFileName>example.jar</destFileName>
                                 </artifactItem>
-
                                 <dependency>
                                     <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>ansible-tasks</artifactId>

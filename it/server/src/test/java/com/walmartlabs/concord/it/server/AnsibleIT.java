@@ -45,7 +45,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testHello() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansible").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -65,7 +65,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testSkipTags() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleSkipTags").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -86,7 +86,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testVault() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleVault").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -106,7 +106,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testVaultWithMultiplePasswords() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleVaultMultiplePasswords").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -126,7 +126,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testVaultWithMultiplePasswordFiles() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleVaultMultiplePasswordFiles").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -147,7 +147,7 @@ public class AnsibleIT extends AbstractServerIT {
     @SuppressWarnings("unchecked")
     public void testTwoAnsibleRuns() throws Exception {
         URI dir = AnsibleIT.class.getResource("twoAnsible").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -187,7 +187,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testWithForm() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleWithForm").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -221,7 +221,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testWithFormSuspensionPostAnsible() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleWithPostFormSuspension/payload").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // --
 
@@ -264,7 +264,7 @@ public class AnsibleIT extends AbstractServerIT {
 
         URI dir = AnsibleIT.class.getResource("ansibleExternalPlaybook/payload").toURI();
         URL playbookUrl = AnsibleIT.class.getResource("ansibleExternalPlaybook/playbook/hello.yml");
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -283,7 +283,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testMergeDefaults() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleMergeDefaults").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -316,7 +316,7 @@ public class AnsibleIT extends AbstractServerIT {
         // ---
 
         URI dir = AnsibleIT.class.getResource("ansibleGroupVars").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -340,7 +340,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testOutVars() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleOutVars").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -361,7 +361,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testStats() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleStats").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -381,7 +381,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testBadStrings() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleBadStrings").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -401,7 +401,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testRawStrings() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleRawStrings").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -423,7 +423,7 @@ public class AnsibleIT extends AbstractServerIT {
     @SuppressWarnings("unchecked")
     public void testTemplateArgs() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleTemplateArgs").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -456,7 +456,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testExtraVarsFiles() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleExtraVarsFiles").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -475,7 +475,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testMultiInventories() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleMultiInventory").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -494,7 +494,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testMultiInventoryFiles() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleMultiInventoryFile").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -513,7 +513,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testLimitWithMultipleHost() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleLimitWithMultipleHost").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -533,7 +533,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testInventoryMixMatch() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleInventoryMix").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -553,7 +553,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testInventoryNameInvalidChars() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleInventoryName").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -575,7 +575,7 @@ public class AnsibleIT extends AbstractServerIT {
         // run w/o filtering first
 
         URI dir = AnsibleIT.class.getResource("ansibleLogFiltering").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 

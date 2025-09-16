@@ -45,7 +45,7 @@ public class SmtpIT extends AbstractServerIT {
     @Test
     public void testSimple() throws Exception {
         URI dir = SmtpIT.class.getResource("smtp").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // --
 

@@ -75,7 +75,7 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
     @Test
     public void testLargeInventoryLimitedToGroup() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -104,7 +104,7 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
     @Test
     public void testVerboseTooManyImportedTasks() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -133,7 +133,7 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
     @Test
     public void testVerboseTooManyHosts() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -162,7 +162,7 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
     @Test
     public void testVerboseTooMuchWork() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -191,7 +191,7 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
     @Test
     public void testNoVerboseLargeInventory() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -220,7 +220,7 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
     @Test
     public void testVerboseSmallInventory() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 

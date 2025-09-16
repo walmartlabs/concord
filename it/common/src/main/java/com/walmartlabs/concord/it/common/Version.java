@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.it.runtime.v2;
+package com.walmartlabs.concord.it.common;
 
 /*-
  * *****
@@ -20,10 +20,24 @@ package com.walmartlabs.concord.it.runtime.v2;
  * =====
  */
 
-public final class ITConstants {
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
-    public static final long DEFAULT_TEST_TIMEOUT = 120000;
+public final class Version {
 
-    private ITConstants() {
+    public static final String PROJECT_VERSION;
+
+    static {
+        try (InputStream in = Version.class.getResourceAsStream("version.properties")) {
+            Properties props = new Properties();
+            props.load(in);
+            PROJECT_VERSION = props.getProperty("project.version");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Version() {
     }
 }

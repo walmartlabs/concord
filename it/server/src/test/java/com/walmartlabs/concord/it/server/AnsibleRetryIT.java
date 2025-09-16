@@ -38,7 +38,7 @@ public class AnsibleRetryIT extends AbstractServerIT {
     @Test
     public void testSaveRetry() throws Exception {
         URI uri = ProcessIT.class.getResource("ansibleSaveRetry").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // start the process
 
