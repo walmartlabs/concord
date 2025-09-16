@@ -53,7 +53,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         // ---
 
         URI dir = AnsibleLookupIT.class.getResource("ansibleLookupSecret").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -98,7 +98,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         // ---
 
         URI dir = AnsibleLookupIT.class.getResource("ansibleLookupSecretData").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -142,7 +142,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         // ---
 
         URI dir = AnsibleLookupIT.class.getResource("ansibleLookupSecretDataNoPassword").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
         Map<String, Object> input = new HashMap<>();
@@ -182,7 +182,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         // ---
 
         URI dir = AnsibleLookupIT.class.getResource("ansibleLookupPublicKey").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 
@@ -222,7 +222,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
 
         // ---
 
-        byte[] payload = archive(AnsibleLookupIT.class.getResource("ansibleLookupSecretDataValue").toURI(), ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(AnsibleLookupIT.class.getResource("ansibleLookupSecretDataValue").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
