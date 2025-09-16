@@ -20,7 +20,7 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.walmartlabs.concord.common.GitTokenProvider;
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.common.secret.KeyPair;
@@ -54,7 +54,7 @@ public class GitClientRealTest {
     private static final Secret KEYPAIR = createKeypair();
 
     @Mock
-    GitTokenProvider authProvider;
+    AuthTokenProvider authProvider;
 
     private static Secret createKeypair() {
         try {

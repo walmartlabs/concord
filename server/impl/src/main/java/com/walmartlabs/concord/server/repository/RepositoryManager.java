@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.repository;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.repository.*;
@@ -63,7 +64,7 @@ public class RepositoryManager {
                              ProjectDao projectDao,
                              SecretManager secretManager,
                              DependencyManager dependencyManager,
-                             ServerGitTokenProvider authProvider) throws IOException {
+                             AuthTokenProvider authProvider) throws IOException {
 
         GitClientConfiguration gitCliCfg = GitClientConfiguration.builder()
                 .oauthToken(gitCfg.getOauthToken())

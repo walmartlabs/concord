@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.github.appinstallation;
+package com.walmartlabs.concord.common.cfg;
 
 /*-
  * *****
@@ -20,22 +20,8 @@ package com.walmartlabs.concord.github.appinstallation;
  * =====
  */
 
-import com.walmartlabs.concord.common.cfg.GitAuth;
-import org.immutables.value.Value;
+public interface OauthTokenConfig {
 
-import java.time.Duration;
-import java.util.List;
-
-@Value.Immutable
-@Value.Style(jdkOnly = true)
-public interface GitHubAppConfig {
-
-    Duration systemAuthCacheDuration();
-
-    List<GitAuth> authConfigs();
-
-    static ImmutableGitHubAppConfig.Builder builder() {
-        return ImmutableGitHubAppConfig.builder();
-    }
+    String getOauthToken();
 
 }

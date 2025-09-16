@@ -22,8 +22,9 @@ package com.walmartlabs.concord.agent.cfg;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigObject;
-import com.walmartlabs.concord.common.cfg.GitAuth;
-import com.walmartlabs.concord.github.appinstallation.cfg.AppInstallation;
+import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
+import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
+import com.walmartlabs.concord.github.appinstallation.AppInstallationAuth;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -34,7 +35,7 @@ import java.util.List;
 
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
 
-public class GitConfiguration {
+public class GitConfiguration implements OauthTokenConfig {
 
     private final String token;
     private final boolean shallowClone;
@@ -47,8 +48,6 @@ public class GitConfiguration {
     private final int sshTimeoutRetryCount;
     private final boolean skip;
     private final List<String> allowedSchemes;
-    private final List<? extends ConfigObject> authConfigs;
-
 
     @Inject
     public GitConfiguration(Config cfg) {
@@ -63,10 +62,10 @@ public class GitConfiguration {
         this.sshTimeoutRetryCount = cfg.getInt("git.sshTimeoutRetryCount");
         this.skip = cfg.getBoolean("git.skip");
         this.allowedSchemes = cfg.getStringList("git.allowedSchemes");
-        this.authConfigs = cfg.getObjectList("git.systemAuth"); //TODO rename variables to systemAuth, make sure it aligns with server
     }
 
-    public String getToken() {
+    @Override
+    public String getOauthToken() {
         return token;
     }
 
@@ -108,92 +107,4 @@ public class GitConfiguration {
 
     public List<String> getAllowedSchemes() { return allowedSchemes; }
 
-    public List<GitAuth> getAuthConfigs() {
-
-        return authConfigs.stream()
-                .map(o -> {
-                    GitAuthType type = GitAuthType.valueOf(o.toConfig().getString("type").toUpperCase());
-
-                    return (AuthConfig) switch (type) {
-                        case OAUTH -> OauthConfig.from(o.toConfig());
-                        case GITHUB_APP_INSTALLATION -> AppInstallationConfig.from(o.toConfig());
-                        case CONCORD_SERVER -> ConcordServerConfig.from(o.toConfig());
-                    };
-                })
-                .map(AuthConfig::toGitAuth)
-                .toList();
-    }
-
-    enum GitAuthType {
-        OAUTH,
-        GITHUB_APP_INSTALLATION,
-        CONCORD_SERVER
-    }
-
-    public interface AuthConfig {
-        String gitHost();
-
-        GitAuth toGitAuth();
-    }
-
-    public record OauthConfig(String gitHost, String token) implements AuthConfig {
-
-        static OauthConfig from(Config cfg) {
-            return new OauthConfig(
-                    cfg.getString("gitHost"),
-                    cfg.getString("token")
-            );
-        }
-
-        @Override
-        public GitAuth toGitAuth() {
-            return GitAuth.Oauth.builder()
-                    .baseUrl(this.gitHost())
-                    .token(this.token())
-                    .build();
-        }
-    }
-
-    public record AppInstallationConfig(String gitHost, String clientId, String privateKey) implements AuthConfig {
-
-        static AppInstallationConfig from(Config c) {
-            return new AppInstallationConfig(
-                    c.getString("gitHost"),
-                    c.getString("clientId"),
-                    c.getString("privateKey")
-            );
-        }
-
-        @Override
-        public GitAuth toGitAuth() {
-            try {
-                var pkData = Files.readString(Paths.get(this.privateKey()));
-
-                return AppInstallation.builder()
-                        .baseUrl(this.gitHost())
-                        .clientId(this.clientId())
-                        .privateKey(pkData)
-                        .apiUrl(null) // TODO fix
-                        .build();
-            } catch (IOException e) {
-                throw new RuntimeException("Error initializing Git App Installation auth", e);
-            }
-        }
-    }
-
-    public record ConcordServerConfig(String gitHost) implements AuthConfig {
-
-        static ConcordServerConfig from(Config cfg) {
-            return new ConcordServerConfig(
-                    cfg.getString("gitHost")
-            );
-        }
-
-        @Override
-        public GitAuth toGitAuth() {
-            return GitAuth.ConcordServer.builder()
-                    .baseUrl(this.gitHost())
-                    .build();
-        }
-    }
 }

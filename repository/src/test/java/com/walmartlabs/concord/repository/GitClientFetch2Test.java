@@ -20,7 +20,7 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.walmartlabs.concord.common.GitTokenProvider;
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -49,7 +49,7 @@ public class GitClientFetch2Test {
     private GitClient client;
 
     @Mock
-    GitTokenProvider authProvider;
+    AuthTokenProvider authProvider;
 
     @BeforeEach
     public void init() {

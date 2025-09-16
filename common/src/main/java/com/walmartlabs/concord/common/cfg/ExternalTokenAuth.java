@@ -24,13 +24,13 @@ import org.immutables.value.Value;
 
 import java.net.URI;
 
-public interface GitAuth {
+public interface ExternalTokenAuth {
 
     /** Regex matching the host, optional port and path of a Git repository URL. */
     String baseUrl();
 
     /**
-     * For compatibility with a {@link GitAuth} instance, a URI must match the
+     * For compatibility with a {@link ExternalTokenAuth} instance, a URI must match the
      * {@link #baseUrl()} regex. The regex may match against the path to support
      * either a Git host behind a reverse proxy or restricting the auth to specific
      * org/repo patterns.
@@ -44,7 +44,7 @@ public interface GitAuth {
 
     @Value.Immutable
     @Value.Style(jdkOnly = true)
-    interface Oauth extends GitAuth {
+    interface Oauth extends ExternalTokenAuth {
         String token();
 
         static ImmutableOauth.Builder builder() {
@@ -54,7 +54,7 @@ public interface GitAuth {
 
     @Value.Immutable
     @Value.Style(jdkOnly = true)
-    interface ConcordServer extends GitAuth {
+    interface ConcordServer extends ExternalTokenAuth {
         // TODO rename to ConcordServerAuth?
         static ImmutableConcordServer.Builder builder() {
             return ImmutableConcordServer.builder();

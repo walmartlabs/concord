@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.common.github;
+package com.walmartlabs.concord.common;
 
 /*-
  * *****
@@ -20,12 +20,6 @@ package com.walmartlabs.concord.common.github;
  * =====
  */
 
-import java.time.Instant;
-
-public interface JWTProvider {
-
-    JwtWrapper getJWT(String baseUrl, String clientId, String privateKey);
-
-    record JwtWrapper(String token, Instant expiration) { }
+public interface SystemExternalTokenProvider extends AuthTokenProvider {
 
 }

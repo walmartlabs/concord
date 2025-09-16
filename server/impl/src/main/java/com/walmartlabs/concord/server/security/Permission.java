@@ -50,7 +50,7 @@ public enum Permission {
     /**
      * Allows users to access to system-provided git auth tokens.
      */
-    SYSTEM_GIT_AUTH("systemGitAuth");
+    EXTERNAL_TOKEN_LOOKUP("externalTokenLookup");
 
     private final String key;
 

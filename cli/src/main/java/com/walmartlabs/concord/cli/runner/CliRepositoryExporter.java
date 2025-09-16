@@ -20,8 +20,8 @@ package com.walmartlabs.concord.cli.runner;
  * =====
  */
 
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.ExpiringToken;
-import com.walmartlabs.concord.common.GitTokenProvider;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.RepositoryExporter;
 import com.walmartlabs.concord.repository.*;
@@ -64,14 +64,14 @@ public class CliRepositoryExporter implements RepositoryExporter {
                 .sshTimeoutRetryCount(SSH_TIMEOUT_RETRY_COUNT)
                 .build();
 
-        GitTokenProvider authProvider = new GitTokenProvider() {
+        AuthTokenProvider authProvider = new AuthTokenProvider() {
             @Override
-            public boolean supports(URI gitHost, @Nullable Secret secret) {
+            public boolean supports(URI repo, @Nullable Secret secret) {
                 return false;
             }
 
             @Override
-            public Optional<ExpiringToken> getAccessToken(String gitHost, URI repo, @Nullable Secret secret) throws RepositoryException {
+            public Optional<ExpiringToken> getToken(URI repo, @Nullable Secret secret) throws RepositoryException {
                 throw new UnsupportedOperationException("Not supported");
             }
         };

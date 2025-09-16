@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.typesafe.config.Config;
-import com.walmartlabs.concord.common.GitTokenProvider;
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.ObjectMapperProvider;
 import com.walmartlabs.concord.config.ConfigModule;
 import com.walmartlabs.concord.db.DatabaseModule;
@@ -43,7 +43,7 @@ import com.walmartlabs.concord.server.org.OrganizationModule;
 import com.walmartlabs.concord.server.org.secret.SystemResource;
 import com.walmartlabs.concord.server.policy.PolicyModule;
 import com.walmartlabs.concord.server.process.ProcessModule;
-import com.walmartlabs.concord.server.repository.ServerGitTokenProvider;
+import com.walmartlabs.concord.server.repository.ServerAuthTokenProvider;
 import com.walmartlabs.concord.server.repository.RepositoryModule;
 import com.walmartlabs.concord.server.role.RoleModule;
 import com.walmartlabs.concord.server.security.SecurityModule;
@@ -92,7 +92,7 @@ public class ConcordServerModule implements Module {
         binder.bind(Listeners.class).in(SINGLETON);
         binder.bind(SecureRandom.class).toProvider(SecureRandomProvider.class);
 
-        binder.bind(GitTokenProvider.class).to(ServerGitTokenProvider.class).in(SINGLETON);
+        binder.bind(AuthTokenProvider.class).to(ServerAuthTokenProvider.class).in(SINGLETON);
 
         binder.bind(MessageChannelManager.class).in(SINGLETON);
 

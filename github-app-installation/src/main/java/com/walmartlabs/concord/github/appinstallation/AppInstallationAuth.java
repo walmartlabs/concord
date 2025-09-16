@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.common;
+package com.walmartlabs.concord.github.appinstallation;
 
 /*-
  * *****
@@ -20,21 +20,22 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Secret;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
+import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
-import java.net.URI;
-import java.util.Optional;
+@Value.Immutable
+@Value.Style(jdkOnly = true)
+@JsonDeserialize(as = ImmutableAppInstallationAuth.class)
+public interface AppInstallationAuth extends ExternalTokenAuth {
 
-public interface GitTokenProvider {
+    String apiUrl();
 
-    /**
-     * @return {@code true} if this the given repo URI and secret are compatible
-     *         with this provider's {@link #getAccessToken(String, URI, Secret)} method,
-     *         {@code false} otherwise.
-     */
-    boolean supports(URI repo, @Nullable Secret secret);
+    String clientId();
 
-    Optional<ExpiringToken> getAccessToken(String gitHost, URI repo, @Nullable Secret secret);
+    String privateKey();
 
+    static ImmutableAppInstallationAuth.Builder builder() {
+        return ImmutableAppInstallationAuth.builder();
+    }
 }

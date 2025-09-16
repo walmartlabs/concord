@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.org.secret;
  */
 
 import com.walmartlabs.concord.common.ExpiringToken;
-import com.walmartlabs.concord.common.GitTokenProvider;
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.repository.RepositoryException;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
@@ -39,11 +39,11 @@ import java.net.URI;
 @Tag(name = "System")
 public class SystemResource implements Resource {
 
-    private final GitTokenProvider gitTokenProvider;
+    private final AuthTokenProvider authTokenProvider;
 
     @Inject
-    public SystemResource(GitTokenProvider gitTokenProvider) {
-        this.gitTokenProvider = gitTokenProvider;
+    public SystemResource(AuthTokenProvider authTokenProvider) {
+        this.authTokenProvider = authTokenProvider;
     }
 
     /**
@@ -52,13 +52,12 @@ public class SystemResource implements Resource {
     @GET
     @Path("/gitauth")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(description = "Retrieves system-provided auth for give repository URI. Requires systemGitAuth permission. ", operationId = "getSystemGitAuth")
-    public ExpiringToken get(@QueryParam("gitHost") String gitHost,
-                             @QueryParam("repoUri") URI repoUri) {
+    @Operation(description = "Retrieves system-provided auth for give repository URI. Requires externalTokenLookup permission. ", operationId = "getExternalToken")
+    public ExpiringToken getExternalToken(@QueryParam("repoUri") URI repoUri) {
         assertSystemGitAuthPermission();
 
         try {
-            return gitTokenProvider.getAccessToken(gitHost, repoUri, null)
+            return authTokenProvider.getToken(repoUri, null)
                     .orElseThrow(() -> new ConcordApplicationException("No system-provided auth found for the given repository URI: " + repoUri, Response.Status.NOT_FOUND));
         } catch (RepositoryException.NotFoundException e) {
             throw new ConcordApplicationException(e.getMessage(), Response.Status.BAD_REQUEST);
@@ -69,7 +68,7 @@ public class SystemResource implements Resource {
     }
 
     private static void assertSystemGitAuthPermission() {
-        if (!Permission.SYSTEM_GIT_AUTH.isPermitted()) {
+        if (!Permission.EXTERNAL_TOKEN_LOOKUP.isPermitted()) {
             throw new ForbiddenException("insufficient privileges to access the resource");
         }
     }

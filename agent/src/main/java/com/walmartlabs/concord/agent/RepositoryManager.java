@@ -23,9 +23,7 @@ package com.walmartlabs.concord.agent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.agent.cfg.GitConfiguration;
 import com.walmartlabs.concord.agent.cfg.RepositoryCacheConfiguration;
-import com.walmartlabs.concord.agent.remote.ApiClientFactory;
 import com.walmartlabs.concord.client2.SecretClient;
-import com.walmartlabs.concord.common.GitTokenProvider;
 import com.walmartlabs.concord.imports.Import.SecretDefinition;
 import com.walmartlabs.concord.repository.*;
 import com.walmartlabs.concord.sdk.Secret;
@@ -54,13 +52,13 @@ public class RepositoryManager {
                              RepositoryCacheConfiguration cacheCfg,
                              ObjectMapper objectMapper,
                              DependencyManager dependencyManager,
-                             ApiClientFactory apiClientFactory) throws IOException {
+                             AgentAuthTokenProvider agentAuthTokenProvider) throws IOException {
 
         this.secretClient = secretClient;
         this.gitCfg = gitCfg;
 
         GitClientConfiguration clientCfg = GitClientConfiguration.builder()
-                .oauthToken(gitCfg.getToken())
+                .oauthToken(gitCfg.getOauthToken())
                 .defaultOperationTimeout(gitCfg.getDefaultOperationTimeout())
                 .fetchTimeout(gitCfg.getFetchTimeout())
                 .httpLowSpeedLimit(gitCfg.getHttpLowSpeedLimit())
@@ -70,11 +68,9 @@ public class RepositoryManager {
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
                 .build();
 
-        GitTokenProvider authProvider = new AgentGitTokenProvider(gitCfg, apiClientFactory, objectMapper);
-
         this.providers = new RepositoryProviders(List.of(
                 new MavenRepositoryProvider(dependencyManager),
-                new GitCliRepositoryProvider(clientCfg, authProvider)
+                new GitCliRepositoryProvider(clientCfg, agentAuthTokenProvider)
         ));
         this.repositoryCache = new RepositoryCache(cacheCfg.getCacheDir(),
                 cacheCfg.getInfoDir(),

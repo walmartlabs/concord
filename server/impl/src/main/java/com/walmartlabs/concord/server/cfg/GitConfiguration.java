@@ -20,9 +20,10 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.concord.common.cfg.GitAuth;
+import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
+import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
 import com.walmartlabs.concord.config.Config;
-import com.walmartlabs.concord.github.appinstallation.cfg.AppInstallation;
+import com.walmartlabs.concord.github.appinstallation.AppInstallationAuth;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
@@ -34,7 +35,7 @@ import java.time.Duration;
 import java.util.LinkedList;
 import java.util.List;
 
-public class GitConfiguration implements Serializable {
+public class GitConfiguration implements OauthTokenConfig, Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -112,11 +113,12 @@ public class GitConfiguration implements Serializable {
         return fetchTimeout;
     }
 
+    @Override
     public String getOauthToken() {
         return oauthToken;
     }
 
-    public List<GitAuth> getAuthConfigs() {
+    public List<ExternalTokenAuth> getAuthConfigs() {
         // new, tighter, list of configs mapped to specific git hosts
         var cfgs = new LinkedList<>(toGitAuth());
 
@@ -124,7 +126,7 @@ public class GitConfiguration implements Serializable {
         // this eventually to keep things tidy, but migrating config and removing
         // git.oauth is sufficiently secure
         if (oauthToken != null) {
-            cfgs.add(GitAuth.Oauth.builder()
+            cfgs.add(ExternalTokenAuth.Oauth.builder()
                     .baseUrl(".*")
                     .token(oauthToken)
                     .build());
@@ -133,7 +135,7 @@ public class GitConfiguration implements Serializable {
         return cfgs;
     }
 
-    private List<GitAuth> toGitAuth() {
+    private List<ExternalTokenAuth> toGitAuth() {
         return authConfigs.stream()
                 .map(o -> (AuthConfig) switch (GitAuthType.valueOf(o.getString("type").toUpperCase())) {
                     case OAUTH -> OauthConfig.from(o);
@@ -179,34 +181,32 @@ public class GitConfiguration implements Serializable {
     }
 
     public interface AuthConfig {
-        String gitHost();
-
-        GitAuth toGitAuth();
+        ExternalTokenAuth toGitAuth();
     }
 
-    public record OauthConfig(String gitHost, String token) implements AuthConfig {
+    public record OauthConfig(String urlPattern, String token) implements AuthConfig {
 
         static OauthConfig from(com.typesafe.config.Config cfg) {
             return new OauthConfig(
-                    cfg.getString("gitHost"),
+                    cfg.getString("urlPattern"),
                     cfg.getString("token")
             );
         }
 
         @Override
-        public GitAuth toGitAuth() {
-            return GitAuth.Oauth.builder()
-                    .baseUrl(this.gitHost())
+        public ExternalTokenAuth toGitAuth() {
+            return ExternalTokenAuth.Oauth.builder()
+                    .baseUrl(this.urlPattern())
                     .token(this.token())
                     .build();
         }
     }
 
-    public record AppInstallationConfig(String gitHost, String apiUrl, String clientId, String privateKey) implements AuthConfig {
+    public record AppInstallationConfig(String urlPattern, String apiUrl, String clientId, String privateKey) implements AuthConfig {
 
         static AppInstallationConfig from(com.typesafe.config.Config c) {
             return new AppInstallationConfig(
-                    c.getString("gitHost"),
+                    c.getString("urlPattern"),
                     c.getString("apiUrl"),
                     c.getString("clientId"),
                     c.getString("privateKey")
@@ -214,12 +214,12 @@ public class GitConfiguration implements Serializable {
         }
 
         @Override
-        public GitAuth toGitAuth() {
+        public ExternalTokenAuth toGitAuth() {
             try {
                 var pkData = Files.readString(Paths.get(this.privateKey()));
 
-                return AppInstallation.builder()
-                        .baseUrl(this.gitHost())
+                return AppInstallationAuth.builder()
+                        .baseUrl(this.urlPattern())
                         .clientId(this.clientId())
                         .privateKey(pkData)
                         .apiUrl(this.apiUrl())

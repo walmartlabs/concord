@@ -20,7 +20,7 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.walmartlabs.concord.common.GitTokenProvider;
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Secret;
@@ -51,7 +51,7 @@ public class GitClientFetchTest {
     private GitClient client;
 
     @Mock
-    GitTokenProvider authProvider;
+    AuthTokenProvider authProvider;
 
     @BeforeEach
     public void init() {

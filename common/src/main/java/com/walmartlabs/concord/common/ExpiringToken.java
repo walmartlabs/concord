@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 
-@JsonDeserialize(as = ImmutableImpl.class)
+@JsonDeserialize(as = ImmutableSimpleToken.class)
 public interface ExpiringToken {
 
     @JsonProperty("token")
@@ -52,9 +52,9 @@ public interface ExpiringToken {
 
     @Value.Immutable
     @Value.Style(jdkOnly = true)
-    interface Impl extends ExpiringToken {
-        static ImmutableImpl.Builder builder() {
-            return ImmutableImpl.builder();
+    interface SimpleToken extends ExpiringToken {
+        static ImmutableSimpleToken.Builder builder() {
+            return ImmutableSimpleToken.builder();
         }
     }
 

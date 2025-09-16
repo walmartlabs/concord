@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.cfg;
+package com.walmartlabs.concord.agent.cfg;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,49 +31,18 @@ import java.util.List;
 
 public class GithubConfiguration implements GithubAppInstallationConfig {
 
-    @Inject
-    @Config("github.secret")
-    @Nullable
-    private String secret;
-
-    @Inject
-    @Config("github.useSenderLdapDn")
-    private boolean useSenderLdapDn;
-
-    @Inject
-    @Config("github.logEvents")
-    private boolean logEvents;
-
-    @Inject
-    @Config("github.disableReposOnDeletedRef")
-    private boolean disableReposOnDeletedRef;
+    private static final String CFG_APP_INSTALLATION = "github.appInstallation";
 
     private final GithubAppInstallationConfig appInstallation;
 
     @Inject
     public GithubConfiguration(com.typesafe.config.Config config) {
-        if (config.hasPath("github.appInstallation")) {
-            var raw = config.getConfig("github.appInstallation");
+        if (config.hasPath(CFG_APP_INSTALLATION)) {
+            var raw = config.getConfig(CFG_APP_INSTALLATION);
             this.appInstallation = GithubAppInstallationConfig.fromConfig(raw);
         } else {
             this.appInstallation = GithubAppInstallationConfig.builder().authConfigs(List.of()).build();
         }
-    }
-
-    public String getSecret() {
-        return secret;
-    }
-
-    public boolean isUseSenderLdapDn() {
-        return useSenderLdapDn;
-    }
-
-    public boolean isLogEvents() {
-        return logEvents;
-    }
-
-    public boolean isDisableReposOnDeletedRef() {
-        return disableReposOnDeletedRef;
     }
 
     @Override

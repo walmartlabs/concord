@@ -20,9 +20,8 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.common.ExpiringToken;
-import com.walmartlabs.concord.common.GitTokenProvider;
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
@@ -56,12 +55,12 @@ public class GitClient {
     private static final int SUCCESS_EXIT_CODE = 0;
 
     private final GitClientConfiguration cfg;
-    private final GitTokenProvider authProvider;
+    private final AuthTokenProvider authProvider;
 
     private final Set<Obfuscation> sensitiveData;
     private final ExecutorService executor;
 
-    public GitClient(GitClientConfiguration cfg, GitTokenProvider authProvider) {
+    public GitClient(GitClientConfiguration cfg, AuthTokenProvider authProvider) {
         this.cfg = cfg;
         this.authProvider = authProvider;
         this.executor = Executors.newCachedThreadPool();
@@ -348,7 +347,8 @@ public class GitClient {
             return url;
         }
 
-        String token = authProvider.getAccessToken(uri.getHost(), uri, secret)
+        // TODO move to method in provider interface. e.g. .updateGitHttpUrl, so username can be handled if it matters for non-github hosts
+        String token = authProvider.getToken(uri, secret)
                 .map(ExpiringToken::token)
                 .orElse(null);
 
@@ -659,7 +659,7 @@ public class GitClient {
                     " -o ServerAliveInterval=" + cfg.sshTimeout().getSeconds() +
                     " -o StrictHostKeyChecking=no \"$@\"");
         }
-        Files.setPosixFilePermissions(ssh, ImmutableSet.of(OWNER_READ, OWNER_EXECUTE));
+        Files.setPosixFilePermissions(ssh, Set.of(OWNER_READ, OWNER_EXECUTE));
         return ssh;
     }
 
@@ -678,7 +678,7 @@ public class GitClient {
             w.println("Password*) echo '" + quoteUnixCredentials(new String(creds.getPassword())) + "' ;;");
             w.println("esac");
         }
-        Files.setPosixFilePermissions(askpass, ImmutableSet.of(OWNER_READ, OWNER_EXECUTE));
+        Files.setPosixFilePermissions(askpass, Set.of(OWNER_READ, OWNER_EXECUTE));
         return askpass;
     }
 
