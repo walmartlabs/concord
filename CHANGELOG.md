@@ -9,7 +9,9 @@
 - slack-tasks: update readme with required oauth scope info
 ([#1213](https://github.com/walmartlabs/concord/pull/1213));
 - it: do not archive deps.dir into payloads
-([#1214](https://github.com/walmartlabs/concord/pull/1214)).
+([#1214](https://github.com/walmartlabs/concord/pull/1214));
+- ansible-tasks: remove ini4j dependency
+([#1215](https://github.com/walmartlabs/concord/pull/1215)).
 
 
 
