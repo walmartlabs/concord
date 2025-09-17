@@ -65,7 +65,6 @@
         <httpcore.version>4.4.13</httpcore.version>
         <httpmime.version>4.5.11</httpmime.version>
         <immutables.version>2.9.3</immutables.version>
-        <ini4j.version>0.5.4</ini4j.version>
         <jackson.databind.version>2.18.3</jackson.databind.version>
         <jackson.jsonschema.version>1.0.39</jackson.jsonschema.version>
         <jackson.version>2.18.3</jackson.version>
@@ -988,11 +987,6 @@
                 <groupId>com.typesafe</groupId>
                 <artifactId>config</artifactId>
                 <version>${config.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.ini4j</groupId>
-                <artifactId>ini4j</artifactId>
-                <version>${ini4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.javers</groupId>
