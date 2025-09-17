@@ -1,6 +1,11 @@
 # Change Log
 
-## [2.32.1] - Unreleased
+## [2.33.0] - Unreleased
+
+### Added
+
+-  ansible-tasks: support inventories specified in configFile
+([#1216](https://github.com/walmartlabs/concord/pull/1216)).
 
 ### Changed
 
