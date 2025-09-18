@@ -20,8 +20,14 @@ package com.walmartlabs.concord.common.cfg;
  * =====
  */
 
+import java.util.Optional;
+
 public interface OauthTokenConfig {
 
-    String getOauthToken();
+    Optional<String> getOauthToken();
+
+    Optional<String> getOauthUsername();
+
+    Optional<String> getOauthUrlPattern();
 
 }

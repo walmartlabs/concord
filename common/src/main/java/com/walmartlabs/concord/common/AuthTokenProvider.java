@@ -74,7 +74,7 @@ public interface AuthTokenProvider {
 
         @Inject
         public OauthTokenProvider(OauthTokenConfig config) {
-            this.authConfigs = toConfigList(config.getOauthToken());
+            this.authConfigs = toConfigList(config);
         }
 
         @Override
@@ -89,7 +89,7 @@ public interface AuthTokenProvider {
                     .findFirst()
                     .map(auth -> ExpiringToken.StaticToken.builder()
                             .token(auth.token())
-                            .username(auth.username())
+                            .username(auth.username().orElse(null))
                             .build());
         }
 
@@ -112,14 +112,17 @@ public interface AuthTokenProvider {
             return authConfigs.stream().anyMatch(auth -> auth.canHandle(repoUri));
         }
 
-        private static List<ExternalTokenAuth.Oauth> toConfigList(String token) {
-            if (token == null) {
+        private static List<ExternalTokenAuth.Oauth> toConfigList(OauthTokenConfig config) {
+            var token = config.getOauthToken().orElse(null);
+
+            if (token == null || token.isBlank()) {
                 return List.of();
             }
 
             return List.of(ExternalTokenAuth.Oauth.builder()
                     .token(token)
-                    .baseUrl(".*")
+                    .username(config.getOauthUsername())
+                    .urlPattern(config.getOauthUrlPattern().orElse(".*")) // for backwards compat with git.oauth
                     .build());
         }
     }

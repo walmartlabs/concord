@@ -185,7 +185,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
                     if (auth instanceof ExternalTokenAuth.Oauth tokenAuth) {
                         return GitHubInstallationToken.builder()
                                 .token(tokenAuth.token())
-                                .username(tokenAuth.username())
+                                .username(tokenAuth.username().orElse(null))
                                 .build();
                     }
 
@@ -268,10 +268,9 @@ public class GitHubAppInstallation implements AuthTokenProvider {
 
         // Some folks give sloppy, but valid, urls like https://me123@github.com/my/repo.git/
         var repoUrl = repo.toString();
-        var baseUrl = app.baseUrl();
-        var cleanedPath = repoUrl.replaceFirst(".*" + baseUrl, "")
+        var urlPattern = app.urlPattern();
+        var cleanedPath = repoUrl.replaceFirst(".*" + urlPattern, "")
                 .replaceFirst("\\.git$", "");
-
 
         // parse out the owner/repo from the path
         var pathParts = Arrays.stream(cleanedPath.split("/"))
@@ -293,7 +292,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
             var accessTokenUrl = getAccessTokenUrl(app.apiUrl(), orgRepo, jwt);
             return ExpiringToken.SimpleToken.builder()
                     .from(createAccessToken(accessTokenUrl, jwt))
-                    .username(app.username())
+                    .username(app.username().orElse(null))
                     .build();
         } catch (JOSEException e) {
             throw new GitHubAppException("Error generating JWT for app: " + app.clientId());

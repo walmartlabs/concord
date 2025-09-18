@@ -20,20 +20,15 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
 import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
 import com.walmartlabs.concord.config.Config;
-import com.walmartlabs.concord.github.appinstallation.AppInstallationAuth;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
-import java.io.IOException;
 import java.io.Serializable;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 public class GitConfiguration implements OauthTokenConfig, Serializable {
 
@@ -45,21 +40,14 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
     private String oauthToken;
 
     @Inject
-    @Config("git.systemAuth")
-    private List<com.typesafe.config.Config> authConfigs;
-
-    @Inject
-    @Config("git.systemAuthCacheDuration")
-    private Duration systemAuthCacheDuration;
-
-    @Inject
-    @Config("git.systemAuthCacheMaxSize")
-    private int systemAuthCacheMaxSize;
-
-    @Inject
-    @Config("git.authorizedGitHosts")
+    @Config("git.oauthUsername")
     @Nullable
-    private List<String> authorizedGitHosts;
+    private String oauthUsername;
+
+    @Inject
+    @Config("git.oauthUrlPattern")
+    @Nullable
+    private String oauthUrlPattern;
 
     @Inject
     @Config("git.shallowClone")
@@ -114,47 +102,18 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
     }
 
     @Override
-    public String getOauthToken() {
-        return oauthToken;
+    public Optional<String> getOauthToken() {
+        return Optional.ofNullable(oauthToken);
     }
 
-    public List<ExternalTokenAuth> getAuthConfigs() {
-        // new, tighter, list of configs mapped to specific git hosts
-        var cfgs = new LinkedList<>(toGitAuth());
-
-        // Backwards compat for a single, global oauth token. We need to remove
-        // this eventually to keep things tidy, but migrating config and removing
-        // git.oauth is sufficiently secure
-        if (oauthToken != null) {
-            cfgs.add(ExternalTokenAuth.Oauth.builder()
-                    .baseUrl(".*")
-                    .token(oauthToken)
-                    .build());
-        }
-
-        return cfgs;
+    @Override
+    public Optional<String> getOauthUsername() {
+        return Optional.ofNullable(oauthUsername);
     }
 
-    private List<ExternalTokenAuth> toGitAuth() {
-        return authConfigs.stream()
-                .map(o -> (AuthConfig) switch (GitAuthType.valueOf(o.getString("type").toUpperCase())) {
-                    case OAUTH -> OauthConfig.from(o);
-                    case GITHUB_APP_INSTALLATION -> AppInstallationConfig.from(o);
-                })
-                .map(AuthConfig::toGitAuth)
-                .toList();
-    }
-
-    public Duration getSystemAuthCacheDuration() {
-        return systemAuthCacheDuration;
-    }
-
-    public int getSystemAuthCacheMaxSize() {
-        return systemAuthCacheMaxSize;
-    }
-
-    public List<String> getAuthorizedGitHosts() {
-        return authorizedGitHosts;
+    @Override
+    public Optional<String> getOauthUrlPattern() {
+        return Optional.ofNullable(oauthUrlPattern);
     }
 
     public int getHttpLowSpeedLimit() {
@@ -174,63 +133,5 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
     }
 
     public List<String> getAllowedSchemes() { return allowedSchemes; }
-
-    enum GitAuthType {
-        OAUTH,
-        GITHUB_APP_INSTALLATION
-    }
-
-    public interface AuthConfig {
-        ExternalTokenAuth toGitAuth();
-    }
-
-    public record OauthConfig(String urlPattern, String username, String token) implements AuthConfig {
-
-        static OauthConfig from(com.typesafe.config.Config cfg) {
-            return new OauthConfig(
-                    cfg.getString("urlPattern"),
-                    cfg.getString("username"),
-                    cfg.getString("token")
-            );
-        }
-
-        @Override
-        public ExternalTokenAuth toGitAuth() {
-            return ExternalTokenAuth.Oauth.builder()
-                    .baseUrl(this.urlPattern())
-                    .token(this.token())
-                    .build();
-        }
-    }
-
-    public record AppInstallationConfig(String urlPattern, String username, String apiUrl, String clientId, String privateKey) implements AuthConfig {
-
-        static AppInstallationConfig from(com.typesafe.config.Config c) {
-            return new AppInstallationConfig(
-                    c.getString("urlPattern"),
-                    c.getString("username"),
-                    c.getString("apiUrl"),
-                    c.getString("clientId"),
-                    c.getString("privateKey")
-            );
-        }
-
-        @Override
-        public ExternalTokenAuth toGitAuth() {
-            try {
-                var pkData = Files.readString(Paths.get(this.privateKey()));
-
-                return AppInstallationAuth.builder()
-                        .baseUrl(this.urlPattern())
-                        .username(this.username())
-                        .clientId(this.clientId())
-                        .privateKey(pkData)
-                        .apiUrl(this.apiUrl())
-                        .build();
-            } catch (IOException e) {
-                throw new RuntimeException("Error initializing Git App Installation auth", e);
-            }
-        }
-    }
 
 }

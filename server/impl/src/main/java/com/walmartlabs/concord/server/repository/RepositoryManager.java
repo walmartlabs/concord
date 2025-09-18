@@ -67,8 +67,9 @@ public class RepositoryManager {
                              AuthTokenProvider authProvider) throws IOException {
 
         GitClientConfiguration gitCliCfg = GitClientConfiguration.builder()
-                .oauthToken(gitCfg.getOauthToken())
-                .authorizedGitHosts(gitCfg.getAuthorizedGitHosts())
+                .oauthToken(gitCfg.getOauthToken()) // TODO remove? authProvider should have the same info now
+                .oauthUsername(gitCfg.getOauthUsername())
+                .oauthUrlPattern(gitCfg.getOauthUrlPattern())
                 .allowedSchemes(gitCfg.getAllowedSchemes())
                 .defaultOperationTimeout(gitCfg.getDefaultOperationTimeout())
                 .fetchTimeout(gitCfg.getFetchTimeout())

@@ -69,10 +69,9 @@ public class GitClient {
         sensitiveData.add(new Obfuscation("(https://[^:]*:)[^@]+(@)", "$1***$2"));
         sensitiveData.add(new Obfuscation("(https://x-access-token:)[^@]+(@)", "$1***$2"));
 
-        if (cfg.oauthToken() != null) {
-            // definitely don't print a hard-code oauth token
-            sensitiveData.add(new Obfuscation(cfg.oauthToken(), "***"));
-        }
+        cfg.oauthToken().ifPresent(oauth ->
+                // definitely don't print a hard-code oauth token
+                sensitiveData.add(new Obfuscation(oauth, "***")));
     }
 
     public FetchResult fetch(FetchRequest req) {

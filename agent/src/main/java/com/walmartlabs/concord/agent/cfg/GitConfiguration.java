@@ -21,23 +21,20 @@ package com.walmartlabs.concord.agent.cfg;
  */
 
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigObject;
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
 import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
-import com.walmartlabs.concord.github.appinstallation.AppInstallationAuth;
 
 import javax.inject.Inject;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
 
 public class GitConfiguration implements OauthTokenConfig {
 
     private final String token;
+    private final String oauthUsername;
+    private final String oauthUrlPattern;
     private final boolean shallowClone;
     private final boolean checkAlreadyFetched;
     private final Duration defaultOperationTimeout;
@@ -52,6 +49,8 @@ public class GitConfiguration implements OauthTokenConfig {
     @Inject
     public GitConfiguration(Config cfg) {
         this.token = getStringOrDefault(cfg, "git.oauth", () -> null);
+        this.oauthUsername = getStringOrDefault(cfg, "git.oauthUsername", () -> null);
+        this.oauthUrlPattern = getStringOrDefault(cfg, "git.oauthUrlPattern", () -> null);
         this.shallowClone = cfg.getBoolean("git.shallowClone");
         this.checkAlreadyFetched = cfg.getBoolean("git.checkAlreadyFetched");
         this.defaultOperationTimeout = cfg.getDuration("git.defaultOperationTimeout");
@@ -65,8 +64,18 @@ public class GitConfiguration implements OauthTokenConfig {
     }
 
     @Override
-    public String getOauthToken() {
-        return token;
+    public Optional<String> getOauthToken() {
+        return Optional.ofNullable(token);
+    }
+
+    @Override
+    public Optional<String> getOauthUsername() {
+        return Optional.ofNullable(oauthUsername);
+    }
+
+    @Override
+    public Optional<String> getOauthUrlPattern() {
+        return Optional.ofNullable(oauthUrlPattern);
     }
 
     public boolean isShallowClone() {

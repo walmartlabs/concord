@@ -22,20 +22,24 @@ package com.walmartlabs.concord.common.cfg;
 
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
 import java.net.URI;
+import java.util.Optional;
 
 public interface ExternalTokenAuth {
 
     /** Regex matching the host, optional port and path of a Git repository URL. */
-    String baseUrl();
+    String urlPattern();
 
-    @Nullable
-    String username();
+    /**
+     * Username to use for authentication with a provided token. Some services
+     * (e.g. GitHub API for app installation) require a specific username. Others
+     * (e.g. GitHub API for personal access tokens) accept just the token and no username
+     */
+    Optional<String> username();
 
     /**
      * For compatibility with a {@link ExternalTokenAuth} instance, a URI must match the
-     * {@link #baseUrl()} regex. The regex may match against the path to support
+     * {@link #urlPattern()} regex. The regex may match against the path to support
      * either a Git host behind a reverse proxy or restricting the auth to specific
      * org/repo patterns.
      * @return {@code true} if this provider can handle the given repo URI, {@code false} otherwise.
@@ -43,7 +47,7 @@ public interface ExternalTokenAuth {
     default boolean canHandle(URI repo) {
         String repoHostPortAndPath = repo.getHost() + (repo.getPort() == -1 ? "" : (":" + repo.getPort())) + (repo.getPath() == null ? "" : repo.getPath());
 
-        return repoHostPortAndPath.matches(baseUrl() + ".*");
+        return repoHostPortAndPath.matches(urlPattern() + ".*");
     }
 
     @Value.Immutable

@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
@@ -102,9 +103,9 @@ public interface GithubAppInstallationConfig {
         @Override
         public ExternalTokenAuth toGitAuth() {
             return ExternalTokenAuth.Oauth.builder()
-                    .baseUrl(this.urlPattern())
-                    .username(this.username())
                     .token(this.token())
+                    .username(Optional.ofNullable(this.username()))
+                    .urlPattern(this.urlPattern())
                     .build();
         }
     }
@@ -112,9 +113,13 @@ public interface GithubAppInstallationConfig {
     record AppInstallationConfig(String urlPattern, String username, String apiUrl, String clientId, String privateKey) implements AuthConfig {
 
         static AppInstallationConfig from(com.typesafe.config.Config c) {
+            var username = Optional.ofNullable(c.hasPath("username") ? c.getString("username") : null)
+                    .filter(s -> !s.isBlank())
+                    .orElse("x-access-token");
+
             return new AppInstallationConfig(
                     c.getString("urlPattern"),
-                    c.getString("username"),
+                    username,
                     c.getString("apiUrl"),
                     c.getString("clientId"),
                     c.getString("privateKey")
@@ -127,7 +132,7 @@ public interface GithubAppInstallationConfig {
                 var pkData = Files.readString(Paths.get(this.privateKey()));
 
                 return AppInstallationAuth.builder()
-                        .baseUrl(this.urlPattern())
+                        .urlPattern(this.urlPattern())
                         .username(this.username())
                         .clientId(this.clientId())
                         .privateKey(pkData)

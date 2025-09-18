@@ -37,13 +37,6 @@ public interface AppInstallationAuth extends ExternalTokenAuth {
 
     String privateKey();
 
-    @Nullable
-    @Value.Default
-    @Override
-    default String username() {
-        return "x-access-token";
-    }
-
     static ImmutableAppInstallationAuth.Builder builder() {
         return ImmutableAppInstallationAuth.builder();
     }
