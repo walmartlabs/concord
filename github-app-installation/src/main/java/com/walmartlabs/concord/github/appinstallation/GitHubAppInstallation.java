@@ -73,6 +73,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
     private static final Pattern START_JSON_OBJECT = Pattern.compile("^\\s*\\{.*", Pattern.DOTALL);
 
     private final List<ExternalTokenAuth> authConfigs;
+    private final Duration httpTimeout;
     private final ObjectMapper objectMapper;
 
     private final LoadingCache<CacheKey, Optional<ExpiringToken>> cache;
@@ -82,12 +83,12 @@ public class GitHubAppInstallation implements AuthTokenProvider {
     @Inject
     public GitHubAppInstallation(GithubAppInstallationConfig cfg, ObjectMapper objectMapper) {
         this.authConfigs = cfg.getAuthConfigs();
+        this.httpTimeout = cfg.getHttpClientTimeout();
         this.objectMapper = objectMapper;
 
         this.cache = CacheBuilder.newBuilder()
                 .expireAfterWrite(cfg.getSystemAuthCacheDuration())
-                .recordStats()
-                .maximumWeight(1024 * 10L) // ~ 10MB
+                .maximumWeight(cfg.getSystemAuthCacheMaxWeight())
                 .weigher((Weigher<CacheKey, Optional<ExpiringToken>>) (key, value) -> {
                     int weight = 1;
 
@@ -305,6 +306,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
                 .header("Authorization", "Bearer " + jwt)
                 .header("Accept", "application/vnd.github+json")
                 .header("X-GitHub-Api-Version", "2022-11-28")
+                .timeout(httpTimeout)
                 .build();
 
         var appInstallation = sendRequest(req, 200, GitHubAppInstallationResp.class, (code, body) -> {
@@ -329,6 +331,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
                 .header("Authorization", "Bearer " + jwt)
                 .header("Accept", "application/vnd.github+json")
                 .header("X-GitHub-Api-Version", "2022-11-28")
+                .timeout(httpTimeout)
                 .build();
 
         return sendRequest(req, 201, ExpiringToken.class, (code, body) -> {
@@ -373,7 +376,10 @@ public class GitHubAppInstallation implements AuthTokenProvider {
 
     private <T> T sendRequest(HttpRequest httpRequest, int expectedCode, Class<T> clazz, BiFunction<Integer, String, GitHubAppException> exFun) throws GitHubAppException {
         try {
-            var resp = HttpClient.newHttpClient().send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
+            var resp = HttpClient.newBuilder() // would be nice to re-use client thread-safely
+                    .connectTimeout(httpTimeout)
+                    .build()
+                    .send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
             if (resp.statusCode() != expectedCode) {
                 throw exFun.apply(resp.statusCode(), readBody(resp));
             }

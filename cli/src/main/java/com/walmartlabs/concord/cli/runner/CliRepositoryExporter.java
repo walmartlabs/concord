@@ -55,7 +55,6 @@ public class CliRepositoryExporter implements RepositoryExporter {
         this.repoCacheDir = repoCacheDir;
 
         GitClientConfiguration clientCfg = GitClientConfiguration.builder()
-                .oauthToken(null)
                 .defaultOperationTimeout(DEFAULT_OPERATION_TIMEOUT)
                 .fetchTimeout(FETCH_TIMEOUT)
                 .httpLowSpeedLimit(HTTP_LOW_SPEED_LIMIT)

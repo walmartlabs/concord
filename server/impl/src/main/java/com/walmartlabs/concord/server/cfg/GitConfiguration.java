@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
+import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
 import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
 import com.walmartlabs.concord.config.Config;
 import org.eclipse.sisu.Nullable;
@@ -85,6 +86,10 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
     @Config("git.allowedSchemes")
     private List<String> allowedSchemes;
 
+    @Inject
+    @Config("git.systemAuth")
+    List<com.typesafe.config.Config> authConfigs;
+
     public boolean isShallowClone() {
         return shallowClone;
     }
@@ -133,5 +138,45 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
     }
 
     public List<String> getAllowedSchemes() { return allowedSchemes; }
+
+    public List<ExternalTokenAuth> getSystemAuth() {
+        return authConfigs.stream()
+                .map(o -> {
+                    GitAuthType type = GitAuthType.valueOf(o.getString("type").toUpperCase());
+
+                    return (AuthConfig) switch (type) {
+                        case OAUTH -> OauthConfig.from(o);
+                    };
+                })
+                .map(AuthConfig::toGitAuth)
+                .toList();
+    }
+
+
+    enum GitAuthType {
+        OAUTH
+    }
+
+    public interface AuthConfig {
+        ExternalTokenAuth toGitAuth();
+    }
+
+    public record OauthConfig(String urlPattern, String token) implements AuthConfig {
+
+        static OauthConfig from(com.typesafe.config.Config cfg) {
+            return new OauthConfig(
+                    cfg.getString("urlPattern"),
+                    cfg.getString("token")
+            );
+        }
+
+        @Override
+        public ExternalTokenAuth.Oauth toGitAuth() {
+            return ExternalTokenAuth.Oauth.builder()
+                    .urlPattern(this.urlPattern())
+                    .token(this.token())
+                    .build();
+        }
+    }
 
 }

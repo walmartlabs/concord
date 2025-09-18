@@ -21,6 +21,7 @@ package com.walmartlabs.concord.agent.cfg;
  */
 
 import com.typesafe.config.Config;
+import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
 import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
 
 import javax.inject.Inject;
@@ -45,6 +46,7 @@ public class GitConfiguration implements OauthTokenConfig {
     private final int sshTimeoutRetryCount;
     private final boolean skip;
     private final List<String> allowedSchemes;
+    private final List<? extends Config> authConfigs;
 
     @Inject
     public GitConfiguration(Config cfg) {
@@ -61,6 +63,7 @@ public class GitConfiguration implements OauthTokenConfig {
         this.sshTimeoutRetryCount = cfg.getInt("git.sshTimeoutRetryCount");
         this.skip = cfg.getBoolean("git.skip");
         this.allowedSchemes = cfg.getStringList("git.allowedSchemes");
+        this.authConfigs = cfg.getConfigList("git.systemAuth");
     }
 
     @Override
@@ -115,5 +118,45 @@ public class GitConfiguration implements OauthTokenConfig {
     }
 
     public List<String> getAllowedSchemes() { return allowedSchemes; }
+
+    public List<ExternalTokenAuth> getSystemAuth() {
+        return authConfigs.stream()
+                .map(o -> {
+                    GitAuthType type = GitAuthType.valueOf(o.getString("type").toUpperCase());
+
+                    return (AuthConfig) switch (type) {
+                        case OAUTH -> OauthConfig.from(o);
+                    };
+                })
+                .map(AuthConfig::toGitAuth)
+                .toList();
+
+    }
+
+    enum GitAuthType {
+        OAUTH
+    }
+
+    public interface AuthConfig {
+        ExternalTokenAuth toGitAuth();
+    }
+
+    public record OauthConfig(String urlPattern, String token) implements AuthConfig {
+
+        static OauthConfig from(Config cfg) {
+            return new OauthConfig(
+                    cfg.getString("urlPattern"),
+                    cfg.getString("token")
+            );
+        }
+
+        @Override
+        public ExternalTokenAuth.Oauth toGitAuth() {
+            return ExternalTokenAuth.Oauth.builder()
+                    .urlPattern(this.urlPattern())
+                    .token(this.token())
+                    .build();
+        }
+    }
 
 }

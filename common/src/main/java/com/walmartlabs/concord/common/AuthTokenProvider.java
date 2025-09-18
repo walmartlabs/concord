@@ -70,7 +70,7 @@ public interface AuthTokenProvider {
 
     class OauthTokenProvider implements AuthTokenProvider {
 
-        private final List<ExternalTokenAuth.Oauth> authConfigs;
+        private final List<ExternalTokenAuth> authConfigs;
 
         @Inject
         public OauthTokenProvider(OauthTokenConfig config) {
@@ -86,6 +86,8 @@ public interface AuthTokenProvider {
         public Optional<ExpiringToken> getToken(URI repo, @Nullable Secret secret) {
             return authConfigs.stream()
                     .filter(auth -> auth.canHandle(repo))
+                    .filter(ExternalTokenAuth.Oauth.class::isInstance)
+                    .map(ExternalTokenAuth.Oauth.class::cast)
                     .findFirst()
                     .map(auth -> ExpiringToken.StaticToken.builder()
                             .token(auth.token())
@@ -112,11 +114,11 @@ public interface AuthTokenProvider {
             return authConfigs.stream().anyMatch(auth -> auth.canHandle(repoUri));
         }
 
-        private static List<ExternalTokenAuth.Oauth> toConfigList(OauthTokenConfig config) {
+        private static List<ExternalTokenAuth> toConfigList(OauthTokenConfig config) {
             var token = config.getOauthToken().orElse(null);
 
-            if (token == null || token.isBlank()) {
-                return List.of();
+            if (token == null || token.isBlank() && config.getSystemAuth().isEmpty()) {
+                return config.getSystemAuth();
             }
 
             return List.of(ExternalTokenAuth.Oauth.builder()

@@ -21,9 +21,7 @@ package com.walmartlabs.concord.agent.cfg;
  */
 
 import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
-import com.walmartlabs.concord.config.Config;
 import com.walmartlabs.concord.github.appinstallation.cfg.GithubAppInstallationConfig;
-import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
 import java.time.Duration;
@@ -41,7 +39,9 @@ public class GithubConfiguration implements GithubAppInstallationConfig {
             var raw = config.getConfig(CFG_APP_INSTALLATION);
             this.appInstallation = GithubAppInstallationConfig.fromConfig(raw);
         } else {
-            this.appInstallation = GithubAppInstallationConfig.builder().authConfigs(List.of()).build();
+            this.appInstallation = GithubAppInstallationConfig.builder()
+                    .authConfigs(List.of())
+                    .build();
         }
     }
 
@@ -56,8 +56,8 @@ public class GithubConfiguration implements GithubAppInstallationConfig {
     }
 
     @Override
-    public int getSystemAuthCacheMaxSize() {
-        return appInstallation.getSystemAuthCacheMaxSize();
+    public long getSystemAuthCacheMaxWeight() {
+        return appInstallation.getSystemAuthCacheMaxWeight();
     }
 
 }

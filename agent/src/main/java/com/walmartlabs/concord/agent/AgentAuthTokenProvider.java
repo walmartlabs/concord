@@ -75,7 +75,7 @@ public class AgentAuthTokenProvider implements AuthTokenProvider {
         private static final String CFG_URL_PATTERN = "externalTokenProvider.urlPattern";
 
         private final SystemApi systemApi;
-        private final ExternalTokenAuth.ConcordServer auth;
+        private final ExternalTokenAuth.ConcordServerAuth auth;
 
         @Inject
         public ConcordServerTokenProvider(ApiClientFactory apiClientFactory, Config config) {
@@ -88,12 +88,12 @@ public class AgentAuthTokenProvider implements AuthTokenProvider {
             }
         }
 
-        private static ExternalTokenAuth.ConcordServer initAuth(Config config) {
+        private static ExternalTokenAuth.ConcordServerAuth initAuth(Config config) {
             if (!config.hasPath(CFG_ENABLED) || !config.getBoolean(CFG_ENABLED)) {
                 return null;
             }
 
-            return config.hasPath(CFG_URL_PATTERN) ? ExternalTokenAuth.ConcordServer.builder()
+            return config.hasPath(CFG_URL_PATTERN) ? ExternalTokenAuth.ConcordServerAuth.builder()
                     .urlPattern(config.getString(CFG_URL_PATTERN))
                     .build() : null;
         }

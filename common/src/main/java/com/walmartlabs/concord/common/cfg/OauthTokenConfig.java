@@ -20,6 +20,7 @@ package com.walmartlabs.concord.common.cfg;
  * =====
  */
 
+import java.util.List;
 import java.util.Optional;
 
 public interface OauthTokenConfig {
@@ -29,5 +30,7 @@ public interface OauthTokenConfig {
     Optional<String> getOauthUsername();
 
     Optional<String> getOauthUrlPattern();
+
+    List<ExternalTokenAuth> getSystemAuth();
 
 }

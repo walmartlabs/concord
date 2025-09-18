@@ -45,8 +45,25 @@ public interface GithubAppInstallationConfig {
     }
 
     @Value.Default
-    default int getSystemAuthCacheMaxSize() {
-        return 1_000;
+    default Duration getHttpClientTimeout() {
+        return Duration.ofSeconds(30);
+    }
+
+    /**
+     * Weight is roughly calculated in kilobytes. Any cached item will have a
+     * minimum weight of 1. While further weight calculations are based on size
+     * of the given secret, if any.
+     * <p/>
+     * The default of 10,240 (~10MB) can hold approximately:
+     * <ul>
+     *     <li>10,000 tokens with no secret</li>
+     *     <li>5,000 tokens with string or credentials secret</li>
+     *     <li>3,500 tokens with app private key secret</li>
+     * </ul>
+     */
+    @Value.Default
+    default long getSystemAuthCacheMaxWeight() {
+        return 1024 * 10L;
     }
 
     static ImmutableGithubAppInstallationConfig.Builder builder() {
@@ -60,12 +77,16 @@ public interface GithubAppInstallationConfig {
 
         var builder = builder();
 
+        if (config.hasPath("httpClientTimeout")) {
+            builder.httpClientTimeout(config.getDuration("httpClientTimeout"));
+        }
+
         if (config.hasPath("systemAuthCacheDuration")) {
             builder.systemAuthCacheDuration(config.getDuration("systemAuthCacheDuration"));
         }
 
-        if (config.hasPath("systemAuthCacheMaxSize")) {
-            builder.systemAuthCacheMaxSize(config.getInt("systemAuthCacheMaxSize"));
+        if (config.hasPath("systemAuthCacheMaxWeight")) {
+            builder.systemAuthCacheMaxWeight(config.getInt("systemAuthCacheMaxWeight"));
         }
 
         return builder
@@ -93,9 +114,13 @@ public interface GithubAppInstallationConfig {
     record OauthConfig(String urlPattern, String username, String token) implements AuthConfig {
 
         static OauthConfig from(com.typesafe.config.Config cfg) {
+            var username = Optional.ofNullable(cfg.hasPath("username") ? cfg.getString("username") : null)
+                    .filter(s -> !s.isBlank())
+                    .orElse(null);
+
             return new OauthConfig(
                     cfg.getString("urlPattern"),
-                    cfg.getString("username"),
+                    username,
                     cfg.getString("token")
             );
         }
@@ -112,17 +137,17 @@ public interface GithubAppInstallationConfig {
 
     record AppInstallationConfig(String urlPattern, String username, String apiUrl, String clientId, String privateKey) implements AuthConfig {
 
-        static AppInstallationConfig from(com.typesafe.config.Config c) {
-            var username = Optional.ofNullable(c.hasPath("username") ? c.getString("username") : null)
+        static AppInstallationConfig from(com.typesafe.config.Config cfg) {
+            var username = Optional.ofNullable(cfg.hasPath("username") ? cfg.getString("username") : null)
                     .filter(s -> !s.isBlank())
                     .orElse("x-access-token");
 
             return new AppInstallationConfig(
-                    c.getString("urlPattern"),
+                    cfg.getString("urlPattern"),
                     username,
-                    c.getString("apiUrl"),
-                    c.getString("clientId"),
-                    c.getString("privateKey")
+                    cfg.getString("apiUrl"),
+                    cfg.getString("clientId"),
+                    cfg.getString("privateKey")
             );
         }
 

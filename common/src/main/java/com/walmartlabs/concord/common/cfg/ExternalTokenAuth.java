@@ -62,10 +62,9 @@ public interface ExternalTokenAuth {
 
     @Value.Immutable
     @Value.Style(jdkOnly = true)
-    interface ConcordServer extends ExternalTokenAuth {
-        // TODO rename to ConcordServerAuth?
-        static ImmutableConcordServer.Builder builder() {
-            return ImmutableConcordServer.builder();
+    interface ConcordServerAuth extends ExternalTokenAuth {
+        static ImmutableConcordServerAuth.Builder builder() {
+            return ImmutableConcordServerAuth.builder();
         }
     }
 

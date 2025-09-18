@@ -82,13 +82,18 @@ public class GithubConfiguration implements GithubAppInstallationConfig {
     }
 
     @Override
+    public Duration getHttpClientTimeout() {
+        return appInstallation.getHttpClientTimeout();
+    }
+
+    @Override
     public Duration getSystemAuthCacheDuration() {
         return appInstallation.getSystemAuthCacheDuration();
     }
 
     @Override
-    public int getSystemAuthCacheMaxSize() {
-        return appInstallation.getSystemAuthCacheMaxSize();
+    public long getSystemAuthCacheMaxWeight() {
+        return appInstallation.getSystemAuthCacheMaxWeight();
     }
 
 }
