@@ -28,6 +28,7 @@ import com.walmartlabs.concord.sdk.Secret;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +42,31 @@ public interface AuthTokenProvider {
     boolean supports(URI repo, @Nullable Secret secret);
 
     Optional<ExpiringToken> getToken(URI repo, @Nullable Secret secret);
+
+    default URI addUserInfoToUri(URI repo, @Nullable Secret secret) {
+        if (!supports(repo, secret)) {
+            // not compatible with auth provider(s)
+            return repo;
+        }
+
+        return getToken(repo, secret)
+                .map(expiringToken -> {
+                    var token  = expiringToken.token();
+                    var userInfo = expiringToken.username() != null
+                            ? expiringToken.username() + ":" + token
+                            : token;
+
+                    try {
+                        return new URI(repo.getScheme(), userInfo, repo.getHost(),
+                                repo.getPort(), repo.getPath(), repo.getQuery(), repo.getFragment());
+                    } catch (URISyntaxException e) {
+                        // TODO add log?
+                    }
+
+                    return null;
+                })
+                .orElse(repo);
+    }
 
     class OauthTokenProvider implements AuthTokenProvider {
 
@@ -62,8 +88,9 @@ public interface AuthTokenProvider {
                     .filter(auth -> auth.canHandle(repo))
                     .findFirst()
                     .map(auth -> ExpiringToken.StaticToken.builder()
-                                .token(auth.token())
-                                .build());
+                            .token(auth.token())
+                            .username(auth.username())
+                            .build());
         }
 
         private boolean validateSecret(Secret secret) {

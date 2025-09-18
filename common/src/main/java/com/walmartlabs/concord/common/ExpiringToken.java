@@ -36,6 +36,10 @@ public interface ExpiringToken {
     String token();
 
     @Nullable
+    @JsonProperty("username")
+    String username();
+
+    @Nullable
     @JsonProperty("expires_at")
     // GitHub gives time in seconds, but most parsers (e.g. jackson) expect milliseconds
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss[.SSS]X")

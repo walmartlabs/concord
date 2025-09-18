@@ -89,11 +89,12 @@ public interface GithubAppInstallationConfig {
         return a.toGitAuth();
     }
 
-    record OauthConfig(String urlPattern, String token) implements AuthConfig {
+    record OauthConfig(String urlPattern, String username, String token) implements AuthConfig {
 
         static OauthConfig from(com.typesafe.config.Config cfg) {
             return new OauthConfig(
                     cfg.getString("urlPattern"),
+                    cfg.getString("username"),
                     cfg.getString("token")
             );
         }
@@ -102,16 +103,18 @@ public interface GithubAppInstallationConfig {
         public ExternalTokenAuth toGitAuth() {
             return ExternalTokenAuth.Oauth.builder()
                     .baseUrl(this.urlPattern())
+                    .username(this.username())
                     .token(this.token())
                     .build();
         }
     }
 
-    record AppInstallationConfig(String urlPattern, String apiUrl, String clientId, String privateKey) implements AuthConfig {
+    record AppInstallationConfig(String urlPattern, String username, String apiUrl, String clientId, String privateKey) implements AuthConfig {
 
         static AppInstallationConfig from(com.typesafe.config.Config c) {
             return new AppInstallationConfig(
                     c.getString("urlPattern"),
+                    c.getString("username"),
                     c.getString("apiUrl"),
                     c.getString("clientId"),
                     c.getString("privateKey")
@@ -125,6 +128,7 @@ public interface GithubAppInstallationConfig {
 
                 return AppInstallationAuth.builder()
                         .baseUrl(this.urlPattern())
+                        .username(this.username())
                         .clientId(this.clientId())
                         .privateKey(pkData)
                         .apiUrl(this.apiUrl())

@@ -184,11 +184,12 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
         ExternalTokenAuth toGitAuth();
     }
 
-    public record OauthConfig(String urlPattern, String token) implements AuthConfig {
+    public record OauthConfig(String urlPattern, String username, String token) implements AuthConfig {
 
         static OauthConfig from(com.typesafe.config.Config cfg) {
             return new OauthConfig(
                     cfg.getString("urlPattern"),
+                    cfg.getString("username"),
                     cfg.getString("token")
             );
         }
@@ -202,11 +203,12 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
         }
     }
 
-    public record AppInstallationConfig(String urlPattern, String apiUrl, String clientId, String privateKey) implements AuthConfig {
+    public record AppInstallationConfig(String urlPattern, String username, String apiUrl, String clientId, String privateKey) implements AuthConfig {
 
         static AppInstallationConfig from(com.typesafe.config.Config c) {
             return new AppInstallationConfig(
                     c.getString("urlPattern"),
+                    c.getString("username"),
                     c.getString("apiUrl"),
                     c.getString("clientId"),
                     c.getString("privateKey")
@@ -220,6 +222,7 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
 
                 return AppInstallationAuth.builder()
                         .baseUrl(this.urlPattern())
+                        .username(this.username())
                         .clientId(this.clientId())
                         .privateKey(pkData)
                         .apiUrl(this.apiUrl())

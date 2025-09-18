@@ -24,6 +24,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
+
 @Value.Immutable
 @Value.Style(jdkOnly = true)
 @JsonDeserialize(as = ImmutableAppInstallationAuth.class)
@@ -34,6 +36,13 @@ public interface AppInstallationAuth extends ExternalTokenAuth {
     String clientId();
 
     String privateKey();
+
+    @Nullable
+    @Value.Default
+    @Override
+    default String username() {
+        return "x-access-token";
+    }
 
     static ImmutableAppInstallationAuth.Builder builder() {
         return ImmutableAppInstallationAuth.builder();

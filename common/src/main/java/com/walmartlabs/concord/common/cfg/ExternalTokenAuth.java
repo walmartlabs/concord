@@ -22,12 +22,16 @@ package com.walmartlabs.concord.common.cfg;
 
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.net.URI;
 
 public interface ExternalTokenAuth {
 
     /** Regex matching the host, optional port and path of a Git repository URL. */
     String baseUrl();
+
+    @Nullable
+    String username();
 
     /**
      * For compatibility with a {@link ExternalTokenAuth} instance, a URI must match the

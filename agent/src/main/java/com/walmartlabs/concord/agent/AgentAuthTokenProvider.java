@@ -116,9 +116,15 @@ public class AgentAuthTokenProvider implements AuthTokenProvider {
 
                 return Optional.of(ExpiringToken.SimpleToken.builder()
                         .token(resp.getToken())
+                        .username(resp.getUsername())
                         .expiresAt(resp.getExpiresAt())
                         .build());
             } catch (ApiException e) {
+                if (e.getCode() == 403) {
+                    // User needs externalTokenLookup permission
+                    throw new RuntimeException("No permission to get auth token from concord server.");
+                }
+
                 throw new RuntimeException("Error retrieving concord-provided auth token", e);
             }
         }

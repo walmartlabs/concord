@@ -20,7 +20,6 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.walmartlabs.concord.common.ExpiringToken;
 import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
@@ -66,10 +65,12 @@ public class GitClient {
         this.executor = Executors.newCachedThreadPool();
         this.sensitiveData = new LinkedHashSet<>();
 
+        // urls with user info. still shows the username if present
         sensitiveData.add(new Obfuscation("(https://[^:]*:)[^@]+(@)", "$1***$2"));
         sensitiveData.add(new Obfuscation("(https://x-access-token:)[^@]+(@)", "$1***$2"));
 
         if (cfg.oauthToken() != null) {
+            // definitely don't print a hard-code oauth token
             sensitiveData.add(new Obfuscation(cfg.oauthToken(), "***"));
         }
     }
@@ -324,12 +325,6 @@ public class GitClient {
 
         URI uri = assertUriAllowed(url);
 
-        if (secret == null && !authProvider.supports(uri, null)) {
-            // no user-provided auth
-            // no matching system-provided auth
-            return url;
-        }
-
         if (url.contains("@") || !url.startsWith("https://")) {
             // provided url already has credentials OR it's a non-https url
             return url;
@@ -342,23 +337,10 @@ public class GitClient {
                     String.valueOf(up.getPassword()) +
                     "@" +
                     url.substring("https://".length());
-        } else if (!authProvider.supports(uri, secret)) {
-            // not compatible with auth provider
-            return url;
         }
 
-        // TODO move to method in provider interface. e.g. .updateGitHttpUrl, so username can be handled if it matters for non-github hosts
-        String token = authProvider.getToken(uri, secret)
-                .map(ExpiringToken::token)
-                .orElse(null);
-
-        if (token == null) {
-            // provided url already has credentials OR there are no default credentials to use.
-            // anonymous auth is the only viable option.
-            return url;
-        }
-
-        return "https://x-access-token:" + token + "@" + url.substring("https://".length());
+        // This will either add auth from a matching provider, or none for anonymous access
+        return authProvider.addUserInfoToUri(uri, secret).toString();
     }
 
     private void updateSubmodules(Path workDir, Secret secret) {
@@ -552,7 +534,6 @@ public class GitClient {
         return uri;
     }
 
-    //TODO make sure that if allowedSchemes = [ "https", "ssh", "git", "file" ] is not present, allow all schemes
     private void assertUriAllowed(URI uri) {
         String providedScheme = uri.getScheme();
         Set<String> allowedSchemes = cfg.allowedSchemes();
@@ -560,10 +541,6 @@ public class GitClient {
 
         if (allowedSchemes.isEmpty()) {
             return; // allow all
-        }
-
-        if (allowedSchemes.isEmpty()) {
-            return;
         }
 
         // the provided repo string is definitely an allowed protocol.

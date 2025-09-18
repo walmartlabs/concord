@@ -38,7 +38,6 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.ExpiringToken;
-import com.walmartlabs.concord.common.SystemExternalTokenProvider;
 import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
@@ -183,9 +182,10 @@ public class GitHubAppInstallation implements AuthTokenProvider {
                 .filter(auth -> auth.canHandle(repo))
                 .findFirst()
                 .map(auth -> {
-                    if (auth instanceof ExternalTokenAuth.Oauth token) {
+                    if (auth instanceof ExternalTokenAuth.Oauth tokenAuth) {
                         return GitHubInstallationToken.builder()
-                                .token(token.token())
+                                .token(tokenAuth.token())
+                                .username(tokenAuth.username())
                                 .build();
                     }
 
@@ -264,6 +264,8 @@ public class GitHubAppInstallation implements AuthTokenProvider {
     }
 
     public ExpiringToken getTokenFromAppInstall(AppInstallationAuth app, URI repo) {
+        log.info("getTokenFromAppInstall ['{}', '{}']", app.apiUrl(), repo);
+
         // Some folks give sloppy, but valid, urls like https://me123@github.com/my/repo.git/
         var repoUrl = repo.toString();
         var baseUrl = app.baseUrl();
@@ -289,9 +291,12 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         try {
             var jwt = generateJWT(app);
             var accessTokenUrl = getAccessTokenUrl(app.apiUrl(), orgRepo, jwt);
-            return createAccessToken(accessTokenUrl, jwt);
+            return ExpiringToken.SimpleToken.builder()
+                    .from(createAccessToken(accessTokenUrl, jwt))
+                    .username(app.username())
+                    .build();
         } catch (JOSEException e) {
-            throw new GitHubAppException("Error generating JWT for app: " + app.clientId(), e);
+            throw new GitHubAppException("Error generating JWT for app: " + app.clientId());
         }
     }
 
@@ -308,6 +313,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
 
             if (code == 404) {
                 // not possible to discern between repo not found and app not installed for existing (private) repo
+                log.warn("getAccessTokenUrl ['{}'] -> not found", installationRepo);
                 return new GitHubAppException.NotFoundException("Repo not found or App installation not found for repo");
             }
 
