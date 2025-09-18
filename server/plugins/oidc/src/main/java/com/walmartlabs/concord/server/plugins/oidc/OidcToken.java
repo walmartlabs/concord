@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,27 +21,28 @@ package com.walmartlabs.concord.server.plugins.oidc;
  */
 
 import org.apache.shiro.authc.AuthenticationToken;
-import org.pac4j.oidc.profile.OidcProfile;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class OidcToken implements AuthenticationToken, Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
-    private final OidcProfile profile;
+    private final UserProfile profile;
 
-    public OidcToken(OidcProfile profile) {
+    public OidcToken(UserProfile profile) {
         this.profile = profile;
     }
 
-    public OidcProfile getProfile() {
+    public UserProfile getProfile() {
         return profile;
     }
 
     @Override
     public Object getPrincipal() {
-        return profile.getId();
+        return profile.id();
     }
 
     @Override
