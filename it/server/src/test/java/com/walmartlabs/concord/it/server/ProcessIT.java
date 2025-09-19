@@ -83,7 +83,7 @@ public class ProcessIT extends AbstractServerIT {
 
     @Test
     public void testTaskOut() throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource("taskOut").toURI(), ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(ProcessIT.class.getResource("taskOut").toURI());
 
         StartProcessResponse spr = start(payload);
 
@@ -99,7 +99,7 @@ public class ProcessIT extends AbstractServerIT {
 
     @Test
     public void testDelegateOut() throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource("delegateOut").toURI(), ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(ProcessIT.class.getResource("delegateOut").toURI());
 
         StartProcessResponse spr = start(payload);
 

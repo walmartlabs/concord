@@ -1,3 +1,7 @@
+configuration:
+  dependencies:
+    - mvn://com.walmartlabs.concord.plugins.basic:example-tasks:PROJECT_VERSION
+
 flows:
   default:
   - example: ['${varA}', '${varB}']

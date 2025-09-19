@@ -65,10 +65,6 @@
             <artifactId>slf4j-api</artifactId>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.ini4j</groupId>
-            <artifactId>ini4j</artifactId>
-        </dependency>
 
         <!-- Immutables -->
         <dependency>

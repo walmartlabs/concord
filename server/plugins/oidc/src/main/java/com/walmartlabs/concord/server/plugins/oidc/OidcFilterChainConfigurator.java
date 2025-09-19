@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * *****
  * Concord
  * -----
- * Copyright (C) 2020 Ivan Bodrov
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,9 @@ import com.walmartlabs.concord.server.boot.FilterChainConfigurator;
 import org.apache.shiro.web.filter.mgt.FilterChainManager;
 
 import javax.inject.Inject;
+import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 public class OidcFilterChainConfigurator implements FilterChainConfigurator {
 
@@ -36,9 +39,9 @@ public class OidcFilterChainConfigurator implements FilterChainConfigurator {
                                        OidcCallbackFilter callbackFilter,
                                        OidcLogoutFilter logoutFilter) {
 
-        this.authFilter = authFilter;
-        this.callbackFilter = callbackFilter;
-        this.logoutFilter = logoutFilter;
+        this.authFilter = requireNonNull(authFilter);
+        this.callbackFilter = requireNonNull(callbackFilter);
+        this.logoutFilter = requireNonNull(logoutFilter);
     }
 
     @Override

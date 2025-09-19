@@ -1,0 +1,13 @@
+configuration:
+  dependencies:
+    - mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:PROJECT_VERSION
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - task: ansible
+      in:
+        playbook: playbook/hello.yml
+        configFile: user.cfg
+        extraVars:
+          greetings: "Hello, world"

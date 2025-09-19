@@ -38,7 +38,7 @@ public class AnsibleEventIT extends AbstractServerIT {
     @SuppressWarnings("unchecked")
     public void testEvent() throws Exception {
         URI uri = AnsibleEventIT.class.getResource("ansibleEvent").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // ---
 
@@ -81,7 +81,7 @@ public class AnsibleEventIT extends AbstractServerIT {
     @Test
     public void testIgnoredFailures() throws Exception {
         URI uri = AnsibleEventIT.class.getResource("ansibleIgnoredFailures").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // ---
 
@@ -123,7 +123,7 @@ public class AnsibleEventIT extends AbstractServerIT {
     @Test
     public void testFailedHosts() throws Exception {
         URI uri = AnsibleEventIT.class.getResource("ansibleFailedHosts").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // ---
 

@@ -62,7 +62,7 @@ public class NodeRosterIT extends AbstractServerIT {
 
         // run an Ansible playbook to get some events
 
-        byte[] payload = archive(NodeRosterIT.class.getResource("nodeRoster").toURI(), ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(NodeRosterIT.class.getResource("nodeRoster").toURI());
 
         String artifactUrl = "http://" + env("IT_DOCKER_HOST_ADDR", "localhost") + ":" + rule.getPort() + "/test.txt";
 
@@ -112,7 +112,7 @@ public class NodeRosterIT extends AbstractServerIT {
 
         // let's test the task
 
-        payload = archive(ProcessIT.class.getResource("nodeRosterTask").toURI(), ITConstants.DEPENDENCIES_DIR);
+        payload = archive(ProcessIT.class.getResource("nodeRosterTask").toURI());
 
         input = new HashMap<>();
         input.put("archive", payload);
@@ -130,7 +130,7 @@ public class NodeRosterIT extends AbstractServerIT {
 
     @Test
     public void testMultipleFactsPerHost() throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource("nodeRosterMultiFacts").toURI(), ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(ProcessIT.class.getResource("nodeRosterMultiFacts").toURI());
 
         String host = "host_" + randomString();
 

@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,6 @@ import org.apache.shiro.authc.credential.CredentialsMatcher;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
-import org.pac4j.oidc.profile.OidcProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,16 +83,16 @@ public class OidcRealm extends AuthorizingRealm {
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
         OidcToken t = (OidcToken) token;
 
-        OidcProfile profile = t.getProfile();
+        UserProfile profile = t.getProfile();
 
         // TODO replace getOrCreate+update with a single method?
 
-        String username = profile.getEmail().toLowerCase();
+        String username = profile.email().toLowerCase();
         UserEntry u = userManager.getOrCreate(username, null, UserType.LOCAL)
-                .orElseThrow(() -> new ConcordApplicationException("User not found: " + profile.getEmail()));
+                .orElseThrow(() -> new ConcordApplicationException("User not found: " + profile.email()));
         UUID userId = u.getId();
 
-        userManager.update(userId, profile.getDisplayName(), profile.getEmail(), null, false, null);
+        userManager.update(userId, profile.displayName(), profile.email(), null, false, null);
 
         Set<UUID> newTeams = new HashSet<>();
         teamDao.tx(tx -> {
@@ -142,7 +141,7 @@ public class OidcRealm extends AuthorizingRealm {
         return SecurityUtils.toAuthorizationInfo(principals, roles);
     }
 
-    private static boolean match(OidcProfile profile, List<PluginConfiguration.Source> sources) {
+    private static boolean match(UserProfile profile, List<PluginConfiguration.Source> sources) {
         for (PluginConfiguration.Source source : sources) {
             String attr = source.attribute();
             String pattern = source.pattern();
@@ -210,10 +209,10 @@ public class OidcRealm extends AuthorizingRealm {
             OidcToken stored = (OidcToken) account.getCredentials();
             OidcToken received = (OidcToken) token;
 
-            Object a = stored.getProfile().getAccessToken();
-            Object b = received.getProfile().getAccessToken();
+            String a = stored.getProfile().accessToken();
+            String b = received.getProfile().accessToken();
 
-            return a.equals(b);
+            return a != null && a.equals(b);
         }
     }
 }
