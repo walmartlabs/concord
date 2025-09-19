@@ -65,9 +65,8 @@ public class GitClient {
         this.executor = Executors.newCachedThreadPool();
         this.sensitiveData = new LinkedHashSet<>();
 
-        // urls with user info. still shows the username if present
-        sensitiveData.add(new Obfuscation("(https://[^:]*:)[^@]+(@)", "$1***$2"));
-        sensitiveData.add(new Obfuscation("(https://x-access-token:)[^@]+(@)", "$1***$2"));
+        // urls with user info.
+        sensitiveData.add(new Obfuscation("https://([^@]*)@", "https://***@"));
 
         cfg.oauthToken().ifPresent(oauth ->
                 // definitely don't print a hard-code oauth token
