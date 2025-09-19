@@ -237,10 +237,11 @@ public class GitHubAppInstallation implements AuthTokenProvider {
     private ExpiringToken fromBinaryData(URI repo, BinaryDataSecret bds) {
         var appInfo = parseAppInstallation(bds);
         if (appInfo.isPresent()) {
+            // great, it's apparently a valid app installation config
             return getTokenFromAppInstall(appInfo.get(), repo);
         }
 
-        // should be a token
+        // hopefully it's just a token a plaintext token
         return GitHubInstallationToken.builder()
                 .token(new String(bds.getData()).trim())
                 .build();
@@ -296,9 +297,9 @@ public class GitHubAppInstallation implements AuthTokenProvider {
             throw new IllegalArgumentException("Failed to parse owner and repository from path: " + repo.getPath());
         }
 
-        log.info("Hooray!");
         var baseUrl = match.group("baseUrl");
         var relevantPath = repo.toString().replaceAll("^.*" + baseUrl + "/?", "")
+                .replaceAll(repo.getQuery() != null ? "\\?" + repo.getQuery() : "", "")
                 .replaceFirst("\\.git$", "");
 
         // parse out the owner/repo from the path

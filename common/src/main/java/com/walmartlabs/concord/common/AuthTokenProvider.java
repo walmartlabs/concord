@@ -69,6 +69,7 @@ public interface AuthTokenProvider {
                 .orElse(repo);
     }
 
+    @SuppressWarnings("ClassCanBeRecord")
     class OauthTokenProvider implements AuthTokenProvider {
 
         private final List<ExternalTokenAuth> authConfigs;

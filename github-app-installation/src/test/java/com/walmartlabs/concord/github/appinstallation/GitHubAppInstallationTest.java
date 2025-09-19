@@ -39,7 +39,11 @@ class GitHubAppInstallationTest {
         return Stream.of(
                 "https://github.com/owner/repo.git", // typicalRepo
                 "https://github.com/owner/repo",             // no trailing '.git', should still work
-                "https://github.com/owner/repo/"             // ...same with trailing slash
+                "https://github.com/owner/repo/",            // ...same with trailing slash
+                // with query params. not very typical, but does work in this pattern matching
+                "https://github.com/owner/repo.git?hello=world",
+                "https://github.com/owner/repo?hello=world",
+                "https://github.com/owner/repo/?hello=world"
         ).map(URI::create);
     }
 
@@ -54,7 +58,11 @@ class GitHubAppInstallationTest {
         return Stream.of(
                 "https://git.company.local/proxypath/owner/repo.git", // typicalRepo
                 "https://git.company.local/proxypath/owner/repo",             // no trailing '.git', should still work
-                "https://git.company.local/proxypath/owner/repo/"             // ...same with trailing slash
+                "https://git.company.local/proxypath/owner/repo/",            // ...same with trailing slash
+                // with query params. not very typical, but does work in this pattern matching
+                "https://git.company.local/proxypath/owner/repo.git?hello=world",
+                "https://git.company.local/proxypath/owner/repo?hello=world",
+                "https://git.company.local/proxypath/owner/repo/?hello=world"
         ).map(URI::create);
     }
 
@@ -88,7 +96,7 @@ class GitHubAppInstallationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("invalidPublicUris")
+    @MethodSource("invalidProxiedUris")
     void testInvalidProxiedUris(URI repo) {
         var ex = assertThrows(IllegalArgumentException.class,
                 () -> runExtract("(?<baseUrl>git.company.local/proxypath).*", repo));
