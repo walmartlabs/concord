@@ -142,19 +142,18 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
     public List<ExternalTokenAuth> getSystemAuth() {
         return authConfigs.stream()
                 .map(o -> {
-                    GitAuthType type = GitAuthType.valueOf(o.getString("type").toUpperCase());
+                    AuthSource type = AuthSource.valueOf(o.getString("type").toUpperCase());
 
                     return (AuthConfig) switch (type) {
-                        case OAUTH -> OauthConfig.from(o);
+                        case OAUTH_TOKEN -> OauthConfig.from(o);
                     };
                 })
                 .map(AuthConfig::toGitAuth)
                 .toList();
     }
 
-
-    enum GitAuthType {
-        OAUTH
+    enum AuthSource {
+        OAUTH_TOKEN
     }
 
     public interface AuthConfig {

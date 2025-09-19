@@ -93,9 +93,11 @@ public class AgentAuthTokenProvider implements AuthTokenProvider {
                 return null;
             }
 
-            return config.hasPath(CFG_URL_PATTERN) ? ExternalTokenAuth.ConcordServerAuth.builder()
-                    .urlPattern(config.getString(CFG_URL_PATTERN))
-                    .build() : null;
+            return config.hasPath(CFG_URL_PATTERN)
+                    ? ExternalTokenAuth.ConcordServerAuth.builder()
+                            .urlPattern(config.getString(CFG_URL_PATTERN))
+                            .build()
+                    : null;
         }
 
         @Override
