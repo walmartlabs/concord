@@ -5,7 +5,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>concord-targetplatform</artifactId>
-    <version>2.32.3-SNAPSHOT</version>
+    <version>2.32.4-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
