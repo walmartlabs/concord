@@ -61,7 +61,7 @@ public class AnsiblePolicyIT extends AbstractServerIT {
                 .projectName(projectName));
 
         URI dir = AnsiblePolicyIT.class.getResource("ansiblePolicyTaskDeny").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         // ---
 

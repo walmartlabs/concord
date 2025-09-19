@@ -16,15 +16,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-oidc</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server-sdk</artifactId>
             <scope>provided</scope>
@@ -77,6 +68,11 @@
         <dependency>
             <groupId>com.typesafe</groupId>
             <artifactId>config</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
             <scope>provided</scope>
         </dependency>
 

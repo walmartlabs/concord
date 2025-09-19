@@ -25,6 +25,7 @@ import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.it.common.Version;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.junit.jupiter.api.Test;
@@ -347,7 +348,7 @@ public class ProcessIT extends AbstractTest {
     @Test
     public void testNoStateAfterCheckpoint() throws Exception {
         String concordYml = resourceToString(ProcessIT.class.getResource("checkpointState/concord.yml"))
-                .replaceAll("PROJECT_VERSION", ITConstants.PROJECT_VERSION);
+                .replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION);
 
         Payload payload = new Payload().concordYml(concordYml);
 
@@ -418,7 +419,7 @@ public class ProcessIT extends AbstractTest {
     @Test
     public void testCheckpointsWith3rdPartyClasses() throws Exception {
         String concordYml = resourceToString(NodeRosterIT.class.getResource("checkpointClasses/concord.yml"))
-                .replaceAll("PROJECT_VERSION", ITConstants.PROJECT_VERSION);
+                .replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION);
 
         ConcordProcess proc = concord.processes().start(new Payload()
                 .concordYml(concordYml));

@@ -21,8 +21,8 @@ package com.walmartlabs.concord.it.common;
  */
 
 import com.walmartlabs.concord.common.PathUtils;
+import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.common.ZipUtils;
-import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -36,27 +36,24 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Stream;
 
 public final class ITUtils {
 
     private static final char[] RANDOM_CHARS = "abcdef0123456789".toCharArray();
 
     public static byte[] archive(URI uri) throws IOException {
-        return archive(uri, null);
-    }
-
-    public static byte[] archive(URI uri, String depsDir) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(out)) {
-            ZipUtils.zip(zip, Paths.get(uri));
-            if (depsDir != null) {
-                ZipUtils.zip(zip, Constants.Files.LIBRARIES_DIR_NAME + "/", Paths.get(depsDir));
+        try (TemporaryPath tmpDir = preprocessDir(uri)) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(out)) {
+                ZipUtils.zip(zip, tmpDir.path());
             }
+            return out.toByteArray();
         }
-        return out.toByteArray();
     }
 
     public static String resourceToString(Class<?> klass, String resource) throws Exception {
@@ -107,6 +104,31 @@ public final class ITUtils {
 
     public static String randomPwd() {
         return "pwd_" + randomString() + "A!";
+    }
+
+    private static TemporaryPath preprocessDir(URI uri) throws IOException {
+        Path src = Paths.get(uri);
+
+        // copy files from the specified URI to a temporary directory
+        TemporaryPath tmpDir = PathUtils.tempDir("test");
+        PathUtils.copy(src, tmpDir.path());
+
+        // find and replace all PROJECT_VERSION strings with the current ${project.version}
+        try (Stream<Path> yamlFiles = Files.walk(tmpDir.path())) {
+            for (Path yamlFile : yamlFiles.filter(f -> {
+                String fileName = f.getFileName().toString().toLowerCase();
+                return fileName.endsWith(".yaml") || fileName.endsWith(".yml") || fileName.endsWith(".json");
+            }).toList()) {
+                String content = Files.readString(yamlFile);
+                if (!content.contains("PROJECT_VERSION")) {
+                    continue;
+                }
+                content = content.replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION);
+                Files.writeString(yamlFile, content, StandardOpenOption.TRUNCATE_EXISTING);
+            }
+        }
+
+        return tmpDir;
     }
 
     private ITUtils() {
