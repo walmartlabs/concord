@@ -22,14 +22,14 @@ package com.walmartlabs.concord.server.cfg;
 
 import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
 import com.walmartlabs.concord.config.Config;
-import com.walmartlabs.concord.github.appinstallation.cfg.GithubAppInstallationConfig;
+import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
 import java.time.Duration;
 import java.util.List;
 
-public class GithubConfiguration implements GithubAppInstallationConfig {
+public class GitHubConfiguration implements GitHubAppInstallationConfig {
 
     @Inject
     @Config("github.secret")
@@ -48,15 +48,15 @@ public class GithubConfiguration implements GithubAppInstallationConfig {
     @Config("github.disableReposOnDeletedRef")
     private boolean disableReposOnDeletedRef;
 
-    private final GithubAppInstallationConfig appInstallation;
+    private final GitHubAppInstallationConfig appInstallation;
 
     @Inject
-    public GithubConfiguration(com.typesafe.config.Config config) {
+    public GitHubConfiguration(com.typesafe.config.Config config) {
         if (config.hasPath("github.appInstallation")) {
             var raw = config.getConfig("github.appInstallation");
-            this.appInstallation = GithubAppInstallationConfig.fromConfig(raw);
+            this.appInstallation = GitHubAppInstallationConfig.fromConfig(raw);
         } else {
-            this.appInstallation = GithubAppInstallationConfig.builder().authConfigs(List.of()).build();
+            this.appInstallation = GitHubAppInstallationConfig.builder().authConfigs(List.of()).build();
         }
     }
 

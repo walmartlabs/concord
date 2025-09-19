@@ -24,11 +24,12 @@ import org.immutables.value.Value;
 
 import java.net.URI;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 public interface ExternalTokenAuth {
 
     /** Regex matching the host, optional port and path of a Git repository URL. */
-    String urlPattern();
+    Pattern urlPattern();
 
     /**
      * Username to use for authentication with a provided token. Some services
@@ -45,7 +46,9 @@ public interface ExternalTokenAuth {
      * @return {@code true} if this provider can handle the given repo URI, {@code false} otherwise.
      */
     default boolean canHandle(URI repo) {
-        String repoHostPortAndPath = repo.getHost() + (repo.getPort() == -1 ? "" : (":" + repo.getPort())) + (repo.getPath() == null ? "" : repo.getPath());
+        var repoHostPortAndPath = repo.getHost()
+                + (repo.getPort() == -1 ? "" : (":" + repo.getPort()))
+                + (repo.getPath() == null ? "" : repo.getPath());
 
         return repoHostPortAndPath.matches(urlPattern() + ".*");
     }

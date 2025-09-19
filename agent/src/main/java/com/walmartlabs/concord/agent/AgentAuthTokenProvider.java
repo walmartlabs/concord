@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 public class AgentAuthTokenProvider implements AuthTokenProvider {
 
@@ -95,7 +96,7 @@ public class AgentAuthTokenProvider implements AuthTokenProvider {
 
             return config.hasPath(CFG_URL_PATTERN)
                     ? ExternalTokenAuth.ConcordServerAuth.builder()
-                            .urlPattern(config.getString(CFG_URL_PATTERN))
+                            .urlPattern(Pattern.compile(config.getString(CFG_URL_PATTERN)))
                             .build()
                     : null;
         }

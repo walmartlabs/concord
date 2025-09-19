@@ -42,7 +42,7 @@ import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
-import com.walmartlabs.concord.github.appinstallation.cfg.GithubAppInstallationConfig;
+import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
 import com.walmartlabs.concord.sdk.Secret;
 import org.immutables.value.Value;
 import org.slf4j.Logger;
@@ -81,7 +81,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
     private record CacheKey(URI repoUri, Secret secret) {}
 
     @Inject
-    public GitHubAppInstallation(GithubAppInstallationConfig cfg, ObjectMapper objectMapper) {
+    public GitHubAppInstallation(GitHubAppInstallationConfig cfg, ObjectMapper objectMapper) {
         this.authConfigs = cfg.getAuthConfigs();
         this.httpTimeout = cfg.getHttpClientTimeout();
         this.objectMapper = objectMapper;
@@ -264,30 +264,15 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         }
     }
 
-    public ExpiringToken getTokenFromAppInstall(AppInstallationAuth app, URI repo) {
+    private ExpiringToken getTokenFromAppInstall(AppInstallationAuth app, URI repo) {
         log.info("getTokenFromAppInstall ['{}', '{}']", app.apiUrl(), repo);
 
-        // Some folks give sloppy, but valid, urls like https://me123@github.com/my/repo.git/
-        var repoUrl = repo.toString();
-        var urlPattern = app.urlPattern();
-        var cleanedPath = repoUrl.replaceFirst(".*" + urlPattern, "")
-                .replaceFirst("\\.git$", "");
+        var ownerAndRepo = extractOwnerAndRepo(app, repo);
 
-        // parse out the owner/repo from the path
-        var pathParts = Arrays.stream(cleanedPath.split("/"))
-                .filter(e -> !e.isBlank())
-                .limit(2)
-                .toList();
-
-        if (pathParts.size() != 2) {
-            throw new IllegalArgumentException("Failed to parse owner and repository from path: " + cleanedPath);
-        }
-
-        var ownerAndRepo = pathParts.get(0) + "/" + pathParts.get(1);
-
-        return getToken(app, ownerAndRepo);
+        return getRepoInstallationToken(app, ownerAndRepo);
     }
-    public ExpiringToken getToken(AppInstallationAuth app, String orgRepo) throws GitHubAppException {
+
+    private ExpiringToken getRepoInstallationToken(AppInstallationAuth app, String orgRepo) throws GitHubAppException {
         try {
             var jwt = generateJWT(app);
             var accessTokenUrl = getAccessTokenUrl(app.apiUrl(), orgRepo, jwt);
@@ -300,7 +285,37 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         }
     }
 
-    String getAccessTokenUrl(String apiBaseUrl, String installationRepo, String jwt) throws GitHubAppException {
+    static String extractOwnerAndRepo(AppInstallationAuth auth, URI repo) {
+        var match = auth.urlPattern().matcher(repo.getHost() + (repo.getPort() == -1 ? "" : (":" + repo.getPort())) + repo.getPath());
+
+        if (!match.matches()) {
+            // at this point, this should only fail if the urlPattern is not
+            // constructed correctly. We wouldn't get there if the pattern didn't
+            // match the repo in the first place.
+            log.warn("Failed to find base url for repo: {}", repo);
+            throw new IllegalArgumentException("Failed to parse owner and repository from path: " + repo.getPath());
+        }
+
+        log.info("Hooray!");
+        var baseUrl = match.group("baseUrl");
+        var relevantPath = repo.toString().replaceAll("^.*" + baseUrl + "/?", "")
+                .replaceFirst("\\.git$", "");
+
+        // parse out the owner/repo from the path
+        var pathParts = Arrays.stream(relevantPath.split("/"))
+                .filter(e -> !e.isBlank())
+                .limit(2)
+                .toList();
+
+        if (pathParts.size() != 2) {
+            log.warn("Failed to parse owner and repository from path: {}", repo);
+            throw new IllegalArgumentException("Failed to parse owner and repository from path: " + repo.getPath());
+        }
+
+        return pathParts.get(0) + "/" + pathParts.get(1);
+    }
+
+    private String getAccessTokenUrl(String apiBaseUrl, String installationRepo, String jwt) throws GitHubAppException {
         var req = HttpRequest.newBuilder().GET()
                 .uri(URI.create(apiBaseUrl + "/repos/" + installationRepo + "/installation"))
                 .header("Authorization", "Bearer " + jwt)

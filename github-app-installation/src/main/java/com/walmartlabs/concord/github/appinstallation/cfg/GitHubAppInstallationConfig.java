@@ -32,10 +32,11 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
-public interface GithubAppInstallationConfig {
+public interface GitHubAppInstallationConfig {
 
     List<ExternalTokenAuth> getAuthConfigs();
 
@@ -66,13 +67,13 @@ public interface GithubAppInstallationConfig {
         return 1024 * 10L;
     }
 
-    static ImmutableGithubAppInstallationConfig.Builder builder() {
-        return ImmutableGithubAppInstallationConfig.builder();
+    static ImmutableGitHubAppInstallationConfig.Builder builder() {
+        return ImmutableGitHubAppInstallationConfig.builder();
     }
 
-    static GithubAppInstallationConfig fromConfig(Config config) {
+    static GitHubAppInstallationConfig fromConfig(Config config) {
         var auths = config.getConfigList("auth").stream()
-                .map(GithubAppInstallationConfig::toGitAuth)
+                .map(GitHubAppInstallationConfig::toGitAuth)
                 .toList();
 
         var builder = builder();
@@ -130,7 +131,7 @@ public interface GithubAppInstallationConfig {
             return ExternalTokenAuth.Oauth.builder()
                     .token(this.token())
                     .username(Optional.ofNullable(this.username()))
-                    .urlPattern(this.urlPattern())
+                    .urlPattern(Pattern.compile(this.urlPattern() + ".*"))
                     .build();
         }
     }
@@ -142,10 +143,14 @@ public interface GithubAppInstallationConfig {
                     .filter(s -> !s.isBlank())
                     .orElse("x-access-token");
 
+            var apiUrl = Optional.ofNullable(cfg.hasPath("apiUrl") ? cfg.getString("apiUrl") : null)
+                    .filter(s -> !s.isBlank())
+                    .orElse("https://api.github.com");
+
             return new AppInstallationConfig(
                     cfg.getString("urlPattern"),
                     username,
-                    cfg.getString("apiUrl"),
+                    apiUrl,
                     cfg.getString("clientId"),
                     cfg.getString("privateKey")
             );
@@ -157,7 +162,7 @@ public interface GithubAppInstallationConfig {
                 var pkData = Files.readString(Paths.get(this.privateKey()));
 
                 return AppInstallationAuth.builder()
-                        .urlPattern(this.urlPattern())
+                        .urlPattern(Pattern.compile(this.urlPattern() + ".*"))
                         .username(this.username())
                         .clientId(this.clientId())
                         .privateKey(pkData)

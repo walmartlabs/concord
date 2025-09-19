@@ -24,8 +24,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
-
 @Value.Immutable
 @Value.Style(jdkOnly = true)
 @JsonDeserialize(as = ImmutableAppInstallationAuth.class)
@@ -37,7 +35,16 @@ public interface AppInstallationAuth extends ExternalTokenAuth {
 
     String privateKey();
 
+    @Value.Check
+    default void checkUrlPattern() {
+        // sanity check url pattern before this object gets too far out there
+        if (!urlPattern().toString().contains("?<baseUrl>")) {
+            throw new IllegalArgumentException("The url pattern must contain the ?<baseUrl> named group");
+        }
+    }
+
     static ImmutableAppInstallationAuth.Builder builder() {
         return ImmutableAppInstallationAuth.builder();
     }
+
 }

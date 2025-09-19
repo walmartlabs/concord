@@ -32,7 +32,7 @@ import com.walmartlabs.concord.agent.remote.QueueClientProvider;
 import com.walmartlabs.concord.common.ObjectMapperProvider;
 import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
 import com.walmartlabs.concord.config.ConfigModule;
-import com.walmartlabs.concord.github.appinstallation.cfg.GithubAppInstallationConfig;
+import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
 import com.walmartlabs.concord.server.queueclient.QueueClient;
 
 import javax.inject.Named;
@@ -62,8 +62,8 @@ public class AgentModule implements Module {
         binder.bind(RuntimeConfiguration.class).asEagerSingleton();
         binder.bind(GitConfiguration.class).in(SINGLETON);
         binder.bind(OauthTokenConfig.class).to(GitConfiguration.class).in(SINGLETON);
-        binder.bind(GithubConfiguration.class).in(SINGLETON);
-        binder.bind(GithubAppInstallationConfig.class).to(GithubConfiguration.class).in(SINGLETON);
+        binder.bind(GitHubConfiguration.class).in(SINGLETON);
+        binder.bind(GitHubAppInstallationConfig.class).to(GitHubConfiguration.class).in(SINGLETON);
         binder.bind(AgentAuthTokenProvider.ConcordServerTokenProvider.class).in(SINGLETON);
         binder.bind(ImportConfiguration.class).in(SINGLETON);
         binder.bind(PreForkConfiguration.class).in(SINGLETON);

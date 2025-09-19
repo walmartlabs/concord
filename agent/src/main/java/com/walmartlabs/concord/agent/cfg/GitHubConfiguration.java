@@ -21,25 +21,25 @@ package com.walmartlabs.concord.agent.cfg;
  */
 
 import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
-import com.walmartlabs.concord.github.appinstallation.cfg.GithubAppInstallationConfig;
+import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
 
 import javax.inject.Inject;
 import java.time.Duration;
 import java.util.List;
 
-public class GithubConfiguration implements GithubAppInstallationConfig {
+public class GitHubConfiguration implements GitHubAppInstallationConfig {
 
     private static final String CFG_APP_INSTALLATION = "github.appInstallation";
 
-    private final GithubAppInstallationConfig appInstallation;
+    private final GitHubAppInstallationConfig appInstallation;
 
     @Inject
-    public GithubConfiguration(com.typesafe.config.Config config) {
+    public GitHubConfiguration(com.typesafe.config.Config config) {
         if (config.hasPath(CFG_APP_INSTALLATION)) {
             var raw = config.getConfig(CFG_APP_INSTALLATION);
-            this.appInstallation = GithubAppInstallationConfig.fromConfig(raw);
+            this.appInstallation = GitHubAppInstallationConfig.fromConfig(raw);
         } else {
-            this.appInstallation = GithubAppInstallationConfig.builder()
+            this.appInstallation = GitHubAppInstallationConfig.builder()
                     .authConfigs(List.of())
                     .build();
         }

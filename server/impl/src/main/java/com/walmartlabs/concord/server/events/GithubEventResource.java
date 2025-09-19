@@ -30,7 +30,7 @@ import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
-import com.walmartlabs.concord.server.cfg.GithubConfiguration;
+import com.walmartlabs.concord.server.cfg.GitHubConfiguration;
 import com.walmartlabs.concord.server.events.github.GithubTriggerProcessor;
 import com.walmartlabs.concord.server.events.github.Payload;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
@@ -79,7 +79,7 @@ public class GithubEventResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(GithubEventResource.class);
 
-    private final GithubConfiguration githubCfg;
+    private final GitHubConfiguration githubCfg;
     private final TriggerProcessExecutor executor;
     private final AuditLog auditLog;
     private final GithubTriggerProcessor processor;
@@ -89,7 +89,7 @@ public class GithubEventResource implements Resource {
     private final Histogram startedProcessesPerEvent;
 
     @Inject
-    public GithubEventResource(GithubConfiguration githubCfg,
+    public GithubEventResource(GitHubConfiguration githubCfg,
                                TriggerProcessExecutor executor,
                                AuditLog auditLog,
                                GithubTriggerProcessor processor,
