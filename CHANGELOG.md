@@ -18,6 +18,12 @@
 - ansible-tasks: remove ini4j dependency
 ([#1215](https://github.com/walmartlabs/concord/pull/1215)).
 
+### Breaking
+
+- oidc: remove pac4j dependency. Will cause (de)serialization
+issues for SUSPENDED processes with OIDC initiators
+([#1217](https://github.com/walmartlabs/concord/pull/1217)).
+
 
 
 ## [2.32.0] - 2025-08-20
