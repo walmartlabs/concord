@@ -37,21 +37,22 @@ class ExternalAuthTokenTest {
 
     @Test
     void testExpiration() {
-        var token = ExternalAuthToken.SimpleToken.builder()
+        var externalToken = ExternalAuthToken.SimpleToken.builder()
                 .token(MOCK_TOKEN)
                 .expiresAt(OffsetDateTime.now().minusSeconds((100)))
                 .build();
 
-        assertTrue(token.secondsUntilExpiration() < 0);
+        assertTrue(externalToken.secondsUntilExpiration() < 0);
     }
 
     @Test
     void testStaticExpiration() {
-        var token = ExternalAuthToken.StaticToken.builder()
+        var externalToken = ExternalAuthToken.StaticToken.builder()
                 .token(MOCK_TOKEN)
                 .build();
 
-        assertEquals(Long.MAX_VALUE, token.secondsUntilExpiration());
+        assertEquals(MOCK_TOKEN, externalToken.token());
+        assertEquals(Long.MAX_VALUE, externalToken.secondsUntilExpiration());
     }
 
     @Test
@@ -63,6 +64,7 @@ class ExternalAuthTokenTest {
                 """, ExternalAuthToken.class);
 
         assertEquals(MOCK_TOKEN, minimalFromJson.token());
+        assertEquals(Long.MAX_VALUE, minimalFromJson.secondsUntilExpiration());
     }
 
     @Test
@@ -97,5 +99,25 @@ class ExternalAuthTokenTest {
         assertNotNull(dt);
         assertEquals(2099, dt.getYear());
         assertEquals(123, dt.getNano() / 1_000_000);
+    }
+
+    @Test
+    void testDateSerializationSecondsToMillis() throws JsonProcessingException {
+        var json = MAPPER.writeValueAsString(ExternalAuthToken.SimpleToken.builder()
+                .token(MOCK_TOKEN)
+                .expiresAt(OffsetDateTime.parse("2099-12-31T23:59:59Z"))
+                .build());
+
+        assertTrue(json.contains("23:59:59.000Z"));
+    }
+
+    @Test
+    void testDateSerializationMillis() throws JsonProcessingException {
+        var json = MAPPER.writeValueAsString(ExternalAuthToken.SimpleToken.builder()
+                .token(MOCK_TOKEN)
+                .expiresAt(OffsetDateTime.parse("2099-12-31T23:59:59.123Z"))
+                .build());
+
+        assertTrue(json.contains("23:59:59.123Z"));
     }
 }

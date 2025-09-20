@@ -46,9 +46,9 @@ public interface ExternalTokenAuth {
      * @return {@code true} if this provider can handle the given repo URI, {@code false} otherwise.
      */
     default boolean canHandle(URI repo) {
-        var repoHostPortAndPath = repo.getHost()
-                + (repo.getPort() == -1 ? "" : (":" + repo.getPort()))
-                + (repo.getPath() == null ? "" : repo.getPath());
+        var port = (repo.getPort() == -1 ? "" : (":" + repo.getPort()));
+        var path = (repo.getPath() == null ? "" : repo.getPath());
+        var repoHostPortAndPath = repo.getHost() + port + path;
 
         return repoHostPortAndPath.matches(urlPattern() + ".*");
     }

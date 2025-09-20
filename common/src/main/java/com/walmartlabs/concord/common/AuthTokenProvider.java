@@ -112,7 +112,7 @@ public interface AuthTokenProvider {
             }
         }
 
-        public boolean systemSupports(URI repoUri) {
+        boolean systemSupports(URI repoUri) {
             return authConfigs.stream().anyMatch(auth -> auth.canHandle(repoUri));
         }
 

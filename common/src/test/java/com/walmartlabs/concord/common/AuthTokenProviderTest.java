@@ -50,6 +50,7 @@ class AuthTokenProviderTest {
     private static final byte[] SECRET_BYTES = "abc123".getBytes(StandardCharsets.UTF_8);
     private static final String MOCK_TOKEN = "mock-token";
     private static final String MOCK_USERNAME = "mock-username";
+    private static final String VALID_REPO = "https://github.local/owner/repo.git";
 
     @Mock
     BinaryDataSecret binaryDataSecret;
@@ -70,25 +71,9 @@ class AuthTokenProviderTest {
         when(oauthTokenConfig.getOauthUrlPattern()).thenReturn(Optional.of("github\\.local"));
         when(oauthTokenConfig.getOauthUsername()).thenReturn(Optional.of(MOCK_USERNAME));
 
-        var provider = new AuthTokenProvider.OauthTokenProvider(oauthTokenConfig);
-
-        assertTrue(provider.supports(URI.create("https://github.local/owner/repo.git"), null));
-        assertTrue(provider.supports(URI.create("https://github.local/owner/repo"), null));
-        assertTrue(provider.supports(URI.create("https://github.local/owner/repo/"), null));
-        assertFalse(provider.supports(URI.create("https://elsewhere.local/owner/repo.git"), null));
-        assertFalse(provider.supports(URI.create("https://elsewhere.local/owner/repo"), null));
+        executeWithoutSecret(oauthTokenConfig);
 
         verify(oauthTokenConfig, times(1)).getOauthUrlPattern(); // retrieved once and stored
-
-        assertEquals(MOCK_TOKEN, provider.getToken(URI.create("https://github.local/owner/repo.git"), null).map(ExternalAuthToken::token).orElse(null));
-        assertEquals(MOCK_TOKEN, provider.getToken(URI.create("https://github.local/owner/repo"), null).map(ExternalAuthToken::token).orElse(null));
-        assertEquals(MOCK_TOKEN, provider.getToken(URI.create("https://github.local/owner/repo/"), null).map(ExternalAuthToken::token).orElse(null));
-        assertFalse(provider.getToken(URI.create("https://elsewhere.local/owner/repo.git"), null).isPresent());
-        assertFalse(provider.getToken(URI.create("https://elsewhere.local/owner/repo"), null).isPresent());
-
-        var enriched = provider.addUserInfoToUri(URI.create("https://github.local/owner/repo.git"), null);
-        assertEquals(MOCK_USERNAME + ":" + MOCK_TOKEN, enriched.getUserInfo());
-        assertEquals("https://" + MOCK_USERNAME + ":" + MOCK_TOKEN + "@github.local/owner/repo.git", enriched.toString());
     }
 
     @Test
@@ -102,6 +87,12 @@ class AuthTokenProviderTest {
                 .addSystemAuth(oauth)
                 .build();
 
+        executeWithoutSecret(cfg);
+
+        verify(oauth, times(12)).canHandle(any());
+    }
+
+    void executeWithoutSecret(OauthTokenConfig cfg) {
         var provider = new AuthTokenProvider.OauthTokenProvider(cfg);
 
         assertTrue(provider.supports(URI.create("https://github.local/owner/repo.git"), null));
@@ -109,8 +100,6 @@ class AuthTokenProviderTest {
         assertTrue(provider.supports(URI.create("https://github.local/owner/repo/"), null));
         assertFalse(provider.supports(URI.create("https://elsewhere.local/owner/repo.git"), null));
         assertFalse(provider.supports(URI.create("https://elsewhere.local/owner/repo"), null));
-
-        verify(oauth, times(5)).canHandle(any());
 
         assertEquals(MOCK_TOKEN, provider.getToken(URI.create("https://github.local/owner/repo.git"), null).map(ExternalAuthToken::token).orElse(null));
         assertEquals(MOCK_TOKEN, provider.getToken(URI.create("https://github.local/owner/repo"), null).map(ExternalAuthToken::token).orElse(null));
@@ -123,8 +112,12 @@ class AuthTokenProviderTest {
         assertEquals("https://" + MOCK_USERNAME + ":" + MOCK_TOKEN + "@github.local/owner/repo.git", enriched.toString());
     }
 
-    void executeWithoutSecret(OauthTokenConfig cfg) {
-// Reduce duplication
+    @Test
+    void testUsernamePassword() {
+        var cfg = TestOauthTokenConfig.builder().build();
+        var provider = new AuthTokenProvider.OauthTokenProvider(cfg);
+
+        assertFalse(provider.supports(URI.create(VALID_REPO), usernamePassword));
     }
 
     @Test
