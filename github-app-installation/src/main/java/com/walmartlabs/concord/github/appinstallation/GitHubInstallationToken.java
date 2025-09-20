@@ -20,12 +20,12 @@ package com.walmartlabs.concord.github.appinstallation;
  * =====
  */
 
-import com.walmartlabs.concord.common.ExpiringToken;
+import com.walmartlabs.concord.common.ExternalAuthToken;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
-public interface GitHubInstallationToken extends ExpiringToken {
+public interface GitHubInstallationToken extends ExternalAuthToken {
 
     static ImmutableGitHubInstallationToken.Builder builder() {
         return ImmutableGitHubInstallationToken.builder();

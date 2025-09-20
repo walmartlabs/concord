@@ -30,7 +30,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 
 @JsonDeserialize(as = ImmutableSimpleToken.class)
-public interface ExpiringToken {
+public interface ExternalAuthToken {
 
     @JsonProperty("token")
     String token();
@@ -54,18 +54,25 @@ public interface ExpiringToken {
         return d.getSeconds();
     }
 
+    /**
+     * Basic implementation of an expiring token.
+     */
     @Value.Immutable
     @Value.Style(jdkOnly = true)
-    interface SimpleToken extends ExpiringToken {
+    interface SimpleToken extends ExternalAuthToken {
         static ImmutableSimpleToken.Builder builder() {
             return ImmutableSimpleToken.builder();
         }
     }
 
+    /**
+     * A token that effectively never expires.
+     */
     @Value.Immutable
     @Value.Style(jdkOnly = true)
-    interface StaticToken extends ExpiringToken {
+    interface StaticToken extends ExternalAuthToken {
 
+        @Value.Default
         @Nullable
         @Override
         default OffsetDateTime expiresAt() {

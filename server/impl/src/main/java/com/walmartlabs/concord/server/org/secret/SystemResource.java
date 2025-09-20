@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-import com.walmartlabs.concord.common.ExpiringToken;
+import com.walmartlabs.concord.common.ExternalAuthToken;
 import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.repository.RepositoryException;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
@@ -53,7 +53,7 @@ public class SystemResource implements Resource {
     @Path("/gitauth")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Retrieves system-provided auth for give repository URI. Requires externalTokenLookup permission. ", operationId = "getExternalToken")
-    public ExpiringToken getExternalToken(@QueryParam("repoUri") URI repoUri) {
+    public ExternalAuthToken getExternalToken(@QueryParam("repoUri") URI repoUri) {
         assertSystemGitAuthPermission();
 
         try {

@@ -37,7 +37,7 @@ import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.walmartlabs.concord.common.AuthTokenProvider;
-import com.walmartlabs.concord.common.ExpiringToken;
+import com.walmartlabs.concord.common.ExternalAuthToken;
 import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
@@ -76,7 +76,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
     private final Duration httpTimeout;
     private final ObjectMapper objectMapper;
 
-    private final LoadingCache<CacheKey, Optional<ExpiringToken>> cache;
+    private final LoadingCache<CacheKey, Optional<ExternalAuthToken>> cache;
 
     private record CacheKey(URI repoUri, Secret secret) {}
 
@@ -89,7 +89,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         this.cache = CacheBuilder.newBuilder()
                 .expireAfterWrite(cfg.getSystemAuthCacheDuration())
                 .maximumWeight(cfg.getSystemAuthCacheMaxWeight())
-                .weigher((Weigher<CacheKey, Optional<ExpiringToken>>) (key, value) -> {
+                .weigher((Weigher<CacheKey, Optional<ExternalAuthToken>>) (key, value) -> {
                     int weight = 1;
 
                     if (key.secret() != null) {
@@ -106,7 +106,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
                 })
                 .build(new CacheLoader<>() {
                     @Override
-                    public @Nonnull Optional<ExpiringToken> load(@Nonnull CacheKey key) {
+                    public @Nonnull Optional<ExternalAuthToken> load(@Nonnull CacheKey key) {
                         return fetchToken(key.repoUri(), key.secret());
                     }
                 });
@@ -118,7 +118,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
     }
 
     @Override
-    public Optional<ExpiringToken> getToken(URI repo, @Nullable Secret secret) {
+    public Optional<ExternalAuthToken> getToken(URI repo, @Nullable Secret secret) {
         try {
             var cacheKey = new CacheKey(repo, secret);
             var activeToken = cache.get(cacheKey);
@@ -173,7 +173,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         return authConfigs.stream().anyMatch(auth -> auth.canHandle(repoUri));
     }
 
-    private Optional<ExpiringToken> fetchToken(URI repo, @Nullable Secret secret) {
+    private Optional<ExternalAuthToken> fetchToken(URI repo, @Nullable Secret secret) {
         if (secret != null) {
             return fromSecret(repo, secret);
         }
@@ -203,7 +203,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
      * invalidate and get a new one. If it's just a little close, refresh the
      * cache in the background and return the still-active token.
      */
-    private ExpiringToken refreshBeforeExpire(@Nonnull ExpiringToken token, CacheKey cacheKey) {
+    private ExternalAuthToken refreshBeforeExpire(@Nonnull ExternalAuthToken token, CacheKey cacheKey) {
         if (token.secondsUntilExpiration() < 10) {
             // not enough time to be useful. get a new token right now
             cache.invalidate(cacheKey);
@@ -222,7 +222,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         return token;
     }
 
-    private Optional<ExpiringToken> fromSecret(URI repo, @Nonnull Secret secret) {
+    private Optional<ExternalAuthToken> fromSecret(URI repo, @Nonnull Secret secret) {
         if (secret instanceof KeyPair) {
             return Optional.empty(); // we don't handle ssh keypairs here
         } else if (secret instanceof UsernamePassword) {
@@ -234,7 +234,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         return Optional.empty();
     }
 
-    private ExpiringToken fromBinaryData(URI repo, BinaryDataSecret bds) {
+    private ExternalAuthToken fromBinaryData(URI repo, BinaryDataSecret bds) {
         var appInfo = parseAppInstallation(bds);
         if (appInfo.isPresent()) {
             // great, it's apparently a valid app installation config
@@ -265,7 +265,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         }
     }
 
-    private ExpiringToken getTokenFromAppInstall(AppInstallationAuth app, URI repo) {
+    private ExternalAuthToken getTokenFromAppInstall(AppInstallationAuth app, URI repo) {
         log.info("getTokenFromAppInstall ['{}', '{}']", app.apiUrl(), repo);
 
         var ownerAndRepo = extractOwnerAndRepo(app, repo);
@@ -273,11 +273,11 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         return getRepoInstallationToken(app, ownerAndRepo);
     }
 
-    private ExpiringToken getRepoInstallationToken(AppInstallationAuth app, String orgRepo) throws GitHubAppException {
+    private ExternalAuthToken getRepoInstallationToken(AppInstallationAuth app, String orgRepo) throws GitHubAppException {
         try {
             var jwt = generateJWT(app);
             var accessTokenUrl = getAccessTokenUrl(app.apiUrl(), orgRepo, jwt);
-            return ExpiringToken.SimpleToken.builder()
+            return ExternalAuthToken.StaticToken.builder()
                     .from(createAccessToken(accessTokenUrl, jwt))
                     .username(app.username().orElse(null))
                     .build();
@@ -340,7 +340,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         return appInstallation.accessTokensUrl();
     }
 
-    ExpiringToken createAccessToken(String accessTokenUrl, String jwt) {
+    ExternalAuthToken createAccessToken(String accessTokenUrl, String jwt) {
         var req = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .uri(URI.create(accessTokenUrl))
@@ -350,7 +350,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
                 .timeout(httpTimeout)
                 .build();
 
-        return sendRequest(req, 201, ExpiringToken.class, (code, body) -> {
+        return sendRequest(req, 201, ExternalAuthToken.class, (code, body) -> {
             log.warn("createAccessToken ['{}'] -> error: {} : {}", accessTokenUrl, code, body);
 
             if (code == 404) {

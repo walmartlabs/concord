@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.repository;
 
 import com.codahale.metrics.MetricRegistry;
 import com.walmartlabs.concord.common.AuthTokenProvider;
-import com.walmartlabs.concord.common.ExpiringToken;
+import com.walmartlabs.concord.common.ExternalAuthToken;
 import com.walmartlabs.concord.github.appinstallation.GitHubAppInstallation;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -57,7 +57,7 @@ public class ServerAuthTokenProvider implements AuthTokenProvider {
     }
 
     @WithTimer
-    public Optional<ExpiringToken> getToken(URI repo, @Nullable Secret secret) {
+    public Optional<ExternalAuthToken> getToken(URI repo, @Nullable Secret secret) {
         for (var k : authTokenProviders) {
             if (k.supports(repo, secret)) {
                 return k.getToken(repo, secret);

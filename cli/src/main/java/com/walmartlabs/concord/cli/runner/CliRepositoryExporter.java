@@ -21,7 +21,7 @@ package com.walmartlabs.concord.cli.runner;
  */
 
 import com.walmartlabs.concord.common.AuthTokenProvider;
-import com.walmartlabs.concord.common.ExpiringToken;
+import com.walmartlabs.concord.common.ExternalAuthToken;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.RepositoryExporter;
 import com.walmartlabs.concord.repository.*;
@@ -70,7 +70,7 @@ public class CliRepositoryExporter implements RepositoryExporter {
             }
 
             @Override
-            public Optional<ExpiringToken> getToken(URI repo, @Nullable Secret secret) throws RepositoryException {
+            public Optional<ExternalAuthToken> getToken(URI repo, @Nullable Secret secret) throws RepositoryException {
                 throw new UnsupportedOperationException("Not supported");
             }
         };

@@ -25,7 +25,7 @@ import com.walmartlabs.concord.agent.remote.ApiClientFactory;
 import com.walmartlabs.concord.client2.ApiException;
 import com.walmartlabs.concord.client2.SystemApi;
 import com.walmartlabs.concord.common.AuthTokenProvider;
-import com.walmartlabs.concord.common.ExpiringToken;
+import com.walmartlabs.concord.common.ExternalAuthToken;
 import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
 import com.walmartlabs.concord.github.appinstallation.GitHubAppInstallation;
 import com.walmartlabs.concord.sdk.Secret;
@@ -60,7 +60,7 @@ public class AgentAuthTokenProvider implements AuthTokenProvider {
                 .anyMatch(p -> p.supports(repo, secret));
     }
 
-    public Optional<ExpiringToken> getToken(URI repo, @Nullable Secret secret) {
+    public Optional<ExternalAuthToken> getToken(URI repo, @Nullable Secret secret) {
         for (var k : authTokenProviders) {
             if (k.supports(repo, secret)) {
                 return k.getToken(repo, secret);
@@ -113,11 +113,11 @@ public class AgentAuthTokenProvider implements AuthTokenProvider {
         }
 
         @Override
-        public Optional<ExpiringToken> getToken(URI repo, @Nullable Secret secret) {
+        public Optional<ExternalAuthToken> getToken(URI repo, @Nullable Secret secret) {
             try {
                 var resp = systemApi.getExternalToken(repo);
 
-                return Optional.of(ExpiringToken.SimpleToken.builder()
+                return Optional.of(ExternalAuthToken.StaticToken.builder()
                         .token(resp.getToken())
                         .username(resp.getUsername())
                         .expiresAt(resp.getExpiresAt())

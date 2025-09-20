@@ -42,7 +42,7 @@ public interface AuthTokenProvider {
      */
     boolean supports(URI repo, @Nullable Secret secret);
 
-    Optional<ExpiringToken> getToken(URI repo, @Nullable Secret secret);
+    Optional<ExternalAuthToken> getToken(URI repo, @Nullable Secret secret);
 
     default URI addUserInfoToUri(URI repo, @Nullable Secret secret) {
         if (!supports(repo, secret)) {
@@ -85,13 +85,13 @@ public interface AuthTokenProvider {
         }
 
         @Override
-        public Optional<ExpiringToken> getToken(URI repo, @Nullable Secret secret) {
+        public Optional<ExternalAuthToken> getToken(URI repo, @Nullable Secret secret) {
             return authConfigs.stream()
                     .filter(auth -> auth.canHandle(repo))
                     .filter(ExternalTokenAuth.Oauth.class::isInstance)
                     .map(ExternalTokenAuth.Oauth.class::cast)
                     .findFirst()
-                    .map(auth -> ExpiringToken.StaticToken.builder()
+                    .map(auth -> ExternalAuthToken.StaticToken.builder()
                             .token(auth.token())
                             .username(auth.username().orElse(null))
                             .build());
