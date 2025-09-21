@@ -29,7 +29,10 @@ import org.immutables.value.Value;
 @JsonDeserialize(as = ImmutableAppInstallationAuth.class)
 public interface AppInstallationAuth extends ExternalTokenAuth {
 
-    String apiUrl();
+    @Value.Default
+    default String apiUrl() {
+        return "https://api.github.com";
+    }
 
     String clientId();
 

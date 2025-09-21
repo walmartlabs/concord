@@ -30,7 +30,6 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 public class GitConfiguration implements OauthTokenConfig, Serializable {
 
@@ -173,7 +172,7 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
         @Override
         public ExternalTokenAuth.Oauth toGitAuth() {
             return ExternalTokenAuth.Oauth.builder()
-                    .urlPattern(Pattern.compile(this.urlPattern() + ".*"))
+                    .urlPattern(ExternalTokenAuth.assertBaseUrlPattern(this.urlPattern()))
                     .token(this.token())
                     .build();
         }

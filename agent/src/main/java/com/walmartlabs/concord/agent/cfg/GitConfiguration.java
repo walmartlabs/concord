@@ -28,7 +28,6 @@ import javax.inject.Inject;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
 
@@ -154,7 +153,7 @@ public class GitConfiguration implements OauthTokenConfig {
         @Override
         public ExternalTokenAuth.Oauth toGitAuth() {
             return ExternalTokenAuth.Oauth.builder()
-                    .urlPattern(Pattern.compile(this.urlPattern() + ".*"))
+                    .urlPattern(ExternalTokenAuth.assertBaseUrlPattern(this.urlPattern()))
                     .token(this.token())
                     .build();
         }

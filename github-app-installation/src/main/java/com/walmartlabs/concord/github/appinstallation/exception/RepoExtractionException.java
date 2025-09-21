@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.github.appinstallation;
+package com.walmartlabs.concord.github.appinstallation.exception;
 
 /*-
  * *****
@@ -20,22 +20,9 @@ package com.walmartlabs.concord.github.appinstallation;
  * =====
  */
 
-public class GitHubAppException extends RuntimeException {
-    public GitHubAppException(String message) {
-        super(message);
-    }
+public class RepoExtractionException extends IllegalArgumentException {
 
-    public GitHubAppException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    static class NotFoundException extends GitHubAppException {
-        public NotFoundException(String message) {
-            super(message);
-        }
-
-        public NotFoundException(String message, Throwable cause) {
-            super(message, cause);
-        }
+    public RepoExtractionException(String s) {
+        super(s);
     }
 }

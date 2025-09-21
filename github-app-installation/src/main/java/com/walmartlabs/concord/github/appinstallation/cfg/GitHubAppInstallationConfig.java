@@ -23,7 +23,7 @@ package com.walmartlabs.concord.github.appinstallation.cfg;
 import com.typesafe.config.Config;
 import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
 import com.walmartlabs.concord.github.appinstallation.AppInstallationAuth;
-import com.walmartlabs.concord.github.appinstallation.GitHubAppException;
+import com.walmartlabs.concord.github.appinstallation.exception.GitHubAppException;
 import org.immutables.value.Value;
 
 import java.io.IOException;
@@ -32,7 +32,6 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
@@ -131,7 +130,7 @@ public interface GitHubAppInstallationConfig {
             return ExternalTokenAuth.Oauth.builder()
                     .token(this.token())
                     .username(Optional.ofNullable(this.username()))
-                    .urlPattern(Pattern.compile(this.urlPattern() + ".*"))
+                    .urlPattern(ExternalTokenAuth.assertBaseUrlPattern(this.urlPattern()))
                     .build();
         }
     }
@@ -162,7 +161,7 @@ public interface GitHubAppInstallationConfig {
                 var pkData = Files.readString(Paths.get(this.privateKey()));
 
                 return AppInstallationAuth.builder()
-                        .urlPattern(Pattern.compile(this.urlPattern() + ".*"))
+                        .urlPattern(ExternalTokenAuth.assertBaseUrlPattern(this.urlPattern()))
                         .username(this.username())
                         .clientId(this.clientId())
                         .privateKey(pkData)

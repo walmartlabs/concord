@@ -53,6 +53,12 @@ public interface ExternalTokenAuth {
         return repoHostPortAndPath.matches(urlPattern() + ".*");
     }
 
+    static Pattern assertBaseUrlPattern(String pattern) {
+        return pattern.endsWith(".*")
+                ? Pattern.compile(pattern)
+                : Pattern.compile(pattern + ".*");
+    }
+
     @Value.Immutable
     @Value.Style(jdkOnly = true)
     interface Oauth extends ExternalTokenAuth {

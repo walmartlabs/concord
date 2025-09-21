@@ -20,10 +20,9 @@ package com.walmartlabs.concord.github.appinstallation;
  * =====
  */
 
+import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -32,7 +31,7 @@ class AppInstallationAuthTest {
     @Test
     void testUrlPatternMissingNamedGroup() {
         var ex = Assertions.assertThrows(Exception.class, () -> AppInstallationAuth.builder()
-                .urlPattern(Pattern.compile(".*")) // needs to have baseUrl
+                .urlPattern(ExternalTokenAuth.assertBaseUrlPattern(".*")) // needs to have baseUrl
                 .clientId("mock-client-id")
                 .privateKey("/not/used/in/test")
                 .apiUrl("https://api.github.com")

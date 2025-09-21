@@ -31,7 +31,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 public interface AuthTokenProvider {
 
@@ -112,7 +111,7 @@ public interface AuthTokenProvider {
             }
         }
 
-        boolean systemSupports(URI repoUri) {
+        private boolean systemSupports(URI repoUri) {
             return authConfigs.stream().anyMatch(auth -> auth.canHandle(repoUri));
         }
 
@@ -126,7 +125,7 @@ public interface AuthTokenProvider {
             return List.of(ExternalTokenAuth.Oauth.builder()
                     .token(token)
                     .username(config.getOauthUsername())
-                    .urlPattern(Pattern.compile(config.getOauthUrlPattern().orElse(".*")))// for backwards compat with git.oauth
+                    .urlPattern(ExternalTokenAuth.assertBaseUrlPattern(config.getOauthUrlPattern().orElse(".*")))// for backwards compat with git.oauth
                     .build());
         }
     }
