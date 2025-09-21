@@ -66,6 +66,7 @@ class ConfigTest {
         assertFalse(oauth.username().isPresent());
         assertEquals("mock-token", oauth.token());
     }
+
     @Test
     void overrideConfig() throws Exception {
         var pk = Files.writeString(workDir.resolve("pk.pem"), PRIVATE_KEY_TEXT);
