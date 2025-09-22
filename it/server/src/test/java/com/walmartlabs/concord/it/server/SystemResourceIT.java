@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class ExternalTokenProviderIT extends AbstractServerIT {
+class SystemResourceIT extends AbstractServerIT {
 
     private static final URI URI001 = URI.create("https://github001.local/owner/repo.git");
     private static final URI URI002 = URI.create("https://github002.local/owner/repo.git");
