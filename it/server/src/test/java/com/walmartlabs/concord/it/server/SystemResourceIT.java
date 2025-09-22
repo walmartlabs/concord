@@ -21,6 +21,8 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client2.ApiException;
+import com.walmartlabs.concord.client2.RoleEntry;
+import com.walmartlabs.concord.client2.RolesApi;
 import com.walmartlabs.concord.client2.SystemApi;
 import org.junit.jupiter.api.Test;
 
@@ -40,9 +42,17 @@ class SystemResourceIT extends AbstractServerIT {
 
     @Test
     void testGetExternalToken() throws Exception {
+        // create role with externalTokenLookup permission
+        var roleApi = new RolesApi(getApiClient());
+        var roleName = "token_lookup_role_" + randomString();
+
+        roleApi.createOrUpdateRole(new RoleEntry()
+                .name(roleName)
+                .permissions(Set.of("externalTokenLookup")));
+
         // user with externalTokenLookup role
         var userBName = "user_external_token_lookup_" + randomString();
-        var externalTokenLookupUser = addUser(userBName, Set.of("externalTokenLookup"));
+        var externalTokenLookupUser = addUser(userBName, Set.of(roleName));
 
         // get system-provided token with externalTokenLookup role
         var systemApi = new SystemApi(getApiClientForKey(externalTokenLookupUser.apiKey()));
