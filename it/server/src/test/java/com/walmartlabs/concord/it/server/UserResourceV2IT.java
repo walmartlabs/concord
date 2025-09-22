@@ -21,13 +21,8 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client2.ApiException;
-import com.walmartlabs.concord.client2.ApiKeysApi;
-import com.walmartlabs.concord.client2.CreateApiKeyRequest;
-import com.walmartlabs.concord.client2.CreateUserRequest;
-import com.walmartlabs.concord.client2.UpdateUserRolesRequest;
 import com.walmartlabs.concord.client2.UserEntry;
 import com.walmartlabs.concord.client2.UserV2Api;
-import com.walmartlabs.concord.client2.UsersApi;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -61,28 +56,10 @@ class UserResourceV2IT extends AbstractServerIT {
         assertEquals(user.getId(), noRolesUser.userId());
     }
 
-    private UserEntry getUser(UserInfo userInfo, UUID userToGet) throws ApiException {
+    protected UserEntry getUser(UserInfo userInfo, UUID userToGet) throws ApiException {
         var apiClient = new UserV2Api(getApiClientForKey(userInfo.apiKey()));
 
         return apiClient.getUser(userToGet);
     }
 
-    private UserInfo addUser(String username, Set<String> roles) throws ApiException {
-        var usersApi = new UsersApi(getApiClient());
-        var user = usersApi.createOrUpdateUser(new CreateUserRequest().username(username)
-                .type(CreateUserRequest.TypeEnum.LOCAL));
-
-        if (!roles.isEmpty()) {
-            usersApi.updateUserRoles(username, new UpdateUserRolesRequest()
-                    .roles(roles));
-        }
-
-        var apiKeysApi = new ApiKeysApi(getApiClient());
-        var apiKeyResp = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
-                .userId(user.getId()));
-
-        return new UserInfo(username, user.getId(), apiKeyResp.getKey());
-    }
-
-    private record UserInfo(String username, UUID userId, String apiKey) { }
 }
