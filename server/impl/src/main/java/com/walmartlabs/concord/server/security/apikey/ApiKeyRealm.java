@@ -37,7 +37,8 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 
 import javax.inject.Inject;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ApiKeyRealm extends AuthorizingRealm {
 
@@ -80,17 +81,21 @@ public class ApiKeyRealm extends AuthorizingRealm {
                 .field("apiKeyId", t.getKeyId())
                 .log();
 
-        UserPrincipal p = new UserPrincipal(REALM_NAME, u);
-        return new SimpleAccount(Arrays.asList(p, t), t.getKey(), getName());
+        List<Object> principals = new ArrayList<>();
+        if (u != null) {
+            principals.add(new UserPrincipal(REALM_NAME, u));
+        }
+        principals.add(t);
+
+        return new SimpleAccount(principals, t.getKey(), getName());
     }
 
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        UserPrincipal p = principals.oneByType(UserPrincipal.class);
-        if (!REALM_NAME.equals(p.getRealm())) {
+        ApiKey principal = principals.oneByType(ApiKey.class);
+        if (principal == null) {
             return null;
         }
-
         return SecurityUtils.toAuthorizationInfo(principals);
     }
 }
