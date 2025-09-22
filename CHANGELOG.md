@@ -16,7 +16,10 @@
 - it: do not archive deps.dir into payloads
 ([#1214](https://github.com/walmartlabs/concord/pull/1214));
 - ansible-tasks: remove ini4j dependency
-([#1215](https://github.com/walmartlabs/concord/pull/1215)).
+([#1215](https://github.com/walmartlabs/concord/pull/1215));
+- concord-server: do not create UserPrincipal for API keys
+without userId
+([#1218](https://github.com/walmartlabs/concord/pull/1218)).
 
 ### Breaking
 
