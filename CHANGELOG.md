@@ -1,5 +1,34 @@
 # Change Log
 
+## [2.33.0] - Unreleased
+
+### Added
+
+-  ansible-tasks: support inventories specified in configFile
+([#1216](https://github.com/walmartlabs/concord/pull/1216)).
+
+### Changed
+
+- project: use JSch fork
+([#1210](https://github.com/walmartlabs/concord/pull/1210));
+- slack-tasks: update readme with required oauth scope info
+([#1213](https://github.com/walmartlabs/concord/pull/1213));
+- it: do not archive deps.dir into payloads
+([#1214](https://github.com/walmartlabs/concord/pull/1214));
+- ansible-tasks: remove ini4j dependency
+([#1215](https://github.com/walmartlabs/concord/pull/1215));
+- concord-server: do not create UserPrincipal for API keys
+without userId
+([#1218](https://github.com/walmartlabs/concord/pull/1218)).
+
+### Breaking
+
+- oidc: remove pac4j dependency. Will cause (de)serialization
+issues for SUSPENDED processes with OIDC initiators
+([#1217](https://github.com/walmartlabs/concord/pull/1217)).
+
+
+
 ## [2.32.0] - 2025-08-20
 
 ### Added
