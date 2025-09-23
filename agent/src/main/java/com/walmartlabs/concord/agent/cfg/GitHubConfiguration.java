@@ -20,7 +20,7 @@ package com.walmartlabs.concord.agent.cfg;
  * =====
  */
 
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
 
 import javax.inject.Inject;
@@ -46,7 +46,7 @@ public class GitHubConfiguration implements GitHubAppInstallationConfig {
     }
 
     @Override
-    public List<ExternalTokenAuth> getAuthConfigs() {
+    public List<MappingAuthConfig> getAuthConfigs() {
         return appInstallation.getAuthConfigs();
     }
 

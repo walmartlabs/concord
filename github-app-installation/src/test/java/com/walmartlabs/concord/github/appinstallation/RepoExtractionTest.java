@@ -20,7 +20,7 @@ package com.walmartlabs.concord.github.appinstallation;
  * =====
  */
 
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -107,9 +107,9 @@ class RepoExtractionTest {
         return Utils.extractOwnerAndRepo(auth, repo);
     }
 
-    private static AppInstallationAuth getAuth(String urlPattern) {
-        return AppInstallationAuth.builder()
-                .urlPattern(ExternalTokenAuth.assertBaseUrlPattern(urlPattern))
+    private static GitHubAppAuthConfig getAuth(String urlPattern) {
+        return GitHubAppAuthConfig.builder()
+                .urlPattern(MappingAuthConfig.assertBaseUrlPattern(urlPattern))
                 .privateKey("/not/used")
                 .clientId("1234")
                 .apiUrl("https://api.github.com")

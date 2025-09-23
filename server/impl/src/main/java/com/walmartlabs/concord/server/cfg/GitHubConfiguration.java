@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import com.walmartlabs.concord.config.Config;
 import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
 import org.eclipse.sisu.Nullable;
@@ -77,7 +77,7 @@ public class GitHubConfiguration implements GitHubAppInstallationConfig {
     }
 
     @Override
-    public List<ExternalTokenAuth> getAuthConfigs() {
+    public List<MappingAuthConfig> getAuthConfigs() {
         return appInstallation.getAuthConfigs();
     }
 

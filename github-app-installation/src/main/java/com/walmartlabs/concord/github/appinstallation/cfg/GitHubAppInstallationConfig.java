@@ -21,8 +21,8 @@ package com.walmartlabs.concord.github.appinstallation.cfg;
  */
 
 import com.typesafe.config.Config;
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
-import com.walmartlabs.concord.github.appinstallation.AppInstallationAuth;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
+import com.walmartlabs.concord.github.appinstallation.GitHubAppAuthConfig;
 import com.walmartlabs.concord.github.appinstallation.exception.GitHubAppException;
 import org.immutables.value.Value;
 
@@ -37,7 +37,7 @@ import java.util.Optional;
 @Value.Style(jdkOnly = true)
 public interface GitHubAppInstallationConfig {
 
-    List<ExternalTokenAuth> getAuthConfigs();
+    List<MappingAuthConfig> getAuthConfigs();
 
     @Value.Default
     default Duration getSystemAuthCacheDuration() {
@@ -100,10 +100,10 @@ public interface GitHubAppInstallationConfig {
     }
 
     interface AuthConfig {
-        ExternalTokenAuth toGitAuth();
+        MappingAuthConfig toGitAuth();
     }
 
-    static ExternalTokenAuth toGitAuth(com.typesafe.config.Config auth) {
+    static MappingAuthConfig toGitAuth(com.typesafe.config.Config auth) {
         var a = switch (AuthSource.valueOf(auth.getString("type").toUpperCase())) {
                     case OAUTH_TOKEN -> OauthConfig.from(auth);
                     case GITHUB_APP_INSTALLATION -> AppInstallationConfig.from(auth);
@@ -126,11 +126,11 @@ public interface GitHubAppInstallationConfig {
         }
 
         @Override
-        public ExternalTokenAuth toGitAuth() {
-            return ExternalTokenAuth.Oauth.builder()
+        public MappingAuthConfig toGitAuth() {
+            return MappingAuthConfig.OauthAuthConfig.builder()
                     .token(this.token())
                     .username(Optional.ofNullable(this.username()))
-                    .urlPattern(ExternalTokenAuth.assertBaseUrlPattern(this.urlPattern()))
+                    .urlPattern(MappingAuthConfig.assertBaseUrlPattern(this.urlPattern()))
                     .build();
         }
     }
@@ -156,12 +156,12 @@ public interface GitHubAppInstallationConfig {
         }
 
         @Override
-        public ExternalTokenAuth toGitAuth() {
+        public MappingAuthConfig toGitAuth() {
             try {
                 var pkData = Files.readString(Paths.get(this.privateKey()));
 
-                return AppInstallationAuth.builder()
-                        .urlPattern(ExternalTokenAuth.assertBaseUrlPattern(this.urlPattern()))
+                return GitHubAppAuthConfig.builder()
+                        .urlPattern(MappingAuthConfig.assertBaseUrlPattern(this.urlPattern()))
                         .username(this.username())
                         .clientId(this.clientId())
                         .privateKey(pkData)

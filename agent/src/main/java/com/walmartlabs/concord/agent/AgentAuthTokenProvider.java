@@ -26,7 +26,7 @@ import com.walmartlabs.concord.client2.ApiException;
 import com.walmartlabs.concord.client2.SystemApi;
 import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.ExternalAuthToken;
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import com.walmartlabs.concord.github.appinstallation.GitHubAppInstallation;
 import com.walmartlabs.concord.sdk.Secret;
 
@@ -75,7 +75,7 @@ public class AgentAuthTokenProvider implements AuthTokenProvider {
         private static final String CFG_URL_PATTERN = "externalTokenProvider.urlPattern";
 
         private final SystemApi systemApi;
-        private final ExternalTokenAuth.ConcordServerAuth auth;
+        private final MappingAuthConfig.ConcordServerAuthConfig auth;
 
         @Inject
         public ConcordServerTokenProvider(ApiClientFactory apiClientFactory, Config config) {
@@ -88,14 +88,14 @@ public class AgentAuthTokenProvider implements AuthTokenProvider {
             }
         }
 
-        private static ExternalTokenAuth.ConcordServerAuth initAuth(Config config) {
+        private static MappingAuthConfig.ConcordServerAuthConfig initAuth(Config config) {
             if (!config.hasPath(CFG_ENABLED) || !config.getBoolean(CFG_ENABLED)) {
                 return null;
             }
 
             return config.hasPath(CFG_URL_PATTERN)
-                    ? ExternalTokenAuth.ConcordServerAuth.builder()
-                            .urlPattern(ExternalTokenAuth.assertBaseUrlPattern(config.getString(CFG_URL_PATTERN)))
+                    ? MappingAuthConfig.ConcordServerAuthConfig.builder()
+                            .urlPattern(MappingAuthConfig.assertBaseUrlPattern(config.getString(CFG_URL_PATTERN)))
                             .build()
                     : null;
         }

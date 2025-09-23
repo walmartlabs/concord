@@ -21,13 +21,13 @@ package com.walmartlabs.concord.github.appinstallation;
  */
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
-@JsonDeserialize(as = ImmutableAppInstallationAuth.class)
-public interface AppInstallationAuth extends ExternalTokenAuth {
+@JsonDeserialize(as = ImmutableGitHubAppAuthConfig.class)
+public interface GitHubAppAuthConfig extends MappingAuthConfig {
 
     @Value.Default
     default String apiUrl() {
@@ -46,8 +46,8 @@ public interface AppInstallationAuth extends ExternalTokenAuth {
         }
     }
 
-    static ImmutableAppInstallationAuth.Builder builder() {
-        return ImmutableAppInstallationAuth.builder();
+    static ImmutableGitHubAppAuthConfig.Builder builder() {
+        return ImmutableGitHubAppAuthConfig.builder();
     }
 
 }

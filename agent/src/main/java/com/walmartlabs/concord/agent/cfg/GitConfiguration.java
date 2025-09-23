@@ -21,7 +21,7 @@ package com.walmartlabs.concord.agent.cfg;
  */
 
 import com.typesafe.config.Config;
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
 
 import javax.inject.Inject;
@@ -119,7 +119,7 @@ public class GitConfiguration implements OauthTokenConfig {
 
     public List<String> getAllowedSchemes() { return allowedSchemes; }
 
-    public List<ExternalTokenAuth> getSystemAuth() {
+    public List<MappingAuthConfig> getSystemAuth() {
         return authConfigs.stream()
                 .map(o -> {
                     AuthSource type = AuthSource.valueOf(o.getString("type").toUpperCase());
@@ -138,7 +138,7 @@ public class GitConfiguration implements OauthTokenConfig {
     }
 
     public interface AuthConfig {
-        ExternalTokenAuth toGitAuth();
+        MappingAuthConfig toGitAuth();
     }
 
     public record OauthConfig(String urlPattern, String token) implements AuthConfig {
@@ -151,9 +151,9 @@ public class GitConfiguration implements OauthTokenConfig {
         }
 
         @Override
-        public ExternalTokenAuth.Oauth toGitAuth() {
-            return ExternalTokenAuth.Oauth.builder()
-                    .urlPattern(ExternalTokenAuth.assertBaseUrlPattern(this.urlPattern()))
+        public MappingAuthConfig.OauthAuthConfig toGitAuth() {
+            return MappingAuthConfig.OauthAuthConfig.builder()
+                    .urlPattern(MappingAuthConfig.assertBaseUrlPattern(this.urlPattern()))
                     .token(this.token())
                     .build();
         }

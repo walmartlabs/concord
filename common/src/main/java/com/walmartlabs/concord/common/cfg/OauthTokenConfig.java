@@ -31,6 +31,6 @@ public interface OauthTokenConfig {
 
     Optional<String> getOauthUrlPattern();
 
-    List<ExternalTokenAuth> getSystemAuth();
+    List<MappingAuthConfig> getSystemAuth();
 
 }

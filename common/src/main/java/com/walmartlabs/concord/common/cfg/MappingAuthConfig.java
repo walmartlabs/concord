@@ -26,7 +26,7 @@ import java.net.URI;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public interface ExternalTokenAuth {
+public interface MappingAuthConfig {
 
     /** Regex matching the host, optional port and path of a Git repository URL. */
     Pattern urlPattern();
@@ -39,7 +39,7 @@ public interface ExternalTokenAuth {
     Optional<String> username();
 
     /**
-     * For compatibility with a {@link ExternalTokenAuth} instance, a URI must match the
+     * For compatibility with a {@link MappingAuthConfig} instance, a URI must match the
      * {@link #urlPattern()} regex. The regex may match against the path to support
      * either a Git host behind a reverse proxy or restricting the auth to specific
      * org/repo patterns.
@@ -61,19 +61,19 @@ public interface ExternalTokenAuth {
 
     @Value.Immutable
     @Value.Style(jdkOnly = true)
-    interface Oauth extends ExternalTokenAuth {
+    interface OauthAuthConfig extends MappingAuthConfig {
         String token();
 
-        static ImmutableOauth.Builder builder() {
-            return ImmutableOauth.builder();
+        static ImmutableOauthAuthConfig.Builder builder() {
+            return ImmutableOauthAuthConfig.builder();
         }
     }
 
     @Value.Immutable
     @Value.Style(jdkOnly = true)
-    interface ConcordServerAuth extends ExternalTokenAuth {
-        static ImmutableConcordServerAuth.Builder builder() {
-            return ImmutableConcordServerAuth.builder();
+    interface ConcordServerAuthConfig extends MappingAuthConfig {
+        static ImmutableConcordServerAuthConfig.Builder builder() {
+            return ImmutableConcordServerAuthConfig.builder();
         }
     }
 

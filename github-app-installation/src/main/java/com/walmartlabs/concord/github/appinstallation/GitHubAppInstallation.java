@@ -28,7 +28,7 @@ import com.google.common.cache.Weigher;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.ExternalAuthToken;
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
 import com.walmartlabs.concord.github.appinstallation.exception.GitHubAppException;
@@ -130,14 +130,14 @@ public class GitHubAppInstallation implements AuthTokenProvider {
                 .filter(auth -> auth.canHandle(repo))
                 .findFirst()
                 .map(auth -> {
-                    if (auth instanceof ExternalTokenAuth.Oauth tokenAuth) {
+                    if (auth instanceof MappingAuthConfig.OauthAuthConfig tokenAuth) {
                         return GitHubInstallationToken.builder()
                                 .token(tokenAuth.token())
                                 .username(tokenAuth.username().orElse(null))
                                 .build();
                     }
 
-                    if (auth instanceof AppInstallationAuth app) {
+                    if (auth instanceof GitHubAppAuthConfig app) {
                         return getTokenFromAppInstall(app, repo);
                     }
 
@@ -190,7 +190,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
                 .build();
     }
 
-    private ExternalAuthToken getTokenFromAppInstall(AppInstallationAuth app, URI repo) {
+    private ExternalAuthToken getTokenFromAppInstall(GitHubAppAuthConfig app, URI repo) {
         log.info("getTokenFromAppInstall ['{}', '{}']", app.apiUrl(), repo);
 
         try {

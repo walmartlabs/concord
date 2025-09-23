@@ -20,7 +20,7 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
@@ -59,7 +59,7 @@ class AuthTokenProviderTest {
     UsernamePassword usernamePassword;
 
     @Mock
-    ExternalTokenAuth.Oauth oauth;
+    MappingAuthConfig.OauthAuthConfig oauth;
 
     @Mock
     TestOauthTokenConfig oauthTokenConfig;

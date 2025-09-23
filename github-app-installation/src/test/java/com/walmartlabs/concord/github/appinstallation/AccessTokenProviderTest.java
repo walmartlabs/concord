@@ -20,7 +20,7 @@ package com.walmartlabs.concord.github.appinstallation;
  * =====
  */
 
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
 import com.walmartlabs.concord.github.appinstallation.exception.GitHubAppException;
 import org.junit.jupiter.api.Test;
@@ -54,8 +54,8 @@ public class AccessTokenProviderTest {
     @Mock
     HttpResponse<InputStream> accessTokenResponse;
 
-    private static final AppInstallationAuth auth = AppInstallationAuth.builder()
-            .urlPattern(ExternalTokenAuth.assertBaseUrlPattern("(?<baseUrl>github.local)/"))
+    private static final GitHubAppAuthConfig auth = GitHubAppAuthConfig.builder()
+            .urlPattern(MappingAuthConfig.assertBaseUrlPattern("(?<baseUrl>github.local)/"))
             .privateKey(PRIVATE_KEY_TEXT)
             .clientId("123")
             .build();

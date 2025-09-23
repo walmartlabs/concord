@@ -20,18 +20,18 @@ package com.walmartlabs.concord.github.appinstallation;
  * =====
  */
 
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class AppInstallationAuthTest {
+class GitHubAppAuthConfigTest {
 
     @Test
     void testUrlPatternMissingNamedGroup() {
-        var ex = Assertions.assertThrows(Exception.class, () -> AppInstallationAuth.builder()
-                .urlPattern(ExternalTokenAuth.assertBaseUrlPattern(".*")) // needs to have baseUrl
+        var ex = Assertions.assertThrows(Exception.class, () -> GitHubAppAuthConfig.builder()
+                .urlPattern(MappingAuthConfig.assertBaseUrlPattern(".*")) // needs to have baseUrl
                 .clientId("mock-client-id")
                 .privateKey("/not/used/in/test")
                 .apiUrl("https://api.github.com")

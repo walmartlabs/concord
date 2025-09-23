@@ -23,7 +23,7 @@ package com.walmartlabs.concord.github.appinstallation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ExternalAuthToken;
 import com.walmartlabs.concord.common.ObjectMapperProvider;
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
 import com.walmartlabs.concord.sdk.Secret;
@@ -57,13 +57,13 @@ class GitHubAppInstallationTest {
     private static final URI VALID_APP_AUTH_URI_02 = URI.create("https://github.local/owner/repo-2.git");
     private static final URI VALID_STATIC_AUTH_URI_01 = URI.create("https://staticgithub.local/owner/repo-1.git");
 
-    private static final AppInstallationAuth auth = AppInstallationAuth.builder()
+    private static final GitHubAppAuthConfig auth = GitHubAppAuthConfig.builder()
             .clientId("123")
-            .urlPattern(ExternalTokenAuth.assertBaseUrlPattern("(?<baseUrl>github.local)/"))
+            .urlPattern(MappingAuthConfig.assertBaseUrlPattern("(?<baseUrl>github.local)/"))
             .privateKey("/does/not/exist")
             .build();
-    private static final ExternalTokenAuth.Oauth staticKeyAuth = ExternalTokenAuth.Oauth.builder()
-            .urlPattern(ExternalTokenAuth.assertBaseUrlPattern("(?<baseUrl>staticgithub.local)/"))
+    private static final MappingAuthConfig.OauthAuthConfig staticKeyAuth = MappingAuthConfig.OauthAuthConfig.builder()
+            .urlPattern(MappingAuthConfig.assertBaseUrlPattern("(?<baseUrl>staticgithub.local)/"))
             .token("static-token")
             .build();
     private final GitHubAppInstallationConfig CFG = GitHubAppInstallationConfig.builder()

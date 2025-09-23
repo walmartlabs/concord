@@ -20,7 +20,7 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.sdk.Secret;
@@ -71,7 +71,7 @@ public interface AuthTokenProvider {
     @SuppressWarnings("ClassCanBeRecord")
     class OauthTokenProvider implements AuthTokenProvider {
 
-        private final List<ExternalTokenAuth> authConfigs;
+        private final List<MappingAuthConfig> authConfigs;
 
         @Inject
         public OauthTokenProvider(OauthTokenConfig config) {
@@ -87,8 +87,8 @@ public interface AuthTokenProvider {
         public Optional<ExternalAuthToken> getToken(URI repo, @Nullable Secret secret) {
             return authConfigs.stream()
                     .filter(auth -> auth.canHandle(repo))
-                    .filter(ExternalTokenAuth.Oauth.class::isInstance)
-                    .map(ExternalTokenAuth.Oauth.class::cast)
+                    .filter(MappingAuthConfig.OauthAuthConfig.class::isInstance)
+                    .map(MappingAuthConfig.OauthAuthConfig.class::cast)
                     .findFirst()
                     .map(auth -> ExternalAuthToken.StaticToken.builder()
                             .token(auth.token())
@@ -115,17 +115,17 @@ public interface AuthTokenProvider {
             return authConfigs.stream().anyMatch(auth -> auth.canHandle(repoUri));
         }
 
-        private static List<ExternalTokenAuth> toConfigList(OauthTokenConfig config) {
+        private static List<MappingAuthConfig> toConfigList(OauthTokenConfig config) {
             var token = config.getOauthToken().orElse(null);
 
             if (token == null || token.isBlank() && config.getSystemAuth().isEmpty()) {
                 return config.getSystemAuth();
             }
 
-            return List.of(ExternalTokenAuth.Oauth.builder()
+            return List.of(MappingAuthConfig.OauthAuthConfig.builder()
                     .token(token)
                     .username(config.getOauthUsername())
-                    .urlPattern(ExternalTokenAuth.assertBaseUrlPattern(config.getOauthUrlPattern().orElse(".*")))// for backwards compat with git.oauth
+                    .urlPattern(MappingAuthConfig.assertBaseUrlPattern(config.getOauthUrlPattern().orElse(".*")))// for backwards compat with git.oauth
                     .build());
         }
     }

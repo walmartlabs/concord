@@ -21,8 +21,8 @@ package com.walmartlabs.concord.github.appinstallation.cfg;
  */
 
 import com.typesafe.config.ConfigFactory;
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
-import com.walmartlabs.concord.github.appinstallation.AppInstallationAuth;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
+import com.walmartlabs.concord.github.appinstallation.GitHubAppAuthConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -58,11 +58,11 @@ class ConfigTest {
         assertEquals(Duration.ofMinutes(50), cfg.getSystemAuthCacheDuration());
         assertEquals(2, cfg.getAuthConfigs().size());
 
-        var appInstall = assertInstanceOf(AppInstallationAuth.class, cfg.getAuthConfigs().get(0));
+        var appInstall = assertInstanceOf(GitHubAppAuthConfig.class, cfg.getAuthConfigs().get(0));
         assertEquals("x-access-token", appInstall.username().orElse(null));
         assertEquals("https://api.github.com", appInstall.apiUrl());
 
-        var oauth = assertInstanceOf(ExternalTokenAuth.Oauth.class, cfg.getAuthConfigs().get(1));
+        var oauth = assertInstanceOf(MappingAuthConfig.OauthAuthConfig.class, cfg.getAuthConfigs().get(1));
         assertFalse(oauth.username().isPresent());
         assertEquals("mock-token", oauth.token());
     }
@@ -87,11 +87,11 @@ class ConfigTest {
         assertEquals(Duration.ofMinutes(1), cfg.getSystemAuthCacheDuration());
         assertEquals(2, cfg.getAuthConfigs().size());
 
-        var appInstall = assertInstanceOf(AppInstallationAuth.class, cfg.getAuthConfigs().get(0));
+        var appInstall = assertInstanceOf(GitHubAppAuthConfig.class, cfg.getAuthConfigs().get(0));
         assertEquals("custom", appInstall.username().orElse(null));
         assertEquals("https://api.github.local", appInstall.apiUrl());
 
-        var oauth = assertInstanceOf(ExternalTokenAuth.Oauth.class, cfg.getAuthConfigs().get(1));
+        var oauth = assertInstanceOf(MappingAuthConfig.OauthAuthConfig.class, cfg.getAuthConfigs().get(1));
         assertEquals("custom", oauth.username().orElse(null));
         assertEquals("mock-token", oauth.token());
     }

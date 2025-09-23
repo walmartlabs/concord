@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.concord.common.cfg.ExternalTokenAuth;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
 import com.walmartlabs.concord.config.Config;
 import org.eclipse.sisu.Nullable;
@@ -139,7 +139,7 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
 
     public List<String> getAllowedSchemes() { return allowedSchemes; }
 
-    public List<ExternalTokenAuth> getSystemAuth() {
+    public List<MappingAuthConfig> getSystemAuth() {
         return authConfigs.stream()
                 .map(o -> {
                     AuthSource type = AuthSource.valueOf(o.getString("type").toUpperCase());
@@ -157,7 +157,7 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
     }
 
     public interface AuthConfig {
-        ExternalTokenAuth toGitAuth();
+        MappingAuthConfig toGitAuth();
     }
 
     public record OauthConfig(String urlPattern, String token) implements AuthConfig {
@@ -170,9 +170,9 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
         }
 
         @Override
-        public ExternalTokenAuth.Oauth toGitAuth() {
-            return ExternalTokenAuth.Oauth.builder()
-                    .urlPattern(ExternalTokenAuth.assertBaseUrlPattern(this.urlPattern()))
+        public MappingAuthConfig.OauthAuthConfig toGitAuth() {
+            return MappingAuthConfig.OauthAuthConfig.builder()
+                    .urlPattern(MappingAuthConfig.assertBaseUrlPattern(this.urlPattern()))
                     .token(this.token())
                     .build();
         }
