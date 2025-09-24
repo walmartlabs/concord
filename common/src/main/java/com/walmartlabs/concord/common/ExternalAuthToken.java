@@ -21,6 +21,7 @@ package com.walmartlabs.concord.common;
  */
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.immutables.value.Value;
@@ -45,6 +46,8 @@ public interface ExternalAuthToken {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss[.SSS]X")
     OffsetDateTime expiresAt();
 
+    @Value.Default
+    @JsonIgnore
     default long secondsUntilExpiration() {
         if (expiresAt() == null) {
             return Long.MAX_VALUE;
@@ -77,12 +80,6 @@ public interface ExternalAuthToken {
         @Override
         default OffsetDateTime expiresAt() {
             return null;
-        }
-
-        @Value.Default
-        @Override
-        default long secondsUntilExpiration() {
-            return Long.MAX_VALUE;
         }
 
         static ImmutableStaticToken.Builder builder() {
