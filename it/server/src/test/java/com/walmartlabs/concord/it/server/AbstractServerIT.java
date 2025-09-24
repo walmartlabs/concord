@@ -210,7 +210,7 @@ public abstract class AbstractServerIT {
             repo.commit().setMessage("import").call();
         }
 
-        return tmpDir.toAbsolutePath().toString();
+        return "file://" + tmpDir.toAbsolutePath().toString();
     }
 
     protected static String env(String k, String def) {
@@ -244,6 +244,25 @@ public abstract class AbstractServerIT {
             projectsApi.deleteProject(orgName, projectName);
         }
     }
+
+    protected UserInfo addUser(String username, Set<String> roles) throws ApiException {
+        var usersApi = new UsersApi(getApiClient());
+        var user = usersApi.createOrUpdateUser(new CreateUserRequest().username(username)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
+
+        if (!roles.isEmpty()) {
+            usersApi.updateUserRoles(username, new UpdateUserRolesRequest()
+                    .roles(roles));
+        }
+
+        var apiKeysApi = new ApiKeysApi(getApiClient());
+        var apiKeyResp = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
+                .userId(user.getId()));
+
+        return new UserInfo(username, user.getId(), apiKeyResp.getKey());
+    }
+
+    protected record UserInfo(String username, UUID userId, String apiKey) { }
 
     @FunctionalInterface
     public interface Consumer<T> {

@@ -52,7 +52,7 @@ public class GitHubNonOrgEventIt extends AbstractServerIT {
             repo.commit().setMessage("import").call();
         }
 
-        String gitUrl = tmpDir.toAbsolutePath().toString();
+        String gitUrl = "file://" + tmpDir.toAbsolutePath().toString();
 
         // ---
 

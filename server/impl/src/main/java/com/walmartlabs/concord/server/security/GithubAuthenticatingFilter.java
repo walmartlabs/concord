@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
-import com.walmartlabs.concord.server.cfg.GithubConfiguration;
+import com.walmartlabs.concord.server.cfg.GitHubConfiguration;
 import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
 import com.walmartlabs.concord.server.security.github.GithubKey;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -62,12 +62,12 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
     public static final String HOOK_PROJECT_ID = "hookProjectId";
     public static final String HOOK_REPO_TOKEN = "hookRepoToken";
 
-    private final GithubConfiguration cfg;
+    private final GitHubConfiguration cfg;
     private final EncryptedProjectValueManager encryptedValueManager;
     private final ObjectMapper objectMapper;
 
     @Inject
-    public GithubAuthenticatingFilter(GithubConfiguration cfg, EncryptedProjectValueManager encryptedValueManager, ObjectMapper objectMapper) {
+    public GithubAuthenticatingFilter(GitHubConfiguration cfg, EncryptedProjectValueManager encryptedValueManager, ObjectMapper objectMapper) {
         this.cfg = cfg;
         this.encryptedValueManager = encryptedValueManager;
         this.objectMapper = objectMapper;

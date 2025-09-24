@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <property name="externalTokenLookupPermissionId" value="141cb914-95fe-4ede-a1ea-c8288a874309"/>
+
+    <changeSet id="2320000" author="4554569+benbroadaway@users.noreply.github.com">
+        <insert tableName="PERMISSIONS">
+            <column name="PERMISSION_ID" value="${externalTokenLookupPermissionId}"/>
+            <column name="PERMISSION_NAME" value="externalTokenLookup"/>
+            <column name="DESCRIPTION" value="Allows users to access system-provided git authentication through Concord REST API"/>
+        </insert>
+
+        <sql>
+            insert into ROLE_PERMISSIONS values (
+                (select ROLE_ID from ROLES where ROLE_NAME = 'concordAdmin'),
+                '${externalTokenLookupPermissionId}'
+            )
+        </sql>
+    </changeSet>
+</databaseChangeLog>

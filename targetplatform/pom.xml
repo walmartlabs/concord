@@ -149,6 +149,11 @@
             </dependency>
             <dependency>
                 <groupId>com.walmartlabs.concord</groupId>
+                <artifactId>concord-github-app-installation</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord</groupId>
                 <artifactId>concord-server</artifactId>
                 <version>${project.version}</version>
             </dependency>

@@ -66,6 +66,9 @@ public final class ConcordConfiguration {
                                 pollDelay = "250 milliseconds"
                             }
                         }
+                        git {
+                            allowedSchemes = [ "file", "https", "ssh", "classpath" ]
+                        }
                     }
                     concord-agent {
                         dependencyResolveTimeout = "30 seconds"
@@ -73,6 +76,9 @@ public final class ConcordConfiguration {
                         pollInterval = "250 milliseconds"
                         prefork {
                             enabled = true
+                        }
+                        git {
+                            allowedSchemes = [ "file", "https", "ssh", "classpath" ]
                         }
                     }
                     """);
@@ -94,16 +100,11 @@ public final class ConcordConfiguration {
 
     // TODO: move to testcontainers
     public static String getServerUrlForAgent(ConcordRule concord) {
-        switch (concord.mode()) {
-            case LOCAL:
-                return "http://localhost:8001";
-            case REMOTE:
-                return System.getProperty("it.remote.baseUrl");
-            case DOCKER:
-                return "http://server:8001";
-            default:
-                throw new IllegalArgumentException("Unknown mode: " + concord.mode());
-        }
+        return switch (concord.mode()) {
+            case LOCAL -> "http://localhost:8001";
+            case REMOTE -> System.getProperty("it.remote.baseUrl");
+            case DOCKER -> "http://server:8001";
+        };
     }
 
     private ConcordConfiguration() {

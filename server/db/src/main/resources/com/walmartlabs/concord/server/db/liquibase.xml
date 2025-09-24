@@ -119,4 +119,5 @@
     <include file="v2.22.0.xml" relativeToChangelogFile="true"/>
     <include file="v2.23.0.xml" relativeToChangelogFile="true"/>
     <include file="v2.31.0.xml" relativeToChangelogFile="true"/>
+    <include file="v2.32.0.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

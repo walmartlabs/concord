@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.events.github;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.sdk.Constants.Trigger;
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.server.cfg.GithubConfiguration;
+import com.walmartlabs.concord.server.cfg.GitHubConfiguration;
 import com.walmartlabs.concord.server.events.DefaultEventFilter;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
@@ -58,7 +58,7 @@ public class GithubTriggerProcessor {
     @Inject
     public GithubTriggerProcessor(Dao dao,
                                   Set<EventEnricher> eventEnrichers,
-                                  GithubConfiguration githubCfg) {
+                                  GitHubConfiguration githubCfg) {
         this.dao = dao;
         this.eventEnrichers = eventEnrichers;
         this.isDisableReposOnDeletedRef = githubCfg.isDisableReposOnDeletedRef();
