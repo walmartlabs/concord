@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.33.1] - Unreleased
+
+### Changed
+
+- pfed-sso: upgrade nimbus-jose-jwt version
+([#1219](https://github.com/walmartlabs/concord/pull/1219)).
+
+
+
 ## [2.33.0] - 2025-09-22
 
 ### Added
