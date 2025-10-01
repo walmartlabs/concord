@@ -74,7 +74,7 @@ public class AccessTokenProviderTest {
         when(accessTokenResponse.statusCode()).thenReturn(201);
         when(accessTokenResponse.body()).thenReturn(asInputStream(ACCESS_TOKEN_RESPONSE));
 
-        var provider = new AccessTokenProvider(CFG, TestConstants.MAPPPER, () -> httpClient);
+        var provider = new AccessTokenProvider(CFG, TestConstants.MAPPPER, httpClient);
 
         // --
 
@@ -95,7 +95,7 @@ public class AccessTokenProviderTest {
         when(tokenUrlResponse.statusCode()).thenReturn(404);
         when(tokenUrlResponse.body()).thenReturn(asInputStream("App is not installed on repo"));
 
-        var provider = new AccessTokenProvider(CFG, TestConstants.MAPPPER, () -> httpClient);
+        var provider = new AccessTokenProvider(CFG, TestConstants.MAPPPER, httpClient);
 
         // --
 
@@ -118,7 +118,7 @@ public class AccessTokenProviderTest {
         when(accessTokenResponse.statusCode()).thenReturn(500);
         when(accessTokenResponse.body()).thenReturn(asInputStream("server error"));
 
-        var provider = new AccessTokenProvider(CFG, TestConstants.MAPPPER, () -> httpClient);
+        var provider = new AccessTokenProvider(CFG, TestConstants.MAPPPER, httpClient);
 
         // --
 

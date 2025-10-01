@@ -44,34 +44,33 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
 import java.util.Date;
 import java.util.function.BiFunction;
-import java.util.function.Supplier;
 
 public class AccessTokenProvider {
 
     private static final Logger log = LoggerFactory.getLogger(AccessTokenProvider.class);
 
-    private final Supplier<HttpClient> httpClientSupplier;
+    private final HttpClient httpClient;
     private final Duration httpTimeout;
     private final ObjectMapper objectMapper;
 
     public AccessTokenProvider(GitHubAppInstallationConfig cfg, ObjectMapper objectMapper) {
         this.httpTimeout = cfg.getHttpClientTimeout();
         this.objectMapper = objectMapper;
-        // TODO: use thread pool for http client. JDK17 HttpClient creates a new thread per client even for synchronous execution
-        this.httpClientSupplier = () -> HttpClient.newBuilder() // would be nice to re-use client thread-safely
+        this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(httpTimeout)
                 .build();
     }
 
     public AccessTokenProvider(GitHubAppInstallationConfig cfg,
                                ObjectMapper objectMapper,
-                               Supplier<HttpClient> httpClientSupplier) {
+                               HttpClient httpClient) {
         this.httpTimeout = cfg.getHttpClientTimeout();
         this.objectMapper = objectMapper;
-        this.httpClientSupplier = httpClientSupplier;
+        this.httpClient = httpClient;
     }
 
     ExternalAuthToken getRepoInstallationToken(GitHubAppAuthConfig app, String orgRepo) throws GitHubAppException {
@@ -162,8 +161,7 @@ public class AccessTokenProvider {
 
     private <T> T sendRequest(HttpRequest httpRequest, int expectedCode, Class<T> clazz, BiFunction<Integer, String, GitHubAppException> exFun) throws GitHubAppException {
         try {
-            var resp = httpClientSupplier.get()
-                    .send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
+            var resp = httpClient.send(httpRequest, BodyHandlers.ofInputStream());
             if (resp.statusCode() != expectedCode) {
                 throw exFun.apply(resp.statusCode(), readBody(resp));
             }
