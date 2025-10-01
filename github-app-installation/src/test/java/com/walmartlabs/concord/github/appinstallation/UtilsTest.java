@@ -56,7 +56,7 @@ class UtilsTest {
 
     @Test
     void parseAppInstallation_ValidJson() {
-        var o = parseAppInstallation(new BinaryDataSecret(APP_INSTALL_CONTENT.getBytes()), MAPPPER);
+        var o = parseAppInstallation(APP_INSTALL_CONTENT.getBytes(), MAPPPER);
 
         assertTrue(o.isPresent());
         var result = o.get();
@@ -72,8 +72,8 @@ class UtilsTest {
                         "privateKey": "mock-key-data"
                     }
                 }""";
-        var secret = new BinaryDataSecret(missingClientId.getBytes());
-        var ex = assertThrows(GitHubAppException.class, () -> parseAppInstallation(secret, MAPPPER));
+        var data = missingClientId.getBytes();
+        var ex = assertThrows(GitHubAppException.class, () -> parseAppInstallation(data, MAPPPER));
 
         assertTrue(ex.getMessage().contains("Invalid app installation definition"));
     }
@@ -81,7 +81,7 @@ class UtilsTest {
     @Test
     void parseAppInstallation_OtherJson() {
         var unexpectedJson = "{ \"valid\": \"but not usable here\"}";
-        var result = parseAppInstallation(new BinaryDataSecret(unexpectedJson.getBytes()), MAPPPER);
+        var result = parseAppInstallation(unexpectedJson.getBytes(), MAPPPER);
 
         assertFalse(result.isPresent());
     }
@@ -89,7 +89,7 @@ class UtilsTest {
     @Test
     void parseRawAppInstallation_NotJson() {
         var unexpectedJson = "justText";
-        var result = parseRawAppInstallation(new BinaryDataSecret(unexpectedJson.getBytes()), MAPPPER);
+        var result = parseRawAppInstallation(unexpectedJson.getBytes(), MAPPPER);
 
         assertNull(result);
     }
@@ -97,7 +97,7 @@ class UtilsTest {
     @Test
     void parseRawAppInstallation_OtherJson() {
         var unexpectedJson = "{ \"valid\": \"but not usable here\"}";
-        var result = parseRawAppInstallation(new BinaryDataSecret(unexpectedJson.getBytes()), MAPPPER);
+        var result = parseRawAppInstallation(unexpectedJson.getBytes(), MAPPPER);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());

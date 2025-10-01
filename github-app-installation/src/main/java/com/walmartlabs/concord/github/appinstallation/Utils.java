@@ -52,7 +52,7 @@ public class Utils {
             return false;
         }
 
-        var base = parseRawAppInstallation(bds, mapper);
+        var base = parseRawAppInstallation(bds.getData(), mapper);
         if (base == null) {
             // It's not JSON, may be an oauth token
             return isPrintableAscii(bds.getData());
@@ -62,7 +62,7 @@ public class Utils {
         }
 
         // App installation config format is either valid or not
-        return parseAppInstallation(bds, mapper).isPresent();
+        return parseAppInstallation(bds.getData(), mapper).isPresent();
     }
 
     private static boolean isPrintableAscii(byte[] bytes) {
@@ -81,10 +81,9 @@ public class Utils {
         return true;
     }
 
-    static Map<?, ?> parseRawAppInstallation(BinaryDataSecret bds,
-                                                     ObjectMapper mapper) {
+    static Map<?, ?> parseRawAppInstallation(byte[] bds, ObjectMapper mapper) {
         try { // find out if it's at least valid JSON.
-            var base = mapper.readValue(bds.getData(), Map.class);
+            var base = mapper.readValue(bds, Map.class);
             if (base.containsKey("githubAppInstallation")) {
                 return base;
             } else {
@@ -97,8 +96,7 @@ public class Utils {
         }
     }
 
-    static Optional<GitHubAppAuthConfig> parseAppInstallation(BinaryDataSecret bds,
-                                                              ObjectMapper mapper) {
+    static Optional<GitHubAppAuthConfig> parseAppInstallation(byte[] bds, ObjectMapper mapper) {
         Map<?, ?> base = parseRawAppInstallation(bds, mapper);
 
         if (base == null || !base.containsKey("githubAppInstallation")) {

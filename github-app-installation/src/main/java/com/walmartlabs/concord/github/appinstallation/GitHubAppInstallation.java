@@ -54,8 +54,6 @@ public class GitHubAppInstallation implements AuthTokenProvider {
 
     private final LoadingCache<CacheKey, Optional<ExternalAuthToken>> cache;
 
-    private record CacheKey(URI repoUri, Secret secret) {}
-
     @Inject
     public GitHubAppInstallation(GitHubAppInstallationConfig cfg, ObjectMapper objectMapper) {
         this.cfg = cfg;
@@ -65,23 +63,11 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         this.cache = CacheBuilder.newBuilder()
                 .expireAfterWrite(cfg.getSystemAuthCacheDuration())
                 .maximumWeight(cfg.getSystemAuthCacheMaxWeight())
-                .weigher((Weigher<CacheKey, Optional<ExternalAuthToken>>) (key, value) -> {
-                    int weight = 1;
-
-                    if (key.secret() != null) {
-                        weight += 1;
-
-                        if (key.secret() instanceof BinaryDataSecret bds) {
-                            weight += bds.getData().length / 1024;
-                        }
-                    }
-
-                    return weight;
-                })
+                .weigher((Weigher<CacheKey, Optional<ExternalAuthToken>>) (key, value) -> key.weight())
                 .build(new CacheLoader<>() {
                     @Override
                     public @Nonnull Optional<ExternalAuthToken> load(@Nonnull CacheKey key) {
-                        return fetchToken(key.repoUri(), key.secret());
+                        return fetchToken(key.repoUri(), key.binaryDataSecret());
                     }
                 });
     }
@@ -91,10 +77,27 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         return Utils.validateSecret(secret, objectMapper) || systemSupports(repo);
     }
 
+    private CacheKey createKey(URI repoUri, @Nullable Secret secret) {
+        if (secret == null) {
+            return CacheKey.from(repoUri);
+        }
+
+        if (secret instanceof BinaryDataSecret bds) {
+            return CacheKey.from(repoUri, bds.getData());
+        }
+
+        return null;
+    }
+
     @Override
     public Optional<ExternalAuthToken> getToken(URI repo, @Nullable Secret secret) {
+        var cacheKey = createKey(repo, secret);
+
+        if (cacheKey == null) {
+            return Optional.empty();
+        }
+
         try {
-            var cacheKey = new CacheKey(repo, secret);
             var activeToken = cache.get(cacheKey);
 
             return activeToken.map(t -> refreshBeforeExpire(t, cacheKey));
@@ -120,9 +123,9 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         return cfg.getAuthConfigs().stream().anyMatch(auth -> auth.canHandle(repoUri));
     }
 
-    private Optional<ExternalAuthToken> fetchToken(URI repo, @Nullable Secret secret) {
+    private Optional<ExternalAuthToken> fetchToken(URI repo, @Nullable byte[] secret) {
         if (secret != null) {
-            return fromSecret(repo, secret);
+            return Optional.ofNullable(fromBinaryData(repo, secret));
         }
 
         // no secret, see if system config has something for this repo
@@ -169,16 +172,8 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         return token;
     }
 
-    private Optional<ExternalAuthToken> fromSecret(URI repo, @Nonnull Secret secret) {
-        if (secret instanceof BinaryDataSecret bds) {
-            return Optional.ofNullable(fromBinaryData(repo, bds));
-        }
-
-        return Optional.empty();
-    }
-
-    private ExternalAuthToken fromBinaryData(URI repo, BinaryDataSecret bds) {
-        var appInfo = Utils.parseAppInstallation(bds, objectMapper);
+    private ExternalAuthToken fromBinaryData(URI repo, byte[] data) {
+        var appInfo = Utils.parseAppInstallation(data, objectMapper);
         if (appInfo.isPresent()) {
             // great, it's apparently a valid app installation config
             return getTokenFromAppInstall(appInfo.get(), repo);
@@ -186,7 +181,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
 
         // hopefully it's just a token a plaintext token
         return GitHubInstallationToken.builder()
-                .token(new String(bds.getData()).trim())
+                .token(new String(data).trim())
                 .build();
     }
 
@@ -196,8 +191,9 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         try {
             var ownerAndRepo = Utils.extractOwnerAndRepo(app, repo);
             return accessTokenProvider().getRepoInstallationToken(app, ownerAndRepo);
-        } catch (RepoExtractionException e) {
-            log.warn("Error retrieving GitHub access token", e);
+        } catch (RepoExtractionException | GitHubAppException e) {
+            var msg = e.getMessage();
+            log.warn("Error retrieving GitHub access token: {}", msg);
         }
 
         return null;

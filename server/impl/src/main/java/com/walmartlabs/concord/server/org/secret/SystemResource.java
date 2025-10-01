@@ -22,14 +22,16 @@ package com.walmartlabs.concord.server.org.secret;
 
 import com.walmartlabs.concord.common.ExternalAuthToken;
 import com.walmartlabs.concord.common.AuthTokenProvider;
-import com.walmartlabs.concord.repository.RepositoryException;
+import com.walmartlabs.concord.github.appinstallation.exception.GitHubAppException;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.security.Permission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -52,18 +54,19 @@ public class SystemResource implements Resource {
     @GET
     @Path("/gitauth")
     @Produces(MediaType.APPLICATION_JSON)
+    @Validate
     @Operation(description = "Retrieves system-provided auth for give repository URI. Requires externalTokenLookup permission. ", operationId = "getExternalToken")
-    public ExternalAuthToken getExternalToken(@QueryParam("repoUri") URI repoUri) {
+    public ExternalAuthToken getExternalToken(@QueryParam("repoUri") @NotNull URI repoUri) {
         assertSystemGitAuthPermission();
 
         try {
             return authTokenProvider.getToken(repoUri, null)
                     .orElseThrow(() -> new ConcordApplicationException("No system-provided auth found for the given repository URI: " + repoUri, Response.Status.NOT_FOUND));
-        } catch (RepositoryException.NotFoundException e) {
-            throw new ConcordApplicationException(e.getMessage(), Response.Status.BAD_REQUEST);
-        } catch (RepositoryException e) {
-            // TODO 500?
+        } catch (GitHubAppException.NotFoundException e) {
+            // repo issue, or app not installed
             throw new ConcordApplicationException(e.getMessage(), Response.Status.NOT_FOUND);
+        } catch (GitHubAppException e) {
+            throw new ConcordApplicationException(e.getMessage(), Response.Status.BAD_REQUEST);
         }
     }
 

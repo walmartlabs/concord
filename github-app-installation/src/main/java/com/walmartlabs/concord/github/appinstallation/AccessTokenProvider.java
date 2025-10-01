@@ -60,6 +60,7 @@ public class AccessTokenProvider {
     public AccessTokenProvider(GitHubAppInstallationConfig cfg, ObjectMapper objectMapper) {
         this.httpTimeout = cfg.getHttpClientTimeout();
         this.objectMapper = objectMapper;
+        // TODO: use thread pool for http client. JDK17 HttpClient creates a new thread per client even for synchronous execution
         this.httpClientSupplier = () -> HttpClient.newBuilder() // would be nice to re-use client thread-safely
                 .connectTimeout(httpTimeout)
                 .build();
@@ -96,14 +97,13 @@ public class AccessTokenProvider {
                 .build();
 
         var appInstallation = sendRequest(req, 200, AccessTokenProvider.GitHubAppInstallationResp.class, (code, body) -> {
-            log.warn("getAccessTokenUrl ['{}'] -> error: {} : {}", installationRepo, code, body);
-
             if (code == 404) {
                 // not possible to discern between repo not found and app not installed for existing (private) repo
                 log.warn("getAccessTokenUrl ['{}'] -> not found", installationRepo);
                 return new GitHubAppException.NotFoundException("Repo not found or App installation not found for repo");
             }
 
+            log.warn("getAccessTokenUrl ['{}'] -> error: {} : {}", installationRepo, code, body);
             return new GitHubAppException("Unexpected error locating repo installation: " + code);
         });
 
