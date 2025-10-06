@@ -62,6 +62,23 @@ public class ProcessIT extends AbstractTest {
     }
 
     /**
+     * Username signature generation.
+     */
+    @Test
+    public void testUsernameSignature() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("usernameSignature"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+
+        proc.assertNoLog(".*signature: null.*");
+        proc.assertLog(".*signature: (?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?\\..*");
+    }
+
+    /**
      * Groovy script execution.
      */
     @Test
