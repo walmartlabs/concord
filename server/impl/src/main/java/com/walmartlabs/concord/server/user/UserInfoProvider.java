@@ -77,5 +77,8 @@ public interface UserInfoProvider {
 
         @Nullable
         Map<String, Object> attributes();
+
+        @Nullable
+        String usernameSignature();
     }
 }
