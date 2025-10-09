@@ -148,7 +148,7 @@ public class ApiKeyManager {
                 .field("userId", userId)
                 .log();
 
-        return new CreateApiKeyResponse(id, name, key, OperationResult.CREATED);
+        return new CreateApiKeyResponse(id, key, OperationResult.CREATED);
     }
 
     public CreateApiKeyResponse updateApiKey(UUID id, UUID userId, String name, @Nullable String key) {
@@ -170,7 +170,7 @@ public class ApiKeyManager {
                 .field("userId", userId)
                 .log();
 
-        return new CreateApiKeyResponse(id, name, key, OperationResult.UPDATED);
+        return new CreateApiKeyResponse(id, key, OperationResult.UPDATED);
     }
 
     public void deleteById(UUID id) {

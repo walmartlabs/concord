@@ -94,8 +94,7 @@ public class ApiKeyDao extends AbstractDao {
         tx(tx -> tx.update(API_KEYS)
                 .set(API_KEYS.API_KEY, hash(key))
                 .set(API_KEYS.EXPIRED_AT, expiredAt)
-                .where(API_KEYS.KEY_ID.eq(keyId))
-                .execute());
+                .where(API_KEYS.KEY_ID.eq(keyId)));
     }
 
     public void delete(UUID id) {
