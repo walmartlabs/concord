@@ -123,7 +123,7 @@ public class OidcRealm extends AuthorizingRealm {
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         UserPrincipal p = principals.oneByType(UserPrincipal.class);
-        if (!REALM_NAME.equals(p.getRealm())) {
+        if (p == null || !REALM_NAME.equals(p.getRealm())) {
             return null;
         }
 
