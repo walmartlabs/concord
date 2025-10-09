@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.33.2] - 2025-10-09
+
+### Changed
+
+- concord-server: fix API key creation for the current user
+([#1222](https://github.com/walmartlabs/concord/pull/1222));
+
+
+
 ## [2.33.1] - 2025-10-06
 
 ### Changed
