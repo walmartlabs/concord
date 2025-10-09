@@ -42,7 +42,7 @@ public class ConcordTaskParams {
             case STARTEXTERNAL -> new StartExternalParams(variables);
             case FORK -> new ForkParams(variables);
             case KILL -> new KillParams(variables);
-            case CREATEAPIKEY, CREATEORUPDATEAPIKEY -> new CreateOrUpdateApiKeyParams(variables);
+            case CREATEAPIKEY -> new CreateApiKeyParams(variables);
         };
     }
 
@@ -428,7 +428,7 @@ public class ConcordTaskParams {
         }
     }
 
-    public static class CreateOrUpdateApiKeyParams extends ConcordTaskParams {
+    public static class CreateApiKeyParams extends ConcordTaskParams {
 
         private static final String BASE_URL_KEY = "baseUrl";
         private static final String API_KEY = "apiKey";
@@ -440,7 +440,7 @@ public class ConcordTaskParams {
         private static final String IGNORE_EXISTING_KEY = "ignoreExisting";
         private static final String KEY = "key";
 
-        CreateOrUpdateApiKeyParams(Variables variables) {
+        CreateApiKeyParams(Variables variables) {
             super(variables);
         }
 
@@ -535,8 +535,7 @@ public class ConcordTaskParams {
         STARTEXTERNAL,
         FORK,
         KILL,
-        CREATEAPIKEY,
-        CREATEORUPDATEAPIKEY,
+        CREATEAPIKEY
     }
 
     private static class DelegateVariables implements Variables {

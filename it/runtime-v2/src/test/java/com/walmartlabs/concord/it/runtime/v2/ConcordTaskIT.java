@@ -64,6 +64,7 @@ public class ConcordTaskIT extends AbstractTest {
      */
     @Test
     public void testExternalApiToken() throws Exception {
+
         String username = "user_" + randomString();
 
         UsersApi usersApi = new UsersApi(concord.apiClient());
@@ -217,6 +218,7 @@ public class ConcordTaskIT extends AbstractTest {
         proc.assertLog(".*Done!.*");
     }
 
+
     @Test
     public void testCreateApiKey() throws Exception {
         String apiKeyName1 = "test1_" + randomString();
@@ -258,41 +260,5 @@ public class ConcordTaskIT extends AbstractTest {
         apiKeysApi = new ApiKeysApi(concord.apiClient().setApiKey(apiKeyValue2));
         apiKeys = apiKeysApi.listUserApiKeys(adminId);
         assertEquals(apiKeyCount, apiKeys.size());
-    }
-
-    @Test
-    public void testCreateOrUpdateApiKey() throws Exception {
-        String username = "user_" + randomString();
-
-        UsersApi usersApi = new UsersApi(concord.apiClient());
-        usersApi.createOrUpdateUser(new CreateUserRequest()
-                .username(username)
-                .type(CreateUserRequest.TypeEnum.LOCAL));
-
-        // --
-
-        String apiKeyValue = Base64.getEncoder().encodeToString(("foo_" + randomString()).getBytes(UTF_8));
-
-        Payload payload = new Payload()
-                .archive(resource("concord/createOrUpdateApiKey"))
-                .arg("apiKeyValue", apiKeyValue)
-                .arg("apiKeyUsername", username);
-
-        // ---
-
-        ConcordProcess proc = concord.processes().start(payload);
-        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
-
-        // ---
-
-        proc.assertLog(".*result1=.*");
-        proc.assertLog(".*result2=.*");
-        proc.assertLog(".*result3=.*");
-
-        // ---
-
-        ApiKeysApi apiKeysApi = new ApiKeysApi(concord.apiClient().setApiKey(apiKeyValue));
-        List<ApiKeyEntry> apiKeys = apiKeysApi.listUserApiKeys(null);
-        assertEquals(1, apiKeys.size());
     }
 }
