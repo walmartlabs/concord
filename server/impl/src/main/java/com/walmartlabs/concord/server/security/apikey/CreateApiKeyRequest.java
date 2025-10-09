@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.security.apikey;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.user.UserType;
 
 import java.io.Serial;
@@ -37,6 +38,7 @@ public class CreateApiKeyRequest implements Serializable {
     private final String username;
     private final String userDomain;
     private final UserType userType;
+    @ConcordKey
     private final String name;
     private final String key;
 

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security.apikey;
  * =====
  */
 
-import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.audit.AuditAction;
@@ -82,14 +81,10 @@ public class ApiKeyManager {
         String name = trim(req.getName());
         if (name == null || name.isEmpty()) {
             // auto generate the name
-            name = "key-" + UUID.randomUUID();
+            name = "key#" + UUID.randomUUID();
         } else {
-            if (!name.matches(ConcordKey.PATTERN)) {
-                throw new ValidationErrorsException("Invalid API key name. Must match " + ConcordKey.PATTERN);
-            }
-
             if (apiKeyDao.getId(userId, name) != null) {
-                throw new ValidationErrorsException("API key with name '" + name + "' already exists");
+                throw new ValidationErrorsException("API Token with name '" + name + "' already exists");
             }
         }
 
