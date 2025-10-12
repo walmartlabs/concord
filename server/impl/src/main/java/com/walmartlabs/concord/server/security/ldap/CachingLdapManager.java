@@ -88,6 +88,11 @@ public class CachingLdapManager implements LdapManager {
         return principalByDn.get(dn).orElse(null);
     }
 
+    @Override
+    public LdapPrincipal getPrincipalByMail(String mail) throws Exception {
+        throw new Exception("not implemented");
+    }
+
     @Value.Immutable
     interface CacheKey {
 

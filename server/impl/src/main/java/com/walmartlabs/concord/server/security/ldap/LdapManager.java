@@ -33,4 +33,6 @@ public interface LdapManager {
     LdapPrincipal getPrincipal(String username, String domain) throws Exception;
 
     LdapPrincipal getPrincipalByDn(String dn) throws Exception;
+
+    LdapPrincipal getPrincipalByMail(String mail) throws Exception;
 }

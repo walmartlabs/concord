@@ -238,6 +238,14 @@ public class Payload {
         return null;
     }
 
+    public String getSenderEmail() {
+        Object result = ConfigurationUtils.get(data, "sender", "email");
+        if (result instanceof String s) {
+            return s;
+        }
+        return null;
+    }
+
     public String getAction() {
         return getString("action");
     }

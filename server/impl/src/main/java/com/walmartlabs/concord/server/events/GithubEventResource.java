@@ -239,13 +239,13 @@ public class GithubEventResource implements Resource {
         private final UserManager userManager;
         private final LdapManager ldapManager;
         private final Payload payload;
-        private final Supplier<UserEntry> fallback;
+        private final Supplier<UserEntry> loginLdapLookupCallback;
 
         public GithubEventInitiatorSupplier(UserManager userManager, LdapManager ldapManager, Payload payload) {
             this.userManager = userManager;
             this.ldapManager = ldapManager;
             this.payload = payload;
-            this.fallback = () -> {
+            this.loginLdapLookupCallback = () -> {
                 String initiator = payload.getSender();
                 if (initiator == null || initiator.trim().isEmpty()) {
                     throw new ConcordApplicationException("Can't determine initiator: " + payload);
@@ -258,22 +258,60 @@ public class GithubEventResource implements Resource {
 
         @Override
         public UserEntry get() {
-            if (!githubCfg.isUseSenderLdapDn()) {
-                return fallback.get();
-            }
-
-            String ldapDn = payload.getSenderLdapDn();
-            if (ldapDn == null || ldapDn.trim().isEmpty()) {
-                log.warn("getOrCreateUserEntry ['{}'] -> can't determine the sender's 'ldap_dn', falling back to 'login'", payload);
-                return fallback.get();
+            if (!githubCfg.isUseSenderLdapDn()) { // don't try to match against payload sender's ldap_dn
+                return loginLdapLookupCallback.get();
             }
 
             // only LDAP users are supported in GitHub triggers
+            UserEntry fromDn = findSenderDnInLdap();
+            if (fromDn != null) {
+                return fromDn;
+            }
+
+            if (githubCfg.isUserSenderEmail()) {
+                UserEntry fromEmail = findSenderEmailInLdap();
+                if (fromEmail != null) {
+                    return fromEmail;
+                }
+            }
+
+            log.warn("getOrCreateUserEntry ['{}'] -> can't determine the sender's 'ldap_dn' or 'email', falling back to 'login'", payload);
+            return loginLdapLookupCallback.get();
+        }
+
+        private UserEntry findSenderDnInLdap() {
+            String ldapDn = payload.getSenderLdapDn();
+            if (ldapDn == null || ldapDn.isBlank()) {
+                return null;
+            }
+
             try {
                 LdapPrincipal p = ldapManager.getPrincipalByDn(ldapDn);
+
                 if (p == null) {
                     log.warn("getOrCreateUserEntry ['{}'] -> can't find user by ldap DN ({})", payload, ldapDn);
-                    return fallback.get();
+                    return null;
+                }
+
+                return userManager.getOrCreate(p.getUsername(), p.getDomain(), UserType.LDAP)
+                        .orElseThrow(() -> new ConcordApplicationException("User not found: " + p.getUsername()));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private UserEntry findSenderEmailInLdap() {
+            String email = payload.getSenderEmail();
+            if (email == null || email.isBlank()) {
+                return null;
+            }
+
+            try {
+                LdapPrincipal p = ldapManager.getPrincipalByMail(email);
+
+                if (p == null) {
+                    log.warn("getOrCreateUserEntry ['{}'] -> can't find user by ldap mail ({})", payload, email);
+                    return null;
                 }
 
                 return userManager.getOrCreate(p.getUsername(), p.getDomain(), UserType.LDAP)
