@@ -22,7 +22,6 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.HasNonNullVariableFunction;
-import com.walmartlabs.concord.runtime.v2.runner.el.functions.HasVariableFunction;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
@@ -40,23 +39,23 @@ public class HasNoNullVariableFunctionTest {
     @Test
     public void test() {
         withVariables(Collections.singletonMap("test", "123"), () -> {
-            assertTrue(HasNonNullVariableFunction.hasVariable("test"));
-            assertFalse(HasNonNullVariableFunction.hasVariable("test.nested.deep"));
-            assertFalse(HasNonNullVariableFunction.hasVariable("boom"));
+            assertTrue(HasNonNullVariableFunction.hasNonNullVariable("test"));
+            assertFalse(HasNonNullVariableFunction.hasNonNullVariable("test.nested.deep"));
+            assertFalse(HasNonNullVariableFunction.hasNonNullVariable("boom"));
         });
 
         withVariables(Collections.singletonMap("testNull", null), () -> {
-            assertFalse(HasNonNullVariableFunction.hasVariable("testNull"));
-            assertFalse(HasNonNullVariableFunction.hasVariable("testNull.k2"));
+            assertFalse(HasNonNullVariableFunction.hasNonNullVariable("testNull"));
+            assertFalse(HasNonNullVariableFunction.hasNonNullVariable("testNull.k2"));
         });
 
         withVariables(Collections.singletonMap("a", ConfigurationUtils.toNested("b.c", "123")), () -> {
-            assertTrue(HasNonNullVariableFunction.hasVariable("a"));
-            assertTrue(HasNonNullVariableFunction.hasVariable("a.b"));
-            assertTrue(HasNonNullVariableFunction.hasVariable("a.b.c"));
-            assertFalse(HasNonNullVariableFunction.hasVariable("a.b.c.d"));
-            assertFalse(HasNonNullVariableFunction.hasVariable(""));
-            assertFalse(HasNonNullVariableFunction.hasVariable(null));
+            assertTrue(HasNonNullVariableFunction.hasNonNullVariable("a"));
+            assertTrue(HasNonNullVariableFunction.hasNonNullVariable("a.b"));
+            assertTrue(HasNonNullVariableFunction.hasNonNullVariable("a.b.c"));
+            assertFalse(HasNonNullVariableFunction.hasNonNullVariable("a.b.c.d"));
+            assertFalse(HasNonNullVariableFunction.hasNonNullVariable(""));
+            assertFalse(HasNonNullVariableFunction.hasNonNullVariable(null));
         });
     }
 

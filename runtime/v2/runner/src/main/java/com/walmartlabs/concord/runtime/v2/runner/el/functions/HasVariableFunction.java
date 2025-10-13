@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,23 +21,16 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.runtime.v2.sdk.ELFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.ThreadLocalEvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Map;
 
 public final class HasVariableFunction {
 
-    public static Method getMethod() {
-        try {
-            return HasVariableFunction.class.getMethod("hasVariable", String.class);
-        } catch (Exception e) {
-            throw new RuntimeException("Method not found");
-        }
-    }
-
+    @ELFunction
     @SuppressWarnings("unchecked")
     public static boolean hasVariable(String name) {
         if (name == null || name.trim().isEmpty()) {
