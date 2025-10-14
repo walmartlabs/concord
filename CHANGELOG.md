@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.33.3] - 2025-10-14
+
+### Changed
+
+- repository: fix uri scheme restriction for ssh repo uris
+([#1226](https://github.com/walmartlabs/concord/pull/1226));
+
+
+
 ## [2.33.2] - 2025-10-09
 
 ### Changed
