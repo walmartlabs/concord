@@ -25,6 +25,7 @@ import org.immutables.value.Value;
 import javax.annotation.Nullable;
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
@@ -35,6 +36,11 @@ public interface GitClientConfiguration {
     
     @Nullable
     List<String> authorizedGitHosts();
+
+    @Value.Default
+    default Set<String> allowedSchemes() {
+        return Set.of("https", "http", "ssh", "classpath");
+    }
 
     @Value.Default
     default Duration defaultOperationTimeout() {
