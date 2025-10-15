@@ -23,8 +23,8 @@ package com.walmartlabs.concord.repository;
 import org.immutables.value.Value;
 
 import java.time.Duration;
-import java.util.Optional;
 import java.util.Set;
+import java.util.Optional;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
