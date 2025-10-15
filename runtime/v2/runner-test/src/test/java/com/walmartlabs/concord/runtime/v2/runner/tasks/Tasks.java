@@ -305,6 +305,18 @@ public final class Tasks {
             return result;
         }
 
+        @SensitiveData(paths = {"key.top-secret"})
+        public Map<String, Object> getSensitiveMapWithPath(String str) {
+            Map<String, Object> inner = new LinkedHashMap<>();
+            inner.put("top-secret", str);
+            inner.put("inner", "non secret value");
+
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("nonSecret", "non secret value");
+            result.put("key", inner);
+            return result;
+        }
+
         @SensitiveData(keys = {"secret"}, includeNestedValues = true)
         public Map<String, Object> getSensitiveMapWithNested(String str) {
             Map<String, Object> result = new LinkedHashMap<>();

@@ -1355,6 +1355,7 @@ public class MainTest  {
         assertLog(log, ".*" + Pattern.quote("map: {nonSecretButMasked=******, secret=******}") + ".*");
         assertLog(log, ".*" + Pattern.quote("map: {nonSecret=non secret value, secret=******}") + ".*");
         assertLog(log, ".*" + Pattern.quote("map.nested: {nonSecret=non secret value, secret={top-secret=******}}") + ".*");
+        assertLog(log, ".*" + Pattern.quote("map.path: {nonSecret=non secret value, key={top-secret=******, inner=non secret value}}") + ".*");
 
         assertLog(log, ".*" + Pattern.quote("plain: plain") + ".*");
 
