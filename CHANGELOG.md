@@ -1,5 +1,34 @@
 # Change Log
 
+## [2.33.3] - 2025-10-14
+
+### Changed
+
+- repository: fix uri scheme restriction for ssh repo uris
+([#1226](https://github.com/walmartlabs/concord/pull/1226));
+
+
+
+## [2.33.2] - 2025-10-09
+
+### Changed
+
+- concord-server: fix API key creation for the current user
+([#1222](https://github.com/walmartlabs/concord/pull/1222));
+
+
+
+## [2.33.1] - 2025-10-06
+
+### Changed
+
+- pfed-sso: upgrade nimbus-jose-jwt version
+([#1219](https://github.com/walmartlabs/concord/pull/1219));
+- server: fix usernameSignature generation
+([#1221](https://github.com/walmartlabs/concord/pull/1221));
+
+
+
 ## [2.33.0] - 2025-09-22
 
 ### Added

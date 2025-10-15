@@ -31,6 +31,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 public interface AuthTokenProvider {
 
@@ -70,7 +71,8 @@ public interface AuthTokenProvider {
 
     @SuppressWarnings("ClassCanBeRecord")
     class OauthTokenProvider implements AuthTokenProvider {
-
+        // >0 length, printable ascii (no newlines, etc)
+        private static final Pattern BASIC_STRING_PTN = Pattern.compile("[ -~]+");
         private final List<MappingAuthConfig> authConfigs;
 
         @Inject
@@ -85,6 +87,16 @@ public interface AuthTokenProvider {
 
         @Override
         public Optional<ExternalAuthToken> getToken(URI repo, @Nullable Secret secret) {
+            if (secret != null) {
+                if (secret instanceof BinaryDataSecret bds) {
+                    return Optional.of(ExternalAuthToken.StaticToken.builder()
+                            .token(new String(bds.getData()))
+                            .build());
+                } else {
+                    return Optional.empty();
+                }
+            }
+
             return authConfigs.stream()
                     .filter(auth -> auth.canHandle(repo))
                     .filter(MappingAuthConfig.OauthAuthConfig.class::isInstance)
@@ -105,9 +117,8 @@ public interface AuthTokenProvider {
                 // this class is not the place for handling key pairs or username/password
                 return false;
             } else {
-                String data = new String(bds.getData());
-                // >0 length, printable ascii (no newlines, etc)
-                return data.matches("[ -~]+");
+                var data = new String(bds.getData());
+                return BASIC_STRING_PTN.matcher(data).matches();
             }
         }
 

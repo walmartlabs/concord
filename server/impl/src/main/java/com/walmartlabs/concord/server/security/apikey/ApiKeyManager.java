@@ -68,7 +68,6 @@ public class ApiKeyManager {
         this.auditLog = requireNonNull(auditLog);
     }
 
-
     public CreateApiKeyResponse create(CreateApiKeyRequest req) {
         String key = assertKeyValue(req);
 
@@ -76,7 +75,11 @@ public class ApiKeyManager {
         if (userId == null) {
             userId = assertUsername(req.getUsername(), req.getUserDomain(), req.getUserType());
         }
-        
+
+        if (userId == null) {
+            userId = UserPrincipal.assertCurrent().getId();
+        }
+
         assertOwner(userId);
 
         String name = trim(req.getName());

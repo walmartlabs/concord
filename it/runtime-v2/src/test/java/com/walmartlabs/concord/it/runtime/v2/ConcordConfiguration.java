@@ -27,6 +27,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.util.Base64;
 
 public final class ConcordConfiguration {
 
@@ -44,6 +47,8 @@ public final class ConcordConfiguration {
                 throw new RuntimeException(e);
             }
         }
+
+        writePrivateKey(sharedDir.resolve("signing.pem"));
     }
 
     public static ConcordRule configure() {
@@ -66,8 +71,8 @@ public final class ConcordConfiguration {
                                 pollDelay = "250 milliseconds"
                             }
                         }
-                        git {
-                            allowedSchemes = [ "file", "https", "ssh", "classpath" ]
+                        process {
+                            signingKeyPath = "%%sharedDir%%/signing.pem"
                         }
                     }
                     concord-agent {
@@ -77,11 +82,8 @@ public final class ConcordConfiguration {
                         prefork {
                             enabled = true
                         }
-                        git {
-                            allowedSchemes = [ "file", "https", "ssh", "classpath" ]
-                        }
                     }
-                    """);
+                    """.replaceAll("%%sharedDir%%", sharedDir().toString()));
 
         boolean localMode = Boolean.parseBoolean(System.getProperty("it.local.mode"));
         if (localMode) {
@@ -105,6 +107,23 @@ public final class ConcordConfiguration {
             case REMOTE -> System.getProperty("it.remote.baseUrl");
             case DOCKER -> "http://server:8001";
         };
+    }
+
+    private static Path writePrivateKey(Path targetFile) {
+        try {
+            return Files.writeString(targetFile, generatePkcs8PemPrivateKey());
+        } catch (Exception e) {
+            throw new IllegalStateException("Error writing server username signing key.", e);
+        }
+    }
+
+    private static String generatePkcs8PemPrivateKey() throws Exception {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(2048);
+        KeyPair pair = keyGen.generateKeyPair();
+        byte[] pkcs8 = pair.getPrivate().getEncoded();
+        String base64 = Base64.getMimeEncoder(64, "\n".getBytes()).encodeToString(pkcs8);
+        return "-----BEGIN PRIVATE KEY-----\n" + base64 + "\n-----END PRIVATE KEY-----";
     }
 
     private ConcordConfiguration() {

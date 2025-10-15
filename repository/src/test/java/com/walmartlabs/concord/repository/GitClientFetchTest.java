@@ -56,7 +56,7 @@ public class GitClientFetchTest {
     @BeforeEach
     public void init() {
         client = new GitClient(GitClientConfiguration.builder()
-                .addAllAllowedSchemes(Arrays.asList("http", "https", "file"))
+                .addAllowedSchemes("file", "ssh")
                 .sshTimeout(Duration.ofMinutes(10))
                 .sshTimeoutRetryCount(1)
                 .httpLowSpeedLimit(1)

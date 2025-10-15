@@ -78,7 +78,7 @@ public class GithubRealm extends AuthorizingRealm {
     @WithTimer
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         UserPrincipal p = principals.oneByType(UserPrincipal.class);
-        if (!REALM_NAME.equals(p.getRealm())) {
+        if (p == null || !REALM_NAME.equals(p.getRealm())) {
             return null;
         }
 
