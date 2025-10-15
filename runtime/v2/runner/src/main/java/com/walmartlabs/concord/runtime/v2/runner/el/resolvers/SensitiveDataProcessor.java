@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el.resolvers;
  */
 
 import com.google.inject.Inject;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.SensitiveData;
 import com.walmartlabs.concord.runtime.v2.sdk.SensitiveDataHolder;
 
@@ -39,6 +40,7 @@ public class SensitiveDataProcessor {
         this.sensitiveDataHolder = sensitiveDataHolder;
     }
 
+    @SuppressWarnings("unchecked")
     public void process(Object value, Method method) {
         if (value == null || method == null) {
             return;
@@ -51,17 +53,44 @@ public class SensitiveDataProcessor {
 
         if (value instanceof String) {
             sensitiveDataHolder.add((String) value);
-        } else if (value instanceof Map<?, ?> m) {
-            var keys = a.keys() != null && a.keys().length > 0 ? new HashSet<Object>(Arrays.asList(a.keys())) : m.keySet();
+        }
 
-            for (var key : keys) {
-                var v = m.get(key);
-                if (v instanceof String) {
-                    sensitiveDataHolder.add((String) v);
-                } else if (a.includeNestedValues() && v instanceof Map<?,?> nested) {
-                    processNestedValues(nested, 0);
+        if (value instanceof Map<?, ?> m) {
+            collectFromMap((Map<String, Object>) m, a);
+        }
+    }
+
+    private void collectFromMap(Map<String, Object> m, SensitiveData a) {
+        // paths
+        if (a.paths() != null && a.paths().length > 0) {
+            for (var p : a.paths()) {
+                var path = p.split("\\.");
+                if (ConfigurationUtils.has(m, path)) {
+                    var v = ConfigurationUtils.get(m, path);
+                    collectValue(v, a);
                 }
             }
+            return;
+        }
+
+        // all keys or specific keys
+        var keys = (a.keys() != null && a.keys().length > 0)
+                ? new HashSet<>(Arrays.asList(a.keys()))
+                : m.keySet();
+
+        for (var key : keys) {
+            collectValue(m.get(key), a);
+        }
+    }
+
+    private void collectValue(Object v, SensitiveData a) {
+        if (v instanceof String s) {
+            sensitiveDataHolder.add(s);
+            return;
+        }
+
+        if (a.includeNestedValues() && v instanceof Map<?, ?> nested) {
+            processNestedValues(nested, 0);
         }
     }
 
