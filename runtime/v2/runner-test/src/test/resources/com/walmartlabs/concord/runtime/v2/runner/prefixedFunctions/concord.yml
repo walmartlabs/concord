@@ -1,0 +1,4 @@
+flows:
+  default:
+    - log: "${testGreet(name)}"
+    - log: "${testFunction:greet(name)}"
