@@ -5,9 +5,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+  <!-- Load config before app initialization -->
   <script src="/api/service/console/cfg"></script>
 
-  <link id="favicon" rel="shortcut icon" href="%PUBLIC_URL%/favicon.png">
+  <link id="favicon" rel="shortcut icon" href="/favicon.png">
   <base href="/" />
   <title>Concord</title>
 </head>
@@ -17,6 +18,9 @@
     You need to enable JavaScript to run this app.
   </noscript>
   <div id="root"></div>
+
+  <!-- Vite entry point -->
+  <script type="module" src="/src/index.tsx"></script>
 </body>
 
 </html>
