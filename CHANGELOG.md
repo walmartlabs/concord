@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.34.0] - Unreleased
+
+### Added
+
+- runtime-v2: allow plugins to supply custom EL functions
+([#1225](https://github.com/walmartlabs/concord/pull/1225)).
+
+
+
 ## [2.33.3] - 2025-10-14
 
 ### Changed
