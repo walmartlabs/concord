@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,20 +20,12 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.ELFunction;
 import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
-
-import java.lang.reflect.Method;
 
 public final class ThrowFunction {
 
-    public static Method getMethod() {
-        try {
-            return ThrowFunction.class.getMethod("throwError", String.class);
-        } catch (Exception e) {
-            throw new RuntimeException("Method not found");
-        }
-    }
-
+    @ELFunction("throw")
     public static Object throwError(String message) {
         throw new UserDefinedException(message);
     }

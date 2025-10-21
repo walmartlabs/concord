@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,21 +20,14 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.ELFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.ThreadLocalEvalContext;
 
-import java.lang.reflect.Method;
 import java.util.Map;
 
 public final class AllVariablesFunction {
 
-    public static Method getMethod() {
-        try {
-            return AllVariablesFunction.class.getMethod("allVariables");
-        } catch (Exception e) {
-            throw new RuntimeException("Method not found");
-        }
-    }
-
+    @ELFunction
     public static Map<String, Object> allVariables() {
         return ThreadLocalEvalContext.get()
                 .variables()

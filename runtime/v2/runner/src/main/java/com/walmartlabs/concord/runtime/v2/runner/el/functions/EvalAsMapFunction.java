@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,13 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.ELFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.ThreadLocalEvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.svm.Runtime;
 
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,14 +34,7 @@ import static com.walmartlabs.concord.common.ConfigurationUtils.deepMerge;
 
 public final class EvalAsMapFunction {
 
-    public static Method getMethod() {
-        try {
-            return EvalAsMapFunction.class.getMethod("evalAsMap", Object.class);
-        } catch (Exception e) {
-            throw new RuntimeException("Method not found");
-        }
-    }
-
+    @ELFunction
     @SuppressWarnings("unchecked")
     public static Map<String, Object> evalAsMap(Object value) {
         Context ctx = ThreadLocalEvalContext.get().context();

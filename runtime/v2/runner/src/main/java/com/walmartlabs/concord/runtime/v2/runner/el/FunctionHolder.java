@@ -22,21 +22,23 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class FunctionMapper extends javax.el.FunctionMapper {
+public class FunctionHolder {
 
-    private final Map<String, Method> functions;
+    private final Map<String, Method> functions = new ConcurrentHashMap<>();
 
-    public FunctionMapper(Map<String, Method> functions) {
-        this.functions = functions;
+    public FunctionHolder register(String name, Method method) {
+        functions.put(name, method);
+        return this;
     }
 
-    @Override
-    public Method resolveFunction(String prefix, String localName) {
-        if (prefix == null || prefix.trim().isEmpty()) {
-            return functions.get(localName);
-        }
+    public Method resolve(String name) {
+        return functions.get(name);
+    }
 
-        return functions.get(prefix + ":" + localName);
+    public Set<String> names() {
+        return Set.copyOf(functions.keySet());
     }
 }
