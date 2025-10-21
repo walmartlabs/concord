@@ -1,0 +1,6 @@
+flows:
+  default:
+    - set:
+        regularValue: "regularValue"
+        secretValue: "${mask(regularValue)}"
+    - log: "The 'regularValue' is masked now"
