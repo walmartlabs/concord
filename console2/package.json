@@ -2,6 +2,7 @@
     "name": "concord-console",
     "version": "1.0.0",
     "private": true,
+    "type": "module",
     "devDependencies": {
         "@babel/preset-react": "7.16.0",
         "@datasert/cronjs-matcher": "^1.4.0",
