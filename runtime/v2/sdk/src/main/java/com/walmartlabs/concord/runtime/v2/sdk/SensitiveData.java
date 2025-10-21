@@ -51,7 +51,5 @@ public @interface SensitiveData {
 
     String[] keys() default {};
 
-    String[] paths() default {};
-
     boolean includeNestedValues() default false;
 }

@@ -61,25 +61,18 @@ public class SensitiveDataProcessor {
     }
 
     private void collectFromMap(Map<String, Object> m, SensitiveData a) {
-        // paths
-        if (a.paths() != null && a.paths().length > 0) {
-            for (var p : a.paths()) {
-                var path = p.split("\\.");
+        if (a.keys() != null && a.keys().length > 0) {
+            for (var k : a.keys()) {
+                var path = k.split("\\.");
                 if (ConfigurationUtils.has(m, path)) {
                     var v = ConfigurationUtils.get(m, path);
                     collectValue(v, a);
                 }
             }
-            return;
-        }
-
-        // all keys or specific keys
-        var keys = (a.keys() != null && a.keys().length > 0)
-                ? new HashSet<>(Arrays.asList(a.keys()))
-                : m.keySet();
-
-        for (var key : keys) {
-            collectValue(m.get(key), a);
+        } else {
+            for (var key : m.keySet()) {
+                collectValue(m.get(key), a);
+            }
         }
     }
 

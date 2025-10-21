@@ -305,7 +305,7 @@ public final class Tasks {
             return result;
         }
 
-        @SensitiveData(paths = {"key.top-secret"})
+        @SensitiveData(keys = {"key.top-secret"})
         public Map<String, Object> getSensitiveMapWithPath(String str) {
             Map<String, Object> inner = new LinkedHashMap<>();
             inner.put("top-secret", str);
