@@ -30,7 +30,7 @@ import { AnyAction, Dispatch } from 'redux';
 import { ConcordKey } from '../../../../api/common';
 import { actions } from '../../../../state/data/processes';
 import { isFinal, ProcessStatus } from '../../../../api/process';
-import { isFunction } from 'util';
+import { isFunction } from 'lodash';
 
 interface ExternalProps {
     children?: RenderCallback;

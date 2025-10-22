@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,24 +17,13 @@
  * limitations under the License.
  * =====
  */
+/// <reference types="vite/client" />
 
-import * as React from 'react';
-import { createRoot } from 'react-dom/client';
+interface ImportMetaEnv {
+  readonly VITE_CONCORD_VERSION?: string;
+  // Add other env variables as needed
+}
 
-import 'typeface-lato';
-import 'semantic-ui-css/semantic.min.css';
-
-import App from './App';
-import './index.css';
-
-const rootEl = document.getElementById('root') as HTMLElement;
-const root = createRoot(rootEl);
-
-root.render(<App />);
-
-// remove any old service worker
-if (navigator.serviceWorker) {
-    navigator.serviceWorker
-        .getRegistrations()
-        .then((regs) => regs.forEach((reg) => reg.unregister()));
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
 }
