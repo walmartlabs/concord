@@ -7,6 +7,11 @@
 - runtime-v2: allow plugins to supply custom EL functions
 ([#1225](https://github.com/walmartlabs/concord/pull/1225)).
 
+### Changed
+
+- concord-console2: migrate off CRA to Vite
+([#1231](https://github.com/walmartlabs/concord/pull/1231)).
+
 
 
 ## [2.33.3] - 2025-10-14
