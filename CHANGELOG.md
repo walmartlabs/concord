@@ -5,7 +5,9 @@
 ### Added
 
 - runtime-v2: allow plugins to supply custom EL functions
-([#1225](https://github.com/walmartlabs/concord/pull/1225)).
+([#1225](https://github.com/walmartlabs/concord/pull/1225));
+- runtime-v2: add EL function to mark strings as sensitive
+([#1230](https://github.com/walmartlabs/concord/pull/1230)).
 
 ### Changed
 
