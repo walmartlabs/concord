@@ -27,9 +27,9 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
 import com.walmartlabs.concord.runtime.v2.runner.el.DefaultExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.sdk.ELFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.FunctionHolder;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.*;
+import com.walmartlabs.concord.runtime.v2.sdk.ELFunction;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 
 import java.lang.reflect.Modifier;
@@ -84,6 +84,7 @@ public class ExpressionSupportModule implements Module {
         binder.bind(HasVariableFunction.class).asEagerSingleton();
         binder.bind(IsDebugFunction.class).asEagerSingleton();
         binder.bind(IsDryRunFunction.class).asEagerSingleton();
+        binder.bind(MarkAsSensitiveFunction.class).asEagerSingleton();
         binder.bind(OrDefaultFunction.class).asEagerSingleton();
         binder.bind(ThrowFunction.class).asEagerSingleton();
         binder.bind(UuidFunction.class).asEagerSingleton();
