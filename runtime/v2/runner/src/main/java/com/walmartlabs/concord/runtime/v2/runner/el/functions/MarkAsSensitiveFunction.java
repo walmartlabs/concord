@@ -27,18 +27,18 @@ import javax.inject.Inject;
 
 import static java.util.Objects.requireNonNull;
 
-public class MaskFunction {
+public class MarkAsSensitiveFunction {
 
     private static SensitiveDataHolder sensitiveData;
 
     @Inject
-    public MaskFunction(SensitiveDataHolder sensitiveData) {
-        MaskFunction.sensitiveData = requireNonNull(sensitiveData);
+    public MarkAsSensitiveFunction(SensitiveDataHolder sensitiveData) {
+        MarkAsSensitiveFunction.sensitiveData = requireNonNull(sensitiveData);
     }
 
     @ELFunction
-    public static String mask(Object v) {
-        if (MaskFunction.sensitiveData == null) {
+    public static String sensitive(Object v) {
+        if (MarkAsSensitiveFunction.sensitiveData == null) {
             throw new IllegalStateException("MaskFunction must be initialized first");
         }
 
@@ -54,6 +54,6 @@ public class MaskFunction {
             return s;
         }
 
-        throw new IllegalArgumentException("Only string values can be masked. Got a " + v.getClass());
+        throw new IllegalArgumentException("Only string values can be masked. Got a " + v.getClass() + " instead");
     }
 }

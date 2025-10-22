@@ -1761,8 +1761,8 @@ public class MainTest  {
     }
 
     @Test
-    public void maskFunction() throws Exception {
-        deploy("maskFunction");
+    public void sensitiveFunction() throws Exception {
+        deploy("sensitiveFunction");
 
         save(ProcessConfiguration.builder().build());
 

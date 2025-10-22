@@ -2,5 +2,5 @@ flows:
   default:
     - set:
         regularValue: "regularValue"
-        secretValue: "${mask(regularValue)}"
+        secretValue: "${sensitive(regularValue)}"
     - log: "The 'regularValue' is masked now"

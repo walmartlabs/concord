@@ -84,7 +84,7 @@ public class ExpressionSupportModule implements Module {
         binder.bind(HasVariableFunction.class).asEagerSingleton();
         binder.bind(IsDebugFunction.class).asEagerSingleton();
         binder.bind(IsDryRunFunction.class).asEagerSingleton();
-        binder.bind(MaskFunction.class).asEagerSingleton();
+        binder.bind(MarkAsSensitiveFunction.class).asEagerSingleton();
         binder.bind(OrDefaultFunction.class).asEagerSingleton();
         binder.bind(ThrowFunction.class).asEagerSingleton();
         binder.bind(UuidFunction.class).asEagerSingleton();
