@@ -1760,6 +1760,17 @@ public class MainTest  {
         assertLog(runtime.allLogs(), ".*Hello, world!.*");
     }
 
+    @Test
+    public void sensitiveFunction() throws Exception {
+        deploy("sensitiveFunction");
+
+        save(ProcessConfiguration.builder().build());
+
+        run();
+
+        assertLog(runtime.allLogs(), ".*" + Pattern.quote("The '******' is masked now") + ".*");
+    }
+
     private void deploy(String name) throws URISyntaxException, IOException {
         runtime.deploy(name);
     }

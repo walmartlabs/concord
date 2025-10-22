@@ -1,5 +1,3 @@
-package com.walmartlabs.concord.runtime.v2.runner.functions;
-
 /*-
  * *****
  * Concord
@@ -19,21 +17,13 @@ package com.walmartlabs.concord.runtime.v2.runner.functions;
  * limitations under the License.
  * =====
  */
+/// <reference types="vite/client" />
 
-import com.walmartlabs.concord.runtime.v2.sdk.ELFunction;
+interface ImportMetaEnv {
+  readonly VITE_CONCORD_VERSION?: string;
+  // Add other env variables as needed
+}
 
-import javax.inject.Named;
-
-@Named
-public class TestFunction {
-
-    @ELFunction("testGreet")
-    public static String regularGreet(String name) {
-        return "Hi, " + name + "!";
-    }
-
-    @ELFunction("testFunction:greet")
-    public static String prefixedGreet(String name) {
-        return "Hello, " + name + "!";
-    }
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
 }
