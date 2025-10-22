@@ -28,8 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class AnsibleEventIT extends AbstractServerIT {
@@ -135,7 +134,7 @@ public class AnsibleEventIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(pe.getInstanceId());
-        assertLog(".*'msg' is undefined.*", ab);
+        assertLogAtLeast(".*'msg' is undefined.*", 1, ab);
 
         // ---
 
