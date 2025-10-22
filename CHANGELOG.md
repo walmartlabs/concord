@@ -12,7 +12,10 @@
 ### Changed
 
 - concord-console2: migrate off CRA to Vite
-([#1231](https://github.com/walmartlabs/concord/pull/1231)).
+([#1231](https://github.com/walmartlabs/concord/pull/1231));
+- concord-server-it: fix testFailedHosts for modern Ansible
+versions
+([#1232](https://github.com/walmartlabs/concord/pull/1232)).
 
 
 
