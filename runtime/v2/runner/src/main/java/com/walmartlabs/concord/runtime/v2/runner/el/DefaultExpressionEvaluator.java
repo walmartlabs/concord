@@ -36,10 +36,11 @@ public class DefaultExpressionEvaluator implements ExpressionEvaluator {
 
     @Inject
     public DefaultExpressionEvaluator(TaskProviders taskProviders,
+                                      FunctionHolder functionHolder,
                                       List<CustomTaskMethodResolver> taskMethodResolvers,
                                       List<CustomBeanMethodResolver> beanMethodResolvers,
                                       SensitiveDataProcessor sensitiveDataProcessor) {
-        this.delegate = new LazyExpressionEvaluator(taskProviders, taskMethodResolvers, beanMethodResolvers, sensitiveDataProcessor);
+        this.delegate = new LazyExpressionEvaluator(taskProviders, functionHolder, taskMethodResolvers, beanMethodResolvers, sensitiveDataProcessor);
     }
 
     @Override

@@ -1,5 +1,3 @@
-package com.walmartlabs.concord.runtime.v2.runner.el.functions;
-
 /*-
  * *****
  * Concord
@@ -9,9 +7,9 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,20 +17,13 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * limitations under the License.
  * =====
  */
+/// <reference types="vite/client" />
 
-import com.walmartlabs.concord.runtime.v2.sdk.ELFunction;
-import com.walmartlabs.concord.runtime.v2.runner.el.ThreadLocalEvalContext;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
+interface ImportMetaEnv {
+  readonly VITE_CONCORD_VERSION?: string;
+  // Add other env variables as needed
+}
 
-public final class CurrentFlowNameFunction {
-
-    @ELFunction
-    public static String currentFlowName() {
-        Context ctx = ThreadLocalEvalContext.get().context();
-        if (ctx == null) {
-            return null;
-        }
-
-        return ctx.execution().currentFlowName();
-    }
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
 }

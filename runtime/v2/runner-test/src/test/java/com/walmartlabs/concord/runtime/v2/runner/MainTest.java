@@ -1747,6 +1747,31 @@ public class MainTest  {
         assertLog(runtime.allLogs(), ".*" + Pattern.quote("out as map with loop: [abc_0, abc_1]") + ".*");
     }
 
+    @Test
+    public void prefixedFunctionsInExpressions() throws Exception {
+        deploy("prefixedFunctions");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("name", "world")
+                .build());
+
+        run();
+
+        assertLog(runtime.allLogs(), ".*Hi, world!.*");
+        assertLog(runtime.allLogs(), ".*Hello, world!.*");
+    }
+
+    @Test
+    public void sensitiveFunction() throws Exception {
+        deploy("sensitiveFunction");
+
+        save(ProcessConfiguration.builder().build());
+
+        run();
+
+        assertLog(runtime.allLogs(), ".*" + Pattern.quote("The '******' is masked now") + ".*");
+    }
+
     private void deploy(String name) throws URISyntaxException, IOException {
         runtime.deploy(name);
     }
