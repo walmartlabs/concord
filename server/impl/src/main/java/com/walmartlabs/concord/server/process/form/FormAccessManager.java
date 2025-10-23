@@ -26,8 +26,8 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
-import com.walmartlabs.concord.server.security.ldap.LdapUserInfoProvider;
+import com.walmartlabs.concord.server.user.UserInfoProvider;
+import com.walmartlabs.concord.server.user.UserManager;
 import io.takari.bpm.form.Form;
 
 import javax.inject.Inject;
@@ -38,7 +38,6 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,12 +48,12 @@ public class FormAccessManager {
     private static final Pattern GROUP_PATTERN = Pattern.compile("CN=(.*?),", Pattern.CASE_INSENSITIVE);
 
     private final ProcessStateManager stateManager;
-    private final LdapUserInfoProvider ldapUserInfoProvider;
+    private final UserManager userManager;
 
     @Inject
-    public FormAccessManager(ProcessStateManager stateManager, LdapUserInfoProvider ldapUserInfoProvider) {
+    public FormAccessManager(ProcessStateManager stateManager, UserManager userManager) {
         this.stateManager = stateManager;
-        this.ldapUserInfoProvider = ldapUserInfoProvider;
+        this.userManager = userManager;
     }
 
     @SuppressWarnings("unchecked")
@@ -93,35 +92,20 @@ public class FormAccessManager {
                     "the necessary permissions to access the form.");
         }
 
-        Set<String> groups = com.walmartlabs.concord.forms.FormUtils.getRunAsLdapGroups(formName, runAsParams);
-        if (!groups.isEmpty()) {
-            Set<String> userLdapGroups = getLdapPrincipalGroups(p, ldapUserInfoProvider, LdapPrincipal::getCurrent);
+        Set<String> formRunAsGroups = com.walmartlabs.concord.forms.FormUtils.getRunAsLdapGroups(formName, runAsParams);
+        if (!formRunAsGroups.isEmpty()) {
+            Set<String> userLdapGroups = Optional.ofNullable(userManager.getCurrentUserInfo())
+                    .map(UserInfoProvider.UserInfo::groups)
+                    .orElseGet(Set::of);
 
-            boolean isGroupMatched = groups.stream()
+            boolean isGroupMatched = formRunAsGroups.stream()
                     .anyMatch(group -> matchesLdapGroup(group, userLdapGroups));
 
             if (!isGroupMatched) {
                 throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
-                        "the necessary permissions to resume process. Expected LDAP group(s) '" + groups + "'");
+                        "the necessary permissions to resume process. Expected LDAP group(s) '" + formRunAsGroups + "'");
             }
         }
-    }
-
-    static Set<String> getLdapPrincipalGroups(UserPrincipal p,
-                                              LdapUserInfoProvider ldapUserInfoProvider,
-                                              Supplier<LdapPrincipal> currentPrincipalSupplier) {
-        if (p == null) {
-            return Set.of();
-        }
-
-        if (p.getRealm().equals("apikey")) {
-            // apikey realm doesn't look up groups by default, get them now
-            return ldapUserInfoProvider.getInfo(null, p.getUsername(), p.getDomain()).groups();
-        }
-
-        return Optional.ofNullable(currentPrincipalSupplier.get())
-                .map(LdapPrincipal::getGroups)
-                .orElseGet(Set::of);
     }
 
     // TODO: move to the formManager
