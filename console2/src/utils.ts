@@ -18,7 +18,6 @@
  * =====
  */
 
-import { default as AnsiUp } from 'ansi_up';
 import { format as formatDate, parseISO as parseDate } from 'date-fns';
 
 interface HasName {
@@ -165,8 +164,89 @@ export interface HighlighterProps {
     global?: boolean;
 }
 
-const ansiUp = new AnsiUp();
-ansiUp.escape_for_html = false;
+const ansiToHtml = (text: string): string => {
+    // matches ansi_up color definitions
+    const colorMap: { [key: number]: string } = {
+        30: '#000000', // black
+        31: '#bb0000', // red
+        32: '#00bb00', // green
+        33: '#bbbb00', // yellow
+        34: '#0000bb', // blue
+        35: '#bb00bb', // magenta
+        36: '#00bbbb', // cyan
+        37: '#ffffff', // white
+        90: '#555555', // bright black
+        91: '#ff5555', // bright red
+        92: '#00ff00', // bright green
+        93: '#ffff55', // bright yellow
+        94: '#5555ff', // bright blue
+        95: '#ff55ff', // bright magenta
+        96: '#55ffff', // bright cyan
+        97: '#ffffff'  // bright white
+    };
+
+    let result = '';
+    let currentColor: string | null = null;
+    let isBold = false;
+    let openSpan = false;
+
+    const ansiRegex = /\x1b\[([0-9;]+)m/g;
+    let lastIndex = 0;
+
+    let match: RegExpExecArray;
+    while ((match = ansiRegex.exec(text)) !== null) {
+        // Add text before this escape sequence
+        if (match.index > lastIndex) {
+            result += text.substring(lastIndex, match.index);
+        }
+
+        const codes = match[1].split(';').map(Number);
+
+        for (const code of codes) {
+            if (code === 0) {
+                if (openSpan) {
+                    result += '</span>';
+                    openSpan = false;
+                }
+                currentColor = null;
+                isBold = false;
+            } else if (code === 1) {
+                isBold = true;
+            } else if (colorMap[code] !== undefined) {
+                currentColor = colorMap[code];
+            }
+        }
+
+        if (openSpan) {
+            result += '</span>';
+            openSpan = false;
+        }
+
+        if (currentColor || isBold) {
+            let style = '';
+            if (currentColor) {
+                style += `color: ${currentColor};`;
+            }
+            if (isBold) {
+                style += 'font-weight: bold;';
+            }
+            result += `<span style="${style}">`;
+            openSpan = true;
+        }
+
+        lastIndex = ansiRegex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+        result += text.substring(lastIndex);
+    }
+
+    if (openSpan) {
+        result += '</span>';
+    }
+
+    return result;
+};
 
 export const highlight = (value: string, props: HighlighterProps): string => {
     const { config, caseInsensitive = false, global = true } = props;
@@ -186,7 +266,7 @@ export const highlight = (value: string, props: HighlighterProps): string => {
         }
     }
 
-    txt = ansiUp.ansi_to_html(txt);
+    txt = ansiToHtml(txt);
 
     return txt;
 };

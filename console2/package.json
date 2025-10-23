@@ -37,7 +37,6 @@
     },
     "dependencies": {
         "@monaco-editor/react": "4.3.1",
-        "ansi_up": "4.0.4",
         "connected-react-router": "6.9.2",
         "constate": "3.3.0",
         "copy-to-clipboard": "3.3.1",
