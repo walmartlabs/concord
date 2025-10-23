@@ -15,7 +15,9 @@
 ([#1231](https://github.com/walmartlabs/concord/pull/1231));
 - concord-server-it: fix testFailedHosts for modern Ansible
 versions
-([#1232](https://github.com/walmartlabs/concord/pull/1232)).
+([#1232](https://github.com/walmartlabs/concord/pull/1232));
+- project: update dependencies
+([#1234](https://github.com/walmartlabs/concord/pull/1234)).
 
 
 
