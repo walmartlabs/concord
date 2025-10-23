@@ -18,8 +18,8 @@
  * =====
  */
 
-import { default as AnsiUp } from 'ansi_up';
 import { format as formatDate, parseISO as parseDate } from 'date-fns';
+import {AnsiUp} from "ansi_up/ansi_up";
 
 interface HasName {
     name: string;
@@ -166,7 +166,7 @@ export interface HighlighterProps {
 }
 
 const ansiUp = new AnsiUp();
-ansiUp.escape_for_html = false;
+ansiUp.escape_html = false;
 
 export const highlight = (value: string, props: HighlighterProps): string => {
     const { config, caseInsensitive = false, global = true } = props;
