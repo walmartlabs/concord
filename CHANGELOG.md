@@ -11,7 +11,6 @@
 - runtime-v2: add EL function to mark strings as sensitive
 ([#1230](https://github.com/walmartlabs/concord/pull/1230)).
 
-
 ### Changed
 
 - concord-console2: migrate off CRA to Vite
@@ -20,7 +19,9 @@
 versions
 ([#1232](https://github.com/walmartlabs/concord/pull/1232));
 - project: update dependencies
-([#1234](https://github.com/walmartlabs/concord/pull/1234)).
+([#1234](https://github.com/walmartlabs/concord/pull/1234));
+- concord-console2: update dependencies, README
+([#1235](https://github.com/walmartlabs/concord/pull/1235)).
 
 
 
