@@ -24,6 +24,7 @@ package com.walmartlabs.concord.server.events.github;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 
+import java.net.URI;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -99,7 +100,7 @@ public final class GithubUtils {
 
     private static String getRepoPath(String repoUrl) {
         // tests support
-        if (repoUrl.startsWith("/")) {
+        if (repoUrl.startsWith("/") || repoUrl.startsWith("file://")) {
             String[] folders = repoUrl.split("/");
             if (folders.length < 2) {
                 return repoUrl;

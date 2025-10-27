@@ -86,7 +86,7 @@ public final class ITUtils {
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 
-        return tmpDir.toAbsolutePath().toString();
+        return "file://" + tmpDir.toAbsolutePath().toString();
     }
 
     public static String randomString() {

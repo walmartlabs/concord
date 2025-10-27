@@ -45,7 +45,7 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
             repo.commit().setMessage("import").call();
         }
 
-        String gitUrl = tmpDir.toAbsolutePath().toString();
+        String gitUrl = "file://" + tmpDir.toAbsolutePath().toString();
 
         // ---
 
@@ -100,7 +100,7 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
             repo.commit().setMessage("import").call();
         }
 
-        String gitUrl = tmpDir.toAbsolutePath().toString();
+        String gitUrl = "file://" + tmpDir.toAbsolutePath().toString();
 
         // ---
 
@@ -156,7 +156,7 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
             repo.commit().setMessage("import").call();
         }
 
-        String gitUrl = tmpDir.toAbsolutePath().toString();
+        String gitUrl = "file://" + tmpDir.toAbsolutePath().toString();
 
         // ---
 

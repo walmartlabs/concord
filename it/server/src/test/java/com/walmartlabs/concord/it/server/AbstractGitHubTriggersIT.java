@@ -62,7 +62,7 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
 
         RepositoryEntry repo = new RepositoryEntry()
                 .branch(repoBranch != null ? repoBranch : "master")
-                .url(bareRepo.toAbsolutePath().toString());
+                .url("file://" + bareRepo.toAbsolutePath().toString());
 
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)

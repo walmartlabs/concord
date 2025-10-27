@@ -50,7 +50,7 @@ public class ProjectIT extends AbstractServerIT {
             repo.commit().setMessage("import").call();
         }
 
-        String gitUrl = tmpDir.toAbsolutePath().toString();
+        String gitUrl = "file://" +  tmpDir.toAbsolutePath().toString();
 
         // ---
 
@@ -88,7 +88,7 @@ public class ProjectIT extends AbstractServerIT {
             repo.commit().setMessage("import").call();
         }
 
-        String gitUrl = tmpDir.toAbsolutePath().toString();
+        String gitUrl = "file://" + tmpDir.toAbsolutePath().toString();
 
         // ---
 
@@ -137,7 +137,7 @@ public class ProjectIT extends AbstractServerIT {
             repo.add().addFilepattern(".").call();
             repo.commit().setMessage("commit-2").call();
 
-            String gitUrl = tmpDir.toAbsolutePath().toString();
+            String gitUrl = "file://" + tmpDir.toAbsolutePath().toString();
 
             // ---
 
@@ -189,7 +189,7 @@ public class ProjectIT extends AbstractServerIT {
             repo.commit().setMessage("commit-2").call();
         }
 
-        String gitUrl = tmpDir.toAbsolutePath().toString();
+        String gitUrl = "file://" + tmpDir.toAbsolutePath().toString();
 
         // ---
         String projectName = "myProject_" + randomString();
@@ -221,7 +221,7 @@ public class ProjectIT extends AbstractServerIT {
             repo.commit().setMessage("import").call();
         }
 
-        String gitUrl = tmpDir.toAbsolutePath().toString();
+        String gitUrl = "file://" + tmpDir.toAbsolutePath().toString();
 
         // ---
 
@@ -258,7 +258,7 @@ public class ProjectIT extends AbstractServerIT {
             repo.commit().setMessage("import").call();
         }
 
-        String gitUrl = tmpDir.toAbsolutePath().toString();
+        String gitUrl = "file://" + tmpDir.toAbsolutePath().toString();
 
         // ---
 
@@ -292,7 +292,7 @@ public class ProjectIT extends AbstractServerIT {
                 repo.commit().setMessage("import").call();
             }
 
-            String gitUrl = tmpDir.toAbsolutePath().toString();
+            String gitUrl = "file://" + tmpDir.toAbsolutePath().toString();
 
             // ---
 
@@ -327,7 +327,7 @@ public class ProjectIT extends AbstractServerIT {
                 repo.commit().setMessage("import").call();
             }
 
-            String gitUrl = tmpDir.toAbsolutePath().toString();
+            String gitUrl = "file://" + tmpDir.toAbsolutePath().toString();
 
             // ---
 
@@ -362,7 +362,7 @@ public class ProjectIT extends AbstractServerIT {
                 repo.commit().setMessage("import").call();
             }
 
-            String gitUrl = tmpDir.toAbsolutePath().toString();
+            String gitUrl = "file://" + tmpDir.toAbsolutePath().toString();
 
             // ---
             String orgName = "Default";

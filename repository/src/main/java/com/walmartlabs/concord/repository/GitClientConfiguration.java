@@ -22,20 +22,19 @@ package com.walmartlabs.concord.repository;
 
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
 import java.time.Duration;
-import java.util.List;
 import java.util.Set;
+import java.util.Optional;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
 public interface GitClientConfiguration {
 
-    @Nullable
-    String oauthToken();
-    
-    @Nullable
-    List<String> authorizedGitHosts();
+    Optional<String> oauthToken();
+
+    Optional<String> oauthUsername();
+
+    Optional<String> oauthUrlPattern();
 
     @Value.Default
     default Set<String> allowedSchemes() {

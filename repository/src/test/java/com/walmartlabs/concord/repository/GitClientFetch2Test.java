@@ -20,17 +20,22 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,18 +43,23 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * test for checkout prev commitId on master branch + checkAlreadyFetched=true
  */
+@ExtendWith(MockitoExtension.class)
 public class GitClientFetch2Test {
 
     private GitClient client;
 
+    @Mock
+    AuthTokenProvider authProvider;
+
     @BeforeEach
     public void init() {
         client = new GitClient(GitClientConfiguration.builder()
+                .addAllAllowedSchemes(Arrays.asList("http", "https", "file"))
                 .sshTimeout(Duration.ofMinutes(10))
                 .sshTimeoutRetryCount(1)
                 .httpLowSpeedLimit(1)
                 .httpLowSpeedTime(Duration.ofMinutes(10))
-                .build());
+                .build(), authProvider);
     }
 
     @Test
@@ -60,13 +70,13 @@ public class GitClientFetch2Test {
 
         try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             // fetch master
-            fetch(repo.toString(), "master", null, repoPath.path());
+            fetch(repo, "master", null, repoPath.path());
             assertContent(repoPath, "master.txt", "master");
             assertContent(repoPath, "0_concord.yml", "0-concord-content");
             assertContent(repoPath, "1_concord.yml", "1-concord-content");
 
             // fetch master+prev commitId
-            fetch(repo.toString(), "master", commit0.name(), repoPath.path());
+            fetch(repo, "master", commit0.name(), repoPath.path());
             assertNoContent(repoPath, "1_concord.yml");
         }
     }
@@ -79,7 +89,7 @@ public class GitClientFetch2Test {
 
         try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             // fetch master
-            fetch(repo.toString(), "master", null, repoPath.path());
+            fetch(repo, "master", null, repoPath.path());
             assertContent(repoPath, "master.txt", "master");
             assertContent(repoPath, "0_concord.yml", "0-concord-content");
             assertContent(repoPath, "1_concord.yml", "1-concord-content");
@@ -87,7 +97,7 @@ public class GitClientFetch2Test {
             System.out.println("fetching prev commit");
 
             // fetch prev commitId
-            fetch(repo.toString(), null, commit0.name(), repoPath.path());
+            fetch(repo, null, commit0.name(), repoPath.path());
             assertNoContent(repoPath, "1_concord.yml");
         }
     }
@@ -100,7 +110,7 @@ public class GitClientFetch2Test {
 
         try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             // fetch master
-            fetch(repo.toString(), "master", null, repoPath.path());
+            fetch(repo, "master", null, repoPath.path());
             assertContent(repoPath, "master.txt", "master");
             assertContent(repoPath, "0_concord.yml", "0-concord-content");
             assertContent(repoPath, "1_concord.yml", "1-concord-content");
@@ -108,14 +118,14 @@ public class GitClientFetch2Test {
             System.out.println("refetching");
 
             // refetch master
-            fetch(repo.toString(), "master", null, repoPath.path());
+            fetch(repo, "master", null, repoPath.path());
             assertContent(repoPath, "1_concord.yml", "1-concord-content");
         }
     }
 
-    private String fetch(String repoUri, String branch, String commitId, Path dest) {
+    private String fetch(Path repo, String branch, String commitId, Path dest) {
         return client.fetch(FetchRequest.builder()
-                .url(repoUri)
+                .url("file://" + repo.toString())
                 .version(FetchRequest.Version.commitWithBranch(commitId, branch))
                 .destination(dest)
                 .shallow(true)

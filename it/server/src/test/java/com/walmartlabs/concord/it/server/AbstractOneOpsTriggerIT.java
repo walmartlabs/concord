@@ -101,7 +101,7 @@ public abstract class AbstractOneOpsTriggerIT extends AbstractServerIT {
 
         RepositoryEntry repo = new RepositoryEntry()
                 .branch("master")
-                .url(bareRepo.toAbsolutePath().toString());
+                .url("file://" + bareRepo.toAbsolutePath().toString());
 
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)

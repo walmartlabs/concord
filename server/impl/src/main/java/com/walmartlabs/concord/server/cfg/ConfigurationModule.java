@@ -23,7 +23,9 @@ package com.walmartlabs.concord.server.cfg;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.typesafe.config.Config;
+import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
 import com.walmartlabs.concord.config.ConfigModule;
+import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
 
 import static com.google.inject.Scopes.SINGLETON;
 
@@ -52,7 +54,9 @@ public class ConfigurationModule implements Module {
         binder.bind(EnqueueWorkersConfiguration.class).in(SINGLETON);
         binder.bind(ExternalEventsConfiguration.class).in(SINGLETON);
         binder.bind(GitConfiguration.class).in(SINGLETON);
-        binder.bind(GithubConfiguration.class).in(SINGLETON);
+        binder.bind(OauthTokenConfig.class).to(GitConfiguration.class).in(SINGLETON);
+        binder.bind(GitHubConfiguration.class).in(SINGLETON);
+        binder.bind(GitHubAppInstallationConfig.class).to(GitHubConfiguration.class).in(SINGLETON);
         binder.bind(ImportConfiguration.class).in(SINGLETON);
         binder.bind(LdapConfiguration.class).in(SINGLETON);
         binder.bind(LdapGroupSyncConfiguration.class).in(SINGLETON);
