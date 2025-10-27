@@ -155,7 +155,7 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
         }
     }
 
-    protected void expectNoProceses(String orgName, String projectName, OffsetDateTime afterCreatedAt) throws Exception {
+    protected void expectNoProcesses(String orgName, String projectName, OffsetDateTime afterCreatedAt) throws Exception {
         ProcessV2Api processApi = new ProcessV2Api(getApiClient());
         ProcessListFilter filter = ProcessListFilter.builder()
                 .orgName(orgName)
