@@ -24,7 +24,9 @@ assertion
 - project: update dependencies
 ([#1234](https://github.com/walmartlabs/concord/pull/1234));
 - concord-console2: update dependencies, README
-([#1235](https://github.com/walmartlabs/concord/pull/1235)).
+([#1235](https://github.com/walmartlabs/concord/pull/1235));
+- concord-server-it: improve test
+([#1236](https://github.com/walmartlabs/concord/pull/1236)).
 
 
 
