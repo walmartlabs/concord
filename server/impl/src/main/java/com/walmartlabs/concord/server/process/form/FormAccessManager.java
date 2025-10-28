@@ -26,7 +26,8 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
+import com.walmartlabs.concord.server.user.UserInfoProvider;
+import com.walmartlabs.concord.server.user.UserManager;
 import io.takari.bpm.form.Form;
 
 import javax.inject.Inject;
@@ -47,10 +48,12 @@ public class FormAccessManager {
     private static final Pattern GROUP_PATTERN = Pattern.compile("CN=(.*?),", Pattern.CASE_INSENSITIVE);
 
     private final ProcessStateManager stateManager;
+    private final UserManager userManager;
 
     @Inject
-    public FormAccessManager(ProcessStateManager stateManager) {
+    public FormAccessManager(ProcessStateManager stateManager, UserManager userManager) {
         this.stateManager = stateManager;
+        this.userManager = userManager;
     }
 
     @SuppressWarnings("unchecked")
@@ -89,18 +92,18 @@ public class FormAccessManager {
                     "the necessary permissions to access the form.");
         }
 
-        Set<String> groups = com.walmartlabs.concord.forms.FormUtils.getRunAsLdapGroups(formName, runAsParams);
-        if (!groups.isEmpty()) {
-            Set<String> userLdapGroups = Optional.ofNullable(LdapPrincipal.getCurrent())
-                    .map(LdapPrincipal::getGroups)
-                    .orElse(null);
+        Set<String> formRunAsGroups = com.walmartlabs.concord.forms.FormUtils.getRunAsLdapGroups(formName, runAsParams);
+        if (!formRunAsGroups.isEmpty()) {
+            Set<String> userLdapGroups = Optional.ofNullable(userManager.getCurrentUserInfo())
+                    .map(UserInfoProvider.UserInfo::groups)
+                    .orElseGet(Set::of);
 
-            boolean isGroupMatched = groups.stream()
+            boolean isGroupMatched = formRunAsGroups.stream()
                     .anyMatch(group -> matchesLdapGroup(group, userLdapGroups));
 
             if (!isGroupMatched) {
                 throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
-                        "the necessary permissions to resume process. Expected LDAP group(s) '" + groups + "'");
+                        "the necessary permissions to resume process. Expected LDAP group(s) '" + formRunAsGroups + "'");
             }
         }
     }
