@@ -18,6 +18,9 @@
 - concord-server-it: fix testFailedHosts for modern Ansible
 versions
 ([#1232](https://github.com/walmartlabs/concord/pull/1232));
+- concord-server: retrieve user ldap groups for form access
+assertion
+([#1233](https://github.com/walmartlabs/concord/pull/1233));
 - project: update dependencies
 ([#1234](https://github.com/walmartlabs/concord/pull/1234));
 - concord-console2: update dependencies, README
