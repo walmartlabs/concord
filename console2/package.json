@@ -25,7 +25,7 @@
         "shx": "0.3.3",
         "ts-node": "10.4.0",
         "typescript": "5.3.3",
-        "vite": "^5.0.8"
+        "vite": "^7.1.12"
     },
     "dependencies": {
         "@monaco-editor/react": "4.3.1",
