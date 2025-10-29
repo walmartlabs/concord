@@ -36,7 +36,7 @@ assertion
 
 ### Changed
 
-- repository: fix uri scheme restriction for ssh repo uris
+- repository: fix uri scheme restriction for SSH repo uris
 ([#1226](https://github.com/walmartlabs/concord/pull/1226));
 
 
