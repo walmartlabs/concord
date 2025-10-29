@@ -26,7 +26,9 @@ assertion
 - concord-console2: update dependencies, README
 ([#1235](https://github.com/walmartlabs/concord/pull/1235));
 - concord-server-it: improve test
-([#1236](https://github.com/walmartlabs/concord/pull/1236)).
+([#1236](https://github.com/walmartlabs/concord/pull/1236));
+- concord-console2: update Node and Vite versions
+([#1237](https://github.com/walmartlabs/concord/pull/1237)).
 
 
 
