@@ -1,10 +1,42 @@
 # Change Log
 
+## [2.34.0] - Unreleased
+
+### Added
+
+- runtime-v2: allow plugins to supply custom EL functions
+([#1225](https://github.com/walmartlabs/concord/pull/1225));
+- runtime-v2: allow paths in SensitiveData keys
+([#1228](https://github.com/walmartlabs/concord/pull/1228));
+- runtime-v2: add EL function to mark strings as sensitive
+([#1230](https://github.com/walmartlabs/concord/pull/1230)).
+
+### Changed
+
+- concord-console2: migrate off CRA to Vite
+([#1231](https://github.com/walmartlabs/concord/pull/1231));
+- concord-server-it: fix testFailedHosts for modern Ansible
+versions
+([#1232](https://github.com/walmartlabs/concord/pull/1232));
+- concord-server: retrieve user ldap groups for form access
+assertion
+([#1233](https://github.com/walmartlabs/concord/pull/1233));
+- project: update dependencies
+([#1234](https://github.com/walmartlabs/concord/pull/1234));
+- concord-console2: update dependencies, README
+([#1235](https://github.com/walmartlabs/concord/pull/1235));
+- concord-server-it: improve test
+([#1236](https://github.com/walmartlabs/concord/pull/1236));
+- concord-console2: update Node and Vite versions
+([#1237](https://github.com/walmartlabs/concord/pull/1237)).
+
+
+
 ## [2.33.3] - 2025-10-14
 
 ### Changed
 
-- repository: fix uri scheme restriction for ssh repo uris
+- repository: fix uri scheme restriction for SSH repo uris
 ([#1226](https://github.com/walmartlabs/concord/pull/1226));
 
 
