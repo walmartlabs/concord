@@ -1,0 +1,9 @@
+flows:
+  default:
+    - form: myForm
+      fields:
+        - inputName: { label: "name", type: "string" }
+      runAs:
+        ldap:
+          - group: "CN=${ldapGroupName},.*"
+    - log: "Submitted name: ${myForm.inputName}"

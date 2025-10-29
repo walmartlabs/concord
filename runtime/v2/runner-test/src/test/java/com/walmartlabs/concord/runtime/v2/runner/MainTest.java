@@ -1355,6 +1355,7 @@ public class MainTest  {
         assertLog(log, ".*" + Pattern.quote("map: {nonSecretButMasked=******, secret=******}") + ".*");
         assertLog(log, ".*" + Pattern.quote("map: {nonSecret=non secret value, secret=******}") + ".*");
         assertLog(log, ".*" + Pattern.quote("map.nested: {nonSecret=non secret value, secret={top-secret=******}}") + ".*");
+        assertLog(log, ".*" + Pattern.quote("map.path: {nonSecret=non secret value, key={top-secret=******, inner=non secret value}}") + ".*");
 
         assertLog(log, ".*" + Pattern.quote("plain: plain") + ".*");
 
@@ -1758,6 +1759,17 @@ public class MainTest  {
 
         assertLog(runtime.allLogs(), ".*Hi, world!.*");
         assertLog(runtime.allLogs(), ".*Hello, world!.*");
+    }
+
+    @Test
+    public void sensitiveFunction() throws Exception {
+        deploy("sensitiveFunction");
+
+        save(ProcessConfiguration.builder().build());
+
+        run();
+
+        assertLog(runtime.allLogs(), ".*" + Pattern.quote("The '******' is masked now") + ".*");
     }
 
     private void deploy(String name) throws URISyntaxException, IOException {
