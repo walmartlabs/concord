@@ -30,6 +30,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 public class OidcCallbackFilter implements Filter {
@@ -87,7 +88,7 @@ public class OidcCallbackFilter implements Filter {
 
         if (code == null || state == null || !state.equals(expectedState)) {
             log.warn("Invalid callback parameters: code={}, state={}, expectedState={}", code != null, state, expectedState);
-            session.invalidate();
+            invalidateOrWarn(session);
             resp.sendRedirect(resp.encodeRedirectURL(OidcAuthFilter.URL + "?from=" + postLoginUrl));
             return;
         }
@@ -103,9 +104,17 @@ public class OidcCallbackFilter implements Filter {
             resp.sendRedirect(resp.encodeRedirectURL(postLoginUrl));
 
         } catch (Exception e) {
-            log.warn("OIDC callback error: {}", e.getMessage());
-            session.invalidate();
+            log.warn("OIDC callback error", e);
+            invalidateOrWarn(session);
             resp.sendRedirect(resp.encodeRedirectURL(OidcAuthFilter.URL + "?from=" + postLoginUrl));
+        }
+    }
+
+    private static void invalidateOrWarn(HttpSession session) {
+        try {
+            session.invalidate();
+        } catch (Exception e) {
+            log.warn("Unable to invalidate the session", e);
         }
     }
 }
