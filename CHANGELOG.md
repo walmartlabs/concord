@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.34.1] - Unreleased
+
+### Changed
+
+- oidc: handle session invalidation errors
+([#1239](https://github.com/walmartlabs/concord/pull/1239)).
+
+
+
 ## [2.34.0] - 2025-10-29
 
 ### Added
