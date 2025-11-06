@@ -181,7 +181,17 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     private ELResolver createResolver(LazyEvalContext evalContext,
                                       ExpressionFactory expressionFactory) {
 
-        var r = new CompositeELResolver();
+        var r = new CompositeELResolver() {
+            @Override
+            public Object getValue(ELContext context, Object base, Object property) {
+                var result = super.getValue(context, base, property);
+                if (evalContext.resolveLazyValues() && result instanceof LazyValue<?> v) {
+                    return v.resolve(evalContext.context());
+                }
+                return result;
+            }
+        };
+
         if (evalContext.scope() != null) {
             r.add(new VariableResolver(evalContext.scope()));
         }
