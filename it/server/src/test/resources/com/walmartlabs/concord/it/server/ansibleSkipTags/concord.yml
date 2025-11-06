@@ -1,3 +1,8 @@
+configuration:
+  dependencies:
+    - mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:PROJECT_VERSION
+  entryPoint: main
+
 flows:
   main:
   - task: ansible
@@ -14,6 +19,3 @@ flows:
         greetings2: "Hello2, world"
       skipTags:
         - "tag-1"
-
-variables:
-  entryPoint: main

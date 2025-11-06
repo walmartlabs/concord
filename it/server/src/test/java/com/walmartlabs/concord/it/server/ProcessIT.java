@@ -26,7 +26,7 @@ import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.client2.ProcessListFilter;
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -83,7 +83,7 @@ public class ProcessIT extends AbstractServerIT {
 
     @Test
     public void testTaskOut() throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource("taskOut").toURI(), ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(ProcessIT.class.getResource("taskOut").toURI());
 
         StartProcessResponse spr = start(payload);
 
@@ -99,7 +99,7 @@ public class ProcessIT extends AbstractServerIT {
 
     @Test
     public void testDelegateOut() throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource("delegateOut").toURI(), ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(ProcessIT.class.getResource("delegateOut").toURI());
 
         StartProcessResponse spr = start(payload);
 
@@ -283,7 +283,7 @@ public class ProcessIT extends AbstractServerIT {
         Files.write(tmp.resolve("concord.yml"), yaml.getBytes());
 
         byte[] payload = archive(tmp.toUri());
-        IOUtils.deleteRecursively(tmp);
+        PathUtils.deleteRecursively(tmp);
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);

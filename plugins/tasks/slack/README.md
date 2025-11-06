@@ -10,6 +10,8 @@ Required `slack` task OAuth scopes:
     For sending messages to channels.
 - [`chat:write.customize`](https://api.slack.com/scopes/chat:write.customize) -
     For customizing message `username` and `iconEmoji`.
+- [`reactions:write`](https://docs.slack.dev/reference/scopes/reactions.write) -
+    For adding reactions to messages using the `addReaction` action.
 - [`chat:write.public`](https://api.slack.com/scopes/chat:write.public) -
     Optional, for sending messages to public channels without membership.
 

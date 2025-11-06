@@ -39,7 +39,7 @@ public class TaskRetryIT extends AbstractServerIT {
     @Test
     public void testAnsibleRetry() throws Exception {
         URI uri = TaskRetryIT.class.getResource("taskRetry").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // start the process
 
@@ -58,7 +58,7 @@ public class TaskRetryIT extends AbstractServerIT {
     @Test
     public void testAnsibleRetryWithExpression() throws Exception {
         URI uri = TaskRetryIT.class.getResource("taskRetryWithExpression").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // start the process
 

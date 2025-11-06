@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.common;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.forms.Form;
 
 import java.io.IOException;
@@ -53,8 +53,8 @@ public class FormService {
 
     public void save(Form form) {
         try {
-            Path p = IOUtils.assertInPath(dir, form.name());
-            Path tmp = IOUtils.createTempFile(form.name(), "form");
+            Path p = PathUtils.assertInPath(dir, form.name());
+            Path tmp = PathUtils.createTempFile(form.name(), "form");
             try (OutputStream out = Files.newOutputStream(tmp)) {
                 SerializationUtils.serialize(out, form);
             }

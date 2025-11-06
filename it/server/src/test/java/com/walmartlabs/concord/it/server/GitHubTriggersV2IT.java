@@ -21,7 +21,6 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.client2.ProcessListFilter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -43,21 +42,9 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
     }
 
     /**
-     * Test subscription to unknown repositories only:
-     * <pre>
-     * # project A
-     * # a default onPush trigger for the default branch
-     * triggers:
-     *   - github:
-     *       entryPoint: onPush
-     *
-     * # project G
-     * # accepts only specific commit authors
-     * triggers:
-     *   - github:
-     *       author: ".*xyz.*"
-     *       entryPoint: onPush
-     * </pre>
+     * Checks if "conditions->sender" works.
+     * Tests filtering by "sender" in events that originate from "known"
+     * and "unknown" (not registered in any Concord project) GitHub repositories.
      */
     @Test
     public void testFilterBySender() throws Exception {
@@ -66,47 +53,41 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         String orgXName = "orgX_" + randomString();
         orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgXName));
 
-        Path repo = initRepo("githubTests/repos/v2/defaultTrigger");
-        String branch = "branch_" + randomString();
-        createNewBranch(repo, branch, "githubTests/repos/v2/defaultTriggerWithSender");
-
-        // Project A
-        // master branch + a default trigger
+        // project A uses a default trigger without conditions
+        // should trigger on any event for the matching "known" repository
+        // i.e. the event must come from a GitHub URL that is added to a Concord project
         String projectAName = "projectA_" + randomString();
         String repoAName = "repoA_" + randomString();
         Path projectARepo = initProjectAndRepo(orgXName, projectAName, repoAName, null, initRepo("githubTests/repos/v2/defaultTrigger"));
         refreshRepo(orgXName, projectAName, repoAName);
 
-        // Project G
-        // accepts only specific commit authors
+        // project G accepts only specific event senders but from any repository
+        // (including events from GitHub URLs that are not registered in any Concord project)
         String projectGName = "projectG_" + randomString();
         String repoGName = "repoG_" + randomString();
-        Path projectBRepo = initProjectAndRepo(orgXName, projectGName, repoGName, null, initRepo("githubTests/repos/v2/defaultTriggerWithSender"));
+        initProjectAndRepo(orgXName, projectGName, repoGName, null, initRepo("githubTests/repos/v2/anyRepoWithSender"));
         refreshRepo(orgXName, projectGName, repoGName);
 
-        // ---
-
+        // send an a projectARepo event from a random sender
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectARepo),
                 "_REF", "refs/heads/master",
-                "_USER_NAME", "aknowndude",
+                "_USER_NAME", "arandomdude" + randomString(),
                 "_USER_LDAP_DN", "");
 
         // A's triggers should be activated
-        ProcessEntry procA = waitForAProcess(orgXName, projectAName, "github");
-        expectNoProceses(orgXName, projectGName, null);
-
-        // ---
+        waitForAProcess(orgXName, projectAName, "github");
+        // G's triggers should NOT be activated, the event is not from not the right sender
+        expectNoProcesses(orgXName, projectGName, null);
 
         // see https://github.com/walmartlabs/concord/issues/435
         // wait a bit to reliably filter out subsequent processes of projectA
         Thread.sleep(1000);
         OffsetDateTime now = OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS);
 
-        // ---
-
+        // send an a projectARepo event (again), this time from the user expected by the G trigger
         sendEvent("githubTests/events/direct_branch_push.json", "push",
-                "_FULL_REPO_NAME", toRepoName(projectBRepo),
+                "_FULL_REPO_NAME", "org" + randomString() + "/" + "repo" + randomString(), // a random ("unknown") GitHub repository
                 "_REF", "refs/heads/master",
                 "_USER_NAME", "somecooldude",
                 "_USER_LDAP_DN", "");
@@ -115,9 +96,9 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         waitForAProcess(orgXName, projectGName, "github");
 
         // no A's are expected
-        expectNoProceses(orgXName, projectAName, now);
+        expectNoProcesses(orgXName, projectAName, now);
 
-        // ---
+        // clean up
 
         deleteOrg(orgXName);
     }

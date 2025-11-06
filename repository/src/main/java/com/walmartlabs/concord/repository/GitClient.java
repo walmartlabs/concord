@@ -21,7 +21,7 @@ package com.walmartlabs.concord.repository;
  */
 
 import com.google.common.collect.ImmutableSet;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
@@ -300,10 +300,15 @@ public class GitClient {
         }
     }
 
-    private String updateUrl(String url, Secret secret) {
-        url = url.trim();
+    String updateUrl(String url, Secret secret) {
+        if (!url.matches("^[A-Za-z][A-Za-z0-9+.-]+://.*")) {
+            // no scheme. Assume ssh, e.g. from GitHub like 'git@github.com:owner/repo.git'
+            assertUriAllowed("ssh://" + url);
 
-        URI uri = URI.create(url);
+            return url; // return un-modified. git cli doesn't want the ssh scheme
+        }
+
+        URI uri = assertUriAllowed(url);
 
         List<String> allowedDefaultHosts = cfg.authorizedGitHosts();
 
@@ -322,6 +327,39 @@ public class GitClient {
 
         // using default credentials
         return "https://" + cfg.oauthToken() + "@" + url.substring("https://".length());
+    }
+
+    private URI assertUriAllowed(String rawUri) {
+        // make sure it's in valid format
+        URI uri = URI.create(rawUri);
+        assertUriAllowed(uri);
+
+        return uri;
+    }
+
+    private void assertUriAllowed(URI uri) {
+        String providedScheme = uri.getScheme();
+        Set<String> allowedSchemes = cfg.allowedSchemes();
+        boolean hasScheme = providedScheme != null && (!providedScheme.isEmpty());
+
+        if (allowedSchemes.isEmpty()) {
+            return; // allow all
+        }
+
+        // the provided repo string is definitely an allowed protocol.
+        if (hasScheme && allowedSchemes.contains(providedScheme)) {
+            return;
+        }
+
+        // the provided repo string has no explicit scheme, should be understood to use an ssh connection
+        if (!hasScheme && uri.getUserInfo() != null) {
+            return;
+        }
+
+        String msg = String.format("Provided repository ('%s') contains an unsupported URI scheme: '%s'.",
+                uri, uri.getScheme());
+        log.warn(msg);
+        throw new RepositoryException(msg);
     }
 
     private void updateSubmodules(Path workDir, Secret secret) {
@@ -577,7 +615,7 @@ public class GitClient {
     }
 
     private Path createUnixGitSSH(Path key) throws IOException {
-        Path ssh = IOUtils.createTempFile("ssh", ".sh");
+        Path ssh = PathUtils.createTempFile("ssh", ".sh");
 
         try (PrintWriter w = new PrintWriter(ssh.toFile(), Charset.defaultCharset().toString())) {
             w.println("#!/bin/sh");
@@ -601,7 +639,7 @@ public class GitClient {
     }
 
     private static Path createUnixStandardAskpass(UsernamePassword creds) throws IOException {
-        Path askpass = IOUtils.createTempFile("pass", ".sh");
+        Path askpass = PathUtils.createTempFile("pass", ".sh");
         try (PrintWriter w = new PrintWriter(askpass.toFile(), Charset.defaultCharset().toString())) {
             w.println("#!/bin/sh");
             w.println("case \"$1\" in");
@@ -614,7 +652,7 @@ public class GitClient {
     }
 
     private static Path createSshKeyFile(KeyPair keyPair) throws IOException {
-        Path keyFile = IOUtils.createTempFile("ssh", ".key");
+        Path keyFile = PathUtils.createTempFile("ssh", ".key");
 
         Files.write(keyFile, keyPair.getPrivateKey());
 

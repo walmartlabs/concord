@@ -35,7 +35,7 @@ import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.client2.ApiClientConfiguration;
 import com.walmartlabs.concord.client2.ApiClientFactory;
 import com.walmartlabs.concord.client2.ProcessEntry;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
@@ -460,7 +460,7 @@ public class Main {
 
         try {
             if (events.isEmpty()) {
-                IOUtils.deleteRecursively(stateDir);
+                PathUtils.deleteRecursively(stateDir);
                 log.debug("finalizeState ['{}'] -> removed the state", instanceId);
             } else {
                 if (!Files.exists(stateDir)) {

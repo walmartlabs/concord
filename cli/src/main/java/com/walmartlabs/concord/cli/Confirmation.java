@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.agent.cfg;
+package com.walmartlabs.concord.cli;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,19 +20,19 @@ package com.walmartlabs.concord.agent.cfg;
  * =====
  */
 
-import com.typesafe.config.Config;
+import java.io.IOException;
 
-import javax.inject.Inject;
+import static org.fusesource.jansi.Ansi.ansi;
 
-public class RunnerV1Configuration extends AbstractRunnerConfiguration {
+public final class Confirmation {
 
-    @Inject
-    public RunnerV1Configuration(Config cfg) {
-        super("runnerV1", cfg);
+    public static boolean confirm(String message) throws IOException {
+        System.out.println(ansi().fgBrightYellow().bold().a(message).reset());
+        int response = System.in.read();
+        // y == 121, Y == 89
+        return response == 121 || response == 89;
     }
 
-    @Override
-    public String getRuntimeName() {
-        return "concord-v1";
+    private Confirmation() {
     }
 }

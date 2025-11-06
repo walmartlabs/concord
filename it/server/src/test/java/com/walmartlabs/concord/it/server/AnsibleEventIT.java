@@ -28,8 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class AnsibleEventIT extends AbstractServerIT {
@@ -38,7 +37,7 @@ public class AnsibleEventIT extends AbstractServerIT {
     @SuppressWarnings("unchecked")
     public void testEvent() throws Exception {
         URI uri = AnsibleEventIT.class.getResource("ansibleEvent").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // ---
 
@@ -81,7 +80,7 @@ public class AnsibleEventIT extends AbstractServerIT {
     @Test
     public void testIgnoredFailures() throws Exception {
         URI uri = AnsibleEventIT.class.getResource("ansibleIgnoredFailures").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // ---
 
@@ -123,7 +122,7 @@ public class AnsibleEventIT extends AbstractServerIT {
     @Test
     public void testFailedHosts() throws Exception {
         URI uri = AnsibleEventIT.class.getResource("ansibleFailedHosts").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // ---
 
@@ -135,7 +134,7 @@ public class AnsibleEventIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(pe.getInstanceId());
-        assertLog(".*'msg' is undefined.*", ab);
+        assertLogAtLeast(".*'msg' is undefined.*", 1, ab);
 
         // ---
 

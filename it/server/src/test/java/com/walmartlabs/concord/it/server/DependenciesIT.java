@@ -22,7 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.client2.StartProcessResponse;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.jupiter.api.Test;
@@ -53,8 +53,8 @@ public class DependenciesIT extends AbstractServerIT {
         Path src = Paths.get(DependenciesIT.class.getResource("deps").toURI());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(baos)) {
-            IOUtils.zip(zip, src);
-            IOUtils.zip(zip, tmpDir);
+            ZipUtils.zip(zip, src);
+            ZipUtils.zip(zip, tmpDir);
         }
 
         byte[] payload = baos.toByteArray();

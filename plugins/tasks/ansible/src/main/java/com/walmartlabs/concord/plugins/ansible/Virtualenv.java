@@ -20,7 +20,7 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,7 +98,7 @@ public class Virtualenv {
 
     public void destroy() {
         try {
-            IOUtils.deleteRecursively(targetDir);
+            PathUtils.deleteRecursively(targetDir);
         } catch (IOException e) {
             log.warn("Error while removing the virtualenv's directory: {}", e.getMessage());
         }

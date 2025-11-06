@@ -109,8 +109,7 @@ public class VariablesIT extends AbstractServerIT {
         String varA = "varA_" + System.currentTimeMillis();
         String varB = "varB_" + System.currentTimeMillis();
 
-        byte[] payload = archive(VariablesIT.class.getResource("arrayInterpolation").toURI(),
-                ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(VariablesIT.class.getResource("arrayInterpolation").toURI());
 
         Map<String, Object> args = new HashMap<>();
         args.put("varA", varA);
@@ -134,8 +133,7 @@ public class VariablesIT extends AbstractServerIT {
 
     @Test
     public void testSetVar() throws Exception {
-        byte[] payload = archive(VariablesIT.class.getResource("setVar").toURI(),
-                ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(VariablesIT.class.getResource("setVar").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -152,8 +150,7 @@ public class VariablesIT extends AbstractServerIT {
 
     @Test
     public void testGetNestedVar() throws Exception {
-        byte[] payload = archive(VariablesIT.class.getResource("getVar").toURI(),
-                ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(VariablesIT.class.getResource("getVar").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -171,8 +168,7 @@ public class VariablesIT extends AbstractServerIT {
 
     @Test
     public void testSetDependentVars() throws Exception {
-        byte[] payload = archive(VariablesIT.class.getResource("setVarNested").toURI(),
-                ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(VariablesIT.class.getResource("setVarNested").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -191,8 +187,7 @@ public class VariablesIT extends AbstractServerIT {
 
     @Test
     public void testSetDependentVars2() throws Exception {
-        byte[] payload = archive(VariablesIT.class.getResource("setVarNested2").toURI(),
-                ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(VariablesIT.class.getResource("setVarNested2").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);

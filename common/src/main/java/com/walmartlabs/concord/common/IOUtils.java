@@ -20,191 +20,140 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.validation.constraints.NotNull;
 import java.io.*;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.*;
+import java.nio.file.CopyOption;
+import java.nio.file.Path;
+import java.util.List;
 
+/**
+ * @deprecated use the alternatives in {@link PathUtils}, {@link ZipUtils}, {@link GrepUtils}, etc.
+ */
+@Deprecated
 public final class IOUtils {
 
-    private static final Logger log = LoggerFactory.getLogger(IOUtils.class);
+    /**
+     * @deprecated use {@link PathUtils#TMP_DIR_KEY}
+     */
+    @Deprecated
+    public static final String TMP_DIR_KEY = PathUtils.TMP_DIR_KEY;
 
-    public static final String TMP_DIR_KEY = "CONCORD_TMP_DIR";
-    public static final Path TMP_DIR = Paths.get(getEnv(TMP_DIR_KEY, System.getProperty("java.io.tmpdir")));
+    /**
+     * @deprecated use {@link PathUtils#TMP_DIR}
+     */
+    @Deprecated
+    public static final Path TMP_DIR = PathUtils.TMP_DIR;
 
-    static {
-        try {
-            if (!Files.exists(TMP_DIR)) {
-                Files.createDirectories(TMP_DIR);
-            }
-            log.debug("Using {} as CONCORD_TMP_DIR", TMP_DIR);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+    /**
+     * @deprecated use {@link PathUtils#tempFile(String, String)}
+     */
+    @Deprecated
     public static TemporaryPath tempFile(String prefix, String suffix) throws IOException {
-        return new TemporaryPath(IOUtils.createTempFile(prefix, suffix));
+        return PathUtils.tempFile(prefix, suffix);
     }
 
+    /**
+     * @deprecated use {@link PathUtils#createTempFile(String, String)}
+     */
+    @Deprecated
     public static Path createTempFile(String prefix, String suffix) throws IOException {
-        return Files.createTempFile(TMP_DIR, prefix, suffix);
+        return PathUtils.createTempFile(prefix, suffix);
     }
 
+    /**
+     * @deprecated use {@link PathUtils#createTempDir(Path, String)}
+     */
+    @Deprecated
     public static Path createTempDir(Path dir, String prefix) throws IOException {
-        return Files.createTempDirectory(dir, prefix);
+        return PathUtils.createTempDir(dir, prefix);
     }
 
+    /**
+     * @deprecated use {@link PathUtils#tempDir(String)}
+     */
+    @Deprecated
     public static TemporaryPath tempDir(String prefix) throws IOException {
-        return new TemporaryPath(IOUtils.createTempDir(prefix));
+        return PathUtils.tempDir(prefix);
     }
 
+    /**
+     * @deprecated use {@link PathUtils#createTempDir(String)}
+     */
+    @Deprecated
     public static Path createTempDir(String prefix) throws IOException {
-        return Files.createTempDirectory(TMP_DIR, prefix);
+        return PathUtils.createTempDir(prefix);
     }
 
-    public static boolean matches(Path p, String... filters) {
-        String n = p.getName(p.getNameCount() - 1).toString();
-        for (String f : filters) {
-            if (n.matches(f)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
+    /**
+     * @deprecated use {@link ZipUtils#zipFile(ZipArchiveOutputStream, Path, String)}
+     */
+    @Deprecated
     public static void zipFile(ZipArchiveOutputStream zip, Path src, String name) throws IOException {
-        ZipArchiveEntry e = new ZipArchiveEntry(name) {
-            @Override
-            public int getPlatform() {
-                return PLATFORM_UNIX;
-            }
-        };
-
-        Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(src);
-        e.setUnixMode(Posix.unixMode(permissions));
-
-        e.setSize(Files.size(src));
-
-        zip.putArchiveEntry(e);
-        Files.copy(src, zip);
-        zip.closeArchiveEntry();
+        ZipUtils.zipFile(zip, src, name);
     }
 
+    /**
+     * @deprecated use {@link ZipUtils#zip(ZipArchiveOutputStream, Path, String...)}
+     */
+    @Deprecated
     public static void zip(ZipArchiveOutputStream zip, Path srcDir, String... filters) throws IOException {
-        zip(zip, null, srcDir, filters);
+        ZipUtils.zip(zip, srcDir, filters);
     }
 
+    /**
+     * @deprecated use {@link ZipUtils#zip(ZipArchiveOutputStream, String, Path, String...)}
+     */
+    @Deprecated
     public static void zip(ZipArchiveOutputStream zip, String dstPrefix, Path srcDir, String... filters) throws IOException {
-        Files.walkFileTree(srcDir, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                if (dir.toAbsolutePath().equals(srcDir)) {
-                    return FileVisitResult.CONTINUE;
-                }
-
-                if (matches(dir, filters)) {
-                    return FileVisitResult.SKIP_SUBTREE;
-                }
-
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (matches(file, filters)) {
-                    return FileVisitResult.SKIP_SUBTREE;
-                }
-
-                String n = srcDir.relativize(file).toString();
-                if (dstPrefix != null) {
-                    n = dstPrefix + n;
-                }
-
-                zipFile(zip, file, n);
-
-                return FileVisitResult.CONTINUE;
-            }
-        });
+        ZipUtils.zip(zip, dstPrefix, srcDir, filters);
     }
 
+    /**
+     * @deprecated use {@link ZipUtils#unzip(InputStream, Path, CopyOption...)}
+     */
+    @Deprecated
     public static void unzip(InputStream in, Path targetDir, CopyOption... options) throws IOException {
-        try (TemporaryPath tmpZip = new TemporaryPath(IOUtils.createTempFile("unzip", "zip"))) {
-            Files.copy(in, tmpZip.path(), StandardCopyOption.REPLACE_EXISTING);
-            IOUtils.unzip(tmpZip.path(), targetDir, options);
-        }
+        ZipUtils.unzip(in, targetDir, options);
     }
 
+    /**
+     * @deprecated use {@link ZipUtils#unzip(Path, Path, CopyOption...)}
+     */
+    @Deprecated
     public static void unzip(Path in, Path targetDir, CopyOption... options) throws IOException {
-        unzip(in, targetDir, false, null, options);
+        ZipUtils.unzip(in, targetDir, options);
     }
 
+    /**
+     * @deprecated use {@link ZipUtils#unzip(Path, Path, boolean, CopyOption...)}
+     */
+    @Deprecated
     public static void unzip(Path in, Path targetDir, boolean skipExisting, CopyOption... options) throws IOException {
-        unzip(in, targetDir, skipExisting, null, options);
+        ZipUtils.unzip(in, targetDir, skipExisting, options);
     }
 
+    /**
+     * @deprecated use {@link ZipUtils#unzip(InputStream, Path, boolean, FileVisitor, CopyOption...)}
+     */
+    @Deprecated
     public static void unzip(InputStream in, Path targetDir, boolean skipExisting, FileVisitor visitor, CopyOption... options) throws IOException {
-        try (TemporaryPath tmpZip = new TemporaryPath(IOUtils.createTempFile("unzip", "zip"))) {
-            Files.copy(in, tmpZip.path(), StandardCopyOption.REPLACE_EXISTING);
-            IOUtils.unzip(tmpZip.path(), targetDir, skipExisting, visitor, options);
-        }
+        ZipUtils.unzip(in, targetDir, skipExisting, visitor, options);
     }
 
+    /**
+     * @deprecated use {@link ZipUtils#unzip(Path, Path, boolean, FileVisitor, CopyOption...)}
+     */
+    @Deprecated
     public static void unzip(Path in, Path targetDir, boolean skipExisting, FileVisitor visitor, CopyOption... options) throws IOException {
-        targetDir = targetDir.normalize().toAbsolutePath();
-
-        try (ZipFile zip = new ZipFile(in.toFile())) {
-            Enumeration<ZipArchiveEntry> entries = zip.getEntries();
-
-            while (entries.hasMoreElements()) {
-                ZipArchiveEntry e = entries.nextElement();
-
-                Path p = targetDir.resolve(e.getName());
-
-                // skip paths outside of targetDir
-                // (don't log anything to avoid "log bombing")
-                if (!p.normalize().toAbsolutePath().startsWith(targetDir)) {
-                    continue;
-                }
-
-                if (skipExisting && Files.exists(p)) {
-                    continue;
-                }
-
-                if (e.isDirectory()) {
-                    Files.createDirectories(p);
-                } else {
-                    Path parent = p.getParent();
-                    if (!Files.exists(parent)) {
-                        Files.createDirectories(parent);
-                    }
-
-                    try (InputStream src = zip.getInputStream(e)) {
-                        Files.copy(src, p, options);
-                    }
-
-                    int unixMode = e.getUnixMode();
-                    if (unixMode <= 0) {
-                        unixMode = Posix.DEFAULT_UNIX_MODE;
-                    }
-
-                    Files.setPosixFilePermissions(p, Posix.posix(unixMode));
-                    if (visitor != null) {
-                        visitor.visit(p, p);
-                    }
-                }
-            }
-        }
+        ZipUtils.unzip(in, targetDir, skipExisting, visitor, options);
     }
 
+    /**
+     * @deprecated use {@link InputStream#transferTo(OutputStream)}
+     */
+    @Deprecated
     public static void copy(InputStream in, OutputStream out) throws IOException {
         byte[] ab = new byte[4096];
         int read;
@@ -213,181 +162,94 @@ public final class IOUtils {
         }
     }
 
+    /**
+     * @deprecated use {@link PathUtils#copy(Path, Path)}
+     */
+    @Deprecated
     public static void copy(Path src, Path dst) throws IOException {
-        copy(src, dst, (String) null, null, new CopyOption[0]);
+        PathUtils.copy(src, dst);
     }
 
+    /**
+     * @deprecated use {@link PathUtils#copy(Path, Path, CopyOption...)}
+     */
+    @Deprecated
     public static void copy(Path src, Path dst, CopyOption... options) throws IOException {
-        copy(src, dst, (String) null, null, options);
+        PathUtils.copy(src, dst, options);
     }
 
+    /**
+     * @deprecated use {@link PathUtils#copy(Path, Path, String, CopyOption...)}
+     */
+    @Deprecated
     public static void copy(Path src, Path dst, String ignorePattern, CopyOption... options) throws IOException {
-        _copy(src, src, dst, toList(ignorePattern), null, options);
+        PathUtils.copy(src, dst, ignorePattern, options);
     }
 
+    /**
+     * @deprecated use {@link PathUtils#copy(Path, Path, String, FileVisitor, CopyOption...)}
+     */
+    @Deprecated
     public static void copy(Path src, Path dst, String skipContents, FileVisitor visitor, CopyOption... options) throws IOException {
-        _copy(src, src, dst, toList(skipContents), visitor, options);
+        PathUtils.copy(src, dst, skipContents, visitor, options);
     }
 
+    /**
+     * @deprecated use {@link PathUtils#copy(Path, Path, List, FileVisitor, CopyOption...)}
+     */
+    @Deprecated
     public static void copy(Path src, Path dst, List<String> skipContents, FileVisitor visitor, CopyOption... options) throws IOException {
-        _copy(src, src, dst, skipContents, visitor, options);
+        PathUtils.copy(src, dst, skipContents, visitor, options);
     }
 
-    private static void _copy(Path root, Path src, Path dst, List<String> ignorePattern, FileVisitor visitor, CopyOption... options) throws IOException {
-        Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                if (dir != src && anyMatch(src.relativize(dir).toString(), ignorePattern)) {
-                    return FileVisitResult.SKIP_SUBTREE;
-                }
-
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (file != src && anyMatch(src.relativize(file).toString(), ignorePattern)) {
-                    return FileVisitResult.CONTINUE;
-                }
-
-                Path a = file;
-                Path b = dst.resolve(src.relativize(file));
-
-                Path parent = b.getParent();
-                if (!Files.exists(parent)) {
-                    Files.createDirectories(parent);
-                }
-
-                if (Files.isSymbolicLink(file)) {
-                    Path link = Files.readSymbolicLink(file);
-                    Path target = file.getParent().resolve(link).normalize();
-
-                    if (!target.startsWith(root)) {
-                        throw new IOException("Symlinks outside the base directory are not supported: " + file + " -> " + target);
-                    }
-
-                    if (Files.notExists(target)) {
-                        // missing target
-                        return FileVisitResult.CONTINUE;
-                    }
-
-                    Files.createSymbolicLink(b, link);
-                    return FileVisitResult.CONTINUE;
-                }
-
-                Files.copy(a, b, options);
-
-                if (visitor != null) {
-                    visitor.visit(a, b);
-                }
-
-                return FileVisitResult.CONTINUE;
-            }
-        });
-    }
-
+    /**
+     * @deprecated use {@link GrepUtils#grep(String, byte[])}
+     */
+    @Deprecated
     public static List<String> grep(String pattern, byte[] ab) throws IOException {
-        return grep(pattern, new ByteArrayInputStream(ab));
+        return GrepUtils.grep(pattern, ab);
     }
 
+    /**
+     * @deprecated use {@link GrepUtils#grep(String, InputStream)}
+     */
+    @Deprecated
     public static List<String> grep(String pattern, InputStream in) throws IOException {
-        List<String> result = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.matches(pattern)) {
-                    result.add(line);
-                }
-            }
-        }
-        return result;
+        return GrepUtils.grep(pattern, in);
     }
 
+    /**
+     * @deprecated use {@link PathUtils#deleteRecursively(Path)}
+     */
+    @Deprecated
     public static boolean deleteRecursively(Path p) throws IOException {
-        if (!Files.exists(p)) {
-            return false;
-        }
-
-        if (!Files.isDirectory(p)) {
-            Files.delete(p);
-            return true;
-        }
-
-        Files.walkFileTree(p, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Files.delete(file);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                Files.delete(dir);
-                return FileVisitResult.CONTINUE;
-            }
-        });
-
-        return true;
+        return PathUtils.deleteRecursively(p);
     }
 
+    /**
+     * @deprecated use {@link InputStream#readAllBytes()}
+     */
+    @Deprecated
     public static byte[] toByteArray(InputStream src) throws IOException {
         ByteArrayOutputStream dst = new ByteArrayOutputStream();
         copy(src, dst);
         return dst.toByteArray();
     }
 
+    /**
+     * @deprecated use {@link PathUtils#delete(File)}
+     */
+    @Deprecated
     public static void delete(File f) {
-        if (f == null || !f.exists()) {
-            return;
-        }
-
-        if (!f.delete()) {
-            log.warn("delete ['{}'] -> failed", f.getAbsolutePath());
-        }
+        PathUtils.delete(f);
     }
 
     /**
-     * Resolves a child path within a parent, asserting the normalized child
-     * starts with the parent path to avoid relative path escaping (e.g.
-     * {@code "../../not/in/parent"}).
-     * @param parent parent path within which child must exist when resolved
-     * @param child filename or path to resolve as a child of {@code parent}
-     * @return normalized child path
-     * @throws IOException when the child does not resolve to an absolute path within the parent path
+     * @deprecated use {@link PathUtils#assertInPath(Path, String)}
      */
+    @Deprecated
     public static Path assertInPath(@NotNull Path parent, @NotNull String child) throws IOException {
-        Path normalizedParent = parent.normalize().toAbsolutePath();
-        Path normalizedChild = normalizedParent.resolve(child).normalize().toAbsolutePath();
-
-        if (!normalizedChild.startsWith(normalizedParent)) {
-            throw new IOException("Child path resolves outside of parent path: " + child);
-        }
-
-        return normalizedChild;
-    }
-
-    private static String getEnv(String key, String defaultValue) {
-        String s = System.getenv(key);
-        if (s == null) {
-            return defaultValue;
-        }
-        return s;
-    }
-
-    private static List<String> toList(String entry) {
-        if (entry == null) {
-            return Collections.emptyList();
-        }
-
-        return Collections.singletonList(entry);
-    }
-
-    private static boolean anyMatch(String what, List<String> patterns) {
-        if (patterns == null) {
-            return false;
-        }
-
-        return patterns.stream().anyMatch(what::matches);
+        return PathUtils.assertInPath(parent, child);
     }
 
     private IOUtils() {

@@ -27,6 +27,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.util.Base64;
 
 public final class ConcordConfiguration {
 
@@ -44,6 +47,8 @@ public final class ConcordConfiguration {
                 throw new RuntimeException(e);
             }
         }
+
+        writePrivateKey(sharedDir.resolve("signing.pem"));
     }
 
     public static ConcordRule configure() {
@@ -66,6 +71,9 @@ public final class ConcordConfiguration {
                                 pollDelay = "250 milliseconds"
                             }
                         }
+                        process {
+                            signingKeyPath = "%%sharedDir%%/signing.pem"
+                        }
                     }
                     concord-agent {
                         dependencyResolveTimeout = "30 seconds"
@@ -75,7 +83,7 @@ public final class ConcordConfiguration {
                             enabled = true
                         }
                     }
-                    """);
+                    """.replaceAll("%%sharedDir%%", sharedDir().toString()));
 
         boolean localMode = Boolean.parseBoolean(System.getProperty("it.local.mode"));
         if (localMode) {
@@ -104,6 +112,23 @@ public final class ConcordConfiguration {
             default:
                 throw new IllegalArgumentException("Unknown mode: " + concord.mode());
         }
+    }
+
+    private static Path writePrivateKey(Path targetFile) {
+        try {
+            return Files.writeString(targetFile, generatePkcs8PemPrivateKey());
+        } catch (Exception e) {
+            throw new IllegalStateException("Error writing server username signing key.", e);
+        }
+    }
+
+    private static String generatePkcs8PemPrivateKey() throws Exception {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(2048);
+        KeyPair pair = keyGen.generateKeyPair();
+        byte[] pkcs8 = pair.getPrivate().getEncoded();
+        String base64 = Base64.getMimeEncoder(64, "\n".getBytes()).encodeToString(pkcs8);
+        return "-----BEGIN PRIVATE KEY-----\n" + base64 + "\n-----END PRIVATE KEY-----";
     }
 
     private ConcordConfiguration() {

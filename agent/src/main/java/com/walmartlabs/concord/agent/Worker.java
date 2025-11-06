@@ -25,7 +25,7 @@ import com.walmartlabs.concord.agent.guice.AgentImportManager;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.remote.ProcessStatusUpdater;
 import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.imports.Import.SecretDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +105,7 @@ public class Worker implements Runnable {
             Path payloadDir = jobRequest.getPayloadDir();
             try {
                 log.info("exec ['{}'] -> removing the payload directory: {}", instanceId, payloadDir);
-                IOUtils.deleteRecursively(payloadDir);
+                PathUtils.deleteRecursively(payloadDir);
             } catch (IOException e) {
                 log.warn("exec ['{}'] -> can't remove the payload directory: {}", instanceId, e.getMessage());
             }

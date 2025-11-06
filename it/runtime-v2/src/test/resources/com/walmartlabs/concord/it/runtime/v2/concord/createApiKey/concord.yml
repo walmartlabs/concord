@@ -8,7 +8,7 @@ flows:
       in:
         action: createApiKey
         username: admin
-        name: ${apiKeyName}
+        name: ${apiKeyName1}
       out: result1
     - log: "result1=${result1}"
 
@@ -18,7 +18,7 @@ flows:
           in:
             action: createApiKey
             username: admin
-            name: ${apiKeyName}
+            name: ${apiKeyName1}
         - log: "result2=${result2}"
       error:
         - log: "error=${lastError}"
@@ -28,7 +28,17 @@ flows:
       in:
         action: createApiKey
         username: admin
-        name: ${apiKeyName}
+        name: ${apiKeyName1}
         ignoreExisting: true
       out: result3
     - log: "result3=${result3}"
+
+    # create a new API key with predefined value
+    - task: concord
+      in:
+        action: createApiKey
+        username: admin
+        name: ${apiKeyName2}
+        key: ${apiKeyValue2}
+      out: result4
+    - log: "result4=${result4}"

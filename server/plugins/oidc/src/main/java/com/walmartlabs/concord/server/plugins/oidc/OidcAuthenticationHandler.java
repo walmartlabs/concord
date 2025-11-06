@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,8 @@ package com.walmartlabs.concord.server.plugins.oidc;
 
 import com.walmartlabs.concord.server.boot.filters.AuthenticationHandler;
 import org.apache.shiro.authc.AuthenticationToken;
-import org.pac4j.core.context.JEEContext;
-import org.pac4j.core.credentials.TokenCredentials;
-import org.pac4j.core.profile.ProfileManager;
-import org.pac4j.oidc.config.OidcConfiguration;
-import org.pac4j.oidc.credentials.authenticator.UserInfoOidcAuthenticator;
-import org.pac4j.oidc.profile.OidcProfile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.ServletRequest;
@@ -35,22 +31,23 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Optional;
 
 public class OidcAuthenticationHandler implements AuthenticationHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(OidcAuthenticationHandler.class);
     private static final String FORM_URL_PATTERN = "/forms/.*";
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String HEADER_PREFIX = "Bearer";
+    private static final String SESSION_PROFILE_KEY = "OIDC_USER_PROFILE";
 
     private final PluginConfiguration cfg;
-    private final OidcConfiguration oidcCfg;
+    private final OidcService oidcService;
 
     @Inject
-    public OidcAuthenticationHandler(PluginConfiguration cfg, OidcConfiguration oidcCfg) {
+    public OidcAuthenticationHandler(PluginConfiguration cfg, OidcService oidcService) {
         this.cfg = cfg;
-        this.oidcCfg = oidcCfg;
+        this.oidcService = oidcService;
     }
 
     @Override
@@ -59,33 +56,32 @@ public class OidcAuthenticationHandler implements AuthenticationHandler {
             return null;
         }
 
-        HttpServletRequest req = (HttpServletRequest) request;
-        HttpServletResponse resp = (HttpServletResponse) response;
-        JEEContext context = new JEEContext(req, resp);
+        var req = (HttpServletRequest) request;
 
-        Optional<OidcProfile> profile;
-
-        // check the token first
-        String header = req.getHeader(AUTHORIZATION_HEADER);
-        if (header != null) {
-            String[] as = header.split(" ");
-            if (as.length != 2 || !as[0].equals(HEADER_PREFIX)) {
+        var header = req.getHeader(AUTHORIZATION_HEADER);
+        if (header == null) {
+            var session = req.getSession(false);
+            if (session == null) {
                 return null;
             }
 
-            TokenCredentials credentials = new TokenCredentials(as[1].trim());
-
-            UserInfoOidcAuthenticator authenticator = new UserInfoOidcAuthenticator(oidcCfg);
-            authenticator.validate(credentials, context);
-
-            // we know that UserInfoOidcAuthenticator produces OidcProfile, so we can cast to it here
-            profile = Optional.ofNullable((OidcProfile) credentials.getUserProfile());
-        } else {
-            ProfileManager<OidcProfile> profileManager = new ProfileManager<>(context);
-            profile = profileManager.get(true);
+            var profile = (UserProfile) session.getAttribute(SESSION_PROFILE_KEY);
+            return new OidcToken(profile);
         }
 
-        return profile.map(OidcToken::new).orElse(null);
+        var as = header.split(" ");
+        if (as.length != 2 || !as[0].equals(HEADER_PREFIX)) {
+            return null;
+        }
+
+        var accessToken = as[1].trim();
+        try {
+            var profile = oidcService.validateToken(accessToken);
+            return new OidcToken(profile);
+        } catch (IOException e) {
+            log.warn("Token validation failed: {}", e.getMessage());
+            return null;
+        }
     }
 
     @Override
@@ -94,8 +90,8 @@ public class OidcAuthenticationHandler implements AuthenticationHandler {
             return false;
         }
 
-        HttpServletRequest req = (HttpServletRequest) request;
-        HttpServletResponse resp = (HttpServletResponse) response;
+        var req = (HttpServletRequest) request;
+        var resp = (HttpServletResponse) response;
 
         if (req.getRequestURI().matches(FORM_URL_PATTERN)) {
             resp.sendRedirect(resp.encodeRedirectURL(OidcAuthFilter.URL + "?from=" + req.getRequestURL()));

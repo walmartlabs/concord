@@ -20,6 +20,8 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.runner.el.functions.AllVariablesFunction;
+import com.walmartlabs.concord.runtime.v2.runner.el.functions.HasVariableFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.SensitiveDataProcessor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
@@ -397,7 +399,14 @@ public class ExpressionEvaluatorTest {
     }
 
     private static ExpressionEvaluator expressionEvaluator(TaskProviders taskProviders) {
-        return new DefaultExpressionEvaluator(taskProviders, List.of(), List.of(), mock(SensitiveDataProcessor.class));
+        try {
+            var functions = new FunctionHolder()
+                    .register("allVariables", AllVariablesFunction.class.getMethod("allVariables"))
+                    .register("hasVariable", HasVariableFunction.class.getMethod("hasVariable", String.class));
+            return new DefaultExpressionEvaluator(taskProviders, functions, List.of(), List.of(), mock(SensitiveDataProcessor.class));
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static class TestTask implements Task {

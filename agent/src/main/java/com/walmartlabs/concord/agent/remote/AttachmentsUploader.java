@@ -22,8 +22,9 @@ package com.walmartlabs.concord.agent.remote;
 
 import com.walmartlabs.concord.agent.AgentConstants;
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
@@ -47,9 +48,9 @@ public class AttachmentsUploader {
             return;
         }
 
-        try (TemporaryPath tmp = IOUtils.tempFile("attachments", ".zip")) {
+        try (TemporaryPath tmp = PathUtils.tempFile("attachments", ".zip")) {
             try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp.path()))) {
-                IOUtils.zip(zip, attachmentsDir);
+                ZipUtils.zip(zip, attachmentsDir);
             }
 
             ProcessApi api = new ProcessApi(apiClient);

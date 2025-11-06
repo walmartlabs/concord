@@ -22,7 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.client2.StartProcessResponse;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.it.common.MockGitSshServer;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.AfterEach;
@@ -56,7 +56,7 @@ public class ProjectTaskIT extends AbstractServerIT {
                 .call()) {
 
             Path initialData = Paths.get(GitRepositoryIT.class.getResource("gitRepository").toURI());
-            IOUtils.copy(initialData, workdir);
+            PathUtils.copy(initialData, workdir);
 
             git.add().addFilepattern(".").call();
             git.commit().setMessage("initial commit").call();

@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.agent.cfg;
+package com.walmartlabs.concord.runtime.v2.runner.functions;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,19 +20,20 @@ package com.walmartlabs.concord.agent.cfg;
  * =====
  */
 
-import com.typesafe.config.Config;
+import com.walmartlabs.concord.runtime.v2.sdk.ELFunction;
 
-import javax.inject.Inject;
+import javax.inject.Named;
 
-public class RunnerV2Configuration extends AbstractRunnerConfiguration {
+@Named
+public class TestFunction {
 
-    @Inject
-    public RunnerV2Configuration(Config cfg) {
-        super("runnerV2", cfg);
+    @ELFunction("testGreet")
+    public static String regularGreet(String name) {
+        return "Hi, " + name + "!";
     }
 
-    @Override
-    public String getRuntimeName() {
-        return "concord-v2";
+    @ELFunction("testFunction:greet")
+    public static String prefixedGreet(String name) {
+        return "Hello, " + name + "!";
     }
 }

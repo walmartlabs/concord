@@ -300,7 +300,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
                         <Button onClick={() => loadWholeLog(opts)}>Show the whole log</Button>
                     )}
                     <Button
-                        disabled={process === undefined}
+                        disabled={!instanceId}
                         onClick={() => window.open(`/api/v1/process/${instanceId}/log`, '_blank')}>
                         Raw
                     </Button>

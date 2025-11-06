@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.console;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
@@ -170,7 +170,7 @@ public class ProcessCardResource implements Resource {
 
         Optional<java.nio.file.Path> o = processCardManager.getForm(cardId, src -> {
             try {
-                java.nio.file.Path tmp = IOUtils.createTempFile("process-form", ".html");
+                java.nio.file.Path tmp = PathUtils.createTempFile("process-form", ".html");
                 Files.copy(src, tmp, StandardCopyOption.REPLACE_EXISTING);
                 return Optional.of(tmp);
             } catch (IOException e) {
@@ -254,7 +254,7 @@ public class ProcessCardResource implements Resource {
     private static Response toBinaryResponse(java.nio.file.Path file) {
         return Response.ok((StreamingOutput) out -> {
             try (InputStream in = Files.newInputStream(file)) {
-                IOUtils.copy(in, out);
+                in.transferTo(out);
             } finally {
                 Files.delete(file);
             }

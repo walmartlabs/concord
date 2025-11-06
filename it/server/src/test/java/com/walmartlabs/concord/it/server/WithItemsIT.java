@@ -36,7 +36,7 @@ public class WithItemsIT extends AbstractServerIT {
     @Test
     public void testAnsible() throws Exception {
         URI uri = WithItemsIT.class.getResource("ansibleWithItems").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // ---
 

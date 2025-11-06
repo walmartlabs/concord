@@ -260,7 +260,7 @@ const ProcessLogActivityV2 = ({
 
                 <Button.Group>
                     <Button
-                        disabled={process === undefined}
+                        disabled={!instanceId}
                         onClick={() => window.open(`/api/v1/process/${instanceId}/log`, '_blank')}>
                         Raw
                     </Button>

@@ -35,9 +35,9 @@ import java.util.stream.Collectors;
 
 public class AnsibleInventory {
 
-    public static void process(AnsibleContext context, PlaybookScriptBuilder playbook) throws IOException {
+    public static void process(AnsibleContext context, AnsibleConfig cfg, PlaybookScriptBuilder playbook) throws IOException {
         List<String> inventories = new AnsibleInventory(context.workDir(), context.tmpDir(), context.debug())
-                .write(context.args());
+                .write(context.args(), cfg);
 
         playbook.withInventories(inventories);
     }
@@ -54,8 +54,8 @@ public class AnsibleInventory {
         this.debug = debug;
     }
 
-    public List<String> write(Map<String, Object> args) throws IOException {
-        List<Path> paths = writeInventory(args);
+    public List<String> write(Map<String, Object> args, AnsibleConfig cfg) throws IOException {
+        List<Path> paths = writeInventory(args, cfg);
 
         if (debug) {
             for (Path p : paths) {
@@ -70,7 +70,7 @@ public class AnsibleInventory {
     }
 
     @SuppressWarnings("unchecked")
-    private List<Path> writeInventory(Map<String, Object> args) throws IOException {
+    private List<Path> writeInventory(Map<String, Object> args, AnsibleConfig cfg) throws IOException {
         // try an "inline" inventory
         Object v = MapUtils.get(args, TaskParams.INVENTORY_KEY.getKey(), null);
 
@@ -142,6 +142,17 @@ public class AnsibleInventory {
                     TaskParams.INVENTORY_KEY.getKey(), TaskParams.INVENTORY_FILE_KEY.getKey(),
                     TaskParams.DYNAMIC_INVENTORY_FILE_KEY.getKey());
             return Collections.singletonList(p);
+        }
+
+        // try the defaults from the configuration file
+        v = cfg.getDefaults().getString("inventory");
+        if (v != null) {
+            p = workDir.resolve(v.toString());
+            if (Files.exists(p)) {
+                Utils.updateScriptPermissions(p);
+                log.info("Using the inventory specified in the configuration file: {}", p);
+                return Collections.singletonList(p);
+            }
         }
 
         // we can't continue without an inventory

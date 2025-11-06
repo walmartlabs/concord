@@ -32,7 +32,6 @@ import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.Base64.Encoder;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ApiKeys.API_KEYS;
@@ -89,6 +88,14 @@ public class ApiKeyDao extends AbstractDao {
                 .returning(API_KEYS.KEY_ID)
                 .fetchOne()
                 .getKeyId());
+    }
+
+    public void update(UUID keyId, String key, OffsetDateTime expiredAt) {
+        tx(tx -> tx.update(API_KEYS)
+                .set(API_KEYS.API_KEY, hash(key))
+                .set(API_KEYS.EXPIRED_AT, expiredAt)
+                .where(API_KEYS.KEY_ID.eq(keyId))
+                .execute());
     }
 
     public void delete(UUID id) {

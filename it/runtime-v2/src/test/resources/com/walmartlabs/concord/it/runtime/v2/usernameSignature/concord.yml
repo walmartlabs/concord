@@ -1,0 +1,6 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - log: "signature: ${initiator.usernameSignature == null ? 'null' : initiator.usernameSignature}."

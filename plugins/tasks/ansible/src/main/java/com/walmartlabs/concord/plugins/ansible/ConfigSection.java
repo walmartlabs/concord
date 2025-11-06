@@ -22,8 +22,6 @@ package com.walmartlabs.concord.plugins.ansible;
 
 import java.util.Map;
 
-import static com.walmartlabs.concord.sdk.MapUtils.getString;
-
 public class ConfigSection {
 
     private final Map<String, Object> items;
@@ -33,7 +31,7 @@ public class ConfigSection {
     }
 
     public ConfigSection prependPath(String key, String path) {
-        String current = getString(items, key);
+        String current = getString(key);
         if (current != null) {
             items.put(key, path + ":" + current);
         } else {
@@ -45,5 +43,16 @@ public class ConfigSection {
     public ConfigSection put(String key, String value) {
         items.put(key, value);
         return this;
+    }
+
+    public String getString(String key) {
+        Object v = items.get(key);
+        if (v == null) {
+            return null;
+        }
+        if (v instanceof String s) {
+            return s;
+        }
+        throw new RuntimeException("Expected a string value in '%s', got %s (%s)".formatted(key, v, v.getClass()));
     }
 }

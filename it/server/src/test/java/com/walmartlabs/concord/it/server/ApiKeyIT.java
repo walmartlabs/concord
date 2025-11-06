@@ -23,8 +23,9 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ApiKeyIT extends AbstractServerIT {
 
@@ -61,5 +62,39 @@ public class ApiKeyIT extends AbstractServerIT {
 
         cakr = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
         assertTrue(cakr.getOk());
+    }
+
+    @Test
+    public void testCreatingKeyWithoutUsername() throws Exception {
+        String userName = "userA_" + randomString();
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        CreateUserResponse user = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
+
+        // the new user has no api keys initially
+
+        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
+        List<ApiKeyEntry> keys = apiKeyResource.listUserApiKeys(user.getId());
+        assertEquals(0, keys.size());
+
+        // admin creates a new api key for the new user
+
+        CreateApiKeyResponse cakr = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userName));
+        assertTrue(cakr.getOk());
+        keys = apiKeyResource.listUserApiKeys(user.getId());
+        assertEquals(1, keys.size());
+
+        // the new user creates another api key for themselves
+
+        setApiKey(cakr.getKey());
+        cakr = apiKeyResource.createUserApiKey(new CreateApiKeyRequest());
+        assertTrue(cakr.getOk());
+
+        // the new user lists all their api keys (should be 2)
+
+        keys = apiKeyResource.listUserApiKeys(user.getId());
+        assertEquals(2, keys.size());
     }
 }

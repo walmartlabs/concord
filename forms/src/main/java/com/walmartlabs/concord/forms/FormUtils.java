@@ -20,7 +20,7 @@ package com.walmartlabs.concord.forms;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -273,7 +273,7 @@ public final class FormUtils {
                 }
                 case FormFields.FileField.TYPE: {
                     try {
-                        Path tmp = IOUtils.createTempFile(f.name(), ".tmp");
+                        Path tmp = PathUtils.createTempFile(f.name(), ".tmp");
                         Files.write(tmp, s.getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
                         return tmp.toString();
                     } catch (IOException e) {
@@ -310,7 +310,7 @@ public final class FormUtils {
         } else if (v instanceof InputStream) {
             if (f.type().equals(FormFields.FileField.TYPE)) {
                 try (InputStream is = (InputStream) v) {
-                    Path tmp = IOUtils.createTempFile(f.name(), ".tmp");
+                    Path tmp = PathUtils.createTempFile(f.name(), ".tmp");
                     Files.copy(is, tmp, REPLACE_EXISTING);
                     return tmp.toString();
                 } catch (IOException e) {

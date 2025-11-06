@@ -26,6 +26,8 @@ import com.walmartlabs.concord.server.user.UserType;
 import java.io.Serializable;
 import java.util.UUID;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * <b>Note:</b> this class is serialized when user principals are stored in
  * the process state. It must maintain backward compatibility.
@@ -46,8 +48,8 @@ public class UserPrincipal implements Serializable {
     private final UserEntry user;
 
     public UserPrincipal(String realm, UserEntry user) {
-        this.realm = realm;
-        this.user = user;
+        this.realm = requireNonNull(realm);
+        this.user = requireNonNull(user);
     }
 
     public String getRealm() {

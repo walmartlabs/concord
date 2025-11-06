@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.config.Config;
 
 import javax.annotation.Nullable;
@@ -35,7 +35,7 @@ public class CustomFormConfiguration {
 
     @Inject
     public CustomFormConfiguration(@Nullable @Config("forms.baseDir") String baseDir) throws IOException {
-        this.baseDir = baseDir != null ? Paths.get(baseDir) : IOUtils.createTempDir("formserv");
+        this.baseDir = baseDir != null ? Paths.get(baseDir) : PathUtils.createTempDir("formserv");
     }
 
     public Path getBaseDir() {

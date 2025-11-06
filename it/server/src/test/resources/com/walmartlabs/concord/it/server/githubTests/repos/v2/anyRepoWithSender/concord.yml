@@ -7,4 +7,7 @@ triggers:
       entryPoint: "onPush"
       version: 2
       conditions:
+        githubOrg: ".*"
+        githubRepo: ".*"
+        type: ".*"
         sender: ".*some.*dude.*"

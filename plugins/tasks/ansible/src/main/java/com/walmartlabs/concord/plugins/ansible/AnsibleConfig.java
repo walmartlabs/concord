@@ -21,13 +21,10 @@ package com.walmartlabs.concord.plugins.ansible;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import org.ini4j.Ini;
-import org.ini4j.Profile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -37,6 +34,7 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.sdk.MapUtils.getMap;
 import static com.walmartlabs.concord.sdk.MapUtils.getString;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class AnsibleConfig {
 
@@ -87,7 +85,7 @@ public class AnsibleConfig {
 
         Path cfgPath = getConfigPath();
         try {
-            Files.write(cfgPath, b.toString().getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+            Files.write(cfgPath, b.toString().getBytes(UTF_8), StandardOpenOption.CREATE);
         } catch (IOException e) {
             log.error("Configuration write {} error", CFG_FILE_NAME, e);
             throw new RuntimeException("Configuration write error: " + e.getMessage());
@@ -186,21 +184,43 @@ public class AnsibleConfig {
 
     private Map<String, Map<String, Object>> loadFromFile(Path file) {
         try {
-            Ini ini = new Ini();
-            ini.load(file.toFile());
-
-            Map<String, Map<String, Object>> result = new HashMap<>();
-            for (Map.Entry<String, Profile.Section> e : ini.entrySet()) {
-                Map<String, Object> section = new HashMap<>();
-                for (Map.Entry<String, String> s : e.getValue().entrySet()) {
-                    section.put(s.getKey(), s.getValue());
-                }
-                result.put(e.getKey(), section);
-            }
-            return result;
+            return parseIniFile(file);
         } catch (IOException e) {
             log.error("Configuration parse error: {}", e.getMessage());
             throw new RuntimeException("Configuration parse error " + file + ": " + e.getMessage());
         }
+    }
+
+    private static Map<String, Map<String, Object>> parseIniFile(Path file) throws IOException {
+        Map<String, Map<String, Object>> result = new HashMap<>();
+        Map<String, Object> currentSection = null;
+        for (String line : Files.readAllLines(file, UTF_8)) {
+            line = line.trim();
+
+            if (line.isEmpty() || line.startsWith("#") || line.startsWith(";")) {
+                continue;
+            }
+
+            if (line.startsWith("[") && line.endsWith("]")) {
+                String sectionName = line.substring(1, line.length() - 1).trim();
+                currentSection = new HashMap<>();
+                result.put(sectionName, currentSection);
+                continue;
+            }
+
+            if (currentSection != null && line.contains("=")) {
+                int equalIndex = line.indexOf("=");
+                String key = line.substring(0, equalIndex).trim();
+                String value = line.substring(equalIndex + 1).trim();
+
+                if ((value.startsWith("\"") && value.endsWith("\"")) ||
+                    (value.startsWith("'") && value.endsWith("'"))) {
+                    value = value.substring(1, value.length() - 1);
+                }
+
+                currentSection.put(key, value);
+            }
+        }
+        return result;
     }
 }

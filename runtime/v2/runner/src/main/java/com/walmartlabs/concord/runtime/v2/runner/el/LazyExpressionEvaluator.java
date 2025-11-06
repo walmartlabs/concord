@@ -22,9 +22,8 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.ExceptionUtils;
-import com.walmartlabs.concord.runtime.v2.runner.el.functions.*;
-import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.MapELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.*;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.MapELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.runner.vm.WrappedException;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
@@ -50,12 +49,13 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     private final SensitiveDataProcessor sensitiveDataProcessor;
 
     public LazyExpressionEvaluator(TaskProviders taskProviders,
+                                   FunctionHolder functionHolder,
                                    List<CustomTaskMethodResolver> taskMethodResolvers,
                                    List<CustomBeanMethodResolver> beanMethodResolvers,
                                    SensitiveDataProcessor sensitiveDataProcessor) {
         this.taskProviders = taskProviders;
         this.sensitiveDataProcessor = sensitiveDataProcessor;
-        this.functionMapper = createFunctionMapper();
+        this.functionMapper = new DelegatingFunctionMapper(functionHolder);
         this.taskMethodResolvers = taskMethodResolvers;
         this.beanMethodResolvers = beanMethodResolvers;
     }
@@ -203,22 +203,6 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         return r;
     }
 
-    private static FunctionMapper createFunctionMapper() {
-        var functions = new HashMap<String, Method>();
-        functions.put("hasVariable", HasVariableFunction.getMethod());
-        functions.put("hasNonNullVariable", HasNonNullVariableFunction.getMethod());
-        functions.put("orDefault", OrDefaultFunction.getMethod());
-        functions.put("allVariables", AllVariablesFunction.getMethod());
-        functions.put("currentFlowName", CurrentFlowNameFunction.getMethod());
-        functions.put("evalAsMap", EvalAsMapFunction.getMethod());
-        functions.put("isDebug", IsDebugFunction.getMethod());
-        functions.put("throw", ThrowFunction.getMethod());
-        functions.put("hasFlow", HasFlowFunction.getMethod());
-        functions.put("uuid", UuidFunction.getMethod());
-        functions.put("isDryRun", IsDryRunFunction.getMethod());
-        return new FunctionMapper(functions);
-    }
-
     private static boolean hasExpression(String s) {
         return s.contains("${");
     }
@@ -271,5 +255,21 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         }
 
         return Optional.empty();
+    }
+
+    private static class DelegatingFunctionMapper extends FunctionMapper {
+        final FunctionHolder functionHolder;
+
+        DelegatingFunctionMapper(FunctionHolder functionHolder) {
+            this.functionHolder = functionHolder;
+        }
+
+        @Override
+        public Method resolveFunction(String prefix, String localName) {
+            if (prefix != null && !prefix.isBlank()) {
+                return functionHolder.resolve(prefix + ":" + localName);
+            }
+            return functionHolder.resolve(localName);
+        }
     }
 }

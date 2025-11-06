@@ -1,3 +1,7 @@
+configuration:
+  dependencies:
+    - mvn://com.walmartlabs.concord.it.tasks:serialization-test:PROJECT_VERSION
+
 flows:
   default:
     - task: serializationTest

@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2024 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,21 +20,13 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.ELFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.ThreadLocalEvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 
-import java.lang.reflect.Method;
-
 public class IsDryRunFunction {
 
-    public static Method getMethod() {
-        try {
-            return IsDryRunFunction.class.getMethod("isDryRun");
-        } catch (Exception e) {
-            throw new RuntimeException("Method not found");
-        }
-    }
-
+    @ELFunction
     public static boolean isDryRun() {
         Context ctx = ThreadLocalEvalContext.get().context();
         if (ctx == null) {

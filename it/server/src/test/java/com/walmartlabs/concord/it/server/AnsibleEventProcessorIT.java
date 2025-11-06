@@ -38,7 +38,7 @@ public class AnsibleEventProcessorIT extends AbstractServerIT {
     @Test
     public void test() throws Exception {
         URI uri = AnsibleEventProcessorIT.class.getResource("ansibleEventProcessor").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // ---
 
@@ -66,7 +66,7 @@ public class AnsibleEventProcessorIT extends AbstractServerIT {
     @Test
     public void testLongNames() throws Exception {
         URI uri = AnsibleEventProcessorIT.class.getResource("ansibleEventProcessor").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // ---
 

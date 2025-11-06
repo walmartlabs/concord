@@ -33,11 +33,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+
+import static com.walmartlabs.concord.common.PathUtils.assertInPath;
 
 public class ResourceTaskCommon {
 
@@ -233,25 +234,15 @@ public class ResourceTaskCommon {
     }
 
     private Path normalizePath(String path) {
-        Path p = Paths.get(path);
-        if (p.isAbsolute()) {
-            return p;
-        }
-        return workDir.resolve(path);
+        return assertWorkDirPath(path);
     }
 
     private Path assertWorkDirPath(String path) {
-        if (path == null) {
-            throw new IllegalArgumentException("Path cannot be null");
+        try {
+            return assertInPath(workDir,path);
+        } catch (IOException ex) {
+            throw new IllegalArgumentException("Not authorized to access file outside of working directory: " + path);
         }
-        Path dst = Paths.get(path);
-        if (!dst.isAbsolute()) {
-            dst = workDir.resolve(path).normalize().toAbsolutePath();
-        }
-        if (!dst.startsWith(workDir)) {
-            throw new IllegalArgumentException("Invalid path: " + path);
-        }
-        return dst;
     }
 
     private static ObjectWriter createYamlWriter() {
