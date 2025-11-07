@@ -186,7 +186,13 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             public Object getValue(ELContext context, Object base, Object property) {
                 var result = super.getValue(context, base, property);
                 if (evalContext.resolveLazyValues() && result instanceof LazyValue<?> v) {
-                    return v.resolve(evalContext.context());
+                    var resolved = v.resolve(evalContext.context());
+                    try {
+                        sensitiveDataProcessor.process(resolved, v.getClass().getMethod("resolve", Context.class));
+                    } catch (NoSuchMethodException e) {
+                        throw new RuntimeException("can't find 'resolve' method in " + resolved.getClass() + ". This is most likely a bug.");
+                    }
+                    return resolved;
                 }
                 return result;
             }
