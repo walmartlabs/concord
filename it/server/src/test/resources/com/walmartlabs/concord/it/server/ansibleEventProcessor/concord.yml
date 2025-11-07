@@ -16,6 +16,17 @@ flows:
       extraVars:
         msg: "Hi there!"
 
+  generateNonPrintableChars:
+    - task: ansible
+      in:
+        playbook: playbook/unicode_sanitization.yml
+        inventory:
+          local:
+            hosts:
+              - "127.0.0.1"
+            vars:
+              ansible_connection: "local"
+
   emitLongNames:
   - set:
       localHosts:
