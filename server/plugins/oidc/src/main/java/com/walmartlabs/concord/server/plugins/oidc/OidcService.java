@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.inject.Inject;
@@ -118,7 +119,8 @@ public class OidcService {
             var id = userInfo.get("sub").asText();
             var email = userInfo.get("email").asText();
             var displayName = userInfo.get("name").asText(email);
-            return new UserProfile(id, email, displayName, accessToken, userInfo);
+            return new UserProfile(id, email, displayName, accessToken, objectMapper.convertValue(userInfo, new TypeReference<>() {
+            }));
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

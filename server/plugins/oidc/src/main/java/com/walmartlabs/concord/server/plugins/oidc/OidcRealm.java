@@ -102,9 +102,6 @@ public class OidcRealm extends AuthorizingRealm {
                 UUID teamId = e.getKey();
                 TeamMapping mapping = e.getValue();
 
-                log.info("doGetAuthenticationInfo: email: {}, groups: {}, mapping: {}",
-                        profile.email(), profile.getAttribute("groups"), mapping);
-
                 if (match(profile, mapping.sources())) {
                     if (!hasTeam(teamId, mapping.role(), currentTeams)) {
                         teamDao.upsertUser(tx, teamId, userId, mapping.role());
@@ -153,7 +150,8 @@ public class OidcRealm extends AuthorizingRealm {
         return SecurityUtils.toAuthorizationInfo(principals, roles);
     }
 
-    private static boolean match(UserProfile profile, List<PluginConfiguration.Source> sources) {
+    @VisibleForTesting
+    static boolean match(UserProfile profile, List<PluginConfiguration.Source> sources) {
         for (PluginConfiguration.Source source : sources) {
             String attr = source.attribute();
             String pattern = source.pattern();

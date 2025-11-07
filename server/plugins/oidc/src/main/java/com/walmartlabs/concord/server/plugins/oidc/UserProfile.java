@@ -20,14 +20,14 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Map;
 
 public record UserProfile(
         String id,
         String email,
         String displayName,
         String accessToken,
-        JsonNode attributes) {
+        Map<String, Object> attributes) {
 
     public Object getAttribute(String name) {
         return attributes != null ? attributes.get(name) : null;

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamEntry;
 import com.walmartlabs.concord.server.org.team.TeamRole;
@@ -74,5 +76,35 @@ public class OidcRealmTest {
         assertFalse(output.containsKey(teamIdFoo));
         assertTrue(output.containsKey(teamIdBar));
         assertFalse(output.containsKey(teamIdBaz));
+    }
+
+    @Test
+    public void testMapping() throws Exception {
+        var profile = """
+                {
+                  "sub": "1234567890",
+                  "email": "user@example.com",
+                  "name": "Test User",
+                  "groups": [
+                    "admins",
+                    "dev",
+                    "testers"
+                  ]
+                }""";
+
+        var objectMapper = new ObjectMapper();
+        var userInfo = objectMapper.readTree(profile);
+        var id = userInfo.get("sub").asText();
+        var email = userInfo.get("email").asText();
+        var displayName = userInfo.get("name").asText(email);
+        var userProfile = new UserProfile(id, email, displayName, "accessToken", objectMapper.convertValue(userInfo, new TypeReference<>() {
+        }));
+
+        assertTrue(OidcRealm.match(userProfile, List.of(new Source("groups", ".*admins.*"))));
+        assertTrue(OidcRealm.match(userProfile, List.of(new Source("groups", "dev"))));
+        assertTrue(OidcRealm.match(userProfile, List.of(new Source("groups", "test.*"))));
+        assertTrue(OidcRealm.match(userProfile, List.of(new Source("groups", ".*"))));
+
+        assertFalse(OidcRealm.match(userProfile, List.of(new Source("groups", ".*superadmins.*"))));
     }
 }
