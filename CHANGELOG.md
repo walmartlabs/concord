@@ -5,7 +5,10 @@
 ### Changed
 
 - oidc: handle session invalidation errors
-([#1239](https://github.com/walmartlabs/concord/pull/1239)).
+([#1239](https://github.com/walmartlabs/concord/pull/1239));
+- concord-server: sanitize escaped unicode nul characters
+from events
+([#1241](https://github.com/walmartlabs/concord/pull/1241)).
 
 
 
