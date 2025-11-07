@@ -28,6 +28,8 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.time.OffsetDateTime;
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 
 @Value.Immutable
@@ -37,6 +39,9 @@ import java.util.UUID;
 public interface LogSegmentRequest {
 
     @Nullable
+    Long parentId();
+
+    @Nullable
     UUID correlationId();
 
     String name();
@@ -44,4 +49,9 @@ public interface LogSegmentRequest {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     @Nullable
     OffsetDateTime createdAt();
+
+    @Value.Default
+    default Map<String, Object> meta() {
+        return Collections.emptyMap();
+    }
 }

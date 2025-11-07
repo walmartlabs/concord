@@ -87,6 +87,7 @@ export enum SegmentStatus {
 
 export interface LogSegmentEntry {
     id: number;
+    parentId?: number;
     correlationId?: string;
     name: string;
     createdAt: string;
@@ -94,6 +95,8 @@ export interface LogSegmentEntry {
     statusUpdatedAt?: string;
     warnings?: number;
     errors?: number;
+    meta?: object;
+    childHasErrors?: boolean;
 }
 
 export interface PaginatedLogSegmentEntry {
@@ -122,7 +125,80 @@ export const listLogSegments = async (
     }
 
     return {
-        items: data,
+        items: data.filter(d => d.meta === undefined || d.meta['generated'] !== true),
+        next: hasMoreElements
+    };
+};
+
+export const listLogSegmentsV3 = async (
+    instanceId: ConcordId,
+    offset: number,
+    limit: number,
+    rootOnly: boolean,
+    parentId?: number
+): Promise<PaginatedLogSegmentEntry> => {
+    const limitParam = limit > 0 ? limit + 1 : limit;
+
+    const data: LogSegmentEntry[] = await fetchJson(
+        `/api/v2/process/${instanceId}/log/segment?${queryParams({
+            offset,
+            limit: limitParam,
+            parentId,
+            rootOnly,
+            collectErrors: true
+        })}`
+    );
+
+    const hasMoreElements: boolean = limit > 0 && data.length > limit;
+
+    if (limit > 0 && hasMoreElements) {
+        data.pop();
+    }
+
+    return {
+        items: data.map(i => {
+            if (i.childHasErrors) {
+                i.errors = (i.errors ? i.errors : 0) + 1;
+            }
+            return i;
+        }),
+        next: hasMoreElements
+    };
+};
+
+export const listLogSegmentsV4 = async (
+    instanceId: ConcordId,
+    offset: number,
+    limit: number,
+    rootOnly: boolean,
+    parentId?: number
+): Promise<PaginatedLogSegmentEntry> => {
+    const limitParam = limit > 0 ? limit + 1 : limit;
+
+    const data: LogSegmentEntry[] = await fetchJson(
+        `/api/v2/process/${instanceId}/log/segment?${queryParams({
+            offset,
+            limit: limitParam,
+            parentId,
+            rootOnly,
+            collectErrors: true,
+            onlyNamedSegments: true
+        })}`
+    );
+
+    const hasMoreElements: boolean = limit > 0 && data.length > limit;
+
+    if (limit > 0 && hasMoreElements) {
+        data.pop();
+    }
+
+    return {
+        items: data.map(i => {
+            if (i.childHasErrors) {
+                i.errors = (i.errors ? i.errors : 0) + 1;
+            }
+            return i;
+        }),
         next: hasMoreElements
     };
 };

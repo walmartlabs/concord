@@ -79,6 +79,14 @@ public final class LogSegmentUtils {
         state.setThreadLocal(threadId, KEY, items);
     }
 
+    public static Long getLogSegmentId(State state, ThreadId threadId) {
+        LogContext logContext = getLogContext(threadId, state);
+        if (logContext == null) {
+            return null;
+        }
+        return logContext.segmentId();
+    }
+
     private LogSegmentUtils() {
     }
 }

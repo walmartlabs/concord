@@ -33,6 +33,8 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.Map;
+import java.util.Map;
 import java.util.UUID;
 
 @Singleton
@@ -49,10 +51,12 @@ public class DefaultLoggingClient implements LoggingClient {
         this.cfg = cfg;
     }
 
-    public long createSegment(UUID correlationId, String name) {
+    public long createSegment(UUID correlationId, String name, Long parentId, Map<String, Object> meta) {
         LogSegmentRequest request = new LogSegmentRequest()
                 .correlationId(correlationId)
                 .createdAt(OffsetDateTime.now(ZoneId.of("UTC")))
+                .parentId(parentId)
+                .meta(meta)
                 .name(name);
 
         try {
