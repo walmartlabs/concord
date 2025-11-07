@@ -101,6 +101,10 @@ public class OidcRealm extends AuthorizingRealm {
             for (Map.Entry<UUID, TeamMapping> e : teamMapping.entrySet()) {
                 UUID teamId = e.getKey();
                 TeamMapping mapping = e.getValue();
+
+                log.info("doGetAuthenticationInfo: email: {}, groups: {}, mapping: {}",
+                        profile.email(), profile.getAttribute("groups"), mapping);
+
                 if (match(profile, mapping.sources())) {
                     if (!hasTeam(teamId, mapping.role(), currentTeams)) {
                         teamDao.upsertUser(tx, teamId, userId, mapping.role());
