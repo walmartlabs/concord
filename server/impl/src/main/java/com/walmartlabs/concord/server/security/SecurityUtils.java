@@ -44,26 +44,36 @@ public final class SecurityUtils {
 
     public static void logout() {
         Subject subject = getSubject();
-        if (subject != null) {
-            subject.logout();
+        if (subject == null) {
+            return;
         }
+        subject.logout();
     }
 
     public static boolean hasRole(String role) {
         Subject s = getSubject();
+        if (s == null) {
+            return false;
+        }
         return s.hasRole(role);
     }
 
     public static boolean isPermitted(String permission) {
         Subject s = getSubject();
+        if (s == null) {
+            return false;
+        }
         return s.isPermitted(permission);
     }
 
     public static Subject getSubject() {
-        Subject subject = ThreadContext.getSubject();
+        return ThreadContext.getSubject();
+    }
+
+    public static Subject assertSubject() {
+        Subject subject = getSubject();
         if (subject == null) {
-            subject = (new Subject.Builder()).buildSubject();
-            ThreadContext.bind(subject);
+            throw new AuthenticationException("Can't determine the current security subject");
         }
         return subject;
     }
