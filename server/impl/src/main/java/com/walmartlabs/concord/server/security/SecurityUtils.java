@@ -78,7 +78,7 @@ public final class SecurityUtils {
         return subject;
     }
 
-    public static <T> T getCurrent(Class<T> type) {
+    public static <T> T getPrincipal(Class<T> type) {
         SecurityManager securityManager = ThreadContext.getSecurityManager();
         if (securityManager == null) {
             return null;
@@ -97,8 +97,8 @@ public final class SecurityUtils {
         return principals.oneByType(type);
     }
 
-    public static <T> T assertCurrent(Class<T> type) {
-        T p = getCurrent(type);
+    public static <T> T assertPrincipal(Class<T> type) {
+        T p = getPrincipal(type);
         if (p == null) {
             throw new AuthenticationException("Can't determine the current principal (" + type.getName() + ")");
         }

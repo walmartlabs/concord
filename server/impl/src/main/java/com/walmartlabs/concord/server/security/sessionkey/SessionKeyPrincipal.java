@@ -26,7 +26,7 @@ import com.walmartlabs.concord.server.security.SecurityUtils;
 public class SessionKeyPrincipal {
 
     public static SessionKeyPrincipal getCurrent() {
-        return SecurityUtils.getCurrent(SessionKeyPrincipal.class);
+        return SecurityUtils.getPrincipal(SessionKeyPrincipal.class);
     }
 
     private final PartialProcessKey processKey;
