@@ -43,7 +43,8 @@ public final class VMUtils {
                                                    ExpressionEvaluator ee,
                                                    Context ctx,
                                                    Map<String, Serializable> input,
-                                                   String inputExpression) {
+                                                   String inputExpression,
+                                                   boolean resolveLazyValues) {
 
         Object value = null;
         if (inputExpression != null) {
@@ -52,13 +53,13 @@ public final class VMUtils {
             value = input;
         }
 
-        Map<String, Object> stepInput = ee.evalAsMap(ecf.global(ctx), value);
+        Map<String, Object> stepInput = ee.evalAsMap(ecf.global(ctx, resolveLazyValues), value);
         if (stepInput == null) {
             stepInput = Collections.emptyMap();
         }
 
         Map<String, Object> overrides = getLocal(ctx.execution().state(), ctx.execution().currentThreadId(), FRAME_INPUT_OVERRIDES_KEY);
-        overrides = ee.evalAsMap(ecf.global(ctx), overrides);
+        overrides = ee.evalAsMap(ecf.global(ctx, resolveLazyValues), overrides);
         if (overrides == null) {
             overrides = Collections.emptyMap();
         }

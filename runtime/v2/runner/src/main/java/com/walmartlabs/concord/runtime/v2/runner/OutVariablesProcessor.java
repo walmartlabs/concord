@@ -71,6 +71,7 @@ public class OutVariablesProcessor implements ExecutionListener {
         EvalContext evalContext = EvalContext.builder()
                 .from(ecf.strict(vars))
                 .undefinedVariableAsNull(true)
+                .resolveLazyValues(true)
                 .build();
 
         Map<String, Object> outValues = new HashMap<>();

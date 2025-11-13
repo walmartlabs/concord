@@ -43,6 +43,8 @@ public interface EvalContextFactory {
      */
     EvalContext global(Context ctx);
 
+    EvalContext global(Context ctx, boolean resolveLazyValues);
+
     /**
      * Includes all flow variables and additional variables.
      * Allows access to tasks.

@@ -72,7 +72,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> implements ElementEve
         Command steps = CompilerUtils.compile(compiler, pc, pd, flowName);
 
         FlowCallOptions opts = Objects.requireNonNull(call.getOptions());
-        Map<String, Object> input = VMUtils.prepareInput(ecf, ee, ctx, opts.input(), opts.inputExpression());
+        Map<String, Object> input = VMUtils.prepareInput(ecf, ee, ctx, opts.input(), opts.inputExpression(), false);
 
         input = new HashMap<>(input);
         input.put("parentSegmentId", LogSegmentUtils.getLogSegmentId(state, threadId));
