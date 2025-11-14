@@ -22,10 +22,8 @@ package com.walmartlabs.concord.agent;
 
 import com.typesafe.config.Config;
 import com.walmartlabs.concord.agent.remote.ApiClientFactory;
-import com.walmartlabs.concord.client2.ApiException;
 import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.ExternalAuthToken;
-import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import com.walmartlabs.concord.github.appinstallation.GitHubAppInstallation;
 import com.walmartlabs.concord.sdk.Secret;
 

@@ -67,7 +67,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
                 .build(new CacheLoader<>() {
                     @Override
                     public @Nonnull Optional<ExternalAuthToken> load(@Nonnull CacheKey key) {
-                        return fetchToken(key.repoUri(), key.binaryDataSecret());
+                        return fetchToken(key.repoUri(), key.secretData());
                     }
                 });
     }

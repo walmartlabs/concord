@@ -20,47 +20,24 @@ package com.walmartlabs.concord.github.appinstallation;
  * =====
  */
 
-import org.immutables.value.Value;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.net.URI;
-import java.util.Objects;
 
-@Value.Immutable
-@Value.Style(jdkOnly = true, redactedMask = "**redacted**")
-interface CacheKey {
+public record CacheKey(URI repoUri, byte[] secretData, int weight) {
 
-    URI repoUri();
-
-    @Nullable
-    @Value.Redacted
-    byte[] binaryDataSecret();
-
-    @Value.Default
-    default int weight() {
-        var weight = 1;
-
-        if (binaryDataSecret() != null) {
-            var data = Objects.requireNonNull(binaryDataSecret());
-            weight += 1;
-            weight += data.length / 1024;
-        }
-
-        return weight;
-    }
 
     static CacheKey from(URI repoUri) {
-        return ImmutableCacheKey.builder()
-                .repoUri(repoUri)
-                .build();
+        return from(repoUri, null);
     }
 
-    static CacheKey from(URI repoUri, @Nonnull byte[] secret) {
-        return ImmutableCacheKey.builder()
-                .repoUri(repoUri)
-                .binaryDataSecret(secret)
-                .build();
-    }
+    static CacheKey from(URI repoUri, byte[] secretData) {
+        var weight = 1;
 
+        if (secretData != null) {
+            weight += 1;
+            weight += secretData.length / 1024;
+        }
+
+        return new CacheKey(repoUri, secretData, weight);
+    }
 }
+
