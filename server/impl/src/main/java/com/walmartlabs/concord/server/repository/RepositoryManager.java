@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.repository;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.repository.*;
@@ -63,11 +64,13 @@ public class RepositoryManager {
                              RepositoryConfiguration repoCfg,
                              ProjectDao projectDao,
                              SecretManager secretManager,
-                             DependencyManager dependencyManager) throws IOException {
+                             DependencyManager dependencyManager,
+                             AuthTokenProvider authProvider) throws IOException {
 
         GitClientConfiguration gitCliCfg = GitClientConfiguration.builder()
-                .oauthToken(gitCfg.getOauthToken())
-                .authorizedGitHosts(gitCfg.getAuthorizedGitHosts())
+                .oauthToken(gitCfg.getOauthToken()) // TODO remove? authProvider should have the same info now
+                .oauthUsername(gitCfg.getOauthUsername())
+                .oauthUrlPattern(gitCfg.getOauthUrlPattern())
                 .defaultOperationTimeout(gitCfg.getDefaultOperationTimeout())
                 .fetchTimeout(gitCfg.getFetchTimeout())
                 .httpLowSpeedLimit(gitCfg.getHttpLowSpeedLimit())
@@ -76,10 +79,13 @@ public class RepositoryManager {
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
                 .build();
 
-        List<RepositoryProvider> providers = Arrays.asList(new ClasspathRepositoryProvider(), new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(gitCliCfg));
-
         this.gitCfg = gitCfg;
-        this.providers = new RepositoryProviders(providers);
+        this.providers =
+                new RepositoryProviders(List.of(
+                        new ClasspathRepositoryProvider(),
+                        new MavenRepositoryProvider(dependencyManager),
+                        new GitCliRepositoryProvider(gitCliCfg, authProvider)
+                ));
         this.secretManager = secretManager;
         this.projectDao = projectDao;
         this.repoCfg = repoCfg;

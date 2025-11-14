@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.walmartlabs.concord.imports.ImportManager;
-import com.walmartlabs.concord.process.loader.DelegatingProjectLoader;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.runtime.v1.ProjectLoaderV1;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;

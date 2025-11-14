@@ -51,13 +51,14 @@ public class RepositoryManager {
                              GitConfiguration gitCfg,
                              RepositoryCacheConfiguration cacheCfg,
                              ObjectMapper objectMapper,
-                             DependencyManager dependencyManager) throws IOException {
+                             DependencyManager dependencyManager,
+                             AgentAuthTokenProvider agentAuthTokenProvider) throws IOException {
 
         this.secretClient = secretClient;
         this.gitCfg = gitCfg;
 
         GitClientConfiguration clientCfg = GitClientConfiguration.builder()
-                .oauthToken(gitCfg.getToken())
+                .oauthToken(gitCfg.getOauthToken())
                 .defaultOperationTimeout(gitCfg.getDefaultOperationTimeout())
                 .fetchTimeout(gitCfg.getFetchTimeout())
                 .httpLowSpeedLimit(gitCfg.getHttpLowSpeedLimit())
@@ -66,9 +67,10 @@ public class RepositoryManager {
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
                 .build();
 
-        List<RepositoryProvider> providers = Arrays.asList(new MavenRepositoryProvider(dependencyManager), new GitCliRepositoryProvider(clientCfg));
-        this.providers = new RepositoryProviders(providers);
-
+        this.providers = new RepositoryProviders(List.of(
+                new MavenRepositoryProvider(dependencyManager),
+                new GitCliRepositoryProvider(clientCfg, agentAuthTokenProvider)
+        ));
         this.repositoryCache = new RepositoryCache(cacheCfg.getCacheDir(),
                 cacheCfg.getInfoDir(),
                 cacheCfg.getLockTimeout(),
