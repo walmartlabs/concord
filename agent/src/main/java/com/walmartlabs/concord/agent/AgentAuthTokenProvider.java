@@ -37,12 +37,10 @@ public class AgentAuthTokenProvider implements AuthTokenProvider {
     private final List<AuthTokenProvider> authTokenProviders;
 
     @Inject
-    public AgentAuthTokenProvider(ConcordServerTokenProvider concordProvider,
-                                  GitHubAppInstallation githubProvider,
+    public AgentAuthTokenProvider(GitHubAppInstallation githubProvider,
                                   OauthTokenProvider oauthTokenProvider) {
 
         this.authTokenProviders = List.of(
-                concordProvider,
                 githubProvider,
                 oauthTokenProvider
         );

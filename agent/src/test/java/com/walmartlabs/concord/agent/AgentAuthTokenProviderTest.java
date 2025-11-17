@@ -48,9 +48,6 @@ class AgentAuthTokenProviderTest {
     @Mock
     AuthTokenProvider.OauthTokenProvider oauthTokenProvider;
 
-    @Mock
-    AgentAuthTokenProvider.ConcordServerTokenProvider concordServerTokenProvider;
-
     @Test
     void testGitHubApp() {
         when(ghApp.getToken(any(), any())).
@@ -60,7 +57,7 @@ class AgentAuthTokenProviderTest {
                         .build()));
         when(ghApp.supports(any(), any())).thenReturn(true);
 
-        var provider = new AgentAuthTokenProvider(concordServerTokenProvider, ghApp, oauthTokenProvider);
+        var provider = new AgentAuthTokenProvider(ghApp, oauthTokenProvider);
 
         // --
 
@@ -82,7 +79,7 @@ class AgentAuthTokenProviderTest {
                         .token("oauth-token")
                         .build()));
 
-        var provider = new AgentAuthTokenProvider(concordServerTokenProvider, ghApp, oauthTokenProvider);
+        var provider = new AgentAuthTokenProvider(ghApp, oauthTokenProvider);
 
         // --
 
@@ -97,33 +94,11 @@ class AgentAuthTokenProviderTest {
     }
 
     @Test
-    void testConcord() {
-        when(concordServerTokenProvider.supports(any(), any())).thenReturn(true);
-        when(concordServerTokenProvider.getToken(any(), any()))
-                .thenReturn(Optional.of(ExternalAuthToken.StaticToken.builder()
-                        .token("token-from-concord")
-                        .build()));
-
-        var provider = new AgentAuthTokenProvider(concordServerTokenProvider, ghApp, oauthTokenProvider);
-
-        // --
-
-        assertTrue(provider.supports(URI.create("https://github.local/owner/repo.git"), null));
-        var o = provider.getToken(URI.create("https://github.local/owner/repo.git"), null);
-
-        // --
-
-        assertTrue(o.isPresent());
-        var result = assertInstanceOf(ExternalAuthToken.class, o.get());
-        assertEquals("token-from-concord", result.token());
-    }
-
-    @Test
     void testNoAuth() {
         when(ghApp.supports(any(), any())).thenReturn(false);
         when(oauthTokenProvider.supports(any(), any())).thenReturn(false);
 
-        var provider = new AgentAuthTokenProvider(concordServerTokenProvider, ghApp, oauthTokenProvider);
+        var provider = new AgentAuthTokenProvider(ghApp, oauthTokenProvider);
 
         // --
 

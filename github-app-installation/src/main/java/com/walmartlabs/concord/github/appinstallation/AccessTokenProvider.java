@@ -47,8 +47,6 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import java.util.function.BiFunction;
 
 public class AccessTokenProvider {
@@ -109,31 +107,6 @@ public class AccessTokenProvider {
         });
 
         return appInstallation.accessTokensUrl();
-    }
-
-    private String getAccessTokenUrlOooorg(String apiBaseUrl, String jwt, String org) throws GitHubAppException {
-        var req = HttpRequest.newBuilder().GET()
-                .uri(URI.create(apiBaseUrl + "/app/installations"))
-                .header("Authorization", "Bearer " + jwt)
-                .header("Accept", "application/vnd.github+json")
-                .header("X-GitHub-Api-Version", "2022-11-28")
-                .timeout(httpTimeout)
-                .build();
-
-        var appInstallation = sendRequestForList(req, 200, Map.class, (code, body) -> {
-            if (code == 404) {
-                // not possible to discern between repo not found and app not installed for existing (private) repo
-                log.warn("getAccessTokenUrl -> not found");
-                return new GitHubAppException.NotFoundException("Repo not found or App installation not found for repo");
-            }
-
-            log.warn("getAccessTokenUrl -> error: {} : {}", code, body);
-            return new GitHubAppException("Unexpected error locating repo installation: " + code);
-        });
-
-        var installation = objectMapper.convertValue(appInstallation.get(0), AccessTokenProvider.GitHubAppInstallationResp.class);
-
-        return installation.accessTokensUrl();
     }
 
     private ExternalAuthToken createAccessToken(String accessTokenUrl, String jwt) {
@@ -202,25 +175,6 @@ public class AccessTokenProvider {
         throw new IllegalStateException("Unexpected error sending HTTP request");
     }
 
-    private <T> List<T> sendRequestForList(HttpRequest httpRequest, int expectedCode, Class<T> clazz, BiFunction<Integer, String, GitHubAppException> exFun) throws GitHubAppException {
-        try {
-            var resp = httpClient.send(httpRequest, BodyHandlers.ofInputStream());
-            if (resp.statusCode() != expectedCode) {
-                throw exFun.apply(resp.statusCode(), readBody(resp));
-            }
-
-            var t = objectMapper.getTypeFactory().constructCollectionType(List.class, clazz);
-
-            return objectMapper.readValue(resp.body(), t);
-        } catch (IOException e) {
-            throw new GitHubAppException("Error sending request", e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        throw new IllegalStateException("Unexpected error sending HTTP request");
-    }
-
     private static String readBody(HttpResponse<InputStream> resp) throws IOException {
         try (var is = resp.body()) {
             return new String(is.readAllBytes());
@@ -234,8 +188,9 @@ public class AccessTokenProvider {
     public interface GitHubAppInstallationResp {
 
         /*
-        This is all we **need**, even though there's other attributes. Some may differ
-        between GitHub "cloud" and GitHub Enterprise/private. So, be care if/when adding more.
+        This is the only attribute we **need**, even though there's other
+        attributes. Some may differ between GitHub "cloud" and GitHub Enterprise/private.
+        Be care if/when adding more.
          */
         @JsonProperty("access_tokens_url")
         String accessTokensUrl();
