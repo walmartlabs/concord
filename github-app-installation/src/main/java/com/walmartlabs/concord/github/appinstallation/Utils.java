@@ -28,10 +28,13 @@ import com.walmartlabs.concord.sdk.Secret;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 public class Utils {
+
+    private static final String KEY_GITHUB_APP_INSTALLATION = "githubAppInstallation";
 
     /**
      * Validates given secret is usable enough to attempt a remote lookup. Not
@@ -81,10 +84,12 @@ public class Utils {
         return true;
     }
 
-    static Map<?, ?> parseRawAppInstallation(byte[] bds, ObjectMapper mapper) {
+    static Map<String, Object> parseRawAppInstallation(byte[] bds, ObjectMapper mapper) {
+        var t = mapper.getTypeFactory().constructMapType(HashMap.class, String.class, Object.class);
+
         try { // find out if it's at least valid JSON.
-            var base = mapper.readValue(bds, Map.class);
-            if (base.containsKey("githubAppInstallation")) {
+            var base = mapper.<Map<String, Object>>readValue(bds, t);
+            if (base.containsKey(KEY_GITHUB_APP_INSTALLATION)) {
                 return base;
             } else {
                 // it's JSON, but not in our format
@@ -97,15 +102,15 @@ public class Utils {
     }
 
     static Optional<GitHubAppAuthConfig> parseAppInstallation(byte[] bds, ObjectMapper mapper) {
-        Map<?, ?> base = parseRawAppInstallation(bds, mapper);
+        var base = parseRawAppInstallation(bds, mapper);
 
-        if (base == null || !base.containsKey("githubAppInstallation")) {
+        if (base == null || !base.containsKey(KEY_GITHUB_APP_INSTALLATION)) {
             // it's either not JSON or not in our format
             return Optional.empty();
         }
 
         try { // great, now convert it to the expected structure
-            return Optional.of(mapper.convertValue(base.get("githubAppInstallation"), GitHubAppAuthConfig.class));
+            return Optional.of(mapper.convertValue(base.get(KEY_GITHUB_APP_INSTALLATION), GitHubAppAuthConfig.class));
         } catch (IllegalArgumentException e) {
             // doesn't match the expected structure
             throw new GitHubAppException("Invalid app installation definition.", e);
@@ -113,20 +118,7 @@ public class Utils {
     }
 
     static String extractOwnerAndRepo(GitHubAppAuthConfig auth, URI repo) throws RepoExtractionException {
-        var port = (repo.getPort() == -1 ? "" : (":" + repo.getPort()));
-        var path = (repo.getPath() == null ? "" : repo.getPath());
-        var repoHostPortAndPath = repo.getHost() + port + path;
-
-        var match = auth.urlPattern().matcher(repoHostPortAndPath);
-
-        if (!match.matches()) {
-            // at this point, this should only fail if the urlPattern is not
-            // constructed correctly. We wouldn't get there if the pattern didn't
-            // match the repo in the first place.
-            throw new RepoExtractionException("Failed to parse owner and repository from path: " + repo.getPath());
-        }
-
-        var baseUrl = match.group("baseUrl");
+        var baseUrl = getBaseUrl(auth, repo);
         var relevantPath = repo.toString().replaceAll("^.*" + baseUrl + "/?", "")
                 .replaceAll(repo.getQuery() != null ? "\\?" + repo.getQuery() : "", "")
                 .replaceFirst("\\.git$", "");
@@ -142,6 +134,23 @@ public class Utils {
         }
 
         return pathParts.get(0) + "/" + pathParts.get(1);
+    }
+
+    private static String getBaseUrl(GitHubAppAuthConfig auth, URI repo) {
+        var port = (repo.getPort() == -1 ? "" : (":" + repo.getPort()));
+        var path = (repo.getPath() == null ? "" : repo.getPath());
+        var repoHostPortAndPath = repo.getHost() + port + path;
+
+        var match = auth.urlPattern().matcher(repoHostPortAndPath);
+
+        if (!match.matches()) {
+            // at this point, this should only fail if the urlPattern is not
+            // constructed correctly. We wouldn't get there if the pattern didn't
+            // match the repo in the first place.
+            throw new RepoExtractionException("Failed to parse owner and repository from path: " + repo.getPath());
+        }
+
+        return match.group("baseUrl");
     }
 
     private Utils() {}

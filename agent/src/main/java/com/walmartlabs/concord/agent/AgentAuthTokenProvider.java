@@ -39,7 +39,7 @@ public class AgentAuthTokenProvider implements AuthTokenProvider {
     @Inject
     public AgentAuthTokenProvider(ConcordServerTokenProvider concordProvider,
                                   GitHubAppInstallation githubProvider,
-                                  AuthTokenProvider.OauthTokenProvider oauthTokenProvider) {
+                                  OauthTokenProvider oauthTokenProvider) {
 
         this.authTokenProviders = List.of(
                 concordProvider,
