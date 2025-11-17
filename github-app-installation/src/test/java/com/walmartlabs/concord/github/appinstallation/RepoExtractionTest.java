@@ -107,8 +107,8 @@ class RepoExtractionTest {
         return Utils.extractOwnerAndRepo(auth, repo);
     }
 
-    private static GitHubAppAuthConfigNew getAuth(String urlPattern) {
-        return new GitHubAppAuthConfigNew(
+    private static GitHubAppAuthConfig getAuth(String urlPattern) {
+        return new GitHubAppAuthConfig(
                 "https://api.github.com",
                 "1234",
                 "/not/used",

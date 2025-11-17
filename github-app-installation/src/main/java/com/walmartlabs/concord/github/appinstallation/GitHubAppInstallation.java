@@ -52,7 +52,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
     private final AccessTokenProvider tokenProvider;
     private final ObjectMapper objectMapper;
 
-    private final LoadingCache<CacheKey, Optional<ExternalAuthToken>> cache;
+    private final LoadingCache<GitHubAppAuthCacheKey, Optional<ExternalAuthToken>> cache;
 
     @Inject
     public GitHubAppInstallation(GitHubAppInstallationConfig cfg, ObjectMapper objectMapper) {
@@ -63,10 +63,10 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         this.cache = CacheBuilder.newBuilder()
                 .expireAfterWrite(cfg.getSystemAuthCacheDuration())
                 .maximumWeight(cfg.getSystemAuthCacheMaxWeight())
-                .weigher((Weigher<CacheKey, Optional<ExternalAuthToken>>) (key, value) -> key.weight())
+                .weigher((Weigher<GitHubAppAuthCacheKey, Optional<ExternalAuthToken>>) (key, value) -> key.weight())
                 .build(new CacheLoader<>() {
                     @Override
-                    public @Nonnull Optional<ExternalAuthToken> load(@Nonnull CacheKey key) {
+                    public @Nonnull Optional<ExternalAuthToken> load(@Nonnull GitHubAppAuthCacheKey key) {
                         return fetchToken(key.repoUri(), key.secretData());
                     }
                 });
@@ -77,13 +77,13 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         return Utils.validateSecret(secret, objectMapper) || systemSupports(repo);
     }
 
-    private CacheKey createKey(URI repoUri, @Nullable Secret secret) {
+    private GitHubAppAuthCacheKey createKey(URI repoUri, @Nullable Secret secret) {
         if (secret == null) {
-            return CacheKey.from(repoUri);
+            return GitHubAppAuthCacheKey.from(repoUri);
         }
 
         if (secret instanceof BinaryDataSecret bds) {
-            return CacheKey.from(repoUri, bds.getData());
+            return GitHubAppAuthCacheKey.from(repoUri, bds.getData());
         }
 
         return null;
@@ -140,7 +140,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
                                 .build();
                     }
 
-                    if (auth instanceof GitHubAppAuthConfigNew app) {
+                    if (auth instanceof GitHubAppAuthConfig app) {
                         return getTokenFromAppInstall(app, repo);
                     }
 
@@ -153,7 +153,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
      * invalidate and get a new one. If it's just a little close, refresh the
      * cache in the background and return the still-active token.
      */
-    private ExternalAuthToken refreshBeforeExpire(@Nonnull ExternalAuthToken token, CacheKey cacheKey) {
+    private ExternalAuthToken refreshBeforeExpire(@Nonnull ExternalAuthToken token, GitHubAppAuthCacheKey cacheKey) {
         if (token.secondsUntilExpiration() < 10) {
             // not enough time to be useful. get a new token right now
             cache.invalidate(cacheKey);
@@ -185,7 +185,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
                 .build();
     }
 
-    private ExternalAuthToken getTokenFromAppInstall(GitHubAppAuthConfigNew app, URI repo) {
+    private ExternalAuthToken getTokenFromAppInstall(GitHubAppAuthConfig app, URI repo) {
         log.info("getTokenFromAppInstall ['{}', '{}']", app.apiUrl(), repo);
 
         try {

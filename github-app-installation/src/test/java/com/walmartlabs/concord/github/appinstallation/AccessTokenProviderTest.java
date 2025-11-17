@@ -54,7 +54,7 @@ class AccessTokenProviderTest {
     @Mock
     HttpResponse<InputStream> accessTokenResponse;
 
-    private static final GitHubAppAuthConfigNew auth = new GitHubAppAuthConfigNew(null, "123", PRIVATE_KEY_TEXT, null, MappingAuthConfig.assertBaseUrlPattern("(?<baseUrl>github.local)/"));
+    private static final GitHubAppAuthConfig auth = new GitHubAppAuthConfig(null, "123", PRIVATE_KEY_TEXT, null, MappingAuthConfig.assertBaseUrlPattern("(?<baseUrl>github.local)/"));
 
 //    private static final GitHubAppAuthConfig auth = GitHubAppAuthConfig.builder()
 //            .urlPattern(MappingAuthConfig.assertBaseUrlPattern("(?<baseUrl>github.local)/"))

@@ -57,7 +57,7 @@ class GitHubAppInstallationTest {
     private static final URI VALID_APP_AUTH_URI_02 = URI.create("https://github.local/owner/repo-2.git");
     private static final URI VALID_STATIC_AUTH_URI_01 = URI.create("https://staticgithub.local/owner/repo-1.git");
 
-    private static final GitHubAppAuthConfigNew auth = new GitHubAppAuthConfigNew(
+    private static final GitHubAppAuthConfig auth = new GitHubAppAuthConfig(
             null,
             "123",
             "/does/not/exist",

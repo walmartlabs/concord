@@ -22,7 +22,7 @@ package com.walmartlabs.concord.github.appinstallation.cfg;
 
 import com.typesafe.config.Config;
 import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
-import com.walmartlabs.concord.github.appinstallation.GitHubAppAuthConfigNew;
+import com.walmartlabs.concord.github.appinstallation.GitHubAppAuthConfig;
 import com.walmartlabs.concord.github.appinstallation.exception.GitHubAppException;
 import org.immutables.value.Value;
 
@@ -160,7 +160,7 @@ public interface GitHubAppInstallationConfig {
             try {
                 var pkData = Files.readString(Paths.get(this.privateKey()));
 
-                return new GitHubAppAuthConfigNew(
+                return new GitHubAppAuthConfig(
                         this.apiUrl(),
                         this.clientId(),
                         pkData,

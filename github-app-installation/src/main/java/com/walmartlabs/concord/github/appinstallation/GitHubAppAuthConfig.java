@@ -20,37 +20,34 @@ package com.walmartlabs.concord.github.appinstallation;
  * =====
  */
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@Value.Style(jdkOnly = true)
-@JsonDeserialize(as = ImmutableGitHubAppAuthConfig.class)
-public interface GitHubAppAuthConfig extends MappingAuthConfig {
+import java.util.regex.Pattern;
 
-    //TODO convert to record, sanity check in constructor
+public record GitHubAppAuthConfig(String apiUrl,
+                                  String clientId,
+                                  String privateKey,
+                                  String username,
+                                  Pattern urlPattern) implements MappingAuthConfig {
 
-    @Value.Default
-    default String apiUrl() {
-        return "https://api.github.com";
-    }
+    public GitHubAppAuthConfig(String apiUrl, String clientId, String privateKey, String username, Pattern urlPattern) {
+        if (clientId == null || clientId.isBlank()) {
+            throw new IllegalArgumentException("clientId must be provided");
+        }
 
-    String clientId();
+        if (privateKey == null || privateKey.isBlank()) {
+            throw new IllegalArgumentException("privateKey must be provided");
+        }
 
-    String privateKey();
-
-    @Value.Check
-    default void checkUrlPattern() {
         // sanity check url pattern before this object gets too far out there
-        if (!urlPattern().toString().contains("?<baseUrl>")) {
+        if (!urlPattern.toString().contains("?<baseUrl>")) {
             throw new IllegalArgumentException("The url pattern must contain the ?<baseUrl> named group");
         }
-    }
 
-    static ImmutableGitHubAppAuthConfig.Builder builder() {
-        return ImmutableGitHubAppAuthConfig.builder();
+        this.apiUrl = (apiUrl == null) ? "https://api.github.com" : apiUrl;
+        this.clientId = clientId;
+        this.privateKey = privateKey;
+        this.username = username;
+        this.urlPattern = urlPattern;
     }
-
 }
-

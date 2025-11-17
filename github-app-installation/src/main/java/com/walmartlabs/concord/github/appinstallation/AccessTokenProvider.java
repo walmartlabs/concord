@@ -75,7 +75,7 @@ public class AccessTokenProvider {
         this.httpClient = httpClient;
     }
 
-    ExternalAuthToken getRepoInstallationToken(GitHubAppAuthConfigNew app, String orgRepo) throws GitHubAppException {
+    ExternalAuthToken getRepoInstallationToken(GitHubAppAuthConfig app, String orgRepo) throws GitHubAppException {
         try {
             var jwt = generateJWT(app);
             var accessTokenUrl = getAccessTokenUrl(app.apiUrl(), orgRepo, jwt);
@@ -158,7 +158,7 @@ public class AccessTokenProvider {
         });
     }
 
-    private static String generateJWT(GitHubAppAuthConfigNew auth) throws JOSEException {
+    private static String generateJWT(GitHubAppAuthConfig auth) throws JOSEException {
         var pk = auth.privateKey();
         var rsaJWK = JWK.parseFromPEMEncodedObjects(pk).toRSAKey();
 

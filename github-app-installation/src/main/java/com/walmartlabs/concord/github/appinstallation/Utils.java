@@ -96,7 +96,7 @@ public class Utils {
         }
     }
 
-    static Optional<GitHubAppAuthConfigNew> parseAppInstallation(byte[] bds, ObjectMapper mapper) {
+    static Optional<GitHubAppAuthConfig> parseAppInstallation(byte[] bds, ObjectMapper mapper) {
         Map<?, ?> base = parseRawAppInstallation(bds, mapper);
 
         if (base == null || !base.containsKey("githubAppInstallation")) {
@@ -105,14 +105,14 @@ public class Utils {
         }
 
         try { // great, now convert it to the expected structure
-            return Optional.of(mapper.convertValue(base.get("githubAppInstallation"), GitHubAppAuthConfigNew.class));
+            return Optional.of(mapper.convertValue(base.get("githubAppInstallation"), GitHubAppAuthConfig.class));
         } catch (IllegalArgumentException e) {
             // doesn't match the expected structure
             throw new GitHubAppException("Invalid app installation definition.", e);
         }
     }
 
-    static String extractOwnerAndRepo(GitHubAppAuthConfigNew auth, URI repo) throws RepoExtractionException {
+    static String extractOwnerAndRepo(GitHubAppAuthConfig auth, URI repo) throws RepoExtractionException {
         var port = (repo.getPort() == -1 ? "" : (":" + repo.getPort()));
         var path = (repo.getPath() == null ? "" : repo.getPath());
         var repoHostPortAndPath = repo.getHost() + port + path;
