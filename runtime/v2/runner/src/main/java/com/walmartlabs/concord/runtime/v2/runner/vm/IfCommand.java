@@ -57,7 +57,7 @@ public class IfCommand extends StepCommand<IfStep> implements ElementEventProduc
 
         EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
         Context ctx = runtime.getService(Context.class);
-        EvalContext evalContext = ecf.global(ctx);
+        EvalContext evalContext = ecf.global(ctx, true);
 
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
         Object ifResult = ee.eval(evalContext, expr, Object.class);

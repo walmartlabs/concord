@@ -1,0 +1,25 @@
+flows:
+  default:
+    - set:
+        value: "100"
+        lazyValue: "${lazyValuesTask.createLazyValue(value)}"
+
+    - expr: "${value + 123}"
+      out: valueResult  # 223 :)
+
+    - expr: "${lazyValue + 123}"
+      out: lazyValueResult
+
+    - log: "1 should print `true`: ${valueResult == lazyValueResult}"
+    - log: "2 should print `true`: ${valueResult.getClass() == lazyValueResult.getClass()}"
+    - log: "3 should print `true`: ${valueResult.getClass().getCanonicalName() == 'java.lang.Long'}"
+
+    - expr: "${lazyValue.trim().length()}"
+      out: lazyValueLength
+
+    - log: "4 should print `3`: ${lazyValueLength}"
+
+    - expr: "${lazyValuesTask.createLazyValue('valueFromExpression')}"
+      out: outExpressionLazyValue
+
+    - expr: "${lazyValuesTask.assertNoLazyValuesInArgument( {'myKey': lazyValue} )}"

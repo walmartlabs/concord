@@ -20,10 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el.resolvers;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.CustomBeanMethodResolver;
-import com.walmartlabs.concord.runtime.v2.sdk.CustomTaskMethodResolver;
-import com.walmartlabs.concord.runtime.v2.sdk.Invocation;
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.el.ELContext;
 import java.util.List;
@@ -31,18 +28,21 @@ import java.util.Objects;
 
 public class CompositeBeanELResolver extends javax.el.BeanELResolver {
 
+    private final Context context;
     private final List<CustomTaskMethodResolver> customTaskMethodResolvers;
     private final List<CustomBeanMethodResolver> customBeanMethodResolvers;
     private final BeanELResolver defaultResolver;
     private final SensitiveDataProcessor sensitiveDataProcessor;
 
     public CompositeBeanELResolver(
+            Context context,
             List<CustomTaskMethodResolver> customTaskMethodResolvers,
             List<CustomBeanMethodResolver> customBeanMethodResolvers,
             SensitiveDataProcessor sensitiveDataProcessor) {
+        this.context = context;
         this.customTaskMethodResolvers = customTaskMethodResolvers;
         this.customBeanMethodResolvers = customBeanMethodResolvers;
-        this.defaultResolver = new BeanELResolver(sensitiveDataProcessor);
+        this.defaultResolver = new BeanELResolver(context, sensitiveDataProcessor);
         this.sensitiveDataProcessor = sensitiveDataProcessor;
     }
 
@@ -55,7 +55,7 @@ public class CompositeBeanELResolver extends javax.el.BeanELResolver {
         var invocation = findInvocation(base, method, paramTypes, params);
         if (invocation != null) {
             elContext.setPropertyResolved(base, method);
-            return invocation.invoke(new DefaultInvocationContext(elContext, sensitiveDataProcessor));
+            return invocation.invoke(new DefaultInvocationContext(context, elContext, sensitiveDataProcessor));
         }
 
         return defaultResolver.invoke(elContext, base, method, paramTypes, params);

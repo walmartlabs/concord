@@ -52,6 +52,15 @@ public class ContextProvider implements Provider<Context> {
         }
     }
 
+    public static Context getMe() {
+        Context ctx = value.peek();
+        if (ctx == null) {
+            throw new IllegalStateException("No context available. This is most likely a bug.");
+        }
+
+        return ctx;
+    }
+
     @Override
     public Context get() {
         Context ctx = value.peek();

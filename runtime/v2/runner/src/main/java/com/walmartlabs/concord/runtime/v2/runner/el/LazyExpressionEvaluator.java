@@ -209,7 +209,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         if (evalContext.context() != null) {
             r.add(new TaskMethodResolver(taskMethodResolvers, evalContext.context(), sensitiveDataProcessor));
         }
-        r.add(new CompositeBeanELResolver(taskMethodResolvers, beanMethodResolvers, sensitiveDataProcessor));
+        r.add(new CompositeBeanELResolver(evalContext.context(), taskMethodResolvers, beanMethodResolvers, sensitiveDataProcessor));
         return r;
     }
 

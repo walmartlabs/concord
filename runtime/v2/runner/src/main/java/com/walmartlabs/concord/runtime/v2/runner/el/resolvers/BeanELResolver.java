@@ -22,6 +22,8 @@ package com.walmartlabs.concord.runtime.v2.runner.el.resolvers;
 
 import com.sun.el.util.ReflectionUtil;
 import com.walmartlabs.concord.runtime.v2.runner.el.MethodNotFoundException;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.LazyValue;
 
 import javax.el.ELContext;
 import java.lang.reflect.Method;
@@ -31,9 +33,11 @@ import java.lang.reflect.Method;
  */
 public class BeanELResolver extends javax.el.BeanELResolver {
 
+    private final Context context;
     private final SensitiveDataProcessor sensitiveDataProcessor;
 
-    public BeanELResolver(SensitiveDataProcessor sensitiveDataProcessor) {
+    public BeanELResolver(Context context, SensitiveDataProcessor sensitiveDataProcessor) {
+        this.context = context;
         this.sensitiveDataProcessor = sensitiveDataProcessor;
     }
 
@@ -44,6 +48,10 @@ public class BeanELResolver extends javax.el.BeanELResolver {
         }
 
         try {
+            if (base instanceof LazyValue<?> lv) {
+                base = lv.resolve(this.context);
+            }
+
             // NPE in super.invoke if method not found :(
             if (ReflectionUtil.findMethod(base.getClass(), method.toString(), paramTypes, params) == null) {
                 throw new MethodNotFoundException(base.getClass(), method, paramTypes);

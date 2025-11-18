@@ -85,7 +85,7 @@ public class TaskMethodResolver extends ELResolver {
         try {
             return interceptor.invoke(callContext, Method.of(invocation.taskClass(), method.toString(), Arrays.asList(params)),
                     () -> {
-                        var result = invocation.invoke(new DefaultInvocationContext(elContext, sensitiveDataProcessor));
+                        var result = invocation.invoke(new DefaultInvocationContext(context, elContext, sensitiveDataProcessor));
                         elContext.setPropertyResolved(true);
                         return result;
                     });

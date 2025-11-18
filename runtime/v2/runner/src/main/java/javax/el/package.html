@@ -1,0 +1,263 @@
+<!--
+
+    Copyright (c) 1997-2018 Oracle and/or its affiliates. All rights reserved.
+    Copyright 2004 The Apache Software Foundation
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!--
+  *****
+  Concord
+  -----
+  Copyright (C) 2017 - 2025 Walmart Inc.
+  -----
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  =====
+  -->
+
+<html>
+<head>
+</head>
+
+<body bgcolor="white">
+Provides the API for the <strong>Unified Expression Language 3.0</strong>
+
+<p>The Expression Language (EL) is a simple language originally designed to
+satisfy the specific needs of web application developers. It has evloved
+into its own specification intended for general use inside and outside of the
+web containers.</p>
+
+<p>This package contains the classes and interfaces that describe
+and define the programmatic access to the Expression Language engine. The API
+is logically partitioned as follows:
+
+<ul>
+  <li><a href="#Context">EL Context</a></li>
+  <li><a href="#ExpressionObjects">Expression Objects</a></li>
+  <li><a href="#ExpressionCreation">Creation of Expressions</a></li>
+  <li><a href="#ExpressionEvaluation">Evaluation of Expressions</a></li>
+  <li><a href="#EvaluationListener">Evaluation Listeners</a></li>
+  <li><a href="#Resolver">Resolution of Model Objects and their Properties</a></li>
+  <li><a href="#Functions">EL Functions</a></li>
+  <li><a href="#Variables">EL Variables</a></li>
+  <li><a href="#Standalone">EL in Stand-alone environment</li>
+</ul>
+
+<h3><a name="Context">EL Context</a></h3>
+
+<p>An important goal of the EL is to ensure it can be used in 
+a variety of environments. It must therefore provide enough flexibility
+to adapt to the specific requirements of the environment where it is
+being used.</p>
+
+<p>Class {@link javax.el.ELContext} is what links 
+the EL with the specific environment where it is being used.
+It provides
+the mechanism through which all relevant context for creating or
+evaluating an expression is specified.
+</p>
+
+<p>When EL used in a web container, the creation of <code>ELContext
+</code> objects is controlled through the underlying technology.
+For example, in JSP, the
+ <code>JspContext.getELContext()</code> factory method is used.  In an
+stand-alone environment, a default {@link javax.el.StandardELContext} is
+provided.</p>
+ 
+ <p>Some technologies provide the ability to add an {@link javax.el.ELContextListener}
+ so that applications and frameworks can ensure their own context objects
+ are attached to any newly created <code>ELContext</code>.</p>
+ 
+<h3><a name="ExpressionObjects">Expression Objects</a></h3>
+
+<p>At the core of the Expression Language is the notion of an <i>expression</i>
+that gets parsed according to the grammar defined by the Expression Language.</p>
+
+<p>There are two types of expressions defined by the EL: <i>value expressions</i>
+and <i>method expressions</i>. A {@link javax.el.ValueExpression} such as 
+<code>"${customer.name}"</code> can be used either
+as an <i>rvalue</i> (return the value associated with property <code>name</code>
+of the model object <code>customer</code>) or as an <i>lvalue</i> 
+(set the value of the property <code>name</code> of the model object
+<code>customer</code>).</p>
+
+<p>A {@link javax.el.MethodExpression} such as 
+<code>"${handler.process}"</code> makes it possible to invoke a method 
+(<code>process</code>) on a specific model object (<code>handler</code>).</p>
+
+<p>In version 2.2 and later, either type of EL expression can represent a method
+invocation, such as <code>${trader.buy("JAVA")}</code>, where the arugments to
+the method invocation are specified in the expression.</p>
+
+<p>All expression classes extend the base class {@link javax.el.Expression}, making them
+serializable and forcing them to implement <code>equals()</code> and 
+<code>hashCode()</code>. Morevover, each method on these expression classes 
+that actually evaluates an expression receives a parameter
+of class {@link javax.el.ELContext},
+which provides the context required to evaluate the expression.</p>
+
+<h3><a name="ExpressionCreation">Creation of Expressions</a></h3>
+
+<p>An expression is created through the {@link javax.el.ExpressionFactory} class.
+The factory provides two creation methods; one for each type of expression
+ supported by the EL.</p>
+
+<p>To create an expression, one must provide an {@link javax.el.ELContext}, 
+a string representing 
+the expression, and the expected type (<code>ValueExpression</code>) or signature 
+(<code>MethodExpression</code>). 
+
+The <code>ELContext</code> provides the context necessary to parse an expression.
+Specifically, if the expression uses an EL function 
+(for example <code>${fn:toUpperCase(customer.name)}</code>) or an
+EL variable, then  
+{@link javax.el.FunctionMapper} and {@link javax.el.VariableMapper}
+objects must be available within the <code>ELContext</code> so that EL functions and
+EL variables are properly mapped.
+
+<h3><a name="ExpressionEvaluation">Evaluation of Expressions</a></h3>
+<p>The creation and the evaluation of an expression are done in two separate
+steps.  At the evaluation of an expression,
+the {@link javax.el.ELContext} 
+provides the context necessary to support property and method resolution
+for modal objects.</p>
+
+<p>A deferred expression is one that is created but not immediately evaluated.
+In a JSF request processing life cycle, EL expressions are typically created
+in the tree building phase and evaluated in the rendering phrase.</p>
+
+<p>Adding parameters to a <code>ValueExpression</code> further enhances the
+power of deferred expressions.  The {@link javax.el.LambdaExpression}
+encapsulates such a construct.  A <code>LambdaExpression</code> can be
+invoked by supplying the actual parameters at evaluation.  It plays
+an important role in the support for collections operators.</p>
+
+<h3><a name="EvaluationListener">Evaluation Listeners</a></h3>
+<p>By registering {@link javax.el.EvaluationListener}s in ELContext, a user can
+receive notifications during the EL expression evaluations.  There are three
+events that trigger the notification:
+<ul>
+  <li>Before evaluation</li>
+  <li>After evaluation</li>
+  <li>When (base, property) is resolved</li>
+</ul></p>
+
+<h3><a name="Resolver">Resolution of Model Objects and their Properties</a></h3>
+
+<p>Through the {@link javax.el.ELResolver} base class, the EL 
+features a pluggable mechanism 
+to resolve model object references as well as properties and method
+invocations of these objects.</p>
+
+<p>The EL API provides implementations of <code>ELResolver</code> supporting 
+property resolution for common data types which include
+arrays ({@link javax.el.ArrayELResolver}), JavaBeans ({@link javax.el.BeanELResolver}), <code>List</code>s ({@link javax.el.ListELResolver}), 
+<code>Map</code>s ({@link javax.el.MapELResolver}), and <code>ResourceBundle</code>s ({@link javax.el.ResourceBundleELResolver}).</p>
+
+<p>Tools can easily obtain more information about resolvable model objects and their 
+resolvable properties by calling
+method <code>getFeatureDescriptors</code> on the <code>ELResolver</code>. This method exposes objects
+of type <code>java.beans.FeatureDescriptor</code>, providing all information of interest 
+on top-level model objects as well as their properties.</p> 
+
+<h3><a name="Functions">EL Functions</a></h3>
+
+<p>If an EL expression uses a function 
+(for example <code>${fn:toUpperCase(customer.name)}</code>), then a 
+{@link javax.el.FunctionMapper} 
+object must also be specified within the <code>ELContext</code>. 
+The <code>FunctionMapper</code> is responsible to map
+ <code>${prefix:name()}</code> style functions to 
+static methods that can execute the specified functions. 
+</p>
+
+<h3><a name="Variables">EL Variables</a></h3>
+
+<p>Just like {@link javax.el.FunctionMapper} provides
+a flexible mechanism to add functions to the EL, {@link javax.el.VariableMapper}
+provides a flexible mechanism to support the notion of 
+<strong>EL variables</strong>.
+</p>
+ 
+<p>
+An EL variable does not directly refer to a model object that can then
+be resolved by an <code>ELResolver</code>. Instead, it refers to an EL
+expression. The evaluation of that EL expression gives the EL variable
+its value.
+</p>
+
+<p>
+For example, in the following code snippet
+<blockquote>
+  <code>&lt;h:inputText value="#{handler.customer.name}"/></code>
+</blockquote>
+
+<code>handler</code> refers to a model object that can be resolved by an EL Resolver.
+</p>
+<p>
+However, in this other example:
+<blockquote>
+<pre>
+&lt;c:forEach var="item" items="#{model.list}">
+   &lt;h:inputText value="#{item.name}"/>
+&lt;/c:forEach>
+</pre>
+</blockquote>
+
+<code>item</code> is an EL variable because it does not refer directly to a model
+object.  Instead, it refers to another EL expression, namely a
+specific item in the collection referred to by the EL expression
+<code>#{model.list}</code>.
+</p>
+
+<p>
+Assuming that there are three elements in <code>${model.list}</code>, this means
+that for
+each invocation of <code>&lt;h:inputText></code>, the following information 
+about <code>item</code> must be preserved in the {@link javax.el.VariableMapper}:
+<blockquote>
+    first invocation: <code>item</code> maps to first element in <code>${model.list}</code><br>
+    second invocation: <code>item</code> maps to second element in <code>${model.list}</code><br>
+    third invocation: <code>item</code> maps to third element in <code>${model.list}</code><br>
+</blockquote>
+<p>
+<code>VariableMapper</code> provides the mechanisms required to allow the mapping
+of an EL variable to the EL expression from which it gets its value.
+</p>
+
+<h3><a name="Standalone">EL in Stand-alone environment</a></h3>
+<p>EL 3.0 includes APIs for using EL in a stand-alone environment.</p>
+<p>{@link javax.el.ELProcessor} provides simple APIs for the direct
+evaluations of expressions.  It also makes it easy to define functions,
+set variables, and define a beans locally.</p>
+
+<p>{@link javax.el.ELManager} provides a lower level APIs for managing the EL
+parsing and evaluation environment.  It contains a default ELContext
+{@link javax.el.StandardELContext}.</p>
+
+</body>
+</html>
+

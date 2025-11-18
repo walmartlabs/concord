@@ -52,4 +52,11 @@ public class IfStep extends AbstractStep<SimpleOptions> {
     public List<Step> getElseSteps() {
         return elseSteps;
     }
+
+    @Override
+    public String toString() {
+        return "IfStep{" +
+                "expression='" + expression + '\'' +
+                '}';
+    }
 }

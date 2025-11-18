@@ -1,0 +1,25 @@
+flows:
+  default:
+    - set:
+        lazyValue: "${lazyValuesTask.createLazyValue('myValue')}"
+
+    # lazy value eval here:
+    - log: "should print real value: ${lazyValue}"
+
+    # Verify that lazy values are evaluated before being passed as task input arguments
+    # lazy value eval here:
+    - task: "lazyValuesTask"
+      in:
+        action: "assertLazyValue"
+        value: "${lazyValue}"
+        expectedValue: "myValue"
+
+    # Verify that out lazy values are returned as is (with out evaluation)
+    - task: "lazyValuesTask"
+      in:
+        action: "outLazyValue"
+        value: "myOutValue"
+      out: result
+
+    # lazy value eval here:
+    - log: "should print `myOutValue`: ${result.lazyValue}"

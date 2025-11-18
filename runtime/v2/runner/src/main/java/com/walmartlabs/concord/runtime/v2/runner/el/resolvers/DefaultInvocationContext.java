@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el.resolvers;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.InvocationContext;
 import com.walmartlabs.concord.runtime.v2.sdk.MethodInvoker;
 
@@ -30,9 +31,9 @@ public class DefaultInvocationContext implements InvocationContext {
     private final ELContext elContext;
     private final javax.el.BeanELResolver beanELResolver;
 
-    public DefaultInvocationContext(ELContext elContext, SensitiveDataProcessor sensitiveDataProcessor) {
+    public DefaultInvocationContext(Context context, ELContext elContext, SensitiveDataProcessor sensitiveDataProcessor) {
         this.elContext = elContext;
-        this.beanELResolver = new BeanELResolver(sensitiveDataProcessor);
+        this.beanELResolver = new BeanELResolver(context, sensitiveDataProcessor);
     }
 
     @Override
