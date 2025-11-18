@@ -24,8 +24,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static com.walmartlabs.concord.runtime.v2.runner.TestRuntimeV2.assertLog;
-import static com.walmartlabs.concord.runtime.v2.runner.TestRuntimeV2.assertLogExactMatch;
+import static com.walmartlabs.concord.runtime.v2.runner.TestRuntimeV2.*;
 
 public class LazyValueTest {
 
@@ -150,5 +149,11 @@ public class LazyValueTest {
         assertLog(log, ".*6 should print `myValue`: myValue.*");
         assertLog(log, ".*lazy value resole -> myValue @ TaskCall\\{name='log'\\}.*");
         assertLog(log, ".*lazy value resole -> myValue.*");
+
+        assertLog(log, ".*lazy value resole -> lazyValueFromSetStep @ TaskCall\\{name='log'\\}.*");
+        assertLog(log, ".*lazy value resole -> lazyValueFromSetStep.*");
+
+        assertLog(log, ".*lazy value resole -> lazyValueFromExprStep @ TaskCall\\{name='log'\\}.*");
+        assertLog(log, ".*lazy value resole -> lazyValueFromExprStep.*");
     }
 }

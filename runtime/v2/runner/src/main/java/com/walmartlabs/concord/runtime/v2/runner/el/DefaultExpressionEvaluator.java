@@ -68,6 +68,10 @@ public class DefaultExpressionEvaluator implements ExpressionEvaluator {
         } else if (evalContext.resolveLazyValues() && value instanceof LazyValue<?> v) {
             var resolved = v.resolve(evalContext.context());
             return expectedType.cast(resolved);
+        } else if (value instanceof Map.Entry<?, ?> entry) {
+            var k = initializeAll(evalContext, entry.getKey(), Object.class);
+            var v = initializeAll(evalContext, entry.getValue(), Object.class);
+            return expectedType.cast(new AbstractMap.SimpleEntry<>(k, v));
         }
         return expectedType.cast(value);
     }

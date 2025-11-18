@@ -30,3 +30,17 @@ flows:
       out: lazyValueInMap
 
     - log: "6 should print `myValue`: ${lazyValueInMap.lazy}"
+
+    # should not resolve `lazyValueFromSetStep` value
+    - set:
+        myMap: "${ {'key': 'value', 'lazyValueFromSetStep': lazyValuesTask.createLazyValueInMap('lazyValueFromSetStep')} }"
+
+    # should not resolve `lazyValueFromExprStep` value
+    - expr: "${myMap.put('lazyValueFromExprStep', lazyValuesTask.createLazyValueInMap('lazyValueFromExprStep')) }"
+
+    # should not resolve `lazyValueFromSetStep` value
+    - expr: "${myMap.entrySet().stream().toList() }"
+      out: myList
+
+    # resolve `lazyValueFromSetStep` here:
+    - log: "${myList}"
