@@ -22,4 +22,11 @@ flows:
     - expr: "${lazyValuesTask.createLazyValue('valueFromExpression')}"
       out: outExpressionLazyValue
 
+    - log: "5 should print `valueFromExpression`: ${outExpressionLazyValue}"
+
     - expr: "${lazyValuesTask.assertNoLazyValuesInArgument( {'myKey': lazyValue} )}"
+
+    - expr: "${lazyValuesTask.createLazyValueInMap('myValue')}"
+      out: lazyValueInMap
+
+    - log: "6 should print `myValue`: ${lazyValueInMap.lazy}"

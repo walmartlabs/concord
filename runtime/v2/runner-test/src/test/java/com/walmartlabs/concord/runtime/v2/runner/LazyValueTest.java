@@ -142,5 +142,13 @@ public class LazyValueTest {
         assertLog(log, ".*2 should print `true`: true.*");
         assertLog(log, ".*3 should print `true`: true.*");
         assertLog(log, ".*4 should print `3`: 3.*");
+
+        assertLog(log, ".*5 should print `valueFromExpression`: valueFromExpression.*");
+        assertLog(log, ".*lazy value resole -> valueFromExpression @ TaskCall\\{name='log'\\}.*");
+        assertLog(log, ".*lazy value resole -> valueFromExpression.*");
+
+        assertLog(log, ".*6 should print `myValue`: myValue.*");
+        assertLog(log, ".*lazy value resole -> myValue @ TaskCall\\{name='log'\\}.*");
+        assertLog(log, ".*lazy value resole -> myValue.*");
     }
 }

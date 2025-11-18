@@ -202,7 +202,7 @@ public class ELSupport {
         }
     }
 
-    private static Object resolveLazyValue(Object obj0) {
+    public static Object resolveLazyValue(Object obj0) {
         if (obj0 instanceof LazyValue<?> lv) {
             return lv.resolve(ContextProvider.getMe());
         }

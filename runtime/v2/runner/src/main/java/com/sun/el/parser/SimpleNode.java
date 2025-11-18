@@ -263,11 +263,4 @@ public abstract class SimpleNode extends ELSupport implements Node {
         h = h + h + h + id;
         return h;
     }
-
-    protected Object resolveLazyValue(Object obj) {
-        if (obj instanceof LazyValue<?> lv) {
-            return lv.resolve(ContextProvider.getMe());
-        }
-        return obj;
-    }
 }

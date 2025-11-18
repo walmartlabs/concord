@@ -441,6 +441,10 @@ public final class Tasks {
             return new TestLazyValue(value);
         }
 
+        public Map<String, Object> createLazyValueInMap(String value) {
+            return Map.of("plain", "plain-value", "lazy", createLazyValue(value));
+        }
+
         public void assertNoLazyValuesInArgument(Map<String, Object> value) {
             for (var key : value.keySet()) {
                 var v =  value.get(key);

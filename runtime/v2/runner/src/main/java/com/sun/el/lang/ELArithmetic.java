@@ -261,10 +261,13 @@ public abstract class ELArithmetic {
 
     private final static Long ZERO = Long.valueOf(0);
 
-    public final static Number add(final Object obj0, final Object obj1) {
+    public final static Number add(Object obj0, Object obj1) {
         if (obj0 == null && obj1 == null) {
             return Long.valueOf(0);
         }
+
+        obj0 = ELSupport.resolveLazyValue(obj0);
+        obj1 = ELSupport.resolveLazyValue(obj1);
 
         final ELArithmetic delegate;
         if (BIGDECIMAL.matches(obj0, obj1))
@@ -282,10 +285,13 @@ public abstract class ELArithmetic {
         return delegate.add(num0, num1);
     }
 
-    public final static Number mod(final Object obj0, final Object obj1) {
+    public final static Number mod(Object obj0, Object obj1) {
         if (obj0 == null && obj1 == null) {
             return Long.valueOf(0);
         }
+
+        obj0 = ELSupport.resolveLazyValue(obj0);
+        obj1 = ELSupport.resolveLazyValue(obj1);
 
         final ELArithmetic delegate;
         if (BIGDECIMAL.matches(obj0, obj1))
@@ -303,10 +309,13 @@ public abstract class ELArithmetic {
         return delegate.mod(num0, num1);
     }
 
-    public final static Number subtract(final Object obj0, final Object obj1) {
+    public final static Number subtract(Object obj0, Object obj1) {
         if (obj0 == null && obj1 == null) {
             return Long.valueOf(0);
         }
+
+        obj0 = ELSupport.resolveLazyValue(obj0);
+        obj1 = ELSupport.resolveLazyValue(obj1);
 
         final ELArithmetic delegate;
         if (BIGDECIMAL.matches(obj0, obj1))
@@ -314,7 +323,7 @@ public abstract class ELArithmetic {
         else if (DOUBLE.matches(obj0, obj1))
             delegate = DOUBLE;
         else if (BIGINTEGER.matches(obj0, obj1))
-            delegate = BIGINTEGER;   
+            delegate = BIGINTEGER;
         else
             delegate = LONG;
 
@@ -324,10 +333,13 @@ public abstract class ELArithmetic {
         return delegate.subtract(num0, num1);
     }
 
-    public final static Number divide(final Object obj0, final Object obj1) {
+    public final static Number divide(Object obj0, Object obj1) {
         if (obj0 == null && obj1 == null) {
             return ZERO;
         }
+
+        obj0 = ELSupport.resolveLazyValue(obj0);
+        obj1 = ELSupport.resolveLazyValue(obj1);
 
         final ELArithmetic delegate;
         if (BIGDECIMAL.matches(obj0, obj1))
@@ -343,10 +355,13 @@ public abstract class ELArithmetic {
         return delegate.divide(num0, num1);
     }
 
-    public final static Number multiply(final Object obj0, final Object obj1) {
+    public final static Number multiply(Object obj0, Object obj1) {
         if (obj0 == null && obj1 == null) {
             return Long.valueOf(0);
         }
+
+        obj0 = ELSupport.resolveLazyValue(obj0);
+        obj1 = ELSupport.resolveLazyValue(obj1);
 
         final ELArithmetic delegate;
         if (BIGDECIMAL.matches(obj0, obj1))
@@ -374,7 +389,7 @@ public abstract class ELArithmetic {
     }
 
     /**
-     * 
+     *
      */
     protected ELArithmetic() {
         super();
@@ -391,7 +406,7 @@ public abstract class ELArithmetic {
     protected abstract Number coerce(final Number num);
 
     protected final Number coerce(final Object obj) {
-        
+
         if (isNumber(obj)) {
             return coerce((Number) obj);
         }
