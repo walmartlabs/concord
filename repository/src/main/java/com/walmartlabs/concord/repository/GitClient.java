@@ -581,13 +581,8 @@ public class GitClient {
                 env.put("SSH_ASKPASS", askpass.toAbsolutePath().toString());
 
                 log.info("using GIT_ASKPASS to set credentials ");
-            } else if (secret instanceof BinaryDataSecret token) {
-                askpass = createUnixStandardAskpass(new UsernamePassword(new String(token.getData()), "".toCharArray()));
-
-                env.put("GIT_ASKPASS", askpass.toAbsolutePath().toString());
-
-                log.info("using GIT_ASKPASS to set credentials ");
             }
+            // if secret is single-value, it was already applied to the URL in updateUrl()
 
             env.put("GIT_HTTP_LOW_SPEED_LIMIT", String.valueOf(cfg.httpLowSpeedLimit()));
             env.put("GIT_HTTP_LOW_SPEED_TIME", String.valueOf(cfg.httpLowSpeedTime().getSeconds()));

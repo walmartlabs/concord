@@ -186,14 +186,12 @@ public class GitHubAppInstallation implements AuthTokenProvider {
     }
 
     private ExternalAuthToken getTokenFromAppInstall(GitHubAppAuthConfig app, URI repo) {
-        log.info("getTokenFromAppInstall ['{}', '{}']", app.apiUrl(), repo);
-
         try {
             var ownerAndRepo = Utils.extractOwnerAndRepo(app, repo);
             return accessTokenProvider().getRepoInstallationToken(app, ownerAndRepo);
         } catch (RepoExtractionException | GitHubAppException e) {
             var msg = e.getMessage();
-            log.warn("Error retrieving GitHub access token: {}", msg);
+            log.warn("getTokenFromAppInstall ['{}', '{}'] Error retrieving GitHub access token: {}", app.apiUrl(), repo, msg);
         }
 
         return null;
