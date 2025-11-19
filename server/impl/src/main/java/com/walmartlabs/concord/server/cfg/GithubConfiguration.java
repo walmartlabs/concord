@@ -41,6 +41,10 @@ public class GithubConfiguration implements GitHubAppInstallationConfig {
     private boolean useSenderLdapDn;
 
     @Inject
+    @Config("github.userSenderEmail")
+    private boolean userSenderEmail;
+
+    @Inject
     @Config("github.logEvents")
     private boolean logEvents;
 
@@ -66,6 +70,10 @@ public class GithubConfiguration implements GitHubAppInstallationConfig {
 
     public boolean isUseSenderLdapDn() {
         return useSenderLdapDn;
+    }
+
+    public boolean isUserSenderEmail() {
+        return userSenderEmail;
     }
 
     public boolean isLogEvents() {

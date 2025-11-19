@@ -23,7 +23,10 @@ package com.walmartlabs.concord.server.events;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.common.ExternalAuthToken;
+import com.walmartlabs.concord.common.ObjectMapperProvider;
 import com.walmartlabs.concord.runtime.v2.model.GithubTriggerExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
@@ -32,6 +35,7 @@ import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.events.github.GithubTriggerProcessor;
+import com.walmartlabs.concord.server.events.github.GithubUtils;
 import com.walmartlabs.concord.server.events.github.Payload;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggerUtils;
@@ -59,6 +63,13 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -71,7 +82,7 @@ import static com.walmartlabs.concord.server.events.github.Constants.EVENT_SOURC
  * Uses a custom authentication mechanism,
  * see {@link com.walmartlabs.concord.server.security.GithubAuthenticatingFilter}.
  * <p>
- * See also https://developer.github.com/webhooks/
+ * See also <a href="https://developer.github.com/webhooks/">developer.github.com/webhooks</a>
  */
 @Path("/events/github")
 @Tag(name = "GitHub Events")
@@ -87,6 +98,9 @@ public class GithubEventResource implements Resource {
     private final LdapManager ldapManager;
     private final TriggerEventInitiatorResolver initiatorResolver;
     private final Histogram startedProcessesPerEvent;
+    private final AuthTokenProvider authTokenProvider;
+    private final HttpClient httpClient;
+    private final ObjectMapper objectMapper;
 
     @Inject
     public GithubEventResource(GithubConfiguration githubCfg,
@@ -96,7 +110,9 @@ public class GithubEventResource implements Resource {
                                UserManager userManager,
                                LdapManager ldapManager,
                                TriggerEventInitiatorResolver initiatorResolver,
-                               MetricRegistry metricRegistry) {
+                               MetricRegistry metricRegistry,
+                               AuthTokenProvider authTokenProvider,
+                               ObjectMapperProvider objectMapperProvider) {
 
         this.githubCfg = githubCfg;
         this.executor = executor;
@@ -106,6 +122,11 @@ public class GithubEventResource implements Resource {
         this.ldapManager = ldapManager;
         this.initiatorResolver = initiatorResolver;
         this.startedProcessesPerEvent = metricRegistry.histogram("started-processes-per-github-event");
+        this.authTokenProvider = authTokenProvider;
+        this.objectMapper = objectMapperProvider.get();
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(githubCfg.getHttpClientTimeout())
+                .build();
     }
 
     @POST
@@ -258,22 +279,44 @@ public class GithubEventResource implements Resource {
 
         @Override
         public UserEntry get() {
-            if (!githubCfg.isUseSenderLdapDn()) {
-                return fallback.get();
-            }
-
-            String ldapDn = payload.getSenderLdapDn();
-            if (ldapDn == null || ldapDn.trim().isEmpty()) {
-                log.warn("getOrCreateUserEntry ['{}'] -> can't determine the sender's 'ldap_dn', falling back to 'login'", payload);
+            if (!githubCfg.isUseSenderLdapDn() && !githubCfg.isUserSenderEmail()) {
+                // don't try to match against payload sender's ldap_dn or email
                 return fallback.get();
             }
 
             // only LDAP users are supported in GitHub triggers
+            // ideally, match against exact LDAP DN (requires GitHub to be integrated with LDAP)
+            if (githubCfg.isUseSenderLdapDn()) {
+                UserEntry fromDn = findSenderDnInLdap();
+                if (fromDn != null) {
+                    return fromDn;
+                }
+            }
+
+            // alternatively, user email may work (e.g. from SSO provider which has upstream LDAP source)
+            if (githubCfg.isUserSenderEmail()) {
+                UserEntry fromEmail = findSenderEmailInLdap();
+                if (fromEmail != null) {
+                    return fromEmail;
+                }
+            }
+
+            log.warn("getOrCreateUserEntry ['{}'] -> can't determine the sender's 'ldap_dn' or 'email', falling back to 'login'", payload);
+            return fallback.get();
+        }
+
+        private UserEntry findSenderDnInLdap() {
+            String ldapDn = payload.getSenderLdapDn();
+            if (ldapDn == null || ldapDn.isBlank()) {
+                return null;
+            }
+
             try {
                 LdapPrincipal p = ldapManager.getPrincipalByDn(ldapDn);
+
                 if (p == null) {
                     log.warn("getOrCreateUserEntry ['{}'] -> can't find user by ldap DN ({})", payload, ldapDn);
-                    return fallback.get();
+                    return null;
                 }
 
                 return userManager.getOrCreate(p.getUsername(), p.getDomain(), UserType.LDAP)
@@ -282,5 +325,77 @@ public class GithubEventResource implements Resource {
                 throw new RuntimeException(e);
             }
         }
+
+        private UserEntry findSenderEmailInLdap() {
+            String email = getEmail();
+            if (email == null || email.isBlank()) {
+                return null;
+            }
+
+            try {
+                LdapPrincipal p = ldapManager.getPrincipalByMail(email);
+
+                if (p == null) {
+                    log.warn("getOrCreateUserEntry ['{}'] -> can't find user by ldap mail ({})", payload, email);
+                    return null;
+                }
+
+                return userManager.getOrCreate(p.getUsername(), p.getDomain(), UserType.LDAP)
+                        .orElseThrow(() -> new ConcordApplicationException("User not found: " + p.getUsername()));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private static final String ERROR_USER_EMAIL_LOOKUP = "Error looking up user info {}: {}";
+
+        private String getEmail() {
+            URI repoUrl = GithubUtils.getRepoCloneUrl(payload);
+            URI userUrl = GithubUtils.getSenderUrl(payload);
+
+            Optional<ExternalAuthToken> t = authTokenProvider.getToken(repoUrl, null);
+
+            if (t.isEmpty()) {
+                return null;
+            }
+
+            HttpRequest req = HttpRequest.newBuilder(userUrl)
+                    .GET()
+                    .header("Authorization", "Bearer " + t.get().token())
+                    .build();
+
+            try {
+                HttpResponse<InputStream> resp = httpClient.send(req, BodyHandlers.ofInputStream());
+                if (resp.statusCode() != 200) {
+                    throw new UserLookupException("Non-200 response [: " + resp.statusCode() + "]: " + readBody(resp));
+                }
+
+                GitHubUser m = objectMapper.readValue(resp.body(), GitHubUser.class);
+                return m.email();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (IOException | UserLookupException e) {
+                log.warn(ERROR_USER_EMAIL_LOOKUP, userUrl, e.getMessage());
+            }
+
+            return null;
+        }
+
+        private static String readBody(HttpResponse<InputStream> resp) {
+            try (InputStream is = resp.body()) {
+                return new String(is.readAllBytes());
+            } catch (IOException e) {
+                return "error reading body: " + e.getMessage();
+            }
+        }
+    }
+
+    private static class UserLookupException extends Exception {
+        public UserLookupException(String message) {
+            super(message);
+        }
+    }
+
+    private record GitHubUser(String email) {
     }
 }
