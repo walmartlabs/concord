@@ -20,13 +20,18 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.ExternalAuthToken;
 import com.walmartlabs.concord.common.ObjectMapperProvider;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import com.walmartlabs.concord.runtime.v2.model.GithubTriggerExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
@@ -58,6 +63,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -70,7 +76,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 import static com.walmartlabs.concord.common.MemoSupplier.memo;
@@ -90,6 +99,8 @@ public class GithubEventResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(GithubEventResource.class);
 
+    private static final String ERROR_USER_EMAIL_LOOKUP = "Error looking up user info {}: {}";
+
     private final GithubConfiguration githubCfg;
     private final TriggerProcessExecutor executor;
     private final AuditLog auditLog;
@@ -98,9 +109,8 @@ public class GithubEventResource implements Resource {
     private final LdapManager ldapManager;
     private final TriggerEventInitiatorResolver initiatorResolver;
     private final Histogram startedProcessesPerEvent;
-    private final AuthTokenProvider authTokenProvider;
-    private final HttpClient httpClient;
-    private final ObjectMapper objectMapper;
+    private final Map<String, Long> rateLimitGauges;
+    private final LoadingCache<EmailCacheKey, Optional<String>> ghUserEmailCache;
 
     @Inject
     public GithubEventResource(GithubConfiguration githubCfg,
@@ -122,11 +132,18 @@ public class GithubEventResource implements Resource {
         this.ldapManager = ldapManager;
         this.initiatorResolver = initiatorResolver;
         this.startedProcessesPerEvent = metricRegistry.histogram("started-processes-per-github-event");
-        this.authTokenProvider = authTokenProvider;
-        this.objectMapper = objectMapperProvider.get();
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(githubCfg.getHttpClientTimeout())
-                .build();
+        this.rateLimitGauges = new ConcurrentHashMap<>(githubCfg.getAuthConfigs().size());
+        this.ghUserEmailCache = CacheBuilder.newBuilder()
+                .expireAfterWrite(githubCfg.senderEmailCacheDuration())
+                .maximumSize(githubCfg.senderEmailCacheSize())
+                .concurrencyLevel(32)
+                .recordStats()
+                .build(new EmailCacheLoader(githubCfg, rateLimitGauges, authTokenProvider, objectMapperProvider.get()));
+
+        for (MappingAuthConfig c : githubCfg.getAuthConfigs()) {
+            Gauge<Long> rateLimitGauge = () -> rateLimitGauges.getOrDefault(c.id(), -1L);
+            metricRegistry.gauge("github-rate-limit-" + c.id(), () -> rateLimitGauge);
+        }
     }
 
     @POST
@@ -279,7 +296,7 @@ public class GithubEventResource implements Resource {
 
         @Override
         public UserEntry get() {
-            if (!githubCfg.isUseSenderLdapDn() && !githubCfg.isUserSenderEmail()) {
+            if (!githubCfg.isUseSenderLdapDn() && !githubCfg.isUseSenderEmail()) {
                 // don't try to match against payload sender's ldap_dn or email
                 return fallback.get();
             }
@@ -294,7 +311,7 @@ public class GithubEventResource implements Resource {
             }
 
             // alternatively, user email may work (e.g. from SSO provider which has upstream LDAP source)
-            if (githubCfg.isUserSenderEmail()) {
+            if (githubCfg.isUseSenderEmail()) {
                 UserEntry fromEmail = findSenderEmailInLdap();
                 if (fromEmail != null) {
                     return fromEmail;
@@ -347,46 +364,19 @@ public class GithubEventResource implements Resource {
             }
         }
 
-        private static final String ERROR_USER_EMAIL_LOOKUP = "Error looking up user info {}: {}";
-
         private String getEmail() {
             URI repoUrl = GithubUtils.getRepoCloneUrl(payload);
             URI userUrl = GithubUtils.getSenderUrl(payload);
 
-            Optional<ExternalAuthToken> t = authTokenProvider.getToken(repoUrl, null);
-
-            if (t.isEmpty()) {
-                return null;
-            }
-
-            HttpRequest req = HttpRequest.newBuilder(userUrl)
-                    .GET()
-                    .header("Authorization", "Bearer " + t.get().token())
-                    .build();
-
             try {
-                HttpResponse<InputStream> resp = httpClient.send(req, BodyHandlers.ofInputStream());
-                if (resp.statusCode() != 200) {
-                    throw new UserLookupException("Non-200 response [: " + resp.statusCode() + "]: " + readBody(resp));
-                }
-
-                GitHubUser m = objectMapper.readValue(resp.body(), GitHubUser.class);
-                return m.email();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            } catch (IOException | UserLookupException e) {
-                log.warn(ERROR_USER_EMAIL_LOOKUP, userUrl, e.getMessage());
+                return ghUserEmailCache.get(new EmailCacheKey(repoUrl, userUrl))
+                        .orElse(null);
+            } catch (ExecutionException ee) {
+                Throwable t = ee.getCause();
+                log.warn(ERROR_USER_EMAIL_LOOKUP, userUrl, t.getMessage());
             }
 
             return null;
-        }
-
-        private static String readBody(HttpResponse<InputStream> resp) {
-            try (InputStream is = resp.body()) {
-                return new String(is.readAllBytes());
-            } catch (IOException e) {
-                return "error reading body: " + e.getMessage();
-            }
         }
     }
 
@@ -397,5 +387,68 @@ public class GithubEventResource implements Resource {
     }
 
     private record GitHubUser(String email) {
+    }
+
+    private record EmailCacheKey(URI repoUrl, URI userUrl) {
+    }
+
+    private static class EmailCacheLoader extends CacheLoader<EmailCacheKey, Optional<String>> {
+
+        private final Map<String, Long> rateLimitGauges;
+        private final AuthTokenProvider authTokenProvider;
+        private final ObjectMapper objectMapper;
+        private final HttpClient httpClient;
+
+        public EmailCacheLoader(GithubConfiguration githubCfg,
+                                Map<String, Long> rateLimitGauges,
+                                AuthTokenProvider authTokenProvider,
+                                ObjectMapper objectMapper) {
+
+            this.rateLimitGauges = rateLimitGauges;
+            this.authTokenProvider = authTokenProvider;
+            this.objectMapper = objectMapper;
+            this.httpClient = HttpClient.newBuilder()
+                    .connectTimeout(githubCfg.getHttpClientTimeout())
+                    .build();
+        }
+
+        @Override
+        public @Nonnull Optional<String> load(@Nonnull EmailCacheKey key) throws Exception {
+            URI repoUrl = key.repoUrl();
+            URI userUrl = key.userUrl();
+
+            Optional<ExternalAuthToken> t = authTokenProvider.getToken(repoUrl, null);
+
+            if (t.isEmpty()) {
+                return Optional.empty();
+            }
+
+            HttpRequest req = HttpRequest.newBuilder(userUrl)
+                    .GET()
+                    .header("Authorization", "Bearer " + t.get().token())
+                    .build();
+
+            HttpResponse<InputStream> resp = httpClient.send(req, BodyHandlers.ofInputStream());
+
+            rateLimitGauges.put(t.get().authId(), resp.headers()
+                    .firstValueAsLong("X-RateLimit-Remaining")
+                    .orElse(-1L));
+
+            if (resp.statusCode() != 200) {
+                throw new UserLookupException("Non-200 response [: " + resp.statusCode() + "]: " + readBody(resp));
+            }
+
+            GitHubUser m = objectMapper.readValue(resp.body(), GitHubUser.class);
+
+            return Optional.ofNullable(m.email());
+        }
+
+        private static String readBody(HttpResponse<InputStream> resp) {
+            try (InputStream is = resp.body()) {
+                return new String(is.readAllBytes());
+            } catch (IOException e) {
+                return "error reading response body: " + e.getMessage();
+            }
+        }
     }
 }
