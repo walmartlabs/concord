@@ -134,6 +134,7 @@ public interface AuthTokenProvider {
             }
 
             return List.of(MappingAuthConfig.OauthAuthConfig.builder()
+                    .id("static-token")
                     .token(token)
                     .username(config.getOauthUsername().orElse(null))
                     .urlPattern(MappingAuthConfig.assertBaseUrlPattern(config.getOauthUrlPattern().orElse(".*")))// for backwards compat with git.oauth

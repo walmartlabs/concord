@@ -28,6 +28,11 @@ import java.util.regex.Pattern;
 
 public interface MappingAuthConfig {
 
+    /**
+     * Identification for the auth config. Should be unique within the
+     * application config. May be used for identifying source configs in metrics */
+    String id();
+
     /** Regex matching the host, optional port and path of a Git repository URL. */
     Pattern urlPattern();
 

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.github.appinstallation;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.typesafe.config.Config;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.github.appinstallation.exception.GitHubAppException;
 import com.walmartlabs.concord.github.appinstallation.exception.RepoExtractionException;
@@ -31,6 +32,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class Utils {
 
@@ -151,6 +153,13 @@ public class Utils {
         }
 
         return match.group("baseUrl");
+    }
+
+    public static String getStringOrDefault(Config cfg, String key, Supplier<String> defaultValueSupplier) {
+        if (cfg.hasPath(key)) {
+            return cfg.getString(key);
+        }
+        return defaultValueSupplier.get();
     }
 
     private Utils() {}

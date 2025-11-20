@@ -54,17 +54,12 @@ class AccessTokenProviderTest {
     @Mock
     HttpResponse<InputStream> accessTokenResponse;
 
-    private static final GitHubAppAuthConfig auth = new GitHubAppAuthConfig(null, "123", PRIVATE_KEY_TEXT, null, MappingAuthConfig.assertBaseUrlPattern("(?<baseUrl>github.local)/"));
-
-//    private static final GitHubAppAuthConfig auth = GitHubAppAuthConfig.builder()
-//            .urlPattern(MappingAuthConfig.assertBaseUrlPattern("(?<baseUrl>github.local)/"))
-//            .privateKey(PRIVATE_KEY_TEXT)
-//            .clientId("123")
-//            .build();
+    private static final GitHubAppAuthConfig auth = new GitHubAppAuthConfig("test-auth", null, "123", PRIVATE_KEY_TEXT, null, MappingAuthConfig.assertBaseUrlPattern("(?<baseUrl>github.local)/"));
 
     private static final GitHubAppInstallationConfig CFG = GitHubAppInstallationConfig.builder()
             .authConfigs(List.of(auth))
             .build();
+
     @Test
     void test() throws Exception {
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class)))

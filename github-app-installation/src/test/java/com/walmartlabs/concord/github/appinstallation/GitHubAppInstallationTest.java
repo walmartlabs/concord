@@ -58,12 +58,14 @@ class GitHubAppInstallationTest {
     private static final URI VALID_STATIC_AUTH_URI_01 = URI.create("https://staticgithub.local/owner/repo-1.git");
 
     private static final GitHubAppAuthConfig auth = new GitHubAppAuthConfig(
+            "test-app-auth",
             null,
             "123",
             "/does/not/exist",
             null,
             MappingAuthConfig.assertBaseUrlPattern("(?<baseUrl>github.local)/"));
     private static final MappingAuthConfig.OauthAuthConfig staticKeyAuth = MappingAuthConfig.OauthAuthConfig.builder()
+            .id("test-static-auth")
             .urlPattern(MappingAuthConfig.assertBaseUrlPattern("(?<baseUrl>staticgithub.local)/"))
             .token("static-token")
             .build();

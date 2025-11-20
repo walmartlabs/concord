@@ -24,13 +24,14 @@ import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 
 import java.util.regex.Pattern;
 
-public record GitHubAppAuthConfig(String apiUrl,
+public record GitHubAppAuthConfig(String id,
+                                  String apiUrl,
                                   String clientId,
                                   String privateKey,
                                   String username,
                                   Pattern urlPattern) implements MappingAuthConfig {
 
-    public GitHubAppAuthConfig(String apiUrl, String clientId, String privateKey, String username, Pattern urlPattern) {
+    public GitHubAppAuthConfig(String id, String apiUrl, String clientId, String privateKey, String username, Pattern urlPattern) {
         if (clientId == null || clientId.isBlank()) {
             throw new IllegalArgumentException("clientId must be provided");
         }
@@ -44,6 +45,7 @@ public record GitHubAppAuthConfig(String apiUrl,
             throw new IllegalArgumentException("The url pattern must contain the ?<baseUrl> named group");
         }
 
+        this.id = id;
         this.apiUrl = (apiUrl == null) ? "https://api.github.com" : apiUrl;
         this.clientId = clientId;
         this.privateKey = privateKey;

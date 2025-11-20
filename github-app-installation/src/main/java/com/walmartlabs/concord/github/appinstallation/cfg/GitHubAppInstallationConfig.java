@@ -33,6 +33,8 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
+import static com.walmartlabs.concord.github.appinstallation.Utils.getStringOrDefault;
+
 @Value.Immutable
 @Value.Style(jdkOnly = true)
 public interface GitHubAppInstallationConfig {
@@ -111,16 +113,13 @@ public interface GitHubAppInstallationConfig {
         return a.toGitAuth();
     }
 
-    record OauthConfig(String urlPattern, String username, String token) implements AuthConfig {
+    record OauthConfig(String id, String urlPattern, String username, String token) implements AuthConfig {
 
         static OauthConfig from(com.typesafe.config.Config cfg) {
-            var username = Optional.ofNullable(cfg.hasPath("username") ? cfg.getString("username") : null)
-                    .filter(s -> !s.isBlank())
-                    .orElse(null);
-
             return new OauthConfig(
+                    getStringOrDefault(cfg, "id", () -> "github-oauth-token"),
                     cfg.getString("urlPattern"),
-                    username,
+                    getStringOrDefault(cfg, "username", null),
                     cfg.getString("token")
             );
         }
@@ -128,6 +127,7 @@ public interface GitHubAppInstallationConfig {
         @Override
         public MappingAuthConfig toGitAuth() {
             return MappingAuthConfig.OauthAuthConfig.builder()
+                    .id(this.id())
                     .token(this.token())
                     .username(this.username())
                     .urlPattern(MappingAuthConfig.assertBaseUrlPattern(this.urlPattern()))
@@ -135,18 +135,20 @@ public interface GitHubAppInstallationConfig {
         }
     }
 
-    record AppInstallationConfig(String urlPattern, String username, String apiUrl, String clientId, String privateKey) implements AuthConfig {
+    record AppInstallationConfig(String id, String urlPattern, String username, String apiUrl, String clientId, String privateKey) implements AuthConfig {
 
         static AppInstallationConfig from(com.typesafe.config.Config cfg) {
-            var username = Optional.ofNullable(cfg.hasPath("username") ? cfg.getString("username") : null)
+
+            var username = Optional.ofNullable(getStringOrDefault(cfg, "apiUrl", null))
                     .filter(s -> !s.isBlank())
                     .orElse("x-access-token");
 
-            var apiUrl = Optional.ofNullable(cfg.hasPath("apiUrl") ? cfg.getString("apiUrl") : null)
+            var apiUrl = Optional.ofNullable(getStringOrDefault(cfg, "apiUrl", null))
                     .filter(s -> !s.isBlank())
                     .orElse("https://api.github.com");
 
             return new AppInstallationConfig(
+                    getStringOrDefault(cfg, "id", () -> "github-app-installation"),
                     cfg.getString("urlPattern"),
                     username,
                     apiUrl,
@@ -161,6 +163,7 @@ public interface GitHubAppInstallationConfig {
                 var pkData = Files.readString(Paths.get(this.privateKey()));
 
                 return new GitHubAppAuthConfig(
+                        this.id(),
                         this.apiUrl(),
                         this.clientId(),
                         pkData,

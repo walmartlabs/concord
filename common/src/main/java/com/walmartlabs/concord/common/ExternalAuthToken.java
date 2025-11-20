@@ -33,6 +33,10 @@ import java.time.OffsetDateTime;
 @JsonDeserialize(as = ImmutableSimpleToken.class)
 public interface ExternalAuthToken {
 
+    @Nullable
+    @JsonProperty("auth_id")
+    String authId();
+
     @JsonProperty("token")
     String token();
 

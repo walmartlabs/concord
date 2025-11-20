@@ -31,6 +31,7 @@ class GitHubAppAuthConfigTest {
     @Test
     void testUrlPatternMissingNamedGroup() {
         var ex = assertThrows(IllegalArgumentException.class, () -> new GitHubAppAuthConfig(
+                "test-auth",
                 "https://api.github.com",
                 "mock-client-id",
                 "/not/used/in/test",
