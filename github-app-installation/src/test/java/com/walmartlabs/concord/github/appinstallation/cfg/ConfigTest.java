@@ -47,8 +47,8 @@ class ConfigTest {
         var typesafeConfig = ConfigFactory.parseString("""
                 {
                     "auth" = [
-                        { type = "GITHUB_APP_INSTALLATION", urlPattern = "(?<baseUrl>github.local)", clientId = "123", privateKey = "{{PK_PATH}}" },
-                        { type = "OAUTH_TOKEN", urlPattern = "(?<baseUrl>github.local)", token = "mock-token" }
+                        { id = "app-auth", type = "GITHUB_APP_INSTALLATION", urlPattern = "(?<baseUrl>github.local)", clientId = "123", privateKey = "{{PK_PATH}}" },
+                        { id = "static-auth", type = "OAUTH_TOKEN", urlPattern = "(?<baseUrl>github.local)", token = "mock-token" }
                     ]
                 }""".replace("{{PK_PATH}}", pk.toString()));
         var cfg = GitHubAppInstallationConfig.fromConfig(typesafeConfig);
@@ -59,10 +59,12 @@ class ConfigTest {
         assertEquals(2, cfg.getAuthConfigs().size());
 
         var appInstall = assertInstanceOf(GitHubAppAuthConfig.class, cfg.getAuthConfigs().get(0));
+        assertEquals("app-auth", appInstall.id());
         assertEquals("x-access-token", appInstall.username());
         assertEquals("https://api.github.com", appInstall.apiUrl());
 
         var oauth = assertInstanceOf(MappingAuthConfig.OauthAuthConfig.class, cfg.getAuthConfigs().get(1));
+        assertEquals("static-auth", oauth.id());
         assertNull(oauth.username());
         assertEquals("mock-token", oauth.token());
     }
@@ -76,8 +78,8 @@ class ConfigTest {
                     systemAuthCacheDuration = "1 minute",
                     systemAuthCacheMaxWeight = "10"
                     "auth" = [
-                        { type = "GITHUB_APP_INSTALLATION", urlPattern = "(?<baseUrl>github.local)", username = "custom", apiUrl = "https://api.github.local", clientId = "123", privateKey = "{{PK_PATH}}" },
-                        { type = "OAUTH_TOKEN", urlPattern = "(?<baseUrl>github.local)", token = "mock-token", username = "custom" }
+                        { id = "app-auth", type = "GITHUB_APP_INSTALLATION", urlPattern = "(?<baseUrl>github.local)", username = "custom", apiUrl = "https://api.github.local", clientId = "123", privateKey = "{{PK_PATH}}" },
+                        { id = "static-auth", type = "OAUTH_TOKEN", urlPattern = "(?<baseUrl>github.local)", token = "mock-token", username = "custom" }
                     ]
                 }""".replace("{{PK_PATH}}", pk.toString()));
         var cfg = GitHubAppInstallationConfig.fromConfig(typesafeConfig);
@@ -88,10 +90,12 @@ class ConfigTest {
         assertEquals(2, cfg.getAuthConfigs().size());
 
         var appInstall = assertInstanceOf(GitHubAppAuthConfig.class, cfg.getAuthConfigs().get(0));
+        assertEquals("app-auth", appInstall.id());
         assertEquals("custom", appInstall.username());
         assertEquals("https://api.github.local", appInstall.apiUrl());
 
         var oauth = assertInstanceOf(MappingAuthConfig.OauthAuthConfig.class, cfg.getAuthConfigs().get(1));
+        assertEquals("static-auth", oauth.id());
         assertEquals("custom", oauth.username());
         assertEquals("mock-token", oauth.token());
     }

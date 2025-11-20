@@ -109,6 +109,7 @@ class RepoExtractionTest {
 
     private static GitHubAppAuthConfig getAuth(String urlPattern) {
         return new GitHubAppAuthConfig(
+                "test-auth",
                 "https://api.github.com",
                 "1234",
                 "/not/used",

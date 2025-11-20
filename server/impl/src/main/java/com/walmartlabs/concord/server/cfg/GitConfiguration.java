@@ -31,6 +31,8 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
+import static com.walmartlabs.concord.server.cfg.Utils.getStringOrDefault;
+
 public class GitConfiguration implements OauthTokenConfig, Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -154,10 +156,11 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
         MappingAuthConfig toGitAuth();
     }
 
-    public record OauthConfig(String urlPattern, String token) implements AuthConfig {
+    public record OauthConfig(String id, String urlPattern, String token) implements AuthConfig {
 
         static OauthConfig from(com.typesafe.config.Config cfg) {
             return new OauthConfig(
+                    getStringOrDefault(cfg, "id", () -> "system-oauth-token"),
                     cfg.getString("urlPattern"),
                     cfg.getString("token")
             );
@@ -166,6 +169,7 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
         @Override
         public MappingAuthConfig.OauthAuthConfig toGitAuth() {
             return MappingAuthConfig.OauthAuthConfig.builder()
+                    .id(this.id())
                     .urlPattern(MappingAuthConfig.assertBaseUrlPattern(this.urlPattern()))
                     .token(this.token())
                     .build();

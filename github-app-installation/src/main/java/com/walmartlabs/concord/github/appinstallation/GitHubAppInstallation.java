@@ -134,7 +134,8 @@ public class GitHubAppInstallation implements AuthTokenProvider {
                 .findFirst()
                 .map(auth -> {
                     if (auth instanceof MappingAuthConfig.OauthAuthConfig tokenAuth) {
-                        return GitHubInstallationToken.builder()
+                        return ExternalAuthToken.StaticToken.builder()
+                                .authId(tokenAuth.id())
                                 .token(tokenAuth.token())
                                 .username(tokenAuth.username())
                                 .build();
@@ -180,7 +181,7 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         }
 
         // hopefully it's just a token a plaintext token
-        return GitHubInstallationToken.builder()
+        return ExternalAuthToken.StaticToken.builder()
                 .token(new String(data).trim())
                 .build();
     }

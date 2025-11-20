@@ -137,10 +137,11 @@ public class GitConfiguration implements OauthTokenConfig {
         MappingAuthConfig toGitAuth();
     }
 
-    public record OauthConfig(String urlPattern, String token) implements AuthConfig {
+    public record OauthConfig(String id, String urlPattern, String token) implements AuthConfig {
 
         static OauthConfig from(Config cfg) {
             return new OauthConfig(
+                    getStringOrDefault(cfg, "id", () -> "system-oauth-token"),
                     cfg.getString("urlPattern"),
                     cfg.getString("token")
             );
@@ -149,6 +150,7 @@ public class GitConfiguration implements OauthTokenConfig {
         @Override
         public MappingAuthConfig.OauthAuthConfig toGitAuth() {
             return MappingAuthConfig.OauthAuthConfig.builder()
+                    .id(this.id())
                     .urlPattern(MappingAuthConfig.assertBaseUrlPattern(this.urlPattern()))
                     .token(this.token())
                     .build();

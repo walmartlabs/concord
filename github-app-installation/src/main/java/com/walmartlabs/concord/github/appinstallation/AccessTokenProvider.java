@@ -79,6 +79,7 @@ public class AccessTokenProvider {
             var accessTokenUrl = getAccessTokenUrl(app.apiUrl(), orgRepo, jwt);
             return ExternalAuthToken.StaticToken.builder()
                     .from(createAccessToken(accessTokenUrl, jwt))
+                    .authId(app.id())
                     .username(app.username())
                     .build();
         } catch (JOSEException e) {
