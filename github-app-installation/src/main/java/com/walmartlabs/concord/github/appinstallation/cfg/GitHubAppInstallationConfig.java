@@ -119,7 +119,7 @@ public interface GitHubAppInstallationConfig {
             return new OauthConfig(
                     getStringOrDefault(cfg, "id", () -> "github-oauth-token"),
                     cfg.getString("urlPattern"),
-                    getStringOrDefault(cfg, "username", null),
+                    getStringOrDefault(cfg, "username", () -> null),
                     cfg.getString("token")
             );
         }
@@ -139,11 +139,11 @@ public interface GitHubAppInstallationConfig {
 
         static AppInstallationConfig from(com.typesafe.config.Config cfg) {
 
-            var username = Optional.ofNullable(getStringOrDefault(cfg, "apiUrl", null))
+            var username = Optional.ofNullable(getStringOrDefault(cfg, "username", () -> null))
                     .filter(s -> !s.isBlank())
                     .orElse("x-access-token");
 
-            var apiUrl = Optional.ofNullable(getStringOrDefault(cfg, "apiUrl", null))
+            var apiUrl = Optional.ofNullable(getStringOrDefault(cfg, "apiUrl", () -> null))
                     .filter(s -> !s.isBlank())
                     .orElse("https://api.github.com");
 
