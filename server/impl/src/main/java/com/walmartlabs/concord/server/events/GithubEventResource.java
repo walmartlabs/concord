@@ -76,7 +76,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -389,7 +388,23 @@ public class GithubEventResource implements Resource {
     private record GitHubUser(String email) {
     }
 
-    private record EmailCacheKey(URI repoUrl, URI userUrl) {
+    private record EmailCacheKey(@Nonnull URI repoUrl, @Nonnull URI userUrl) {
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+
+            EmailCacheKey that = (EmailCacheKey) o;
+            // userUrl is sufficient for equality for caching--it will point to
+            // the same user regardless of repoUrl.
+            // repoUrl is only necessary to acquire token, not for caching.
+            return userUrl().equals(that.userUrl());
+        }
+
+        @Override
+        public int hashCode() {
+            return userUrl().hashCode();
+        }
     }
 
     private static class EmailCacheLoader extends CacheLoader<EmailCacheKey, Optional<String>> {
