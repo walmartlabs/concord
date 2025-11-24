@@ -44,6 +44,8 @@ public final class Constants {
     public static final String BASE_KEY = "base";
     public static final String HEAD_KEY = "head";
     public static final String REF_KEY = "ref";
+    public static final String INSTALLATION_KEY = "installation";
+    public static final String NODE_ID_KEY = "node_id";
 
     public static final String GITHUB_ORG_KEY = "githubOrg";
     public static final String GITHUB_REPO_KEY = "githubRepo";

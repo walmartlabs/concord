@@ -160,6 +160,34 @@ public class UserDao extends AbstractDao {
         return getUserInfo(tx, r);
     }
 
+    public UserEntry getGitHubAppUser(String installationNodeId, String userNodeId) {
+        DSLContext tx = dsl();
+
+        Record9<UUID, String, String, String, String, String, Boolean, Boolean, OffsetDateTime> r =
+                tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED, USERS.IS_PERMANENTLY_DISABLED, USERS.DISABLED_DATE)
+                        .from(USERS, GITHUB_APP_USERS)
+                        .where(USERS.USER_ID.eq(GITHUB_APP_USERS.USER_ID))
+                        .and(GITHUB_APP_USERS.INSTALLATION_NODE_ID.eq(installationNodeId))
+                        .and(GITHUB_APP_USERS.APP_USER_NODE_ID.eq(userNodeId))
+                        .fetchOne();
+
+        if (r == null) {
+            return null;
+        }
+
+        return getUserInfo(tx, r);
+    }
+
+    public void createGitHubAppUser(UUID userId, String installationNodeId, String userNodeId) {
+        tx(tx -> tx.insertInto(GITHUB_APP_USERS)
+                .columns(GITHUB_APP_USERS.INSTALLATION_NODE_ID, GITHUB_APP_USERS.APP_USER_NODE_ID, GITHUB_APP_USERS.USER_ID)
+                .values(installationNodeId, userNodeId, userId)
+                .onConflict(GITHUB_APP_USERS.INSTALLATION_NODE_ID, GITHUB_APP_USERS.APP_USER_NODE_ID)
+                .doUpdate()
+                .set(GITHUB_APP_USERS.USER_ID, userId)
+                .execute());
+    }
+
     /**
      * Returns the ID of the specified user.
      * Note that {@code username} and {@code domain} are case-insensitive and forced to lower case.

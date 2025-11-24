@@ -210,6 +210,18 @@ public class Payload {
         return raw().containsKey(PULL_REQUEST_EVENT);
     }
 
+    public boolean hasInstallation() {
+        return raw().containsKey(INSTALLATION_KEY);
+    }
+
+    /**
+     * @return graphql node id for the given attribute
+     */
+    public String getNodeId(String attribute) {
+        Map<String, Object> m = MapUtils.getMap(raw(), attribute, Map.of());
+        return MapUtils.getString(m, NODE_ID_KEY);
+    }
+
     public String getPullRequestBaseUrl() {
         Map<String, Object> pullRequest = getPullRequestAttribute(this.raw());
         return getPullRequestCloneUrl(pullRequest, BASE_KEY);

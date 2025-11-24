@@ -295,6 +295,15 @@ public class GithubEventResource implements Resource {
 
         @Override
         public UserEntry get() {
+            // GitHub user -> Concord user mapping may already exist in DB
+            if (payload.hasInstallation()) {
+                UserEntry fromDbMapping = findUserInDbMapping();
+
+                if (fromDbMapping != null) {
+                    return fromDbMapping;
+                }
+            }
+
             if (!githubCfg.isUseSenderLdapDn() && !githubCfg.isUseSenderEmail()) {
                 // don't try to match against payload sender's ldap_dn or email
                 return fallback.get();
@@ -305,6 +314,7 @@ public class GithubEventResource implements Resource {
             if (githubCfg.isUseSenderLdapDn()) {
                 UserEntry fromDn = findSenderDnInLdap();
                 if (fromDn != null) {
+                    addUserDbMapping(fromDn);
                     return fromDn;
                 }
             }
@@ -313,12 +323,29 @@ public class GithubEventResource implements Resource {
             if (githubCfg.isUseSenderEmail()) {
                 UserEntry fromEmail = findSenderEmailInLdap();
                 if (fromEmail != null) {
+                    addUserDbMapping(fromEmail);
                     return fromEmail;
                 }
             }
 
             log.warn("getOrCreateUserEntry ['{}'] -> can't determine the sender's 'ldap_dn' or 'email', falling back to 'login'", payload);
             return fallback.get();
+        }
+
+        private UserEntry findUserInDbMapping() {
+            String installationNodeId = payload.getNodeId("installation");
+            String senderNodeId = payload.getNodeId("sender");
+
+            return userManager.getGitHubAppUser(installationNodeId, senderNodeId).orElse(null);
+        }
+
+        private void addUserDbMapping(UserEntry user) {
+            if (payload.hasInstallation()) {
+                String installationNodeId = payload.getNodeId("installation");
+                String senderNodeId = payload.getNodeId("sender");
+
+                userManager.createGitHubAppUser(user.getId(), installationNodeId, senderNodeId);
+            }
         }
 
         private UserEntry findSenderDnInLdap() {
