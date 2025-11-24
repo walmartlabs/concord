@@ -54,10 +54,8 @@ public class BeanELResolver extends javax.el.BeanELResolver {
                 base = lv.resolve(this.context);
             }
 
-            if (!(base instanceof Map<?, ?>)) {
-                params = resolveLazyValues(this.context, params);
-                paramTypes = null;
-            }
+            params = resolveLazyValues(this.context, params);
+            paramTypes = null;
 
             // NPE in super.invoke if method not found :(
             if (ReflectionUtil.findMethod(base.getClass(), method.toString(), paramTypes, params) == null) {
