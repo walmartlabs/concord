@@ -1,0 +1,36 @@
+version: "3"
+services:
+  db:
+    image: "library/postgres:10.4-alpine"
+    environment:
+      POSTGRES_PASSWORD: "${PG_PASS}"
+  ldap:
+    image: "lldap/lldap:stable"
+    ports:
+      - "8001:17170"
+    environment:
+      - LLDAP_JWT_SECRET=${LDAP_JWT}
+      - LLDAP_KEY_SEED=${LDAP_SEED}
+      - LLDAP_LDAP_BASE_DN=${LDAP_BASE_DN}
+      - LLDAP_LDAP_USER_PASS=${LDAP_PASS}
+  concord-dind:
+    image: "docker:dind"
+    privileged: true
+    volumes:
+      - "agent-tmp:/tmp"
+    command: "dockerd -H tcp://0.0.0.0:6666 --bip=10.11.13.1/24"
+    ports:
+      - "6666:6666"
+  development: # handles both the agent and the server, as these will (presumably) both be in active-development.
+    image: "mcr.microsoft.com/devcontainers/base:ubuntu"
+    command: sleep infinity
+    volumes:
+      - "../:/workspace"
+      - "agent-tmp:/tmp"
+    depends_on:
+      - "db"
+      - "concord-dind"
+      - "ldap"
+
+volumes:
+  agent-tmp: {}
