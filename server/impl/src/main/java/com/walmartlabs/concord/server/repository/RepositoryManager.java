@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -68,9 +67,6 @@ public class RepositoryManager {
                              AuthTokenProvider authProvider) throws IOException {
 
         GitClientConfiguration gitCliCfg = GitClientConfiguration.builder()
-                .oauthToken(gitCfg.getOauthToken()) // TODO remove? authProvider should have the same info now
-                .oauthUsername(gitCfg.getOauthUsername())
-                .oauthUrlPattern(gitCfg.getOauthUrlPattern())
                 .defaultOperationTimeout(gitCfg.getDefaultOperationTimeout())
                 .fetchTimeout(gitCfg.getFetchTimeout())
                 .httpLowSpeedLimit(gitCfg.getHttpLowSpeedLimit())

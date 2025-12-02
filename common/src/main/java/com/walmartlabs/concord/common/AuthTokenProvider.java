@@ -61,10 +61,8 @@ public interface AuthTokenProvider {
                         return new URI(repo.getScheme(), userInfo, repo.getHost(),
                                 repo.getPort(), repo.getPath(), repo.getQuery(), repo.getFragment());
                     } catch (URISyntaxException e) {
-                        // TODO add log?
+                        return null;
                     }
-
-                    return null;
                 })
                 .orElse(repo);
     }
