@@ -43,7 +43,7 @@ public class ServerAuthTokenProvider implements AuthTokenProvider {
 
     @Inject
     public ServerAuthTokenProvider(GitHubAppInstallation githubProvider,
-                                   AuthTokenProvider.OauthTokenProvider oauthTokenProvider,
+                                   OauthTokenProvider oauthTokenProvider,
                                    MetricRegistry metricRegistry) {
         this.authTokenProviders = List.of(githubProvider, oauthTokenProvider);
 
@@ -58,9 +58,9 @@ public class ServerAuthTokenProvider implements AuthTokenProvider {
 
     @WithTimer
     public Optional<ExternalAuthToken> getToken(URI repo, @Nullable Secret secret) {
-        for (var k : authTokenProviders) {
-            if (k.supports(repo, secret)) {
-                return k.getToken(repo, secret);
+        for (var tokenProvider : authTokenProviders) {
+            if (tokenProvider.supports(repo, secret)) {
+                return tokenProvider.getToken(repo, secret);
             }
         }
 

@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 
 public class RepositoryManager {
@@ -58,7 +57,6 @@ public class RepositoryManager {
         this.gitCfg = gitCfg;
 
         GitClientConfiguration clientCfg = GitClientConfiguration.builder()
-                .oauthToken(gitCfg.getOauthToken())
                 .defaultOperationTimeout(gitCfg.getDefaultOperationTimeout())
                 .fetchTimeout(gitCfg.getFetchTimeout())
                 .httpLowSpeedLimit(gitCfg.getHttpLowSpeedLimit())
