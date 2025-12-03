@@ -26,6 +26,11 @@ import javax.annotation.Nullable;
 import java.net.URI;
 import java.util.regex.Pattern;
 
+/**
+ * Configuration for mapping Git repository URLs to an authentication method.
+ * Mapping is based on regex matching (see {@link #urlPattern()}) against the
+ * repository URL.
+ */
 public interface MappingAuthConfig {
 
     /**

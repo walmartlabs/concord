@@ -40,10 +40,7 @@ public class AgentAuthTokenProvider implements AuthTokenProvider {
     public AgentAuthTokenProvider(GitHubAppInstallation githubProvider,
                                   OauthTokenProvider oauthTokenProvider) {
 
-        this.authTokenProviders = List.of(
-                githubProvider,
-                oauthTokenProvider
-        );
+        this.authTokenProviders = List.of(githubProvider, oauthTokenProvider);
     }
 
     @Override
@@ -53,9 +50,9 @@ public class AgentAuthTokenProvider implements AuthTokenProvider {
     }
 
     public Optional<ExternalAuthToken> getToken(URI repo, @Nullable Secret secret) {
-        for (var k : authTokenProviders) {
-            if (k.supports(repo, secret)) {
-                return k.getToken(repo, secret);
+        for (var tokenProvider : authTokenProviders) {
+            if (tokenProvider.supports(repo, secret)) {
+                return tokenProvider.getToken(repo, secret);
             }
         }
 

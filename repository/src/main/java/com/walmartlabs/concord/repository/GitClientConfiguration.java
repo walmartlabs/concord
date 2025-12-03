@@ -38,9 +38,6 @@ public interface GitClientConfiguration {
 
     Optional<String> oauthUrlPattern();
 
-    @Nullable
-    List<String> authorizedGitHosts();
-
     @Value.Default
     default Set<String> allowedSchemes() {
         return Set.of("https", "http", "ssh", "classpath");
