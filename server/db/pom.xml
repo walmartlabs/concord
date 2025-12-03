@@ -152,9 +152,8 @@
                                     <POSTGRES_INITDB_ARGS>--no-sync</POSTGRES_INITDB_ARGS>
                                 </env>
                                 <wait>
-<!--                                    <log>(?s).*ready for start up.*ready to accept connections.*</log>-->
-<!--                                    <time>60000</time>-->
-                                    <time>4000</time>
+                                    <log>(?s).*ready for start up.*ready to accept connections.*</log>
+                                    <time>60000</time>
                                 </wait>
                             </run>
                         </image>
