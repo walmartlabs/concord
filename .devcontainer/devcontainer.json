@@ -9,8 +9,11 @@
             "additionalVersions": "21"
         },
         "ghcr.io/devcontainers/features/common-utils:2": {},
+        /*
+            important: needs to be same NodeJS version as specified in pom.xml <node.version>
+        */
         "ghcr.io/devcontainers/features/node:1": {
-            "version": "20"
+            "version": "24.10.0"
         },
         "ghcr.io/devcontainers/features/docker-in-docker:2": {}
     },
