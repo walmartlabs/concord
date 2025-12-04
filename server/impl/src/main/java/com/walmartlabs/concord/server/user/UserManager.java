@@ -108,20 +108,20 @@ public class UserManager {
         return Optional.ofNullable(userDao.getId(username, userDomain, type));
     }
 
-    public Optional<UserEntry> getGitHubAppUser(String installationNodeId, String userNodeId) {
-        if (installationNodeId == null || userNodeId == null) {
+    public Optional<UserEntry> getUserFromExternalMapping(String externalId) {
+        if (externalId == null) {
             return Optional.empty();
         }
 
-        return Optional.ofNullable(userDao.getGitHubAppUser(installationNodeId, userNodeId));
+        return Optional.ofNullable(userDao.getUserFromExternalMapping(externalId));
     }
 
-    public void createGitHubAppUser(UUID id, String installationNodeId, String userNodeId) {
-        if (installationNodeId == null ||  userNodeId == null) {
+    public void createExternalUserMapping(UUID concordUserId, String externalId) {
+        if (externalId == null) {
             return;
         }
 
-        userDao.createGitHubAppUser(id, installationNodeId, userNodeId);
+        userDao.createExternalUserMapping(concordUserId, externalId);
     }
 
     public Optional<UserEntry> update(UUID userId, String displayName, String email, UserType userType, boolean isDisabled, Set<String> roles) {

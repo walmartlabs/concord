@@ -210,8 +210,9 @@ public class Payload {
         return raw().containsKey(PULL_REQUEST_EVENT);
     }
 
-    public boolean hasInstallation() {
-        return raw().containsKey(INSTALLATION_KEY);
+    public String getUrl(String attribute) {
+        Map<String, Object> m = MapUtils.getMap(raw(), attribute, Map.of());
+        return MapUtils.getString(m, URL_KEY);
     }
 
     /**

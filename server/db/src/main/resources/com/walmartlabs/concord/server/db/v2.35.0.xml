@@ -5,11 +5,8 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
     <changeSet id="2510000" author="benjamin.broadaway@walmart.com">
-        <createTable tableName="GITHUB_APP_USERS">
-            <column name="APP_USER_NODE_ID" type="varchar(256)">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="installation_node_id" type="varchar(256)">
+        <createTable tableName="EXTERNAL_APP_USERS">
+            <column name="EXTERNAL_USER_ID" type="varchar(512)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="USER_ID" type="uuid">
@@ -17,9 +14,9 @@
             </column>
         </createTable>
 
-        <addForeignKeyConstraint baseTableName="GITHUB_APP_USERS"
+        <addForeignKeyConstraint baseTableName="EXTERNAL_APP_USERS"
                                  baseColumnNames="USER_ID"
-                                 constraintName="FK_GITHUB_USERS_USER_ID"
+                                 constraintName="FK_EXTERNAL_APP_USERS_USER_ID"
                                  referencedTableName="USERS"
                                  referencedColumnNames="USER_ID"
                                  onDelete="CASCADE"/>
