@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Map;
 
 public record UserProfile(
@@ -27,7 +29,10 @@ public record UserProfile(
         String email,
         String displayName,
         String accessToken,
-        Map<String, Object> attributes) {
+        Map<String, Object> attributes) implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     public Object getAttribute(String name) {
         return attributes != null ? attributes.get(name) : null;

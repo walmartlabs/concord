@@ -28,6 +28,8 @@ import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.plugins.oidc.PluginConfiguration.Source;
 import com.walmartlabs.concord.server.plugins.oidc.PluginConfiguration.TeamMapping;
 import com.walmartlabs.concord.server.role.RoleDao;
+import com.walmartlabs.concord.server.security.SecurityUtils;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -106,5 +108,9 @@ public class OidcRealmTest {
         assertTrue(OidcRealm.match(userProfile, List.of(new Source("groups", ".*"))));
 
         assertFalse(OidcRealm.match(userProfile, List.of(new Source("groups", ".*superadmins.*"))));
+
+        var pc = new SimplePrincipalCollection();
+        pc.add(new OidcToken(userProfile), "oidc");
+        SecurityUtils.serialize(pc);
     }
 }
