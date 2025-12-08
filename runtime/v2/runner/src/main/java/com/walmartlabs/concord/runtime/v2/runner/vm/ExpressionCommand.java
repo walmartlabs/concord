@@ -59,7 +59,7 @@ public class ExpressionCommand extends StepCommand<Expression> {
 
         EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
-        Object result = ee.eval(ecf.global(ctx), expr, Object.class);
+        Object result = ee.eval(ecf.global(ctx, false), expr, Object.class);
         result = VariablesSanitizer.sanitize(result);
 
         ExpressionOptions opts = Objects.requireNonNull(step.getOptions());

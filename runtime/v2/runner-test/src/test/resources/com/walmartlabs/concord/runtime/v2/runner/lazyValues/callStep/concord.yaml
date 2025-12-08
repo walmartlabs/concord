@@ -1,0 +1,18 @@
+flows:
+  default:
+    - set:
+        lazyValue: "${lazyValuesTask.createLazyValue('myValue')}"
+
+    - call: myFlow
+      in:
+        inLazyValue: "${lazyValue}"
+      out: outLazyValue
+
+    - log: "should print `outValue`: ${outLazyValue}"
+
+  myFlow:
+    # lazy value eval here:
+    - log: "should print `myValue`: ${inLazyValue}"
+
+    - set:
+        outLazyValue: "${lazyValuesTask.createLazyValue('outValue')}"

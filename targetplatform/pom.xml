@@ -41,6 +41,7 @@
         <bouncycastle.version>1.80</bouncycastle.version>
         <bpm.version>1.0.3</bpm.version>
         <bytebuddy.version>1.14.9</bytebuddy.version>
+        <concord.juel.version>0.0.1-SNAPSHOT</concord.juel.version>
         <commons.beanutils.version>1.11.0</commons.beanutils.version>
         <commons.codec.version>1.17.1</commons.codec.version>
         <commons.collections.version>3.2.2</commons.collections.version>
@@ -53,7 +54,6 @@
         <config.version>1.4.2</config.version>
         <cronutils.version>9.2.0</cronutils.version>
         <errorproneannotations.version>2.28.0</errorproneannotations.version>
-        <glassfish.el.version>3.0.1-b12</glassfish.el.version>
         <graalvm.version>22.0.0.2</graalvm.version>
         <greenmail.version>1.6.5</greenmail.version>
         <groovy.version>2.5.23</groovy.version>
@@ -963,9 +963,9 @@
                 <version>${aopalliance.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.glassfish</groupId>
-                <artifactId>javax.el</artifactId>
-                <version>${glassfish.el.version}</version>
+                <groupId>com.walmartlabs.concord.juel</groupId>
+                <artifactId>concord-juel</artifactId>
+                <version>${concord.juel.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>

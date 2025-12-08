@@ -22,6 +22,8 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.ExceptionUtils;
+import com.walmartlabs.concord.juel.ResolvableValue;
+import com.walmartlabs.concord.juel.ValueResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.*;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.MapELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
@@ -139,6 +141,14 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         };
         sc.putContext(ExpressionFactory.class, expressionFactory);
 
+        sc.putContext(ValueResolver.class, new ValueResolver() {
+
+            @Override
+            public Object resolve(ELContext elContext, ResolvableValue resolvableValue) {
+                return ((LazyValue)resolvableValue).resolve(ctx.context());
+            }
+        });
+
         try {
             var x = expressionFactory.createValueExpression(sc, expr, type);
             var v = withEvalContext(ctx, () -> x.getValue(sc));
@@ -163,7 +173,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             var lastElException = ExceptionUtils.findLastException(e, javax.el.ELException.class);
             if (lastElException.getCause() instanceof UserDefinedException ue) {
                 throw ue;
-            } else if (e.getCause() instanceof com.sun.el.parser.ParseException pe) {
+            } else if (e.getCause() instanceof com.walmartlabs.concord.juel.parser.ParseException pe) {
                 throw new UserDefinedException("while parsing expression '" + expr + "': " + pe.getMessage());
             } else if (lastElException.getCause() instanceof Exception ee) {
                 throw new WrappedException(exceptionPrefix(expr), ee);

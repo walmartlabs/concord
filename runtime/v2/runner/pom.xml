@@ -43,6 +43,12 @@
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-common</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.takari.bpm</groupId>
+                    <artifactId>bpm-engine-impl</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
@@ -175,10 +181,9 @@
             <artifactId>log-tasks</artifactId>
         </dependency>
 
-        <!-- Java EL support -->
         <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.el</artifactId>
+            <groupId>com.walmartlabs.concord.juel</groupId>
+            <artifactId>concord-juel</artifactId>
         </dependency>
 
         <!-- Immutables -->
@@ -217,7 +222,7 @@
             <groupId>com.sun.activation</groupId>
             <artifactId>javax.activation</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>uk.org.lidalia</groupId>
             <artifactId>sysout-over-slf4j</artifactId>

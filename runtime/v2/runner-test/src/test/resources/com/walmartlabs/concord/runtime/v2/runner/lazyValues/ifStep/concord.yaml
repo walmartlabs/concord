@@ -1,0 +1,19 @@
+flows:
+  default:
+    - set:
+        lazyValue: "${lazyValuesTask.createLazyValue('myValue')}"
+
+    # lazy value eval here:
+    - if: "${lazyValue != 'myValue'}"
+      then:
+        - throw: "Not eq"
+
+    # lazy value eval here:
+    - if: "${lazyValue == 'myValue'}"
+      then:
+        - log: "EQ is ok"
+
+    # lazy value eval here:
+    - if: "${lazyValue.trim() == 'myValue'}"
+      then:
+        - log: "methods is ok"

@@ -76,8 +76,8 @@
 
         <!-- TODO this should be pulled from transitive deps, shouldn't? -->
         <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.el</artifactId>
+            <groupId>com.walmartlabs.concord.juel</groupId>
+            <artifactId>concord-juel</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>

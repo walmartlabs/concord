@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  * =====
  */
 
-import com.sun.el.util.ReflectionUtil;
+import com.walmartlabs.concord.juel.util.ReflectionUtil;
 import com.walmartlabs.concord.common.AllowNulls;
 import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;

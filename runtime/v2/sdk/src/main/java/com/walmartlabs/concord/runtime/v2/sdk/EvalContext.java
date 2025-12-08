@@ -66,6 +66,11 @@ public interface EvalContext {
         return false;
     }
 
+    @Value.Default
+    default boolean resolveLazyValues() {
+        return false;
+    }
+
     class Builder extends ImmutableEvalContext.Builder {}
 
     static EvalContext.Builder builder() {

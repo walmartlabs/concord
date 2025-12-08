@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el.resolvers;
  * =====
  */
 
-import com.sun.el.util.ReflectionUtil;
+import com.walmartlabs.concord.juel.util.ReflectionUtil;
 
 import javax.el.ELContext;
 

@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
-import com.sun.el.util.ReflectionUtil;
+import com.walmartlabs.concord.juel.util.ReflectionUtil;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.SensitiveDataProcessor;
@@ -79,7 +79,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
                 .build();
 
         TaskCallOptions opts = Objects.requireNonNull(call.getOptions());
-        Variables input = new MapBackedVariables(VMUtils.prepareInput(ecf, expressionEvaluator, ctx, opts.input(), opts.inputExpression()));
+        Variables input = new MapBackedVariables(VMUtils.prepareInput(ecf, expressionEvaluator, ctx, opts.input(), opts.inputExpression(), true));
 
         TaskResult result;
         try {

@@ -23,7 +23,6 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.runtime.v2.runner.TestRuntimeV2;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import org.immutables.value.Value;
 import org.slf4j.Logger;
@@ -408,6 +407,72 @@ public final class Tasks {
             log.info("will suspend with event: '{}'", input.assertString("eventName"));
 
             return TaskResult.suspend(input.assertString("eventName"));
+        }
+    }
+
+    @Named("lazyValuesTask")
+    @SuppressWarnings("unused")
+    public static class LazyValuesTask implements Task {
+
+        @Override
+        public TaskResult execute(Variables input) throws Exception {
+            var action = input.assertString("action");
+            switch (action) {
+                case "assertLazyValue": {
+                    var actualValue = input.assertString("value");
+                    var expectedValue = input.assertString("expectedValue");
+                    if (!actualValue.equals(expectedValue)) {
+                        return TaskResult.fail(actualValue + " != " + expectedValue);
+                    } else {
+                        return TaskResult.success();
+                    }
+                }
+                case "outLazyValue": {
+                    var value = input.assertString("value");
+                    return TaskResult.success()
+                            .value("lazyValue", new TestLazyValue(value));
+                }
+            }
+            return TaskResult.success();
+        }
+
+        public TestLazyValue createLazyValue(String value) {
+            return new TestLazyValue(value);
+        }
+
+        public Map<String, Object> createLazyValueInMap(String value) {
+            return Map.of("plain", "plain-value", "lazy", createLazyValue(value));
+        }
+
+        public void assertNoLazyValuesInArgument(Map<String, Object> value) {
+            for (var key : value.keySet()) {
+                var v =  value.get(key);
+                if (v instanceof LazyValue) {
+                    throw new RuntimeException("lazy value for key: " + key);
+                }
+            }
+        }
+    }
+
+    public static class TestLazyValue implements LazyValue {
+
+        private final Object value;
+
+        public TestLazyValue(Object value) {
+            this.value = value;
+        }
+
+        @Override
+        public Object resolve(Context context) {
+            System.out.println("lazy value resole -> " + value + " @ " + context.execution().currentStep());
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return "TestLazyValue{" +
+                    "value='" + value + '\'' +
+                    '}';
         }
     }
 }

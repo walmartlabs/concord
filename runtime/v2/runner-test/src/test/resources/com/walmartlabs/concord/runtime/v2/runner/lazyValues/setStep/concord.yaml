@@ -1,0 +1,42 @@
+flows:
+  default:
+#    - set:
+#        lazyValue: "${lazyValuesTask.createLazyValue('myValue')}"
+#        booleanLazyValue: "${lazyValuesTask.createLazyValue(true)}"
+#        numLazyValue: "${lazyValuesTask.createLazyValue(123)}"
+#
+#    - set:
+#        v: "${lazyValue}"  # lazy value should not be evaluated here
+#
+#    # lazy value eval here:
+#    - log: "should print `myValue`: ${lazyValue}"
+#
+#    # lazy value eval here:
+#    - log: "should print `myValue`: ${v}"
+#
+#    # lazy value eval here:
+#    - log: "0 should print `true`: ${booleanLazyValue}"
+#
+#    # lazy value eval here:
+#    - log: "0 should print `123`: ${numLazyValue}"
+#
+#    - set:
+#        nonLazyValue: "${lazyValue}_boom"
+#    - set:
+#        nonLazyValue2: "${lazyValue == 'myValue' ? true : false}"
+    - set:
+        nonLazyValue3: "${lazyValue.trim().length() == 7 ? true : false}"
+#    - set:
+#        nonLazyValue4: "${lazyValue.trim().isEmpty() == false}"
+#    - set:
+#        nonLazyValue5: "${booleanLazyValue && true}"
+#    - set:
+#        nonLazyValue6: "${numLazyValue == 123}"
+#
+#    - log: "should print `myValue_boom`: ${nonLazyValue}"
+#    - log: "1 should print `true`: ${nonLazyValue2}"
+#    - log: "2 should print `true`: ${nonLazyValue3}"
+#    - log: "3 should print `true`: ${nonLazyValue4}"
+#    - log: "4 should print `true`: ${nonLazyValue5}"
+#    - log: "5 should print `true`: ${nonLazyValue6}"
+

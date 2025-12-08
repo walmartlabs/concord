@@ -31,8 +31,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.el</artifactId>
+            <groupId>com.walmartlabs.concord.juel</groupId>
+            <artifactId>concord-juel</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>

@@ -74,7 +74,7 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> implements Elemen
 
         assertScriptDryRunReady(ctx, opts);
 
-        Map<String, Object> input = VMUtils.prepareInput(ecf, expressionEvaluator, ctx, opts.input(), opts.inputExpression());
+        Map<String, Object> input = VMUtils.prepareInput(ecf, expressionEvaluator, ctx, opts.input(), opts.inputExpression(), true);
 
         String language = getLanguage(ecf, expressionEvaluator, scriptEvaluator, ctx, call);
         Reader content = getContent(ecf, expressionEvaluator, resourceResolver, ctx, call);

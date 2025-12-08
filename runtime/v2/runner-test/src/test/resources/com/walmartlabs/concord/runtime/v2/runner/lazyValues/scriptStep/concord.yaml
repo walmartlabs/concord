@@ -1,0 +1,16 @@
+flows:
+  default:
+    - set:
+        lazyValue: "${lazyValuesTask.createLazyValue('myValue')}"
+
+    - script: js
+      in:
+        inLazyValue: "${lazyValue}"  # resolving only `in` variables
+      body: |
+        log.info("should print `myValue`: {}", inLazyValue)
+        
+        result.set("scriptOut", tasks.get('lazyValuesTask').createLazyValue('lazyValueFromScript'));
+      out:
+        outLazyValue: ${result.scriptOut}
+
+    - log: "should print `lazyValueFromScript`: ${outLazyValue}"

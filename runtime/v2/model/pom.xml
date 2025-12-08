@@ -31,6 +31,12 @@
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-common</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.takari.bpm</groupId>
+                    <artifactId>bpm-engine-impl</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
