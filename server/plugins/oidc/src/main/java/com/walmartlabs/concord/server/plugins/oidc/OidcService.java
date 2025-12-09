@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.inject.Inject;
@@ -114,12 +115,7 @@ public class OidcService {
                 throw new IOException("UserInfo request failed: " + response.statusCode() + " " + response.body());
             }
 
-            var userInfo = objectMapper.readTree(response.body());
-            var id = userInfo.get("sub").asText();
-            var email = userInfo.get("email").asText();
-            var displayName = userInfo.get("name").asText(email);
-            return new UserProfile(id, email, displayName, accessToken, userInfo);
-
+            return UserProfileConverter.convert(objectMapper, response.body(), accessToken);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IOException("Request interrupted", e);
