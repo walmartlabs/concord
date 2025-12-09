@@ -8,7 +8,9 @@
 ([#1239](https://github.com/walmartlabs/concord/pull/1239));
 - concord-server: sanitize escaped unicode nul characters
 from events
-([#1241](https://github.com/walmartlabs/concord/pull/1241)).
+([#1241](https://github.com/walmartlabs/concord/pull/1241));
+- oidc: serialization and mapping fix
+([#1245](https://github.com/walmartlabs/concord/pull/1245)).
 
 
 
