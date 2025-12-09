@@ -20,14 +20,19 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.Map;
 
 public record UserProfile(
         String id,
         String email,
         String displayName,
         String accessToken,
-        JsonNode attributes) {
+        Map<String, Object> attributes) implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     public Object getAttribute(String name) {
         return attributes != null ? attributes.get(name) : null;
