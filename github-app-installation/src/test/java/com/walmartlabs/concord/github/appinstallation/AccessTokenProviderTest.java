@@ -66,7 +66,7 @@ class AccessTokenProviderTest {
                 .thenReturn(tokenUrlResponse, accessTokenResponse);
 
         when(tokenUrlResponse.statusCode()).thenReturn(200);
-        when(tokenUrlResponse.body()).thenReturn(asInputStream(ACCESS_TOKEN_URL_RESPONSE));
+        when(tokenUrlResponse.body()).thenReturn(asInputStream(ACCESS_TOKEN_INSTALLATION_RESPONSE));
 
         when(accessTokenResponse.statusCode()).thenReturn(201);
         when(accessTokenResponse.body()).thenReturn(asInputStream(ACCESS_TOKEN_RESPONSE));
@@ -110,7 +110,7 @@ class AccessTokenProviderTest {
                 .thenReturn(tokenUrlResponse, accessTokenResponse);
 
         when(tokenUrlResponse.statusCode()).thenReturn(200);
-        when(tokenUrlResponse.body()).thenReturn(asInputStream(ACCESS_TOKEN_URL_RESPONSE));
+        when(tokenUrlResponse.body()).thenReturn(asInputStream(ACCESS_TOKEN_INSTALLATION_RESPONSE));
 
         when(accessTokenResponse.statusCode()).thenReturn(500);
         when(accessTokenResponse.body()).thenReturn(asInputStream("server error"));
@@ -127,9 +127,10 @@ class AccessTokenProviderTest {
         assertTrue(ex.getMessage().contains("Unexpected error creating app access token: 500"));
     }
 
-    private static final String ACCESS_TOKEN_URL_RESPONSE = """
+    private static final String ACCESS_TOKEN_INSTALLATION_RESPONSE = """
             {
-                "access_tokens_url": "https://github.local/access_tokens"
+                "access_tokens_url": "https://github.local/access_tokens",
+                "extra_field": "should be ignored"
             }""";
 
     private static final String ACCESS_TOKEN_RESPONSE = """
