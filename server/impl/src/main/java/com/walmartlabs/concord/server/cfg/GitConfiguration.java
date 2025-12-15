@@ -26,15 +26,18 @@ import com.walmartlabs.concord.config.Config;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
+import static com.walmartlabs.concord.common.cfg.MappingAuthConfig.assertBaseUrlPattern;
 import static com.walmartlabs.concord.server.cfg.Utils.getStringOrDefault;
 
 public class GitConfiguration implements OauthTokenConfig, Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Inject
@@ -156,7 +159,9 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
         MappingAuthConfig toGitAuth();
     }
 
-    public record OauthConfig(String id, String urlPattern, String token) implements AuthConfig {
+    public record OauthConfig(String id,
+                              String urlPattern,
+                              String token) implements AuthConfig {
 
         static OauthConfig from(com.typesafe.config.Config cfg) {
             return new OauthConfig(
@@ -170,7 +175,7 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
         public MappingAuthConfig.OauthAuthConfig toGitAuth() {
             return MappingAuthConfig.OauthAuthConfig.builder()
                     .id(this.id())
-                    .urlPattern(MappingAuthConfig.assertBaseUrlPattern(this.urlPattern()))
+                    .urlPattern(assertBaseUrlPattern(this.urlPattern()))
                     .token(this.token())
                     .build();
         }

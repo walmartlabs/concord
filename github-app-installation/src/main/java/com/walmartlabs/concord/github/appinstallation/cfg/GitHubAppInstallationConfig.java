@@ -33,6 +33,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
+import static com.walmartlabs.concord.common.cfg.MappingAuthConfig.assertBaseUrlPattern;
 import static com.walmartlabs.concord.github.appinstallation.Utils.getStringOrDefault;
 
 @Value.Immutable
@@ -130,12 +131,17 @@ public interface GitHubAppInstallationConfig {
                     .id(this.id())
                     .token(this.token())
                     .username(this.username())
-                    .urlPattern(MappingAuthConfig.assertBaseUrlPattern(this.urlPattern()))
+                    .urlPattern(assertBaseUrlPattern(this.urlPattern()))
                     .build();
         }
     }
 
-    record AppInstallationConfig(String id, String urlPattern, String username, String apiUrl, String clientId, String privateKey) implements AuthConfig {
+    record AppInstallationConfig(String id,
+                                 String urlPattern,
+                                 String username,
+                                 String apiUrl,
+                                 String clientId,
+                                 String privateKey) implements AuthConfig {
 
         static AppInstallationConfig from(com.typesafe.config.Config cfg) {
 
@@ -168,7 +174,7 @@ public interface GitHubAppInstallationConfig {
                         this.clientId(),
                         pkData,
                         this.username(),
-                        MappingAuthConfig.assertBaseUrlPattern(this.urlPattern())
+                        assertBaseUrlPattern(this.urlPattern())
                 );
             } catch (IOException e) {
                 throw new GitHubAppException("Error initializing Git App Installation auth", e);

@@ -156,7 +156,7 @@ public class AccessTokenProvider {
         // Compute the RSA signature
         signedJWT.sign(signer);
 
-        // To serialize to compact form, produces something like
+        // Serialize to compact form
         return signedJWT.serialize();
     }
 
@@ -182,19 +182,15 @@ public class AccessTokenProvider {
         }
     }
 
-    @Value.Immutable
-    @Value.Style(jdkOnly = true)
-    @JsonDeserialize(as = ImmutableGitHubAppInstallationResp.class)
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public interface GitHubAppInstallationResp {
-
-        /*
-        This is the only attribute we **need**, even though there's other
-        attributes. Some may differ between GitHub "cloud" and GitHub Enterprise/private.
-        Be care if/when adding more.
-         */
-        @JsonProperty("access_tokens_url")
-        String accessTokensUrl();
-
+    public record GitHubAppInstallationResp(
+            /*
+                This is the only attribute we **need**, even though there's other
+                attributes. Some may differ between GitHub "cloud" and GitHub
+                Enterprise/private. Be care if/when adding more.
+             */
+            @JsonProperty("access_tokens_url")
+            String accessTokensUrl
+    ) {
     }
 }
