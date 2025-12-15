@@ -24,6 +24,7 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -33,7 +34,7 @@ public interface GitClientConfiguration {
 
     @Nullable
     String oauthToken();
-    
+
     @Nullable
     List<String> authorizedGitHosts();
 
@@ -46,30 +47,29 @@ public interface GitClientConfiguration {
     default Duration defaultOperationTimeout() {
         return Duration.ofMinutes(10L);
     }
-
     @Value.Default
     default Duration fetchTimeout() {
         return Duration.ofMinutes(10L);
     }
-
     @Value.Default
     default int httpLowSpeedLimit() {
         return 0;
     }
-
     @Value.Default
     default Duration httpLowSpeedTime() {
         return Duration.ofMinutes(0L);
     }
-
     @Value.Default
     default Duration sshTimeout() {
         return Duration.ofMinutes(10);
     }
-
     @Value.Default
     default int sshTimeoutRetryCount() {
         return 1;
+    }
+    @Value.Default
+    default List<GitAuthProvider> systemGitAuthProviders() {
+        return Collections.emptyList();
     }
 
     static ImmutableGitClientConfiguration.Builder builder() {

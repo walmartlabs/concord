@@ -21,14 +21,20 @@ package com.walmartlabs.concord.agent.cfg;
  */
 
 import com.typesafe.config.Config;
+import com.walmartlabs.concord.repository.AuthType;
+import com.walmartlabs.concord.repository.GitAuthProvider;
+import com.walmartlabs.concord.repository.ImmutableGitAuthProvider;
 
 import javax.inject.Inject;
 import java.time.Duration;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
 
 public class GitConfiguration {
 
+    private final List<GitAuthProvider> systemGitAuthProviders;
     private final String token;
     private final boolean shallowClone;
     private final boolean checkAlreadyFetched;
@@ -43,6 +49,11 @@ public class GitConfiguration {
     @Inject
     public GitConfiguration(Config cfg) {
         this.token = getStringOrDefault(cfg, "git.oauth", () -> null);
+        this.systemGitAuthProviders = cfg.hasPath("git.systemGitAuthProviders")
+                ? cfg.getConfigList("git.systemGitAuthProviders").stream()
+                .map(GitConfiguration::buildAuthProvider)
+                .collect(Collectors.toList())
+                : null;
         this.shallowClone = cfg.getBoolean("git.shallowClone");
         this.checkAlreadyFetched = cfg.getBoolean("git.checkAlreadyFetched");
         this.defaultOperationTimeout = cfg.getDuration("git.defaultOperationTimeout");
@@ -52,6 +63,47 @@ public class GitConfiguration {
         this.sshTimeout = cfg.getDuration("git.sshTimeout");
         this.sshTimeoutRetryCount = cfg.getInt("git.sshTimeoutRetryCount");
         this.skip = cfg.getBoolean("git.skip");
+    }
+
+        private static GitAuthProvider buildAuthProvider(Config c) {
+        ImmutableGitAuthProvider.Builder b = ImmutableGitAuthProvider.builder()
+                .authType(AuthType.valueOf(c.getString("type")))
+                .baseUrl(getOptString(c, "baseUrl"));
+
+        // Optional fields depending on type
+        if (c.hasPath("oauthToken")) {
+            b.oauthToken(c.getString("oauthToken"));
+        }
+        if (c.hasPath("clientId")) {
+            b.clientId(c.getString("clientId"));
+        }
+        if (c.hasPath("privateKey")) {
+            b.privateKey(c.getString("privateKey"));
+        }
+        if (c.hasPath("installationId")) {
+            b.installationId(c.getString("installationId"));
+        }
+        return b.build();
+    }
+
+    private static String getOptString(Config c, String k) {
+        return c.hasPath(k) ? c.getString(k) : null;
+    }
+
+    private static boolean getBoolean(Config c, String k, boolean def) {
+        return c.hasPath(k) ? c.getBoolean(k) : def;
+    }
+
+    private static int getInt(Config c, String k, int def) {
+        return c.hasPath(k) ? c.getInt(k) : def;
+    }
+
+    private static Duration getDuration(Config c, String k, Duration def) {
+        return c.hasPath(k) ? c.getDuration(k) : def;
+    }
+
+    public List<GitAuthProvider> getSystemGitAuthProviders() {
+        return systemGitAuthProviders;
     }
 
     public String getToken() {
