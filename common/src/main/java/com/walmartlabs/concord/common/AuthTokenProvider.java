@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import static com.walmartlabs.concord.common.cfg.MappingAuthConfig.assertBaseUrlPattern;
+
 public interface AuthTokenProvider {
 
     /**
@@ -135,7 +137,7 @@ public interface AuthTokenProvider {
                     .id("static-token")
                     .token(token)
                     .username(config.getOauthUsername().orElse(null))
-                    .urlPattern(MappingAuthConfig.assertBaseUrlPattern(config.getOauthUrlPattern().orElse(".*")))// for backwards compat with git.oauth
+                    .urlPattern(assertBaseUrlPattern(config.getOauthUrlPattern().orElse(".*")))// for backwards compat with git.oauth
                     .build());
         }
     }

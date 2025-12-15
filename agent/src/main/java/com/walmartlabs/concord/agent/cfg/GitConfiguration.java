@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
+import static com.walmartlabs.concord.common.cfg.MappingAuthConfig.assertBaseUrlPattern;
 
 public class GitConfiguration implements OauthTokenConfig {
 
@@ -126,7 +127,6 @@ public class GitConfiguration implements OauthTokenConfig {
                 })
                 .map(AuthConfig::toGitAuth)
                 .toList();
-
     }
 
     enum AuthSource {
@@ -151,7 +151,7 @@ public class GitConfiguration implements OauthTokenConfig {
         public MappingAuthConfig.OauthAuthConfig toGitAuth() {
             return MappingAuthConfig.OauthAuthConfig.builder()
                     .id(this.id())
-                    .urlPattern(MappingAuthConfig.assertBaseUrlPattern(this.urlPattern()))
+                    .urlPattern(assertBaseUrlPattern(this.urlPattern()))
                     .token(this.token())
                     .build();
         }

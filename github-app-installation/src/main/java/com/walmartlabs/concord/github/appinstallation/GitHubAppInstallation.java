@@ -46,7 +46,7 @@ import java.util.concurrent.ExecutionException;
 
 public class GitHubAppInstallation implements AuthTokenProvider {
 
-    private static final Logger log = LoggerFactory.getLogger(com.walmartlabs.concord.github.appinstallation.GitHubAppInstallation.class);
+    private static final Logger log = LoggerFactory.getLogger(GitHubAppInstallation.class);
 
     private final GitHubAppInstallationConfig cfg;
     private final AccessTokenProvider tokenProvider;
