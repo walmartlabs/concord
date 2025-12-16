@@ -10,7 +10,9 @@
 from events
 ([#1241](https://github.com/walmartlabs/concord/pull/1241));
 - oidc: serialization and mapping fix
-([#1245](https://github.com/walmartlabs/concord/pull/1245)).
+([#1245](https://github.com/walmartlabs/concord/pull/1245))
+- server, agent: github app installation clone support
+([#1242](https://github.com/walmartlabs/concord/pull/1242)).
 
 
 
