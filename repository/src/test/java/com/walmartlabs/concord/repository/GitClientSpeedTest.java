@@ -20,6 +20,7 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Secret;
@@ -27,6 +28,9 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,9 +58,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Require internet connection
  */
 @Disabled
+@ExtendWith(MockitoExtension.class)
 public class GitClientSpeedTest {
 
     private GitClient client;
+
+    @Mock
+    AuthTokenProvider authProvider;
 
     @BeforeEach
     public void init() {
@@ -65,7 +73,7 @@ public class GitClientSpeedTest {
                 .sshTimeoutRetryCount(1)
                 .httpLowSpeedLimit(1)
                 .httpLowSpeedTime(Duration.ofMinutes(10))
-                .build());
+                .build(), authProvider);
     }
 
     @Test
