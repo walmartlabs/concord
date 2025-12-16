@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -95,6 +96,42 @@ public class AnsibleEventProcessorIT extends AbstractServerIT {
         assertEquals(1024, task.getTaskName().length());
     }
 
+    @Test
+    public void testUnicodeSanitization() throws Exception {
+        URI uri = AnsibleEventProcessorIT.class.getResource("ansibleEventProcessor").toURI();
+        byte[] payload = archive(uri);
+
+        // ---
+
+        StartProcessResponse spr = start("generateNonPrintableChars", payload);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        Assertions.assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        // ---
+
+        AnsibleProcessApi ansibleApi = new AnsibleProcessApi(getApiClient());
+
+        PlaybookEntry playbook = assertPlaybook(ansibleApi, pir.getInstanceId());
+        assertEquals("playbook/unicode_sanitization.yml", playbook.getName());
+        assertEquals(1L, playbook.getHostsCount().longValue());
+        assertEquals(1, playbook.getPlaysCount().intValue());
+
+        PlayInfo play = assertPlay(ansibleApi, pir.getInstanceId(), playbook.getId());
+        List<ProcessEventEntry> events = assertEvents(ansibleApi, pir.getInstanceId(), playbook.getId());
+
+        assertEquals(0, play.getTaskStats().get("failed"));
+        assertEquals(1, play.getTaskStats().get("ok"));
+
+        Map<?, ?> result = Assertions.assertInstanceOf(Map.class, events.get(0).getData().get("result"));
+        String stdout = result.get("stdout").toString();
+
+        // expect actual escaped NUL to be removed. Escaped SOH and not-really-NUL should be preserved.
+        assertEquals("aNul\naSoh\u0001\nNotNul\\u0000", stdout);
+    }
+
     private static PlaybookEntry assertPlaybook(AnsibleProcessApi ansibleApi, UUID instanceId) throws Exception {
         List<PlaybookEntry> playbooks = poll(() -> ansibleApi.listPlaybooks(instanceId));
         assertEquals(1, playbooks.size());
@@ -111,6 +148,12 @@ public class AnsibleEventProcessorIT extends AbstractServerIT {
         List<TaskInfo> tasks = poll(() -> ansibleApi.listTasks(instanceId, playId));
         assertFalse(tasks.isEmpty());
         return tasks.get(0);
+    }
+
+    private static List<ProcessEventEntry> assertEvents(AnsibleProcessApi ansibleApi, UUID instanceId, UUID playbookId) throws Exception {
+        List<ProcessEventEntry> events = poll(() -> ansibleApi.listEvents(instanceId, "127.0.0.1", "local", "OK", playbookId));
+        assertFalse(events.isEmpty());
+        return events;
     }
 
     private static <T> List<T> poll(Callable<List<T>> call) throws Exception {

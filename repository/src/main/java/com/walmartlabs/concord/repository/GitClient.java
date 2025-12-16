@@ -20,7 +20,7 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.google.common.collect.ImmutableSet;
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
@@ -54,14 +54,22 @@ public class GitClient {
     private static final int SUCCESS_EXIT_CODE = 0;
 
     private final GitClientConfiguration cfg;
-
-    private final List<String> sensitiveData;
+    private final AuthTokenProvider authProvider;
+    private final Set<Obfuscation> sensitiveData;
     private final ExecutorService executor;
 
-    public GitClient(GitClientConfiguration cfg) {
+    public GitClient(GitClientConfiguration cfg, AuthTokenProvider authProvider) {
         this.cfg = cfg;
-        this.sensitiveData = cfg.oauthToken() != null ? Collections.singletonList(cfg.oauthToken()) : Collections.emptyList();
+        this.authProvider = authProvider;
         this.executor = Executors.newCachedThreadPool();
+        this.sensitiveData = new LinkedHashSet<>();
+
+        // urls with user info.
+        sensitiveData.add(new Obfuscation("https://([^@]*)@", "https://***@"));
+
+        cfg.oauthToken().ifPresent(oauth ->
+                // definitely don't print a hard-code oauth token
+                sensitiveData.add(new Obfuscation(oauth, "***")));
     }
 
     public FetchResult fetch(FetchRequest req) {
@@ -310,23 +318,22 @@ public class GitClient {
 
         URI uri = assertUriAllowed(url);
 
-        List<String> allowedDefaultHosts = cfg.authorizedGitHosts();
-
-        if(secret == null && allowedDefaultHosts!= null && !allowedDefaultHosts.contains(uri.getHost())) {
-            // in this case the user has not provided authentication AND the host is not in the whitelist of hosts
-            // which may use the default git credentials. return the url un-modified to attempt anonymous auth;
-            // if it fails
+        if (url.contains("@") || !url.startsWith("https://")) {
+            // provided url already has credentials OR it's a non-https url
             return url;
         }
 
-        if (secret != null || cfg.oauthToken() == null || url.contains("@") || !url.startsWith("https://")) {
-            // provided url already has credentials OR there are no default credentials to use.
-            // anonymous auth is the only viable option.
-            return url;
+        if (secret instanceof UsernamePassword up) {
+            // Secret contains static auth (token or username). No lookup needed.
+            return "https://" +
+                    (up.getUsername() == null ? "" : up.getUsername() + ":") +
+                    String.valueOf(up.getPassword()) +
+                    "@" +
+                    url.substring("https://".length());
         }
 
-        // using default credentials
-        return "https://" + cfg.oauthToken() + "@" + url.substring("https://".length());
+        // This will either add auth from a matching provider, or none for anonymous access
+        return authProvider.addUserInfoToUri(uri, secret).toString();
     }
 
     private URI assertUriAllowed(String rawUri) {
@@ -554,9 +561,7 @@ public class GitClient {
         env.put("GIT_TERMINAL_PROMPT", "0");
 
         try {
-            if (secret instanceof KeyPair) {
-                KeyPair keyPair = (KeyPair) secret;
-
+            if (secret instanceof KeyPair keyPair) {
                 key = createSshKeyFile(keyPair);
                 ssh = createUnixGitSSH(key);
 
@@ -569,24 +574,15 @@ public class GitClient {
                 }
 
                 log.info("using GIT_SSH to set credentials");
-            } else if (secret instanceof UsernamePassword) {
-                UsernamePassword userPass = (UsernamePassword) secret;
-
+            } else if (secret instanceof UsernamePassword userPass) {
                 askpass = createUnixStandardAskpass(userPass);
 
                 env.put("GIT_ASKPASS", askpass.toAbsolutePath().toString());
                 env.put("SSH_ASKPASS", askpass.toAbsolutePath().toString());
 
                 log.info("using GIT_ASKPASS to set credentials ");
-            } else if (secret instanceof BinaryDataSecret) {
-                BinaryDataSecret token = (BinaryDataSecret) secret;
-
-                askpass = createUnixStandardAskpass(new UsernamePassword(new String(token.getData()), "".toCharArray()));
-
-                env.put("GIT_ASKPASS", askpass.toAbsolutePath().toString());
-
-                log.info("using GIT_ASKPASS to set credentials ");
             }
+            // if secret is single-value, it was already applied to the URL in updateUrl()
 
             env.put("GIT_HTTP_LOW_SPEED_LIMIT", String.valueOf(cfg.httpLowSpeedLimit()));
             env.put("GIT_HTTP_LOW_SPEED_TIME", String.valueOf(cfg.httpLowSpeedTime().getSeconds()));
@@ -608,8 +604,8 @@ public class GitClient {
             return null;
         }
 
-        for (String p : sensitiveData) {
-            s = s.replaceAll(p, "***");
+        for (Obfuscation o : sensitiveData) {
+            s = s.replaceAll(o.pattern(), o.replacement());
         }
         return s;
     }
@@ -628,7 +624,7 @@ public class GitClient {
                     " -o ServerAliveInterval=" + cfg.sshTimeout().getSeconds() +
                     " -o StrictHostKeyChecking=no \"$@\"");
         }
-        Files.setPosixFilePermissions(ssh, ImmutableSet.of(OWNER_READ, OWNER_EXECUTE));
+        Files.setPosixFilePermissions(ssh, Set.of(OWNER_READ, OWNER_EXECUTE));
         return ssh;
     }
 
@@ -647,7 +643,7 @@ public class GitClient {
             w.println("Password*) echo '" + quoteUnixCredentials(new String(creds.getPassword())) + "' ;;");
             w.println("esac");
         }
-        Files.setPosixFilePermissions(askpass, ImmutableSet.of(OWNER_READ, OWNER_EXECUTE));
+        Files.setPosixFilePermissions(askpass, Set.of(OWNER_READ, OWNER_EXECUTE));
         return askpass;
     }
 
@@ -782,5 +778,9 @@ public class GitClient {
         static ImmutableCommitInfo.Builder builder() {
             return ImmutableCommitInfo.builder();
         }
+    }
+
+    private record Obfuscation(String pattern,
+                               String replacement) {
     }
 }

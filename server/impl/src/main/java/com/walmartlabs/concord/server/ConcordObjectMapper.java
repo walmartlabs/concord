@@ -34,7 +34,7 @@ public class ConcordObjectMapper {
     public static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<Map<String, Object>>() {
     };
 
-    private static final Pattern CONTROL_CHARS = Pattern.compile("[\\x00-\\x1F]");
+    private static final Pattern CONTROL_CHARS = Pattern.compile("((?<!\\\\)\\\\u0000|[\\x00-\\x1F])");
 
     private final ObjectMapper delegate;
 
