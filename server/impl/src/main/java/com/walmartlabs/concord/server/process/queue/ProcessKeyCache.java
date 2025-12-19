@@ -27,10 +27,12 @@ import com.google.common.cache.LoadingCache;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.io.Serial;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
+@Singleton
 public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.ProcessKeyCache {
 
     private final LoadingCache<UUID, ProcessKey> cache;
