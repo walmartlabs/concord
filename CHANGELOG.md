@@ -16,7 +16,10 @@ from events
 - concord-server: option to look up GH webhook event sender by email
 ([#1243](https://github.com/walmartlabs/concord/pull/1243));
 - noderoster: configurable host cache size and eviction duration
-([#1246](https://github.com/walmartlabs/concord/pull/1246)).
+([#1246](https://github.com/walmartlabs/concord/pull/1246));
+- concord-server: inject ProcessKeyCache interface instead of implementation to
+utilize singleton scope
+([#1247](https://github.com/walmartlabs/concord/pull/1247)).
 
 
 
