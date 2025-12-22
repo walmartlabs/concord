@@ -27,12 +27,10 @@ import com.google.common.cache.LoadingCache;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.io.Serial;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
-@Singleton
 public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.ProcessKeyCache {
 
     private final LoadingCache<UUID, ProcessKey> cache;
@@ -78,6 +76,16 @@ public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.Proce
             throw new IllegalStateException("Can't determine the process key of " + instanceId);
         }
         return processKey;
+    }
+
+    @Override
+    public long hitCount() {
+        return cache.stats().hitCount();
+    }
+
+    @Override
+    public long missCount() {
+        return cache.stats().missCount();
     }
 
     private static class ProcessNotFoundException extends Exception {

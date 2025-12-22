@@ -32,18 +32,17 @@ import com.walmartlabs.concord.server.process.event.ProcessEventManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKeyCache;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-@Singleton
 public class ProcessQueueManager {
 
     private final ProcessQueueDao queueDao;
