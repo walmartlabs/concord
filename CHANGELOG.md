@@ -12,7 +12,11 @@ from events
 - oidc: serialization and mapping fix
 ([#1245](https://github.com/walmartlabs/concord/pull/1245));
 - server, agent: github app installation clone support
-([#1242](https://github.com/walmartlabs/concord/pull/1242)).
+([#1242](https://github.com/walmartlabs/concord/pull/1242));
+- concord-server: option to look up GH webhook event sender by email
+([#1243](https://github.com/walmartlabs/concord/pull/1243));
+- noderoster: configurable host cache size and eviction duration
+([#1246](https://github.com/walmartlabs/concord/pull/1246)).
 
 
 
