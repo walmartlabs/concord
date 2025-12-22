@@ -40,6 +40,7 @@ public class CachingLdapManager implements LdapManager {
 
     private final LoadingCache<CacheKey, Optional<LdapPrincipal>> principalByName;
     private final LoadingCache<String, Optional<LdapPrincipal>> principalByDn;
+    private final LoadingCache<String, Optional<LdapPrincipal>> principalByMail;
 
     public CachingLdapManager(Duration cacheDuration,
                               LdapManager delegate) {
@@ -66,6 +67,17 @@ public class CachingLdapManager implements LdapManager {
                         return Optional.ofNullable(delegate.getPrincipalByDn(key));
                     }
                 });
+
+        this.principalByMail = CacheBuilder.newBuilder()
+                .expireAfterWrite(cacheDuration.toMillis(), TimeUnit.MILLISECONDS)
+                .concurrencyLevel(32)
+                .recordStats()
+                .build(new CacheLoader<String, Optional<LdapPrincipal>>() {
+                    @Override
+                    public Optional<LdapPrincipal> load(String key) throws Exception {
+                        return Optional.ofNullable(delegate.getPrincipalByMail(key));
+                    }
+                });
     }
 
     @Override
@@ -86,6 +98,11 @@ public class CachingLdapManager implements LdapManager {
     @Override
     public LdapPrincipal getPrincipalByDn(String dn) throws Exception {
         return principalByDn.get(dn).orElse(null);
+    }
+
+    @Override
+    public LdapPrincipal getPrincipalByMail(String email) throws Exception {
+        return principalByMail.get(email).orElse(null);
     }
 
     @Value.Immutable
