@@ -160,6 +160,44 @@ public class UserDao extends AbstractDao {
         return getUserInfo(tx, r);
     }
 
+    public UserEntry getUserFromExternalMapping(String externalId) {
+        DSLContext tx = dsl();
+
+        Record9<UUID, String, String, String, String, String, Boolean, Boolean, OffsetDateTime> r =
+                tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED, USERS.IS_PERMANENTLY_DISABLED, USERS.DISABLED_DATE)
+                        .from(USERS, EXTERNAL_APP_USERS)
+                        .where(USERS.USER_ID.eq(EXTERNAL_APP_USERS.USER_ID))
+                        .and(EXTERNAL_APP_USERS.EXTERNAL_USER_ID.eq(externalId))
+                        .fetchOne();
+
+        if (r == null) {
+            return null;
+        }
+
+        return getUserInfo(tx, r);
+    }
+
+    /**
+     * Creates a mapping from an external user to an existing Concord user. The
+     * external identifier may not be a singular, exact, ID for the system. The
+     * context(s) creating and retrieving the mapping must understand the construction
+     * of the identifier. Typically, it should be a formatting along the lines
+     * of <code>{external_system} + {actual_user_id}</code> to avoid clashing of
+     * IDs that are unique to the system but potentially duplicated across other
+     * external systems that have been integrated (e.g. multiple GitHub instances).
+     * @param userId existing Concord user ID
+     * @param externalId identifier for user in an external system
+     */
+    public void createExternalUserMapping(UUID userId, String externalId) {
+        tx(tx -> tx.insertInto(EXTERNAL_APP_USERS)
+                .columns(EXTERNAL_APP_USERS.EXTERNAL_USER_ID, EXTERNAL_APP_USERS.USER_ID)
+                .values(externalId, userId)
+                .onConflict(EXTERNAL_APP_USERS.EXTERNAL_USER_ID)
+                .doUpdate()
+                .set(EXTERNAL_APP_USERS.USER_ID, userId)
+                .execute());
+    }
+
     /**
      * Returns the ID of the specified user.
      * Note that {@code username} and {@code domain} are case-insensitive and forced to lower case.

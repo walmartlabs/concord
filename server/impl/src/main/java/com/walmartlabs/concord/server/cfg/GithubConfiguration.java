@@ -41,8 +41,8 @@ public class GithubConfiguration implements GitHubAppInstallationConfig {
     private boolean useSenderLdapDn;
 
     @Inject
-    @Config("github.userSenderEmail")
-    private boolean userSenderEmail;
+    @Config("github.useSenderEmail")
+    private boolean useSenderEmail;
 
     @Inject
     @Config("github.senderEmailCacheSize")
@@ -51,6 +51,10 @@ public class GithubConfiguration implements GitHubAppInstallationConfig {
     @Inject
     @Config("github.senderEmailCacheDuration")
     private Duration senderEmailCacheDuration;
+
+    @Inject
+    @Config("github.enableExternalUserIdMappingCache")
+    private boolean enableExternalUserIdMappingCache;
 
     @Inject
     @Config("github.logEvents")
@@ -81,7 +85,11 @@ public class GithubConfiguration implements GitHubAppInstallationConfig {
     }
 
     public boolean isUseSenderEmail() {
-        return userSenderEmail;
+        return useSenderEmail;
+    }
+
+    public boolean isEnableExternalUserIdMappingCache() {
+        return enableExternalUserIdMappingCache;
     }
 
     public long senderEmailCacheSize() {

@@ -84,6 +84,9 @@ import java.util.function.Supplier;
 import static com.walmartlabs.concord.common.MemoSupplier.memo;
 import static com.walmartlabs.concord.server.events.github.Constants.COMMIT_ID_KEY;
 import static com.walmartlabs.concord.server.events.github.Constants.EVENT_SOURCE;
+import static com.walmartlabs.concord.server.events.github.Constants.NODE_ID_KEY;
+import static com.walmartlabs.concord.server.events.github.Constants.SENDER_KEY;
+import static com.walmartlabs.concord.server.events.github.Constants.URL_KEY;
 
 /**
  * Handles external GitHub events.
@@ -295,8 +298,15 @@ public class GithubEventResource implements Resource {
 
         @Override
         public UserEntry get() {
+            // GitHub user -> Concord user mapping may already exist in DB
+            UserEntry fromDbMapping = findUserInDbMapping();
+
+            if (fromDbMapping != null) {
+                return fromDbMapping;
+            }
+
+            // don't try to match against payload sender's ldap_dn or email if they aren't present
             if (!githubCfg.isUseSenderLdapDn() && !githubCfg.isUseSenderEmail()) {
-                // don't try to match against payload sender's ldap_dn or email
                 return fallback.get();
             }
 
@@ -305,6 +315,7 @@ public class GithubEventResource implements Resource {
             if (githubCfg.isUseSenderLdapDn()) {
                 UserEntry fromDn = findSenderDnInLdap();
                 if (fromDn != null) {
+                    addUserDbMapping(fromDn);
                     return fromDn;
                 }
             }
@@ -313,12 +324,56 @@ public class GithubEventResource implements Resource {
             if (githubCfg.isUseSenderEmail()) {
                 UserEntry fromEmail = findSenderEmailInLdap();
                 if (fromEmail != null) {
+                    addUserDbMapping(fromEmail);
                     return fromEmail;
                 }
             }
 
             log.warn("getOrCreateUserEntry ['{}'] -> can't determine the sender's 'ldap_dn' or 'email', falling back to 'login'", payload);
             return fallback.get();
+        }
+
+        private UserEntry findUserInDbMapping() {
+            if (!githubCfg.isEnableExternalUserIdMappingCache()) {
+                return null;
+            }
+
+            String senderUrl = payload.getUrl(SENDER_KEY);
+            String senderNodeId = payload.getNodeId(SENDER_KEY);
+            String externalId = formatExternalId(senderUrl, senderNodeId);
+
+            if (externalId == null) {
+                return null;
+            }
+            return userManager.getUserFromExternalMapping(externalId).orElse(null);
+        }
+
+        private void addUserDbMapping(UserEntry user) {
+            if (!githubCfg.isEnableExternalUserIdMappingCache()) {
+                return;
+            }
+
+            String senderUrl = payload.getUrl(SENDER_KEY);
+            String senderNodeId = payload.getNodeId(SENDER_KEY);
+            String externalId = formatExternalId(senderUrl, senderNodeId);
+
+            if (externalId == null) {
+                return;
+            }
+
+            userManager.createExternalUserMapping(user.getId(), externalId);
+        }
+
+        private static String formatExternalId(String url, String userId) {
+            if (url == null || userId == null) {
+                return null;
+            }
+
+            if (url.isBlank() || userId.isBlank()) {
+                return null;
+            }
+
+            return String.format("github_%s=%s,%s=%s", URL_KEY, url, NODE_ID_KEY, userId);
         }
 
         private UserEntry findSenderDnInLdap() {
