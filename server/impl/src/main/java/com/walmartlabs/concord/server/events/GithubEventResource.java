@@ -334,6 +334,10 @@ public class GithubEventResource implements Resource {
         }
 
         private UserEntry findUserInDbMapping() {
+            if (!githubCfg.isEnableExternalUserIdMappingCache()) {
+                return null;
+            }
+
             String senderUrl = payload.getUrl(SENDER_KEY);
             String senderNodeId = payload.getNodeId(SENDER_KEY);
             String externalId = formatExternalId(senderUrl, senderNodeId);
@@ -345,6 +349,10 @@ public class GithubEventResource implements Resource {
         }
 
         private void addUserDbMapping(UserEntry user) {
+            if (!githubCfg.isEnableExternalUserIdMappingCache()) {
+                return;
+            }
+
             String senderUrl = payload.getUrl(SENDER_KEY);
             String senderNodeId = payload.getNodeId(SENDER_KEY);
             String externalId = formatExternalId(senderUrl, senderNodeId);
