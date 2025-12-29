@@ -108,6 +108,22 @@ public class UserManager {
         return Optional.ofNullable(userDao.getId(username, userDomain, type));
     }
 
+    public Optional<UserEntry> getUserFromExternalMapping(String externalId) {
+        if (externalId == null) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(userDao.getUserFromExternalMapping(externalId));
+    }
+
+    public void createExternalUserMapping(UUID concordUserId, String externalId) {
+        if (externalId == null) {
+            return;
+        }
+
+        userDao.createExternalUserMapping(concordUserId, externalId);
+    }
+
     public Optional<UserEntry> update(UUID userId, String displayName, String email, UserType userType, boolean isDisabled, Set<String> roles) {
         UserEntry prevEntry = userDao.get(userId);
         if (prevEntry == null) {
