@@ -1,6 +1,6 @@
 # Change Log
 
-## [2.34.1] - Unreleased
+## [2.35.0] - 2025-12-29
 
 ### Changed
 
@@ -19,7 +19,9 @@ from events
 ([#1246](https://github.com/walmartlabs/concord/pull/1246));
 - concord-server: inject ProcessKeyCache interface instead of implementation to
 utilize singleton scope
-([#1247](https://github.com/walmartlabs/concord/pull/1247)).
+([#1247](https://github.com/walmartlabs/concord/pull/1247));
+- concord-db, concord-server: cache external app user mapping in database
+([#1244](https://github.com/walmartlabs/concord/pull/1244)).
 
 
 
