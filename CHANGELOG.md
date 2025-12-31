@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.35.1] - TBD
+
+### Changed
+
+- runtime-v2: add 'name' attribute to script call in schema
+([#1248](https://github.com/walmartlabs/concord/pull/1248)).
+
+
+
 ## [2.35.0] - 2025-12-29
 
 ### Changed
