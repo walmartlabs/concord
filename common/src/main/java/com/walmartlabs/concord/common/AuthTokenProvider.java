@@ -103,6 +103,7 @@ public interface AuthTokenProvider {
                     .map(MappingAuthConfig.OauthAuthConfig.class::cast)
                     .findFirst()
                     .map(auth -> ExternalAuthToken.StaticToken.builder()
+                            .authId(auth.id())
                             .token(auth.token())
                             .username(auth.username())
                             .build());
