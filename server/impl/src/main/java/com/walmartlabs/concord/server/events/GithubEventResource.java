@@ -493,16 +493,20 @@ public class GithubEventResource implements Resource {
                 return Optional.empty();
             }
 
+            ExternalAuthToken externalAuth  = t.get();
             HttpRequest req = HttpRequest.newBuilder(userUrl)
                     .GET()
-                    .header("Authorization", "Bearer " + t.get().token())
+                    .header("Authorization", "Bearer " + externalAuth.token())
                     .build();
 
             HttpResponse<InputStream> resp = httpClient.send(req, BodyHandlers.ofInputStream());
 
-            rateLimitGauges.put(t.get().authId(), resp.headers()
-                    .firstValueAsLong("X-RateLimit-Remaining")
-                    .orElse(-1L));
+            if (externalAuth.authId() != null) {
+                long remaining = resp.headers()
+                        .firstValueAsLong("X-RateLimit-Remaining")
+                        .orElse(-1L);
+                rateLimitGauges.put(externalAuth.authId(), remaining);
+            }
 
             if (resp.statusCode() != 200) {
                 throw new UserLookupException("Non-200 response [: " + resp.statusCode() + "]: " + readBody(resp));
