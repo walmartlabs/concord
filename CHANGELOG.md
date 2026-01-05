@@ -5,7 +5,7 @@
 ### Changed
 
 - runtime-v2: add 'name' attribute to script call in schema
-([#1248](https://github.com/walmartlabs/concord/pull/1248)).
+([#1248](https://github.com/walmartlabs/concord/pull/1248));
 - common, server: skip rate limit metrics for null auth id
 ([#1249](https://github.com/walmartlabs/concord/pull/1249)).
 
