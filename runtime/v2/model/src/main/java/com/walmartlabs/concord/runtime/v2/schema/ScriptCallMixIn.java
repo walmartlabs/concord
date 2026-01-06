@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 @JsonTypeName("ScriptCall")
-public interface ScriptCallMixIn extends StepMixIn {
+public interface ScriptCallMixIn extends NamedStep {
 
     @JsonSchemaTitle("Script Call step")
     @JsonProperty(value = "script", required = true)

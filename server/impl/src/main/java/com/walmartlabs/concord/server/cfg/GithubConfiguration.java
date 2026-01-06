@@ -20,12 +20,16 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import com.walmartlabs.concord.config.Config;
+import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
+import java.time.Duration;
+import java.util.List;
 
-public class GithubConfiguration {
+public class GithubConfiguration implements GitHubAppInstallationConfig {
 
     @Inject
     @Config("github.secret")
@@ -37,12 +41,40 @@ public class GithubConfiguration {
     private boolean useSenderLdapDn;
 
     @Inject
+    @Config("github.useSenderEmail")
+    private boolean useSenderEmail;
+
+    @Inject
+    @Config("github.senderEmailCacheSize")
+    private long senderEmailCacheSize;
+
+    @Inject
+    @Config("github.senderEmailCacheDuration")
+    private Duration senderEmailCacheDuration;
+
+    @Inject
+    @Config("github.enableExternalUserIdMappingCache")
+    private boolean enableExternalUserIdMappingCache;
+
+    @Inject
     @Config("github.logEvents")
     private boolean logEvents;
 
     @Inject
     @Config("github.disableReposOnDeletedRef")
     private boolean disableReposOnDeletedRef;
+
+    private final GitHubAppInstallationConfig appInstallation;
+
+    @Inject
+    public GithubConfiguration(com.typesafe.config.Config config) {
+        if (config.hasPath("github.appInstallation")) {
+            var raw = config.getConfig("github.appInstallation");
+            this.appInstallation = GitHubAppInstallationConfig.fromConfig(raw);
+        } else {
+            this.appInstallation = GitHubAppInstallationConfig.builder().authConfigs(List.of()).build();
+        }
+    }
 
     public String getSecret() {
         return secret;
@@ -52,6 +84,22 @@ public class GithubConfiguration {
         return useSenderLdapDn;
     }
 
+    public boolean isUseSenderEmail() {
+        return useSenderEmail;
+    }
+
+    public boolean isEnableExternalUserIdMappingCache() {
+        return enableExternalUserIdMappingCache;
+    }
+
+    public long senderEmailCacheSize() {
+        return senderEmailCacheSize;
+    }
+
+    public Duration senderEmailCacheDuration() {
+        return senderEmailCacheDuration;
+    }
+
     public boolean isLogEvents() {
         return logEvents;
     }
@@ -59,4 +107,25 @@ public class GithubConfiguration {
     public boolean isDisableReposOnDeletedRef() {
         return disableReposOnDeletedRef;
     }
+
+    @Override
+    public List<MappingAuthConfig> getAuthConfigs() {
+        return appInstallation.getAuthConfigs();
+    }
+
+    @Override
+    public Duration getHttpClientTimeout() {
+        return appInstallation.getHttpClientTimeout();
+    }
+
+    @Override
+    public Duration getSystemAuthCacheDuration() {
+        return appInstallation.getSystemAuthCacheDuration();
+    }
+
+    @Override
+    public long getSystemAuthCacheMaxWeight() {
+        return appInstallation.getSystemAuthCacheMaxWeight();
+    }
+
 }

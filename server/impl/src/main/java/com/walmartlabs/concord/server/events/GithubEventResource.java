@@ -20,10 +20,18 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.common.ExternalAuthToken;
+import com.walmartlabs.concord.common.ObjectMapperProvider;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import com.walmartlabs.concord.runtime.v2.model.GithubTriggerExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
@@ -32,6 +40,7 @@ import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.events.github.GithubTriggerProcessor;
+import com.walmartlabs.concord.server.events.github.GithubUtils;
 import com.walmartlabs.concord.server.events.github.Payload;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggerUtils;
@@ -54,30 +63,45 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 import static com.walmartlabs.concord.common.MemoSupplier.memo;
 import static com.walmartlabs.concord.server.events.github.Constants.COMMIT_ID_KEY;
 import static com.walmartlabs.concord.server.events.github.Constants.EVENT_SOURCE;
+import static com.walmartlabs.concord.server.events.github.Constants.NODE_ID_KEY;
+import static com.walmartlabs.concord.server.events.github.Constants.SENDER_KEY;
+import static com.walmartlabs.concord.server.events.github.Constants.URL_KEY;
 
 /**
  * Handles external GitHub events.
  * Uses a custom authentication mechanism,
  * see {@link com.walmartlabs.concord.server.security.GithubAuthenticatingFilter}.
  * <p>
- * See also https://developer.github.com/webhooks/
+ * See also <a href="https://developer.github.com/webhooks/">developer.github.com/webhooks</a>
  */
 @Path("/events/github")
 @Tag(name = "GitHub Events")
 public class GithubEventResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(GithubEventResource.class);
+
+    private static final String ERROR_USER_EMAIL_LOOKUP = "Error looking up user info {}: {}";
 
     private final GithubConfiguration githubCfg;
     private final TriggerProcessExecutor executor;
@@ -87,6 +111,8 @@ public class GithubEventResource implements Resource {
     private final LdapManager ldapManager;
     private final TriggerEventInitiatorResolver initiatorResolver;
     private final Histogram startedProcessesPerEvent;
+    private final Map<String, Long> rateLimitGauges;
+    private final LoadingCache<EmailCacheKey, Optional<String>> ghUserEmailCache;
 
     @Inject
     public GithubEventResource(GithubConfiguration githubCfg,
@@ -96,7 +122,9 @@ public class GithubEventResource implements Resource {
                                UserManager userManager,
                                LdapManager ldapManager,
                                TriggerEventInitiatorResolver initiatorResolver,
-                               MetricRegistry metricRegistry) {
+                               MetricRegistry metricRegistry,
+                               AuthTokenProvider authTokenProvider,
+                               ObjectMapperProvider objectMapperProvider) {
 
         this.githubCfg = githubCfg;
         this.executor = executor;
@@ -106,6 +134,18 @@ public class GithubEventResource implements Resource {
         this.ldapManager = ldapManager;
         this.initiatorResolver = initiatorResolver;
         this.startedProcessesPerEvent = metricRegistry.histogram("started-processes-per-github-event");
+        this.rateLimitGauges = new ConcurrentHashMap<>(githubCfg.getAuthConfigs().size());
+        this.ghUserEmailCache = CacheBuilder.newBuilder()
+                .expireAfterWrite(githubCfg.senderEmailCacheDuration())
+                .maximumSize(githubCfg.senderEmailCacheSize())
+                .concurrencyLevel(32)
+                .recordStats()
+                .build(new EmailCacheLoader(githubCfg, rateLimitGauges, authTokenProvider, objectMapperProvider.get()));
+
+        for (MappingAuthConfig c : githubCfg.getAuthConfigs()) {
+            Gauge<Long> rateLimitGauge = () -> rateLimitGauges.getOrDefault(c.id(), -1L);
+            metricRegistry.gauge("github-rate-limit-" + c.id(), () -> rateLimitGauge);
+        }
     }
 
     @POST
@@ -258,28 +298,230 @@ public class GithubEventResource implements Resource {
 
         @Override
         public UserEntry get() {
-            if (!githubCfg.isUseSenderLdapDn()) {
-                return fallback.get();
+            // GitHub user -> Concord user mapping may already exist in DB
+            UserEntry fromDbMapping = findUserInDbMapping();
+
+            if (fromDbMapping != null) {
+                return fromDbMapping;
             }
 
-            String ldapDn = payload.getSenderLdapDn();
-            if (ldapDn == null || ldapDn.trim().isEmpty()) {
-                log.warn("getOrCreateUserEntry ['{}'] -> can't determine the sender's 'ldap_dn', falling back to 'login'", payload);
+            // don't try to match against payload sender's ldap_dn or email if they aren't present
+            if (!githubCfg.isUseSenderLdapDn() && !githubCfg.isUseSenderEmail()) {
                 return fallback.get();
             }
 
             // only LDAP users are supported in GitHub triggers
+            // ideally, match against exact LDAP DN (requires GitHub to be integrated with LDAP)
+            if (githubCfg.isUseSenderLdapDn()) {
+                UserEntry fromDn = findSenderDnInLdap();
+                if (fromDn != null) {
+                    addUserDbMapping(fromDn);
+                    return fromDn;
+                }
+            }
+
+            // alternatively, user email may work (e.g. from SSO provider which has upstream LDAP source)
+            if (githubCfg.isUseSenderEmail()) {
+                UserEntry fromEmail = findSenderEmailInLdap();
+                if (fromEmail != null) {
+                    addUserDbMapping(fromEmail);
+                    return fromEmail;
+                }
+            }
+
+            log.warn("getOrCreateUserEntry ['{}'] -> can't determine the sender's 'ldap_dn' or 'email', falling back to 'login'", payload);
+            return fallback.get();
+        }
+
+        private UserEntry findUserInDbMapping() {
+            if (!githubCfg.isEnableExternalUserIdMappingCache()) {
+                return null;
+            }
+
+            String senderUrl = payload.getUrl(SENDER_KEY);
+            String senderNodeId = payload.getNodeId(SENDER_KEY);
+            String externalId = formatExternalId(senderUrl, senderNodeId);
+
+            if (externalId == null) {
+                return null;
+            }
+            return userManager.getUserFromExternalMapping(externalId).orElse(null);
+        }
+
+        private void addUserDbMapping(UserEntry user) {
+            if (!githubCfg.isEnableExternalUserIdMappingCache()) {
+                return;
+            }
+
+            String senderUrl = payload.getUrl(SENDER_KEY);
+            String senderNodeId = payload.getNodeId(SENDER_KEY);
+            String externalId = formatExternalId(senderUrl, senderNodeId);
+
+            if (externalId == null) {
+                return;
+            }
+
+            userManager.createExternalUserMapping(user.getId(), externalId);
+        }
+
+        private static String formatExternalId(String url, String userId) {
+            if (url == null || userId == null) {
+                return null;
+            }
+
+            if (url.isBlank() || userId.isBlank()) {
+                return null;
+            }
+
+            return String.format("github_%s=%s,%s=%s", URL_KEY, url, NODE_ID_KEY, userId);
+        }
+
+        private UserEntry findSenderDnInLdap() {
+            String ldapDn = payload.getSenderLdapDn();
+            if (ldapDn == null || ldapDn.isBlank()) {
+                return null;
+            }
+
             try {
                 LdapPrincipal p = ldapManager.getPrincipalByDn(ldapDn);
+
                 if (p == null) {
                     log.warn("getOrCreateUserEntry ['{}'] -> can't find user by ldap DN ({})", payload, ldapDn);
-                    return fallback.get();
+                    return null;
                 }
 
                 return userManager.getOrCreate(p.getUsername(), p.getDomain(), UserType.LDAP)
                         .orElseThrow(() -> new ConcordApplicationException("User not found: " + p.getUsername()));
             } catch (Exception e) {
                 throw new RuntimeException(e);
+            }
+        }
+
+        private UserEntry findSenderEmailInLdap() {
+            String email = getEmail();
+            if (email == null || email.isBlank()) {
+                return null;
+            }
+
+            try {
+                LdapPrincipal p = ldapManager.getPrincipalByMail(email);
+
+                if (p == null) {
+                    log.warn("getOrCreateUserEntry ['{}'] -> can't find user by ldap mail ({})", payload, email);
+                    return null;
+                }
+
+                return userManager.getOrCreate(p.getUsername(), p.getDomain(), UserType.LDAP)
+                        .orElseThrow(() -> new ConcordApplicationException("User not found: " + p.getUsername()));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private String getEmail() {
+            URI repoUrl = GithubUtils.getRepoCloneUrl(payload);
+            URI userUrl = GithubUtils.getSenderUrl(payload);
+
+            try {
+                return ghUserEmailCache.get(new EmailCacheKey(repoUrl, userUrl))
+                        .orElse(null);
+            } catch (ExecutionException ee) {
+                Throwable t = ee.getCause();
+                log.warn(ERROR_USER_EMAIL_LOOKUP, userUrl, t.getMessage());
+            }
+
+            return null;
+        }
+    }
+
+    private static class UserLookupException extends Exception {
+        public UserLookupException(String message) {
+            super(message);
+        }
+    }
+
+    private record GitHubUser(String email) {
+    }
+
+    private record EmailCacheKey(@Nonnull URI repoUrl, @Nonnull URI userUrl) {
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+
+            EmailCacheKey that = (EmailCacheKey) o;
+            // userUrl is sufficient for equality for caching--it will point to
+            // the same user regardless of repoUrl.
+            // repoUrl is only necessary to acquire token, not for caching.
+            return userUrl().equals(that.userUrl());
+        }
+
+        @Override
+        public int hashCode() {
+            return userUrl().hashCode();
+        }
+    }
+
+    private static class EmailCacheLoader extends CacheLoader<EmailCacheKey, Optional<String>> {
+
+        private final Map<String, Long> rateLimitGauges;
+        private final AuthTokenProvider authTokenProvider;
+        private final ObjectMapper objectMapper;
+        private final HttpClient httpClient;
+
+        public EmailCacheLoader(GithubConfiguration githubCfg,
+                                Map<String, Long> rateLimitGauges,
+                                AuthTokenProvider authTokenProvider,
+                                ObjectMapper objectMapper) {
+
+            this.rateLimitGauges = rateLimitGauges;
+            this.authTokenProvider = authTokenProvider;
+            this.objectMapper = objectMapper;
+            this.httpClient = HttpClient.newBuilder()
+                    .connectTimeout(githubCfg.getHttpClientTimeout())
+                    .build();
+        }
+
+        @Override
+        public @Nonnull Optional<String> load(@Nonnull EmailCacheKey key) throws Exception {
+            URI repoUrl = key.repoUrl();
+            URI userUrl = key.userUrl();
+
+            Optional<ExternalAuthToken> t = authTokenProvider.getToken(repoUrl, null);
+
+            if (t.isEmpty()) {
+                return Optional.empty();
+            }
+
+            ExternalAuthToken externalAuth  = t.get();
+            HttpRequest req = HttpRequest.newBuilder(userUrl)
+                    .GET()
+                    .header("Authorization", "Bearer " + externalAuth.token())
+                    .build();
+
+            HttpResponse<InputStream> resp = httpClient.send(req, BodyHandlers.ofInputStream());
+
+            if (externalAuth.authId() != null) {
+                long remaining = resp.headers()
+                        .firstValueAsLong("X-RateLimit-Remaining")
+                        .orElse(-1L);
+                rateLimitGauges.put(externalAuth.authId(), remaining);
+            }
+
+            if (resp.statusCode() != 200) {
+                throw new UserLookupException("Non-200 response [: " + resp.statusCode() + "]: " + readBody(resp));
+            }
+
+            GitHubUser m = objectMapper.readValue(resp.body(), GitHubUser.class);
+
+            return Optional.ofNullable(m.email());
+        }
+
+        private static String readBody(HttpResponse<InputStream> resp) {
+            try (InputStream is = resp.body()) {
+                return new String(is.readAllBytes());
+            } catch (IOException e) {
+                return "error reading response body: " + e.getMessage();
             }
         }
     }

@@ -5,7 +5,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>concord-targetplatform</artifactId>
-    <version>2.34.1-SNAPSHOT</version>
+    <version>2.35.1-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -145,6 +145,11 @@
             <dependency>
                 <groupId>com.walmartlabs.concord</groupId>
                 <artifactId>concord-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord</groupId>
+                <artifactId>concord-github-app-installation</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

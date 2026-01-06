@@ -20,6 +20,7 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.common.secret.KeyPair;
@@ -28,6 +29,9 @@ import com.walmartlabs.concord.sdk.Secret;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,6 +42,7 @@ import java.time.Duration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Disabled
+@ExtendWith(MockitoExtension.class)
 public class GitClientRealTest {
 
     private static final String HTTPS_REPO_URL = System.getenv("HTTPS_REPO_URL");
@@ -61,6 +66,9 @@ public class GitClientRealTest {
 
     private GitClient client;
 
+    @Mock
+    AuthTokenProvider authProvider;
+
     @BeforeEach
     public void init() {
         client = new GitClient(GitClientConfiguration.builder()
@@ -69,7 +77,7 @@ public class GitClientRealTest {
                 .sshTimeoutRetryCount(1)
                 .httpLowSpeedLimit(1)
                 .httpLowSpeedTime(Duration.ofMinutes(10))
-                .build());
+                .build(), authProvider);
     }
 
     @Test
