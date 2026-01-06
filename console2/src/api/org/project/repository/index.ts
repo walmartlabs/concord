@@ -199,9 +199,9 @@ export const listTriggers = (
 
 export interface TriggerFilter {
     type?: ConcordKey;
-    orgName: ConcordKey;
-    projectName: ConcordKey;
-    repoName: ConcordKey;
+    orgName?: ConcordKey;
+    projectName?: ConcordKey;
+    repoName?: ConcordKey;
 }
 
 export const listTriggersV2 = (filter: TriggerFilter): Promise<TriggerEntry[]> =>
