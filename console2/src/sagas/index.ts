@@ -22,7 +22,6 @@ import { all, fork } from 'redux-saga/effects';
 
 import { sagas as Forms } from '../state/data/forms';
 import { sagas as Processes } from '../state/data/processes';
-import { sagas as Search } from '../state/data/search';
 import { sagas as Secrets } from '../state/data/secrets';
 import { sagas as Teams } from '../state/data/teams';
 import { sagas as Triggers } from '../state/data/triggers';
@@ -31,7 +30,6 @@ export default function* root() {
     yield all([
         fork(Forms),
         fork(Processes),
-        fork(Search),
         fork(Secrets),
         fork(Teams),
         fork(Triggers)

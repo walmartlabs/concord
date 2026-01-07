@@ -24,7 +24,6 @@ import { History } from 'history';
 
 import { reducers as formsReducers, State as FormsState } from '../state/data/forms';
 import { reducers as processesReducers, State as ProcessesState } from '../state/data/processes';
-import { reducers as searchReducers, State as SearchState } from '../state/data/search';
 import { reducers as secretsReducer, State as SecretsState } from '../state/data/secrets';
 import { reducers as teamReducers, State as TeamsState } from '../state/data/teams';
 import { reducers as triggersReducer, State as TriggersState } from '../state/data/triggers';
@@ -33,7 +32,6 @@ export interface State {
     forms: FormsState;
     processes: ProcessesState;
     router: RouterState;
-    search: SearchState;
     secrets: SecretsState;
     teams: TeamsState;
     triggers: TriggersState;
@@ -44,7 +42,6 @@ const reducers = (history: History) =>
         forms: formsReducers,
         processes: processesReducers,
         router: connectRouter(history),
-        search: searchReducers,
         secrets: secretsReducer,
         teams: teamReducers,
         triggers: triggersReducer
