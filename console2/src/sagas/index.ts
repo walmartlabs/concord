@@ -24,14 +24,12 @@ import { sagas as Forms } from '../state/data/forms';
 import { sagas as Processes } from '../state/data/processes';
 import { sagas as Secrets } from '../state/data/secrets';
 import { sagas as Teams } from '../state/data/teams';
-import { sagas as Triggers } from '../state/data/triggers';
 
 export default function* root() {
     yield all([
         fork(Forms),
         fork(Processes),
         fork(Secrets),
-        fork(Teams),
-        fork(Triggers)
+        fork(Teams)
     ]);
 }

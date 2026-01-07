@@ -26,7 +26,6 @@ import { reducers as formsReducers, State as FormsState } from '../state/data/fo
 import { reducers as processesReducers, State as ProcessesState } from '../state/data/processes';
 import { reducers as secretsReducer, State as SecretsState } from '../state/data/secrets';
 import { reducers as teamReducers, State as TeamsState } from '../state/data/teams';
-import { reducers as triggersReducer, State as TriggersState } from '../state/data/triggers';
 
 export interface State {
     forms: FormsState;
@@ -34,7 +33,6 @@ export interface State {
     router: RouterState;
     secrets: SecretsState;
     teams: TeamsState;
-    triggers: TriggersState;
 }
 
 const reducers = (history: History) =>
@@ -43,8 +41,7 @@ const reducers = (history: History) =>
         processes: processesReducers,
         router: connectRouter(history),
         secrets: secretsReducer,
-        teams: teamReducers,
-        triggers: triggersReducer
+        teams: teamReducers
     });
 
 export default reducers;
