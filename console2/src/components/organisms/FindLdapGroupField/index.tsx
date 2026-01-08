@@ -19,31 +19,21 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
+import { useCallback, useEffect, useState } from 'react';
 import { Search, SearchResultData, SearchResultProps } from 'semantic-ui-react';
 
-import { LdapGroupSearchResult } from '../../../api/service/console';
-import { actions, State } from '../../../state/data/search';
+import { RequestError } from '../../../api/common';
+import {
+    findLdapGroups as apiFindLdapGroups,
+    LdapGroupSearchResult
+} from '../../../api/service/console';
+import { useThrottle } from '../../../hooks/useThrottle';
 
-interface ExternalProps {
+interface Props {
     onSelect: (value: LdapGroupSearchResult) => void;
     onChange?: (value?: string) => void;
     placeholder?: string;
 }
-
-interface StateProps {
-    loading: boolean;
-    error: boolean;
-    items: LdapGroupSearchResult[];
-}
-
-interface DispatchProps {
-    onSearch: (filter: string) => void;
-    reset: () => void;
-}
-
-type Props = ExternalProps & StateProps & DispatchProps;
 
 // TODO remove when the Search component will support custom result types
 const toResults = (items: LdapGroupSearchResult[]) =>
@@ -56,69 +46,74 @@ const toResults = (items: LdapGroupSearchResult[]) =>
 const resultToItem = (result: SearchResultProps, items: LdapGroupSearchResult[]) =>
     items.find((i) => i.groupName === result.description)!;
 
-class FindLdapGroupField extends React.PureComponent<Props> {
-    componentDidMount() {
-        this.props.reset();
-    }
+const FindLdapGroupField = ({ onSelect, onChange, placeholder }: Props) => {
+    const [filter, setFilter] = useState<string>('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<RequestError>();
+    const [items, setItems] = useState<LdapGroupSearchResult[]>([]);
 
-    handleSelect({ result }: SearchResultData) {
-        if (!result) {
+    const performSearch = useCallback(async (searchFilter: string) => {
+        if (searchFilter.length < 5) {
+            setItems([]);
             return;
         }
 
-        const { items } = this.props;
-        const i = resultToItem(result, items);
-        if (!i) {
-            return;
+        try {
+            setLoading(true);
+            setError(undefined);
+            const result = await apiFindLdapGroups(searchFilter);
+            setItems(result || []);
+        } catch (e) {
+            setError(e);
+            setItems([]);
+        } finally {
+            setLoading(false);
         }
+    }, []);
 
-        const { onSelect } = this.props;
-        onSelect(i);
-    }
+    const throttledSearch = useThrottle(performSearch, 2000);
 
-    render() {
-        const { error, loading, onSearch, onChange, items, placeholder } = this.props;
+    useEffect(() => {
+        throttledSearch(filter);
+    }, [filter, throttledSearch]);
 
-        return (
-            <Search
-                input={{
-                    fluid: true,
-                    placeholder: placeholder ? placeholder : 'Search for a user...',
-                    error
-                }}
-                fluid={true}
-                loading={loading}
-                showNoResults={!loading}
-                onSearchChange={(ev, data) => {
-                    const filter = data.value;
-                    if (filter && filter.length >= 5) {
-                        onSearch(filter);
-                    }
+    const handleSelect = useCallback(
+        ({ result }: SearchResultData) => {
+            if (!result) {
+                return;
+            }
 
-                    if (onChange) {
-                        onChange(data.value);
-                    }
-                }}
-                onResultSelect={(ev, data) => this.handleSelect(data)}
-                results={toResults(items)}
-            />
-        );
-    }
-}
+            const item = resultToItem(result, items);
+            if (!item) {
+                return;
+            }
 
-const mapStateToProps = ({ search }: { search: State }): StateProps => ({
-    loading: search.ldapGroups.running,
-    error: !!search.ldapGroups.error,
-    items: search.ldapGroups.response // TODO yuck
-        ? search.ldapGroups.response.items
-            ? search.ldapGroups.response.items
-            : []
-        : []
-});
+            onSelect(item);
+        },
+        [items, onSelect]
+    );
 
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    reset: () => dispatch(actions.resetLdapGroupSearch()),
-    onSearch: (filter: string) => dispatch(actions.findLdapGroups(filter))
-});
+    return (
+        <Search
+            input={{
+                fluid: true,
+                placeholder: placeholder ? placeholder : 'Search for a user...',
+                error: !!error
+            }}
+            fluid={true}
+            loading={loading}
+            showNoResults={!loading}
+            onSearchChange={(ev, data) => {
+                const newFilter = data.value || '';
+                setFilter(newFilter);
+                if (onChange) {
+                    onChange(newFilter);
+                }
+            }}
+            onResultSelect={(ev, data) => handleSelect(data)}
+            results={toResults(items)}
+        />
+    );
+};
 
-export default connect(mapStateToProps, mapDispatchToProps)(FindLdapGroupField);
+export default FindLdapGroupField;
