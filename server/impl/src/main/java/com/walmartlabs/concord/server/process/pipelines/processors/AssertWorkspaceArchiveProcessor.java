@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
+import com.walmartlabs.concord.process.loader.StandardRuntimeTypes;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.jooq.enums.RawPayloadMode;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -39,7 +40,7 @@ import java.util.UUID;
 
 public class AssertWorkspaceArchiveProcessor implements PayloadProcessor {
 
-    private static final Set<String> PROJECT_ROOT_FILE_NAMES = new HashSet<>(Arrays.asList(Constants.Files.PROJECT_ROOT_FILE_NAMES));
+    private static final Set<String> PROJECT_ROOT_FILE_NAMES = new HashSet<>(Arrays.asList(StandardRuntimeTypes.PROJECT_ROOT_FILE_NAMES));
 
     private final ProjectDao projectDao;
     private final ProjectAccessManager projectAccessManager;

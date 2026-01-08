@@ -26,6 +26,7 @@ import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.HostEntry;
 import com.walmartlabs.concord.client2.NodeRosterHostsApi;
 import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.it.common.Version;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -46,7 +47,7 @@ public class NodeRosterIT extends AbstractTest {
         // run the Ansible flow first to get some data
 
         String concordYml = resourceToString(NodeRosterIT.class.getResource("noderoster/ansible.yml"))
-                .replaceAll("PROJECT_VERSION", ITConstants.PROJECT_VERSION);
+                .replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION);
 
         ConcordProcess proc = concord.processes().start(new Payload()
                 .concordYml(concordYml)
@@ -67,7 +68,7 @@ public class NodeRosterIT extends AbstractTest {
         // run the Node Roster flow next to test the plugin
 
         concordYml = resourceToString(ProcessIT.class.getResource("noderoster/noderoster.yml"))
-                .replaceAll("PROJECT_VERSION", ITConstants.PROJECT_VERSION);
+                .replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION);
 
         proc = concord.processes().start(new Payload()
                 .concordYml(concordYml));

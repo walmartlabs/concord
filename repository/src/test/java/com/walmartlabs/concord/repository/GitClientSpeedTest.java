@@ -20,13 +20,17 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.AuthTokenProvider;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Secret;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,9 +58,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Require internet connection
  */
 @Disabled
+@ExtendWith(MockitoExtension.class)
 public class GitClientSpeedTest {
 
     private GitClient client;
+
+    @Mock
+    AuthTokenProvider authProvider;
 
     @BeforeEach
     public void init() {
@@ -65,13 +73,13 @@ public class GitClientSpeedTest {
                 .sshTimeoutRetryCount(1)
                 .httpLowSpeedLimit(1)
                 .httpLowSpeedTime(Duration.ofMinutes(10))
-                .build());
+                .build(), authProvider);
     }
 
     @Test
     public void testFetch() throws Exception {
         String url = "https://github.com/walmartlabs/concord";
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             // fetch master
             fetch(url, "master", null, null, repoPath.path());
             assertContent(repoPath, "pom.xml", "<version>1.73.1-SNAPSHOT</version>");
@@ -109,7 +117,7 @@ public class GitClientSpeedTest {
         }
 
         // fetch by commit with clean repo
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             String result = fetch(url, "1.63.x", "64feb9fe2d518e71a5497ba43132f4dafa1c471f", null, repoPath.path());
             assertContent(repoPath, "pom.xml", "<version>1.63.1</version>");
             assertEquals("64feb9fe2d518e71a5497ba43132f4dafa1c471f", result);
@@ -119,7 +127,7 @@ public class GitClientSpeedTest {
         }
 
         // fetch by commit with clean repo
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             String result = fetch(url, "1.66.0", "56e248cf2e6fa10d058e41aac005b5dee70526e4", null, repoPath.path());
             assertContent(repoPath, "pom.xml", "<version>1.65.1-SNAPSHOT</version>");
             assertEquals("56e248cf2e6fa10d058e41aac005b5dee70526e4", result);
@@ -129,7 +137,7 @@ public class GitClientSpeedTest {
         }
 
         // fetch by commit with clean repo and without branch -> should  fetch all repo and checkout commit-id
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             String result = fetch(url, null, "56e248cf2e6fa10d058e41aac005b5dee70526e4", null, repoPath.path());
             assertContent(repoPath, "pom.xml", "<version>1.65.1-SNAPSHOT</version>");
             assertEquals("56e248cf2e6fa10d058e41aac005b5dee70526e4", result);
@@ -139,7 +147,7 @@ public class GitClientSpeedTest {
         }
 
         // fetch same branch two times
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             // fetch branch
             fetch(url, "1.70.x", null, null, repoPath.path());
             assertContent(repoPath, "pom.xml", "<version>1.70.2-SNAPSHOT</version>");

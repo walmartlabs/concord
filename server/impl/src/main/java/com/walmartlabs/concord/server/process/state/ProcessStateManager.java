@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.state;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.common.secret.SecretUtils;
 import com.walmartlabs.concord.db.AbstractDao;
@@ -779,7 +778,7 @@ public class ProcessStateManager extends AbstractDao {
                 }
 
                 try (OutputStream dst = Files.newOutputStream(p, options)) {
-                    IOUtils.copy(src, dst);
+                    src.transferTo(dst);
                 }
 
                 Files.setPosixFilePermissions(p, Posix.posix(unixMode));
@@ -804,7 +803,7 @@ public class ProcessStateManager extends AbstractDao {
 
             try {
                 dst.putArchiveEntry(entry);
-                IOUtils.copy(src, dst);
+                src.transferTo(dst);
                 dst.closeArchiveEntry();
             } catch (IOException e) {
                 throw new RuntimeException(e);

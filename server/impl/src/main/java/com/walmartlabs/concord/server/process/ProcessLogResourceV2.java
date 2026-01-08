@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.HttpUtils;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
@@ -171,7 +170,7 @@ public class ProcessLogResourceV2 implements Resource {
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
 
         try {
-            byte[] ab = IOUtils.toByteArray(data);
+            byte[] ab = data.readAllBytes();
             int upper = logManager.log(processKey, segmentId, ab);
 
             int logSizeLimit = processCfg.getLogSizeLimit();

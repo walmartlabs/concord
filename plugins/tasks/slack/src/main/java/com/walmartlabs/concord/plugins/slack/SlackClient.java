@@ -112,7 +112,7 @@ public class SlackClient implements AutoCloseable {
         return exec(CHAT_UPDATE_MESSAGE_CMD, json);
     }
 
-    public Response message(String channelId, String ts, boolean replyBroadcast, String text, String iconEmoji, String username, Collection<Object> attachments) throws IOException {
+    public Response message(String channelId, String ts, boolean replyBroadcast, String text, String iconEmoji, String username, Collection<Object> attachments, Collection<Object> blocks) throws IOException {
         Map<String, Object> params = new HashMap<>();
         params.put(CHANNEL, channelId);
 
@@ -143,6 +143,10 @@ public class SlackClient implements AutoCloseable {
 
         if (attachments != null) {
             params.put("attachments", attachments);
+        }
+
+        if (blocks != null && !blocks.isEmpty()) {
+            params.put("blocks", blocks);
         }
 
         return exec(CHAT_POST_MESSAGE_CMD, params);

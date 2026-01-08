@@ -22,7 +22,7 @@ package com.walmartlabs.concord.plugins.mock;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.runtime.v2.model.Location;
+import com.walmartlabs.concord.runtime.model.Location;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.DryRunReady;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;

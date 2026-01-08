@@ -29,7 +29,6 @@ import com.walmartlabs.concord.runtime.v2.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.DefaultCompiler;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.context.DefaultContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.DefaultExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactoryImpl;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.runner.script.DefaultScriptEvaluator;
@@ -44,12 +43,13 @@ public class BaseRunnerModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new ExpressionSupportModule());
+
         bind(ContextFactory.class).to(DefaultContextFactory.class);
         bind(FileService.class).to(DefaultFileService.class);
         bind(Compiler.class).to(DefaultCompiler.class);
         bind(PolicyEngine.class).toProvider(PolicyEngineProvider.class);
         bind(SynchronizationService.class).to(DefaultSynchronizationService.class);
-        bind(ExpressionEvaluator.class).to(DefaultExpressionEvaluator.class);
         bind(EvalContextFactory.class).to(EvalContextFactoryImpl.class);
         bind(ScriptEvaluator.class).to(DefaultScriptEvaluator.class);
         bind(ResourceResolver.class).to(DefaultResourceResolver.class);

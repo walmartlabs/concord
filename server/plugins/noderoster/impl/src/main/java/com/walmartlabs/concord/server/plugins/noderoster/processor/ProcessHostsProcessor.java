@@ -141,7 +141,7 @@ public class ProcessHostsProcessor implements Processor {
     }
 
     @Value.Immutable
-    static abstract class ProcessHostItem {
+    public abstract static class ProcessHostItem {
 
         public abstract UUID instanceId();
 

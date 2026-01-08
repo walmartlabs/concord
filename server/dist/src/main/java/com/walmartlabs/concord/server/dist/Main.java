@@ -42,7 +42,16 @@ public class Main {
 
         long t1 = System.currentTimeMillis();
 
-        autoWire().start();
+        ConcordServer server = autoWire();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            log.info("Received SIGTERM, stopping...");
+            try {
+                server.stop();
+            } catch (Exception e) {
+                log.warn("Failed to stop the server: {}", e.getMessage());
+            }
+        }, "shutdown-hook"));
+        server.start();
 
         long t2 = System.currentTimeMillis();
         log.info("main -> started in {}ms", (t2 - t1));

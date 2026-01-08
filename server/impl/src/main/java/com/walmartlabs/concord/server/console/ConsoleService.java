@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.console;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.server.cfg.ConsoleConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -62,6 +63,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import java.net.URI;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
@@ -84,6 +86,7 @@ public class ConsoleService implements Resource {
     private final JsonStoreQueryDao storageQueryDao;
     private final JsonStoreAccessManager jsonStoreAccessManager;
     private final ConsoleServiceDao consoleServiceDao;
+    private final ConsoleConfiguration consoleCfg;
 
     @Inject
     public ConsoleService(ProjectDao projectDao,
@@ -98,7 +101,8 @@ public class ConsoleService implements Resource {
                           JsonStoreDao storageDao,
                           JsonStoreQueryDao storageQueryDao,
                           JsonStoreAccessManager jsonStoreAccessManager,
-                          ConsoleServiceDao consoleServiceDao) {
+                          ConsoleServiceDao consoleServiceDao,
+                          ConsoleConfiguration consoleCfg) {
 
         this.projectDao = projectDao;
         this.repositoryManager = repositoryManager;
@@ -113,6 +117,17 @@ public class ConsoleService implements Resource {
         this.storageQueryDao = storageQueryDao;
         this.jsonStoreAccessManager = jsonStoreAccessManager;
         this.consoleServiceDao = consoleServiceDao;
+        this.consoleCfg = consoleCfg;
+    }
+
+    @GET
+    @Path("/cfg")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response getCfg() {
+        if (consoleCfg.isUseDefaultCfg()) {
+            return Response.seeOther(URI.create("/cfg.js")).build();
+        }
+        return Response.ok(consoleCfg.getCfg()).build();
     }
 
     @GET

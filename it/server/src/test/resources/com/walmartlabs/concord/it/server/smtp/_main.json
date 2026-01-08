@@ -1,4 +1,7 @@
 {
+  "dependencies": [
+    "mvn://com.walmartlabs.concord.plugins.basic:smtp-tasks:PROJECT_VERSION"
+  ],
   "entryPoint": "main",
   "arguments": {
     "mailParams": {

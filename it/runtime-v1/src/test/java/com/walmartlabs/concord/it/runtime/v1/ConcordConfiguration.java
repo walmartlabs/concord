@@ -37,7 +37,18 @@ public final class ConcordConfiguration {
                 .streamAgentLogs(true)
                 .useLocalMavenRepository(true)
                 .extraConfigurationSupplier(() -> """
+                        concord-server {
+                            queue {
+                                enqueuePollInterval = "250 milliseconds"
+                                dispatcher {
+                                    pollDelay = "250 milliseconds"
+                                }
+                            }
+                        }
                         concord-agent {
+                            dependencyResolveTimeout = "30 seconds"
+                            logMaxDelay = "250 milliseconds"
+                            pollInterval = "250 milliseconds"
                             workersCount = 8
                             prefork {
                                 enabled = false

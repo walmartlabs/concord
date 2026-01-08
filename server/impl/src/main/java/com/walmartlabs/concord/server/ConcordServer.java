@@ -25,8 +25,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.walmartlabs.concord.server.boot.BackgroundTasks;
 import com.walmartlabs.concord.server.boot.HttpServer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.walmartlabs.concord.server.message.MessageChannelManager;
 
 import javax.inject.Inject;
 import java.util.Collection;
@@ -36,8 +35,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public final class ConcordServer {
 
-    private static final Logger log = LoggerFactory.getLogger(ConcordServer.class);
-
     @Inject
     private Injector injector;
 
@@ -46,6 +43,9 @@ public final class ConcordServer {
 
     @Inject
     private HttpServer server;
+
+    @Inject
+    private MessageChannelManager messageChannelManager;
 
     private final Lock controlMutex = new ReentrantLock();
 
@@ -58,11 +58,8 @@ public final class ConcordServer {
      */
     public static ConcordServer withModules(Collection<Module> modules) throws Exception {
         Injector injector = Guice.createInjector(modules);
-
         ConcordServer instance = new ConcordServer();
         injector.injectMembers(instance);
-
-        log.info("start -> starting {} task(s)", instance.tasks.count());
         return instance;
     }
 
@@ -80,6 +77,11 @@ public final class ConcordServer {
     public void stop() throws Exception {
         controlMutex.lock();
         try {
+            if (messageChannelManager != null) {
+                messageChannelManager.shutdown();
+                messageChannelManager = null;
+            }
+
             if (server != null) {
                 server.stop();
                 server = null;

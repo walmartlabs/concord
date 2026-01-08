@@ -19,6 +19,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -26,14 +27,24 @@ import org.junit.jupiter.api.Test;
 import javax.naming.Context;
 import javax.naming.NameAlreadyBoundException;
 import javax.naming.directory.*;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.Base64;
+import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -44,6 +55,7 @@ public class LdapIT extends AbstractServerIT {
     private static final String GROUP_OU = "ou=groups,dc=example,dc=org";
     private static final String USER_OU = "ou=users,dc=example,dc=org";
     private static DirContext ldapCtx;
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().build();
 
     @BeforeAll
     public static void createLdapStructure() throws Exception {
@@ -92,7 +104,6 @@ public class LdapIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getInstanceId());
         String groupDn = "cn=" + groupName + "," + GROUP_OU;
         assertLog(".*" + groupDn + ".*", ab);
-
     }
 
     @Test
@@ -136,6 +147,140 @@ public class LdapIT extends AbstractServerIT {
         assertTrue(ue.getPermanentlyDisabled());
     }
 
+    @Test
+    void testSubmitFormRunAsGroupWithApiKey() throws Exception {
+        // create users in ldap
+        String noGroupUser = "noGroupUser" + randomString();
+        createLdapUser(noGroupUser);
+
+        String username = "runAsUser" + randomString();
+        createLdapUser(username);
+
+        // create group
+        String groupName = "RunAsGroup" + randomString();
+        createLdapGroupWithUser(groupName, username);
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LDAP));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(noGroupUser)
+                .type(CreateUserRequest.TypeEnum.LDAP));
+
+        String noGroupApiKey = createApiKey(noGroupUser);
+        String validUserApiKey = createApiKey(username);
+
+        setApiKey(validUserApiKey);
+
+        // --- execute form
+
+        byte[] payload = archive(LdapIT.class.getResource("ldapFormRunAs").toURI());
+        StartProcessResponse spr = start(Map.of(
+                "archive", payload,
+                "arguments.ldapGroupName", groupName
+        ));
+        assertNotNull(spr.getInstanceId());
+
+
+        // ---
+
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+
+        // --- try to get with user not in group (expect no permission)
+
+        ApiException noGroupEx = assertThrows(ApiException.class, () ->
+                new ProcessFormsApi(getApiClientForKey(noGroupApiKey)).getProcessForm(pir.getInstanceId(), "myForm"));
+
+        assertEquals(403, noGroupEx.getCode());
+        assertTrue(noGroupEx.getMessage().contains("doesn't have the necessary permissions to resume process. Expected LDAP group(s) '[CN=RunAsGroup"));
+
+        // --- get form with user in expected ldap group
+
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClientForKey(validUserApiKey));
+
+        FormInstanceEntry form = formsApi.getProcessForm(pir.getInstanceId(), "myForm");
+
+        assertEquals("myForm", form.getName());
+        assertEquals(1, form.getFields().size());
+        assertEquals("inputName", form.getFields().get(0).getName());
+        assertEquals("string", form.getFields().get(0).getType());
+
+        // --- submit form with user in expected ldap group
+
+        formsApi.submitForm(pir.getInstanceId(), "myForm", Map.of("inputName", "testuser"));
+
+        waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
+
+        byte[] ab = getLog(pir.getInstanceId());
+        assertLog(".*Submitted name: testuser.*", ab);
+    }
+
+    @Test
+    void testSubmitFormRunAsGroupWithPassword() throws Exception {
+        // create users in ldap
+        String noGroupUser = "noGroupUser" + randomString();
+        createLdapUser(noGroupUser);
+
+        String username = "runAsUser" + randomString();
+        createLdapUser(username);
+
+        // create group
+        String groupName = "RunAsGroup" + randomString();
+        createLdapGroupWithUser(groupName, username);
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LDAP));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(noGroupUser)
+                .type(CreateUserRequest.TypeEnum.LDAP));
+
+        String validUserApiKey = createApiKey(username);
+
+        setApiKey(validUserApiKey);
+
+        // --- execute form
+
+        byte[] payload = archive(LdapIT.class.getResource("ldapFormRunAs").toURI());
+        StartProcessResponse spr = start(Map.of(
+                "archive", payload,
+                "arguments.ldapGroupName", groupName
+        ));
+        assertNotNull(spr.getInstanceId());
+
+        // ---
+
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+
+        // --- try to get with user not in group (expect no permission)
+
+        ApiException noGroupEx = assertThrows(ApiException.class, () ->
+                getFormHttpClient(getApiClient().getBaseUrl(), pir.getInstanceId(), "myForm", noGroupUser, noGroupUser));
+
+        assertEquals(403, noGroupEx.getCode());
+        assertTrue(noGroupEx.getResponseBody().contains("doesn't have the necessary permissions to resume process. Expected LDAP group(s) '[CN=RunAsGroup"));
+
+        // --- get form with user in expected ldap group
+
+        FormInstanceEntry form = getFormHttpClient(getApiClient().getBaseUrl(), pir.getInstanceId(), "myForm", username, username);
+
+        assertEquals("myForm", form.getName());
+        assertEquals(1, form.getFields().size());
+        assertEquals("inputName", form.getFields().get(0).getName());
+        assertEquals("string", form.getFields().get(0).getType());
+
+        // --- submit form with user in expected ldap group
+
+        submitFormHttpClient(getApiClient().getBaseUrl(), pir.getInstanceId(), "myForm", Map.of("inputName", "testuser"), username, username);
+
+        waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
+
+        byte[] ab = getLog(pir.getInstanceId());
+        assertLog(".*Submitted name: testuser.*", ab);
+    }
+
     public static DirContext createContext() throws Exception {
         String url = System.getenv("IT_LDAP_URL");
         String connectionType = "simple";
@@ -176,6 +321,7 @@ public class LdapIT extends AbstractServerIT {
         Attribute uid = new BasicAttribute("uid", username);
         Attribute cn = new BasicAttribute(COMMON_NAME, username);
         Attribute sn = new BasicAttribute("sn", username);
+        Attribute userPassword = new BasicAttribute("userPassword", username);
 
         Attribute objectClass = new BasicAttribute(OBJECT_CLASS);
         objectClass.add("top");
@@ -186,6 +332,7 @@ public class LdapIT extends AbstractServerIT {
         attributes.put(uid);
         attributes.put(cn);
         attributes.put(sn);
+        attributes.put(userPassword);
         attributes.put(objectClass);
 
         try {
@@ -214,6 +361,51 @@ public class LdapIT extends AbstractServerIT {
         } catch (NameAlreadyBoundException e) {
             System.err.println("createLdapGroupWithUser -> " + e.getMessage());
             // already exists, ignore
+        }
+    }
+
+    private String createApiKey(String username) throws Exception {
+        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse cakr = apiKeyResource.createUserApiKey(new CreateApiKeyRequest()
+                .username(username)
+                .userType(CreateApiKeyRequest.UserTypeEnum.LDAP));
+
+        return cakr.getKey();
+    }
+
+    private FormInstanceEntry getFormHttpClient(String baseUrl, UUID instanceId, String formName, String username, String password) throws Exception {
+        HttpRequest req = HttpRequest.newBuilder(URI.create(baseUrl + "/api/v1/process/" + instanceId + "/form/" + formName))
+                .GET()
+                .header("Authorization", "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes()))
+                .build();
+
+        HttpResponse<InputStream> resp = HTTP_CLIENT.send(req, HttpResponse.BodyHandlers.ofInputStream());
+
+        try (InputStream is = resp.body()) {
+            if (resp.statusCode() != 200) {
+                throw new ApiException(resp.statusCode(), resp.headers(), new String(is.readAllBytes()));
+            }
+
+            return new ObjectMapper().readValue(resp.body(), FormInstanceEntry.class);
+        }
+    }
+
+    private void submitFormHttpClient(String baseUrl, UUID instanceId, String formName, Map<String, Object> data, String username, String password) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        String requestBody = mapper.writeValueAsString(data);
+
+        HttpRequest req = HttpRequest.newBuilder(URI.create(baseUrl + "/api/v1/process/" + instanceId + "/form/" + formName))
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes()))
+                .build();
+
+        HttpResponse<InputStream> resp = HTTP_CLIENT.send(req, HttpResponse.BodyHandlers.ofInputStream());
+
+        try (InputStream is = resp.body()) {
+            if (resp.statusCode() != 200) {
+                throw new ApiException(resp.statusCode(), resp.headers(), new String(resp.body().readAllBytes()));
+            }
         }
     }
 }

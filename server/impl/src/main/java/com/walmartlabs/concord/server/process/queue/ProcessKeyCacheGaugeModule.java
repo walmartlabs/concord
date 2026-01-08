@@ -21,13 +21,14 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.codahale.metrics.Gauge;
-import com.google.common.cache.CacheStats;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.server.sdk.metrics.GaugeProvider;
+import com.walmartlabs.concord.server.sdk.ProcessKeyCache;
 
-import java.util.function.Function;
+
+import java.util.function.ToLongFunction;
 
 public class ProcessKeyCacheGaugeModule extends AbstractModule {
 
@@ -36,12 +37,12 @@ public class ProcessKeyCacheGaugeModule extends AbstractModule {
         Provider<ProcessKeyCache> provider = getProvider(ProcessKeyCache.class);
 
         Multibinder<GaugeProvider> gauges = Multibinder.newSetBinder(binder(), GaugeProvider.class);
-        gauges.addBinding().toInstance(create("hit-count", provider, CacheStats::hitCount));
-        gauges.addBinding().toInstance(create("miss-count", provider, CacheStats::missCount));
+        gauges.addBinding().toInstance(create("hit-count", provider, ProcessKeyCache::hitCount));
+        gauges.addBinding().toInstance(create("miss-count", provider, ProcessKeyCache::missCount));
     }
 
-    private static GaugeProvider<Long> create(String suffix, Provider<ProcessKeyCache> provider, Function<CacheStats, Long> value) {
-        return new GaugeProvider<Long>() {
+    private static GaugeProvider<Long> create(String suffix, Provider<ProcessKeyCache> provider, ToLongFunction<ProcessKeyCache> value) {
+        return new GaugeProvider<>() {
             @Override
             public String name() {
                 return "process-key-cache-" + suffix;
@@ -50,10 +51,7 @@ public class ProcessKeyCacheGaugeModule extends AbstractModule {
             @Override
             public Gauge<Long> gauge() {
                 ProcessKeyCache cache = provider.get();
-                return () -> {
-                    CacheStats stats = cache.stats();
-                    return value.apply(stats);
-                };
+                return () -> value.applyAsLong(cache);
             }
         };
     }

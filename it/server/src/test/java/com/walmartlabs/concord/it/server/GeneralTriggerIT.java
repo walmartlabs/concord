@@ -21,7 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -42,7 +42,7 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
         Path tmpDir = createTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource("generalExclusiveTrigger").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
 
         try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
             repo.add().addFilepattern(".").call();
@@ -97,7 +97,7 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
         Path tmpDir = createTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource("generalTriggerWithExclusiveCfg").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
 
         try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
             repo.add().addFilepattern(".").call();
@@ -153,7 +153,7 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
         Path tmpDir = createTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource("generalTriggerWithExclusiveOverride").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
 
         try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
             repo.add().addFilepattern(".").call();

@@ -22,45 +22,11 @@ package com.walmartlabs.concord.runtime.v2.model;
 
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
-import java.io.Serializable;
-
+/**
+ * For backward-compatibility with runtime-v2 state serialized before 2.27.0.
+ */
 @Value.Immutable
-@Value.Style(jdkOnly = true)
-public interface Location extends Serializable {
+public interface Location extends com.walmartlabs.concord.runtime.model.Location {
 
     long serialVersionUID = 1L;
-
-    static String toShortString(Location location) {
-        if (location == null || location.fileName() == null) {
-            return "n/a";
-        }
-
-        return "line: " + location.lineNum() + ", col: " + location.column();
-    }
-
-    static String toErrorPrefix(Location location) {
-        if (location == null || location.fileName() == null) {
-            return "(n/a): Error.";
-        } else {
-            return "(" + location.fileName() + "): Error @ " + toShortString(location);
-        }
-    }
-
-    @Value.Default
-    default int lineNum() {
-        return -1;
-    }
-
-    @Value.Default
-    default int column() {
-        return -1;
-    }
-
-    @Nullable
-    String fileName();
-
-    static ImmutableLocation.Builder builder() {
-        return ImmutableLocation.builder();
-    }
 }

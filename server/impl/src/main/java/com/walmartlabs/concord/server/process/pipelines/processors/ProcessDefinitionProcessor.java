@@ -23,9 +23,11 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.ImportProcessingException;
 import com.walmartlabs.concord.imports.ImportsListener;
+import com.walmartlabs.concord.process.loader.DelegatingProjectLoader;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
-import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.process.loader.ProjectLoaderUtils;
 import com.walmartlabs.concord.repository.Snapshot;
+import com.walmartlabs.concord.runtime.model.ProcessDefinition;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
@@ -45,7 +47,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static com.walmartlabs.concord.process.loader.ProjectLoader.CONCORD_V1_RUNTIME_TYPE;
+import static com.walmartlabs.concord.process.loader.StandardRuntimeTypes.CONCORD_V1_RUNTIME_TYPE;
 
 /**
  * Loads the process definition using the working directory and configured {@code imports}.
@@ -56,12 +58,12 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
 
     private static final int MAX_DEPENDENCIES_COUNT = 100;
 
-    private final ProjectLoader projectLoader;
+    private final DelegatingProjectLoader projectLoader;
     private final ImportsNormalizerFactory importsNormalizer;
     private final ProcessLogManager logManager;
 
     @Inject
-    public ProcessDefinitionProcessor(ProjectLoader projectLoader,
+    public ProcessDefinitionProcessor(DelegatingProjectLoader projectLoader,
                                       ImportsNormalizerFactory importsNormalizer,
                                       ProcessLogManager logManager) {
 
@@ -83,6 +85,10 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
 
         try {
             String runtime = getRuntimeType(payload);
+            if (!projectLoader.supports(runtime)) {
+                throw new ConcordApplicationException("Unsupported runtime type: " + runtime, Response.Status.BAD_REQUEST);
+            }
+
             ProjectLoader.Result result = projectLoader.loadProject(workDir, runtime, importsNormalizer.forProject(projectId),
                     new ProcessImportsListener(processKey));
 
@@ -138,7 +144,7 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
         }
 
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
-        return ProjectLoader.getRuntimeType(workDir, CONCORD_V1_RUNTIME_TYPE);
+        return ProjectLoaderUtils.getRuntimeType(workDir).orElse(CONCORD_V1_RUNTIME_TYPE);
     }
 
     class ProcessImportsListener implements ImportsListener {

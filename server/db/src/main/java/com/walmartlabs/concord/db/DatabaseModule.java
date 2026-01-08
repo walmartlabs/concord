@@ -56,17 +56,15 @@ public class DatabaseModule implements com.google.inject.Module {
                                     MetricRegistry metricRegistry,
                                     Set<DatabaseChangeLogProvider> changeLogProviders) {
 
-        DataSource ds = DataSourceUtils.createDataSource(cfg, "app", cfg.username(), cfg.password(), metricRegistry);
-
         if (migrateDb) {
             changeLogProviders.stream()
                     // can't inject a set of objects with the same qualifier, filter manually
                     .filter(p -> p.getClass().getAnnotation(MainDB.class) != null)
                     .sorted(Comparator.comparingInt(DatabaseChangeLogProvider::order))
-                    .forEach(p -> DataSourceUtils.migrateDb(ds, p, cfg.changeLogParameters()));
+                    .forEach(p -> DataSourceUtils.migrateDb(cfg, p));
         }
 
-        return ds;
+        return DataSourceUtils.createDataSource(cfg, "app", cfg.username(), cfg.password(), metricRegistry);
     }
 
     @Provides

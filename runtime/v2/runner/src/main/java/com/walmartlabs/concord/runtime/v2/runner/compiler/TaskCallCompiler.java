@@ -62,7 +62,7 @@ public final class TaskCallCompiler implements StepCompiler<TaskCall> {
             if (options.out() != null) {
                 out = Collections.singletonList(options.out());
             }
-            cmd = LoopWrapper.of(context, cmd, loop, out, options.outExpr(), step);
+            cmd = LoopWrapper.of(context, cmd, loop, out, options.outExpr(), null, step);
         }
 
         List<Step> errorSteps = options.errorSteps();

@@ -22,7 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
 
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.Method;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;

@@ -38,6 +38,7 @@ public class ApiKeyModule implements Module {
         newSetBinder(binder, BackgroundTask.class).addBinding().to(ApiKeyLoader.class);
 
         bindJaxRsResource(binder, ApiKeyResource.class);
+        bindJaxRsResource(binder, ApiKeyResourceV2.class);
 
         bindSingletonScheduledTask(binder, ApiKeyCleaner.class);
         bindSingletonScheduledTask(binder, ApiKeyExpirationNotifier.class);

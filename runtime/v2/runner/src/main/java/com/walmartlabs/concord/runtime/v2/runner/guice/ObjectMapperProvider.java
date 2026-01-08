@@ -29,7 +29,6 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 @Named
-@Singleton
 public class ObjectMapperProvider implements Provider<ObjectMapper> {
 
     private static final ObjectMapper instance;
@@ -42,12 +41,8 @@ public class ObjectMapperProvider implements Provider<ObjectMapper> {
         instance = om;
     }
 
-    public static ObjectMapper getInstance() {
-        return instance;
-    }
-
     @Override
     public ObjectMapper get() {
-        return instance;
+        return instance.copy();
     }
 }

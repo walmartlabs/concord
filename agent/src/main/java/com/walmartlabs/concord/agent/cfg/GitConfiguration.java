@@ -21,15 +21,22 @@ package com.walmartlabs.concord.agent.cfg;
  */
 
 import com.typesafe.config.Config;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
+import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
 
 import javax.inject.Inject;
 import java.time.Duration;
+import java.util.List;
+import java.util.Optional;
 
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
+import static com.walmartlabs.concord.common.cfg.MappingAuthConfig.assertBaseUrlPattern;
 
-public class GitConfiguration {
+public class GitConfiguration implements OauthTokenConfig {
 
     private final String token;
+    private final String oauthUsername;
+    private final String oauthUrlPattern;
     private final boolean shallowClone;
     private final boolean checkAlreadyFetched;
     private final Duration defaultOperationTimeout;
@@ -39,10 +46,13 @@ public class GitConfiguration {
     private final Duration sshTimeout;
     private final int sshTimeoutRetryCount;
     private final boolean skip;
+    private final List<? extends Config> authConfigs;
 
     @Inject
     public GitConfiguration(Config cfg) {
         this.token = getStringOrDefault(cfg, "git.oauth", () -> null);
+        this.oauthUsername = getStringOrDefault(cfg, "git.oauthUsername", () -> null);
+        this.oauthUrlPattern = getStringOrDefault(cfg, "git.oauthUrlPattern", () -> null);
         this.shallowClone = cfg.getBoolean("git.shallowClone");
         this.checkAlreadyFetched = cfg.getBoolean("git.checkAlreadyFetched");
         this.defaultOperationTimeout = cfg.getDuration("git.defaultOperationTimeout");
@@ -52,10 +62,22 @@ public class GitConfiguration {
         this.sshTimeout = cfg.getDuration("git.sshTimeout");
         this.sshTimeoutRetryCount = cfg.getInt("git.sshTimeoutRetryCount");
         this.skip = cfg.getBoolean("git.skip");
+        this.authConfigs = cfg.getConfigList("git.systemAuth");
     }
 
-    public String getToken() {
-        return token;
+    @Override
+    public Optional<String> getOauthToken() {
+        return Optional.ofNullable(token);
+    }
+
+    @Override
+    public Optional<String> getOauthUsername() {
+        return Optional.ofNullable(oauthUsername);
+    }
+
+    @Override
+    public Optional<String> getOauthUrlPattern() {
+        return Optional.ofNullable(oauthUrlPattern);
     }
 
     public boolean isShallowClone() {
@@ -92,5 +114,46 @@ public class GitConfiguration {
 
     public boolean isSkip() {
         return skip;
+    }
+
+    public List<MappingAuthConfig> getSystemAuth() {
+        return authConfigs.stream()
+                .map(o -> {
+                    AuthSource type = AuthSource.valueOf(o.getString("type").toUpperCase());
+
+                    return (AuthConfig) switch (type) {
+                        case OAUTH_TOKEN -> OauthConfig.from(o);
+                    };
+                })
+                .map(AuthConfig::toGitAuth)
+                .toList();
+    }
+
+    enum AuthSource {
+        OAUTH_TOKEN
+    }
+
+    public interface AuthConfig {
+        MappingAuthConfig toGitAuth();
+    }
+
+    public record OauthConfig(String id, String urlPattern, String token) implements AuthConfig {
+
+        static OauthConfig from(Config cfg) {
+            return new OauthConfig(
+                    getStringOrDefault(cfg, "id", () -> "system-oauth-token"),
+                    cfg.getString("urlPattern"),
+                    cfg.getString("token")
+            );
+        }
+
+        @Override
+        public MappingAuthConfig.OauthAuthConfig toGitAuth() {
+            return MappingAuthConfig.OauthAuthConfig.builder()
+                    .id(this.id())
+                    .urlPattern(assertBaseUrlPattern(this.urlPattern()))
+                    .token(this.token())
+                    .build();
+        }
     }
 }

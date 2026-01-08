@@ -49,9 +49,8 @@ public class DatabaseModule extends AbstractModule {
                                  @NodeRosterDB DatabaseChangeLogProvider changeLogProvider,
                                  @MainDB DatabaseConfiguration mainCfg) {
 
-        DataSource ds = DataSourceUtils.createDataSource(cfg, "noderoster", cfg.username(), cfg.password(), metricRegistry);
-        DataSourceUtils.migrateDb(ds, changeLogProvider, mainCfg.changeLogParameters());
-        return ds;
+        DataSourceUtils.migrateDb(mainCfg, changeLogProvider);
+        return DataSourceUtils.createDataSource(cfg, "noderoster", cfg.username(), cfg.password(), metricRegistry);
     }
 
     @Provides

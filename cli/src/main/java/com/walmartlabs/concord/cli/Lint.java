@@ -23,13 +23,15 @@ package com.walmartlabs.concord.cli;
 import com.walmartlabs.concord.cli.lint.*;
 import com.walmartlabs.concord.cli.lint.LintResult.Type;
 import com.walmartlabs.concord.cli.runner.CliImportsListener;
+import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.NoopImportManager;
-import com.walmartlabs.concord.process.loader.ProjectLoader;
-import com.walmartlabs.concord.process.loader.ProjectLoader.ProjectLoaderConfiguration;
-import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
-import com.walmartlabs.concord.process.loader.model.SourceMap;
+import com.walmartlabs.concord.process.loader.DelegatingProjectLoader;
+import com.walmartlabs.concord.runtime.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.model.SourceMap;
+import com.walmartlabs.concord.runtime.v1.ProjectLoaderV1;
+import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
+import org.fusesource.jansi.Ansi;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Help.Ansi;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -41,7 +43,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
+
+import static org.fusesource.jansi.Ansi.ansi;
 
 @Command(name = "lint", description = "Parse and validate Concord YAML files")
 public class Lint implements Callable<Integer> {
@@ -66,7 +71,10 @@ public class Lint implements Callable<Integer> {
             throw new IllegalArgumentException("Not a directory: " + targetDir);
         }
 
-        ProjectLoader loader = new ProjectLoader(ProjectLoaderConfiguration.defaultConfiguration(), new NoopImportManager());
+        ImportManager importManager = new NoopImportManager();
+        ProjectLoaderV1 v1 = new ProjectLoaderV1(importManager);
+        ProjectLoaderV2 v2 = new ProjectLoaderV2(importManager);
+        DelegatingProjectLoader loader = new DelegatingProjectLoader(Set.of(v1, v2));
         ProcessDefinition pd = loader.loadProject(targetDir, new DummyImportsNormalizer(), verbose ? new CliImportsListener() : null).projectDefinition();
 
         List<LintResult> lintResults = new ArrayList<>();
@@ -91,9 +99,9 @@ public class Lint implements Callable<Integer> {
         println();
         boolean hasErrors = hasErrors(lintResults);
         if (hasErrors) {
-            println("@|red,bold INVALID|@");
+            System.out.println(ansi().fgBrightRed().bold().a("INVALID").reset());
         } else {
-            println("@|green,bold VALID|@");
+            System.out.println(ansi().fgBrightGreen().bold().a("VALID").reset());
         }
 
         return hasErrors ? 10 : 0;
@@ -108,14 +116,14 @@ public class Lint implements Callable<Integer> {
 
     private void print(List<LintResult> results) {
         for (LintResult r : results) {
-            StringBuilder msg = new StringBuilder();
+            Ansi msg = ansi();
             switch (r.getType()) {
                 case ERROR: {
-                    msg.append("@|red ERROR:|@ ");
+                    ansi().fgBrightRed().a("ERROR:").reset();
                     break;
                 }
                 case WARNING: {
-                    msg.append("@|yellow WARN:|@ ");
+                    ansi().fgBrightYellow().a("WARN:").reset();
                     break;
                 }
                 default:
@@ -124,12 +132,12 @@ public class Lint implements Callable<Integer> {
 
             SourceMap sm = r.getSourceMap();
             if (sm != null) {
-                msg.append("@ [").append(sm.source()).append("] line: ").append(sm.line()).append(", col: ").append(sm.column());
+                msg.a("@ [").a(sm.source()).a("] line: ").a(sm.line()).a(", col: ").a(sm.column());
             }
 
             msg.append("\n\t").append(r.getMessage());
 
-            println(msg.toString());
+            println(msg);
             println("------------------------------------------------------------");
         }
     }
@@ -140,12 +148,8 @@ public class Lint implements Callable<Integer> {
         println("Result: " + errors + " error(s), " + warns + " warning(s)");
     }
 
-    private void println(String s) {
-        Ansi ansi = spec.commandLine()
-                .getColorScheme()
-                .ansi();
-
-        System.out.println(ansi.string(s));
+    private void println(Object o) {
+        System.out.println(o);
     }
 
     private void println() {

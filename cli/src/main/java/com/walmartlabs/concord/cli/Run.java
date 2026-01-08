@@ -24,29 +24,33 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.google.inject.Injector;
+import com.walmartlabs.concord.cli.CliConfig.CliConfigContext;
 import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.FileVisitor;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
 import com.walmartlabs.concord.imports.*;
-import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
-import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.model.EffectiveConfiguration;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
-import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.model.Flow;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.Profile;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
+import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelExecutionException;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
+import com.walmartlabs.concord.runtime.v2.wrapper.ProcessDefinitionV2;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelExecutionException;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -63,7 +67,9 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
-@Command(name = "run", description = "Run the current directory as a Concord process")
+import static org.fusesource.jansi.Ansi.ansi;
+
+@Command(name = "run", description = "Execute flows locally. Sends the specified <workDir> as the process payload.")
 public class Run implements Callable<Integer> {
 
     @Spec
@@ -71,6 +77,9 @@ public class Run implements Callable<Integer> {
 
     @Option(names = {"-h", "--help"}, usageHelp = true, description = "display the command's help message")
     boolean helpRequested = false;
+
+    @Option(names = {"--context"}, description = "Configuration context to use")
+    String context = "default";
 
     @Option(names = {"-e", "--extra-vars"}, description = "additional process variables")
     Map<String, Object> extraVars = new LinkedHashMap<>();
@@ -88,13 +97,13 @@ public class Run implements Callable<Integer> {
     Path repoCacheDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("repoCache");
 
     @Option(names = {"--secret-dir"}, description = "secret store dir")
-    Path secretStoreDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("secrets");
+    Path secretStoreDir;
 
     @Option(names = {"--vault-dir"}, description = "vault dir")
-    Path vaultDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("vaults");
+    Path vaultDir;
 
     @Option(names = {"--vault-id"}, description = "vault id")
-    String vaultId = "default";
+    String vaultId;
 
     @Option(names = {"--imports-source"}, description = "default imports source")
     String importsSource = "https://github.com";
@@ -134,6 +143,9 @@ public class Run implements Callable<Integer> {
     public Integer call() throws Exception {
         Verbosity verbosity = new Verbosity(this.verbosity);
 
+        CliConfigContext cliConfigContext = CliConfig.load(verbosity, context,
+                new CliConfig.Overrides(secretStoreDir, vaultDir, vaultId));
+
         sourceDir = sourceDir.normalize().toAbsolutePath();
         Path targetDir;
 
@@ -150,11 +162,11 @@ public class Run implements Callable<Integer> {
                 if (verbosity.verbose()) {
                     System.out.println("Cleaning target directory");
                 }
-                IOUtils.deleteRecursively(targetDir);
+                PathUtils.deleteRecursively(targetDir);
             }
 
             // copy everything into target except target
-            IOUtils.copy(sourceDir, targetDir, "^target$", new CopyNotifier(verbosity.verbose() ? 0 : 100), StandardCopyOption.REPLACE_EXISTING);
+            PathUtils.copy(sourceDir, targetDir, "^target$", new CopyNotifier(verbosity.verbose() ? 0 : 100), StandardCopyOption.REPLACE_EXISTING);
         } else {
             throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
         }
@@ -195,7 +207,7 @@ public class Run implements Callable<Integer> {
         }
 
         // "deps" are the "dependencies" of the last profile in the list of active profiles (if present)
-        Map<String, Object> overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), profiles);
+        Map<String, Object> overlayCfg = EffectiveConfiguration.getEffectiveConfiguration(new ProcessDefinitionV2(processDefinition), profiles);
         List<String> deps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
 
         // "extraDependencies" are additive: ALL extra dependencies from ALL ACTIVE profiles are added to the list
@@ -253,7 +265,7 @@ public class Run implements Callable<Integer> {
             return 0;
         }
 
-        System.out.println("Starting...");
+        System.out.println(ansi().fgBrightGreen().a("Starting...").reset());
 
         if (dryRunMode) {
             System.out.println("Running in the dry-run mode.");
@@ -269,7 +281,7 @@ public class Run implements Callable<Integer> {
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(secretStoreDir, targetDir, defaultTaskVars, new VaultProvider(vaultDir, vaultId), dependencyManager, verbosity))
+                new CliServicesModule(cliConfigContext, targetDir, defaultTaskVars, dependencyManager, verbosity))
                 .create();
 
         // Just to notify listeners
@@ -291,7 +303,7 @@ public class Run implements Callable<Integer> {
             return 1;
         }
 
-        System.out.println("...done!");
+        System.out.println(ansi().fgBrightGreen().a("...done!").reset());
 
         return 0;
     }
@@ -405,11 +417,12 @@ public class Run implements Callable<Integer> {
         return DependencyManagerConfiguration.of(depsCacheDir);
     }
 
+
     private static void dumpArguments(Map<String, Object> args) {
         ObjectMapper om = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
         try {
-            System.out.println("Process arguments:");
-            System.out.println(om.writerWithDefaultPrettyPrinter().writeValueAsString(args));
+            System.out.print(ansi().fgYellow().a("\nProcess arguments:\n\t"));
+            System.out.println(om.writerWithDefaultPrettyPrinter().writeValueAsString(args).replace("\n", "\n\t"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -417,10 +430,10 @@ public class Run implements Callable<Integer> {
 
     private static void logException(Verbosity verbosity, Exception e) {
         if (verbosity.verbose()) {
-            System.err.print("Error: ");
+            System.err.print(ansi().fgBrightRed().a("Error: "));
             e.printStackTrace(System.err);
         } else {
-            System.err.println("Error: " + e.getMessage());
+            System.err.println("Error: " + e.getMessage()); // TODO
         }
     }
 
@@ -441,7 +454,7 @@ public class Run implements Callable<Integer> {
             }
 
             if (currentCount == notifyOnCount) {
-                System.out.println("Copying files into the target directory...");
+                System.out.println(ansi().fgBrightBlack().a("Copying files into ./target/ directory..."));
                 currentCount = -1;
                 return;
             }

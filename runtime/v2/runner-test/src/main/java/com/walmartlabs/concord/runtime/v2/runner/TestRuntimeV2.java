@@ -26,7 +26,7 @@ import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import com.walmartlabs.concord.client2.ApiClient;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.runtime.common.FormService;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
@@ -46,10 +46,10 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
-import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
-import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.*;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelExecutionException;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
+import com.walmartlabs.concord.runtime.v2.sdk.SensitiveDataHolder;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
@@ -71,6 +71,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.walmartlabs.concord.process.loader.StandardRuntimeTypes.PROJECT_ROOT_FILE_NAMES;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -89,6 +90,8 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
 
     protected TestCheckpointUploader checkpointService;
 
+    protected boolean skipSerializationAssert = false;
+
     protected byte[] lastLog;
     protected byte[] allLogs;
 
@@ -103,11 +106,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
 
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
-        boolean ignoreSerializationAssert = context.getTestMethod()
-                .filter(m -> m.getAnnotation(IgnoreSerializationAssert.class) != null)
-                .isPresent();
-
-        setUp(!ignoreSerializationAssert);
+        setUp();
 
         this.testClass = context.getTestClass().orElseThrow(() -> new IllegalStateException("No test class found"));
     }
@@ -154,11 +153,11 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
         assertNotNull(res, "Resource not found: " + resource);
 
         Path src = Paths.get(res.toURI());
-        IOUtils.copy(src, workDir);
+        PathUtils.copy(src, workDir);
     }
 
     public ImmutableProcessConfiguration.Builder cfgFromDeployment() throws IOException {
-        for (String fileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
+        for (String fileName : PROJECT_ROOT_FILE_NAMES) {
             Path p = workDir.resolve(fileName);
             if (Files.exists(p)) {
                 var result = new ProjectLoaderV2((imports, dest, listener) -> List.of()).loadFromFile(p);
@@ -354,7 +353,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
         return cnt;
     }
 
-    private void setUp(boolean withSerializationAssert) throws IOException {
+    private void setUp() throws IOException {
         workDir = Files.createTempDirectory("test");
 
         instanceId = UUID.randomUUID();
@@ -402,25 +401,32 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
                 executionListeners.addBinding().toInstance(new ExecutionListener() {
                     @Override
                     public void beforeProcessStart(Runtime runtime, State state) {
-                        SensitiveDataHolder.getInstance().get().clear();
+                        runtime.getService(SensitiveDataHolder.class).get().clear();
                     }
                 });
                 executionListeners.addBinding().to(StackTraceCollector.class);
 
-                if (withSerializationAssert) {
-                    executionListeners.addBinding().toInstance(new ExecutionListener() {
-                        @Override
-                        public Result afterCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
-                            if (cmd instanceof BlockCommand
-                                || cmd instanceof ParallelCommand) {
-                                return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
-                            }
+                executionListeners.addBinding().toInstance(new ExecutionListener() {
+                    @Override
+                    public Result beforeCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
+                        if (cmd instanceof ForkCommand) {
+                            skipSerializationAssert = true;
+                        }
+                        return ExecutionListener.super.beforeCommand(runtime, vm, state, threadId, cmd);
+                    }
 
-                            assertTrue(isSerializable(state), "Non serializable state after: " + cmd);
+                    @Override
+                    public Result afterCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
+                        if (cmd instanceof BlockCommand
+                            || cmd instanceof ParallelCommand
+                            || skipSerializationAssert) {
                             return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
                         }
-                    });
-                }
+
+                        assertTrue(isSerializable(state), "Non serializable state after: " + cmd);
+                        return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
+                    }
+                });
             }
         };
 
@@ -429,7 +435,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
 
     private void tearDown() throws IOException {
         if (workDir != null) {
-            IOUtils.deleteRecursively(workDir);
+            PathUtils.deleteRecursively(workDir);
         }
 
         processConfiguration = null;

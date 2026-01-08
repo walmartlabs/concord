@@ -20,19 +20,13 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * =====
  */
 
-import java.lang.reflect.Method;
+import com.walmartlabs.concord.runtime.v2.sdk.ELFunction;
+
 import java.util.UUID;
 
 public final class UuidFunction {
 
-    public static Method getMethod() {
-        try {
-            return UuidFunction.class.getMethod("uuid");
-        } catch (Exception e) {
-            throw new RuntimeException("Method not found");
-        }
-    }
-
+    @ELFunction
     public static String uuid() {
         return UUID.randomUUID().toString();
     }

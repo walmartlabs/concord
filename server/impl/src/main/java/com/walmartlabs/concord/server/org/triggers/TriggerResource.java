@@ -22,8 +22,9 @@ package com.walmartlabs.concord.server.org.triggers;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.imports.ImportsListener;
+import com.walmartlabs.concord.process.loader.DelegatingProjectLoader;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
-import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.model.ProcessDefinition;
 import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
@@ -63,7 +64,7 @@ public class TriggerResource implements Resource {
     private final ProjectAccessManager projectAccessManager;
     private final OrganizationManager orgManager;
     private final TriggerManager triggerManager;
-    private final ProjectLoader projectLoader;
+    private final DelegatingProjectLoader projectLoader;
     private final ImportsNormalizerFactory importsNormalizerFactory;
 
     private final ProjectRepositoryManager projectRepositoryManager;
@@ -75,7 +76,7 @@ public class TriggerResource implements Resource {
                            ProjectAccessManager projectAccessManager,
                            OrganizationManager orgManager,
                            TriggerManager triggerManager,
-                           ProjectLoader projectLoader,
+                           DelegatingProjectLoader projectLoader,
                            ImportsNormalizerFactory importsNormalizerFactory,
                            ProjectRepositoryManager projectRepositoryManager) {
 

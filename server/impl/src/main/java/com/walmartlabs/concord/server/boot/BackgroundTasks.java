@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server.boot;
  */
 
 import com.walmartlabs.concord.server.sdk.BackgroundTask;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.Set;
@@ -28,6 +30,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class BackgroundTasks {
+
+    private static final Logger log = LoggerFactory.getLogger(BackgroundTasks.class);
 
     private final Set<BackgroundTask> tasks;
     private final Lock controlMutex = new ReentrantLock();
@@ -39,6 +43,7 @@ public class BackgroundTasks {
 
     public void start() {
         controlMutex.lock();
+        log.info("start -> starting {} task(s)", tasks.size());
         try {
             tasks.forEach(BackgroundTask::start);
         } finally {

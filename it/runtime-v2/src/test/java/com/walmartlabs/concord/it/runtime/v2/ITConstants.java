@@ -20,28 +20,9 @@ package com.walmartlabs.concord.it.runtime.v2;
  * =====
  */
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-
 public final class ITConstants {
 
-    public static final String PROJECT_VERSION;
     public static final long DEFAULT_TEST_TIMEOUT = 120000;
-
-    static {
-        PROJECT_VERSION = getProperties("version.properties").getProperty("project.version");
-    }
-
-    private static Properties getProperties(String path) {
-        try (InputStream in = ClassLoader.getSystemResourceAsStream(path)) {
-            Properties props = new Properties();
-            props.load(in);
-            return props;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     private ITConstants() {
     }

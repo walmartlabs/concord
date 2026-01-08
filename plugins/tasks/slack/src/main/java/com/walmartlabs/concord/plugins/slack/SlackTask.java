@@ -56,7 +56,7 @@ public class SlackTask implements Task {
                      boolean ignoreErrors) {
 
         SlackConfiguration slackCfg = SlackConfiguration.from(SlackConfigurationParams.of(new ContextVariables(ctx), defaults(ctx)));
-        delegate.sendMessage(slackCfg, channelId, ts, false, text, iconEmoji, username, attachments, ignoreErrors);
+        delegate.sendMessage(slackCfg, channelId, ts, false, text, iconEmoji, username, attachments, null, ignoreErrors);
     }
 
     public void call(@InjectVariable("context") Context ctx,
@@ -65,7 +65,7 @@ public class SlackTask implements Task {
                      boolean ignoreErrors) {
 
         SlackConfiguration slackCfg = SlackConfiguration.from(SlackConfigurationParams.of(new ContextVariables(ctx), defaults(ctx)));
-        delegate.sendMessage(slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments, ignoreErrors);
+        delegate.sendMessage(slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments, null, ignoreErrors);
     }
 
     public void sendJsonMessage(@InjectVariable("context") Context ctx, SlackConfiguration slackCfg, String json, boolean ignoreErrors) {
@@ -88,7 +88,7 @@ public class SlackTask implements Task {
                             Collection<Object> attachments,
                             boolean ignoreErrors) {
 
-        Map<String, Object> result = delegate.sendMessage(slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments, ignoreErrors);
+        Map<String, Object> result = delegate.sendMessage(slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments, null, ignoreErrors);
         ctx.setVariable("result", result);
     }
 

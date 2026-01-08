@@ -24,7 +24,7 @@ import com.google.common.hash.HashCode;
 import com.walmartlabs.concord.agent.ExecutionException;
 import com.walmartlabs.concord.agent.Utils;
 import com.walmartlabs.concord.agent.cfg.PreForkConfiguration;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,7 +166,7 @@ public class ProcessPool {
 
     private static void cleanup(ProcessEntry process) {
         try {
-            IOUtils.deleteRecursively(process.workDir);
+            PathUtils.deleteRecursively(process.workDir);
         } catch (IOException e) {
             log.info("cleanup ['{}'] -> error: {}", process.workDir, e.getMessage());
             // ignore

@@ -1,0 +1,10 @@
+contexts:
+  default:
+    secrets:
+      vault:
+        id: "foo"
+        dir: "qux"
+  another:
+    secrets:
+      vault:
+        id: "bar"

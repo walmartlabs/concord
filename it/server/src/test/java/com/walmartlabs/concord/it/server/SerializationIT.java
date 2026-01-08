@@ -38,8 +38,7 @@ public class SerializationIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        byte[] payload = archive(SerializationIT.class.getResource("serialization").toURI(),
-                ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(SerializationIT.class.getResource("serialization").toURI());
 
         // ---
 

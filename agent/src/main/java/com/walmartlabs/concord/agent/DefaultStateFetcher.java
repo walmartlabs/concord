@@ -22,7 +22,7 @@ package com.walmartlabs.concord.agent;
 
 import com.walmartlabs.concord.client2.ClientUtils;
 import com.walmartlabs.concord.client2.ProcessApi;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 
 import javax.inject.Inject;
 import java.io.InputStream;
@@ -40,7 +40,7 @@ public class DefaultStateFetcher implements StateFetcher {
     @Override
     public void downloadState(JobRequest job) throws Exception {
         try (InputStream is = ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY, () -> processApi.downloadState(job.getInstanceId()))){
-            IOUtils.unzip(is, job.getPayloadDir(), StandardCopyOption.REPLACE_EXISTING);
+            ZipUtils.unzip(is, job.getPayloadDir(), StandardCopyOption.REPLACE_EXISTING);
         }
     }
 }

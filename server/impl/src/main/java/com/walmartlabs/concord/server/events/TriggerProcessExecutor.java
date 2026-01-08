@@ -35,6 +35,7 @@ import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.SecurityUtils;
+import com.walmartlabs.concord.server.security.UserSecurityContext;
 import com.walmartlabs.concord.server.user.UserEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +64,7 @@ public class TriggerProcessExecutor {
     private final ProcessManager processManager;
     private final RepositoryDao repositoryDao;
     private final ProjectDao projectDao;
-    private final ProcessSecurityContext processSecurityContext;
+    private final UserSecurityContext userSecurityContext;
     private final ExecutorService executor;
 
     @Inject
@@ -72,14 +73,14 @@ public class TriggerProcessExecutor {
                                   ProcessManager processManager,
                                   RepositoryDao repositoryDao,
                                   ProjectDao projectDao,
-                                  ProcessSecurityContext processSecurityContext) {
+                                  UserSecurityContext userSecurityContext) {
 
         this.eventsCfg = eventsCfg;
         this.triggersCfg = triggersCfg;
         this.processManager = processManager;
         this.repositoryDao = repositoryDao;
         this.projectDao = projectDao;
-        this.processSecurityContext = processSecurityContext;
+        this.userSecurityContext = userSecurityContext;
         this.executor = createExecutor(eventsCfg.getWorkerThreads());
     }
 
@@ -209,7 +210,7 @@ public class TriggerProcessExecutor {
 
         PartialProcessKey processKey = PartialProcessKey.create();
 
-        processSecurityContext.runAs(initiator.getId(), () -> {
+        userSecurityContext.runAs(initiator.getId(), () -> {
             Payload payload = PayloadBuilder.start(processKey)
                     .initiator(initiator.getId(), initiator.getName())
                     .organization(orgId)

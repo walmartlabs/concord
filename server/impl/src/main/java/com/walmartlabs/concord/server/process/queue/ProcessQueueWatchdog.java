@@ -37,6 +37,7 @@ import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
+import com.walmartlabs.concord.server.security.UserSecurityContext;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.jooq.*;
 import org.slf4j.Logger;
@@ -111,7 +112,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     private final PayloadManager payloadManager;
     private final ProcessManager processManager;
     private final ProcessQueueManager queueManager;
-    private final ProcessSecurityContext processSecurityContext;
+    private final UserSecurityContext userSecurityContext;
 
     @Inject
     public ProcessQueueWatchdog(ProcessWatchdogConfiguration cfg,
@@ -123,7 +124,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                                 PayloadManager payloadManager,
                                 ProcessManager processManager,
                                 ProcessQueueManager queueManager,
-                                ProcessSecurityContext processSecurityContext) {
+                                UserSecurityContext userSecurityContext) {
         this.cfg = cfg;
 
         this.queueDao = queueDao;
@@ -134,7 +135,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         this.payloadManager = payloadManager;
         this.processManager = processManager;
         this.queueManager = queueManager;
-        this.processSecurityContext = processSecurityContext;
+        this.userSecurityContext = userSecurityContext;
     }
 
     @Override
@@ -184,7 +185,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                         parent.initiatorId, username, parent.projectId, req, null,
                         null, parent.imports);
 
-                processSecurityContext.runAs(parent.initiatorId, () -> processManager.startFork(payload));
+                userSecurityContext.runAs(parent.initiatorId, () -> processManager.startFork(payload));
 
                 logManager.info(parent.processKey, "{} started: {}", toString(entry.handlerKind), LogTags.instanceId(payload.getProcessKey().getInstanceId()));
 

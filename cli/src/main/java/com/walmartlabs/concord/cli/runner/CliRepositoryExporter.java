@@ -20,17 +20,22 @@ package com.walmartlabs.concord.cli.runner;
  * =====
  */
 
+import com.walmartlabs.concord.common.AuthTokenProvider;
+import com.walmartlabs.concord.common.ExternalAuthToken;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.RepositoryExporter;
 import com.walmartlabs.concord.repository.*;
 import com.walmartlabs.concord.sdk.Secret;
 
+import javax.annotation.Nullable;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class CliRepositoryExporter implements RepositoryExporter {
 
@@ -50,7 +55,6 @@ public class CliRepositoryExporter implements RepositoryExporter {
         this.repoCacheDir = repoCacheDir;
 
         GitClientConfiguration clientCfg = GitClientConfiguration.builder()
-                .oauthToken(null)
                 .defaultOperationTimeout(DEFAULT_OPERATION_TIMEOUT)
                 .fetchTimeout(FETCH_TIMEOUT)
                 .httpLowSpeedLimit(HTTP_LOW_SPEED_LIMIT)
@@ -59,7 +63,19 @@ public class CliRepositoryExporter implements RepositoryExporter {
                 .sshTimeoutRetryCount(SSH_TIMEOUT_RETRY_COUNT)
                 .build();
 
-        this.providers = new RepositoryProviders(Collections.singletonList(new GitCliRepositoryProvider(clientCfg)));
+        AuthTokenProvider authProvider = new AuthTokenProvider() {
+            @Override
+            public boolean supports(URI repo, @Nullable Secret secret) {
+                return false;
+            }
+
+            @Override
+            public Optional<ExternalAuthToken> getToken(URI repo, @Nullable Secret secret) throws RepositoryException {
+                throw new UnsupportedOperationException("Not supported");
+            }
+        };
+
+        this.providers = new RepositoryProviders(List.of(new GitCliRepositoryProvider(clientCfg, authProvider)));
     }
 
     @Override

@@ -20,6 +20,8 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.model.Location;
+
 public class FormCall extends AbstractStep<FormCallOptions> {
 
     private static final long serialVersionUID = 1L;

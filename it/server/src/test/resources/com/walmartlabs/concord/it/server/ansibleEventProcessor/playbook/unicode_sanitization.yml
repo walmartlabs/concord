@@ -1,0 +1,7 @@
+---
+- hosts: local
+  gather_facts: false
+  tasks:
+    - name: "Print some non-printable unicode characters"
+      ansible.builtin.shell:
+        cmd: bash -c 'echo -ne "aNul\x00\naSoh\x01\nNotNul\\\\u0000\n"'

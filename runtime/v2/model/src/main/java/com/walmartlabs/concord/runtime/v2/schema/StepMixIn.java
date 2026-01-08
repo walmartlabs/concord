@@ -23,7 +23,7 @@ package com.walmartlabs.concord.runtime.v2.schema;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.walmartlabs.concord.runtime.v2.model.Location;
+import com.walmartlabs.concord.runtime.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 
 @JsonTypeInfo(

@@ -38,11 +38,15 @@ import java.util.stream.Collectors;
 
 public abstract class LoopWrapper implements Command {
 
-    public static LoopWrapper of(CompilerContext ctx, Command cmd, Loop withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions, Step step) {
+    public static LoopWrapper of(CompilerContext ctx, Command cmd, Loop withItems,
+                                 Collection<String> outVariables,
+                                 Map<String, Serializable> outMapping,
+                                 String outExpression,
+                                 Step step) {
         Collection<String> out = Collections.emptyList();
-        if (!outExpressions.isEmpty()) {
+        if (outMapping != null && !outMapping.isEmpty()) {
             // serializable
-            out = new HashSet<>(outExpressions.keySet());
+            out = new HashSet<>(outMapping.keySet());
         } else if (!outVariables.isEmpty()) {
             out = outVariables;
         }
@@ -50,9 +54,9 @@ public abstract class LoopWrapper implements Command {
         Loop.Mode mode = withItems.mode();
         switch (mode) {
             case SERIAL:
-                return new SerialWithItems(cmd, withItems, out, step);
+                return new SerialWithItems(cmd, withItems, out, outExpression, step);
             case PARALLEL:
-                return new ParallelWithItems(ctx, cmd, withItems, out, step);
+                return new ParallelWithItems(ctx, cmd, withItems, out, outExpression, step);
             default:
                 throw new IllegalArgumentException("Unknown withItems mode: " + mode);
         }
@@ -67,13 +71,15 @@ public abstract class LoopWrapper implements Command {
 
     protected final Command cmd;
     protected final Serializable items;
-    protected final Collection<String> outVariables;
+    private final Collection<String> outVariables;
+    protected final String outExpression;
     private final Step step;
 
-    protected LoopWrapper(Command cmd, Serializable items, Collection<String> outVariables, Step step) {
+    protected LoopWrapper(Command cmd, Serializable items, Collection<String> outVariables, String outExpression, Step step) {
         this.cmd = cmd;
         this.items = items;
         this.outVariables = outVariables;
+        this.outExpression = outExpression;
         this.step = step;
     }
 
@@ -116,10 +122,20 @@ public abstract class LoopWrapper implements Command {
             return;
         }
 
-        eval(runtime, state, threadId, ctx, items);
+        Collection<String> effectiveOUtVariables = outVariables;
+        if (outExpression != null) {
+            Object outExpr = ee.eval(ecf.global(ctx), outExpression, Object.class);
+            if (outExpr instanceof List<?> l) {
+                effectiveOUtVariables = l.stream().filter(Objects::nonNull).map(Object::toString).toList();
+            } else if (outExpr instanceof Map<?,?> m) {
+                effectiveOUtVariables = m.keySet().stream().filter(Objects::nonNull).map(Object::toString).toList();
+            }
+        }
+
+        eval(runtime, state, threadId, ctx, items, effectiveOUtVariables);
     }
 
-    protected abstract void eval(Runtime runtime, State state, ThreadId threadId, Context ctx, ArrayList<Serializable> items);
+    protected abstract void eval(Runtime runtime, State state, ThreadId threadId, Context ctx, ArrayList<Serializable> items, Collection<String> outVariables);
 
     private Step getCurrentStep() {
         if (cmd instanceof StepCommand) {
@@ -134,15 +150,10 @@ public abstract class LoopWrapper implements Command {
 
         private final Parallelism parallelism;
 
-        protected ParallelWithItems(CompilerContext ctx, Command cmd, Loop loop, Collection<String> outVariables, Step step) {
-            super(cmd, loop.items(), outVariables, step);
+        protected ParallelWithItems(CompilerContext ctx, Command cmd, Loop loop, Collection<String> outVariables, String outExpression, Step step) {
+            super(cmd, loop.items(), outVariables, outExpression, step);
 
             this.parallelism = processParallelism(ctx, loop);
-        }
-
-        private ParallelWithItems(Command cmd, Serializable items, Collection<String> outVariables, Parallelism parallelism, Step step) {
-            super(cmd, items, outVariables, step);
-            this.parallelism = parallelism;
         }
 
         private static Parallelism processParallelism(CompilerContext ctx, Loop loop) {
@@ -161,7 +172,7 @@ public abstract class LoopWrapper implements Command {
         }
 
         @Override
-        protected void eval(Runtime runtime, State state, ThreadId threadId, Context ctx, ArrayList<Serializable> items) {
+        protected void eval(Runtime runtime, State state, ThreadId threadId, Context ctx, ArrayList<Serializable> items, Collection<String> outVariables) {
             // target frame for out variables
             Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
 
@@ -176,12 +187,12 @@ public abstract class LoopWrapper implements Command {
             List<ArrayList<Serializable>> batches = batches(items, batchSize);
             int itemIndexStart = 0;
             for (ArrayList<Serializable> batch : batches) {
-                evalBatch(itemIndexStart, state, threadId, batch, outVarsAccumulator);
+                evalBatch(itemIndexStart, state, threadId, batch, outVarsAccumulator, outVariables);
                 itemIndexStart += batch.size();
             }
         }
 
-        private void evalBatch(int itemIndexStart, State state, ThreadId threadId, ArrayList<Serializable> items, Map<String, List<Serializable>> outVarsAccumulator) {
+        private void evalBatch(int itemIndexStart, State state, ThreadId threadId, ArrayList<Serializable> items, Map<String, List<Serializable>> outVarsAccumulator, Collection<String> outVariables) {
             Frame frame = state.peekFrame(threadId);
 
             List<Map.Entry<ThreadId, Serializable>> forks = items.stream()
@@ -244,12 +255,12 @@ public abstract class LoopWrapper implements Command {
 
         private static final long serialVersionUID = 1L;
 
-        protected SerialWithItems(Command cmd, Loop loop, Collection<String> outVariables, Step step) {
-            super(cmd, loop.items(), outVariables, step);
+        protected SerialWithItems(Command cmd, Loop loop, Collection<String> outVariables, String outVariablesExpression, Step step) {
+            super(cmd, loop.items(), outVariables, outVariablesExpression, step);
         }
 
         @Override
-        protected void eval(Runtime runtime, State state, ThreadId threadId, Context ctx, ArrayList<Serializable> items) {
+        protected void eval(Runtime runtime, State state, ThreadId threadId, Context ctx, ArrayList<Serializable> items, Collection<String> outVariables) {
             Frame loop = Frame.builder()
                     .nonRoot()
                     .build();
