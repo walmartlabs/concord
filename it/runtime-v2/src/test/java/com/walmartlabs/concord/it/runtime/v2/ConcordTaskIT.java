@@ -27,6 +27,7 @@ import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.parallel.Execution;
 
 import java.util.Base64;
 import java.util.List;
@@ -34,8 +35,12 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
+@Execution(SAME_THREAD) // TODO address parallelism issues
 public class ConcordTaskIT extends AbstractTest {
 
     @RegisterExtension

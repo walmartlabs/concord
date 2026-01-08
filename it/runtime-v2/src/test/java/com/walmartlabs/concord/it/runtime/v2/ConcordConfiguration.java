@@ -76,11 +76,12 @@ public final class ConcordConfiguration {
                         }
                     }
                     concord-agent {
+                        workersCount = 8
                         dependencyResolveTimeout = "30 seconds"
                         logMaxDelay = "250 milliseconds"
                         pollInterval = "250 milliseconds"
                         prefork {
-                            enabled = true
+                            enabled = false
                         }
                     }
                     """.replaceAll("%%sharedDir%%", sharedDir().toString()));

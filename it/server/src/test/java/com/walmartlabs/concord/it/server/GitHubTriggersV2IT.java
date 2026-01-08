@@ -23,6 +23,8 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import javax.naming.NameAlreadyBoundException;
 import javax.naming.directory.*;
@@ -33,7 +35,9 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
+@Execution(SAME_THREAD) // TODO address parallelism issues
 public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
 
     @AfterEach
