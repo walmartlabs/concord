@@ -114,7 +114,7 @@
         <reactive.streams.version>1.0.3</reactive.streams.version>
         <reflections.version>0.9.11</reflections.version>
         <resteasy.version>4.7.9.Final</resteasy.version>
-        <selenium.version>4.8.1</selenium.version>
+        <selenium.version>4.27.0</selenium.version>
         <servlet.version>4.0.1</servlet.version>
         <shiro.version>2.0.2</shiro.version>
         <siesta.version>2.3.2</siesta.version>
