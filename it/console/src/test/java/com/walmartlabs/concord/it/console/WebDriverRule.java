@@ -116,7 +116,7 @@ public class WebDriverRule implements BeforeEachCallback, TestExecutionException
     }
 
     @Override
-    public void afterEach(ExtensionContext context) throws Exception {
+    public void afterEach(ExtensionContext context) {
         tearDown();
     }
 
