@@ -1,5 +1,20 @@
 # Change Log
 
+## [2.35.1] - TBD
+
+### Changed
+
+- runtime-v2: add 'name' attribute to script call in schema
+([#1248](https://github.com/walmartlabs/concord/pull/1248));
+- common, server: skip rate limit metrics for null auth id
+([#1249](https://github.com/walmartlabs/concord/pull/1249));
+- concord-console2: replace some saga usage with hooks
+([#1252](https://github.com/walmartlabs/concord/pull/1252));
+- project: update docker-maven-plugin version
+([#1253](https://github.com/walmartlabs/concord/pull/1254)).
+
+
+
 ## [2.35.0] - 2025-12-29
 
 ### Changed
