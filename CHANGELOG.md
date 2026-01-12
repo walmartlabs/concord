@@ -8,6 +8,8 @@
 ([#1248](https://github.com/walmartlabs/concord/pull/1248));
 - common, server: skip rate limit metrics for null auth id
 ([#1249](https://github.com/walmartlabs/concord/pull/1249));
+- concord-console2: replace some saga usage with hooks
+([#1252](https://github.com/walmartlabs/concord/pull/1252));
 - project: update docker-maven-plugin version
 ([#1253](https://github.com/walmartlabs/concord/pull/1254)).
 
