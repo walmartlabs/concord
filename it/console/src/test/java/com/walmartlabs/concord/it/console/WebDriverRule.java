@@ -31,8 +31,6 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.logging.LogType;
 import org.openqa.selenium.logging.LoggingPreferences;
-import org.openqa.selenium.remote.Augmenter;
-import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.LocalFileDetector;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
@@ -87,7 +85,7 @@ public class WebDriverRule implements BeforeEachCallback, TestExecutionException
             log.info("Using a remote driver: {}", url);
             RemoteWebDriver d = new RemoteWebDriver(url, opts);
             d.setFileDetector(new LocalFileDetector());
-            driver = new Augmenter().augment(d);
+            driver = d;
         } else {
             log.info("Using a local driver...");
             driver = new ChromeDriver();
