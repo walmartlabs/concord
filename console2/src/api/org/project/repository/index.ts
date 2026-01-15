@@ -77,6 +77,7 @@ export interface TriggerConditions {
 
 export interface TriggerEntry {
     id: ConcordId;
+    repositoryId: ConcordId;
     eventSource: ConcordKey;
     arguments?: object;
     conditions?: TriggerConditions;

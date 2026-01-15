@@ -110,10 +110,11 @@ const ProjectRepositories = ({ orgName, projectName, forceRefresh }: ExternalPro
         const mapData : {[id: string] : TriggerEntry[]} = {};
         if (isArray(triggerInfo.data)) {
             for(let triggerData of triggerInfo.data) {
-                if(!isArray(mapData[triggerData.id])) {
-                    mapData[triggerData.id] = [ triggerData ];
+                const triggerKey = triggerData.repositoryId;
+                if(!isArray(mapData[triggerKey])) {
+                    mapData[triggerKey] = [ triggerData ];
                 } else {
-                    mapData[triggerData.id].push(triggerData);
+                    mapData[triggerKey ].push(triggerData);
                 }
             }
         }
