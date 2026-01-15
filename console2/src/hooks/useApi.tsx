@@ -25,16 +25,18 @@ export interface Props<S> {
     fetchOnMount?: boolean;
     initialData?: S;
     forceRequest?: any;
+    debounceTime?: number | null;
     dispatch?: (value: LoadingAction) => void;
     requestByFetch?: boolean;
 }
 
 export function useApi<S>(dataFetcher: () => Promise<S>, props: Props<S>) {
-    const { fetchOnMount, initialData, forceRequest, dispatch, requestByFetch } = props;
+    const { fetchOnMount, initialData, forceRequest, dispatch, requestByFetch, debounceTime } = props;
 
     const didMountRef = useRef(false);
     const didMountRef2 = useRef(false);
     const fetchNowRef = useRef(false);
+    const debounceRef = useRef(null);
     const [fetchNow, toggleFetchNow] = useState<boolean>(false);
     const [data, setData] = useState(initialData);
     const [isLoading, setIsLoading] = useState(false);
@@ -91,6 +93,20 @@ export function useApi<S>(dataFetcher: () => Promise<S>, props: Props<S>) {
             }
         };
 
+        const startBouncing = () => {
+            if(typeof debounceTime === "number" && debounceTime > 0) {
+                if(debounceRef.current !== null) {
+                    clearTimeout(debounceRef.current);
+                }
+                debounceRef.current = setTimeout(async ()=>{
+                    debounceRef.current = null;
+                    await fetchData();
+                }, debounceTime);
+            } else {
+                fetchData();
+            }
+        }
+
         if (!didMountRef.current && !fetchOnMount) {
             didMountRef.current = true;
             return;
@@ -98,10 +114,10 @@ export function useApi<S>(dataFetcher: () => Promise<S>, props: Props<S>) {
 
         if (!requestByFetch) {
             fetchNowRef.current = false;
-            fetchData();
+            startBouncing();
         } else if (requestByFetch && fetchNowRef.current) {
             fetchNowRef.current = false;
-            fetchData();
+            startBouncing();
         }
 
         return () => {
@@ -110,7 +126,7 @@ export function useApi<S>(dataFetcher: () => Promise<S>, props: Props<S>) {
                 dispatch(LoadingAction.STOP);
             }
         };
-    }, [dataFetcher, fetchOnMount, forceRequest, requestByFetch, dispatch, fetchNow]);
+    }, [dataFetcher, fetchOnMount, forceRequest, requestByFetch, dispatch, fetchNow, debounceTime]);
 
     return { data, isLoading, error, fetch, clearState };
 }
