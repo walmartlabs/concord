@@ -24,6 +24,7 @@ import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.PathUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -31,6 +32,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
+
+@Execution(SAME_THREAD) // TODO address parallelism issues
 public class GeneralTriggerV2IT extends AbstractGeneralTriggerIT {
 
     private String orgName;

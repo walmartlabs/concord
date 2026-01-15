@@ -49,8 +49,9 @@ public final class ConcordConfiguration {
                             dependencyResolveTimeout = "30 seconds"
                             logMaxDelay = "250 milliseconds"
                             pollInterval = "250 milliseconds"
+                            workersCount = 8
                             prefork {
-                                enabled = true
+                                enabled = false
                             }
                         }
                         """);

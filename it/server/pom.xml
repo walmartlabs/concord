@@ -252,6 +252,9 @@
                         <java.io.tmpdir>${tmp.dir}</java.io.tmpdir>
                         <isDocker>${is.docker.profile}</isDocker>
                         <local.mvn.repo>${local.repository.src.mount}</local.mvn.repo>
+                        <junit.jupiter.execution.parallel.enabled>true</junit.jupiter.execution.parallel.enabled>
+                        <junit.jupiter.execution.parallel.mode.default>concurrent</junit.jupiter.execution.parallel.mode.default>
+                        <junit.jupiter.execution.parallel.mode.classes.default>same_thread</junit.jupiter.execution.parallel.mode.classes.default>
                     </systemProperties>
                 </configuration>
             </plugin>
@@ -515,7 +518,7 @@
                                             <com.walmartlabs.concord.it.name>server</com.walmartlabs.concord.it.name>
                                         </labels>
                                         <log>
-                                            <prefix>SERVER </prefix>
+                                            <prefix>SERVER&nbsp;</prefix>
                                             <color>cyan</color>
                                         </log>
                                     </run>
