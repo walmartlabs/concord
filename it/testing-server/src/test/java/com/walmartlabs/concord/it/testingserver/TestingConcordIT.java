@@ -23,9 +23,10 @@ package com.walmartlabs.concord.it.testingserver;
 import com.walmartlabs.concord.client2.ApiClientConfiguration;
 import com.walmartlabs.concord.client2.DefaultApiClientFactory;
 import com.walmartlabs.concord.client2.ProcessApi;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.io.IOException;
@@ -47,7 +48,7 @@ public class TestingConcordIT {
     private TestingConcordServer concordServer;
     private TestingConcordAgent concordAgent;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         db = new PostgreSQLContainer<>("postgres:15-alpine");
         db.start();
@@ -60,7 +61,7 @@ public class TestingConcordIT {
         concordAgent.start();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         if (concordAgent != null) {
             concordAgent.close();
@@ -78,7 +79,8 @@ public class TestingConcordIT {
         }
     }
 
-    @Test(timeout = 120_000)
+    @Test
+    @Timeout(120)
     public void testRunningSimpleProcess() throws Exception {
         var client = new DefaultApiClientFactory(concordServer.getApiBaseUrl())
                 .create(ApiClientConfiguration.builder()
