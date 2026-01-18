@@ -62,6 +62,7 @@ class TeamDeleteActivity extends React.PureComponent<Props> {
                     confirmationHeader="Delete the team?"
                     confirmationContent="Are you sure you want to delete the team?"
                     onConfirm={() => deleteTeam(orgName, teamName)}
+                    data-testid="team-delete-button"
                 />
             </>
         );
