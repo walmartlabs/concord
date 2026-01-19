@@ -31,7 +31,6 @@ import {
 import { Input, Menu } from 'semantic-ui-react';
 import { PaginationToolBar, RepositoryList } from '../../molecules';
 import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
-import {isArray} from "lodash";
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -108,10 +107,10 @@ const ProjectRepositories = ({ orgName, projectName, forceRefresh }: ExternalPro
 
     const repoTriggerMap = useMemo(()=>{
         const mapData : {[id: string] : TriggerEntry[]} = {};
-        if (isArray(triggerInfo.data)) {
+        if (Array.isArray(triggerInfo.data)) {
             for(let triggerData of triggerInfo.data) {
                 const triggerKey = triggerData.repositoryId;
-                if(!isArray(mapData[triggerKey])) {
+                if(!Array.isArray(mapData[triggerKey])) {
                     mapData[triggerKey] = [ triggerData ];
                 } else {
                     mapData[triggerKey ].push(triggerData);
@@ -119,7 +118,7 @@ const ProjectRepositories = ({ orgName, projectName, forceRefresh }: ExternalPro
             }
         }
         return mapData;
-    }, [triggerInfo.data, orgName, projectName]);
+    }, [triggerInfo.data]);
 
     if (error) {
         return <RequestErrorActivity error={error} />;

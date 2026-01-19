@@ -122,6 +122,10 @@ export function useApi<S>(dataFetcher: () => Promise<S>, props: Props<S>) {
 
         return () => {
             cancelled = true;
+            if(debounceRef.current !== null) {
+                clearTimeout(debounceRef.current);
+                debounceRef.current = null;
+            }
             if (dispatch && loading) {
                 dispatch(LoadingAction.STOP);
             }
