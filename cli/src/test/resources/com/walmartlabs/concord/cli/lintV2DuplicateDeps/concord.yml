@@ -1,0 +1,9 @@
+configuration:
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:http-tasks:1.53.1"
+    - "mvn://com.walmartlabs.concord.plugins.basic:http-tasks:1.53.1"
+    - "mvn://com.walmartlabs.concord.plugins.basic:log-tasks:1.53.1"
+
+flows:
+  default:
+    - log: "Hello!"
