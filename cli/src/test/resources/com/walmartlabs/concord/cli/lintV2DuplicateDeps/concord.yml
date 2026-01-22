@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   dependencies:
     - "mvn://com.walmartlabs.concord.plugins.basic:http-tasks:1.53.1"
     - "mvn://com.walmartlabs.concord.plugins.basic:http-tasks:1.53.1"
