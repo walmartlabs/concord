@@ -10,8 +10,8 @@
 ([#1249](https://github.com/walmartlabs/concord/pull/1249));
 - concord-console2: replace some saga usage with hooks
 ([#1252](https://github.com/walmartlabs/concord/pull/1252));
-- project: update docker-maven-plugin version
-([#1253](https://github.com/walmartlabs/concord/pull/1254)).
+- project: update dependency versions
+([#1253](https://github.com/walmartlabs/concord/pull/1254));
 
 
 
