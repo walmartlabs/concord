@@ -364,7 +364,7 @@
                 <plugin>
                     <groupId>dev.ybrig.concord</groupId>
                     <artifactId>concord-maven-plugin</artifactId>
-                    <version>0.0.31</version>
+                    <version>0.0.36</version>
                     <configuration>
                         <concordVersion>${project.version}</concordVersion>
                     </configuration>
