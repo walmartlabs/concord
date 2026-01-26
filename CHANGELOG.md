@@ -12,6 +12,8 @@
 ([#1252](https://github.com/walmartlabs/concord/pull/1252));
 - project: update dependency versions
 ([#1253](https://github.com/walmartlabs/concord/pull/1254));
+- concord-noderoster: do not build the tarball anymore
+([#1257](https://github.com/walmartlabs/concord/pull/1257)).
 
 
 
