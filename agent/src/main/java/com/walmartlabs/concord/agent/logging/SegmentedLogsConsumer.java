@@ -108,7 +108,7 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
     }
 
     private static Map<Long, List<Segment>> byId(List<Segment> segments) {
-        Map<Long, List<Segment>> result = new HashMap<>();
+        Map<Long, List<Segment>> result = new LinkedHashMap<>();
         for (Segment s : segments) {
             result.computeIfAbsent(s.header().segmentId(), id -> new ArrayList<>())
                     .add(s);
