@@ -21,9 +21,11 @@ package com.walmartlabs.concord.server.events.github;
  */
 
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 
+import java.net.URI;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -95,6 +97,27 @@ public final class GithubUtils {
      */
     public static boolean ignoreEmptyPush(TriggerEntry triggerEntry) {
         return MapUtils.getBoolean(triggerEntry.getCfg(), Constants.IGNORE_EMPTY_PUSH_KEY, true);
+    }
+
+    public static URI getSenderUrl(Payload p) {
+        Object rawUrl = ConfigurationUtils.get(p.raw(), "sender", "url");
+
+        if (rawUrl instanceof String url) {
+            return URI.create(url);
+        } else {
+            throw new IllegalArgumentException("Invalid url info url: " + rawUrl);
+        }
+
+    }
+
+    public static URI getRepoCloneUrl(Payload p) {
+        Object rawUrl = ConfigurationUtils.get(p.raw(), "repository", "clone_url");
+
+        if (rawUrl instanceof String url) {
+            return URI.create(url);
+        } else {
+            throw new IllegalArgumentException("Invalid repository clone url: " + rawUrl);
+        }
     }
 
     private static String getRepoPath(String repoUrl) {

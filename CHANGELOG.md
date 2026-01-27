@@ -1,5 +1,30 @@
 # Change Log
 
+## [2.35.0] - 2025-12-29
+
+### Changed
+
+- oidc: handle session invalidation errors
+([#1239](https://github.com/walmartlabs/concord/pull/1239));
+- concord-server: sanitize escaped unicode nul characters
+from events
+([#1241](https://github.com/walmartlabs/concord/pull/1241));
+- oidc: serialization and mapping fix
+([#1245](https://github.com/walmartlabs/concord/pull/1245));
+- server, agent: github app installation clone support
+([#1242](https://github.com/walmartlabs/concord/pull/1242));
+- concord-server: option to look up GH webhook event sender by email
+([#1243](https://github.com/walmartlabs/concord/pull/1243));
+- noderoster: configurable host cache size and eviction duration
+([#1246](https://github.com/walmartlabs/concord/pull/1246));
+- concord-server: inject ProcessKeyCache interface instead of implementation to
+utilize singleton scope
+([#1247](https://github.com/walmartlabs/concord/pull/1247));
+- concord-db, concord-server: cache external app user mapping in database
+([#1244](https://github.com/walmartlabs/concord/pull/1244)).
+
+
+
 ## [2.34.0] - 2025-10-29
 
 ### Added

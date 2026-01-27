@@ -20,11 +20,15 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,9 +42,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * test for checkout prev commitId on master branch + checkAlreadyFetched=true
  */
+@ExtendWith(MockitoExtension.class)
 public class GitClientFetch2Test {
 
     private GitClient client;
+
+    @Mock
+    AuthTokenProvider authProvider;
 
     @BeforeEach
     public void init() {
@@ -49,7 +57,7 @@ public class GitClientFetch2Test {
                 .sshTimeoutRetryCount(1)
                 .httpLowSpeedLimit(1)
                 .httpLowSpeedTime(Duration.ofMinutes(10))
-                .build());
+                .build(), authProvider);
     }
 
     @Test

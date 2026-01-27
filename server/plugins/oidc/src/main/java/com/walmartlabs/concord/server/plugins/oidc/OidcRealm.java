@@ -141,7 +141,7 @@ public class OidcRealm extends AuthorizingRealm {
         return SecurityUtils.toAuthorizationInfo(principals, roles);
     }
 
-    private static boolean match(UserProfile profile, List<PluginConfiguration.Source> sources) {
+    static boolean match(UserProfile profile, List<PluginConfiguration.Source> sources) {
         for (PluginConfiguration.Source source : sources) {
             String attr = source.attribute();
             String pattern = source.pattern();

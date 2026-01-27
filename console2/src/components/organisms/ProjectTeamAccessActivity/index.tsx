@@ -19,82 +19,82 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { Loader } from 'semantic-ui-react';
-import { ConcordKey, RequestError } from '../../../api/common';
-import { ResourceAccessEntry } from '../../../api/org';
-import { actions, State, selectors } from '../../../state/data/projects';
-import { RequestErrorMessage, TeamAccessList } from '../../molecules';
+import {useCallback, useState} from 'react';
+import {Loader} from 'semantic-ui-react';
+import {ConcordKey, GenericOperationResult} from '../../../api/common';
+import {ResourceAccessEntry} from '../../../api/org';
+import {getProjectAccess, updateProjectAccess} from '../../../api/org/project';
+import {useApi} from '../../../hooks/useApi';
+import {LoadingDispatch} from '../../../App';
+import {RequestErrorMessage, TeamAccessList} from '../../molecules';
 
 interface ExternalProps {
     orgName: ConcordKey;
     projectName: ConcordKey;
 }
 
-interface StateProps {
-    error: RequestError;
-    updating: boolean;
-    loading: boolean;
-    entries: ResourceAccessEntry[];
-}
+const ProjectTeamAccessActivity = ({orgName, projectName}: ExternalProps) => {
+    const dispatch = React.useContext(LoadingDispatch);
+    const [refresh, toggleRefresh] = useState<boolean>(false);
 
-interface DispatchProps {
-    load: (orgName: ConcordKey, projectName: ConcordKey) => void;
-    update: (orgName: ConcordKey, projectName: ConcordKey, entries: ResourceAccessEntry[]) => void;
-}
+    const fetchData = useCallback(() => {
+        return getProjectAccess(orgName, projectName);
+    }, [orgName, projectName]);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+    const {data, error} = useApi<ResourceAccessEntry[]>(fetchData, {
+        fetchOnMount: true,
+        dispatch: dispatch,
+        forceRequest: refresh
+    });
 
-class ProjectTeamAccessActivity extends React.PureComponent<Props> {
-    componentDidMount() {
-        this.init();
+    const [updateValue, setUpdateValue] = useState({
+        access: [] as ResourceAccessEntry[]
+    });
+
+    const postData = useCallback(async () => {
+        const result = await updateProjectAccess(orgName, projectName, updateValue.access);
+        toggleRefresh((prevState) => !prevState);
+        return result;
+    }, [orgName, projectName, updateValue]);
+
+    const update = useApi<GenericOperationResult>(postData, {
+        fetchOnMount: false,
+        dispatch: dispatch,
+        requestByFetch: true
+    });
+
+    const handleUpdate = useCallback(
+        (entries: ResourceAccessEntry[]) => {
+            setUpdateValue({access: entries});
+            update.fetch();
+        },
+        [update]
+    );
+
+    if (error) {
+        return <RequestErrorMessage error={error}/>;
     }
-    init() {
-        const { orgName, projectName, load } = this.props;
-        load(orgName, projectName);
+
+    if (update.error) {
+        return <RequestErrorMessage error={update.error}/>;
     }
-    render() {
-        const { error, entries, update, orgName, projectName, updating, loading } = this.props;
 
-        if (loading || updating) {
-            return <Loader active={true} />;
-        }
-
-        if (error) {
-            return <RequestErrorMessage error={error} />;
-        }
-
-        return (
-            <div>
-                <TeamAccessList
-                    data={entries}
-                    submitting={updating}
-                    orgName={orgName}
-                    submit={(accessEntries) => update(orgName, projectName, accessEntries)}
-                />
-            </div>
-        );
+    if (!data || update.isLoading) {
+        return <Loader active={true}/>;
     }
-}
 
-const mapStateToProps = (
-    { projects }: { projects: State },
-    { orgName, projectName }: ExternalProps
-): StateProps => ({
-    entries: selectors.projectAccesTeams(projects, orgName, projectName),
-    error: projects.updateProjectTeamAccess.error,
-    updating: projects.updateProjectTeamAccess.running,
-    loading: projects.projectTeamAccess.running
-});
+    const entries = data || [];
 
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    load: (orgName, projectName) => {
-        dispatch(actions.getTeamAccess(orgName, projectName));
-    },
-    update: (orgName, projectName, data) => {
-        dispatch(actions.updateTeamAccess(orgName, projectName, data));
-    }
-});
+    return (
+        <div>
+            <TeamAccessList
+                data={entries}
+                submitting={update.isLoading}
+                orgName={orgName}
+                submit={handleUpdate}
+            />
+        </div>
+    );
+};
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProjectTeamAccessActivity);
+export default ProjectTeamAccessActivity;

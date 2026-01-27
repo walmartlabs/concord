@@ -1,8 +1,10 @@
+package com.walmartlabs.concord.github.appinstallation;
+
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,22 +20,14 @@
  * =====
  */
 
-import { Action } from 'redux';
-import { RequestError } from '../../../api/common';
+import com.walmartlabs.concord.common.ExternalAuthToken;
+import org.immutables.value.Value;
 
-import { LdapGroupSearchResult } from '../../../api/service/console';
-import { RequestState } from '../common';
+@Value.Immutable
+@Value.Style(jdkOnly = true)
+public interface GitHubInstallationToken extends ExternalAuthToken {
 
-export interface SearchLdapGroupsRequest extends Action {
-    filter: string;
-}
-
-export interface SearchLdapGroupsResponse extends Action {
-    error?: RequestError;
-    items?: LdapGroupSearchResult[];
-}
-
-export type SearchLdapGroupsState = RequestState<SearchLdapGroupsResponse>;
-export interface State {
-    ldapGroups: SearchLdapGroupsState;
+    static ImmutableGitHubInstallationToken.Builder builder() {
+        return ImmutableGitHubInstallationToken.builder();
+    }
 }

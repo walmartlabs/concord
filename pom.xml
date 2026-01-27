@@ -5,7 +5,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>parent</artifactId>
-    <version>2.34.1-SNAPSHOT</version>
+    <version>2.35.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -37,6 +37,7 @@
         <module>common</module>
         <module>policy-engine</module>
         <module>dependency-manager</module>
+        <module>github-app-installation</module>
         <module>repository</module>
         <module>imports</module>
         <module>forms</module>
@@ -67,7 +68,7 @@
 
         <scm.connection>scm:git:https://github.com/walmartlabs/concord.git</scm.connection>
 
-        <docker.plugin.version>0.45.1</docker.plugin.version>
+        <docker.plugin.version>0.48.0</docker.plugin.version>
         <jooq.version>3.14.0</jooq.version>
         <junit.version>5.9.1</junit.version>
         <liquibase.version>4.29.2</liquibase.version>
