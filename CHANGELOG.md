@@ -15,7 +15,9 @@
 - concord-noderoster: do not build the tarball anymore
 ([#1257](https://github.com/walmartlabs/concord/pull/1257));
 - concord-console-it: add basic tests for team UI
-([#1258](https://github.com/walmartlabs/concord/pull/1258)).
+([#1258](https://github.com/walmartlabs/concord/pull/1258));
+- project: concord-maven-plugin version up
+([#1259](https://github.com/walmartlabs/concord/pull/1259)).
 
 
 
