@@ -13,7 +13,9 @@
 - project: update dependency versions
 ([#1253](https://github.com/walmartlabs/concord/pull/1254));
 - concord-noderoster: do not build the tarball anymore
-([#1257](https://github.com/walmartlabs/concord/pull/1257)).
+([#1257](https://github.com/walmartlabs/concord/pull/1257));
+- concord-console-it: add basic tests for team UI
+([#1258](https://github.com/walmartlabs/concord/pull/1258)).
 
 
 
