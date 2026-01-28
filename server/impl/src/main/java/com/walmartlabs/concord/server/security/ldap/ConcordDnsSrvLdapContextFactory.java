@@ -137,7 +137,7 @@ public class ConcordDnsSrvLdapContextFactory implements LdapContextFactory {
             @Override
             protected LdapContext createLdapContext(Hashtable env) throws NamingException {
                 String url = getCurrentLdapUrl();
-                if (url != null && url.startsWith(PROTOCOL)) {
+                if (url != null && url.startsWith(PROTOCOL) && cfg.isTrustAllCertificates()) {
                     env.put("java.naming.ldap.factory.socket", TrustingSslSocketFactory.class.getName());
                 }
 
