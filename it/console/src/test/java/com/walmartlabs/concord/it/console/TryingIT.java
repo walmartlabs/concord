@@ -46,12 +46,12 @@ public class TryingIT extends Base {
 
     public static class TestRule implements BeforeEachCallback, TestExecutionExceptionHandler, AfterEachCallback {
         @Override
-        public void afterEach(ExtensionContext context) throws Exception {
+        public void afterEach(ExtensionContext context) {
             System.out.println("afterEach");
         }
 
         @Override
-        public void beforeEach(ExtensionContext context) throws Exception {
+        public void beforeEach(ExtensionContext context) {
             System.out.println("beforeEach");
         }
 

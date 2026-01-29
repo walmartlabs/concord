@@ -45,6 +45,8 @@ interface Props {
     isExists: (name: string) => Promise<boolean> | undefined;
     alreadyExistsTemplate: (name: string) => string;
     disabled?: boolean;
+    inputTestId?: string;
+    buttonTestId?: string;
 }
 
 class EntityRenameForm extends React.Component<InjectedFormikProps<Props, FormValues>, State> {
@@ -75,19 +77,23 @@ class EntityRenameForm extends React.Component<InjectedFormikProps<Props, FormVa
             submitting,
             confirmationHeader,
             confirmationContent,
-            disabled
+            disabled,
+            inputTestId,
+            buttonTestId
         } = this.props;
         const hasErrors = notEmpty(this.props.errors);
 
         return (
             <Form onSubmit={handleSubmit} loading={submitting}>
                 <Form.Group widths={3}>
-                    <FormikInput
-                        fluid={true}
-                        name="name"
-                        placeholder={inputPlaceholder}
-                        disabled={disabled}
-                    />
+                    <div data-testid={inputTestId}>
+                        <FormikInput
+                            fluid={true}
+                            name="name"
+                            placeholder={inputPlaceholder}
+                            disabled={disabled}
+                        />
+                    </div>
 
                     <Form.Button
                         primary={true}
@@ -95,6 +101,7 @@ class EntityRenameForm extends React.Component<InjectedFormikProps<Props, FormVa
                         content="Rename"
                         disabled={hasErrors || !dirty || disabled}
                         onClick={(ev) => this.handleShowConfirm(ev)}
+                        data-testid={buttonTestId}
                     />
                 </Form.Group>
 
