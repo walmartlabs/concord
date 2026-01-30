@@ -292,8 +292,8 @@ public class FailureHandlingIT extends AbstractServerIT {
         new ProcessApi(getApiClient()).kill(spr.getInstanceId());
         waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.CANCELLED);
 
-        // expect error starting child process
+        // expect error starting child process, may take 3+ seconds for the watchdog to do it's work
 
-        waitForLog(spr.getInstanceId(), ".*Error while starting onCancel handler: initiator is disabled.*");
+        waitForLog(spr.getInstanceId(), 15, ".*Error while starting onCancel handler: initiator is disabled.*");
     }
 }
