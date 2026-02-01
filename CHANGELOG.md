@@ -1,6 +1,12 @@
 # Change Log
 
-## [2.35.1] - TBD
+## [2.36.0] - TBD
+
+### Added
+
+- concord-server: add ldap.trustAllCertificates, disable by
+default
+([#1261](https://github.com/walmartlabs/concord/pull/1261)).
 
 ### Changed
 
