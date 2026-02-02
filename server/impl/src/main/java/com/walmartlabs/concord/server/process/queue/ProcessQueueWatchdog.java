@@ -162,26 +162,26 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         @Override
         public void run() {
             Field<OffsetDateTime> maxAge = PgUtils.nowMinus(cfg.getMaxFailureHandlingAge());
-            boolean errorEncountered = false;
+            boolean doWork = true;
 
             for (PollEntry e : POLL_ENTRIES) {
                 List<ProcessEntry> parents = watchdogDao.poll(e, maxAge, 1);
 
                 for (ProcessEntry parent : parents) {
-                    errorEncountered = process(e, parent);
-                    if (errorEncountered) {
+                    doWork = process(e, parent);
+                    if (!doWork) {
                         break;
                     }
                 }
 
-                if (errorEncountered) {
+                if (!doWork) {
                     break;
                 }
             }
         }
 
         /**
-         * @return {@code true} on error
+         * @return {@code true} on success, {@code false} on error
          */
         private boolean process(PollEntry entry, ProcessEntry parent) {
             Map<String, Object> req = new HashMap<>();
@@ -201,13 +201,13 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
                 log.info("process -> created a new child process '{}' (parent '{}', entryPoint: '{}')",
                         childKey, parent.processKey, entry.flow);
-                return false;
+                return true;
             } catch (Exception e) {
                 // remove the handler from the parent process to avoid infinite retries
                 queueDao.removeHandler(parent.processKey, entry.flow);
                 logManager.warn(parent.processKey, "Error while starting {} handler: {}", entry.flow, e.getMessage());
                 log.warn("Error while starting {}/{} handler: {}", parent.processKey, entry.flow, e.getMessage());
-                return true;
+                return false;
             }
         }
 
