@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
@@ -140,8 +141,31 @@ public class TaskSchemaRegistry {
             log.debug("No '{}' section in schema for task '{}'", section, taskName);
             return null;
         }
+
+        if (!sectionSchema.isObject()) {
+            log.warn("Schema section '{}' for task '{}' is not an object", section, taskName);
+            return null;
+        }
+
         try {
-            return schemaFactory.getSchema(sectionSchema);
+            // Build a new schema that includes root definitions for $ref resolution
+            ObjectNode newSchema = objectMapper.createObjectNode();
+
+            // Copy definitions from root schema (supports both "definitions" and "$defs")
+            JsonNode definitions = rawSchema.get("definitions");
+            if (definitions != null && !definitions.isNull()) {
+                newSchema.set("definitions", definitions);
+            }
+            JsonNode defs = rawSchema.get("$defs");
+            if (defs != null && !defs.isNull()) {
+                newSchema.set("$defs", defs);
+            }
+
+            // Copy all properties from the section schema
+            sectionSchema.fields().forEachRemaining(entry ->
+                newSchema.set(entry.getKey(), entry.getValue()));
+
+            return schemaFactory.getSchema(newSchema);
         } catch (Exception e) {
             log.warn("Failed to compile '{}' schema for task '{}': {}", section, taskName, e.getMessage());
             return null;

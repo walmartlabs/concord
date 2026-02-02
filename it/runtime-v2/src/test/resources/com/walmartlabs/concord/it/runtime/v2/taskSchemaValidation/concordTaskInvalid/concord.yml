@@ -1,0 +1,14 @@
+configuration:
+  runtime: "concord-v2"
+  validation:
+    taskCalls:
+      in: fail
+
+flows:
+  default:
+    # Missing required 'action' parameter - should fail validation
+    - task: concord
+      in:
+        project: "test"
+      out: result
+    - log: "Result: ${result}"
