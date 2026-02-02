@@ -1,0 +1,18 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+    - "mvn://com.walmartlabs.concord.it.tasks:schema-test:PROJECT_VERSION"
+  validation:
+    taskCalls:
+      in: warn
+
+flows:
+  default:
+    # Missing required 'message' - should log warning but continue
+    # The task will use default value
+    - task: schemaTest
+      in:
+        message: "default"
+        count: -1  # Invalid: count must be >= 0
+      out: result
+    - log: "Result: ${result.echo}"

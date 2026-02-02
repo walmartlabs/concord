@@ -23,6 +23,10 @@ configuration:
     recordTaskMeta: false
     truncateMeta: true
   parallelLoopParallelism: 123
+  validation:
+    taskCalls:
+      in: "DISABLED"
+      out: "DISABLED"
 flows:
   flow1:
   - checkpoint: "chp1"

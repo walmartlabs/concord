@@ -23,13 +23,16 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.sun.el.util.ReflectionUtil;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
+import com.walmartlabs.concord.runtime.v2.model.TaskCallValidation;
+import com.walmartlabs.concord.runtime.v2.model.TaskCallValidation.ValidationMode;
+import com.walmartlabs.concord.runtime.v2.model.ValidationConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.SensitiveDataProcessor;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskException;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.*;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Objects;
@@ -45,6 +48,8 @@ import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallIntercepto
 public class TaskCallCommand extends StepCommand<TaskCall> {
 
     private static final long serialVersionUID = 1L;
+
+    private static final Logger log = LoggerFactory.getLogger(TaskCallCommand.class);
 
     public TaskCallCommand(UUID correlationId, TaskCall step) {
         super(correlationId, step);
@@ -81,6 +86,14 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         TaskCallOptions opts = Objects.requireNonNull(call.getOptions());
         Variables input = new MapBackedVariables(VMUtils.prepareInput(ecf, expressionEvaluator, ctx, opts.input(), opts.inputExpression()));
 
+        // Input validation (null-safe for backward compatibility with old serialized state)
+        TaskCallValidation validation = getTaskCallValidation(ctx);
+        if (validation.in() != ValidationMode.DISABLED) {
+            TaskSchemaValidator validator = runtime.getService(TaskSchemaValidator.class);
+            TaskSchemaValidationResult validationResult = validator.validateInput(taskName, input.toMap());
+            handleValidationResult(taskName, "in", validationResult, validation.in());
+        }
+
         TaskResult result;
         try {
             result = interceptor.invoke(callContext, Method.of(t.getClass(), "execute", Collections.singletonList(input)),
@@ -89,6 +102,16 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
             if (result instanceof TaskResult.SimpleResult simpleResult) {
                 var m = ReflectionUtil.findMethod(t.getClass(), "execute", new Class[]{Variables.class}, new Variables[]{input});
                 runtime.getService(SensitiveDataProcessor.class).process(simpleResult.values(), m);
+
+                // Output validation
+                if (validation.out() != ValidationMode.DISABLED) {
+                    TaskSchemaValidator validator = runtime.getService(TaskSchemaValidator.class);
+                    TaskSchemaValidationResult validationResult = validator.validateOutput(taskName, simpleResult.toMap());
+                    handleValidationResult(taskName, "out", validationResult, validation.out());
+                }
+            } else if (validation.out() != ValidationMode.DISABLED) {
+                log.warn("Task '{}' output validation enabled but result type '{}' does not support validation",
+                        taskName, result.getClass().getSimpleName());
             }
         } catch (TaskException e) {
             result = TaskResult.fail(e.getCause());
@@ -99,5 +122,42 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         }
 
         TaskCallUtils.processTaskResult(runtime, ctx, taskName, opts, result);
+    }
+
+    private static void handleValidationResult(String taskName, String section,
+                                               TaskSchemaValidationResult result, ValidationMode mode) {
+        if (!result.hasErrors()) {
+            return;
+        }
+
+        if (mode == ValidationMode.WARN) {
+            log.warn("Task '{}' {} validation errors:{}", taskName, section, formatErrors(result.errors()));
+        } else if (mode == ValidationMode.FAIL) {
+            throw new TaskSchemaValidationException(taskName, section, result.errors());
+        }
+    }
+
+    private static String formatErrors(java.util.List<String> errors) {
+        StringBuilder sb = new StringBuilder();
+        for (String error : errors) {
+            sb.append("\n  - ").append(error);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Get the task call validation configuration, handling null for backward compatibility
+     * with old serialized process definitions that don't have the validation field.
+     */
+    private static TaskCallValidation getTaskCallValidation(Context ctx) {
+        ValidationConfiguration validationConfig = ctx.execution().processDefinition().configuration().validation();
+        if (validationConfig == null) {
+            return new TaskCallValidation();
+        }
+        TaskCallValidation taskCalls = validationConfig.taskCalls();
+        if (taskCalls == null) {
+            return new TaskCallValidation();
+        }
+        return taskCalls;
     }
 }

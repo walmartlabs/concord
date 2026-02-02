@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.model.TaskCallValidation.ValidationMode;
 
 import java.io.Serializable;
 import java.time.Duration;
@@ -112,6 +113,9 @@ public final class YamlValueType<T> {
     public static final YamlValueType<List<Map<String, Object>>> ARRAY_OF_GITHUB_REPOSITORY_INFO = array("REPOSITORY_INFO", GITHUB_REPOSITORY_INFO);
     public static final YamlValueType<Loop> LOOP = type("LOOP");
     public static final YamlValueType<ImmutableLoop.Builder> LOOP_PARALLELISM = type("int or expression");
+    public static final YamlValueType<TaskCallValidation.ValidationMode> VALIDATION_MODE = type("VALIDATION_MODE");
+    public static final YamlValueType<TaskCallValidation> TASK_CALL_VALIDATION = type("TASK_CALL_VALIDATION");
+    public static final YamlValueType<ValidationConfiguration> VALIDATION_CFG = type("VALIDATION_CONFIGURATION");
 
     private final String name;
 
