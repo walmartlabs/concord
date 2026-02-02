@@ -24,8 +24,11 @@ import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.it.common.Version;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import static com.walmartlabs.concord.it.runtime.v2.Utils.resourceToString;
 
 public class TaskSchemaValidationIT extends AbstractTest {
 
@@ -37,8 +40,10 @@ public class TaskSchemaValidationIT extends AbstractTest {
      */
     @Test
     public void testValidInput() throws Exception {
-        Payload payload = new Payload()
-                .archive(resource("taskSchemaValidation/validInput"));
+        String concordYml = resourceToString(TaskSchemaValidationIT.class.getResource("taskSchemaValidation/validInput/concord.yml"))
+                .replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION);
+
+        Payload payload = new Payload().concordYml(concordYml);
 
         ConcordProcess proc = concord.processes().start(payload);
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
@@ -52,8 +57,10 @@ public class TaskSchemaValidationIT extends AbstractTest {
      */
     @Test
     public void testInvalidInputFail() throws Exception {
-        Payload payload = new Payload()
-                .archive(resource("taskSchemaValidation/invalidInputFail"));
+        String concordYml = resourceToString(TaskSchemaValidationIT.class.getResource("taskSchemaValidation/invalidInputFail/concord.yml"))
+                .replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION);
+
+        Payload payload = new Payload().concordYml(concordYml);
 
         ConcordProcess proc = concord.processes().start(payload);
         expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
@@ -67,8 +74,10 @@ public class TaskSchemaValidationIT extends AbstractTest {
      */
     @Test
     public void testInvalidInputWarn() throws Exception {
-        Payload payload = new Payload()
-                .archive(resource("taskSchemaValidation/invalidInputWarn"));
+        String concordYml = resourceToString(TaskSchemaValidationIT.class.getResource("taskSchemaValidation/invalidInputWarn/concord.yml"))
+                .replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION);
+
+        Payload payload = new Payload().concordYml(concordYml);
 
         ConcordProcess proc = concord.processes().start(payload);
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
@@ -82,8 +91,10 @@ public class TaskSchemaValidationIT extends AbstractTest {
      */
     @Test
     public void testValidationDisabled() throws Exception {
-        Payload payload = new Payload()
-                .archive(resource("taskSchemaValidation/validationDisabled"));
+        String concordYml = resourceToString(TaskSchemaValidationIT.class.getResource("taskSchemaValidation/validationDisabled/concord.yml"))
+                .replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION);
+
+        Payload payload = new Payload().concordYml(concordYml);
 
         ConcordProcess proc = concord.processes().start(payload);
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
@@ -102,7 +113,7 @@ public class TaskSchemaValidationIT extends AbstractTest {
         ConcordProcess proc = concord.processes().start(payload);
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
-        proc.assertLog(".*log: hello from log task.*");
+        proc.assertLog(".*hello from log task.*");
     }
 
     /**
@@ -110,12 +121,43 @@ public class TaskSchemaValidationIT extends AbstractTest {
      */
     @Test
     public void testMultipleErrors() throws Exception {
-        Payload payload = new Payload()
-                .archive(resource("taskSchemaValidation/multipleErrors"));
+        String concordYml = resourceToString(TaskSchemaValidationIT.class.getResource("taskSchemaValidation/multipleErrors/concord.yml"))
+                .replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION);
+
+        Payload payload = new Payload().concordYml(concordYml);
 
         ConcordProcess proc = concord.processes().start(payload);
         expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
 
         proc.assertLog(".*Task 'schemaTest' in validation failed.*");
+    }
+
+    /**
+     * Test that valid concord task input passes validation.
+     */
+    @Test
+    public void testConcordTaskValidInput() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("taskSchemaValidation/concordTaskValid"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        proc.assertLog(".*Done.*");
+    }
+
+    /**
+     * Test that invalid concord task input fails validation.
+     */
+    @Test
+    public void testConcordTaskInvalidInput() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("taskSchemaValidation/concordTaskInvalid"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
+
+        proc.assertLog(".*Task 'concord' in validation failed.*");
+        proc.assertLog(".*action.*");
     }
 }

@@ -1,0 +1,426 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Concord Task Schema",
+  "description": "Schema for the concord task - start/fork processes, manage API keys",
+  "definitions": {
+    "startParamsBase": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "description": "Project name"
+        },
+        "org": {
+          "type": "string",
+          "description": "Organization name"
+        },
+        "repo": {
+          "type": "string",
+          "description": "Repository name"
+        },
+        "repoBranchOrTag": {
+          "type": "string",
+          "description": "Git branch or tag"
+        },
+        "repoCommitId": {
+          "type": "string",
+          "description": "Git commit ID"
+        },
+        "payload": {
+          "type": "string",
+          "description": "Path to directory or zip file"
+        },
+        "entryPoint": {
+          "type": "string",
+          "description": "Entry flow name"
+        },
+        "activeProfiles": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Active profiles"
+        },
+        "arguments": {
+          "type": "object",
+          "description": "Process arguments",
+          "additionalProperties": true
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Process tags"
+        },
+        "meta": {
+          "description": "Metadata"
+        },
+        "requirements": {
+          "type": "object",
+          "description": "Agent requirements",
+          "additionalProperties": true
+        },
+        "attachments": {
+          "type": "array",
+          "description": "Files to attach"
+        },
+        "exclusive": {
+          "type": "object",
+          "description": "Exclusive mode settings",
+          "additionalProperties": true
+        },
+        "startAt": {
+          "type": "string",
+          "description": "Scheduled start time"
+        },
+        "disableOnCancel": {
+          "type": "boolean",
+          "default": false,
+          "description": "Disable onCancel handler"
+        },
+        "disableOnFailure": {
+          "type": "boolean",
+          "default": false,
+          "description": "Disable onFailure handler"
+        },
+        "outVars": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Output variable names to retrieve"
+        },
+        "sync": {
+          "type": "boolean",
+          "default": false,
+          "description": "Wait for completion"
+        },
+        "suspend": {
+          "type": "boolean",
+          "default": false,
+          "description": "Suspend until completion"
+        },
+        "debug": {
+          "type": "boolean",
+          "description": "Enable debug logging"
+        },
+        "dryRunMode": {
+          "type": "boolean",
+          "description": "Run in dry-run mode"
+        },
+        "ignoreFailures": {
+          "type": "boolean",
+          "default": false,
+          "description": "Ignore child process failures"
+        },
+        "baseUrl": {
+          "type": "string",
+          "description": "Concord server URL"
+        },
+        "apiKey": {
+          "type": "string",
+          "description": "API key for authentication"
+        }
+      },
+      "additionalProperties": true
+    },
+    "startParams": {
+      "description": "Parameters for starting a process. At least one of 'project' or 'payload' is required.",
+      "allOf": [
+        { "$ref": "#/definitions/startParamsBase" },
+        {
+          "anyOf": [
+            { "required": ["project"] },
+            { "required": ["payload"] }
+          ]
+        }
+      ]
+    },
+    "forkEntry": {
+      "type": "object",
+      "properties": {
+        "entryPoint": {
+          "type": "string",
+          "description": "Entry flow name (required)"
+        },
+        "instances": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1,
+          "description": "Number of instances to spawn"
+        },
+        "arguments": {
+          "type": "object",
+          "description": "Process arguments",
+          "additionalProperties": true
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Process tags"
+        },
+        "outVars": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Output variable names"
+        },
+        "activeProfiles": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Active profiles"
+        },
+        "exclusive": {
+          "type": "object",
+          "description": "Exclusive mode settings",
+          "additionalProperties": true
+        },
+        "meta": {
+          "description": "Metadata"
+        },
+        "requirements": {
+          "type": "object",
+          "description": "Agent requirements",
+          "additionalProperties": true
+        },
+        "disableOnCancel": {
+          "type": "boolean",
+          "default": false,
+          "description": "Disable onCancel handler"
+        },
+        "disableOnFailure": {
+          "type": "boolean",
+          "default": false,
+          "description": "Disable onFailure handler"
+        }
+      },
+      "required": ["entryPoint"],
+      "additionalProperties": true
+    }
+  },
+  "in": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string",
+        "enum": ["start", "startExternal", "fork", "kill", "createApiKey", "createOrUpdateApiKey"],
+        "description": "The action to perform"
+      }
+    },
+    "required": ["action"],
+    "allOf": [
+      {
+        "if": {
+          "properties": { "action": { "const": "start" } },
+          "required": ["action"]
+        },
+        "then": {
+          "$ref": "#/definitions/startParams"
+        }
+      },
+      {
+        "if": {
+          "properties": { "action": { "const": "startExternal" } },
+          "required": ["action"]
+        },
+        "then": {
+          "allOf": [
+            { "$ref": "#/definitions/startParams" },
+            { "required": ["baseUrl", "apiKey"] }
+          ]
+        }
+      },
+      {
+        "if": {
+          "properties": { "action": { "const": "fork" } },
+          "required": ["action"]
+        },
+        "then": {
+          "properties": {
+            "forks": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/forkEntry" },
+              "minItems": 1,
+              "description": "Fork configurations (cannot be empty)"
+            },
+            "entryPoint": {
+              "type": "string",
+              "description": "Entry flow name (required when not using forks array)"
+            },
+            "sync": {
+              "type": "boolean",
+              "default": false,
+              "description": "Wait for completion"
+            },
+            "suspend": {
+              "type": "boolean",
+              "default": false,
+              "description": "Suspend until completion"
+            },
+            "ignoreFailures": {
+              "type": "boolean",
+              "default": false,
+              "description": "Ignore child process failures"
+            },
+            "outVars": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Output variable names to retrieve"
+            },
+            "tags": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Process tags (inherited by forks)"
+            },
+            "arguments": {
+              "type": "object",
+              "description": "Process arguments (inherited by forks)",
+              "additionalProperties": true
+            },
+            "activeProfiles": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Active profiles (inherited by forks)"
+            },
+            "exclusive": {
+              "type": "object",
+              "description": "Exclusive mode settings (inherited by forks)",
+              "additionalProperties": true
+            },
+            "meta": {
+              "description": "Metadata (inherited by forks)"
+            },
+            "requirements": {
+              "type": "object",
+              "description": "Agent requirements (inherited by forks)",
+              "additionalProperties": true
+            },
+            "disableOnCancel": {
+              "type": "boolean",
+              "default": false,
+              "description": "Disable onCancel handler (inherited by forks)"
+            },
+            "disableOnFailure": {
+              "type": "boolean",
+              "default": false,
+              "description": "Disable onFailure handler (inherited by forks)"
+            }
+          },
+          "anyOf": [
+            { "required": ["forks"] },
+            { "required": ["entryPoint"] }
+          ],
+          "additionalProperties": true
+        }
+      },
+      {
+        "if": {
+          "properties": { "action": { "const": "kill" } },
+          "required": ["action"]
+        },
+        "then": {
+          "properties": {
+            "instanceId": {
+              "oneOf": [
+                { "type": "string" },
+                { "type": "array", "items": { "type": "string" } }
+              ],
+              "description": "Process ID(s) to kill"
+            },
+            "sync": {
+              "type": "boolean",
+              "default": false,
+              "description": "Wait for process termination"
+            }
+          },
+          "required": ["instanceId"],
+          "additionalProperties": true
+        }
+      },
+      {
+        "if": {
+          "properties": { "action": { "enum": ["createApiKey", "createOrUpdateApiKey"] } },
+          "required": ["action"]
+        },
+        "then": {
+          "properties": {
+            "baseUrl": {
+              "type": "string",
+              "description": "Concord server URL"
+            },
+            "apiKey": {
+              "type": "string",
+              "description": "API key for authentication"
+            },
+            "userId": {
+              "type": "string",
+              "description": "Target user ID"
+            },
+            "username": {
+              "type": "string",
+              "description": "Target username"
+            },
+            "userDomain": {
+              "type": "string",
+              "description": "User domain"
+            },
+            "userType": {
+              "type": "string",
+              "enum": ["LOCAL", "LDAP", "OIDC"],
+              "description": "User type"
+            },
+            "name": {
+              "type": "string",
+              "description": "API key name"
+            },
+            "key": {
+              "type": "string",
+              "description": "Specific API key value"
+            },
+            "ignoreExisting": {
+              "type": "boolean",
+              "default": false,
+              "description": "Ignore if API key already exists"
+            }
+          },
+          "anyOf": [
+            { "required": ["userId"] },
+            { "required": ["username"] }
+          ],
+          "additionalProperties": true
+        }
+      }
+    ],
+    "additionalProperties": true
+  },
+  "out": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "Whether the operation succeeded"
+      },
+      "id": {
+        "type": "string",
+        "description": "Instance ID (for start) or API key ID (for createApiKey)"
+      },
+      "ids": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Instance IDs (for fork with multiple processes)"
+      },
+      "name": {
+        "type": "string",
+        "description": "API key name"
+      },
+      "key": {
+        "type": "string",
+        "description": "The actual API key value"
+      },
+      "result": {
+        "type": "string",
+        "description": "Result status (CREATED or UPDATED for createOrUpdateApiKey)"
+      },
+      "expiredAt": {
+        "type": "string",
+        "description": "API key expiration timestamp"
+      }
+    },
+    "required": ["ok"],
+    "additionalProperties": true
+  }
+}
