@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
 
 import com.fasterxml.jackson.core.JsonToken;
 import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.model.TaskCallValidation.ValidationMode;
 import io.takari.parc.Parser;
 
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
@@ -69,6 +70,64 @@ public final class ConfigurationGrammar {
     private static final Parser<Atom, EventConfiguration> eventsVal =
             orError(events, YamlValueType.EVENTS_CFG);
 
+    // Case-insensitive enum parsing for ValidationMode
+    private static final Parser<Atom, ValidationMode> validationModeVal =
+            orError(stringVal.map(s -> ValidationMode.valueOf(s.toUpperCase())), YamlValueType.VALIDATION_MODE);
+
+    // Mutable holder for building TaskCallValidation
+    private static final class TaskCallValidationHolder {
+        ValidationMode in = ValidationMode.DISABLED;
+        ValidationMode out = ValidationMode.DISABLED;
+
+        TaskCallValidationHolder in(ValidationMode v) {
+            this.in = v;
+            return this;
+        }
+
+        TaskCallValidationHolder out(ValidationMode v) {
+            this.out = v;
+            return this;
+        }
+
+        TaskCallValidation build() {
+            return new TaskCallValidation(in, out);
+        }
+    }
+
+    private static final Parser<Atom, TaskCallValidation> taskCallValidation =
+            betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
+                    with(TaskCallValidationHolder::new,
+                            o -> options(
+                                    optional("in", validationModeVal.map(o::in)),
+                                    optional("out", validationModeVal.map(o::out))))
+                            .map(TaskCallValidationHolder::build));
+
+    private static final Parser<Atom, TaskCallValidation> taskCallValidationVal =
+            orError(taskCallValidation, YamlValueType.TASK_CALL_VALIDATION);
+
+    // Mutable holder for building ValidationConfiguration
+    private static final class ValidationConfigurationHolder {
+        TaskCallValidation taskCalls = new TaskCallValidation();
+
+        ValidationConfigurationHolder taskCalls(TaskCallValidation v) {
+            this.taskCalls = v;
+            return this;
+        }
+
+        ValidationConfiguration build() {
+            return new ValidationConfiguration(taskCalls);
+        }
+    }
+
+    private static final Parser<Atom, ValidationConfiguration> validation =
+            betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
+                    with(ValidationConfigurationHolder::new,
+                            o -> options(
+                                    optional("taskCalls", taskCallValidationVal.map(o::taskCalls))))
+                            .map(ValidationConfigurationHolder::build));
+
+    private static final Parser<Atom, ValidationConfiguration> validationVal =
+            orError(validation, YamlValueType.VALIDATION_CFG);
 
     private static final Parser<Atom, ProcessDefinitionConfiguration> cfg =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
@@ -89,7 +148,8 @@ public final class ConfigurationGrammar {
                                     optional("arguments", mapVal.map(o::arguments)),
                                     optional("debug", booleanVal.map(o::debug)),
                                     optional("template", stringVal.map(o::template)),
-                                    optional("parallelLoopParallelism", intVal.map(o::parallelLoopParallelism))))
+                                    optional("parallelLoopParallelism", intVal.map(o::parallelLoopParallelism)),
+                                    optional("validation", validationVal.map(o::validation))))
                             .map(ImmutableProcessDefinitionConfiguration.Builder::build));
 
     public static final Parser<Atom, ProcessDefinitionConfiguration> processCfgVal =
