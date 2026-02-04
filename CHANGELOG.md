@@ -25,7 +25,10 @@ default
 - project: concord-maven-plugin version up
 ([#1259](https://github.com/walmartlabs/concord/pull/1259));
 - concord-agent: send segmented logs in order logged\
-([#1260](https://github.com/walmartlabs/concord/pull/1260)).
+([#1260](https://github.com/walmartlabs/concord/pull/1260));
+- concord-server: assert user enabled before process restart
+or handler
+([#1262](https://github.com/walmartlabs/concord/pull/1262)).
 
 
 
