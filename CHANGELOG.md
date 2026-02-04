@@ -6,7 +6,9 @@
 
 - concord-server: add ldap.trustAllCertificates, disable by
 default
-([#1261](https://github.com/walmartlabs/concord/pull/1261)).
+([#1261](https://github.com/walmartlabs/concord/pull/1261));
+- concord-cli: add support for .gitignore
+([#1264](https://github.com/walmartlabs/concord/pull/1264)).
 
 ### Changed
 
