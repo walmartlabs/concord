@@ -68,7 +68,7 @@
 
         <scm.connection>scm:git:https://github.com/walmartlabs/concord.git</scm.connection>
 
-        <docker.plugin.version>0.45.1</docker.plugin.version>
+        <docker.plugin.version>0.48.0</docker.plugin.version>
         <jooq.version>3.14.0</jooq.version>
         <junit.version>5.9.1</junit.version>
         <liquibase.version>4.29.2</liquibase.version>
@@ -364,7 +364,7 @@
                 <plugin>
                     <groupId>dev.ybrig.concord</groupId>
                     <artifactId>concord-maven-plugin</artifactId>
-                    <version>0.0.31</version>
+                    <version>0.0.36</version>
                     <configuration>
                         <concordVersion>${project.version}</concordVersion>
                     </configuration>
