@@ -30,7 +30,9 @@ default
 ([#1260](https://github.com/walmartlabs/concord/pull/1260));
 - concord-server: assert user enabled before process restart
 or handler
-([#1262](https://github.com/walmartlabs/concord/pull/1262)).
+([#1262](https://github.com/walmartlabs/concord/pull/1262));
+- project: update testcontainers-concord version
+([#1265](https://github.com/walmartlabs/concord/pull/1265)).
 
 
 
