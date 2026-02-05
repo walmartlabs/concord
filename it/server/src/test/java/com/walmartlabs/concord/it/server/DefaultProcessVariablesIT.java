@@ -24,6 +24,8 @@ import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,6 +36,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@Execution(ExecutionMode.SAME_THREAD)
 public class DefaultProcessVariablesIT extends AbstractServerIT {
 
     private static final String POLICY_NAME = "default-vars-from-test";

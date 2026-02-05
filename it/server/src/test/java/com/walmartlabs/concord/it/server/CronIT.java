@@ -27,6 +27,8 @@ import com.walmartlabs.concord.common.PathUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -45,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @Timeout(value = 2 * DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
+@Execution(ExecutionMode.SAME_THREAD)
 public class CronIT extends AbstractServerIT {
 
     @Test
