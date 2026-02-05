@@ -63,6 +63,7 @@ public class RepositoryManager {
                 .httpLowSpeedTime(gitCfg.getHttpLowSpeedTime())
                 .sshTimeout(gitCfg.getSshTimeout())
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
+                .maxGitCliOutputBytes(gitCfg.maxGitCliOutputBytes())
                 .build();
 
         this.providers = new RepositoryProviders(List.of(
