@@ -118,6 +118,29 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="noderoster-10080" author="ibodrov@gmail.com">
+        <!-- skip if the table is partitioned -->
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*)
+                from pg_inherits
+                join pg_class parent ON pg_inherits.inhparent = parent.oid
+                join pg_class child ON pg_inherits.inhrelid = child.oid
+                join pg_namespace nmsp_parent ON nmsp_parent.oid = parent.relnamespace
+                join pg_namespace nmsp_child ON nmsp_child.oid = child.relnamespace
+                where parent.relname = 'node_roster_host_artifacts'
+            </sqlCheck>
+        </preConditions>
+
+        <!-- required for onConflictDoNothing to work -->
+        <createIndex tableName="NODE_ROSTER_HOST_ARTIFACTS" indexName="IDX_NR_HA_UNIQUE" unique="true">
+            <column name="INSTANCE_ID"/>
+            <column name="INSTANCE_CREATED_AT"/>
+            <column name="HOST_ID"/>
+            <column name="ARTIFACT_URL"/>
+        </createIndex>
+    </changeSet>
+
     <!-- see server/db/src/main/resources/com/walmartlabs/concord/server/db/v1.58.0.xml -->
     <changeSet id="noderoster-1580000" author="ibodrov@gmail.com">
         <createProcedure dbms="postgresql">
