@@ -65,6 +65,9 @@ public final class ConcordConfiguration {
                 .useLocalMavenRepository(true)
                 .extraConfigurationSupplier(() -> """
                     concord-server {
+                        db {
+                            maxPoolSize = 30
+                        }
                         queue {
                             enqueuePollInterval = "250 milliseconds"
                             dispatcher {

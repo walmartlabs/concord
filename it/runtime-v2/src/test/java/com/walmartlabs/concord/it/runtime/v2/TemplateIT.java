@@ -50,6 +50,12 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static com.walmartlabs.concord.common.PathUtils.createTempFile;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 
+/**
+ * This test class requires its own Concord container because it uses a ContainerListener
+ * to expose the WireMock server port to the Concord server container right before it starts.
+ * The WireMock port is dynamically allocated, so this setup must happen during container
+ * initialization, which is not compatible with the shared container pattern.
+ */
 public class TemplateIT extends AbstractTest {
 
     @RegisterExtension

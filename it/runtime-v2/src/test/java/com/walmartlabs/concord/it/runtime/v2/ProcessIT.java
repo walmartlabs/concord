@@ -28,8 +28,9 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.it.common.Version;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.*;
 
@@ -38,10 +39,15 @@ import static com.walmartlabs.concord.it.runtime.v2.Utils.resourceToString;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@ExtendWith(SharedConcordExtension.class)
 public class ProcessIT extends AbstractTest {
 
-    @RegisterExtension
-    public static final ConcordRule concord = ConcordConfiguration.configure();
+    static ConcordRule concord;
+
+    @BeforeAll
+    static void setUp(ConcordRule rule) {
+        concord = rule;
+    }
 
     /**
      * Argument passing.

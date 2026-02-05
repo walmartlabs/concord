@@ -27,17 +27,23 @@ import com.walmartlabs.concord.client2.HostEntry;
 import com.walmartlabs.concord.client2.NodeRosterHostsApi;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.it.common.Version;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
 
 import static com.walmartlabs.concord.it.runtime.v2.Utils.resourceToString;
 
+@ExtendWith(SharedConcordExtension.class)
 public class NodeRosterIT extends AbstractTest {
 
-    @RegisterExtension
-    public static final ConcordRule concord = ConcordConfiguration.configure();
+    static ConcordRule concord;
+
+    @BeforeAll
+    static void setUp(ConcordRule rule) {
+        concord = rule;
+    }
 
     /**
      * Tests various methods of the 'noderoster' plugin.

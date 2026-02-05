@@ -36,6 +36,12 @@ import java.nio.file.Paths;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 
+/**
+ * This test class requires its own Concord container because it needs a custom
+ * server/agent configuration with {@code disabledProcessors = []} to enable
+ * directory imports, which are disabled by default. It cannot share the container
+ * with other tests that use the default configuration.
+ */
 @Execution(ExecutionMode.SAME_THREAD)
 public class ImportsIT extends AbstractTest {
 

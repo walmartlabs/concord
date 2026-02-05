@@ -26,8 +26,9 @@ import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.FormListEntry;
 import com.walmartlabs.concord.client2.FormSubmitResponse;
 import com.walmartlabs.concord.client2.ProcessEntry;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,10 +37,15 @@ import java.util.Map;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(SharedConcordExtension.class)
 public class ProfilesIT extends AbstractTest {
 
-    @RegisterExtension
-    public static final ConcordRule concord = ConcordConfiguration.configure();
+    static ConcordRule concord;
+
+    @BeforeAll
+    static void setUp(ConcordRule rule) {
+        concord = rule;
+    }
 
     /**
      * Override flows from active profiles.

@@ -28,8 +28,9 @@ import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,10 +43,15 @@ import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v2.ConcordConfiguration.getServerUrlForAgent;
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(SharedConcordExtension.class)
 public class SessionStateFilesIT extends AbstractTest {
 
-    @RegisterExtension
-    public static final ConcordRule concord = ConcordConfiguration.configure();
+    static ConcordRule concord;
+
+    @BeforeAll
+    static void setUp(ConcordRule rule) {
+        concord = rule;
+    }
 
     @Test
     public void testSessionFileAccess() throws Exception {
