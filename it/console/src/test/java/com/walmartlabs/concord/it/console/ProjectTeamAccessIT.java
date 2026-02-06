@@ -23,8 +23,6 @@ package com.walmartlabs.concord.it.console;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.it.common.ITUtils;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
@@ -32,23 +30,14 @@ import org.openqa.selenium.interactions.Actions;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import static com.walmartlabs.concord.it.console.Utils.DEFAULT_TEST_TIMEOUT;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
-public class ProjectTeamAccessIT {
-
-    @RegisterExtension
-    public static ConcordServerRule serverRule = new ConcordServerRule();
-
-    @RegisterExtension
-    public static ConcordConsoleRule consoleRule = new ConcordConsoleRule();
+public class ProjectTeamAccessIT extends AbstractConsoleIT {
 
     @Test
     public void testAddTeamAccess() throws Exception {
-        ApiClient client = serverRule.getClient();
+        ApiClient client = getApiClient();
 
         // ---
 
@@ -65,47 +54,47 @@ public class ProjectTeamAccessIT {
 
         // ---
 
-        consoleRule.login(Concord.ADMIN_API_KEY);
-        consoleRule.navigateToRelative("/#/org/" + orgName + "/project/" + projectName + "/access");
-        consoleRule.waitForLoad();
+        login(defaultApiKey());
+        navigateToRelative("/#/org/" + orgName + "/project/" + projectName + "/access");
+        waitForLoad();
 
         // ---
 
-        WebElement team1Row = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-row-" + team1Name + "']"));
+        WebElement team1Row = waitFor(By.cssSelector("[data-testid='team-access-row-" + team1Name + "']"));
         assertNotNull(team1Row);
-        WebElement team1AccessCell = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-level-" + team1Name + "']"));
+        WebElement team1AccessCell = waitFor(By.cssSelector("[data-testid='team-access-level-" + team1Name + "']"));
         assertEquals("READER", team1AccessCell.getText());
 
         // ---
 
-        WebElement editButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-edit-btn']"));
+        WebElement editButton = waitFor(By.cssSelector("[data-testid='team-access-edit-btn']"));
         editButton.click();
         Thread.sleep(500);
 
         // ---
 
-        WebElement teamDropdown = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-add-dropdown'] input"));
+        WebElement teamDropdown = waitFor(By.cssSelector("[data-testid='team-access-add-dropdown'] input"));
         teamDropdown.click();
-        new Actions(consoleRule.getDriver())
+        new Actions(getDriver())
                 .sendKeys(team2Name)
                 .pause(500)
                 .sendKeys(Keys.ENTER)
                 .perform();
         Thread.sleep(500);
 
-        WebElement team2Row = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-row-" + team2Name + "']"));
+        WebElement team2Row = waitFor(By.cssSelector("[data-testid='team-access-row-" + team2Name + "']"));
         assertTrue(team2Row.getDomAttribute("class").contains("positive"));
 
         // ---
 
-        WebElement saveButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-save-btn']:not([disabled])"));
+        WebElement saveButton = waitFor(By.cssSelector("[data-testid='team-access-save-btn']:not([disabled])"));
         saveButton.click();
         Thread.sleep(1500);
 
         // ---
 
-        consoleRule.waitFor(By.cssSelector("[data-testid='team-access-row-" + team1Name + "']"));
-        consoleRule.waitFor(By.cssSelector("[data-testid='team-access-row-" + team2Name + "']"));
+        waitFor(By.cssSelector("[data-testid='team-access-row-" + team1Name + "']"));
+        waitFor(By.cssSelector("[data-testid='team-access-row-" + team2Name + "']"));
 
         // ---
 
@@ -116,7 +105,7 @@ public class ProjectTeamAccessIT {
 
     @Test
     public void testChangeAccessLevel() throws Exception {
-        ApiClient client = serverRule.getClient();
+        ApiClient client = getApiClient();
 
         // ---
 
@@ -131,40 +120,40 @@ public class ProjectTeamAccessIT {
 
         // ---
 
-        consoleRule.login(Concord.ADMIN_API_KEY);
-        consoleRule.navigateToRelative("/#/org/" + orgName + "/project/" + projectName + "/access");
-        consoleRule.waitForLoad();
+        login(defaultApiKey());
+        navigateToRelative("/#/org/" + orgName + "/project/" + projectName + "/access");
+        waitForLoad();
 
         // ---
 
-        WebElement accessCell = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-level-" + teamName + "']"));
+        WebElement accessCell = waitFor(By.cssSelector("[data-testid='team-access-level-" + teamName + "']"));
         assertEquals("READER", accessCell.getText());
 
         // ---
 
-        WebElement editButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-edit-btn']"));
+        WebElement editButton = waitFor(By.cssSelector("[data-testid='team-access-edit-btn']"));
         editButton.click();
         Thread.sleep(500);
 
         // ---
 
-        WebElement dropdown = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-dropdown-" + teamName + "']"));
+        WebElement dropdown = waitFor(By.cssSelector("[data-testid='team-access-dropdown-" + teamName + "']"));
         dropdown.click();
         Thread.sleep(800);
 
-        WebElement ownerOption = consoleRule.waitFor(By.xpath("//div[@role='listbox']//div[@role='option' and .//span[text()='Owner']]"));
+        WebElement ownerOption = waitFor(By.xpath("//div[@role='listbox']//div[@role='option' and .//span[text()='Owner']]"));
         ownerOption.click();
         Thread.sleep(300);
 
         // ---
 
-        WebElement saveButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-save-btn']"));
+        WebElement saveButton = waitFor(By.cssSelector("[data-testid='team-access-save-btn']"));
         saveButton.click();
         Thread.sleep(1500);
 
         // ---
 
-        accessCell = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-level-" + teamName + "']"));
+        accessCell = waitFor(By.cssSelector("[data-testid='team-access-level-" + teamName + "']"));
         assertEquals("OWNER", accessCell.getText());
 
         // ---
@@ -177,7 +166,7 @@ public class ProjectTeamAccessIT {
 
     @Test
     public void testRemoveTeamAccess() throws Exception {
-        ApiClient client = serverRule.getClient();
+        ApiClient client = getApiClient();
 
         // ---
 
@@ -195,25 +184,25 @@ public class ProjectTeamAccessIT {
 
         // ---
 
-        consoleRule.login(Concord.ADMIN_API_KEY);
-        consoleRule.navigateToRelative("/#/org/" + orgName + "/project/" + projectName + "/access");
-        consoleRule.waitForLoad();
+        login(defaultApiKey());
+        navigateToRelative("/#/org/" + orgName + "/project/" + projectName + "/access");
+        waitForLoad();
 
         // ---
 
-        consoleRule.waitFor(By.cssSelector("[data-testid='team-access-row-" + team1Name + "']"));
-        consoleRule.waitFor(By.cssSelector("[data-testid='team-access-row-" + team2Name + "']"));
+        waitFor(By.cssSelector("[data-testid='team-access-row-" + team1Name + "']"));
+        waitFor(By.cssSelector("[data-testid='team-access-row-" + team2Name + "']"));
 
         // ---
 
-        WebElement editButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-edit-btn']"));
+        WebElement editButton = waitFor(By.cssSelector("[data-testid='team-access-edit-btn']"));
         editButton.click();
         Thread.sleep(500);
 
         // ---
 
-        WebElement team1Row = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-row-" + team1Name + "']"));
-        WebElement deleteButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-delete-btn-" + team1Name + "']"));
+        WebElement team1Row = waitFor(By.cssSelector("[data-testid='team-access-row-" + team1Name + "']"));
+        WebElement deleteButton = waitFor(By.cssSelector("[data-testid='team-access-delete-btn-" + team1Name + "']"));
         deleteButton.click();
         Thread.sleep(300);
         assertTrue(team1Row.getDomAttribute("class").contains("negative"));
@@ -228,15 +217,15 @@ public class ProjectTeamAccessIT {
 
         // ---
 
-        WebElement saveButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-save-btn']"));
+        WebElement saveButton = waitFor(By.cssSelector("[data-testid='team-access-save-btn']"));
         saveButton.click();
         Thread.sleep(1500);
 
         // ---
 
-        List<WebElement> team1Rows = consoleRule.getDriver().findElements(By.cssSelector("[data-testid='team-access-row-" + team1Name + "']"));
+        List<WebElement> team1Rows = getDriver().findElements(By.cssSelector("[data-testid='team-access-row-" + team1Name + "']"));
         assertEquals(0, team1Rows.size());
-        consoleRule.waitFor(By.cssSelector("[data-testid='team-access-row-" + team2Name + "']"));
+        waitFor(By.cssSelector("[data-testid='team-access-row-" + team2Name + "']"));
 
         // ---
 
