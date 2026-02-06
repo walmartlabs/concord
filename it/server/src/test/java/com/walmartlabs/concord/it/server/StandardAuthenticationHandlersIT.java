@@ -53,7 +53,7 @@ public class StandardAuthenticationHandlersIT extends AbstractServerIT {
 
         // ---
 
-        String targetUrl = "http://server:8001/api/v1/org?limit=1";
+        String targetUrl = ITConstants.INTERNAL_SERVER_URL + "/api/v1/org?limit=1";
         StartProcessResponse spr = start(Map.of(
                 "archive", payload,
                 "arguments.targetUrl", targetUrl));

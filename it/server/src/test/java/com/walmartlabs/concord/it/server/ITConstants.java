@@ -28,6 +28,11 @@ public final class ITConstants {
     public static final String DEPENDENCIES_DIR = System.getProperty("it.deps.dir");
     public static final String DOCKER_ANSIBLE_IMAGE = System.getProperty("it.docker.ansible.image", "walmartlabs/concord-ansible");
 
+    /**
+     * Server URL accessible from within the Docker network (agent, runner, etc.).
+     */
+    public static final String INTERNAL_SERVER_URL = "http://server:8001";
+
     private ITConstants() {
     }
 }
