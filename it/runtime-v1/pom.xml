@@ -21,7 +21,7 @@
         <db.image>library/postgres:10</db.image>
         <server.image>walmartlabs/concord-server</server.image>
         <agent.image>walmartlabs/concord-agent</agent.image>
-        <ryuk.image>testcontainers/ryuk:0.6.0</ryuk.image>
+        <ryuk.image>testcontainers/ryuk:0.13.0</ryuk.image>
     </properties>
 
     <dependencies>

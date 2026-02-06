@@ -20,7 +20,7 @@
         <db.image>library/postgres:10</db.image>
         <server.image>walmartlabs/concord-server</server.image>
         <agent.image>walmartlabs/concord-agent</agent.image>
-        <ryuk.image>testcontainers/ryuk:0.6.0</ryuk.image>
+        <ryuk.image>testcontainers/ryuk:0.13.0</ryuk.image>
         <docker.ansible.image>walmartlabs/concord-ansible</docker.ansible.image>
         <ldap.image>osixia/openldap:1.5.0</ldap.image>
         <dind.image>docker:dind</dind.image>
