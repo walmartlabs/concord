@@ -1,5 +1,41 @@
 # Change Log
 
+## [2.36.0] - 2026-02-04
+
+### Added
+
+- concord-server: add ldap.trustAllCertificates, disable by
+default
+([#1261](https://github.com/walmartlabs/concord/pull/1261));
+- concord-cli: add support for .gitignore
+([#1264](https://github.com/walmartlabs/concord/pull/1264)).
+
+### Changed
+
+- runtime-v2: add 'name' attribute to script call in schema
+([#1248](https://github.com/walmartlabs/concord/pull/1248));
+- common, server: skip rate limit metrics for null auth id
+([#1249](https://github.com/walmartlabs/concord/pull/1249));
+- concord-console2: replace some saga usage with hooks
+([#1252](https://github.com/walmartlabs/concord/pull/1252));
+- project: update dependency versions
+([#1253](https://github.com/walmartlabs/concord/pull/1254));
+- concord-noderoster: do not build the tarball anymore
+([#1257](https://github.com/walmartlabs/concord/pull/1257));
+- concord-console-it: add basic tests for team UI
+([#1258](https://github.com/walmartlabs/concord/pull/1258));
+- project: concord-maven-plugin version up
+([#1259](https://github.com/walmartlabs/concord/pull/1259));
+- concord-agent: send segmented logs in order logged
+([#1260](https://github.com/walmartlabs/concord/pull/1260));
+- concord-server: assert user enabled before process restart
+or handler
+([#1262](https://github.com/walmartlabs/concord/pull/1262));
+- project: update testcontainers-concord version
+([#1265](https://github.com/walmartlabs/concord/pull/1265)).
+
+
+
 ## [2.35.0] - 2025-12-29
 
 ### Changed
