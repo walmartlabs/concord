@@ -24,13 +24,14 @@ import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.it.common.JGitUtils;
+import com.walmartlabs.concord.it.common.SharedConcordExtension;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -57,14 +58,13 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-import static com.walmartlabs.concord.it.console.ITConstants.DEFAULT_TEST_TIMEOUT;
-
-@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
-@ExtendWith({SharedConcordExtension.class, AbstractConsoleIT.ScreenshotExtension.class})
+@ExtendWith(AbstractConsoleIT.ScreenshotExtension.class)
 public abstract class AbstractConsoleIT {
+
+    @RegisterExtension
+    static SharedConcordExtension concordExtension = new SharedConcordExtension(ConcordConfiguration::configure);
 
     private static final Logger log = LoggerFactory.getLogger(AbstractConsoleIT.class);
 

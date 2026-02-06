@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 
 import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.it.common.ITConstants;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;

@@ -29,13 +29,11 @@ import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.it.common.Version;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
 
 import static com.walmartlabs.concord.it.runtime.v2.Utils.resourceToString;
 
-@ExtendWith(SharedConcordExtension.class)
 public class NodeRosterIT extends AbstractTest {
 
     static ConcordRule concord;

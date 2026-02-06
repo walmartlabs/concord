@@ -30,7 +30,6 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.*;
 
@@ -39,7 +38,6 @@ import static com.walmartlabs.concord.it.runtime.v2.Utils.resourceToString;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@ExtendWith(SharedConcordExtension.class)
 public class ProcessIT extends AbstractTest {
 
     static ConcordRule concord;

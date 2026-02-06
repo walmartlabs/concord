@@ -21,18 +21,15 @@ package com.walmartlabs.concord.it.console;
  */
 
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
+import com.walmartlabs.concord.it.common.BaseConcordConfiguration;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.images.PullPolicy;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 public final class ConcordConfiguration {
 
-    private static final Path sharedDir = Paths.get(System.getProperty("java.io.tmpdir")).resolve("concord-console-it");
+    private static final Path sharedDir = BaseConcordConfiguration.setupSharedDir("concord-console-it");
     private static volatile GenericContainer<?> seleniumContainer;
 
     public static Path sharedDir() {
@@ -47,28 +44,11 @@ public final class ConcordConfiguration {
         return "http://server:8001";
     }
 
-    static {
-        if (Files.notExists(sharedDir)) {
-            try {
-                Files.createDirectories(sharedDir);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
     public static ConcordRule configure() {
-        return new ConcordRule()
+        return BaseConcordConfiguration.createBase()
                 .pathToRunnerV1(null)
                 .pathToRunnerV2(null)
-                .dbImage(System.getProperty("db.image", "library/postgres:10"))
-                .serverImage(System.getProperty("server.image", "walmartlabs/concord-server"))
-                .agentImage(System.getProperty("agent.image", "walmartlabs/concord-agent"))
-                .pullPolicy(PullPolicy.defaultPolicy())
-                .streamServerLogs(true)
-                .streamAgentLogs(true)
                 .sharedContainerDir(sharedDir)
-                .useLocalMavenRepository(true)
                 .extraContainerSupplier(network -> {
                     @SuppressWarnings("resource")
                     GenericContainer<?> selenium = new GenericContainer<>(System.getProperty("selenium.image", "seleniarm/standalone-chromium:110.0"))
@@ -80,24 +60,13 @@ public final class ConcordConfiguration {
                     seleniumContainer = selenium;
                     return List.of(selenium);
                 })
-                .extraConfigurationSupplier(() -> """
+                .extraConfigurationSupplier(() -> BaseConcordConfiguration.baseConfig() + """
                     concord-server {
                         secretStore {
                             serverPassword = "aXRpdGl0"
                             secretStoreSalt = "aXRpdGl0"
                             projectSecretSalt = "aXRpdGl0"
                         }
-                        queue {
-                            enqueuePollInterval = "250 milliseconds"
-                            dispatcher {
-                                pollDelay = "250 milliseconds"
-                            }
-                        }
-                    }
-                    concord-agent {
-                        dependencyResolveTimeout = "30 seconds"
-                        logMaxDelay = "250 milliseconds"
-                        pollInterval = "250 milliseconds"
                     }
                     """);
     }

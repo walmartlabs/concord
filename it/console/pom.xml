@@ -19,10 +19,6 @@
         <!-- pin down the version of DB and Selenium images -->
         <db.image>library/postgres:10.4-alpine</db.image>
         <selenium.image>seleniarm/standalone-chromium:110.0</selenium.image>
-
-        <!-- use the latest locally built Concord images -->
-        <server.image>walmartlabs/concord-server</server.image>
-        <agent.image>walmartlabs/concord-agent</agent.image>
     </properties>
 
     <dependencies>
@@ -116,11 +112,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
-                    <skipTests>${skip.it.tests}</skipTests>
                     <systemProperties>
-                        <db.image>${db.image}</db.image>
-                        <server.image>${server.image}</server.image>
-                        <agent.image>${agent.image}</agent.image>
                         <selenium.image>${selenium.image}</selenium.image>
                     </systemProperties>
                 </configuration>

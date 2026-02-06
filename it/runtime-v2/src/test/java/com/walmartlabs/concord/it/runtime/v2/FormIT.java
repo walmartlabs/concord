@@ -31,7 +31,6 @@ import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
 import javax.script.ScriptEngine;
@@ -47,7 +46,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(SharedConcordExtension.class)
 public class FormIT extends AbstractTest {
 
     static ConcordRule concord;

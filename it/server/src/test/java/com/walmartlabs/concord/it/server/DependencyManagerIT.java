@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.it.common.ITConstants;
 import com.walmartlabs.concord.client2.StartProcessResponse;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;

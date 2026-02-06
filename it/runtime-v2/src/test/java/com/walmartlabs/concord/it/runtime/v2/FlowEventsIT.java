@@ -28,14 +28,12 @@ import com.walmartlabs.concord.client2.ProcessEventEntry;
 import com.walmartlabs.concord.client2.ProcessEventsApi;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(SharedConcordExtension.class)
 public class FlowEventsIT extends AbstractTest {
 
     static ConcordRule concord;

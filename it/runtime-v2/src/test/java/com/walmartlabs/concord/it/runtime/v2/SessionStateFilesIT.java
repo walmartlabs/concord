@@ -30,7 +30,6 @@ import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,7 +42,6 @@ import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v2.ConcordConfiguration.getServerUrlForAgent;
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(SharedConcordExtension.class)
 public class SessionStateFilesIT extends AbstractTest {
 
     static ConcordRule concord;

@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.it.server;
+package com.walmartlabs.concord.it.common;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2026 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@ package com.walmartlabs.concord.it.server;
  */
 
 public final class ITConstants {
-
-    public static final long DEFAULT_TEST_TIMEOUT = 180000;
 
     public static final String PROJECT_VERSION = System.getProperty("project.version", "LATEST");
     public static final String DEPENDENCIES_DIR = System.getProperty("deps.dir");

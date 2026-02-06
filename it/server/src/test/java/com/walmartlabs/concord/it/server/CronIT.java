@@ -42,11 +42,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.GrepUtils.grep;
-import static com.walmartlabs.concord.it.server.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-@Timeout(value = 2 * DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
+@Timeout(value = 360, unit = TimeUnit.SECONDS)
 @Execution(ExecutionMode.SAME_THREAD)
 public class CronIT extends AbstractServerIT {
 

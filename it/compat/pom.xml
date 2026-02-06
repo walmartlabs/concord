@@ -20,11 +20,7 @@
         <!-- should be one or more release versions behind the current version -->
         <!-- must be a multi-arch image to pass tests on both x86 and arm64 -->
         <prev.concord.version>2.14.2</prev.concord.version>
-
-        <server.image>walmartlabs/concord-server</server.image>
         <prev.agent.image>walmartlabs/concord-agent:${prev.concord.version}</prev.agent.image>
-
-        <ryuk.image>testcontainers/ryuk:0.13.0</ryuk.image>
     </properties>
 
     <dependencies>
@@ -53,6 +49,11 @@
             <artifactId>concord-client2</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.it</groupId>
+            <artifactId>concord-common-it</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <!-- LOCAL mode support -->
         <dependency>
@@ -73,30 +74,28 @@
     </dependencies>
 
     <build>
-        <resources>
-            <resource>
+        <testResources>
+            <testResource>
                 <filtering>false</filtering>
                 <directory>${project.basedir}/src/test/resources</directory>
                 <includes>
                     <include>**/*</include>
                 </includes>
-            </resource>
-            <resource>
+            </testResource>
+            <testResource>
                 <filtering>true</filtering>
                 <directory>${project.basedir}/src/test/filtered-resources</directory>
                 <includes>
                     <include>**/*</include>
                 </includes>
-            </resource>
-        </resources>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
-                    <skipTests>${skip.it.tests}</skipTests>
                     <systemProperties>
-                        <server.image>${server.image}</server.image>
                         <agent.image>${prev.agent.image}</agent.image>
                     </systemProperties>
                 </configuration>

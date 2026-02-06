@@ -25,19 +25,13 @@ import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.images.PullPolicy;
 
-import java.util.concurrent.TimeUnit;
-
-import static com.walmartlabs.concord.it.compat.ITConstants.DEFAULT_TEST_TIMEOUT;
-
 /**
  * Runs an older version of the Agent with the current version of the Server.
  */
-@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 @DisabledIfEnvironmentVariable(named = "SKIP_OLD_AGENT_TESTS", matches = "true", disabledReason = "Requires a published agent image of the old version.")
 public class OldAgentIT {
 

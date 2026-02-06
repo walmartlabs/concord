@@ -28,7 +28,6 @@ import com.walmartlabs.concord.client2.FormSubmitResponse;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +36,6 @@ import java.util.Map;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(SharedConcordExtension.class)
 public class ProfilesIT extends AbstractTest {
 
     static ConcordRule concord;

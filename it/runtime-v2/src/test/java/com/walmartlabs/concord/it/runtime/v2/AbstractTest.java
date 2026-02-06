@@ -23,19 +23,20 @@ package com.walmartlabs.concord.it.runtime.v2;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.it.common.JGitUtils;
+import com.walmartlabs.concord.it.common.SharedConcordExtension;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.concurrent.TimeUnit;
 
-import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public abstract class AbstractTest {
+
+    @RegisterExtension
+    static SharedConcordExtension concordExtension = new SharedConcordExtension(ConcordConfiguration::configure);
 
     @BeforeAll
     public static void init() {

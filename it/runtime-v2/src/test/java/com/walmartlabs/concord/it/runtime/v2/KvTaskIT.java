@@ -26,11 +26,9 @@ import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 
-@ExtendWith(SharedConcordExtension.class)
 public class KvTaskIT extends AbstractTest {
 
     static ConcordRule concord;

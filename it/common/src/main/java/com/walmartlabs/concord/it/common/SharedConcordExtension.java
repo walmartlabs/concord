@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.it.console;
+package com.walmartlabs.concord.it.common;
 
 /*-
  * *****
@@ -23,22 +23,31 @@ package com.walmartlabs.concord.it.console;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import org.junit.jupiter.api.extension.*;
 
-public class SharedConcordExtension implements BeforeAllCallback, AfterAllCallback, ParameterResolver {
+import java.util.function.Supplier;
+
+public class SharedConcordExtension implements BeforeAllCallback, ParameterResolver {
 
     private static final ExtensionContext.Namespace NAMESPACE =
             ExtensionContext.Namespace.create(SharedConcordExtension.class);
 
     private static final String CONCORD_KEY = "concord";
 
-    @Override
-    public void beforeAll(ExtensionContext context) {
-        ConcordRule concord = SharedConcordEnvironment.acquire();
-        context.getStore(NAMESPACE).put(CONCORD_KEY, concord);
+    private final Supplier<ConcordRule> supplier;
+
+    public SharedConcordExtension(Supplier<ConcordRule> supplier) {
+        this.supplier = supplier;
     }
 
     @Override
-    public void afterAll(ExtensionContext context) {
-        SharedConcordEnvironment.release();
+    public void beforeAll(ExtensionContext context) {
+        ConcordRuleResource resource = context.getRoot().getStore(NAMESPACE)
+                .getOrComputeIfAbsent(CONCORD_KEY, k -> {
+                    ConcordRule rule = supplier.get();
+                    rule.start();
+                    return new ConcordRuleResource(rule);
+                }, ConcordRuleResource.class);
+
+        context.getStore(NAMESPACE).put(CONCORD_KEY, resource.rule());
     }
 
     @Override
@@ -49,5 +58,13 @@ public class SharedConcordExtension implements BeforeAllCallback, AfterAllCallba
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
         return extensionContext.getStore(NAMESPACE).get(CONCORD_KEY, ConcordRule.class);
+    }
+
+    private record ConcordRuleResource(ConcordRule rule) implements ExtensionContext.Store.CloseableResource {
+
+        @Override
+        public void close() {
+            rule.close();
+        }
     }
 }

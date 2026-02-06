@@ -27,14 +27,12 @@ import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Collections;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomPwd;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 
-@ExtendWith(SharedConcordExtension.class)
 public class CryptoIT extends AbstractTest {
 
     static ConcordRule concord;

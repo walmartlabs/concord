@@ -26,12 +26,12 @@ import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
 import com.walmartlabs.concord.it.common.JGitUtils;
 import com.walmartlabs.concord.it.common.ServerClient;
+import com.walmartlabs.concord.it.common.SharedConcordExtension;
 import org.eclipse.jgit.api.Git;
 import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,13 +40,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
-import static com.walmartlabs.concord.it.server.ITConstants.DEFAULT_TEST_TIMEOUT;
-
-@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
-@ExtendWith(SharedConcordExtension.class)
 public abstract class AbstractServerIT {
+
+    @RegisterExtension
+    static SharedConcordExtension concordExtension = new SharedConcordExtension(ConcordConfiguration::configure);
 
     private static ConcordRule concord;
     private ServerClient serverClient;

@@ -27,7 +27,6 @@ import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Base64;
 import java.util.List;
@@ -37,7 +36,6 @@ import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(SharedConcordExtension.class)
 public class ConcordTaskIT extends AbstractTest {
 
     static ConcordRule concord;

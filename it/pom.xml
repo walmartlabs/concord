@@ -33,7 +33,32 @@
 
     <properties>
         <skip.it.tests>true</skip.it.tests>
+        <it.local.mode>false</it.local.mode>
+        <db.image>library/postgres:10</db.image>
+        <server.image>walmartlabs/concord-server</server.image>
+        <agent.image>walmartlabs/concord-agent</agent.image>
+        <ryuk.image>testcontainers/ryuk:0.13.0</ryuk.image>
     </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <configuration>
+                        <skipTests>${skip.it.tests}</skipTests>
+                        <systemProperties>
+                            <it.local.mode>${it.local.mode}</it.local.mode>
+                            <db.image>${db.image}</db.image>
+                            <server.image>${server.image}</server.image>
+                            <agent.image>${agent.image}</agent.image>
+                        </systemProperties>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 
     <profiles>
         <profile>
