@@ -77,7 +77,7 @@ public final class ConcordConfiguration {
                 .useLocalMavenRepository(true)
                 .extraContainerSupplier(network -> {
                     @SuppressWarnings("resource")
-                    GenericContainer<?> ldap = new GenericContainer<>("osixia/openldap:1.5.0")
+                    GenericContainer<?> ldap = new GenericContainer<>(System.getProperty("ldap.image", "osixia/openldap:1.5.0"))
                             .withNetwork(network)
                             .withNetworkAliases("ldap")
                             .withExposedPorts(389)
@@ -87,7 +87,7 @@ public final class ConcordConfiguration {
                     ldapContainer = ldap;
 
                     @SuppressWarnings("resource")
-                    GenericContainer<?> dind = new GenericContainer<>("docker:dind")
+                    GenericContainer<?> dind = new GenericContainer<>(System.getProperty("dind.image", "docker:dind"))
                             .withNetwork(network)
                             .withNetworkAliases("dind")
                             .withPrivilegedMode(true)

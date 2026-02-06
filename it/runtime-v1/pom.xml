@@ -112,7 +112,6 @@
                         <db.image>${db.image}</db.image>
                         <server.image>${server.image}</server.image>
                         <agent.image>${agent.image}</agent.image>
-                        <ryuk.image>${ryuk.image}</ryuk.image>
                     </systemProperties>
                 </configuration>
             </plugin>

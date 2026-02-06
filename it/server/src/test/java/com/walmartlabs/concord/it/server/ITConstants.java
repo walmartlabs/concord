@@ -24,9 +24,9 @@ public final class ITConstants {
 
     public static final long DEFAULT_TEST_TIMEOUT = 180000;
 
-    public static final String PROJECT_VERSION = System.getProperty("it.project.version", "LATEST");
-    public static final String DEPENDENCIES_DIR = System.getProperty("it.deps.dir");
-    public static final String DOCKER_ANSIBLE_IMAGE = System.getProperty("it.docker.ansible.image", "walmartlabs/concord-ansible");
+    public static final String PROJECT_VERSION = System.getProperty("project.version", "LATEST");
+    public static final String DEPENDENCIES_DIR = System.getProperty("deps.dir");
+    public static final String DOCKER_ANSIBLE_IMAGE = System.getProperty("docker.ansible.image", "walmartlabs/concord-ansible");
 
     /**
      * Server URL accessible from within the Docker network (agent, runner, etc.).

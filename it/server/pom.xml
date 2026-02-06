@@ -21,6 +21,9 @@
         <server.image>walmartlabs/concord-server</server.image>
         <agent.image>walmartlabs/concord-agent</agent.image>
         <ryuk.image>testcontainers/ryuk:0.6.0</ryuk.image>
+        <docker.ansible.image>walmartlabs/concord-ansible</docker.ansible.image>
+        <ldap.image>osixia/openldap:1.5.0</ldap.image>
+        <dind.image>docker:dind</dind.image>
         <deps.dir>${java.io.tmpdir}/concord-server-it/deps</deps.dir>
     </properties>
 
@@ -229,6 +232,13 @@
                     <include>**/*</include>
                 </includes>
             </resource>
+            <resource>
+                <filtering>true</filtering>
+                <directory>${project.basedir}/src/test/filtered-resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
         </resources>
         <plugins>
             <plugin>
@@ -241,8 +251,11 @@
                         <db.image>${db.image}</db.image>
                         <server.image>${server.image}</server.image>
                         <agent.image>${agent.image}</agent.image>
-                        <it.project.version>${project.version}</it.project.version>
-                        <it.deps.dir>${deps.dir}</it.deps.dir>
+                        <project.version>${project.version}</project.version>
+                        <deps.dir>${deps.dir}</deps.dir>
+                        <docker.ansible.image>${docker.ansible.image}</docker.ansible.image>
+                        <ldap.image>${ldap.image}</ldap.image>
+                        <dind.image>${dind.image}</dind.image>
                     </systemProperties>
                     <environmentVariables>
                         <SKIP_DOCKER_TESTS>true</SKIP_DOCKER_TESTS>
