@@ -29,7 +29,7 @@ import {
     PaginatedRepositoryEntries, TriggerEntry,
 } from '../../../api/org/project/repository';
 import { Input, Menu } from 'semantic-ui-react';
-import { PaginationToolBar, RepositoryList } from '../../molecules';
+import {PaginationToolBar, RepositoryList, RequestErrorMessage} from '../../molecules';
 import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
 
 interface ExternalProps {
@@ -105,6 +105,8 @@ const ProjectRepositories = ({ orgName, projectName, forceRefresh }: ExternalPro
         dispatch
     });
 
+    triggerInfo.error
+
     const repoTriggerMap = useMemo(()=>{
         const mapData : {[id: string] : TriggerEntry[]} = {};
         if (Array.isArray(triggerInfo.data)) {
@@ -122,6 +124,10 @@ const ProjectRepositories = ({ orgName, projectName, forceRefresh }: ExternalPro
 
     if (error) {
         return <RequestErrorActivity error={error} />;
+    }
+
+    if (triggerInfo.error) {
+        return <RequestErrorMessage error={triggerInfo.error} />;
     }
 
     return (
