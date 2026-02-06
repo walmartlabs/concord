@@ -41,7 +41,7 @@ public class TriggersRefreshIT extends AbstractServerIT {
 
     @Test
     public void testTriggerRepoRefresh() throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource("triggerRepo").toURI());
         PathUtils.copy(src.toPath(), tmpDir);

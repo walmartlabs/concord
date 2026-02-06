@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.GrepUtils.grep;
-import static com.walmartlabs.concord.it.server.AbstractServerIT.DEFAULT_TEST_TIMEOUT;
+import static com.walmartlabs.concord.it.server.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
@@ -194,7 +194,7 @@ public class CronIT extends AbstractServerIT {
     }
 
     private static String initRepo(String initResource) throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource(initResource).toURI());
         PathUtils.copy(src.toPath(), tmpDir);

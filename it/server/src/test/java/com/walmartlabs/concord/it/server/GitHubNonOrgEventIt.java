@@ -42,7 +42,7 @@ public class GitHubNonOrgEventIt extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(GitHubNonOrgEventIt.class.getResource("githubNonRepoEvent").toURI());
         PathUtils.copy(src.toPath(), tmpDir);

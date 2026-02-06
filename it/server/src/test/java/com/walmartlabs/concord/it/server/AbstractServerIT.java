@@ -20,6 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
@@ -30,6 +31,7 @@ import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,23 +42,32 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static com.walmartlabs.concord.it.server.AbstractServerIT.DEFAULT_TEST_TIMEOUT;
+import static com.walmartlabs.concord.it.server.ITConstants.DEFAULT_TEST_TIMEOUT;
 
 @Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
+@ExtendWith(SharedConcordExtension.class)
 public abstract class AbstractServerIT {
 
-    public static final long DEFAULT_TEST_TIMEOUT = 180000;
-
+    private static ConcordRule concord;
     private ServerClient serverClient;
 
     @BeforeAll
-    public static void _initJGit() {
+    public static void _initJGit(ConcordRule rule) {
         JGitUtils.applyWorkarounds();
+        concord = rule;
     }
 
     @BeforeEach
     public void _init() {
-        serverClient = new ServerClient(ITConstants.SERVER_URL);
+        serverClient = new ServerClient(concord.apiBaseUrl(), concord.environment().apiToken());
+    }
+
+    protected static ConcordRule concord() {
+        return concord;
+    }
+
+    protected static String defaultApiKey() {
+        return concord.environment().apiToken();
     }
 
     protected ApiClient getApiClient() {
@@ -149,7 +160,7 @@ public abstract class AbstractServerIT {
     }
 
     protected void resetApiKey() {
-        serverClient.resetApiKey();
+        serverClient.setApiKey(concord.environment().apiToken());
     }
 
     protected void setApiKey(String apiKey) {
@@ -176,14 +187,16 @@ public abstract class AbstractServerIT {
         return ITUtils.randomPwd();
     }
 
-    protected static Path createTempDir() throws IOException {
-        return ITUtils.createTempDir();
+    protected static Path createSharedTempDir() throws IOException {
+        Path dir = Files.createTempDirectory(ConcordConfiguration.sharedDir(), "test");
+        Files.setPosixFilePermissions(dir, PosixFilePermissions.fromString("rwxr-xr-x"));
+        return dir;
     }
 
-    protected static Path createTempFile(String suffix) throws IOException {
-        Path tmpDir = Files.createTempFile("test", suffix);
-        Files.setPosixFilePermissions(tmpDir, PosixFilePermissions.fromString("rw-r--r--"));
-        return tmpDir;
+    protected static Path createSharedTempFile(String suffix) throws IOException {
+        Path tmp = Files.createTempFile(ConcordConfiguration.sharedDir(), "test", suffix);
+        Files.setPosixFilePermissions(tmp, PosixFilePermissions.fromString("rw-r--r--"));
+        return tmp;
     }
 
     @SuppressWarnings("unchecked")
@@ -205,7 +218,7 @@ public abstract class AbstractServerIT {
     }
 
     protected String createRepo(String resource) throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(AbstractServerIT.class.getResource(resource).toURI());
         PathUtils.copy(src.toPath(), tmpDir);

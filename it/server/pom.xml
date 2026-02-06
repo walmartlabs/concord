@@ -16,29 +16,12 @@
     <name>${project.groupId}:${project.artifactId}</name>
 
     <properties>
-        <agent.image>walmartlabs/concord-agent</agent.image>
-        <ansible.image>walmartlabs/concord-ansible</ansible.image>
-        <base.dir>${basedir}</base.dir>
-        <db.image>library/postgres</db.image>
-        <deps.dir.src.mount>${project.basedir}/target/deps</deps.dir.src.mount>
-        <deps.dir>${project.basedir}/target/deps</deps.dir>
-        <dind.image>docker:dind</dind.image>
-        <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
-        <docker.host.addr>localhost</docker.host.addr>
-        <is.docker.profile>false</is.docker.profile>
-        <it.db.addr>db-node:5432</it.db.addr>
-        <it.docker.port>2375</it.docker.port>
-        <it.ldap.addr>ldap-node:389</it.ldap.addr>
-        <it.server.network.mode>custom</it.server.network.mode>
-        <it.server.port>8001</it.server.port>
-        <local.repository.src.mount>${settings.localRepository}</local.repository.src.mount>
-        <network>net-server-it</network>
-        <oldap.image>osixia/openldap</oldap.image>
+        <it.local.mode>false</it.local.mode>
+        <db.image>library/postgres:10</db.image>
         <server.image>walmartlabs/concord-server</server.image>
-        <skip.socat>true</skip.socat>
-        <socat.image>alpine/socat</socat.image>
-        <tmp.dir.src.mount>${java.io.tmpdir}</tmp.dir.src.mount>
-        <tmp.dir>${java.io.tmpdir}</tmp.dir>
+        <agent.image>walmartlabs/concord-agent</agent.image>
+        <ryuk.image>testcontainers/ryuk:0.6.0</ryuk.image>
+        <deps.dir>${java.io.tmpdir}/concord-server-it/deps</deps.dir>
     </properties>
 
     <dependencies>
@@ -65,6 +48,22 @@
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-sdk</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ca.ibodrov.concord</groupId>
+            <artifactId>testcontainers-concord-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ca.ibodrov.concord</groupId>
+            <artifactId>testcontainers-concord-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -237,22 +236,17 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <skipTests>${skip.it.tests}</skipTests>
-                    <environmentVariables>
-                        <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
-                        <IT_CUSTOM_AGENTS>true</IT_CUSTOM_AGENTS>
-                        <IT_DEFAULT_API_KEY>cTFxMXExcTE=</IT_DEFAULT_API_KEY>
-                        <IT_DEPS_DIR>${deps.dir}</IT_DEPS_DIR>
-                        <IT_DOCKER_ANSIBLE_IMAGE>${ansible.image}</IT_DOCKER_ANSIBLE_IMAGE>
-                        <IT_DOCKER_HOST_ADDR>${docker.host.addr}</IT_DOCKER_HOST_ADDR>
-                        <IT_LDAP_URL>ldap://localhost:${it.ldap.port}</IT_LDAP_URL>
-                        <IT_PROJECT_VERSION>${project.version}</IT_PROJECT_VERSION>
-                        <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
-                    </environmentVariables>
                     <systemProperties>
-                        <java.io.tmpdir>${tmp.dir}</java.io.tmpdir>
-                        <isDocker>${is.docker.profile}</isDocker>
-                        <local.mvn.repo>${local.repository.src.mount}</local.mvn.repo>
+                        <it.local.mode>${it.local.mode}</it.local.mode>
+                        <db.image>${db.image}</db.image>
+                        <server.image>${server.image}</server.image>
+                        <agent.image>${agent.image}</agent.image>
+                        <it.project.version>${project.version}</it.project.version>
+                        <it.deps.dir>${deps.dir}</it.deps.dir>
                     </systemProperties>
+                    <environmentVariables>
+                        <SKIP_DOCKER_TESTS>true</SKIP_DOCKER_TESTS>
+                    </environmentVariables>
                 </configuration>
             </plugin>
             <plugin>
@@ -322,7 +316,7 @@
                                     <type>pom</type>
                                 </artifactItem>
                             </artifactItems>
-                            <outputDirectory>${tmp.dir}</outputDirectory>
+                            <outputDirectory>${project.basedir}/target/deps</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -332,233 +326,56 @@
 
     <profiles>
         <profile>
-            <id>mac-os</id>
-            <activation>
-                <os>
-                    <family>mac</family>
-                </os>
-            </activation>
-            <properties>
-                <tmp.dir>/tmp</tmp.dir>
-                <tmp.dir.src.mount>/tmp</tmp.dir.src.mount>
-                <docker.host.addr>host.docker.internal</docker.host.addr>
-                <skip.socat>false</skip.socat>
-            </properties>
-        </profile>
-        <profile>
-            <id>not-mac-os</id>
-            <activation>
-                <os>
-                    <family>
-                        !mac
-                    </family>
-                </os>
-            </activation>
-            <properties>
-                <it.server.network.mode>host</it.server.network.mode>
-                <it.server.port>8001</it.server.port>
-                <it.db.addr>localhost:${it.db.port}</it.db.addr>
-                <it.ldap.addr>localhost:${it.ldap.port}</it.ldap.addr>
-            </properties>
-        </profile>
-        <profile>
-            <id>docker</id>
+            <id>local</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
-                <is.docker.profile>true</is.docker.profile>
+                <it.local.mode>true</it.local.mode>
             </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.walmartlabs.concord.server</groupId>
+                    <artifactId>concord-server-impl</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.walmartlabs.concord.server</groupId>
+                    <artifactId>concord-server</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.walmartlabs.concord</groupId>
+                    <artifactId>concord-agent</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>io.fabric8</groupId>
-                        <artifactId>docker-maven-plugin</artifactId>
-                        <extensions>true</extensions>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>start</id>
-                                <phase>process-resources</phase>
+                                <id>copy-runner-jar</id>
+                                <phase>process-test-resources</phase>
                                 <goals>
-                                    <goal>start</goal>
+                                    <goal>copy</goal>
                                 </goals>
-                            </execution>
-                            <execution>
-                                <id>stop</id>
-                                <phase>post-integration-test</phase>
-                                <goals>
-                                    <goal>stop</goal>
-                                </goals>
+                                <configuration>
+                                    <overWriteIfNewer>true</overWriteIfNewer>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>com.walmartlabs.concord.runtime.v2</groupId>
+                                            <artifactId>concord-runner-v2</artifactId>
+                                            <classifier>jar-with-dependencies</classifier>
+                                            <destFileName>runner-v2.jar</destFileName>
+                                        </artifactItem>
+                                    </artifactItems>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
+                                </configuration>
                             </execution>
                         </executions>
-                        <configuration>
-                            <skipRun>${skip.it.tests}</skipRun>
-                            <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
-                            <images>
-                                <image>
-                                    <name>${socat.image}</name>
-                                    <alias>socat</alias>
-                                    <run>
-                                        <skip>${skip.socat}</skip>
-                                        <network>
-                                            <mode>host</mode>
-                                        </network>
-                                        <volumes>
-                                            <bind>
-                                                <volume>/var/run/docker.sock:/var/run/docker.sock</volume>
-                                            </bind>
-                                        </volumes>
-                                        <labels>
-                                            <concordTxId>${txId}</concordTxId>
-                                            <com.walmartlabs.concord.it.name>socat</com.walmartlabs.concord.it.name>
-                                        </labels>
-                                        <cmd> TCP-LISTEN:${it.docker.port},fork UNIX-CONNECT:/var/run/docker.sock</cmd>
-                                    </run>
-                                </image>
-                                <image>
-                                    <name>${oldap.image}</name>
-                                    <alias>openldap</alias>
-                                    <run>
-                                        <ports>
-                                            <port>${it.ldap.port}:389</port>
-                                        </ports>
-                                        <network>
-                                            <mode>custom</mode>
-                                            <name>${network}</name>
-                                            <alias>ldap-node</alias>
-                                        </network>
-                                        <wait>
-                                            <log>(?s).*slapd starting*</log>
-                                            <time>60000</time>
-                                        </wait>
-                                        <labels>
-                                            <com.walmartlabs.concord.it.name>oldap</com.walmartlabs.concord.it.name>
-                                        </labels>
-                                    </run>
-                                </image>
-                                <image>
-                                    <name>${db.image}</name>
-                                    <alias>db</alias>
-                                    <run>
-                                        <ports>
-                                            <port>it.db.port:5432</port>
-                                        </ports>
-                                        <network>
-                                            <mode>custom</mode>
-                                            <name>${network}</name>
-                                            <alias>db-node</alias>
-                                        </network>
-                                        <env>
-                                            <POSTGRES_PASSWORD>it</POSTGRES_PASSWORD>
-                                            <POSTGRES_INITDB_ARGS>--no-sync</POSTGRES_INITDB_ARGS>
-                                        </env>
-                                        <wait>
-                                            <log>(?s).*ready for start up.*ready to accept connections.*</log>
-                                            <time>60000</time>
-                                        </wait>
-                                        <labels>
-                                            <concordTxId>${txId}</concordTxId>
-                                            <com.walmartlabs.concord.it.name>db</com.walmartlabs.concord.it.name>
-                                        </labels>
-                                    </run>
-                                </image>
-                                <image>
-                                    <name>${server.image}</name>
-                                    <alias>server</alias>
-                                    <run>
-                                        <ports>
-                                            <port>it.server.port:8001</port>
-                                        </ports>
-                                        <network>
-                                            <mode>${it.server.network.mode}</mode>
-                                            <name>${network}</name>
-                                            <alias>server-node</alias>
-                                        </network>
-                                        <volumes>
-                                            <bind>
-                                                <!-- to share files between tests and the server -->
-                                                <volume>${tmp.dir.src.mount}:${tmp.dir}</volume>
-                                                <!-- allows the server to pick up local dependencies -->
-                                                <volume>${deps.dir.src.mount}:${deps.dir}:ro</volume>
-                                                <!-- provide the server's cfg -->
-                                                <volume>${base.dir}/src/test/resources/server.conf:/opt/concord/conf/server.conf:ro</volume>
-                                                <!-- provide the default process variables cfg -->
-                                                <volume>${base.dir}/src/test/resources/default_vars.yml:/opt/concord/conf/default_vars.yml:ro</volume>
-                                                <!-- share host artifacts -->
-                                                <volume>${local.repository.src.mount}:/host/.m2/repository:ro</volume>
-                                                <volume>${base.dir}/src/test/resources/mvn.json:/opt/concord/conf/mvn.json:ro</volume>
-                                            </bind>
-                                        </volumes>
-                                        <env>
-                                            <CONCORD_CFG_FILE>/opt/concord/conf/server.conf</CONCORD_CFG_FILE>
-                                            <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
-                                            <DB_INVENTORY_PASSWORD>it</DB_INVENTORY_PASSWORD>
-                                            <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>
-                                            <DB_PASSWORD>it</DB_PASSWORD>
-                                            <DB_URL>jdbc:postgresql://${it.db.addr}/postgres</DB_URL>
-                                            <DB_USERNAME>postgres</DB_USERNAME>
-                                            <LDAP_URL>ldap://${it.ldap.addr}</LDAP_URL>
-                                            <NODEROSTER_DB_PASSWORD>it</NODEROSTER_DB_PASSWORD>
-                                            <NODEROSTER_DB_URL>jdbc:postgresql://${it.db.addr}/postgres</NODEROSTER_DB_URL>
-                                            <NODEROSTER_DB_USERNAME>postgres</NODEROSTER_DB_USERNAME>
-                                            <CONCORD_MAVEN_CFG>/opt/concord/conf/mvn.json</CONCORD_MAVEN_CFG>
-                                        </env>
-                                        <wait>
-                                            <!--suppress MavenModelInspection -->
-                                            <http>
-                                                <url>http://localhost:${it.server.port}/api/v1/server/ping</url>
-                                            </http>
-                                            <time>60000</time>
-                                        </wait>
-                                        <labels>
-                                            <concordTxId>${txId}</concordTxId>
-                                            <com.walmartlabs.concord.it.name>server</com.walmartlabs.concord.it.name>
-                                        </labels>
-                                        <log>
-                                            <prefix>SERVER </prefix>
-                                            <color>cyan</color>
-                                        </log>
-                                    </run>
-                                </image>
-                                <!-- TODO start DIND? -->
-                                <image>
-                                    <name>${agent.image}</name>
-                                    <alias>agent</alias>
-                                    <run>
-                                        <network>
-                                            <mode>host</mode>
-                                        </network>
-                                        <volumes>
-                                            <bind>
-                                                <!-- provide the agents's cfg -->
-                                                <volume>${base.dir}/src/test/resources/agent.conf:/opt/concord/conf/agent.conf:ro</volume>
-                                                <!-- to share files between process containers -->
-                                                <volume>${tmp.dir.src.mount}:${tmp.dir}</volume>
-                                                <!-- allows the agent to pick up local dependencies -->
-                                                <volume>${deps.dir.src.mount}:${deps.dir}:ro</volume>
-                                                <!-- share host artifacts -->
-                                                <volume>${local.repository.src.mount}:/host/.m2/repository:ro</volume>
-                                                <volume>${base.dir}/src/test/resources/mvn.json:/opt/concord/conf/mvn.json:ro</volume>
-                                            </bind>
-                                        </volumes>
-                                        <env>
-                                            <CONCORD_CFG_FILE>/opt/concord/conf/agent.conf</CONCORD_CFG_FILE>
-                                            <CONCORD_DOCKER_LOCAL_MODE>false</CONCORD_DOCKER_LOCAL_MODE>
-                                            <CONCORD_MAVEN_CFG>/opt/concord/conf/mvn.json</CONCORD_MAVEN_CFG>
-                                            <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
-                                            <DOCKER_HOST>${docker.daemon.addr}</DOCKER_HOST>
-                                            <SERVER_API_BASE_URL>http://localhost:${it.server.port}</SERVER_API_BASE_URL>
-                                            <SERVER_WEBSOCKET_URL>ws://localhost:${it.server.port}/websocket</SERVER_WEBSOCKET_URL>
-                                            <WORKERS_COUNT>3</WORKERS_COUNT>
-                                        </env>
-                                        <labels>
-                                            <concordTxId>${txId}</concordTxId>
-                                            <com.walmartlabs.concord.it.name>agent</com.walmartlabs.concord.it.name>
-                                        </labels>
-                                    </run>
-                                </image>
-                            </images>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>

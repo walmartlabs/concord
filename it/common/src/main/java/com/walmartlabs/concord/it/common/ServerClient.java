@@ -45,6 +45,10 @@ public class ServerClient {
         this.client = createClient(baseUrl, DEFAULT_API_KEY, null);
     }
 
+    public ServerClient(String baseUrl, String apiKey) {
+        this.client = createClient(baseUrl, apiKey, null);
+    }
+
     public ApiClient getClient() {
         return client;
     }
@@ -328,11 +332,6 @@ public class ServerClient {
     }
 
     private static String envApiKey() {
-        String s = System.getenv("IT_DEFAULT_API_KEY");
-        if (s == null) {
-            throw new IllegalStateException("The default (admin) API key must be configured via IT_DEFAULT_API_KEY environment variable. " +
-                    "The value must match the db.changeLogParameters.defaultAdminToken value in the server's configuration file");
-        }
-        return s;
+        return System.getenv("IT_DEFAULT_API_KEY");
     }
 }

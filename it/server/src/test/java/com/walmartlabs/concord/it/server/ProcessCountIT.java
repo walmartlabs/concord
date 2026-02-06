@@ -41,7 +41,7 @@ public class ProcessCountIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource("processCount").toURI());
         PathUtils.copy(src.toPath(), tmpDir);

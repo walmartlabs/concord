@@ -74,7 +74,7 @@ public class DependencyManagerIT extends AbstractServerIT {
 
         Map<String, Object> cfg = new HashMap<>();
         cfg.put("dependencies", new String[]{"mvn://com.walmartlabs.concord.it.tasks:dependency-manager-test:" + ITConstants.PROJECT_VERSION});
-        String url = "http://" + env("IT_DOCKER_HOST_ADDR", "localhost") + ":" + rule.getPort() + "/item.txt";
+        String url = "http://" + concord().hostAddressAccessibleByContainers() + ":" + rule.getPort() + "/item.txt";
         cfg.put("arguments", Collections.singletonMap("url", url));
 
         input.put("request", cfg);

@@ -562,7 +562,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
     private static String initRepo(String resourceName, String path, String find, String replace, Consumer<Path> fileAdder) throws Exception {
 
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(ExternalImportsIT.class.getResource(resourceName).toURI());
         PathUtils.copy(src.toPath(), tmpDir);
@@ -596,7 +596,7 @@ public class ExternalImportsIT extends AbstractServerIT {
     }
 
     private static Path createPayload(String resourceName, Map<String, String> replacements) throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
         File src = new File(ExternalImportsIT.class.getResource(resourceName).toURI());
         PathUtils.copy(src.toPath(), tmpDir);
         Path concordFile = tmpDir.resolve("concord.yml");

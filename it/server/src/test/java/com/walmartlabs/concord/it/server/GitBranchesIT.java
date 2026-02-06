@@ -46,11 +46,11 @@ public class GitBranchesIT extends AbstractServerIT {
 
     @BeforeEach
     public void setUp() throws Exception {
-        Path bareRepo = createTempDir();
+        Path bareRepo = createSharedTempDir();
         try (Git git = Git.init().setInitialBranch("master").setBare(true).setDirectory(bareRepo.toFile()).call()) {
         }
 
-        Path workdir = createTempDir();
+        Path workdir = createSharedTempDir();
         try (Git git = Git.cloneRepository()
                 .setDirectory(workdir.toFile())
                 .setURI("file://" + bareRepo)
@@ -77,6 +77,7 @@ public class GitBranchesIT extends AbstractServerIT {
 
         gitServer = new MockGitSshServer(0, bareRepo);
         gitServer.start();
+        org.testcontainers.Testcontainers.exposeHostPorts(gitServer.getPort());
     }
 
     @AfterEach
@@ -89,7 +90,7 @@ public class GitBranchesIT extends AbstractServerIT {
         String orgName = "Default";
         String projectName = "project_" + randomString();
         String repoName = "repo_" + randomString();
-        String repoUrl = String.format(ITConstants.GIT_SERVER_URL_PATTERN, gitServer.getPort());
+        String repoUrl = String.format("ssh://git@" + concord().hostAddressAccessibleByContainers() + ":%d/", gitServer.getPort());
         String repoSecret = "secret_" + randomString();
 
         SecretOperationResponse sor = generateKeyPair(orgName, repoSecret, false, null);

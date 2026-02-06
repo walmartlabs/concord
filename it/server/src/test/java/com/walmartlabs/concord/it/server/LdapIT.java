@@ -59,7 +59,7 @@ public class LdapIT extends AbstractServerIT {
 
     @BeforeAll
     public static void createLdapStructure() throws Exception {
-        assumeTrue(System.getenv("IT_LDAP_URL") != null);
+        assumeTrue(ConcordConfiguration.ldapUrl() != null);
 
         ldapCtx = createContext();
 
@@ -282,7 +282,7 @@ public class LdapIT extends AbstractServerIT {
     }
 
     public static DirContext createContext() throws Exception {
-        String url = System.getenv("IT_LDAP_URL");
+        String url = ConcordConfiguration.ldapUrl();
         String connectionType = "simple";
         String dn = "cn=admin,dc=example,dc=org";
         String credentials = "admin";

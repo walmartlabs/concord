@@ -46,7 +46,7 @@ public class DependenciesIT extends AbstractServerIT {
         String dep = "file:///" + ITConstants.DEPENDENCIES_DIR + "/example.jar";
 
         String request = "{ \"entryPoint\": \"main\", \"dependencies\": [ \"" + dep + "\" ] }";
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
         Path requestFile = tmpDir.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
         Files.write(requestFile, Collections.singletonList(request));
 

@@ -86,7 +86,7 @@ public class ProjectFileIT extends AbstractServerIT {
     @Test
     public void testDependencies() throws Exception {
         String dep = "file:///" + ITConstants.DEPENDENCIES_DIR + "/example.jar";
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         // prepare .concord.yml
         try (InputStream in = ProjectFileIT.class.getResourceAsStream("projectfile/deps/.template.yml");

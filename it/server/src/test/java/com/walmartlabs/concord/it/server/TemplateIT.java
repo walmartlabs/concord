@@ -146,7 +146,7 @@ public class TemplateIT extends AbstractServerIT {
         final String processYml = "fromTemplate:\n- log: \"hello!\"";
         Path templatePath = createTemplate(processYml, null);
 
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(TemplateIT.class.getResource("repositoryValidationTemplateRef").toURI());
         PathUtils.copy(src.toPath(), tmpDir);
@@ -190,7 +190,7 @@ public class TemplateIT extends AbstractServerIT {
     }
 
     private static Path createTemplate(String process, String mainJs) throws IOException {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         if (mainJs != null) {
             Path metaPath = tmpDir.resolve("_main.js");
@@ -203,7 +203,7 @@ public class TemplateIT extends AbstractServerIT {
         Path procPath = processesPath.resolve("hello.yml");
         Files.write(procPath, process.getBytes());
 
-        Path tmpZip = createTempFile(".zip");
+        Path tmpZip = createSharedTempFile(".zip");
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmpZip))) {
             ZipUtils.zip(zip, tmpDir);
         }
