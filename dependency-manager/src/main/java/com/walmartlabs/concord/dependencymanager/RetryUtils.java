@@ -50,7 +50,7 @@ public final class RetryUtils {
             tryCount++;
         }
         if (exception == null) {
-            return null; // TODO: throw exception?
+            throw new InterruptedException("Retry interrupted");
         }
         throw exception;
     }
