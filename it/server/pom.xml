@@ -16,6 +16,7 @@
     <name>${project.groupId}:${project.artifactId}</name>
 
     <properties>
+        <it.test.parallelism>3</it.test.parallelism>
         <docker.ansible.image>walmartlabs/concord-ansible</docker.ansible.image>
         <ldap.image>osixia/openldap:1.5.0</ldap.image>
         <dind.image>docker:dind</dind.image>

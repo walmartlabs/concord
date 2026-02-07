@@ -45,6 +45,7 @@ jobs:
             runs_on: ubuntu-latest
           - profile: 'jdk17-aarch64'
             runs_on: [ linux, ARM64 ]
+            extra_maven_args: '-Dit.test.parallelism=1'
       fail-fast: false
 
     runs-on: ${{ matrix.runs_on }}
@@ -74,4 +75,4 @@ jobs:
       - name: Build and test with Maven
         env:
           SKIP_DOCKER_TESTS: "true"
-        run: ./mvnw -s .github/settings.xml -B clean install -Pgha -Pdocker -Pit -P${{ matrix.profile }}
+        run: ./mvnw -s .github/settings.xml -B clean install -Pgha -Pdocker -Pit -P${{ matrix.profile }} ${{ matrix.extra_maven_args }}
