@@ -39,7 +39,7 @@ public class GeneralTriggerV2IT extends AbstractGeneralTriggerIT {
     private OrganizationsApi orgApi;
 
     private void setup(String yamlPath) throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource(yamlPath).toURI());
         PathUtils.copy(src.toPath(), tmpDir);

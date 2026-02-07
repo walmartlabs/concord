@@ -648,7 +648,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
     }
 
     private String createUser() throws Exception {
-        assertNotNull(System.getenv("IT_LDAP_URL"));
+        assertNotNull(ConcordConfiguration.ldapUrl());
 
         String username = "user_" + randomString();
 

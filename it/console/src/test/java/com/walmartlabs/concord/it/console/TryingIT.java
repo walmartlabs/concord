@@ -26,8 +26,9 @@ import org.junit.jupiter.api.extension.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
+@Timeout(value = 5000, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
 @Execution(ExecutionMode.CONCURRENT)
-public class TryingIT extends Base {
+public class TryingIT {
 
     @RegisterExtension
     public static TestRule rule = new TestRule();

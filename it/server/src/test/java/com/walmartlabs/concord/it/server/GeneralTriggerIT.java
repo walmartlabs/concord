@@ -35,7 +35,7 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
 
     @Test
     public void testExclusive() throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource("generalExclusiveTrigger").toURI());
         PathUtils.copy(src.toPath(), tmpDir);
@@ -90,7 +90,7 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
 
     @Test
     public void testExclusiveFromConfiguration() throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource("generalTriggerWithExclusiveCfg").toURI());
         PathUtils.copy(src.toPath(), tmpDir);
@@ -146,7 +146,7 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
 
     @Test
     public void testExclusiveWithTriggerOverride() throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource("generalTriggerWithExclusiveOverride").toURI());
         PathUtils.copy(src.toPath(), tmpDir);

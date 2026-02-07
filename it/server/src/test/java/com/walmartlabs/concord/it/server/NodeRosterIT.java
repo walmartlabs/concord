@@ -49,6 +49,8 @@ public class NodeRosterIT extends AbstractServerIT {
 
     @BeforeEach
     public void setUp() {
+        org.testcontainers.Testcontainers.exposeHostPorts(rule.getPort());
+
         rule.stubFor(get(urlEqualTo("/test.txt"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -64,7 +66,7 @@ public class NodeRosterIT extends AbstractServerIT {
 
         byte[] payload = archive(NodeRosterIT.class.getResource("nodeRoster").toURI());
 
-        String artifactUrl = "http://" + env("IT_DOCKER_HOST_ADDR", "localhost") + ":" + rule.getPort() + "/test.txt";
+        String artifactUrl = "http://" + concord().hostAddressAccessibleByContainers() + ":" + rule.getPort() + "/test.txt";
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);

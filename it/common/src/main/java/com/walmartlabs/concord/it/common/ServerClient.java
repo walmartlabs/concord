@@ -34,15 +34,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ServerClient {
 
-    /**
-     * As defined in server.conf
-     */
-    public static final String DEFAULT_API_KEY = envApiKey();
-
     private final ApiClient client;
 
-    public ServerClient(String baseUrl) {
-        this.client = createClient(baseUrl, DEFAULT_API_KEY, null);
+    public ServerClient(String baseUrl, String apiKey) {
+        this.client = createClient(baseUrl, apiKey, null);
     }
 
     public ApiClient getClient() {
@@ -51,10 +46,6 @@ public class ServerClient {
 
     public ApiClient getClientForApiKey(String apiKey) {
         return createClient(client.getBaseUrl(), apiKey, null);
-    }
-
-    public void resetApiKey() {
-        setApiKey(DEFAULT_API_KEY);
     }
 
     public synchronized void setApiKey(String apiKey) {
@@ -327,12 +318,4 @@ public class ServerClient {
         return c;
     }
 
-    private static String envApiKey() {
-        String s = System.getenv("IT_DEFAULT_API_KEY");
-        if (s == null) {
-            throw new IllegalStateException("The default (admin) API key must be configured via IT_DEFAULT_API_KEY environment variable. " +
-                    "The value must match the db.changeLogParameters.defaultAdminToken value in the server's configuration file");
-        }
-        return s;
-    }
 }

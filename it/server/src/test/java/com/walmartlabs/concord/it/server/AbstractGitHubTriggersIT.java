@@ -49,12 +49,12 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
 
     protected Path initRepo(String resource) throws Exception {
         Path src = Paths.get(AbstractGitHubTriggersIT.class.getResource(resource).toURI());
-        return GitUtils.createBareRepository(src);
+        return GitUtils.createBareRepository(src, ConcordConfiguration.sharedDir());
     }
 
     protected Path initRepo(String resource, String leaf) throws Exception {
         Path src = Paths.get(AbstractGitHubTriggersIT.class.getResource(resource).toURI());
-        return GitUtils.createBareRepository(src, "init", null, leaf);
+        return GitUtils.createBareRepository(src, "init", ConcordConfiguration.sharedDir(), leaf);
     }
 
     protected Path initProjectAndRepo(String orgName, String projectName, String repoName, String repoBranch, Path bareRepo) throws Exception {

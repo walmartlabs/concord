@@ -122,7 +122,7 @@ public class TriggerIT extends AbstractServerIT {
     }
 
     private ProjectOperationResponse createProject(String orgName, String projectName, String repoName, String repoResource) throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(TriggerIT.class.getResource(repoResource).toURI());
         PathUtils.copy(src.toPath(), tmpDir);

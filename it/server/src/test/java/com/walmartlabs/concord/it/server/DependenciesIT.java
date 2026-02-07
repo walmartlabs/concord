@@ -23,6 +23,7 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.client2.StartProcessResponse;
 import com.walmartlabs.concord.common.ZipUtils;
+import com.walmartlabs.concord.it.common.ITConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.jupiter.api.Test;
@@ -46,7 +47,7 @@ public class DependenciesIT extends AbstractServerIT {
         String dep = "file:///" + ITConstants.DEPENDENCIES_DIR + "/example.jar";
 
         String request = "{ \"entryPoint\": \"main\", \"dependencies\": [ \"" + dep + "\" ] }";
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
         Path requestFile = tmpDir.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
         Files.write(requestFile, Collections.singletonList(request));
 

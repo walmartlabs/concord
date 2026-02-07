@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.it.common.GitUtils;
+import com.walmartlabs.concord.it.common.ITConstants;
 import com.walmartlabs.concord.it.common.MockGitSshServer;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.AfterEach;
@@ -49,12 +50,13 @@ public class AnsibleProjectIT extends AbstractServerIT {
     @BeforeEach
     public void setUp() throws Exception {
         Path data = Paths.get(AnsibleProjectIT.class.getResource("ansibleproject/git").toURI());
-        Path repo = GitUtils.createBareRepository(data);
+        Path repo = GitUtils.createBareRepository(data, ConcordConfiguration.sharedDir());
 
         gitServer = new MockGitSshServer(0, repo);
         gitServer.start();
 
         gitPort = gitServer.getPort();
+        org.testcontainers.Testcontainers.exposeHostPorts(gitPort);
     }
 
     @AfterEach
@@ -89,7 +91,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
         String repoSecretName = "repoSecret_" + randomString();
         String repoName = "repo_" + randomString();
-        String repoUrl = String.format(ITConstants.GIT_SERVER_URL_PATTERN, gitPort);
+        String repoUrl = String.format("ssh://git@" + concord().hostAddressAccessibleByContainers() + ":%d/", gitPort);
 
         // ---
 
@@ -147,7 +149,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
         String repoSecretName = "repoSecret_" + randomString();
         String repoName = "repo_" + randomString();
-        String repoUrl = String.format(ITConstants.GIT_SERVER_URL_PATTERN, gitPort);
+        String repoUrl = String.format("ssh://git@" + concord().hostAddressAccessibleByContainers() + ":%d/", gitPort);
 
         // ---
 

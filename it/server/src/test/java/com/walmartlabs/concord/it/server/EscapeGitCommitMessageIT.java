@@ -44,12 +44,13 @@ public class EscapeGitCommitMessageIT extends AbstractServerIT {
     @BeforeEach
     public void setUp() throws Exception {
         Path data = Paths.get(EscapeGitCommitMessageIT.class.getResource("escapeCommitMessage").toURI());
-        Path repo = GitUtils.createBareRepository(data, "oops ${booom}");
+        Path repo = GitUtils.createBareRepository(data, "oops ${booom}", ConcordConfiguration.sharedDir(), null);
 
         gitServer = new MockGitSshServer(0, repo);
         gitServer.start();
 
         gitPort = gitServer.getPort();
+        org.testcontainers.Testcontainers.exposeHostPorts(gitPort);
     }
 
     @AfterEach
@@ -66,7 +67,7 @@ public class EscapeGitCommitMessageIT extends AbstractServerIT {
         String projectName = "project@" + randomString();
         String repoSecretName = "repoSecret@" + randomString();
         String repoName = "repo@" + randomString();
-        String repoUrl = String.format(ITConstants.GIT_SERVER_URL_PATTERN, gitPort);
+        String repoUrl = String.format("ssh://git@" + concord().hostAddressAccessibleByContainers() + ":%d/", gitPort);
 
         // ---
 

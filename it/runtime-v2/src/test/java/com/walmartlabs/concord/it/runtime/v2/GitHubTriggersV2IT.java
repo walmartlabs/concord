@@ -27,8 +27,8 @@ import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.it.common.GitHubUtils;
 import com.walmartlabs.concord.it.common.GitUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.nio.file.Path;
@@ -43,8 +43,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class GitHubTriggersV2IT extends AbstractTest {
 
-    @RegisterExtension
-    public static final ConcordRule concord = ConcordConfiguration.configure();
+    static ConcordRule concord;
+
+    @BeforeAll
+    static void setUp(ConcordRule rule) {
+        concord = rule;
+    }
 
     /**
      * Test subscription to unknown repositories only:

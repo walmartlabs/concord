@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +26,7 @@ import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.Testcontainers;
 
 import javax.mail.internet.MimeMessage;
 import java.net.URI;
@@ -44,6 +45,8 @@ public class SmtpIT extends AbstractServerIT {
 
     @Test
     public void testSimple() throws Exception {
+        Testcontainers.exposeHostPorts(mail.getSmtp().getPort());
+
         URI dir = SmtpIT.class.getResource("smtp").toURI();
         byte[] payload = archive(dir);
 
@@ -53,7 +56,7 @@ public class SmtpIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         Map<String, Object> smtpParams = new HashMap<>();
-        smtpParams.put("host", ITConstants.SMTP_SERVER_HOST);
+        smtpParams.put("host", concord().hostAddressAccessibleByContainers());
         smtpParams.put("port", mail.getSmtp().getPort());
 
         Map<String, Object> args = new HashMap<>();

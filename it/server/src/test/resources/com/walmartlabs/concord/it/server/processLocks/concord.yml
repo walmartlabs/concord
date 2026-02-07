@@ -1,6 +1,16 @@
+configuration:
+  arguments:
+    useForm: false
+
+forms:
+  releaseForm:
+  - x: { type: "string" }
+
 flows:
   default:
   - ${lock.lock("my-lock", "ORG")}
   - log: "locked!"
-  - ${sleep.ms(10000)}
+  - if: ${useForm == true}
+    then:
+    - form: releaseForm
   - ${lock.unlock("my-lock", "ORG")}

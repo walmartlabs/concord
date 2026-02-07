@@ -49,7 +49,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HttpTaskIT extends AbstractServerIT {
 
-    private static final String mockHttpBaseUrl;
     private static final String mockHttpAuthToken = "Y249dGVzdDpwYXNzd29yZA==";
     private static final String mockHttpAuthUser = "cn=test";
     private static final String mockHttpAuthPassword = "password";
@@ -63,13 +62,6 @@ public class HttpTaskIT extends AbstractServerIT {
     private static final String mockHttpPathFormUrlEncoded = "/formUrlEncode";
     private static final String mockHttpPathFollowRedirects = "/followRedirects";
 
-    private static final String SERVER_URL;
-
-    static {
-        SERVER_URL = "http://localhost" + ":" + env("IT_SERVER_PORT", "8001");
-        mockHttpBaseUrl = "http://" + env("IT_DOCKER_HOST_ADDR", "localhost") + ":";
-    }
-
     @RegisterExtension
     final WireMockExtension rule = WireMockExtension.newInstance()
             .options(wireMockConfig()
@@ -78,8 +70,13 @@ public class HttpTaskIT extends AbstractServerIT {
                     .extensions(new RequestHeaders()))
             .build();
 
+    private String mockHttpBaseUrl() {
+        return "http://" + concord().hostAddressAccessibleByContainers() + ":" + rule.getPort();
+    }
+
     @BeforeEach
     public void setup() {
+        org.testcontainers.Testcontainers.exposeHostPorts(rule.getPort());
         stubForGetAsStringEndpoint(mockHttpPathPing);
         stubForGetWithQueryEndpoint(mockHttpPathQueryParams);
         stubForGetSecureEndpoint(mockHttpAuthUser, mockHttpAuthPassword, mockHttpPathPassword);
@@ -106,7 +103,7 @@ public class HttpTaskIT extends AbstractServerIT {
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
-        input.put("arguments.url", SERVER_URL + mockHttpPathPing);
+        input.put("arguments.url", mockHttpBaseUrl() + mockHttpPathPing);
 
         StartProcessResponse spr = start(input);
 
@@ -124,7 +121,7 @@ public class HttpTaskIT extends AbstractServerIT {
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
-        input.put("arguments.url", SERVER_URL + mockHttpPathPing);
+        input.put("arguments.url", mockHttpBaseUrl() + mockHttpPathPing);
 
         StartProcessResponse spr = start(input);
 
@@ -143,7 +140,7 @@ public class HttpTaskIT extends AbstractServerIT {
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
-        input.put("arguments.url", SERVER_URL + mockHttpPathPing);
+        input.put("arguments.url", mockHttpBaseUrl() + mockHttpPathPing);
 
         StartProcessResponse spr = start(input);
 
@@ -163,7 +160,7 @@ public class HttpTaskIT extends AbstractServerIT {
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
-        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathQueryParams);
+        input.put("arguments.url", mockHttpBaseUrl() + mockHttpPathQueryParams);
 
         StartProcessResponse spr = start(input);
 
@@ -187,7 +184,7 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("arguments.user", mockHttpAuthUser);
         input.put("arguments.password", mockHttpAuthPassword);
-        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathPassword);
+        input.put("arguments.url", mockHttpBaseUrl() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
@@ -206,7 +203,7 @@ public class HttpTaskIT extends AbstractServerIT {
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.authToken", mockHttpAuthToken);
-        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathToken);
+        input.put("arguments.url", mockHttpBaseUrl() + mockHttpPathToken);
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
@@ -226,7 +223,7 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("arguments.user", mockHttpAuthUser);
         input.put("arguments.password", mockHttpAuthPassword);
-        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathPassword);
+        input.put("arguments.url", mockHttpBaseUrl() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
@@ -246,7 +243,7 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("arguments.user", mockHttpAuthUser);
         input.put("arguments.password", mockHttpAuthPassword);
-        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathPassword);
+        input.put("arguments.url", mockHttpBaseUrl() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
@@ -266,7 +263,7 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("arguments.user", mockHttpAuthUser);
         input.put("arguments.password", mockHttpAuthPassword);
-        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathPassword);
+        input.put("arguments.url", mockHttpBaseUrl() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
@@ -284,7 +281,7 @@ public class HttpTaskIT extends AbstractServerIT {
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
-        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathFormUrlEncoded);
+        input.put("arguments.url", mockHttpBaseUrl() + mockHttpPathFormUrlEncoded);
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
@@ -304,7 +301,7 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("arguments.user", mockHttpAuthUser);
         input.put("arguments.password", mockHttpAuthPassword);
-        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathPassword);
+        input.put("arguments.url", mockHttpBaseUrl() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
@@ -323,7 +320,7 @@ public class HttpTaskIT extends AbstractServerIT {
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.authToken", mockHttpAuthToken);
-        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathToken);
+        input.put("arguments.url", mockHttpBaseUrl() + mockHttpPathToken);
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
@@ -356,7 +353,7 @@ public class HttpTaskIT extends AbstractServerIT {
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
-        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathHeaders);
+        input.put("arguments.url", mockHttpBaseUrl() + mockHttpPathHeaders);
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
@@ -378,7 +375,7 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("arguments.user", "wrongUsername");
         input.put("arguments.password", "wrongPassword");
-        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathUnauthorized);
+        input.put("arguments.url", mockHttpBaseUrl() + mockHttpPathUnauthorized);
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
@@ -396,7 +393,7 @@ public class HttpTaskIT extends AbstractServerIT {
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
-        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathEmpty);
+        input.put("arguments.url", mockHttpBaseUrl() + mockHttpPathEmpty);
 
         StartProcessResponse spr = start(input);
 
@@ -416,7 +413,7 @@ public class HttpTaskIT extends AbstractServerIT {
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.authToken", mockHttpAuthToken);
-        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathFollowRedirects);
+        input.put("arguments.url", mockHttpBaseUrl() + mockHttpPathFollowRedirects);
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());

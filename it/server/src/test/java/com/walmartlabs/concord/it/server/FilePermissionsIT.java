@@ -45,7 +45,7 @@ public class FilePermissionsIT extends AbstractServerIT {
     public void test() throws Exception {
         Path src = Paths.get(FilePermissionsIT.class.getResource("filePerm").toURI());
 
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
         PathUtils.copy(src, tmpDir);
 
         Path testFile = tmpDir.resolve("test.sh");

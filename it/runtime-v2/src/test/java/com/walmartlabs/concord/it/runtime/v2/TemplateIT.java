@@ -50,6 +50,12 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static com.walmartlabs.concord.common.PathUtils.createTempFile;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 
+/**
+ * This test class requires its own Concord container because it uses a ContainerListener
+ * to expose the WireMock server port to the Concord server container right before it starts.
+ * The WireMock port is dynamically allocated, so this setup must happen during container
+ * initialization, which is not compatible with the shared container pattern.
+ */
 public class TemplateIT extends AbstractTest {
 
     @RegisterExtension
@@ -73,7 +79,7 @@ public class TemplateIT extends AbstractTest {
 
     @Test
     public void testTemplate() throws Exception {
-        Path templatePath = createTemplate(Paths.get(resource("template")));
+        Path templatePath = zip(Paths.get(resource("template")));
         String templateUrl = stubForGetTemplate(templatePath.toAbsolutePath());
         String templateAlias = "template_" + randomString();
 
@@ -138,15 +144,8 @@ public class TemplateIT extends AbstractTest {
         return new URL("http", concord.hostAddressAccessibleByContainers(), rule.getPort(), tPath.toString()).toString();
     }
 
-    /**
-     * Creates a zip file for using as a template
-     *
-     * @param templateDir Directory containing template files
-     * @return Path to the tempalte zip file
-     * @throws IOException when template zip file cannot be created
-     */
-    private static Path createTemplate(Path templateDir) throws IOException {
-        Path tmpZip = createTempFile("runtime-v2Template", ".zip");
+    private static Path zip(Path templateDir) throws IOException {
+        Path tmpZip = createTempFile("archive", ".zip");
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmpZip))) {
             ZipUtils.zip(zip, templateDir);
         }

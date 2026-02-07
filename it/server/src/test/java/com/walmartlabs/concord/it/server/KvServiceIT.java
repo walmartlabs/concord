@@ -169,7 +169,7 @@ public class KvServiceIT extends AbstractServerIT {
     private byte[] createPayload(String process, String entryPoint, Map<String, Object> args) throws Exception {
         Path src = Paths.get(KvServiceIT.class.getResource(process).toURI());
 
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
         PathUtils.copy(src, tmpDir);
 
         Map<String, Object> req = ImmutableMap.of("entryPoint", entryPoint,

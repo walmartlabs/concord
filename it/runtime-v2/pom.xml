@@ -16,11 +16,7 @@
     <name>${project.groupId}:${project.artifactId}</name>
 
     <properties>
-        <it.local.mode>false</it.local.mode>
-        <db.image>library/postgres:10</db.image>
-        <server.image>walmartlabs/concord-server</server.image>
-        <agent.image>walmartlabs/concord-agent</agent.image>
-        <ryuk.image>testcontainers/ryuk:0.6.0</ryuk.image>
+        <it.test.parallelism>2</it.test.parallelism>
         <sshd.image>testcontainers/sshd:1.2.0</sshd.image>
     </properties>
 
@@ -130,35 +126,26 @@
     </dependencies>
 
     <build>
-        <resources>
-            <resource>
+        <testResources>
+            <testResource>
                 <filtering>false</filtering>
                 <directory>${project.basedir}/src/test/resources</directory>
                 <includes>
                     <include>**/*</include>
                 </includes>
-            </resource>
-            <resource>
+            </testResource>
+            <testResource>
                 <filtering>true</filtering>
                 <directory>${project.basedir}/src/test/filtered-resources</directory>
                 <includes>
                     <include>**/*</include>
                 </includes>
-            </resource>
-        </resources>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <configuration>
-                    <skipTests>${skip.it.tests}</skipTests>
-                    <systemProperties>
-                        <it.local.mode>${it.local.mode}</it.local.mode>
-                        <db.image>${db.image}</db.image>
-                        <server.image>${server.image}</server.image>
-                        <agent.image>${agent.image}</agent.image>
-                    </systemProperties>
-                </configuration>
             </plugin>
         </plugins>
     </build>

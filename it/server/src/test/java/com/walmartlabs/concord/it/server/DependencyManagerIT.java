@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.it.common.ITConstants;
 import com.walmartlabs.concord.client2.StartProcessResponse;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -74,7 +75,7 @@ public class DependencyManagerIT extends AbstractServerIT {
 
         Map<String, Object> cfg = new HashMap<>();
         cfg.put("dependencies", new String[]{"mvn://com.walmartlabs.concord.it.tasks:dependency-manager-test:" + ITConstants.PROJECT_VERSION});
-        String url = "http://" + env("IT_DOCKER_HOST_ADDR", "localhost") + ":" + rule.getPort() + "/item.txt";
+        String url = "http://" + concord().hostAddressAccessibleByContainers() + ":" + rule.getPort() + "/item.txt";
         cfg.put("arguments", Collections.singletonMap("url", url));
 
         input.put("request", cfg);

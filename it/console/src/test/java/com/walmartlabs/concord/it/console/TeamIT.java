@@ -23,30 +23,19 @@ package com.walmartlabs.concord.it.console;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.it.common.ITUtils;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import static com.walmartlabs.concord.it.console.Utils.DEFAULT_TEST_TIMEOUT;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
-public class TeamIT {
-
-    @RegisterExtension
-    public static ConcordServerRule serverRule = new ConcordServerRule();
-
-    @RegisterExtension
-    public static ConcordConsoleRule consoleRule = new ConcordConsoleRule();
+public class TeamIT extends AbstractConsoleIT {
 
     @Test
     public void testViewTeam() throws Exception {
-        ApiClient client = serverRule.getClient();
+        ApiClient client = getApiClient();
 
         // --- setup: create org and team via API
 
@@ -64,36 +53,36 @@ public class TeamIT {
 
         // --- login and navigate to team page
 
-        consoleRule.login(Concord.ADMIN_API_KEY);
-        consoleRule.navigateToRelative("/#/org/" + orgName + "/team/" + teamName);
-        consoleRule.waitForLoad();
+        login(defaultApiKey());
+        navigateToRelative("/#/org/" + orgName + "/team/" + teamName);
+        waitForLoad();
 
         // --- verify team page loads with correct tabs
 
-        WebElement membersTab = consoleRule.waitFor(By.cssSelector("[data-testid='team-tab-members']"));
+        WebElement membersTab = waitFor(By.cssSelector("[data-testid='team-tab-members']"));
         assertNotNull(membersTab);
         assertTrue(membersTab.getText().contains("Members"));
 
-        WebElement ldapGroupsTab = consoleRule.waitFor(By.cssSelector("[data-testid='team-tab-ldapGroups']"));
+        WebElement ldapGroupsTab = waitFor(By.cssSelector("[data-testid='team-tab-ldapGroups']"));
         assertNotNull(ldapGroupsTab);
 
-        WebElement settingsTab = consoleRule.waitFor(By.cssSelector("[data-testid='team-tab-settings']"));
+        WebElement settingsTab = waitFor(By.cssSelector("[data-testid='team-tab-settings']"));
         assertNotNull(settingsTab);
 
         // --- navigate to settings and verify team ID is displayed
 
         settingsTab.click();
-        consoleRule.waitForLoad();
+        waitForLoad();
         Thread.sleep(500);
 
-        WebElement teamIdElement = consoleRule.waitFor(By.cssSelector("[data-testid='team-settings-id']"));
+        WebElement teamIdElement = waitFor(By.cssSelector("[data-testid='team-settings-id']"));
         assertNotNull(teamIdElement);
         assertTrue(teamIdElement.getText().contains("ID:"));
     }
 
     @Test
     public void testCreateTeam() throws Exception {
-        ApiClient client = serverRule.getClient();
+        ApiClient client = getApiClient();
 
         // --- setup: create org via API
 
@@ -106,34 +95,34 @@ public class TeamIT {
 
         // --- login and navigate to new team page
 
-        consoleRule.login(Concord.ADMIN_API_KEY);
-        consoleRule.navigateToRelative("/#/org/" + orgName + "/team/_new");
-        consoleRule.waitForLoad();
+        login(defaultApiKey());
+        navigateToRelative("/#/org/" + orgName + "/team/_new");
+        waitForLoad();
 
         // --- fill in the form
 
-        WebElement nameInput = consoleRule.waitFor(By.cssSelector("[data-testid='team-form-name'] input"));
+        WebElement nameInput = waitFor(By.cssSelector("[data-testid='team-form-name'] input"));
         nameInput.sendKeys(newTeamName);
 
-        WebElement descriptionInput = consoleRule.waitFor(By.cssSelector("[data-testid='team-form-description'] input"));
+        WebElement descriptionInput = waitFor(By.cssSelector("[data-testid='team-form-description'] input"));
         descriptionInput.sendKeys(newTeamDescription);
 
         Thread.sleep(500); // wait for validation
 
         // --- submit the form
 
-        WebElement createButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-form-submit']"));
+        WebElement createButton = waitFor(By.cssSelector("[data-testid='team-form-submit']"));
         assertTrue(createButton.isEnabled());
         createButton.click();
 
         // --- wait for navigation to the new team page
 
         Thread.sleep(2000);
-        consoleRule.waitForLoad();
+        waitForLoad();
 
         // --- verify we're on the new team's page
 
-        String currentUrl = consoleRule.getDriver().getCurrentUrl();
+        String currentUrl = getDriver().getCurrentUrl();
         assertTrue(currentUrl.contains("/org/" + orgName + "/team/" + newTeamName),
                 "Expected URL to contain team path, but was: " + currentUrl);
 
@@ -148,7 +137,7 @@ public class TeamIT {
 
     @Test
     public void testRenameTeam() throws Exception {
-        ApiClient client = serverRule.getClient();
+        ApiClient client = getApiClient();
 
         // --- setup: create org and team via API
 
@@ -164,13 +153,13 @@ public class TeamIT {
 
         // --- login and navigate to team settings
 
-        consoleRule.login(Concord.ADMIN_API_KEY);
-        consoleRule.navigateToRelative("/#/org/" + orgName + "/team/" + originalTeamName + "/settings");
-        consoleRule.waitForLoad();
+        login(defaultApiKey());
+        navigateToRelative("/#/org/" + orgName + "/team/" + originalTeamName + "/settings");
+        waitForLoad();
 
         // --- find the rename input, select all text, then enter new name
 
-        WebElement renameInput = consoleRule.waitFor(By.cssSelector("[data-testid='team-rename-input'] input"));
+        WebElement renameInput = waitFor(By.cssSelector("[data-testid='team-rename-input'] input"));
         renameInput.sendKeys(Keys.chord(Keys.CONTROL, "a"));
         renameInput.sendKeys(newTeamName);
 
@@ -178,24 +167,24 @@ public class TeamIT {
 
         // --- click rename button
 
-        WebElement renameButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-rename-button']"));
+        WebElement renameButton = waitFor(By.cssSelector("[data-testid='team-rename-button']"));
         assertTrue(renameButton.isEnabled());
         renameButton.click();
 
         // --- wait for confirmation modal and confirm
 
         Thread.sleep(500);
-        WebElement confirmButton = consoleRule.waitFor(By.cssSelector(".ui.modal.active .actions .ui.primary.button"));
+        WebElement confirmButton = waitFor(By.cssSelector(".ui.modal.active .actions .ui.primary.button"));
         confirmButton.click();
 
         // --- wait for navigation
 
         Thread.sleep(2000);
-        consoleRule.waitForLoad();
+        waitForLoad();
 
         // --- verify we're on the renamed team's page
 
-        String currentUrl = consoleRule.getDriver().getCurrentUrl();
+        String currentUrl = getDriver().getCurrentUrl();
         assertTrue(currentUrl.contains("/org/" + orgName + "/team/" + newTeamName),
                 "Expected URL to contain new team name, but was: " + currentUrl);
 
@@ -219,7 +208,7 @@ public class TeamIT {
 
     @Test
     public void testDeleteTeam() throws Exception {
-        ApiClient client = serverRule.getClient();
+        ApiClient client = getApiClient();
 
         // --- setup: create org and team via API
 
@@ -239,29 +228,29 @@ public class TeamIT {
 
         // --- login and navigate to team settings
 
-        consoleRule.login(Concord.ADMIN_API_KEY);
-        consoleRule.navigateToRelative("/#/org/" + orgName + "/team/" + teamName + "/settings");
-        consoleRule.waitForLoad();
+        login(defaultApiKey());
+        navigateToRelative("/#/org/" + orgName + "/team/" + teamName + "/settings");
+        waitForLoad();
 
         // --- click delete button
 
-        WebElement deleteButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-delete-button']"));
+        WebElement deleteButton = waitFor(By.cssSelector("[data-testid='team-delete-button']"));
         deleteButton.click();
 
         // --- wait for confirmation modal and confirm
 
         Thread.sleep(500);
-        WebElement confirmButton = consoleRule.waitFor(By.cssSelector(".ui.modal.active .actions .ui.primary.button"));
+        WebElement confirmButton = waitFor(By.cssSelector(".ui.modal.active .actions .ui.primary.button"));
         confirmButton.click();
 
         // --- wait for navigation to team list
 
         Thread.sleep(2000);
-        consoleRule.waitForLoad();
+        waitForLoad();
 
         // --- verify we're redirected to team list
 
-        String currentUrl = consoleRule.getDriver().getCurrentUrl();
+        String currentUrl = getDriver().getCurrentUrl();
         assertTrue(currentUrl.contains("/org/" + orgName + "/team") && !currentUrl.contains(teamName),
                 "Expected URL to be team list, but was: " + currentUrl);
 
@@ -279,7 +268,7 @@ public class TeamIT {
 
     @Test
     public void testTeamListNavigation() throws Exception {
-        ApiClient client = serverRule.getClient();
+        ApiClient client = getApiClient();
 
         // --- setup: create org and teams via API
 
@@ -296,25 +285,25 @@ public class TeamIT {
 
         // --- login and navigate to team list
 
-        consoleRule.login(Concord.ADMIN_API_KEY);
-        consoleRule.navigateToRelative("/#/org/" + orgName + "/team");
-        consoleRule.waitForLoad();
+        login(defaultApiKey());
+        navigateToRelative("/#/org/" + orgName + "/team");
+        waitForLoad();
 
         // --- verify both teams are listed
 
-        WebElement team1Link = consoleRule.waitFor(By.linkText(team1Name));
+        WebElement team1Link = waitFor(By.linkText(team1Name));
         assertNotNull(team1Link);
 
-        WebElement team2Link = consoleRule.waitFor(By.linkText(team2Name));
+        WebElement team2Link = waitFor(By.linkText(team2Name));
         assertNotNull(team2Link);
 
         // --- click on team1 and verify navigation
 
         team1Link.click();
-        consoleRule.waitForLoad();
+        waitForLoad();
         Thread.sleep(500);
 
-        String currentUrl = consoleRule.getDriver().getCurrentUrl();
+        String currentUrl = getDriver().getCurrentUrl();
         assertTrue(currentUrl.contains("/org/" + orgName + "/team/" + team1Name),
                 "Expected URL to contain team1 path, but was: " + currentUrl);
     }

@@ -40,7 +40,7 @@ public class ProjectIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(ProjectIT.class.getResource("project").toURI());
         PathUtils.copy(src.toPath(), tmpDir);
@@ -78,7 +78,7 @@ public class ProjectIT extends AbstractServerIT {
 
     @Test
     public void testEntryPointFromYml() throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(ProjectIT.class.getResource("projectEntryPoint").toURI());
         PathUtils.copy(src.toPath(), tmpDir);
@@ -108,7 +108,7 @@ public class ProjectIT extends AbstractServerIT {
 
     @Test
     public void testWithCommitId() throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(ProjectIT.class.getResource("project").toURI());
         PathUtils.copy(src.toPath(), tmpDir);
@@ -161,7 +161,7 @@ public class ProjectIT extends AbstractServerIT {
 
     @Test
     public void testWithTag() throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(ProjectIT.class.getResource("project").toURI());
         PathUtils.copy(src.toPath(), tmpDir);
@@ -211,7 +211,7 @@ public class ProjectIT extends AbstractServerIT {
 
     @Test
     public void testInitImport() throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(ProjectIT.class.getResource("project-triggers").toURI());
         PathUtils.copy(src.toPath(), tmpDir);
@@ -248,7 +248,7 @@ public class ProjectIT extends AbstractServerIT {
 
     @Test
     public void testRepositoryValidation() throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(ProjectIT.class.getResource("repositoryValidation").toURI());
         PathUtils.copy(src.toPath(), tmpDir);
@@ -282,7 +282,7 @@ public class ProjectIT extends AbstractServerIT {
     @Test
     public void testRepositoryValidationForEmptyFlow() throws Exception {
         assertThrows(Exception.class, () -> {
-            Path tmpDir = createTempDir();
+            Path tmpDir = createSharedTempDir();
 
             File src = new File(ProjectIT.class.getResource("repositoryValidationEmptyFlow").toURI());
             PathUtils.copy(src.toPath(), tmpDir);
@@ -317,7 +317,7 @@ public class ProjectIT extends AbstractServerIT {
     @Test
     public void testRepositoryValidationForEmptyForm() throws Exception {
         assertThrows(Exception.class, () -> {
-            Path tmpDir = createTempDir();
+            Path tmpDir = createSharedTempDir();
 
             File src = new File(ProjectIT.class.getResource("repositoryValidationEmptyForm").toURI());
             PathUtils.copy(src.toPath(), tmpDir);
@@ -352,7 +352,7 @@ public class ProjectIT extends AbstractServerIT {
     @Test
     public void testDisabledRepository() throws Exception {
         assertThrows(Exception.class, () -> {
-            Path tmpDir = createTempDir();
+            Path tmpDir = createSharedTempDir();
 
             File src = new File(ProjectIT.class.getResource("ProcessDisabledRepo").toURI());
             PathUtils.copy(src.toPath(), tmpDir);

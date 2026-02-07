@@ -38,6 +38,12 @@ import javax.mail.internet.MimeMessage;
 import static com.walmartlabs.concord.it.runtime.v2.Utils.resourceToString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * This test class requires its own Concord container because it uses a ContainerListener
+ * to expose the GreenMail SMTP server port to the agent container right before it starts.
+ * The SMTP port is dynamically allocated, so this setup must happen during container
+ * initialization, which is not compatible with the shared container pattern.
+ */
 public class SmtpIT extends AbstractTest {
 
     @RegisterExtension

@@ -27,12 +27,7 @@ import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import java.util.concurrent.TimeUnit;
-
-import static com.walmartlabs.concord.it.compat.ITConstants.DEFAULT_TEST_TIMEOUT;
 
 /**
  * Runs the current versions of the Server and the Agent in testcontainer-concord's LOCAL mode.
@@ -40,7 +35,6 @@ import static com.walmartlabs.concord.it.compat.ITConstants.DEFAULT_TEST_TIMEOUT
  * Currently, the test is ignored due to some port conflicts.
  */
 @Disabled
-@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class LocalModeIT {
 
     @RegisterExtension

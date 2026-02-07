@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.client2.StartProcessResponse;
+import com.walmartlabs.concord.it.common.ITConstants;
 import org.junit.jupiter.api.Test;
 
 import java.net.HttpURLConnection;
@@ -37,10 +38,10 @@ public class StandardAuthenticationHandlersIT extends AbstractServerIT {
 
     @Test
     public void testBearerToken() throws Exception {
-        URL urlObj = new URL(ITConstants.SERVER_URL + "/api/v1/org?limit=1");
+        URL urlObj = new URL(concord().apiBaseUrl() + "/api/v1/org?limit=1");
         HttpURLConnection httpCon = (HttpURLConnection) urlObj.openConnection();
 
-        httpCon.setRequestProperty("Authorization", "Bearer " + DEFAULT_API_KEY);
+        httpCon.setRequestProperty("Authorization", "Bearer " + defaultApiKey());
 
         int responseCode = httpCon.getResponseCode();
         assertEquals(HttpURLConnection.HTTP_OK, responseCode);
@@ -53,7 +54,7 @@ public class StandardAuthenticationHandlersIT extends AbstractServerIT {
 
         // ---
 
-        String targetUrl = getApiClient().getBaseUri() + "/api/v1/org?limit=1";
+        String targetUrl = ITConstants.INTERNAL_SERVER_URL + "/api/v1/org?limit=1";
         StartProcessResponse spr = start(Map.of(
                 "archive", payload,
                 "arguments.targetUrl", targetUrl));

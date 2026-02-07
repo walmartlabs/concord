@@ -93,7 +93,7 @@ public abstract class AbstractOneOpsTriggerIT extends AbstractServerIT {
 
     protected Path initRepo(String resource) throws Exception {
         Path src = Paths.get(AbstractGitHubTriggersIT.class.getResource(resource).toURI());
-        return GitUtils.createBareRepository(src);
+        return GitUtils.createBareRepository(src, ConcordConfiguration.sharedDir());
     }
 
     protected Path initProjectAndRepo(String orgName, String projectName, String repoName, Path bareRepo) throws Exception {

@@ -19,17 +19,6 @@
         <!-- pin down the version of DB and Selenium images -->
         <db.image>library/postgres:10.4-alpine</db.image>
         <selenium.image>seleniarm/standalone-chromium:110.0</selenium.image>
-
-        <!-- use the latest locally built Concord images -->
-        <server.image>walmartlabs/concord-server</server.image>
-        <agent.image>walmartlabs/concord-agent</agent.image>
-        <console.image>walmartlabs/concord-console</console.image>
-
-        <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
-
-        <it.webdriver.type>local</it.webdriver.type>
-        <tmp.dir>/tmp</tmp.dir>
-        <network>net-console-it</network>
     </properties>
 
     <dependencies>
@@ -43,9 +32,31 @@
             <artifactId>concord-client2</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>ca.ibodrov.concord</groupId>
+            <artifactId>testcontainers-concord-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ca.ibodrov.concord</groupId>
+            <artifactId>testcontainers-concord-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -101,182 +112,11 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
-                    <skipTests>${skip.it.tests}</skipTests>
-                    <environmentVariables>
-                        <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
-                        <IT_CONSOLE_BASE_URL>http://server-node:8001</IT_CONSOLE_BASE_URL>
-                        <IT_DEFAULT_API_KEY>cTFxMXExcTE=</IT_DEFAULT_API_KEY>
-                        <IT_SCREENSHOTS_DIR>${project.build.directory}/screenshots</IT_SCREENSHOTS_DIR>
-                        <IT_SELENIUM_PORT>${it.selenium.port}</IT_SELENIUM_PORT>
-                        <IT_SERVER_BASE_URL>http://localhost:${it.server.port}</IT_SERVER_BASE_URL>
-                        <IT_WEBDRIVER_TYPE>${it.webdriver.type}</IT_WEBDRIVER_TYPE>
-                    </environmentVariables>
                     <systemProperties>
-                        <java.io.tmpdir>${tmp.dir}</java.io.tmpdir>
+                        <selenium.image>${selenium.image}</selenium.image>
                     </systemProperties>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>docker</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <it.webdriver.type>remote</it.webdriver.type>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>io.fabric8</groupId>
-                        <artifactId>docker-maven-plugin</artifactId>
-                        <extensions>true</extensions>
-                        <executions>
-                            <execution>
-                                <id>start</id>
-                                <phase>pre-integration-test</phase>
-                                <goals>
-                                    <goal>start</goal>
-                                </goals>
-                            </execution>
-                            <execution>
-                                <id>stop</id>
-                                <phase>post-integration-test</phase>
-                                <goals>
-                                    <goal>stop</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <skipRun>${skip.it.tests}</skipRun>
-                            <showLogs>false</showLogs>
-                            <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
-                            <images>
-                                <image>
-                                    <name>${db.image}</name>
-                                    <alias>db</alias>
-                                    <run>
-                                        <ports>
-                                            <port>it.db.port:8001</port>
-                                        </ports>
-                                        <network>
-                                            <mode>custom</mode>
-                                            <name>${network}</name>
-                                            <alias>db-node</alias>
-                                        </network>
-                                        <env>
-                                            <POSTGRES_PASSWORD>it</POSTGRES_PASSWORD>
-                                            <POSTGRES_INITDB_ARGS>--no-sync</POSTGRES_INITDB_ARGS>
-                                        </env>
-                                        <wait>
-                                            <log>(?s).*ready for start up.*ready to accept connections.*</log>
-                                            <time>60000</time>
-                                        </wait>
-                                    </run>
-                                </image>
-                                <image>
-                                    <name>${server.image}</name>
-                                    <alias>server</alias>
-                                    <run>
-                                        <ports>
-                                            <port>it.server.port:8001</port>
-                                        </ports>
-                                        <network>
-                                            <mode>custom</mode>
-                                            <name>${network}</name>
-                                            <alias>server-node</alias>
-                                        </network>
-                                        <volumes>
-                                            <bind>
-                                                <!-- to access test files -->
-                                                <volume>${tmp.dir}:${tmp.dir}</volume>
-                                                <!-- allows the server to pick up local dependencies -->
-                                                <volume>${settings.localRepository}:/home/concord/.m2/repository:ro</volume>
-                                                <volume>${basedir}/src/test/resources/server.conf:/opt/concord/conf/server.conf:ro</volume>
-                                            </bind>
-                                        </volumes>
-                                        <env>
-                                            <CONCORD_CFG_FILE>/opt/concord/conf/server.conf</CONCORD_CFG_FILE>
-                                            <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
-                                            <DB_INVENTORY_PASSWORD>it</DB_INVENTORY_PASSWORD>
-                                            <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>
-                                            <DB_PASSWORD>it</DB_PASSWORD>
-                                            <DB_URL>jdbc:postgresql://db-node:5432/postgres</DB_URL>
-                                            <DB_USERNAME>postgres</DB_USERNAME>
-                                            <NODEROSTER_DB_PASSWORD>it</NODEROSTER_DB_PASSWORD>
-                                            <NODEROSTER_DB_URL>jdbc:postgresql://db-node:5432/postgres</NODEROSTER_DB_URL>
-                                            <NODEROSTER_DB_USERNAME>postgres</NODEROSTER_DB_USERNAME>
-                                        </env>
-                                        <wait>
-                                            <!--suppress MavenModelInspection -->
-                                            <http>
-                                                <url>http://localhost:${it.server.port}/api/v1/server/ping</url>
-                                            </http>
-                                            <time>60000</time>
-                                        </wait>
-                                    </run>
-                                </image>
-                                <image>
-                                    <name>${agent.image}</name>
-                                    <alias>agent</alias>
-                                    <run>
-                                        <network>
-                                            <mode>custom</mode>
-                                            <name>${network}</name>
-                                            <alias>agent-node</alias>
-                                        </network>
-                                        <volumes>
-                                            <bind>
-                                                <!-- to share files between process containers -->
-                                                <volume>${tmp.dir}:${tmp.dir}</volume>
-                                                <!-- share host artifacts -->
-                                                <volume>${settings.localRepository}:/host/.m2/repository:ro</volume>
-                                                <volume>${basedir}/src/test/resources/console.conf:/opt/concord/console/nginx/app.conf:ro</volume>
-                                                <volume>${basedir}/src/test/resources/mvn.json:/opt/concord/conf/mvn.json:ro</volume>
-                                                <volume>${basedir}/src/test/resources/agent.conf:/opt/concord/conf/agent.conf:ro</volume>
-                                            </bind>
-                                        </volumes>
-                                        <env>
-                                            <CONCORD_CFG_FILE>/opt/concord/conf/agent.conf</CONCORD_CFG_FILE>
-                                            <CONCORD_DOCKER_LOCAL_MODE>false</CONCORD_DOCKER_LOCAL_MODE>
-                                            <CONCORD_MAVEN_CFG>/opt/concord/conf/mvn.json</CONCORD_MAVEN_CFG>
-                                            <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
-                                            <SERVER_API_BASE_URL>http://server-node:8001</SERVER_API_BASE_URL>
-                                            <SERVER_WEBSOCKET_URL>ws://server-node:8001/websocket</SERVER_WEBSOCKET_URL>
-                                        </env>
-                                    </run>
-                                </image>
-                                <image>
-                                    <name>${selenium.image}</name>
-                                    <alias>selenium-chromium</alias>
-                                    <run>
-                                        <ports>
-                                            <port>it.selenium.port:4444</port>
-                                        </ports>
-                                        <network>
-                                            <mode>custom</mode>
-                                            <name>${network}</name>
-                                            <alias>selenium-node</alias>
-                                        </network>
-                                        <volumes>
-                                            <bind>
-                                                <volume>/dev/shm:/dev/shm</volume>
-                                            </bind>
-                                        </volumes>
-                                        <wait>
-                                            <log>(?s).*Started Selenium Standalone.*</log>
-                                            <time>60000</time>
-                                        </wait>
-                                    </run>
-                                </image>
-                            </images>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>

@@ -27,6 +27,8 @@ import com.walmartlabs.concord.common.PathUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -40,11 +42,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.GrepUtils.grep;
-import static com.walmartlabs.concord.it.server.AbstractServerIT.DEFAULT_TEST_TIMEOUT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-@Timeout(value = 2 * DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
+@Timeout(value = 360, unit = TimeUnit.SECONDS)
+@Execution(ExecutionMode.SAME_THREAD)
 public class CronIT extends AbstractServerIT {
 
     @Test
@@ -191,7 +193,7 @@ public class CronIT extends AbstractServerIT {
     }
 
     private static String initRepo(String initResource) throws Exception {
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource(initResource).toURI());
         PathUtils.copy(src.toPath(), tmpDir);

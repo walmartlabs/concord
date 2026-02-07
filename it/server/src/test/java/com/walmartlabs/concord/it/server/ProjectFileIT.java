@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.ZipUtils;
+import com.walmartlabs.concord.it.common.ITConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.jupiter.api.Test;
@@ -86,7 +87,7 @@ public class ProjectFileIT extends AbstractServerIT {
     @Test
     public void testDependencies() throws Exception {
         String dep = "file:///" + ITConstants.DEPENDENCIES_DIR + "/example.jar";
-        Path tmpDir = createTempDir();
+        Path tmpDir = createSharedTempDir();
 
         // prepare .concord.yml
         try (InputStream in = ProjectFileIT.class.getResourceAsStream("projectfile/deps/.template.yml");

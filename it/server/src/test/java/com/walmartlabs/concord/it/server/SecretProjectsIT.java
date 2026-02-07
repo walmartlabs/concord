@@ -114,7 +114,6 @@ public class SecretProjectsIT extends AbstractServerIT {
         assertLog(".*C0nC0rD.*", bytes);
 
         resetApiKey();
-        setApiKey(DEFAULT_API_KEY);
         projectsApi.deleteProject(orgName, projectName1);
         projectsApi.deleteProject(orgName, projectName2);
         projectsApi.deleteProject(orgName, projectName3);

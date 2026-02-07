@@ -25,8 +25,8 @@ import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.sdk.Constants;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.Base64;
 import java.util.List;
@@ -38,8 +38,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ConcordTaskIT extends AbstractTest {
 
-    @RegisterExtension
-    public static final ConcordRule concord = ConcordConfiguration.configure();
+    static ConcordRule concord;
+
+    @BeforeAll
+    static void setUp(ConcordRule rule) {
+        concord = rule;
+    }
 
     /**
      * Test for concord/project-task
