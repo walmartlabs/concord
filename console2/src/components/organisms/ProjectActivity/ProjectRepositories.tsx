@@ -23,7 +23,7 @@ import { ConcordKey } from '../../../api/common';
 import { RedirectButton, RequestErrorActivity } from '../index';
 import { LoadingDispatch } from '../../../App';
 import { useApi } from '../../../hooks/useApi';
-import {useCallback, useMemo, useRef, useState} from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
     list as apiRepositoryList, listTriggersV2 as apiListTriggers,
     PaginatedRepositoryEntries, TriggerEntry,

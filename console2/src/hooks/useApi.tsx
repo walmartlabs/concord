@@ -94,8 +94,8 @@ export function useApi<S>(dataFetcher: () => Promise<S>, props: Props<S>) {
         };
 
         const startBouncing = () => {
-            if(typeof debounceTime === "number" && debounceTime > 0) {
-                if(debounceRef.current !== null) {
+            if (typeof debounceTime === "number" && debounceTime > 0) {
+                if (debounceRef.current !== null) {
                     clearTimeout(debounceRef.current);
                 }
                 debounceRef.current = setTimeout(async ()=>{
@@ -122,7 +122,7 @@ export function useApi<S>(dataFetcher: () => Promise<S>, props: Props<S>) {
 
         return () => {
             cancelled = true;
-            if(debounceRef.current !== null) {
+            if (debounceRef.current !== null) {
                 clearTimeout(debounceRef.current);
                 debounceRef.current = null;
             }
