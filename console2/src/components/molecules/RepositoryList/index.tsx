@@ -23,7 +23,7 @@ import { Link } from 'react-router-dom';
 import { Icon, Table, Popup } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
-import {RepositoryEntry, TriggerEntry} from '../../../api/org/project/repository';
+import { RepositoryEntry, TriggerEntry } from '../../../api/org/project/repository';
 import { GitHubLink } from '../../molecules';
 import { RepositoryActionDropdown } from '../../organisms';
 import { gitUrlParse } from "../GitHubLink";

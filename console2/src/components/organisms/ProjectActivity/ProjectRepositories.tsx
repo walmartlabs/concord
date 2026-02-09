@@ -25,8 +25,10 @@ import { LoadingDispatch } from '../../../App';
 import { useApi } from '../../../hooks/useApi';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
-    list as apiRepositoryList, listTriggersV2 as apiListTriggers,
-    PaginatedRepositoryEntries, TriggerEntry,
+    list as apiRepositoryList,
+    listTriggersV2 as apiListTriggers,
+    PaginatedRepositoryEntries,
+    TriggerEntry
 } from '../../../api/org/project/repository';
 import { Input, Menu } from 'semantic-ui-react';
 import { PaginationToolBar, RepositoryList, RequestErrorMessage } from '../../molecules';
@@ -110,10 +112,10 @@ const ProjectRepositories = ({ orgName, projectName, forceRefresh }: ExternalPro
         if (Array.isArray(triggerInfo.data)) {
             for (let triggerData of triggerInfo.data) {
                 const triggerKey = triggerData.repositoryId;
-                if(!Array.isArray(mapData[triggerKey])) {
-                    mapData[triggerKey] = [ triggerData ];
+                if (Array.isArray(mapData[triggerKey])) {
+                    mapData[triggerKey].push(triggerData);
                 } else {
-                    mapData[triggerKey ].push(triggerData);
+                    mapData[triggerKey] = [triggerData];
                 }
             }
         }
