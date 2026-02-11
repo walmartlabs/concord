@@ -57,7 +57,6 @@ public class TaskSchemaRegistry {
      * Cache entry holding both raw schema and compiled in/out schemas.
      */
     private record CachedSchema(
-            JsonNode rawSchema,
             JsonSchema inSchema,   // null if no 'in' section
             JsonSchema outSchema   // null if no 'out' section
     ) {}
@@ -128,7 +127,7 @@ public class TaskSchemaRegistry {
             JsonSchema inSchema = compileSection(rawSchema, "in", taskName);
             JsonSchema outSchema = compileSection(rawSchema, "out", taskName);
 
-            return Optional.of(new CachedSchema(rawSchema, inSchema, outSchema));
+            return Optional.of(new CachedSchema(inSchema, outSchema));
         } catch (IOException e) {
             log.warn("Failed to load schema for task '{}': {}", taskName, e.getMessage());
             return Optional.empty();

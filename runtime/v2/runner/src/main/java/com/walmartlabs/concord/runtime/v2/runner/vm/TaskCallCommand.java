@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -86,10 +87,12 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         TaskCallOptions opts = Objects.requireNonNull(call.getOptions());
         Variables input = new MapBackedVariables(VMUtils.prepareInput(ecf, expressionEvaluator, ctx, opts.input(), opts.inputExpression()));
 
-        // Input validation (null-safe for backward compatibility with old serialized state)
+        // Input/output validation (null-safe for backward compatibility with old serialized state)
         TaskCallValidation validation = getTaskCallValidation(ctx);
+        boolean validationEnabled = validation.in() != ValidationMode.DISABLED || validation.out() != ValidationMode.DISABLED;
+        TaskSchemaValidator validator = validationEnabled ? runtime.getService(TaskSchemaValidator.class) : null;
+
         if (validation.in() != ValidationMode.DISABLED) {
-            TaskSchemaValidator validator = runtime.getService(TaskSchemaValidator.class);
             TaskSchemaValidationResult validationResult = validator.validateInput(taskName, input.toMap());
             handleValidationResult(taskName, "in", validationResult, validation.in());
         }
@@ -105,7 +108,6 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
 
                 // Output validation
                 if (validation.out() != ValidationMode.DISABLED) {
-                    TaskSchemaValidator validator = runtime.getService(TaskSchemaValidator.class);
                     TaskSchemaValidationResult validationResult = validator.validateOutput(taskName, simpleResult.toMap());
                     handleValidationResult(taskName, "out", validationResult, validation.out());
                 }
@@ -137,7 +139,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         }
     }
 
-    private static String formatErrors(java.util.List<String> errors) {
+    private static String formatErrors(List<String> errors) {
         StringBuilder sb = new StringBuilder();
         for (String error : errors) {
             sb.append("\n  - ").append(error);

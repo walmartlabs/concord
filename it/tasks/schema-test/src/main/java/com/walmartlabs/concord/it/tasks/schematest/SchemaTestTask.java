@@ -40,8 +40,15 @@ public class SchemaTestTask implements Task {
     public TaskResult execute(Variables input) {
         String message = input.assertString("message");
         int count = input.getInt("count", 0);
+        boolean badOutput = input.getBoolean("badOutput", false);
 
         log.info("SchemaTestTask: message={}, count={}", message, count);
+
+        if (badOutput) {
+            // Return output missing required "echo" field to trigger output validation failure
+            return TaskResult.success()
+                    .value("count", count);
+        }
 
         return TaskResult.success()
                 .value("echo", message)
