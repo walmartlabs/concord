@@ -44,7 +44,7 @@ jobs:
           - profile: 'jdk17'
             runs_on: ubuntu-latest
           - profile: 'jdk17-aarch64'
-            runs_on: [ linux, ARM64 ]
+            runs_on: arm64-runner-set
       fail-fast: false
 
     runs-on: ${{ matrix.runs_on }}
