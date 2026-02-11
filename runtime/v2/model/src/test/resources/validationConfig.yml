@@ -1,0 +1,10 @@
+configuration:
+  runtime: "concord-v2"
+  validation:
+    taskCalls:
+      in: fail
+      out: warn
+
+flows:
+  default:
+    - log: "Hello"
