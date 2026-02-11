@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.guice;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
@@ -56,6 +57,7 @@ public class BaseRunnerModule extends AbstractModule {
         bind(TaskResultService.class);
         bind(FormService.class).toProvider(FormServiceProvider.class);
         bind(Context.class).toProvider(ContextProvider.class);
+        bind(ObjectMapper.class).toProvider(ObjectMapperProvider.class);
 
         bind(DependencyManagerConfiguration.class).toProvider(DependencyManagerConfigurationProvider.class);
 

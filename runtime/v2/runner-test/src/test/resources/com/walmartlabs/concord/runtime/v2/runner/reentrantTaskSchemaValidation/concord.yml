@@ -1,0 +1,14 @@
+configuration:
+  validation:
+    taskCalls:
+      out: fail
+
+flows:
+  default:
+    - log: "Before"
+    - task: reentrantTask
+      in:
+        action: ${actionName}
+      out:
+        result: ${result}
+    - log: "result.ok: ${result.ok}"

@@ -1,0 +1,17 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+    - "mvn://com.walmartlabs.concord.it.tasks:schema-test:PROJECT_VERSION"
+  validation:
+    taskCalls:
+      out: fail
+
+flows:
+  default:
+    # badOutput=true causes the task to omit required 'echo' field
+    - task: schemaTest
+      in:
+        message: "hello"
+        badOutput: true
+      out: result
+    - log: "Result: ${result}"

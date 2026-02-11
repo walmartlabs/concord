@@ -70,11 +70,9 @@ public final class ConfigurationGrammar {
     private static final Parser<Atom, EventConfiguration> eventsVal =
             orError(events, YamlValueType.EVENTS_CFG);
 
-    // Case-insensitive enum parsing for ValidationMode
     private static final Parser<Atom, ValidationMode> validationModeVal =
-            orError(stringVal.map(s -> ValidationMode.valueOf(s.toUpperCase())), YamlValueType.VALIDATION_MODE);
+            orError(enumVal(ValidationMode.class, String::equalsIgnoreCase), YamlValueType.VALIDATION_MODE);
 
-    // Mutable holder for building TaskCallValidation
     private static final class TaskCallValidationHolder {
         ValidationMode in = ValidationMode.DISABLED;
         ValidationMode out = ValidationMode.DISABLED;
@@ -105,7 +103,6 @@ public final class ConfigurationGrammar {
     private static final Parser<Atom, TaskCallValidation> taskCallValidationVal =
             orError(taskCallValidation, YamlValueType.TASK_CALL_VALIDATION);
 
-    // Mutable holder for building ValidationConfiguration
     private static final class ValidationConfigurationHolder {
         TaskCallValidation taskCalls = new TaskCallValidation();
 

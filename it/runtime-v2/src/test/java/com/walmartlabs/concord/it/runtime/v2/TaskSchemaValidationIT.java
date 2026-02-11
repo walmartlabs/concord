@@ -133,7 +133,76 @@ public class TaskSchemaValidationIT extends AbstractTest {
     }
 
     /**
-     * Test that valid concord task input passes validation.
+     * Test that invalid output with FAIL mode throws and process fails.
+     */
+    @Test
+    public void testInvalidOutputFail() throws Exception {
+        String concordYml = resourceToString(TaskSchemaValidationIT.class.getResource("taskSchemaValidation/invalidOutputFail/concord.yml"))
+                .replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION);
+
+        Payload payload = new Payload().concordYml(concordYml);
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
+
+        proc.assertLog(".*Task 'schemaTest' out validation failed.*");
+        proc.assertLog(".*echo.*");
+    }
+
+    /**
+     * Test that invalid output with WARN mode logs warning but process completes.
+     */
+    @Test
+    public void testInvalidOutputWarn() throws Exception {
+        String concordYml = resourceToString(TaskSchemaValidationIT.class.getResource("taskSchemaValidation/invalidOutputWarn/concord.yml"))
+                .replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION);
+
+        Payload payload = new Payload().concordYml(concordYml);
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        proc.assertLog(".*validation errors.*");
+        proc.assertLog(".*Done.*");
+    }
+
+    /**
+     * Test that an invalid schema resource fails in FAIL mode.
+     */
+    @Test
+    public void testInvalidSchemaFail() throws Exception {
+        String concordYml = resourceToString(TaskSchemaValidationIT.class.getResource("taskSchemaValidation/invalidSchemaFail/concord.yml"))
+                .replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION);
+
+        Payload payload = new Payload().concordYml(concordYml);
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
+
+        proc.assertLog(".*Task 'invalidSchema' in validation failed.*");
+        proc.assertLog(".*\\[WARN \\] Failed to load schema resource.*");
+    }
+
+    /**
+     * Test that an invalid schema resource only warns in WARN mode.
+     */
+    @Test
+    public void testInvalidSchemaWarn() throws Exception {
+        String concordYml = resourceToString(TaskSchemaValidationIT.class.getResource("taskSchemaValidation/invalidSchemaWarn/concord.yml"))
+                .replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION);
+
+        Payload payload = new Payload().concordYml(concordYml);
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        proc.assertLog(".*validation errors.*");
+        proc.assertLog(".*InvalidSchemaTask executed.*");
+        proc.assertLog(".*Done.*");
+    }
+
+    /**
+     * Test that valid concord task input passes validation, including startExternal without baseUrl.
      */
     @Test
     public void testConcordTaskValidInput() throws Exception {

@@ -25,11 +25,13 @@ import java.util.List;
 /**
  * Result of task schema validation.
  *
- * @param status the validation status
- * @param errors list of validation error messages
+ * @param status         the validation status
+ * @param schemaResource task schema resource used for validation, if any
+ * @param errors         list of validation error messages
  */
 public record TaskSchemaValidationResult(
         Status status,
+        String schemaResource,
         List<String> errors
 ) {
 
@@ -61,18 +63,26 @@ public record TaskSchemaValidationResult(
     }
 
     public static TaskSchemaValidationResult noSchema() {
-        return new TaskSchemaValidationResult(Status.NO_SCHEMA, List.of());
+        return new TaskSchemaValidationResult(Status.NO_SCHEMA, null, List.of());
     }
 
     public static TaskSchemaValidationResult skipped() {
-        return new TaskSchemaValidationResult(Status.SKIPPED, List.of());
+        return new TaskSchemaValidationResult(Status.SKIPPED, null, List.of());
     }
 
-    public static TaskSchemaValidationResult valid() {
-        return new TaskSchemaValidationResult(Status.VALID, List.of());
+    public static TaskSchemaValidationResult skipped(String schemaResource) {
+        return new TaskSchemaValidationResult(Status.SKIPPED, schemaResource, List.of());
+    }
+
+    public static TaskSchemaValidationResult valid(String schemaResource) {
+        return new TaskSchemaValidationResult(Status.VALID, schemaResource, List.of());
     }
 
     public static TaskSchemaValidationResult invalid(List<String> errors) {
-        return new TaskSchemaValidationResult(Status.INVALID, errors);
+        return invalid(null, errors);
+    }
+
+    public static TaskSchemaValidationResult invalid(String schemaResource, List<String> errors) {
+        return new TaskSchemaValidationResult(Status.INVALID, schemaResource, errors);
     }
 }

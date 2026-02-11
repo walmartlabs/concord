@@ -2389,6 +2389,19 @@ public class YamlErrorParserTest extends AbstractParserTest {
         assertErrorMessage("errors/configuration/023.yml", msg);
     }
 
+    @Test
+    public void test1905() throws Exception {
+        String msg =
+                "(024.yml): Error @ line: 4, col: 11. Invalid value: fatal, expected: [DISABLED, WARN, FAIL]\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'in' @ line: 4, col: 7\n" +
+                        "\t\t'taskCalls' @ line: 3, col: 5\n" +
+                        "\t\t\t'validation' @ line: 2, col: 3\n" +
+                        "\t\t\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/024.yml", msg);
+    }
+
     private void assertErrorMessage(String resource, String expectedError) throws Exception {
         try {
             load(resource);

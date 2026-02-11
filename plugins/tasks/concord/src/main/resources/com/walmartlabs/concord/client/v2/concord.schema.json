@@ -3,6 +3,57 @@
   "title": "Concord Task Schema",
   "description": "Schema for the concord task - start/fork processes, manage API keys",
   "definitions": {
+    "action": {
+      "type": "string",
+      "pattern": "^(?:[sS][tT][aA][rR][tT]|[sS][tT][aA][rR][tT][eE][xX][tT][eE][rR][nN][aA][lL]|[fF][oO][rR][kK]|[kK][iI][lL][lL]|[cC][rR][eE][aA][tT][eE][aA][pP][iI][kK][eE][yY]|[cC][rR][eE][aA][tT][eE][oO][rR][uU][pP][dD][aA][tT][eE][aA][pP][iI][kK][eE][yY])$",
+      "description": "The action to perform"
+    },
+    "actionStart": {
+      "type": "string",
+      "pattern": "^[sS][tT][aA][rR][tT]$"
+    },
+    "actionStartExternal": {
+      "type": "string",
+      "pattern": "^[sS][tT][aA][rR][tT][eE][xX][tT][eE][rR][nN][aA][lL]$"
+    },
+    "actionFork": {
+      "type": "string",
+      "pattern": "^[fF][oO][rR][kK]$"
+    },
+    "actionKill": {
+      "type": "string",
+      "pattern": "^[kK][iI][lL][lL]$"
+    },
+    "actionApiKey": {
+      "type": "string",
+      "pattern": "^(?:[cC][rR][eE][aA][tT][eE][aA][pP][iI][kK][eE][yY]|[cC][rR][eE][aA][tT][eE][oO][rR][uU][pP][dD][aA][tT][eE][aA][pP][iI][kK][eE][yY])$"
+    },
+    "stringOrStringArray": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" } }
+      ]
+    },
+    "attachment": {
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "properties": {
+            "src": {
+              "type": "string",
+              "description": "Source file path"
+            },
+            "dest": {
+              "type": "string",
+              "description": "Destination file path"
+            }
+          },
+          "required": ["src", "dest"],
+          "additionalProperties": true
+        }
+      ]
+    },
     "startParamsBase": {
       "type": "object",
       "properties": {
@@ -35,8 +86,7 @@
           "description": "Entry flow name"
         },
         "activeProfiles": {
-          "type": "array",
-          "items": { "type": "string" },
+          "allOf": [{ "$ref": "#/definitions/stringOrStringArray" }],
           "description": "Active profiles"
         },
         "arguments": {
@@ -45,8 +95,7 @@
           "additionalProperties": true
         },
         "tags": {
-          "type": "array",
-          "items": { "type": "string" },
+          "allOf": [{ "$ref": "#/definitions/stringOrStringArray" }],
           "description": "Process tags"
         },
         "meta": {
@@ -59,6 +108,7 @@
         },
         "attachments": {
           "type": "array",
+          "items": { "$ref": "#/definitions/attachment" },
           "description": "Files to attach"
         },
         "exclusive": {
@@ -150,8 +200,7 @@
           "additionalProperties": true
         },
         "tags": {
-          "type": "array",
-          "items": { "type": "string" },
+          "allOf": [{ "$ref": "#/definitions/stringOrStringArray" }],
           "description": "Process tags"
         },
         "outVars": {
@@ -160,8 +209,7 @@
           "description": "Output variable names"
         },
         "activeProfiles": {
-          "type": "array",
-          "items": { "type": "string" },
+          "allOf": [{ "$ref": "#/definitions/stringOrStringArray" }],
           "description": "Active profiles"
         },
         "exclusive": {
@@ -186,6 +234,14 @@
           "type": "boolean",
           "default": false,
           "description": "Disable onFailure handler"
+        },
+        "baseUrl": {
+          "type": "string",
+          "description": "Concord server URL"
+        },
+        "apiKey": {
+          "type": "string",
+          "description": "API key for authentication"
         }
       },
       "required": ["entryPoint"],
@@ -196,16 +252,14 @@
     "type": "object",
     "properties": {
       "action": {
-        "type": "string",
-        "enum": ["start", "startExternal", "fork", "kill", "createApiKey", "createOrUpdateApiKey"],
-        "description": "The action to perform"
+        "$ref": "#/definitions/action"
       }
     },
     "required": ["action"],
     "allOf": [
       {
         "if": {
-          "properties": { "action": { "const": "start" } },
+          "properties": { "action": { "$ref": "#/definitions/actionStart" } },
           "required": ["action"]
         },
         "then": {
@@ -214,19 +268,19 @@
       },
       {
         "if": {
-          "properties": { "action": { "const": "startExternal" } },
+          "properties": { "action": { "$ref": "#/definitions/actionStartExternal" } },
           "required": ["action"]
         },
         "then": {
           "allOf": [
             { "$ref": "#/definitions/startParams" },
-            { "required": ["baseUrl", "apiKey"] }
+            { "required": ["apiKey"] }
           ]
         }
       },
       {
         "if": {
-          "properties": { "action": { "const": "fork" } },
+          "properties": { "action": { "$ref": "#/definitions/actionFork" } },
           "required": ["action"]
         },
         "then": {
@@ -262,8 +316,7 @@
               "description": "Output variable names to retrieve"
             },
             "tags": {
-              "type": "array",
-              "items": { "type": "string" },
+              "allOf": [{ "$ref": "#/definitions/stringOrStringArray" }],
               "description": "Process tags (inherited by forks)"
             },
             "arguments": {
@@ -272,8 +325,7 @@
               "additionalProperties": true
             },
             "activeProfiles": {
-              "type": "array",
-              "items": { "type": "string" },
+              "allOf": [{ "$ref": "#/definitions/stringOrStringArray" }],
               "description": "Active profiles (inherited by forks)"
             },
             "exclusive": {
@@ -298,6 +350,14 @@
               "type": "boolean",
               "default": false,
               "description": "Disable onFailure handler (inherited by forks)"
+            },
+            "baseUrl": {
+              "type": "string",
+              "description": "Concord server URL"
+            },
+            "apiKey": {
+              "type": "string",
+              "description": "API key for authentication"
             }
           },
           "anyOf": [
@@ -309,7 +369,7 @@
       },
       {
         "if": {
-          "properties": { "action": { "const": "kill" } },
+          "properties": { "action": { "$ref": "#/definitions/actionKill" } },
           "required": ["action"]
         },
         "then": {
@@ -333,7 +393,7 @@
       },
       {
         "if": {
-          "properties": { "action": { "enum": ["createApiKey", "createOrUpdateApiKey"] } },
+          "properties": { "action": { "$ref": "#/definitions/actionApiKey" } },
           "required": ["action"]
         },
         "then": {
@@ -360,7 +420,7 @@
             },
             "userType": {
               "type": "string",
-              "enum": ["LOCAL", "LDAP", "OIDC"],
+              "pattern": "^(?:[lL][oO][cC][aA][lL]|[lL][dD][aA][pP]|[oO][iI][dD][cC])$",
               "description": "User type"
             },
             "name": {
@@ -416,7 +476,7 @@
         "description": "Result status (CREATED or UPDATED for createOrUpdateApiKey)"
       },
       "expiredAt": {
-        "type": "string",
+        "type": ["string", "null"],
         "description": "API key expiration timestamp"
       }
     },

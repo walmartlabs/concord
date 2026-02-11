@@ -25,16 +25,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
+import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class TaskSchemaValidatorTest {
+
+    private static final Class<? extends Task> TASK_CLASS = Task.class;
 
     private TaskSchemaRegistry registry;
     private TaskSchemaValidator validator;
@@ -52,12 +55,35 @@ public class TaskSchemaValidatorTest {
 
     @Test
     void testNoSchema() {
-        when(registry.getInputSchema("testTask")).thenReturn(Optional.empty());
+        when(registry.getInputSchema("testTask", TASK_CLASS)).thenReturn(TaskSchemaLookupResult.absent("testTask.schema.json"));
 
-        TaskSchemaValidationResult result = validator.validateInput("testTask", Map.of("key", "value"));
+        TaskSchemaValidationResult result = validator.validateInput("testTask", TASK_CLASS, Map.of("key", "value"));
 
         assertEquals(TaskSchemaValidationResult.Status.NO_SCHEMA, result.status());
         assertFalse(result.hasErrors());
+    }
+
+    @Test
+    void testNoSection() {
+        when(registry.getInputSchema("testTask", TASK_CLASS)).thenReturn(TaskSchemaLookupResult.noSection(objectMapper.createObjectNode(), "testTask.schema.json"));
+
+        TaskSchemaValidationResult result = validator.validateInput("testTask", TASK_CLASS, Map.of("key", "value"));
+
+        assertEquals(TaskSchemaValidationResult.Status.SKIPPED, result.status());
+        assertEquals("testTask.schema.json", result.schemaResource());
+        assertFalse(result.hasErrors());
+    }
+
+    @Test
+    void testInvalidSchemaLookup() {
+        when(registry.getInputSchema("testTask", TASK_CLASS)).thenReturn(TaskSchemaLookupResult.invalid(objectMapper.createObjectNode(), "testTask.schema.json", List.of("bad schema")));
+
+        TaskSchemaValidationResult result = validator.validateInput("testTask", TASK_CLASS, Map.of("key", "value"));
+
+        assertEquals(TaskSchemaValidationResult.Status.INVALID, result.status());
+        assertEquals("testTask.schema.json", result.schemaResource());
+        assertTrue(result.hasErrors());
+        assertEquals(List.of("bad schema"), result.errors());
     }
 
     @Test
@@ -73,9 +99,9 @@ public class TaskSchemaValidatorTest {
             """);
 
         JsonSchema schema = schemaFactory.getSchema(schemaNode);
-        when(registry.getInputSchema("testTask")).thenReturn(Optional.of(schema));
+        when(registry.getInputSchema("testTask", TASK_CLASS)).thenReturn(TaskSchemaLookupResult.found(schema, schemaNode, "testTask.schema.json"));
 
-        TaskSchemaValidationResult result = validator.validateInput("testTask", Map.of("message", "hello"));
+        TaskSchemaValidationResult result = validator.validateInput("testTask", TASK_CLASS, Map.of("message", "hello"));
 
         assertEquals(TaskSchemaValidationResult.Status.VALID, result.status());
         assertFalse(result.hasErrors());
@@ -94,12 +120,13 @@ public class TaskSchemaValidatorTest {
             """);
 
         JsonSchema schema = schemaFactory.getSchema(schemaNode);
-        when(registry.getInputSchema("testTask")).thenReturn(Optional.of(schema));
+        when(registry.getInputSchema("testTask", TASK_CLASS)).thenReturn(TaskSchemaLookupResult.found(schema, schemaNode, "testTask.schema.json"));
 
         // Missing required 'message'
-        TaskSchemaValidationResult result = validator.validateInput("testTask", Map.of("other", "value"));
+        TaskSchemaValidationResult result = validator.validateInput("testTask", TASK_CLASS, Map.of("other", "value"));
 
         assertEquals(TaskSchemaValidationResult.Status.INVALID, result.status());
+        assertEquals("testTask.schema.json", result.schemaResource());
         assertTrue(result.hasErrors());
         assertFalse(result.errors().isEmpty());
     }
@@ -118,10 +145,10 @@ public class TaskSchemaValidatorTest {
             """);
 
         JsonSchema schema = schemaFactory.getSchema(schemaNode);
-        when(registry.getInputSchema("testTask")).thenReturn(Optional.of(schema));
+        when(registry.getInputSchema("testTask", TASK_CLASS)).thenReturn(TaskSchemaLookupResult.found(schema, schemaNode, "testTask.schema.json"));
 
         // Missing 'message' and 'count'
-        TaskSchemaValidationResult result = validator.validateInput("testTask", Map.of());
+        TaskSchemaValidationResult result = validator.validateInput("testTask", TASK_CLASS, Map.of());
 
         assertEquals(TaskSchemaValidationResult.Status.INVALID, result.status());
         assertTrue(result.hasErrors());
@@ -143,9 +170,9 @@ public class TaskSchemaValidatorTest {
             """);
 
         JsonSchema schema = schemaFactory.getSchema(schemaNode);
-        when(registry.getOutputSchema("testTask")).thenReturn(Optional.of(schema));
+        when(registry.getOutputSchema("testTask", TASK_CLASS)).thenReturn(TaskSchemaLookupResult.found(schema, schemaNode, "testTask.schema.json"));
 
-        TaskSchemaValidationResult result = validator.validateOutput("testTask",
+        TaskSchemaValidationResult result = validator.validateOutput("testTask", TASK_CLASS,
                 Map.of("ok", true, "result", "success"));
 
         assertEquals(TaskSchemaValidationResult.Status.VALID, result.status());
@@ -164,10 +191,10 @@ public class TaskSchemaValidatorTest {
             """);
 
         JsonSchema schema = schemaFactory.getSchema(schemaNode);
-        when(registry.getInputSchema("testTask")).thenReturn(Optional.of(schema));
+        when(registry.getInputSchema("testTask", TASK_CLASS)).thenReturn(TaskSchemaLookupResult.found(schema, schemaNode, "testTask.schema.json"));
 
         // String instead of integer
-        TaskSchemaValidationResult result = validator.validateInput("testTask", Map.of("count", "not-a-number"));
+        TaskSchemaValidationResult result = validator.validateInput("testTask", TASK_CLASS, Map.of("count", "not-a-number"));
 
         assertEquals(TaskSchemaValidationResult.Status.INVALID, result.status());
         assertTrue(result.hasErrors());
@@ -175,9 +202,9 @@ public class TaskSchemaValidatorTest {
 
     @Test
     void testNoOutputSchema() {
-        when(registry.getOutputSchema("testTask")).thenReturn(Optional.empty());
+        when(registry.getOutputSchema("testTask", TASK_CLASS)).thenReturn(TaskSchemaLookupResult.absent("testTask.schema.json"));
 
-        TaskSchemaValidationResult result = validator.validateOutput("testTask", Map.of("key", "value"));
+        TaskSchemaValidationResult result = validator.validateOutput("testTask", TASK_CLASS, Map.of("key", "value"));
 
         assertEquals(TaskSchemaValidationResult.Status.NO_SCHEMA, result.status());
         assertFalse(result.hasErrors());

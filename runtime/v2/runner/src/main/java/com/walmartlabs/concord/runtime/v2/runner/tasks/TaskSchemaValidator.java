@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
+import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,6 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -58,40 +58,47 @@ public class TaskSchemaValidator {
     /**
      * Validate task input parameters.
      *
-     * @param taskName the task name
-     * @param input    the input parameters
+     * @param taskName  the task name
+     * @param taskClass the resolved task class
+     * @param input     the input parameters
      * @return validation result
      */
-    public TaskSchemaValidationResult validateInput(String taskName, Map<String, Object> input) {
-        Optional<JsonSchema> schema = registry.getInputSchema(taskName);
-        if (schema.isEmpty()) {
-            return TaskSchemaValidationResult.noSchema();
-        }
-        return validate(taskName, "in", schema.get(), input);
+    public TaskSchemaValidationResult validateInput(String taskName, Class<? extends Task> taskClass, Map<String, Object> input) {
+        TaskSchemaLookupResult schema = registry.getInputSchema(taskName, taskClass);
+        return validate(taskName, "in", schema, input);
     }
 
     /**
      * Validate task output parameters.
      *
-     * @param taskName the task name
-     * @param output   the output parameters
+     * @param taskName  the task name
+     * @param taskClass the resolved task class
+     * @param output    the output parameters
      * @return validation result
      */
-    public TaskSchemaValidationResult validateOutput(String taskName, Map<String, Object> output) {
-        Optional<JsonSchema> schema = registry.getOutputSchema(taskName);
-        if (schema.isEmpty()) {
-            return TaskSchemaValidationResult.noSchema();
-        }
-        return validate(taskName, "out", schema.get(), output);
+    public TaskSchemaValidationResult validateOutput(String taskName, Class<? extends Task> taskClass, Map<String, Object> output) {
+        TaskSchemaLookupResult schema = registry.getOutputSchema(taskName, taskClass);
+        return validate(taskName, "out", schema, output);
     }
 
-    private TaskSchemaValidationResult validate(String taskName, String section, JsonSchema schema, Map<String, Object> data) {
+    private TaskSchemaValidationResult validate(String taskName, String section, TaskSchemaLookupResult lookupResult, Map<String, Object> data) {
+        if (lookupResult.status() == TaskSchemaLookupResult.Status.ABSENT) {
+            return TaskSchemaValidationResult.noSchema();
+        }
+        if (lookupResult.status() == TaskSchemaLookupResult.Status.NO_SECTION) {
+            return TaskSchemaValidationResult.skipped(lookupResult.resourceName());
+        }
+        if (lookupResult.status() == TaskSchemaLookupResult.Status.INVALID) {
+            return TaskSchemaValidationResult.invalid(lookupResult.resourceName(), lookupResult.errors());
+        }
+
+        JsonSchema schema = lookupResult.schema();
         try {
             JsonNode dataNode = objectMapper.valueToTree(data);
 
             Set<ValidationMessage> errors = schema.validate(dataNode);
             if (errors.isEmpty()) {
-                return TaskSchemaValidationResult.valid();
+                return TaskSchemaValidationResult.valid(lookupResult.resourceName());
             }
 
             List<String> errorMessages = errors.stream()
@@ -99,10 +106,10 @@ public class TaskSchemaValidator {
                     .toList();
 
             log.debug("Validation errors for task '{}' {}: {}", taskName, section, errorMessages);
-            return TaskSchemaValidationResult.invalid(errorMessages);
+            return TaskSchemaValidationResult.invalid(lookupResult.resourceName(), errorMessages);
         } catch (Exception e) {
             log.warn("Failed to validate task '{}' {}: {}", taskName, section, e.getMessage());
-            return TaskSchemaValidationResult.invalid(List.of("Schema validation error: " + e.getMessage()));
+            return TaskSchemaValidationResult.invalid(lookupResult.resourceName(), List.of("Schema validation error: " + e.getMessage()));
         }
     }
 }
