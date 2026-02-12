@@ -74,4 +74,10 @@ jobs:
       - name: Build and test with Maven
         env:
           SKIP_DOCKER_TESTS: "true"
-        run: ./mvnw -s .github/settings.xml -B clean install -Pgha -Pdocker -Pit -P${{ matrix.profile }}
+        run: |
+          WORK=${{ github.workspace }}/tmp
+          mkdir -p ${WORK} && chmod 1777 ${WORK}
+          ./mvnw -s .github/settings.xml -B clean install \
+            -Dmaven.repo.local=${WORK}/.m2/repository \
+            -Djava.io.tmpdir=${WORK} \
+            -Pgha -Pdocker -Pit -P${{ matrix.profile }}
