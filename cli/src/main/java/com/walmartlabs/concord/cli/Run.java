@@ -33,6 +33,7 @@ import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
 import com.walmartlabs.concord.imports.*;
+import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.model.EffectiveConfiguration;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
@@ -231,6 +232,7 @@ public class Run implements Callable<Integer> {
         }
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
+                .api(buildApiConfiguration(cliConfigContext))
                 .dependencies(resolvedDependencies)
                 .debug(processDefinition.configuration().debug())
                 .build();
@@ -273,7 +275,11 @@ public class Run implements Callable<Integer> {
             System.out.println("Running in the dry-run mode.");
         }
 
-        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(args, profiles), projectInfo(args))
+        ProcessInfo processInfo = ProcessInfo.builder()
+                .activeProfiles(profiles)
+                .build();
+
+        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo, projectInfo(args))
                 .entryPoint(entryPoint)
                 .instanceId(instanceId)
                 .dryRun(dryRunMode)
@@ -310,21 +316,14 @@ public class Run implements Callable<Integer> {
         return 0;
     }
 
-    @SuppressWarnings("unchecked")
-    private static ProcessInfo processInfo(Map<String, Object> args, List<String> profiles) {
-        Object processInfoObject = args.get("processInfo");
-        if (processInfoObject == null) {
-            processInfoObject = fromExtraVars("processInfo", args);
+    private ApiConfiguration buildApiConfiguration(CliConfigContext cliConfigContext) {
+        CliConfig.RemoteRunConfiguration remoteRun = cliConfigContext.remoteRun();
+        if (remoteRun == null || remoteRun.baseUrl() == null) {
+            return ApiConfiguration.builder().build();
         }
 
-        Map<String, Object> processInfo = Collections.emptyMap();
-        if (processInfoObject instanceof Map) {
-            processInfo = (Map<String, Object>) processInfoObject;
-        }
-
-        return ProcessInfo.builder()
-                .sessionToken(MapUtils.getString(processInfo, "sessionToken", "<undefined>"))
-                .activeProfiles(profiles)
+        return ApiConfiguration.builder()
+                .baseUrl(remoteRun.baseUrl())
                 .build();
     }
 
