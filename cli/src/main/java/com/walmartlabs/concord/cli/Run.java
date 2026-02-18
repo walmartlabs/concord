@@ -277,6 +277,7 @@ public class Run implements Callable<Integer> {
 
         ProcessInfo processInfo = ProcessInfo.builder()
                 .activeProfiles(profiles)
+                .sessionToken("<undefined>")
                 .build();
 
         ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo, projectInfo(args))
