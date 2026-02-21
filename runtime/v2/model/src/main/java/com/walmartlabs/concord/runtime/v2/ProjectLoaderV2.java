@@ -21,7 +21,7 @@ package com.walmartlabs.concord.runtime.v2;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.Imports;
@@ -108,7 +108,7 @@ public class ProjectLoaderV2 implements ProjectLoader {
 
         Path tmpDir = null;
         try {
-            tmpDir = IOUtils.createTempDir("concord-export");
+            tmpDir = PathUtils.createTempDir("concord-export");
             copyResources(baseDir, resources, tmpDir, options);
 
             Imports imports = importsNormalizer.normalize(root.imports());
@@ -117,7 +117,7 @@ public class ProjectLoaderV2 implements ProjectLoader {
             copyResources(tmpDir, resources, destDir, options);
         } finally {
             if (tmpDir != null) {
-                IOUtils.deleteRecursively(tmpDir);
+                PathUtils.deleteRecursively(tmpDir);
             }
         }
     }

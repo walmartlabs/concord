@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.PrivilegedAction;
 
 import java.io.FilePermission;
@@ -38,7 +38,7 @@ public class ConcordSecurityManager extends SecurityManager {
     private static final String[] ALLOWED_PATHS = {
             System.getProperty("java.home"),             // JAVA_HOME
             System.getProperty("user.dir"),              // process' working directory
-            IOUtils.TMP_DIR.toAbsolutePath().toString(), // concord's own TMP
+            PathUtils.TMP_DIR.toAbsolutePath().toString(), // concord's own TMP
             "/tmp",                                      // system TMP
             "/dev/", "/proc/", "/sys/",                  // unix stuff
             "/groovy/"                                   // Groovy's pseudo-files

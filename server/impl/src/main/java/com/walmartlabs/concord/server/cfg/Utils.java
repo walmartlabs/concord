@@ -20,19 +20,28 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.typesafe.config.Config;
+import com.walmartlabs.concord.common.PathUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.Supplier;
 
 public final class Utils {
 
     public static Path getPath(String s, String defaultPrefix) throws IOException {
         if (s == null) {
-            return IOUtils.createTempDir(defaultPrefix);
+            return PathUtils.createTempDir(defaultPrefix);
         }
         return Paths.get(s);
+    }
+
+    public static String getStringOrDefault(Config cfg, String key, Supplier<String> defaultValueSupplier) {
+        if (cfg.hasPath(key)) {
+            return cfg.getString(key);
+        }
+        return defaultValueSupplier.get();
     }
 
     private Utils() {

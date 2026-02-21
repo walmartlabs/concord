@@ -21,7 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.it.common.MockGitSshServer;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.transport.RefSpec;
@@ -57,7 +57,7 @@ public class GitBranchesIT extends AbstractServerIT {
                 .call()) {
 
             Path initialData = Paths.get(GitBranchesIT.class.getResource("gitBranches/qa").toURI());
-            IOUtils.copy(initialData, workdir);
+            PathUtils.copy(initialData, workdir);
 
             git.add().addFilepattern(".").call();
             git.commit().setMessage("initial commit").call();
@@ -68,7 +68,7 @@ public class GitBranchesIT extends AbstractServerIT {
             git.checkout().setCreateBranch(true).setName("dev").call();
 
             Path devData = Paths.get(GitBranchesIT.class.getResource("gitBranches/dev").toURI());
-            IOUtils.copy(devData, workdir, StandardCopyOption.REPLACE_EXISTING);
+            PathUtils.copy(devData, workdir, StandardCopyOption.REPLACE_EXISTING);
 
             git.add().addFilepattern(".").call();
             git.commit().setMessage("dev commit").call();

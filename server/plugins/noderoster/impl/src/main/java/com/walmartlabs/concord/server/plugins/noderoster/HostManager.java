@@ -20,34 +20,45 @@ package com.walmartlabs.concord.server.plugins.noderoster;
  * =====
  */
 
-import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.walmartlabs.concord.server.plugins.noderoster.cfg.NodeRosterEventsConfiguration;
 import com.walmartlabs.concord.server.plugins.noderoster.dao.HostsDao;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 @Named
+@Singleton
 public class HostManager {
 
     private final HostsDao dao;
     private final HostNormalizer hostNormalizer;
 
-    private final Cache<String, Optional<UUID>> hostCache;
+    private final LoadingCache<String, Optional<UUID>> hostCache;
 
     @Inject
-    public HostManager(HostsDao dao, HostNormalizer hostNormalizer) {
+    public HostManager(HostsDao dao, HostNormalizer hostNormalizer, NodeRosterEventsConfiguration cfg) {
         this.dao = dao;
         this.hostNormalizer = hostNormalizer;
 
         this.hostCache = CacheBuilder.newBuilder()
-                .expireAfterAccess(1, TimeUnit.MINUTES)
-                .build();
+                .expireAfterAccess(cfg.getHostCacheDuration())
+                .maximumSize(cfg.getHostCacheSize())
+                .recordStats()
+                .build(new CacheLoader<>() {
+                    @Override
+                    public @Nonnull Optional<UUID> load(@Nonnull String host) {
+                        UUID id = findHost(host);
+                        return Optional.ofNullable(id);
+                    }
+                });
     }
 
     @WithTimer
@@ -57,7 +68,7 @@ public class HostManager {
         }
 
         try {
-            return hostCache.get(host, new GetLoader(host))
+            return hostCache.get(host)
                     .orElse(null);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -67,69 +78,24 @@ public class HostManager {
     @WithTimer
     public UUID getOrCreate(String host) {
         try {
-            return hostCache.get(host, new GetOrCreateLoader(host))
-                    .orElseThrow(() -> new RuntimeException("Can't find a host: " + host));
+            Optional<UUID> knownHost = hostCache.get(host);
+
+            if (knownHost.isPresent()) {
+                return knownHost.get();
+            }
+
+            // insert in db and update cache
+            UUID id = dao.insert(hostNormalizer.normalize(host));
+            hostCache.put(host, Optional.of(id));
+
+            return id;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Host findHost(String host) {
+    private UUID findHost(String host) {
         String normalizedHost = hostNormalizer.normalize(host);
-        UUID hostId = dao.getId(normalizedHost);
-        if (hostId != null) {
-            return new Host(hostId, normalizedHost);
-        }
-
-        return new Host(null, normalizedHost);
-    }
-
-    private static class Host {
-
-        private final UUID id;
-        private final String normalizedHost;
-
-        public Host(UUID id, String normalizedHost) {
-            this.id = id;
-            this.normalizedHost = normalizedHost;
-        }
-    }
-
-    private final class GetLoader implements Callable<Optional<UUID>> {
-
-        private final String host;
-
-        private GetLoader(String host) {
-            this.host = host;
-        }
-
-        @Override
-        public Optional<UUID> call() {
-            Host h = findHost(host);
-            if (h.id == null) {
-                return Optional.empty();
-            }
-
-            return Optional.of(h.id);
-        }
-    }
-
-    private final class GetOrCreateLoader implements Callable<Optional<UUID>> {
-
-        private final String host;
-
-        private GetOrCreateLoader(String host) {
-            this.host = host;
-        }
-
-        @Override
-        public Optional<UUID> call() {
-            Host h = findHost(host);
-            if (h.id != null) {
-                return Optional.of(h.id);
-            }
-
-            return Optional.of(dao.insert(h.normalizedHost));
-        }
+        return dao.getId(normalizedHost);
     }
 }

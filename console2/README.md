@@ -1,7 +1,5 @@
 # Concord UI
 
-Uses https://github.com/facebook/create-react-app/ as the boilerplate.    
-
 ## Prerequisites
 
 - Node 20 or greater, available in `$PATH`;
@@ -27,11 +25,10 @@ In the dev mode the UI is served by running `npm start`.
 First time:
 ```bash
 $ npm ci
-$ npm start
+$ npm run dev
 ```
 
-The browser should automatically open on http://localhost:3000
-(the initial load might take a while, especially on slower machines).
+Open http://localhost:3000.
 
 The `ci` step can be skipped for subsequent runs.
 
@@ -69,9 +66,3 @@ concord-server {
 ```
 
 Use [./public/cfg.js](./public/cfg.js) as an example.
-
-## Custom Server URL
-
-The `proxy` property in the [package.json](./package.json) file is used to
-proxy API requests to the server. It can be used to point the UI in dev mode to
-another server.

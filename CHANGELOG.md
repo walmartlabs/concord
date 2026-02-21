@@ -1,5 +1,192 @@
 # Change Log
 
+## [2.36.0] - 2026-02-04
+
+### Added
+
+- concord-server: add ldap.trustAllCertificates, disable by
+default
+([#1261](https://github.com/walmartlabs/concord/pull/1261));
+- concord-cli: add support for .gitignore
+([#1264](https://github.com/walmartlabs/concord/pull/1264)).
+
+### Changed
+
+- runtime-v2: add 'name' attribute to script call in schema
+([#1248](https://github.com/walmartlabs/concord/pull/1248));
+- common, server: skip rate limit metrics for null auth id
+([#1249](https://github.com/walmartlabs/concord/pull/1249));
+- concord-console2: replace some saga usage with hooks
+([#1252](https://github.com/walmartlabs/concord/pull/1252));
+- project: update dependency versions
+([#1253](https://github.com/walmartlabs/concord/pull/1254));
+- concord-noderoster: do not build the tarball anymore
+([#1257](https://github.com/walmartlabs/concord/pull/1257));
+- concord-console-it: add basic tests for team UI
+([#1258](https://github.com/walmartlabs/concord/pull/1258));
+- project: concord-maven-plugin version up
+([#1259](https://github.com/walmartlabs/concord/pull/1259));
+- concord-agent: send segmented logs in order logged
+([#1260](https://github.com/walmartlabs/concord/pull/1260));
+- concord-server: assert user enabled before process restart
+or handler
+([#1262](https://github.com/walmartlabs/concord/pull/1262));
+- project: update testcontainers-concord version
+([#1265](https://github.com/walmartlabs/concord/pull/1265)).
+
+
+
+## [2.35.0] - 2025-12-29
+
+### Changed
+
+- oidc: handle session invalidation errors
+([#1239](https://github.com/walmartlabs/concord/pull/1239));
+- concord-server: sanitize escaped unicode nul characters
+from events
+([#1241](https://github.com/walmartlabs/concord/pull/1241));
+- oidc: serialization and mapping fix
+([#1245](https://github.com/walmartlabs/concord/pull/1245));
+- server, agent: github app installation clone support
+([#1242](https://github.com/walmartlabs/concord/pull/1242));
+- concord-server: option to look up GH webhook event sender by email
+([#1243](https://github.com/walmartlabs/concord/pull/1243));
+- noderoster: configurable host cache size and eviction duration
+([#1246](https://github.com/walmartlabs/concord/pull/1246));
+- concord-server: inject ProcessKeyCache interface instead of implementation to
+utilize singleton scope
+([#1247](https://github.com/walmartlabs/concord/pull/1247));
+- concord-db, concord-server: cache external app user mapping in database
+([#1244](https://github.com/walmartlabs/concord/pull/1244)).
+
+
+
+## [2.34.0] - 2025-10-29
+
+### Added
+
+- runtime-v2: allow plugins to supply custom EL functions
+([#1225](https://github.com/walmartlabs/concord/pull/1225));
+- runtime-v2: allow paths in SensitiveData keys
+([#1228](https://github.com/walmartlabs/concord/pull/1228));
+- runtime-v2: add EL function to mark strings as sensitive
+([#1230](https://github.com/walmartlabs/concord/pull/1230)).
+
+### Changed
+
+- concord-console2: migrate off CRA to Vite
+([#1231](https://github.com/walmartlabs/concord/pull/1231));
+- concord-server-it: fix testFailedHosts for modern Ansible
+versions
+([#1232](https://github.com/walmartlabs/concord/pull/1232));
+- concord-server: retrieve user ldap groups for form access
+assertion
+([#1233](https://github.com/walmartlabs/concord/pull/1233));
+- project: update dependencies
+([#1234](https://github.com/walmartlabs/concord/pull/1234));
+- concord-console2: update dependencies, README
+([#1235](https://github.com/walmartlabs/concord/pull/1235));
+- concord-server-it: improve test
+([#1236](https://github.com/walmartlabs/concord/pull/1236));
+- concord-console2: update Node and Vite versions
+([#1237](https://github.com/walmartlabs/concord/pull/1237)).
+
+
+
+## [2.33.3] - 2025-10-14
+
+### Changed
+
+- repository: fix uri scheme restriction for SSH repo uris
+([#1226](https://github.com/walmartlabs/concord/pull/1226));
+
+
+
+## [2.33.2] - 2025-10-09
+
+### Changed
+
+- concord-server: fix API key creation for the current user
+([#1222](https://github.com/walmartlabs/concord/pull/1222));
+
+
+
+## [2.33.1] - 2025-10-06
+
+### Changed
+
+- pfed-sso: upgrade nimbus-jose-jwt version
+([#1219](https://github.com/walmartlabs/concord/pull/1219));
+- server: fix usernameSignature generation
+([#1221](https://github.com/walmartlabs/concord/pull/1221));
+
+
+
+## [2.33.0] - 2025-09-22
+
+### Added
+
+-  ansible-tasks: support inventories specified in configFile
+([#1216](https://github.com/walmartlabs/concord/pull/1216)).
+
+### Changed
+
+- project: use JSch fork
+([#1210](https://github.com/walmartlabs/concord/pull/1210));
+- slack-tasks: update readme with required oauth scope info
+([#1213](https://github.com/walmartlabs/concord/pull/1213));
+- it: do not archive deps.dir into payloads
+([#1214](https://github.com/walmartlabs/concord/pull/1214));
+- ansible-tasks: remove ini4j dependency
+([#1215](https://github.com/walmartlabs/concord/pull/1215));
+- concord-server: do not create UserPrincipal for API keys
+without userId
+([#1218](https://github.com/walmartlabs/concord/pull/1218)).
+
+### Breaking
+
+- oidc: remove pac4j dependency. Will cause (de)serialization
+issues for SUSPENDED processes with OIDC initiators
+([#1217](https://github.com/walmartlabs/concord/pull/1217)).
+
+
+
+## [2.32.0] - 2025-08-20
+
+### Added
+
+- concord-cli: support for remote secrets, configurable secrets
+providers
+([#1143](https://github.com/walmartlabs/concord/pull/1143));
+- concord-agent: configurable list of runners
+([#1182](https://github.com/walmartlabs/concord/pull/1182));
+- concord-cli: add self-update command
+([#1198](https://github.com/walmartlabs/concord/pull/1198)).
+
+### Changed
+
+- concord-client2: add Concord-specific media type for
+validation errors
+([#1199](https://github.com/walmartlabs/concord/pull/1199));
+- docker-images: use Debian 12
+([#1201](https://github.com/walmartlabs/concord/pull/1201));
+- concord-cli: do not call System.exit in RemoteSecretsProvider
+([#1202](https://github.com/walmartlabs/concord/pull/1202));
+- concord-cli: ignore unknown properties in the CLI config
+file
+([#1203](https://github.com/walmartlabs/concord/pull/1203));
+- resource-task: Use the shared IOUtils assertInPath method
+for resource lookups
+([#1204](https://github.com/walmartlabs/concord/pull/1204));
+- project: enable trimHeaderLine in license-maven-plugin
+([#1205](https://github.com/walmartlabs/concord/pull/1205));
+- noderoster: optimize event list query
+([#1206](https://github.com/walmartlabs/concord/pull/1206));
+- concord-common: deprecate IOUtils
+([#1208](https://github.com/walmartlabs/concord/pull/1208)).
+
+
+
 ## [2.31.0] - 2025-08-04
 
 ### Added

@@ -41,8 +41,7 @@ public class DockerAnsibleIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        byte[] payload = archive(DockerAnsibleIT.class.getResource("dockerAnsible").toURI(),
-                ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(DockerAnsibleIT.class.getResource("dockerAnsible").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);

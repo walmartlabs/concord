@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.repository;
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,11 +62,11 @@ public class MavenRepositoryProvider implements RepositoryProvider {
         try {
             URI uri = new URI(request.url().concat(":").concat(request.version().value()));
             Path dependencyPath = dependencyManager.resolveSingle(uri).getPath();
-            IOUtils.unzip(dependencyPath, dst, false, StandardCopyOption.REPLACE_EXISTING);
+            ZipUtils.unzip(dependencyPath, dst, false, StandardCopyOption.REPLACE_EXISTING);
             return null;
         } catch (URISyntaxException | IOException e) {
             try {
-                IOUtils.deleteRecursively(request.destination());
+                PathUtils.deleteRecursively(request.destination());
             } catch (IOException ee) {
                 log.warn("fetch ['{}', '{}', '{}'] -> cleanup error: {}",
                         request.url(), request.version(), request.destination(), e.getMessage());
@@ -86,7 +87,7 @@ public class MavenRepositoryProvider implements RepositoryProvider {
         LastModifiedSnapshot snapshot = new LastModifiedSnapshot();
         List<String> allIgnorePatterns = new ArrayList<>();
         allIgnorePatterns.addAll(ignorePatterns);
-        IOUtils.copy(src, dst, allIgnorePatterns, snapshot, StandardCopyOption.REPLACE_EXISTING);
+        PathUtils.copy(src, dst, allIgnorePatterns, snapshot, StandardCopyOption.REPLACE_EXISTING);
         return snapshot;
     }
 }

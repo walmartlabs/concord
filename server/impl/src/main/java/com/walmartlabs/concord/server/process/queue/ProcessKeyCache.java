@@ -78,6 +78,16 @@ public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.Proce
         return processKey;
     }
 
+    @Override
+    public long hitCount() {
+        return cache.stats().hitCount();
+    }
+
+    @Override
+    public long missCount() {
+        return cache.stats().missCount();
+    }
+
     private static class ProcessNotFoundException extends Exception {
 
         @Serial

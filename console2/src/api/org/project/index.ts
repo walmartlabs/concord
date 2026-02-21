@@ -237,7 +237,7 @@ export const encrypt = (
 export const getProjectAccess = (
     orgName: ConcordKey,
     projectName: ConcordKey
-): Promise<GenericOperationResult> => {
+): Promise<Array<ResourceAccessEntry>> => {
     return fetchJson(`/api/v1/org/${orgName}/project/${projectName}/access`);
 };
 

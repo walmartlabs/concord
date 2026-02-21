@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.plugins.basic</groupId>
         <artifactId>parent</artifactId>
-        <version>2.31.1-SNAPSHOT</version>
+        <version>2.36.1-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -23,6 +23,11 @@
         <dependency>
             <groupId>com.walmartlabs.concord.runtime.v2</groupId>
             <artifactId>concord-runtime-sdk-v2</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-common</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

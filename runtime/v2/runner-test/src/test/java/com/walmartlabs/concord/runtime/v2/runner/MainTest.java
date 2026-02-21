@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
@@ -70,7 +70,7 @@ public class MainTest  {
         data.put("fullName", "John Smith");
 
         Path newWorkDir = Files.createTempDirectory("test-new");
-        IOUtils.copy(runtime.workDir(), newWorkDir);
+        PathUtils.copy(runtime.workDir(), newWorkDir);
         runtime.setWorkDir(newWorkDir);
 
         log = resume(myForm.eventName(), ProcessConfiguration.builder().arguments(Collections.singletonMap("myForm", data)).build());
@@ -1355,6 +1355,7 @@ public class MainTest  {
         assertLog(log, ".*" + Pattern.quote("map: {nonSecretButMasked=******, secret=******}") + ".*");
         assertLog(log, ".*" + Pattern.quote("map: {nonSecret=non secret value, secret=******}") + ".*");
         assertLog(log, ".*" + Pattern.quote("map.nested: {nonSecret=non secret value, secret={top-secret=******}}") + ".*");
+        assertLog(log, ".*" + Pattern.quote("map.path: {nonSecret=non secret value, key={top-secret=******, inner=non secret value}}") + ".*");
 
         assertLog(log, ".*" + Pattern.quote("plain: plain") + ".*");
 
@@ -1744,6 +1745,31 @@ public class MainTest  {
         assertLog(runtime.allLogs(), ".*" + Pattern.quote("out as map: abc") + ".*");
         assertLog(runtime.allLogs(), ".*" + Pattern.quote("out as array with loop: [abc, abc]") + ".*");
         assertLog(runtime.allLogs(), ".*" + Pattern.quote("out as map with loop: [abc_0, abc_1]") + ".*");
+    }
+
+    @Test
+    public void prefixedFunctionsInExpressions() throws Exception {
+        deploy("prefixedFunctions");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("name", "world")
+                .build());
+
+        run();
+
+        assertLog(runtime.allLogs(), ".*Hi, world!.*");
+        assertLog(runtime.allLogs(), ".*Hello, world!.*");
+    }
+
+    @Test
+    public void sensitiveFunction() throws Exception {
+        deploy("sensitiveFunction");
+
+        save(ProcessConfiguration.builder().build());
+
+        run();
+
+        assertLog(runtime.allLogs(), ".*" + Pattern.quote("The '******' is masked now") + ".*");
     }
 
     private void deploy(String name) throws URISyntaxException, IOException {

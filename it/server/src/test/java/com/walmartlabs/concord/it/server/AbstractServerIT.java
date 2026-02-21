@@ -21,11 +21,12 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
 import com.walmartlabs.concord.it.common.JGitUtils;
 import com.walmartlabs.concord.it.common.ServerClient;
 import org.eclipse.jgit.api.Git;
+import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Timeout;
@@ -159,8 +160,12 @@ public abstract class AbstractServerIT {
         serverClient.setGithubKey(key);
     }
 
-    protected void waitForLog(UUID instanceId, String pattern) throws IOException, InterruptedException, ApiException {
+    protected void waitForLog(UUID instanceId, @Language("RegExp") String pattern) throws IOException, InterruptedException, ApiException {
         serverClient.waitForLog(instanceId, pattern);
+    }
+
+    protected void waitForLog(UUID instanceId, int retries, @Language("RegExp") String pattern) throws IOException, InterruptedException, ApiException {
+        serverClient.waitForLog(instanceId, retries, pattern);
     }
 
     protected static String randomString() {
@@ -203,7 +208,7 @@ public abstract class AbstractServerIT {
         Path tmpDir = createTempDir();
 
         File src = new File(AbstractServerIT.class.getResource(resource).toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
 
         try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
             repo.add().addFilepattern(".").call();

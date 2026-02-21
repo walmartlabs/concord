@@ -21,8 +21,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.pipelines.processors.signing.Signing;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
@@ -59,12 +57,20 @@ public abstract class UserInfoProcessor implements PayloadProcessor {
     @Override
     public Payload process(Chain chain, Payload payload) {
         var info = userManager.getCurrentUserInfo();
+        var user = userManager.get(info.id());
 
-        var result = objectMapper.convertValue(info, ObjectNode.class);
+        if (user.isPresent() && user.get().isDisabled()) {
+            throw new ConcordApplicationException(String.format("User '%s' is disabled", info.id()));
+        }
+
         if (signing.isEnabled()) {
-            Optional.ofNullable(info.username())
-                    .map(this::sign)
-                    .ifPresent(signature -> result.set("usernameSignature", signature));
+            var signature = Optional.ofNullable(info.username())
+                    .map(this::sign);
+
+            info = signature.isEmpty() ? info : UserInfoProvider.UserInfo.builder()
+                    .from(info)
+                    .usernameSignature(signature.get())
+                    .build();
         }
 
         Map<String, UserInfoProvider.UserInfo> m = new HashMap<>();
@@ -75,9 +81,9 @@ public abstract class UserInfoProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
-    private TextNode sign(String username) {
+    private String sign(String username) {
         try {
-            return TextNode.valueOf(signing.sign(username));
+            return signing.sign(username);
         } catch (Exception e) {
             throw new ConcordApplicationException("Error while singing process data: " + e.getMessage(), e);
         }

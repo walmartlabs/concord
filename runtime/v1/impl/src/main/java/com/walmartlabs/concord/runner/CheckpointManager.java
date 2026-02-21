@@ -20,8 +20,8 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import io.takari.bpm.api.ExecutionException;
@@ -62,9 +62,9 @@ public class CheckpointManager {
 
             try (TemporaryPath checkpointFile = new TemporaryPath(checkpointDir.resolve(checkpointId + "_" + checkpointName + ".zip"))) {
                 try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(checkpointFile.path()))) {
-                    IOUtils.zip(zip, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME + "/", baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME));
-                    IOUtils.zip(zip, InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME + "/", baseDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME));
-                    IOUtils.zipFile(zip, checkpointMeta, Constants.Files.CHECKPOINT_META_FILE_NAME);
+                    ZipUtils.zip(zip, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME + "/", baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME));
+                    ZipUtils.zip(zip, InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME + "/", baseDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME));
+                    ZipUtils.zipFile(zip, checkpointMeta, Constants.Files.CHECKPOINT_META_FILE_NAME);
                 }
 
                 try (InputStream in = Files.newInputStream(checkpointFile.path())) {

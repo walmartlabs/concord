@@ -174,6 +174,34 @@ public class LdapManagerImpl implements LdapManager {
         }
     }
 
+    @Override
+    public LdapPrincipal getPrincipalByMail(String email) throws NamingException {
+        String searchDn = cfg.getSearchBase();
+        String mailAttr = "(mail=" + email + ")";
+
+        LdapContext ctx = null;
+        try {
+            ctx = ctxFactory.getSystemLdapContext();
+            return getPrincipal(new SearchFn(ctx) {
+                @Override
+                public NamingEnumeration<SearchResult> lookup(SearchControls ctls) throws NamingException {
+                    return ctx.search(searchDn, mailAttr, ctls);
+                }
+
+                @Override
+                public void handleNonUniqueResult() {
+                    log.error("getPrincipalByMail ['{}'] -> non unique results", email);
+                    throw new RuntimeException("LDAP error, non unique result found for email: '" + email + "'.");
+                }
+            });
+        } catch (Exception e) {
+            log.warn("getPrincipalByMail ['{}'] -> error while retrieving LDAP data: {}", email, e.getMessage(), e);
+            throw e;
+        } finally {
+            LdapUtils.closeContext(ctx);
+        }
+    }
+
     private LdapPrincipal getPrincipal(SearchFn searchFn) throws NamingException {
         SearchControls ctls = new SearchControls();
         ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);

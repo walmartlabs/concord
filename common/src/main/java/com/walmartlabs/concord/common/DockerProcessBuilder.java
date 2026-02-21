@@ -209,12 +209,12 @@ public class DockerProcessBuilder {
             c.add(entryPoint);
         }
         if (generateUsers) {
-            Path tmp = IOUtils.createTempFile("passwd", ".docker"); // NOSONAR
+            Path tmp = PathUtils.createTempFile("passwd", ".docker"); // NOSONAR
             tmpPaths.add(tmp);
 
             try (InputStream src = Objects.requireNonNull(DockerProcessBuilder.class.getResourceAsStream("dockerPasswd"));
                  OutputStream dst = Files.newOutputStream(tmp)) {
-                IOUtils.copy(src, dst);
+                src.transferTo(dst);
             }
             c.add("-v");
             c.add(tmp.toAbsolutePath() + ":/etc/passwd:ro");
@@ -450,7 +450,7 @@ public class DockerProcessBuilder {
         public void close() {
             for (Path p : tmpPaths) {
                 try {
-                    IOUtils.deleteRecursively(p);
+                    PathUtils.deleteRecursively(p);
                 } catch (IOException e) {
                     log.warn("delete '{}' -> error: {}", p, e.getMessage());
                 }

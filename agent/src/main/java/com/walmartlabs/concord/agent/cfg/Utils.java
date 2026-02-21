@@ -21,7 +21,7 @@ package com.walmartlabs.concord.agent.cfg;
  */
 
 import com.typesafe.config.Config;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -58,7 +58,7 @@ public final class Utils {
     public static Path getOrCreatePath(Config cfg, String key) {
         try {
             if (!cfg.hasPath(key)) {
-                return IOUtils.createTempDir(key);
+                return PathUtils.createTempDir(key);
             }
 
             String value = cfg.getString(key);
@@ -73,7 +73,7 @@ public final class Utils {
 
                 return p;
             }
-            return IOUtils.createTempDir(value);
+            return PathUtils.createTempDir(value);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

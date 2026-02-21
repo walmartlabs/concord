@@ -85,7 +85,7 @@ public class AnsibleTask {
 
         PlaybookScriptBuilder b = new PlaybookScriptBuilder(context, playbook);
 
-        AnsibleInventory.process(context, b);
+        AnsibleInventory.process(context, cfg, b);
 
         AnsibleVaultId.process(context, b);
 

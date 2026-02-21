@@ -20,8 +20,8 @@ package com.walmartlabs.concord.runtime.common;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.ObjectInputStreamWithClassLoader;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Constants;
 
@@ -68,11 +68,11 @@ public final class StateManager {
         Path stateDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(Constants.Files.JOB_STATE_DIR_NAME);
 
-        IOUtils.deleteRecursively(stateDir);
+        PathUtils.deleteRecursively(stateDir);
 
         Path sessionFilesDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(Constants.Files.JOB_SESSION_FILES_DIR_NAME);
-        IOUtils.deleteRecursively(sessionFilesDir);
+        PathUtils.deleteRecursively(sessionFilesDir);
     }
 
     public static void saveResumeEvent(Path baseDir, String eventName) {
@@ -144,7 +144,7 @@ public final class StateManager {
 
         Path dst = stateDir.resolve("instance");
 
-        try (TemporaryPath tmp = IOUtils.tempFile("instance", "state");
+        try (TemporaryPath tmp = PathUtils.tempFile("instance", "state");
              OutputStream out = Files.newOutputStream(tmp.path())) {
 
             SerializationUtils.serialize(out, state);

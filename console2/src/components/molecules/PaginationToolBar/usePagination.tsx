@@ -17,8 +17,12 @@
  * limitations under the License.
  * =====
  */
-import { Pagination } from '../../../state/data/projects';
 import { useCallback, useState } from 'react';
+
+interface Pagination {
+    limit: number;
+    offset: number;
+}
 
 export interface UsePaginationType {
     paginationFilter: Pagination;

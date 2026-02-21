@@ -49,7 +49,7 @@ public class TemporaryPath implements AutoCloseable {
 
         try {
             if (Files.isDirectory(path)) {
-                IOUtils.deleteRecursively(path);
+                PathUtils.deleteRecursively(path);
             } else {
                 Files.deleteIfExists(path);
             }

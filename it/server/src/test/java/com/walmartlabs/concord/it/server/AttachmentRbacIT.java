@@ -110,8 +110,7 @@ public class AttachmentRbacIT extends AbstractServerIT {
 
         // start a new process using the project as the user A
 
-        byte[] payload = archive(AttachmentRbacIT.class.getResource("ansibleEvent").toURI(),
-                ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(AttachmentRbacIT.class.getResource("ansibleEvent").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("org", orgName);
