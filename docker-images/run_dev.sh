@@ -34,7 +34,7 @@ docker run -d \
 -e 'PGDATA=/var/lib/postgresql/data/pgdata' \
 --mount source=concordDB,target=/var/lib/postgresql/data \
 -p 5432:5432 \
-"library/postgres:10.4-alpine"
+"library/postgres:14.21-alpine"
 
 docker run -d \
 --link db \
