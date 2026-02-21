@@ -19,7 +19,6 @@
         <agent.image>walmartlabs/concord-agent</agent.image>
         <ansible.image>walmartlabs/concord-ansible</ansible.image>
         <base.dir>${basedir}</base.dir>
-        <db.image>library/postgres</db.image>
         <deps.dir.src.mount>${project.basedir}/target/deps</deps.dir.src.mount>
         <deps.dir>${project.basedir}/target/deps</deps.dir>
         <dind.image>docker:dind</dind.image>

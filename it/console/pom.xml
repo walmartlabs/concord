@@ -16,8 +16,7 @@
     <name>${project.groupId}:${project.artifactId}</name>
 
     <properties>
-        <!-- pin down the version of DB and Selenium images -->
-        <db.image>library/postgres:14.18-alpine</db.image>
+        <!-- pin down the version of Selenium image -->
         <selenium.image>seleniarm/standalone-chromium:110.0</selenium.image>
 
         <!-- use the latest locally built Concord images -->

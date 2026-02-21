@@ -74,6 +74,9 @@
         <node.version>20.12.2</node.version>
         <frontend.plugin.version>1.15.1</frontend.plugin.version>
 
+        <!-- used for ITs and db module(s) schema generation -->
+        <db.image>library/postgres:14.21-alpine</db.image>
+
         <jdk.version>17</jdk.version>
         <failsafe.args>
             --add-opens java.base/java.util=ALL-UNNAMED
