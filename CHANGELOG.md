@@ -1,5 +1,19 @@
 # Change Log
 
+## [2.37.0] - TBD
+
+### Added
+
+- repository, server, agent: configurable limit for git cli output
+  ([#1266](https://github.com/walmartlabs/concord/pull/1266)).
+
+### Changed
+
+- project: build with postgres 14 image
+([#1148](https://github.com/walmartlabs/concord/pull/1148)).
+
+
+
 ## [2.36.0] - 2026-02-04
 
 ### Added
