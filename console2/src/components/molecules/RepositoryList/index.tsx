@@ -23,7 +23,7 @@ import { Link } from 'react-router-dom';
 import { Icon, Table, Popup } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
-import { RepositoryEntry } from '../../../api/org/project/repository';
+import { RepositoryEntry, TriggerEntry } from '../../../api/org/project/repository';
 import { GitHubLink } from '../../molecules';
 import { RepositoryActionDropdown } from '../../organisms';
 import { gitUrlParse } from "../GitHubLink";
@@ -32,11 +32,12 @@ interface ExternalProps {
     orgName: ConcordKey;
     projectName: ConcordKey;
     data?: RepositoryEntry[];
+    triggerMap : {[id: string] : TriggerEntry[]}
     loading: boolean;
     refresh: () => void;
 }
 
-const RepositoryList = ({ orgName, projectName, data, loading, refresh }: ExternalProps) => {
+const RepositoryList = ({ orgName, projectName, data, loading, refresh, triggerMap }: ExternalProps) => {
     return (
         <div style={{ overflowX: 'auto', width: '100%', height: '100%' }}>
             <Table striped>
@@ -65,7 +66,7 @@ const RepositoryList = ({ orgName, projectName, data, loading, refresh }: Extern
                             <Table.Cell colSpan={6}>No repositories found</Table.Cell>
                         </tr>
                     )}
-                    {data?.map((r) => renderTableRow(orgName, projectName, r, refresh))}
+                    {data?.map((r) => renderTableRow(orgName, projectName, r, triggerMap[r.id], refresh))}
                 </Table.Body>
             </Table>
         </div>
@@ -108,6 +109,7 @@ const renderTableRow = (
     orgName: ConcordKey,
     projectName: ConcordKey,
     row: RepositoryEntry,
+    triggerData: TriggerEntry[],
     refresh: () => void
 ) => {
     return (
@@ -138,6 +140,7 @@ const renderTableRow = (
                 orgName={orgName}
                 projectName={projectName}
                 repo={row}
+                triggerData={triggerData}
                 refresh={refresh}
             />
         </Table.Row>

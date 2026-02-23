@@ -39,6 +39,7 @@ interface ExternalProps {
     orgName: ConcordKey;
     projectName: ConcordKey;
     repo: RepositoryEntry;
+    triggerData: TriggerEntry[];
     refresh: () => void;
 }
 
@@ -89,31 +90,6 @@ const renderManualTrigger = ({
 const RepositoryActionDropdown = (props: ExternalProps) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<RequestError>();
-    const [manualTriggers, setManualTriggers] = useState<TriggerEntry[]>();
-
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            setError(undefined);
-
-            try {
-                const result = await apiListTriggers({
-                    type: 'manual',
-                    orgName: props.orgName,
-                    projectName: props.projectName,
-                    repoName: props.repo.name
-                });
-
-                setManualTriggers(result);
-            } catch (e) {
-                setError(e);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [props.orgName, props.projectName, props.repo.name]);
 
     const { orgName, projectName, repo, refresh } = props;
 
@@ -133,7 +109,7 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
     return (
         <>
             <Table.Cell style={{ paddingRight: '0px' }}>
-                {manualTriggers && manualTriggers.length > 0 ? (
+                {props.triggerData?.length > 0 ? (
                     <Dropdown
                         icon="play green"
                         pointing={'top right'}
@@ -161,7 +137,7 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
                                 )}
                             />
                             <Dropdown.Divider />
-                            {manualTriggers.map((t) =>
+                            {props.triggerData.map((t) =>
                                 renderManualTrigger({
                                     trigger: t,
                                     orgName,
