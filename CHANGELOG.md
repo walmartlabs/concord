@@ -10,9 +10,9 @@
 ### Changed
 
 - project: build with postgres 14 image
-([#1148](https://github.com/walmartlabs/concord/pull/1148)).
+([#1148](https://github.com/walmartlabs/concord/pull/1148));
 - console2: reduce calls to trigger API
-([#1251](https://github.com/walmartlabs/concord/pull/1251));
+([#1251](https://github.com/walmartlabs/concord/pull/1251)).
 
 
 
