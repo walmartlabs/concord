@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import ch.qos.logback.classic.Level;
+import com.walmartlabs.concord.runtime.common.SensitiveDataMasker;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
@@ -77,6 +78,8 @@ public class LogSegmentScopeCommand<T extends Step> extends StepCommand<T> {
         if (segmentName == null) {
             return null;
         }
+
+        segmentName = SensitiveDataMasker.mask(segmentName, runtime.getService(SensitiveDataHolder.class).get());
 
         return buildLogContext(runtime, segmentName, correlationId);
     }
