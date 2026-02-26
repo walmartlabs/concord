@@ -16,7 +16,6 @@
     <name>${project.groupId}:${project.artifactId}</name>
 
     <properties>
-        <db.image>library/postgres:10.4-alpine</db.image>
         <db.baseDir>${project.build.directory}/db</db.baseDir>
         <db.changeLogPath>com/walmartlabs/concord/server/db/liquibase.xml</db.changeLogPath>
         <db.host>localhost</db.host>

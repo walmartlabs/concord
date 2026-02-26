@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   concord-db:
-    image: "library/postgres:10.4-alpine"
+    image: "library/postgres:14.21-alpine"
     environment:
       POSTGRES_PASSWORD: "q1q1q1q1"
   concord-server:

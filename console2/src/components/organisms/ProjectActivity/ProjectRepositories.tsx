@@ -23,13 +23,15 @@ import { ConcordKey } from '../../../api/common';
 import { RedirectButton, RequestErrorActivity } from '../index';
 import { LoadingDispatch } from '../../../App';
 import { useApi } from '../../../hooks/useApi';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
     list as apiRepositoryList,
+    listTriggersV2 as apiListTriggers,
     PaginatedRepositoryEntries,
+    TriggerEntry
 } from '../../../api/org/project/repository';
 import { Input, Menu } from 'semantic-ui-react';
-import { PaginationToolBar, RepositoryList } from '../../molecules';
+import { PaginationToolBar, RepositoryList, RequestErrorMessage } from '../../molecules';
 import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
 
 interface ExternalProps {
@@ -80,14 +82,52 @@ const ProjectRepositories = ({ orgName, projectName, forceRefresh }: ExternalPro
         resetOffset,
     ]);
 
+    const fetchTriggers = useCallback(() => {
+        return apiListTriggers({
+            type: 'manual',
+            orgName: orgName,
+            projectName: projectName
+        });
+
+    }, [
+        orgName,
+        projectName
+    ]);
+
     const { data, isLoading, error } = useApi<PaginatedRepositoryEntries>(fetchData, {
         fetchOnMount: true,
         forceRequest: (forceRefresh ? 1 : 0) + (refresh ? 10 : 0),
-        dispatch: dispatch,
+        debounceTime: 1000,
+        dispatch,
     });
+
+    const triggerInfo = useApi<TriggerEntry[]>(fetchTriggers, {
+        fetchOnMount: true,
+        forceRequest: (forceRefresh ? 1 : 0 ) + (refresh ? 10 : 0),
+        dispatch
+    });
+
+    const repoTriggerMap = useMemo(()=>{
+        const mapData : {[id: string] : TriggerEntry[]} = {};
+        if (Array.isArray(triggerInfo.data)) {
+            for (let triggerData of triggerInfo.data) {
+                const triggerKey = triggerData.repositoryId;
+                if (Array.isArray(mapData[triggerKey])) {
+                    mapData[triggerKey].push(triggerData);
+                } else {
+                    mapData[triggerKey] = [triggerData];
+                }
+            }
+        }
+        return mapData;
+    }, [triggerInfo.data]);
 
     if (error) {
         return <RequestErrorActivity error={error} />;
+    }
+
+    if (triggerInfo.error) {
+        return <RequestErrorMessage error={triggerInfo.error} />;
     }
 
     return (
@@ -131,6 +171,7 @@ const ProjectRepositories = ({ orgName, projectName, forceRefresh }: ExternalPro
                 orgName={orgName}
                 projectName={projectName}
                 data={data?.items}
+                triggerMap={repoTriggerMap}
                 loading={isLoading}
                 refresh={refreshHandler}
             />

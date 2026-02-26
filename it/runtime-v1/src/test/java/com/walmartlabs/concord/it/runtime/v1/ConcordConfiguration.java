@@ -29,7 +29,7 @@ public final class ConcordConfiguration {
         ConcordRule concord = new ConcordRule()
                 .pathToRunnerV1("target/runner-v1.jar")
                 .pathToRunnerV2(null)
-                .dbImage(System.getProperty("db.image", "library/postgres:10"))
+                .dbImage(System.getProperty("db.image", "library/postgres:14"))
                 .serverImage(System.getProperty("server.image", "walmartlabs/concord-server"))
                 .agentImage(System.getProperty("agent.image", "walmartlabs/concord-agent"))
                 .pullPolicy(PullPolicy.defaultPolicy())

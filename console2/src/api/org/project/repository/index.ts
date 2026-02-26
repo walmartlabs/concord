@@ -77,6 +77,7 @@ export interface TriggerConditions {
 
 export interface TriggerEntry {
     id: ConcordId;
+    repositoryId: ConcordId;
     eventSource: ConcordKey;
     arguments?: object;
     conditions?: TriggerConditions;
@@ -199,9 +200,9 @@ export const listTriggers = (
 
 export interface TriggerFilter {
     type?: ConcordKey;
-    orgName: ConcordKey;
-    projectName: ConcordKey;
-    repoName: ConcordKey;
+    orgName?: ConcordKey;
+    projectName?: ConcordKey;
+    repoName?: ConcordKey;
 }
 
 export const listTriggersV2 = (filter: TriggerFilter): Promise<TriggerEntry[]> =>
