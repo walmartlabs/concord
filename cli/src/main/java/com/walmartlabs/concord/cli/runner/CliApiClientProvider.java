@@ -23,25 +23,29 @@ package com.walmartlabs.concord.cli.runner;
 import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.client2.ApiClientConfiguration;
 import com.walmartlabs.concord.client2.ApiClientFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-public class CliApiClientFactory implements Provider<ApiClient> {
+public class CliApiClientProvider implements Provider<ApiClient> {
 
     private final ApiClientFactory clientFactory;
     private final ApiKey apiKey;
+    private final ProcessConfiguration processCfg;
 
     @Inject
-    public CliApiClientFactory(ApiClientFactory clientFactory, ApiKey apiKey) {
+    public CliApiClientProvider(ApiClientFactory clientFactory, ApiKey apiKey, ProcessConfiguration processCfg) {
         this.clientFactory = clientFactory;
         this.apiKey = apiKey;
+        this.processCfg = processCfg;
     }
 
     @Override
     public ApiClient get() {
         return clientFactory.create(ApiClientConfiguration.builder()
                 .apiKey(apiKey.value())
+                .sessionToken(processCfg.processInfo().sessionToken())
                 .build());
     }
 }

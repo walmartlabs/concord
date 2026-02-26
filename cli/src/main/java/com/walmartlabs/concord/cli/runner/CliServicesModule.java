@@ -84,7 +84,7 @@ public class CliServicesModule extends AbstractModule {
         });
 
         bind(ApiKey.class).toInstance(ApiKey.create(cliConfigContext, workDir, verbosity));
-        bind(ApiClient.class).toProvider(CliApiClientFactory.class);
+        bind(ApiClient.class).toProvider(CliApiClientProvider.class);
 
         bind(DefaultTaskVariablesService.class)
                 .toInstance(new MapBackedDefaultTaskVariablesService(readDefaultVars(defaultTaskVars)));
