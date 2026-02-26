@@ -41,4 +41,9 @@ public record ApiKey(String value) {
             throw new RuntimeException("Unable to fetch the API key. " + e.getMessage());
         }
     }
+
+    @Override
+    public String toString() {
+        return "***";
+    }
 }
