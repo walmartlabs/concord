@@ -41,6 +41,7 @@ public class EnqueueProcessPipeline extends Pipeline {
         super(List.of(
                 injector.getInstance(LoggingMDCProcessor.class),
                 injector.getInstance(PayloadRestoreProcessor.class),
+                injector.getInstance(RestoredPayloadValidationProcessor.class),
                 injector.getInstance(RunAsCurrentProcessUserProcessor.class),
                 injector.getInstance(PolicyExportProcessor.class),
                 injector.getInstance(WorkspaceArchiveProcessor.class),
