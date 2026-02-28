@@ -34,6 +34,10 @@ public record ApiKey(String value) {
             return new ApiKey(null);
         }
 
+        if (verbosity.verbose()) {
+            System.out.println("Using '" + remoteRunConfig.apiKeyRef() + "' as a secret for API key");
+        }
+
         CliSecretService secretService = CliSecretService.create(cliConfigContext, workDir, verbosity);
         try {
             return new ApiKey(secretService.exportAsString(remoteRunConfig.apiKeyRef().orgName(), remoteRunConfig.apiKeyRef().secretName(), null));

@@ -237,6 +237,10 @@ public class Run implements Callable<Integer> {
                 .debug(processDefinition.configuration().debug())
                 .build();
 
+        if (verbosity.verbose()) {
+            System.out.println("Using '" + runnerCfg.api().baseUrl() + "' as API base URL");
+        }
+
         Map<String, Object> overlayArgs = MapUtils.getMap(overlayCfg, Constants.Request.ARGUMENTS_KEY, Collections.emptyMap());
         Map<String, Object> args = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), overlayArgs, extraVars);
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
