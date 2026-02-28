@@ -72,16 +72,14 @@ public class ProcessSecurityContext {
         return SecurityUtils.serialize(dst);
     }
 
-    // TODO: invalidate cache for processKey?
     public void storeCurrentSubject(ProcessKey processKey) {
-        Subject s = SecurityUtils.getSubject();
-        PrincipalCollection src = s.getPrincipals();
-        storeSubject(processKey, src);
+        Subject subject = SecurityUtils.assertSubject();
+        storeSubject(processKey, subject.getPrincipals());
     }
 
-    // TODO: invalidate cache for processKey?
     public void storeSubject(ProcessKey processKey, PrincipalCollection src) {
         stateManager.replace(processKey, PRINCIPAL_FILE_PATH, serializePrincipals(src));
+        principalCache.invalidate(processKey);
     }
 
     public PrincipalCollection getPrincipals(PartialProcessKey processKey) {
