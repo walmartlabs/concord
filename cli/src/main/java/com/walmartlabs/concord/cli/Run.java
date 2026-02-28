@@ -134,8 +134,11 @@ public class Run implements Callable<Integer> {
     @Option(names = {"--no-gitignore"}, description = "Do not use .gitignore patterns when filtering files")
     boolean noGitIgnore = false;
 
+    @Option(names = {"--target-dir"}, description = "Target directory for the assembled payload (default: <sourceDir>/target)")
+    Path targetDir;
+
     @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")
-    Path sourceDir = Paths.get(System.getProperty("user.dir"));
+    Path sourceDirOrFile = Paths.get(System.getProperty("user.dir"));
 
     @Option(names = {"--dry-run"}, description = "execute process in dry-run mode?")
     boolean dryRunMode = false;
@@ -147,34 +150,10 @@ public class Run implements Callable<Integer> {
         CliConfigContext cliConfigContext = CliConfig.load(verbosity, context,
                 new CliConfig.Overrides(secretStoreDir, vaultDir, vaultId));
 
-        sourceDir = sourceDir.normalize().toAbsolutePath();
-        Path targetDir;
-
-        if (Files.isRegularFile(sourceDir)) {
-            Path src = sourceDir.toAbsolutePath();
-            System.out.println("Running a single Concord file: " + src);
-
-            targetDir = Files.createTempDirectory("payload");
-
-            Files.copy(src, targetDir.resolve("concord.yml"), StandardCopyOption.REPLACE_EXISTING);
-        } else if (Files.isDirectory(sourceDir)) {
-            targetDir = sourceDir.resolve("target");
-            if (cleanup && Files.exists(targetDir)) {
-                if (verbosity.verbose()) {
-                    System.out.println("Cleaning target directory");
-                }
-                PathUtils.deleteRecursively(targetDir);
-            }
-
-            // copy everything into target except target (and files matching .gitignore patterns)
-            GitIgnoreFilter gitIgnoreFilter = noGitIgnore ? null : GitIgnoreFilter.load(sourceDir);
-            copyWithGitIgnore(sourceDir, targetDir, gitIgnoreFilter, new CopyNotifier(verbosity.verbose() ? 0 : 100), StandardCopyOption.REPLACE_EXISTING);
-        } else {
-            throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
-        }
+        Path workDir = prepareWorkDir(sourceDirOrFile.normalize().toAbsolutePath(), verbosity);
 
         if (!noDefaultCfg) {
-            copyDefaultCfg(targetDir, defaultCfg, verbosity.verbose());
+            copyDefaultCfg(workDir, defaultCfg, verbosity.verbose());
         }
 
         DependencyManager dependencyManager = initDependencyManager();
@@ -185,13 +164,13 @@ public class Run implements Callable<Integer> {
         ProjectLoaderV2.Result loadResult;
         try {
             loadResult = new ProjectLoaderV2(importManager)
-                    .load(targetDir, new CliImportsNormalizer(importsSource, verbosity.verbose(), defaultVersion), verbosity.verbose() ? new CliImportsListener() : null);
+                    .load(workDir, new CliImportsNormalizer(importsSource, verbosity.verbose(), defaultVersion), verbosity.verbose() ? new CliImportsListener() : null);
         } catch (ImportProcessingException e) {
             ObjectMapper om = new ObjectMapper();
             System.err.println("Error while processing import " + om.writeValueAsString(e.getImport()) + ": " + e.getMessage());
             return -1;
         } catch (Exception e) {
-            System.err.println("Error while loading " + targetDir);
+            System.err.println("Error while loading " + workDir);
             e.printStackTrace();
             return -1;
         }
@@ -238,7 +217,7 @@ public class Run implements Callable<Integer> {
         Map<String, Object> overlayArgs = MapUtils.getMap(overlayCfg, Constants.Request.ARGUMENTS_KEY, Collections.emptyMap());
         Map<String, Object> args = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), overlayArgs, extraVars);
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
-        args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
+        args.put(Constants.Context.WORK_DIR_KEY, workDir.toAbsolutePath().toString());
         if (verbosity.verbose()) {
             dumpArguments(args);
         }
@@ -279,16 +258,16 @@ public class Run implements Callable<Integer> {
                 .dryRun(dryRunMode)
                 .build();
 
-        Injector injector = new InjectorFactory(new WorkingDirectory(targetDir),
+        Injector injector = new InjectorFactory(new WorkingDirectory(workDir),
                 runnerCfg,
                 () -> cfg,
-                new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(cliConfigContext, targetDir, defaultTaskVars, dependencyManager, verbosity))
+                new ProcessDependenciesModule(workDir, runnerCfg.dependencies(), cfg.debug()),
+                new CliServicesModule(cliConfigContext, workDir, defaultTaskVars, dependencyManager, verbosity))
                 .create();
 
         // Just to notify listeners
         ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
-        loader.load(targetDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER);
+        loader.load(workDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER);
 
         Runner runner = injector.getInstance(Runner.class);
 
@@ -419,6 +398,73 @@ public class Run implements Callable<Integer> {
         return DependencyManagerConfiguration.of(depsCacheDir);
     }
 
+    private Path prepareWorkDir(Path sourceDir, Verbosity verbosity) throws IOException {
+        Path srcDir;
+        if (Files.isRegularFile(sourceDir)) {
+            srcDir = sourceDir.getParent();
+            if (srcDir == null) {
+                throw new IllegalArgumentException("Cannot determine parent directory of: " + sourceDir);
+            }
+        } else if (Files.isDirectory(sourceDir)) {
+            srcDir = sourceDir;
+        } else {
+            throw new IllegalArgumentException("Invalid source (not a file or directory): " + sourceDir);
+        }
+
+        Path target = targetDir != null
+                ? targetDir.normalize().toAbsolutePath()
+                : srcDir.resolve("target");
+
+        validatePaths(srcDir, target);
+
+        if (cleanup) {
+            cleanTargetDirectory(target, verbosity);
+        }
+
+        if (!Files.exists(target)) {
+            Files.createDirectories(target);
+        }
+
+        if (Files.isRegularFile(sourceDir)) {
+            System.out.println("Running a single Concord file: " + sourceDir);
+            Files.copy(sourceDir, target.resolve("concord.yml"), StandardCopyOption.REPLACE_EXISTING);
+        } else {
+            copySourceToTarget(srcDir, target, verbosity);
+        }
+
+        return target;
+    }
+
+    private static void validatePaths(Path src, Path target) {
+        if (target.equals(src)) {
+            throw new IllegalArgumentException("Target directory cannot be the same as the source: " + target);
+        }
+        if (src.startsWith(target)) {
+            throw new IllegalArgumentException("Target directory cannot be a parent of the source: " + target);
+        }
+        if (Files.isSymbolicLink(target)) {
+            throw new IllegalArgumentException("Target directory cannot be a symbolic link: " + target);
+        }
+    }
+
+    private static void cleanTargetDirectory(Path target, Verbosity verbosity) throws IOException {
+        if (Files.exists(target)) {
+            if (verbosity.verbose()) {
+                System.out.println("Cleaning target directory: " + target);
+            }
+            PathUtils.deleteRecursively(target);
+        }
+    }
+
+    private void copySourceToTarget(Path src, Path target, Verbosity verbosity) throws IOException {
+        String targetRelPath = target.startsWith(src) ? src.relativize(target).toString() : null;
+        GitIgnoreFilter filter = noGitIgnore ? null : GitIgnoreFilter.load(src);
+
+        String displayPath = (targetRelPath != null) ? "./" + targetRelPath : target.toString();
+        CopyNotifier notifier = new CopyNotifier(verbosity.verbose() ? 0 : 100, displayPath);
+
+        copyWithGitIgnore(src, target, targetRelPath, filter, notifier, StandardCopyOption.REPLACE_EXISTING);
+    }
 
     private static void dumpArguments(Map<String, Object> args) {
         ObjectMapper om = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
@@ -442,11 +488,13 @@ public class Run implements Callable<Integer> {
     private static class CopyNotifier implements FileVisitor {
 
         private final long notifyOnCount;
+        private final String targetDirDisplay;
 
         private long currentCount = 0;
 
-        public CopyNotifier(long notifyOnCount) {
+        public CopyNotifier(long notifyOnCount, String targetDirDisplay) {
             this.notifyOnCount = notifyOnCount;
+            this.targetDirDisplay = targetDirDisplay;
         }
 
         @Override
@@ -456,7 +504,7 @@ public class Run implements Callable<Integer> {
             }
 
             if (currentCount == notifyOnCount) {
-                System.out.println(ansi().fgBrightBlack().a("Copying files into ./target/ directory..."));
+                System.out.println(ansi().fgBrightBlack().a("Copying files into " + targetDirDisplay + " directory..."));
                 currentCount = -1;
                 return;
             }
@@ -465,7 +513,8 @@ public class Run implements Callable<Integer> {
         }
     }
 
-    private static void copyWithGitIgnore(Path src, Path dst, GitIgnoreFilter filter,
+    private static void copyWithGitIgnore(Path src, Path dst, String targetDirName,
+                                          GitIgnoreFilter filter,
                                           FileVisitor visitor, CopyOption... options) throws IOException {
         Files.walkFileTree(src, new SimpleFileVisitor<>() {
             @Override
@@ -475,8 +524,8 @@ public class Run implements Callable<Integer> {
                 }
 
                 Path rel = src.relativize(dir);
-                // Always skip target directory
-                if (rel.toString().equals("target")) {
+                // Skip the target directory (if it's inside the source directory)
+                if (targetDirName != null && rel.toString().equals(targetDirName)) {
                     return FileVisitResult.SKIP_SUBTREE;
                 }
                 // Check gitignore
