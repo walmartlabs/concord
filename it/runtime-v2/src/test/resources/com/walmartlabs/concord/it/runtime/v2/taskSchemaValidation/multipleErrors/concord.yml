@@ -1,0 +1,16 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+    - "mvn://com.walmartlabs.concord.it.tasks:schema-test:PROJECT_VERSION"
+  validation:
+    taskCalls:
+      in: fail
+
+flows:
+  default:
+    # Multiple validation errors: missing 'message' and invalid count type
+    - task: schemaTest
+      in:
+        count: "not-a-number"
+      out: result
+    - log: "Result: ${result.echo}"

@@ -1,0 +1,17 @@
+configuration:
+  runtime: "concord-v2"
+  validation:
+    taskCalls:
+      in: fail
+
+flows:
+  default:
+    - task: concord
+      in:
+        action: start
+        project: "test"
+        sync: false
+      out: result
+      error:
+        - log: "Expected error: ${lastError}"
+    - log: "Done"

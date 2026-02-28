@@ -65,5 +65,8 @@ public class BaseRunnerModule extends AbstractModule {
         Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
         taskCallListeners.addBinding().to(TaskCallPolicyChecker.class);
         taskCallListeners.addBinding().to(TaskResultListener.class);
+
+        bind(TaskSchemaRegistry.class);
+        bind(TaskSchemaValidator.class);
     }
 }

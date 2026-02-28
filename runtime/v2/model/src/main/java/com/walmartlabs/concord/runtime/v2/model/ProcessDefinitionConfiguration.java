@@ -168,6 +168,14 @@ public interface ProcessDefinitionConfiguration extends Serializable {
         return Runtime.getRuntime().availableProcessors();
     }
 
+    /**
+     * Validation configuration.
+     */
+    @Value.Default
+    default ValidationConfiguration validation() {
+        return new ValidationConfiguration();
+    }
+
     static ImmutableProcessDefinitionConfiguration.Builder builder() {
         return ImmutableProcessDefinitionConfiguration.builder();
     }
