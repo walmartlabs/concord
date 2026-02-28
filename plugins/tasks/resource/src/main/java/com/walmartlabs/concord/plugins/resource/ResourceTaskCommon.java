@@ -31,6 +31,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -59,7 +60,7 @@ public class ResourceTaskCommon {
 
     public String asString(String path) throws IOException {
         byte[] ab = Files.readAllBytes(normalizePath(path));
-        return new String(ab);
+        return new String(ab, StandardCharsets.UTF_8);
     }
 
     public Object asJson(String path) throws IOException {
@@ -159,13 +160,13 @@ public class ResourceTaskCommon {
 
     public String writeAsString(String content) throws IOException {
         Path tmpFile = fileService.createTempFile(RESOURCE_PREFIX, TEXT_FILE_SUFFIX);
-        Files.write(tmpFile, content.getBytes());
+        Files.write(tmpFile, content.getBytes(StandardCharsets.UTF_8));
         return workDir.relativize(tmpFile.toAbsolutePath()).toString();
     }
 
     public String writeAsString(String content, String path) throws IOException {
         Path dst = assertWorkDirPath(path);
-        Files.write(dst, content.getBytes());
+        Files.write(dst, content.getBytes(StandardCharsets.UTF_8));
         return workDir.relativize(dst.toAbsolutePath()).toString();
     }
 
