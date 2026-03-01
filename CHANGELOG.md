@@ -9,6 +9,8 @@
 
 ### Changed
 
+- examples: fix/update runtime-v2 example dependencies
+([#1271](https://github.com/walmartlabs/concord/pull/1271));
 - project: build with postgres 14 image
 ([#1148](https://github.com/walmartlabs/concord/pull/1148));
 - console2: reduce calls to trigger API
