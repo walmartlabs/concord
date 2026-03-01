@@ -1,5 +1,23 @@
 # Change Log
 
+## [2.37.0] - TBD
+
+### Added
+
+- repository, server, agent: configurable limit for git cli output
+  ([#1266](https://github.com/walmartlabs/concord/pull/1266)).
+
+### Changed
+
+- examples: fix/update runtime-v2 example dependencies
+([#1271](https://github.com/walmartlabs/concord/pull/1271));
+- project: build with postgres 14 image
+([#1148](https://github.com/walmartlabs/concord/pull/1148));
+- console2: reduce calls to trigger API
+([#1251](https://github.com/walmartlabs/concord/pull/1251)).
+
+
+
 ## [2.36.0] - 2026-02-04
 
 ### Added
