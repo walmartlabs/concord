@@ -1,11 +1,11 @@
 configuration:
   dependencies:
-  - "mvn://org.codehaus.groovy:groovy-all:2.5.23"
-  - "mvn://com.walmartlabs.concord.plugins.basic:dynamic-tasks:1.76.1"
+  - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.23"
+  - "mvn://com.walmartlabs.concord.plugins.basic:dynamic-tasks:2.36.0"
 
 flows:
   default:
   - task: loadTasks
     in:
       path: "tasks"
-  - ${myTask.hey("world")}
+  - expr: ${myTask.hey("world")}
