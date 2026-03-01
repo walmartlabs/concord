@@ -1,0 +1,15 @@
+[book]
+authors = ["Concord Authors"]
+language = "en"
+src = "src"
+title = "Concord"
+
+[preprocessor.variables.variables.site]
+concord_core_version = "2.32.0"
+concord_source = "https://github.com/walmartlabs/concord/"
+concord_plugins_source = "https://github.com/walmartlabs/concord-plugins/"
+concord_plugins_v1_docs = "https://concord.walmartlabs.com/docs/plugins-v1"
+concord_plugins_v2_docs = "https://concord.walmartlabs.com/docs/plugins-v2"
+
+[output.html]
+default-theme = "light"
