@@ -66,6 +66,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
@@ -460,7 +461,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
         private final AtomicLong id = new AtomicLong(1L);
 
         @Override
-        public long createSegment(UUID correlationId, String name) {
+        public long createSegment(UUID correlationId, String name, Long parentId, Map<String, Object> meta) {
             return id.getAndIncrement();
         }
     }

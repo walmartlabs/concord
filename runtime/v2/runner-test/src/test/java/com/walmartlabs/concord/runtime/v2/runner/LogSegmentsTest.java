@@ -561,7 +561,8 @@ public class LogSegmentsTest {
 
         byte[] log = runWithSegments();
 
-        assertSegmentLog(log, 1, "[INFO ] in inner flow");
+        assertSegmentLog(log, 2, "[INFO ] in inner flow");
+        assertSegmentStatusOk(log, 2);
         assertSegmentStatusOk(log, 1);
         assertNoMoreSegments();
     }
@@ -619,15 +620,17 @@ public class LogSegmentsTest {
 
         byte[] log = runWithSegments();
 
-        assertSegmentLog(log, 1, "[ERROR] (concord.yaml): Error @ line: 15, col: 11. FAIL");
-        assertSegmentMultilineLog(log, 1, "[ERROR] Call stack:\n" +
+        assertSegmentLog(log, 2, "[ERROR] (concord.yaml): Error @ line: 15, col: 11. FAIL");
+        assertSegmentMultilineLog(log, 2, "[ERROR] Call stack:\n" +
                 "(concord.yaml) @ line: 3, col: 7, thread: 0, flow: inner");
+        assertSegmentStatusError(log, 2);
         assertSegmentStatusError(log, 1);
 
         assertSystemSegment(log, "[WARN ] Last error: FAIL. Waiting for 1000ms before retry (attempt #0)");
 
-        assertSegmentLog(log, 2, "[INFO ] in inner flow");
-        assertSegmentStatusOk(log, 2);
+        assertSegmentLog(log, 4, "[INFO ] in inner flow");
+        assertSegmentStatusOk(log, 4);
+        assertSegmentStatusOk(log, 3);
 
         assertNoMoreSegments();
     }
@@ -641,13 +644,14 @@ public class LogSegmentsTest {
 
         byte[] log = runWithSegments();
 
-        assertSegmentLog(log, 1, "[ERROR] (concord.yaml): Error @ line: 13, col: 11. FAIL");
-        assertSegmentMultilineLog(log, 1, "[ERROR] Call stack:\n" +
+        assertSegmentLog(log, 2, "[ERROR] (concord.yaml): Error @ line: 13, col: 11. FAIL");
+        assertSegmentMultilineLog(log, 2, "[ERROR] Call stack:\n" +
                 "(concord.yaml) @ line: 3, col: 7, thread: 0, flow: inner");
+        assertSegmentStatusError(log, 2);
         assertSegmentStatusError(log, 1);
 
-        assertSegmentLog(log, 2, "[INFO ] in error block");
-        assertSegmentStatusOk(log, 2);
+        assertSegmentLog(log, 3, "[INFO ] in error block");
+        assertSegmentStatusOk(log, 3);
 
         assertNoMoreSegments();
     }
@@ -666,16 +670,17 @@ public class LogSegmentsTest {
             // ignore
         }
 
-        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 13, col: 11. FAIL");
-        assertSegmentMultilineLog(runtime.lastLog(), 1, "[ERROR] Call stack:\n" +
+        assertSegmentLog(runtime.lastLog(), 2, "[ERROR] (concord.yaml): Error @ line: 13, col: 11. FAIL");
+        assertSegmentMultilineLog(runtime.lastLog(), 2, "[ERROR] Call stack:\n" +
                 "(concord.yaml) @ line: 3, col: 7, thread: 0, flow: inner");
+        assertSegmentStatusError(runtime.lastLog(), 2);
         assertSegmentStatusError(runtime.lastLog(), 1);
 
-        assertSegmentLog(runtime.lastLog(), 2, "[INFO ] in error block");
-        assertSegmentStatusOk(runtime.lastLog(), 2);
+        assertSegmentLog(runtime.lastLog(), 3, "[INFO ] in error block");
+        assertSegmentStatusOk(runtime.lastLog(), 3);
 
-        assertSegmentLog(runtime.lastLog(), 3, "[ERROR] (concord.yaml): Error @ line: 8, col: 11. FAIL");
-        assertSegmentStatusError(runtime.lastLog(), 3);
+        assertSegmentLog(runtime.lastLog(), 4, "[ERROR] (concord.yaml): Error @ line: 8, col: 11. FAIL");
+        assertSegmentStatusError(runtime.lastLog(), 4);
 
         assertNoMoreSegments();
     }

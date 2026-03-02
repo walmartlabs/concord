@@ -83,14 +83,18 @@ public class ProcessLogResourceV2 implements Resource {
     @Operation(description = "List process log segments", operationId = "processLogSegments")
     public List<LogSegment> segments(@PathParam("id") UUID instanceId,
                                      @QueryParam("limit") @DefaultValue("30") int limit,
-                                     @QueryParam("offset") @DefaultValue("0") int offset) {
+                                     @QueryParam("offset") @DefaultValue("0") int offset,
+                                     @QueryParam("parentId") Long parentId,
+                                     @QueryParam("rootOnly") @DefaultValue("false") boolean rootOnly,
+                                     @QueryParam("collectErrors") @DefaultValue("false") boolean collectErrors,
+                                     @QueryParam("onlyNamedSegments") @DefaultValue("false") boolean onlyNamedSegments) {
 
         if (offset < 0) {
             throw new ValidationErrorsException("'offset' must be a positive number or zero");
         }
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
-        return logManager.listSegments(processKey, limit, offset);
+        return logManager.listSegments(processKey, limit, offset, parentId, rootOnly, collectErrors, onlyNamedSegments);
     }
 
     /**
@@ -106,7 +110,7 @@ public class ProcessLogResourceV2 implements Resource {
                                                LogSegmentRequest request) {
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
-        long segmentId = logManager.createSegment(processKey, request.correlationId(), request.name(), request.createdAt());
+        long segmentId = logManager.createSegment(processKey, request.correlationId(), request.name(), request.createdAt(), request.parentId(), request.meta());
         return new LogSegmentOperationResponse(segmentId, OperationResult.CREATED);
     }
 
