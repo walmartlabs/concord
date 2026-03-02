@@ -457,13 +457,14 @@ public class Run implements Callable<Integer> {
     }
 
     private void copySourceToTarget(Path src, Path target, Verbosity verbosity) throws IOException {
-        String targetRelPath = target.startsWith(src) ? src.relativize(target).toString() : null;
+        Path skipDir = target.startsWith(src) ? target : null;
         GitIgnoreFilter filter = noGitIgnore ? null : GitIgnoreFilter.load(src);
 
+        String targetRelPath = skipDir != null ? src.relativize(target).toString() : null;
         String displayPath = (targetRelPath != null) ? "./" + targetRelPath : target.toString();
         CopyNotifier notifier = new CopyNotifier(verbosity.verbose() ? 0 : 100, displayPath);
 
-        copyWithGitIgnore(src, target, targetRelPath, filter, notifier, StandardCopyOption.REPLACE_EXISTING);
+        copyWithGitIgnore(src, target, skipDir, filter, notifier, StandardCopyOption.REPLACE_EXISTING);
     }
 
     private static void dumpArguments(Map<String, Object> args) {
@@ -513,21 +514,22 @@ public class Run implements Callable<Integer> {
         }
     }
 
-    private static void copyWithGitIgnore(Path src, Path dst, String targetDirName,
+    private static void copyWithGitIgnore(Path src, Path dst, Path skipDir,
                                           GitIgnoreFilter filter,
                                           FileVisitor visitor, CopyOption... options) throws IOException {
         Files.walkFileTree(src, new SimpleFileVisitor<>() {
             @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                 if (dir.equals(src)) {
                     return FileVisitResult.CONTINUE;
                 }
 
-                Path rel = src.relativize(dir);
                 // Skip the target directory (if it's inside the source directory)
-                if (targetDirName != null && rel.toString().equals(targetDirName)) {
+                if (skipDir != null && Files.isSameFile(dir, skipDir)) {
                     return FileVisitResult.SKIP_SUBTREE;
                 }
+
+                Path rel = src.relativize(dir);
                 // Check gitignore
                 if (filter != null && filter.isIgnored(rel, true)) {
                     return FileVisitResult.SKIP_SUBTREE;
