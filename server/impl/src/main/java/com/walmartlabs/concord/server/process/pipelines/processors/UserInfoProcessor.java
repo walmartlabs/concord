@@ -57,6 +57,11 @@ public abstract class UserInfoProcessor implements PayloadProcessor {
     @Override
     public Payload process(Chain chain, Payload payload) {
         var info = userManager.getCurrentUserInfo();
+        var user = userManager.get(info.id());
+
+        if (user.isPresent() && user.get().isDisabled()) {
+            throw new ConcordApplicationException(String.format("User '%s' is disabled", info.id()));
+        }
 
         if (signing.isEnabled()) {
             var signature = Optional.ofNullable(info.username())

@@ -277,8 +277,10 @@ public class ServerClient {
     }
 
     public void waitForLog(UUID instanceId, @Language("RegExp") String pattern) throws ApiException, IOException, InterruptedException {
-        int retries = 5;
+        waitForLog(instanceId, 5, pattern);
+    }
 
+    public void waitForLog(UUID instanceId, int retries, @Language("RegExp") String pattern) throws ApiException, IOException, InterruptedException {
         while (true) {
             byte[] ab = getLog(instanceId);
             if (!grep(pattern, ab).isEmpty()) {

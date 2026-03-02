@@ -59,10 +59,8 @@ import picocli.CommandLine.Spec;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
@@ -133,6 +131,9 @@ public class Run implements Callable<Integer> {
     @Option(names = {"--no-default-cfg"}, description = "Do not load default configuration (including standard dependencies)")
     boolean noDefaultCfg = false;
 
+    @Option(names = {"--no-gitignore"}, description = "Do not use .gitignore patterns when filtering files")
+    boolean noGitIgnore = false;
+
     @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")
     Path sourceDir = Paths.get(System.getProperty("user.dir"));
 
@@ -165,8 +166,9 @@ public class Run implements Callable<Integer> {
                 PathUtils.deleteRecursively(targetDir);
             }
 
-            // copy everything into target except target
-            PathUtils.copy(sourceDir, targetDir, "^target$", new CopyNotifier(verbosity.verbose() ? 0 : 100), StandardCopyOption.REPLACE_EXISTING);
+            // copy everything into target except target (and files matching .gitignore patterns)
+            GitIgnoreFilter gitIgnoreFilter = noGitIgnore ? null : GitIgnoreFilter.load(sourceDir);
+            copyWithGitIgnore(sourceDir, targetDir, gitIgnoreFilter, new CopyNotifier(verbosity.verbose() ? 0 : 100), StandardCopyOption.REPLACE_EXISTING);
         } else {
             throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
         }
@@ -461,5 +463,66 @@ public class Run implements Callable<Integer> {
 
             currentCount++;
         }
+    }
+
+    private static void copyWithGitIgnore(Path src, Path dst, GitIgnoreFilter filter,
+                                          FileVisitor visitor, CopyOption... options) throws IOException {
+        Files.walkFileTree(src, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                if (dir.equals(src)) {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                Path rel = src.relativize(dir);
+                // Always skip target directory
+                if (rel.toString().equals("target")) {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+                // Check gitignore
+                if (filter != null && filter.isIgnored(rel, true)) {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Path rel = src.relativize(file);
+                if (filter != null && filter.isIgnored(rel, false)) {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                Path dstFile = dst.resolve(rel);
+                Path parent = dstFile.getParent();
+                if (!Files.exists(parent)) {
+                    Files.createDirectories(parent);
+                }
+
+                if (Files.isSymbolicLink(file)) {
+                    Path link = Files.readSymbolicLink(file);
+                    Path target = file.getParent().resolve(link).normalize();
+
+                    if (!target.startsWith(src)) {
+                        throw new IOException("Symlinks outside the base directory are not supported: " + file + " -> " + target);
+                    }
+
+                    if (Files.notExists(target)) {
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    Files.deleteIfExists(dstFile);
+                    Files.createSymbolicLink(dstFile, link);
+                } else {
+                    Files.copy(file, dstFile, options);
+                }
+
+                if (visitor != null) {
+                    visitor.visit(file, dstFile);
+                }
+
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 }

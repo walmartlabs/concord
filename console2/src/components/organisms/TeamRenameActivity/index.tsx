@@ -66,6 +66,8 @@ class TeamRenameActivity extends React.PureComponent<Props> {
                     confirmationContent="Are you sure you want to rename the team?"
                     isExists={(name) => isTeamExists(orgName, name)}
                     alreadyExistsTemplate={teamAlreadyExistsError}
+                    inputTestId="team-rename-input"
+                    buttonTestId="team-rename-button"
                 />
             </>
         );

@@ -39,23 +39,18 @@ import picocli.CommandLine.Parameters;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.regex.Pattern;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.fusesource.jansi.Ansi.ansi;
 
 @Command(name = "remote-run", description = "Execute flows remotely. Sends the specified <workDir> as the process payload.")
 public class RemoteRun implements Callable<Integer> {
-
-    private static final String[] PAYLOAD_ARCHIVE_FILTERS = {Pattern.quote(".concord"), Pattern.quote(".git")};
     private static final long LARGE_PAYLOAD_SIZE_BYTES = 16 * 1024 * 1024;
     private static final String LARGE_PAYLOAD_SIZE_HUMAN = "16MB";
 
@@ -82,6 +77,9 @@ public class RemoteRun implements Callable<Integer> {
 
     @Option(names = {"--cfg"}, description = "Process configuration in JSON format (dependencies, runtime, arguments, etc)")
     String processCfg;
+
+    @Option(names = {"--no-gitignore"}, description = "Do not use .gitignore patterns when filtering files")
+    boolean noGitIgnore = false;
 
     @Parameters(arity = "1", description = "A path to a single concord.yaml (or .yml) file or a directory with flows")
     Path workDir = Paths.get(System.getProperty("user.dir"));
@@ -143,7 +141,7 @@ public class RemoteRun implements Callable<Integer> {
             return err("Unable to determine the payload size: " + e.getMessage());
         }
 
-        try (var archive = prepareArchive(workDir)) {
+        try (var archive = prepareArchive(workDir, noGitIgnore)) {
             var input = new HashMap<String, Object>();
             input.put("archive", archive.path());
             if (orgName != null) {
@@ -177,7 +175,7 @@ public class RemoteRun implements Callable<Integer> {
         return 0;
     }
 
-    private static TemporaryPath prepareArchive(Path src) throws IOException {
+    private static TemporaryPath prepareArchive(Path src, boolean noGitIgnore) throws IOException {
         var badSrc = false;
 
         if (Files.isRegularFile(src)) {
@@ -197,11 +195,47 @@ public class RemoteRun implements Callable<Integer> {
             if (Files.isRegularFile(src)) {
                 ZipUtils.zipFile(zip, src, src.getFileName().toString());
             } else if (Files.isDirectory(src)) {
-                ZipUtils.zip(zip, src, PAYLOAD_ARCHIVE_FILTERS);
+                GitIgnoreFilter gitIgnoreFilter = noGitIgnore ? null : GitIgnoreFilter.load(src);
+                zipWithGitIgnore(zip, src, gitIgnoreFilter);
             }
         }
 
         return dst;
+    }
+
+    private static void zipWithGitIgnore(ZipArchiveOutputStream zip, Path srcDir,
+                                          GitIgnoreFilter filter) throws IOException {
+        Files.walkFileTree(srcDir, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                if (dir.equals(srcDir)) {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                String name = dir.getFileName().toString();
+                // Always skip .git and .concord directories
+                if (name.equals(".git") || name.equals(".concord")) {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+                // Check gitignore
+                Path rel = srcDir.relativize(dir);
+                if (filter != null && filter.isIgnored(rel, true)) {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Path rel = srcDir.relativize(file);
+                if (filter != null && filter.isIgnored(rel, false)) {
+                    return FileVisitResult.CONTINUE;
+                }
+                String name = rel.toString();
+                ZipUtils.zipFile(zip, file, name);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
     private static long getDirectorySize(Path src) throws IOException {

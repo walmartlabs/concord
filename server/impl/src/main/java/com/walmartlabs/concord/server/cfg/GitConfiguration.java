@@ -88,6 +88,10 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
     private int sshTimeoutRetryCount;
 
     @Inject
+    @Config("git.maxGitCliOutputBytes")
+    private long maxGitCliOutputBytes;
+
+    @Inject
     @Config("git.systemAuth")
     List<com.typesafe.config.Config> authConfigs;
 
@@ -136,6 +140,10 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
 
     public int getSshTimeoutRetryCount() {
         return sshTimeoutRetryCount;
+    }
+
+    public long maxGitCliOutputBytes() {
+        return maxGitCliOutputBytes;
     }
 
     public List<MappingAuthConfig> getSystemAuth() {

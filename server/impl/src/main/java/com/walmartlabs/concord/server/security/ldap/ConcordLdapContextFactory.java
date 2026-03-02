@@ -37,7 +37,7 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
             @Override
             protected LdapContext createLdapContext(Hashtable env) throws NamingException {
                 String url = cfg.getUrl();
-                if (url != null && url.startsWith("ldaps:")) {
+                if (url != null && url.startsWith("ldaps:") && cfg.isTrustAllCertificates()) {
                     env.put("java.naming.ldap.factory.socket", TrustingSslSocketFactory.class.getName());
                 }
 

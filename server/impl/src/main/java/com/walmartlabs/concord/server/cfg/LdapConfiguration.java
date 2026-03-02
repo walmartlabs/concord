@@ -107,6 +107,10 @@ public class LdapConfiguration implements Serializable {
     @Config("ldap.dnsSRVName")
     private String dnsSRVName;
 
+    @Inject
+    @Config("ldap.trustAllCertificates")
+    private boolean trustAllCertificates;
+
     private final Set<String> exposeAttributes;
 
     private final Set<String> excludeAttributes;
@@ -193,6 +197,10 @@ public class LdapConfiguration implements Serializable {
 
     public String getDnsSRVName() {
         return dnsSRVName;
+    }
+
+    public boolean isTrustAllCertificates() {
+        return trustAllCertificates;
     }
 
     private static Set<String> split(String s) {

@@ -61,7 +61,7 @@ class TeamActivity extends React.PureComponent<Props> {
     static renderSetting(t: TeamEntry) {
         return (
             <>
-                <Header as="h5" disabled={true}>
+                <Header as="h5" disabled={true} data-testid="team-settings-id">
                     <WithCopyToClipboard value={t.id}>ID: {t.id}</WithCopyToClipboard>
                 </Header>
 
@@ -113,19 +113,19 @@ class TeamActivity extends React.PureComponent<Props> {
         return (
             <>
                 <Menu tabular={true}>
-                    <Menu.Item active={activeTab === 'members'}>
+                    <Menu.Item active={activeTab === 'members'} data-testid="team-tab-members">
                         <Icon name="users" />
                         <Link to={`/org/${orgName}/team/${teamName}/members`}>Members</Link>
                     </Menu.Item>
-                    <Menu.Item active={activeTab === 'ldapGroups'}>
+                    <Menu.Item active={activeTab === 'ldapGroups'} data-testid="team-tab-ldapGroups">
                         <Icon name="users" />
                         <Link to={`/org/${orgName}/team/${teamName}/ldapGroups`}>LDAP Groups</Link>
                     </Menu.Item>
-                    <Menu.Item active={activeTab === 'settings'}>
+                    <Menu.Item active={activeTab === 'settings'} data-testid="team-tab-settings">
                         <Icon name="setting" />
                         <Link to={`/org/${orgName}/team/${teamName}/settings`}>Settings</Link>
                     </Menu.Item>
-                    <Menu.Item active={activeTab === 'audit'}>
+                    <Menu.Item active={activeTab === 'audit'} data-testid="team-tab-audit">
                         <Icon name="history" />
                         <Link to={`/org/${orgName}/team/${teamName}/audit`}>Audit Log</Link>
                     </Menu.Item>

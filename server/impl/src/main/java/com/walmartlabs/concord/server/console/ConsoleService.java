@@ -178,6 +178,10 @@ public class ConsoleService implements Resource {
         UserEntry user = userManager.get(p.getId())
                 .orElseThrow(() -> new ConcordApplicationException("Unknown user: " + p.getId()));
 
+        if (user.isDisabled()) {
+            throw new UnauthorizedException("User is disabled: " + p.getId());
+        }
+
         return new UserResponse(p.getRealm(), user.getName(), user.getDomain(), displayName(u, p), user.getOrgs());
     }
 

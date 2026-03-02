@@ -43,17 +43,21 @@ class NewTeamForm extends React.Component<InjectedFormikProps<Props, NewTeamEntr
 
         return (
             <Form onSubmit={handleSubmit} loading={submitting}>
-                <FormikInput name="name" label="Name" placeholder="Team name" required={true} />
+                <div data-testid="team-form-name">
+                    <FormikInput name="name" label="Name" placeholder="Team name" required={true} />
+                </div>
 
-                <FormikInput
-                    name="description"
-                    label="Description"
-                    placeholder="Short description"
-                />
+                <div data-testid="team-form-description">
+                    <FormikInput
+                        name="description"
+                        label="Description"
+                        placeholder="Short description"
+                    />
+                </div>
 
                 <Divider />
 
-                <Button primary={true} type="submit" disabled={!dirty || hasErrors}>
+                <Button primary={true} type="submit" disabled={!dirty || hasErrors} data-testid="team-form-submit">
                     Create
                 </Button>
             </Form>
