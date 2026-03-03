@@ -4,6 +4,8 @@
 
 ### Added
 
+- cli: add `--target-dir` option to specify custom payload target directory
+([#1275](https://github.com/walmartlabs/concord/pull/1275));
 - cli: allow tasks to interact with remote during local runs
 ([#1269](https://github.com/walmartlabs/concord/pull/1269));
 - repository, server, agent: configurable limit for git cli output
