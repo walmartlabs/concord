@@ -82,6 +82,7 @@ public class JoinCommand<T extends Step> extends StepCommand<T> {
 
             // find if some of the threads has failed with an unhandled exception
             Collection<ThreadId> failed = status.entrySet().stream()
+                    .filter(e -> ids.contains(e.getKey()))
                     .filter(e -> e.getValue() == ThreadStatus.FAILED)
                     .map(Map.Entry::getKey)
                     .toList();
