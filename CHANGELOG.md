@@ -4,8 +4,10 @@
 
 ### Added
 
+- cli: allow tasks to interact with remote during local runs
+([#1269](https://github.com/walmartlabs/concord/pull/1269));
 - repository, server, agent: configurable limit for git cli output
-  ([#1266](https://github.com/walmartlabs/concord/pull/1266)).
+([#1266](https://github.com/walmartlabs/concord/pull/1266)).
 
 ### Changed
 
