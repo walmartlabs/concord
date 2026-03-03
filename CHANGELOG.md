@@ -4,16 +4,19 @@
 
 ### Added
 
-- cli: add `--target-dir` option to specify custom payload target directory
+- cli: add `--target-dir` option to specify custom payload
+target directory
 ([#1275](https://github.com/walmartlabs/concord/pull/1275));
 - cli: allow tasks to interact with remote during local runs
 ([#1269](https://github.com/walmartlabs/concord/pull/1269));
-- repository, server, agent: configurable limit for git cli output
+- repository, server, agent: configurable limit for git cli
+output
 ([#1266](https://github.com/walmartlabs/concord/pull/1266)).
 
 ### Changed
 
-- runtime-v2: fix JoinCommand collecting failed threads from unrelated parallel blocks
+- runtime-v2: fix JoinCommand collecting failed threads from
+unrelated parallel blocks
 ([#1276](https://github.com/walmartlabs/concord/pull/1276));
 - console2: fix copyToClipboard is not a function
 ([#1274](https://github.com/walmartlabs/concord/pull/1274));
