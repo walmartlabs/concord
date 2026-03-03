@@ -11,6 +11,8 @@
 
 - runtime-v2: fix JoinCommand collecting failed threads from unrelated parallel blocks
 ([#1276](https://github.com/walmartlabs/concord/pull/1276));
+- runtime-v2: mask sensitive data in log segment names
+([#1272](https://github.com/walmartlabs/concord/pull/1272));
 - examples: fix/update runtime-v2 example dependencies
 ([#1271](https://github.com/walmartlabs/concord/pull/1271));
 - project: build with postgres 14 image
