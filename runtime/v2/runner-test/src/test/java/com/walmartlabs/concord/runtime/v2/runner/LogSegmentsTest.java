@@ -680,6 +680,25 @@ public class LogSegmentsTest {
         assertNoMoreSegments();
     }
 
+    @Test
+    public void taskSensitiveDataInName() throws Exception {
+        deploy("logSegments/taskWithSensitiveDataInName");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = runWithSegments();
+
+        assertSegmentName(1, "My masked password: ******");
+        assertSegmentLog(log, 1, "[INFO ] Still masked: ******");
+        assertSegmentStatusOk(log, 1);
+        assertNoMoreSegments();
+    }
+
+    private void assertSegmentName(int segmentId, String expectedName) {
+        assertEquals(expectedName, runtime.testLoggingClient().getSegmentName(segmentId));
+    }
+
     private static void assertSystemSegment(byte[] log, String message) throws IOException {
         assertSegmentLog(log, 0, message);
     }

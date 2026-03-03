@@ -59,14 +59,15 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Singleton;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -89,6 +90,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
     protected Module testServices;
 
     protected TestCheckpointUploader checkpointService;
+    protected TestLoggingClient testLoggingClient;
 
     protected boolean skipSerializationAssert = false;
 
@@ -138,6 +140,10 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
 
     public TestCheckpointUploader checkpointService() {
         return checkpointService;
+    }
+
+    public TestLoggingClient testLoggingClient() {
+        return testLoggingClient;
     }
 
     public ProcessStatusCallback processStatusCallback() {
@@ -223,7 +229,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
             protected void configure() {
                 bind(DefaultTaskVariablesService.class).toProvider(new DefaultTaskVariablesProvider(processConfiguration));
                 bind(RunnerLogger.class).toProvider(LoggerProvider.class);
-                bind(LoggingClient.class).to(TestLoggingClient.class);
+                bind(LoggingClient.class).toInstance(testLoggingClient);
             }
         };
 
@@ -367,6 +373,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
         processStatusCallback = mock(ProcessStatusCallback.class);
 
         checkpointService = spy(new TestCheckpointUploader());
+        testLoggingClient = spy(new TestLoggingClient());
 
         testServices = new AbstractModule() {
             @Override
@@ -439,6 +446,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
         }
 
         processConfiguration = null;
+        testLoggingClient = null;
 
         LoggingConfigurator.reset();
     }
@@ -454,14 +462,20 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
         return true;
     }
 
-    @Singleton
-    static class TestLoggingClient implements LoggingClient {
+    public static class TestLoggingClient implements LoggingClient {
 
         private final AtomicLong id = new AtomicLong(1L);
+        private final Map<Long, String> segmentNames = new ConcurrentHashMap<>();
 
         @Override
         public long createSegment(UUID correlationId, String name) {
-            return id.getAndIncrement();
+            long segmentId = id.getAndIncrement();
+            segmentNames.put(segmentId, name);
+            return segmentId;
+        }
+
+        public String getSegmentName(long segmentId) {
+            return segmentNames.get(segmentId);
         }
     }
 }
