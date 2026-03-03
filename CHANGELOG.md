@@ -11,6 +11,8 @@
 
 - runtime-v2: fix JoinCommand collecting failed threads from unrelated parallel blocks
 ([#1276](https://github.com/walmartlabs/concord/pull/1276));
+- console2: fix copyToClipboard is not a function
+([#1274](https://github.com/walmartlabs/concord/pull/1274));
 - server: validate restored payload IDs on process restart
 ([#1273](https://github.com/walmartlabs/concord/pull/1273));
 - runtime-v2: mask sensitive data in log segment names
