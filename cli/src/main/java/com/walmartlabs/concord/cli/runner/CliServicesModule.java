@@ -34,7 +34,6 @@ import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SimpleLogger;
-import com.walmartlabs.concord.runtime.v2.runner.remote.ApiClientProvider;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
 import com.walmartlabs.concord.runtime.v2.sdk.LockService;
@@ -83,7 +82,8 @@ public class CliServicesModule extends AbstractModule {
         bind(ProcessStatusCallback.class).toInstance(instanceId -> {
         });
 
-        bind(ApiClient.class).toProvider(ApiClientProvider.class);
+        bind(ApiKey.class).toInstance(ApiKey.create(cliConfigContext, workDir, verbosity));
+        bind(ApiClient.class).toProvider(CliApiClientProvider.class);
 
         bind(DefaultTaskVariablesService.class)
                 .toInstance(new MapBackedDefaultTaskVariablesService(readDefaultVars(defaultTaskVars)));
