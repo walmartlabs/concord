@@ -11,6 +11,8 @@
 
 - runtime-v2: fix JoinCommand collecting failed threads from unrelated parallel blocks
 ([#1276](https://github.com/walmartlabs/concord/pull/1276));
+- server: validate restored payload IDs on process restart
+([#1273](https://github.com/walmartlabs/concord/pull/1273));
 - runtime-v2: mask sensitive data in log segment names
 ([#1272](https://github.com/walmartlabs/concord/pull/1272));
 - examples: fix/update runtime-v2 example dependencies
