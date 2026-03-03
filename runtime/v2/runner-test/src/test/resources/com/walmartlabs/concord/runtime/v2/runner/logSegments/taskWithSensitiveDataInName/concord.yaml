@@ -1,0 +1,4 @@
+flows:
+  default:
+    - name: "My masked password: ${sensitiveTask.get('password')}"
+      log: "Still masked: ${sensitiveTask.get('password')}"
