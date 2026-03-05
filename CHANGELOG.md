@@ -15,6 +15,8 @@ output
 
 ### Changed
 
+- runtime-v2: fix JoinCommand not waiting for threads in UNWINDING state
+([#1277](https://github.com/walmartlabs/concord/pull/1277));
 - runtime-v2: fix JoinCommand collecting failed threads from
 unrelated parallel blocks
 ([#1276](https://github.com/walmartlabs/concord/pull/1276));
