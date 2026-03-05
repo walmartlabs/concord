@@ -27,9 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serial;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class JoinCommand<T extends Step> extends StepCommand<T> {
 
@@ -57,56 +55,52 @@ public class JoinCommand<T extends Step> extends StepCommand<T> {
         // We could've used futures instead, but it's way more
         // complicated - especially when suspend/resume are involved.
 
+        var finalStatuses = waitForChildren(state);
+        var failed = finalStatuses.entrySet().stream()
+                .filter(e -> e.getValue() == ThreadStatus.FAILED)
+                .map(Map.Entry::getKey)
+                .toList();
+        if (!failed.isEmpty()) {
+            throw new ParallelExecutionException(failed.stream()
+                    .map(state::clearThreadError)
+                    .filter(Objects::nonNull)
+                    .toList());
+        }
+
+        if (finalStatuses.containsValue(ThreadStatus.SUSPENDED)) {
+            log.trace("eval [{}] -> children suspended, suspending parent", threadId);
+            state.setStatus(threadId, ThreadStatus.SUSPENDED);
+            return;
+        }
+
+        state.peekFrame(threadId).pop();
+    }
+
+    private Map<ThreadId, ThreadStatus> waitForChildren(State state) {
         while (true) {
-            Map<ThreadId, ThreadStatus> status = state.threadStatus();
+            var allStatuses = state.threadStatus();
 
-            boolean allDone = status.entrySet().stream()
-                    .map(e -> ids.contains(e.getKey()) ? e.getValue() : ThreadStatus.DONE)
-                    .allMatch(e -> e == ThreadStatus.DONE);
-
-            // all children are done, proceed with the execution
-            if (allDone) {
-                state.peekFrame(threadId).pop();
-                return;
+            var targets = new HashMap<ThreadId, ThreadStatus>();
+            var active = false;
+            for (var id : ids) {
+                // null means the thread completed and was removed by gc()
+                var s = allStatuses.getOrDefault(id, ThreadStatus.DONE);
+                targets.put(id, s);
+                if (s == ThreadStatus.READY || s == ThreadStatus.UNWINDING) {
+                    active = true;
+                }
             }
 
-            boolean anySuspended = anyMatch(status, ids, ThreadStatus.SUSPENDED);
-            boolean anyReady = anyMatch(status, ids, ThreadStatus.READY);
-
-            // all children are either DONE or SUSPENDED - suspend the parent execution
-            if (!anyReady && anySuspended) {
-                log.trace("eval [{}] -> some of the children are SUSPENDED, suspending the parent thread", threadId);
-                state.setStatus(threadId, ThreadStatus.SUSPENDED);
-                return;
+            if (!active) {
+                return targets;
             }
 
-            // find if some of the threads has failed with an unhandled exception
-            Collection<ThreadId> failed = status.entrySet().stream()
-                    .filter(e -> ids.contains(e.getKey()))
-                    .filter(e -> e.getValue() == ThreadStatus.FAILED)
-                    .map(Map.Entry::getKey)
-                    .toList();
-
-            // nothing left to run and we got some unhandled exceptions
-            if (!failed.isEmpty() && !anyReady) {
-                throw new ParallelExecutionException(failed.stream()
-                        .map(state::clearThreadError)
-                        .filter(Objects::nonNull)
-                        .toList());
-            }
-
-            // some children are still running, wait for a bit and then check again
             try {
                 Thread.sleep(BUSY_WAIT_SLEEP);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                throw new RuntimeException("JoinCommand interrupted", e);
             }
         }
-    }
-
-    private static boolean anyMatch(Map<ThreadId, ThreadStatus> status, Collection<ThreadId> ids, ThreadStatus match) {
-        return status.entrySet().stream()
-                .filter(e -> ids.contains(e.getKey()))
-                .anyMatch(e -> e.getValue() == match);
     }
 }
