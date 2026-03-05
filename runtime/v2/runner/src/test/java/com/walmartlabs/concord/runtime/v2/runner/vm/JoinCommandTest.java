@@ -31,6 +31,149 @@ import static org.junit.jupiter.api.Assertions.*;
 public class JoinCommandTest {
 
     @Test
+    public void testAllChildrenDoneShouldContinueExecution() {
+        Frame rootFrame = Frame.builder().root().build();
+        InMemoryState state = new InMemoryState(rootFrame);
+
+        ThreadId parentThread = state.getRootThreadId();
+        ThreadId child1 = state.nextThreadId();
+        ThreadId child2 = state.nextThreadId();
+
+        state.setStatus(child1, ThreadStatus.DONE);
+        state.setStatus(child2, ThreadStatus.DONE);
+
+        JoinCommand<Step> joinCommand = new JoinCommand<>(List.of(child1, child2), null);
+        state.peekFrame(parentThread).push(joinCommand);
+
+        // Should not throw — all children completed successfully
+        assertDoesNotThrow(() -> joinCommand.execute(null, state, parentThread));
+
+        // Parent thread should NOT be suspended
+        assertNotEquals(ThreadStatus.SUSPENDED, state.getStatus(parentThread));
+    }
+
+    @Test
+    public void testSuspendedChildShouldSuspendParent() {
+        Frame rootFrame = Frame.builder().root().build();
+        InMemoryState state = new InMemoryState(rootFrame);
+
+        ThreadId parentThread = state.getRootThreadId();
+        ThreadId child1 = state.nextThreadId();
+        ThreadId child2 = state.nextThreadId();
+
+        state.setStatus(child1, ThreadStatus.DONE);
+        state.setStatus(child2, ThreadStatus.SUSPENDED);
+
+        JoinCommand<Step> joinCommand = new JoinCommand<>(List.of(child1, child2), null);
+
+        joinCommand.execute(null, state, parentThread);
+
+        assertEquals(ThreadStatus.SUSPENDED, state.getStatus(parentThread));
+    }
+
+    @Test
+    public void testMultipleFailedThreadsShouldCollectAllErrors() {
+        Frame rootFrame = Frame.builder().root().build();
+        InMemoryState state = new InMemoryState(rootFrame);
+
+        ThreadId parentThread = state.getRootThreadId();
+        ThreadId child1 = state.nextThreadId();
+        ThreadId child2 = state.nextThreadId();
+        ThreadId child3 = state.nextThreadId();
+
+        state.setStatus(child1, ThreadStatus.DONE);
+        state.setStatus(child2, ThreadStatus.FAILED);
+        state.setStatus(child3, ThreadStatus.FAILED);
+
+        Exception error2 = new RuntimeException("error from child2");
+        Exception error3 = new RuntimeException("error from child3");
+        state.setThreadError(child2, error2);
+        state.setThreadError(child3, error3);
+
+        JoinCommand<Step> joinCommand = new JoinCommand<>(List.of(child1, child2, child3), null);
+
+        ParallelExecutionException exception = assertThrows(
+                ParallelExecutionException.class,
+                () -> joinCommand.execute(null, state, parentThread));
+
+        assertEquals(2, exception.getExceptions().size());
+        assertTrue(exception.getExceptions().containsAll(List.of(error2, error3)));
+    }
+
+    @Test
+    public void testFailedThreadWithNoErrorShouldBeFilteredOut() {
+        Frame rootFrame = Frame.builder().root().build();
+        InMemoryState state = new InMemoryState(rootFrame);
+
+        ThreadId parentThread = state.getRootThreadId();
+        ThreadId child1 = state.nextThreadId();
+        ThreadId child2 = state.nextThreadId();
+
+        state.setStatus(child1, ThreadStatus.FAILED);
+        state.setStatus(child2, ThreadStatus.FAILED);
+
+        // Only set error for child1; child2 has no error — clearThreadError returns null
+        Exception error1 = new RuntimeException("error 1");
+        state.setThreadError(child1, error1);
+
+        JoinCommand<Step> joinCommand = new JoinCommand<>(List.of(child1, child2), null);
+
+        ParallelExecutionException exception = assertThrows(
+                ParallelExecutionException.class,
+                () -> joinCommand.execute(null, state, parentThread));
+
+        // Only non-null errors should be included
+        assertEquals(1, exception.getExceptions().size());
+        assertSame(error1, exception.getExceptions().get(0));
+    }
+
+    @Test
+    public void testFailedTakePriorityOverSuspended() {
+        Frame rootFrame = Frame.builder().root().build();
+        InMemoryState state = new InMemoryState(rootFrame);
+
+        ThreadId parentThread = state.getRootThreadId();
+        ThreadId child1 = state.nextThreadId();
+        ThreadId child2 = state.nextThreadId();
+
+        state.setStatus(child1, ThreadStatus.FAILED);
+        state.setStatus(child2, ThreadStatus.SUSPENDED);
+
+        Exception error = new RuntimeException("failure");
+        state.setThreadError(child1, error);
+
+        JoinCommand<Step> joinCommand = new JoinCommand<>(List.of(child1, child2), null);
+
+        // Should throw even though child2 is suspended — failures are checked first
+        ParallelExecutionException exception = assertThrows(
+                ParallelExecutionException.class,
+                () -> joinCommand.execute(null, state, parentThread));
+
+        assertEquals(1, exception.getExceptions().size());
+        assertSame(error, exception.getExceptions().get(0));
+    }
+
+    @Test
+    public void testErrorsClearedFromStateAfterFailure() {
+        Frame rootFrame = Frame.builder().root().build();
+        InMemoryState state = new InMemoryState(rootFrame);
+
+        ThreadId parentThread = state.getRootThreadId();
+        ThreadId child = state.nextThreadId();
+
+        state.setStatus(child, ThreadStatus.FAILED);
+        state.setThreadError(child, new RuntimeException("err"));
+
+        JoinCommand<Step> joinCommand = new JoinCommand<>(List.of(child), null);
+
+        assertThrows(ParallelExecutionException.class,
+                () -> joinCommand.execute(null, state, parentThread));
+
+        // clearThreadError should have removed the error from state
+        assertNull(state.getThreadError(child));
+    }
+
+    @Test
     public void testFailedThreadsShouldBeFilteredByOwnedIds() {
         // Setup state with a root frame for the parent thread
         Frame rootFrame = Frame.builder().root().build();
