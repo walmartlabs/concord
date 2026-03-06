@@ -5,6 +5,7 @@
 - Keep ongoing multi-step progress notes in `PROGRESS.md` and update them periodically during the task.
 - When a task includes a small production change plus supporting tests, commit the production change separately once it is ready.
 - Follow the existing git commit message pattern: `module-name: short description`.
+- When creating commits for this repo, skip GPG signing so commits do not block on interactive signing prompts.
 
 ## Java Style
 
