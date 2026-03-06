@@ -2,6 +2,28 @@
 
 ### 2026-03-06
 
+- Completed backlog item `5.2 Replace process log factory responsibilities`.
+- Shrunk the active factory surface to the session-backed runner log path:
+  - `ProcessLogFactory` no longer builds the temp-file redirector path for active code
+  - temp-file redirector setup moved directly into characterization tests that still lock in the legacy behavior until Milestone 6 removes those classes
+- Verification:
+  - `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessLogFactoryTest,ProcessLogCharacterizationTest,RunnerJobTest test`
+- Milestone state:
+  - Milestone 5 is ready for a separate commit
+
+- Milestone 4 committed:
+  - `d6c19dfef` `agent: route agent messages through log sessions`
+- Completed backlog item `5.1 Replace runner logging assembly`.
+- Updated the active runner path to use a single session-backed `ProcessLog`:
+  - `ProcessLogFactory.createRunnerLog(...)`
+  - `RunnerJob` now stores `ProcessLog` instead of `RunnerLog`
+  - `RunnerJobExecutor` no longer starts the extra `LogStream` maintenance thread
+- Verification:
+  - `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessLogFactoryTest,ProcessLogCharacterizationTest,JobDependenciesTest test`
+- Next action:
+  - hand `5.2 Replace process log factory responsibilities` to a worker
+  - remove the now-unused file-backed factory responsibilities from active construction and tighten the factory around session creation only
+
 - Completed backlog item `4.2 Fix DI composition`.
 - Added the worker-level mode-selection bridge onto the shared composition:
   - `ProcessLogModeConfigurator`

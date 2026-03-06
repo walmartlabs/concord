@@ -26,6 +26,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.walmartlabs.concord.agent.ExecutionException;
 import com.walmartlabs.concord.agent.JobRequest;
 import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor.RunnerJobExecutorConfiguration;
+import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.policyengine.PolicyEngineRules;
@@ -59,12 +60,10 @@ public class RunnerJob {
         }
 
         RunnerConfiguration runnerCfg = createRunnerConfiguration(runnerExecutorCfg, cfg);
-        RunnerLog log;
+        ProcessLog log;
         try {
-            log = new RunnerLog(
-                    processLogFactory.createRedirectedLog(jobRequest.getInstanceId(), runnerExecutorCfg.segmentedLogs()),
-                    processLogFactory.createRemoteLog(jobRequest.getInstanceId(), runnerExecutorCfg.segmentedLogs()));
-        } catch (IOException e) {
+            log = processLogFactory.createRunnerLog(jobRequest.getInstanceId(), runnerExecutorCfg.segmentedLogs());
+        } catch (RuntimeException e) {
             throw new ExecutionException("Error while creating the runner's log: " + e.getMessage(), e);
         }
 
@@ -87,10 +86,10 @@ public class RunnerJob {
     private final Map<String, Object> processCfg;
     private final RunnerConfiguration runnerCfg;
     private final boolean debugMode;
-    private final RunnerLog log;
+    private final ProcessLog log;
     private final PolicyEngine policyEngine;
 
-    private RunnerJob(UUID instanceId, Path payloadDir, Map<String, Object> processCfg, RunnerConfiguration runnerCfg, RunnerLog log, PolicyEngine policyEngine) {
+    private RunnerJob(UUID instanceId, Path payloadDir, Map<String, Object> processCfg, RunnerConfiguration runnerCfg, ProcessLog log, PolicyEngine policyEngine) {
         this.instanceId = instanceId;
         this.payloadDir = payloadDir;
         this.processCfg = processCfg;
@@ -120,7 +119,7 @@ public class RunnerJob {
         return debugMode;
     }
 
-    public RunnerLog getLog() {
+    public ProcessLog getLog() {
         return log;
     }
 

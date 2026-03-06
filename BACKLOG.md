@@ -235,31 +235,59 @@ Verification:
 
 ## Milestone 5. Migrate Executor And Factory Code
 
+Status:
+
+- complete
+- note: the active runner path now uses the session-backed process log directly
+- note: file-backed redirector classes remain on disk only as compatibility/test-covered legacy pieces until Milestone 6 removes them
+
 ### 5.1 Replace runner logging assembly
 
 Tasks:
 
-- update `RunnerJob`
-- update `RunnerJobExecutor`
-- replace `RunnerLog` usage with the new session/pump model
+- [x] update `RunnerJob`
+- [x] update `RunnerJobExecutor`
+- [x] replace `RunnerLog` usage with the new session/pump model
 
 Done when:
 
 - runner execution no longer requires `RunnerLog`
 - subprocess output and agent-generated messages both use the new abstractions
 
+Implemented in:
+
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/ProcessLogFactory.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/executors/runner/RunnerJob.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/executors/runner/RunnerJobExecutor.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/ProcessLogFactoryTest.java`
+
+Verification:
+
+- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessLogFactoryTest,ProcessLogCharacterizationTest,JobDependenciesTest test`
+
 ### 5.2 Replace process log factory responsibilities
 
 Tasks:
 
-- shrink `ProcessLogFactory` into a small session factory or equivalent builder
-- stop creating temp log directories for normal streaming
-- keep mode selection based on runtime `segmentedLogs`
+- [x] shrink `ProcessLogFactory` into a small session factory or equivalent builder
+- [x] stop creating temp log directories for normal streaming
+- [x] keep mode selection based on runtime `segmentedLogs`
 
 Done when:
 
 - factory code is only responsible for session creation and mode selection
 - no file-backed redirector remains in the main path
+
+Implemented in:
+
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/ProcessLogFactory.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/ProcessLogFactoryTest.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/ProcessLogCharacterizationTest.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/executors/runner/RunnerJobTest.java`
+
+Verification:
+
+- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessLogFactoryTest,ProcessLogCharacterizationTest,RunnerJobTest test`
 
 ## Milestone 6. Remove Legacy Logging Pieces
 

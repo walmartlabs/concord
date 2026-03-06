@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agent.executors.runner;
  * =====
  */
 
+import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Test;
 
@@ -65,7 +66,7 @@ public class JobDependenciesTest {
         when(j.getProcessCfg()).thenReturn(cfg);
         when(j.getPayloadDir()).thenReturn(payloadDir);
 
-        RunnerLog log = mock(RunnerLog.class);
+        ProcessLog log = mock(ProcessLog.class);
         when(j.getLog()).thenReturn(log);
 
         Collection<URI> uris = JobDependencies.get(j);

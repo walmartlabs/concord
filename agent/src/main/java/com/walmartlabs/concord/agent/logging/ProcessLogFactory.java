@@ -23,45 +23,28 @@ package com.walmartlabs.concord.agent.logging;
 import com.walmartlabs.concord.agent.cfg.AgentConfiguration;
 
 import javax.inject.Inject;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 public class ProcessLogFactory {
 
-    private final Path logDir;
-    private final long logStreamMaxDelay;
+    private final long flushIntervalMillis;
     private final LogAppender logAppender;
 
     @Inject
     public ProcessLogFactory(AgentConfiguration cfg, LogAppender logAppender) {
-        this.logDir = cfg.getLogDir();
-        this.logStreamMaxDelay = cfg.getLogMaxDelay();
+        this.flushIntervalMillis = cfg.getLogMaxDelay();
         this.logAppender = logAppender;
     }
 
-    public RedirectedProcessLog createRedirectedLog(UUID instanceId, boolean segmented) throws IOException {
-        Path dst = logDir.resolve(instanceId.toString());
-        if (Files.notExists(dst)) {
-            Files.createDirectories(dst);
-        }
-
-        Consumer<RedirectedProcessLog.Chunk> logConsumer;
-        if (segmented) {
-            logConsumer = new SegmentedLogsConsumer(instanceId, logAppender);
-        } else {
-            logConsumer = chunk -> {
-                byte[] ab = new byte[chunk.len()];
-                System.arraycopy(chunk.bytes(), 0, ab, 0, chunk.len());
-                logAppender.appendLog(instanceId, ab);
-            };
-        }
-        return new RedirectedProcessLog(dst, logStreamMaxDelay, logConsumer);
+    public ProcessLog createRunnerLog(UUID instanceId, boolean segmented) {
+        return new SessionProcessLog(new DefaultProcessLogSession(createOutput(instanceId, segmented)), flushIntervalMillis);
     }
 
-    public RemoteProcessLog createRemoteLog(UUID instanceId, boolean segmented) {
-        return new RemoteProcessLog(instanceId, logAppender, segmented);
+    private ProcessOutputDecoder createOutput(UUID instanceId, boolean segmented) {
+        var transport = new LogAppenderProcessLogTransport(instanceId, logAppender);
+        if (segmented) {
+            return new SegmentedOutputDecoder(transport);
+        }
+        return new PlainOutputDecoder(transport);
     }
 }

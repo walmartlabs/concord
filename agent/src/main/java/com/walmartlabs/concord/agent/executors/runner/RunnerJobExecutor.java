@@ -300,32 +300,21 @@ public class RunnerJobExecutor implements JobExecutor {
 
     private void exec(RunnerJob job, ProcessEntry pe) throws Exception {
         // the actual OS process
-        Process proc = pe.getProcess();
+        var proc = pe.getProcess();
 
-        UUID instanceId = job.getInstanceId();
-        ProcessLog processLog = job.getLog();
-
-        // start the log's maintenance thread (e.g. streaming to the server)
-        LogStream logStream = new LogStream(job, proc);
-        logStream.start();
+        var instanceId = job.getInstanceId();
+        var processLog = job.getLog();
 
         try {
-            // save the process' log
             processLog.log(proc.getInputStream());
 
-            // wait for the process to finish
-            int code;
+            var code = 0;
             try {
                 code = proc.waitFor();
             } catch (Exception e) {
-                // wait for the log to finish
-                logStream.waitForCompletion();
                 handleError(job, proc, e.getMessage());
                 throw new ExecutionException("Error while executing a job: " + e.getMessage());
             }
-
-            // wait for the log to finish
-            logStream.waitForCompletion();
 
             if (code != 0) {
                 log.warn("exec ['{}'] -> finished with {}", instanceId, code);
@@ -335,9 +324,15 @@ public class RunnerJobExecutor implements JobExecutor {
 
             log.info("exec ['{}'] -> finished with {}", instanceId, code);
             processLog.info("Process finished with: {}", code);
+        } catch (IOException e) {
+            handleError(job, proc, e.getMessage());
+            throw new ExecutionException("Error while streaming the process log: " + e.getMessage(), e);
         } finally {
-            // wait for the log to finish
-            logStream.waitForCompletion();
+            try {
+                processLog.delete();
+            } catch (Exception e) {
+                log.warn("exec ['{}'] -> error while cleaning up the process log: {}", instanceId, e.getMessage());
+            }
         }
     }
 
@@ -685,51 +680,6 @@ public class RunnerJobExecutor implements JobExecutor {
             job.getLog().delete();
         } catch (Exception e) {
             log.warn("cleanup [{}] -> error while cleaning up the process logs: {}", job.getInstanceId(), e.getMessage());
-        }
-    }
-
-    /**
-     * A tiny wrapper to simplify working with the log streaming.
-     */
-    private class LogStream {
-
-        private final RunnerJob job;
-        private final Process proc;
-
-        private Future<?> f;
-        private transient boolean doStop = false;
-
-        private LogStream(RunnerJob job, Process proc) {
-            this.job = job;
-            this.proc = proc;
-        }
-
-        /**
-         * Starts the log streaming in a separate thread.
-         */
-        public void start() {
-            RunnerLog processLog = job.getLog();
-
-            f = executor.submit(() -> {
-                try {
-                    processLog.run(() -> doStop);
-                } catch (Exception e) {
-                    handleError(job, proc, e.getMessage());
-                }
-            });
-        }
-
-        /**
-         * Waits for the log stream to finish and removes the log file.
-         */
-        public void waitForCompletion() {
-            this.doStop = true;
-
-            try {
-                f.get(1, TimeUnit.MINUTES);
-            } catch (Exception e) {
-                log.warn("waitForCompletion -> timeout waiting for the log stream of {}", job.getInstanceId());
-            }
         }
     }
 

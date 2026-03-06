@@ -23,7 +23,8 @@ package com.walmartlabs.concord.agent.logging;
 import com.walmartlabs.concord.agent.cfg.AgentConfiguration;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Files;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,9 +35,9 @@ import static org.mockito.Mockito.when;
 public class ProcessLogFactoryTest {
 
     @Test
-    public void createRemoteLogPreservesNonSegmentedMessageDelivery() throws Exception {
+    public void createRunnerLogPreservesNonSegmentedMessageDelivery() throws Exception {
         var appender = new RecordingLogAppender();
-        var log = newFactory(appender).createRemoteLog(UUID.randomUUID(), false);
+        var log = newFactory(appender).createRunnerLog(UUID.randomUUID(), false);
 
         log.info("plain factory message");
 
@@ -45,9 +46,9 @@ public class ProcessLogFactoryTest {
     }
 
     @Test
-    public void createRemoteLogRoutesSegmentedMessagesToSystemSegmentZero() throws Exception {
+    public void createRunnerLogRoutesSegmentedMessagesToSystemSegmentZero() throws Exception {
         var appender = new RecordingLogAppender();
-        var log = newFactory(appender).createRemoteLog(UUID.randomUUID(), true);
+        var log = newFactory(appender).createRunnerLog(UUID.randomUUID(), true);
 
         log.error("segmented factory message");
 
@@ -55,10 +56,30 @@ public class ProcessLogFactoryTest {
         assertTrue(appender.segmentLog(0).contains("segmented factory message"));
     }
 
+    @Test
+    public void createRunnerLogStreamsPlainOutputIntoSystemLog() throws Exception {
+        var appender = new RecordingLogAppender();
+        var log = newFactory(appender).createRunnerLog(UUID.randomUUID(), false);
+
+        log.log(new ByteArrayInputStream("runner plain output".getBytes(StandardCharsets.UTF_8)));
+
+        assertTrue(appender.systemLog().contains("runner plain output"));
+        assertEquals("", appender.segmentLog(0));
+    }
+
+    @Test
+    public void createRunnerLogStreamsUnframedSegmentedOutputIntoSystemSegmentZero() throws Exception {
+        var appender = new RecordingLogAppender();
+        var log = newFactory(appender).createRunnerLog(UUID.randomUUID(), true);
+
+        log.log(new ByteArrayInputStream("runner segmented output".getBytes(StandardCharsets.UTF_8)));
+
+        assertEquals("", appender.systemLog());
+        assertEquals("runner segmented output", appender.segmentLog(0));
+    }
+
     private static ProcessLogFactory newFactory(LogAppender appender) throws Exception {
         var cfg = mock(AgentConfiguration.class);
-        var logDir = Files.createTempDirectory("process-log-factory");
-        when(cfg.getLogDir()).thenReturn(logDir);
         when(cfg.getLogMaxDelay()).thenReturn(5L);
         return new ProcessLogFactory(cfg, appender);
     }

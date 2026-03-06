@@ -21,7 +21,6 @@ package com.walmartlabs.concord.agent.logging;
  */
 
 import com.google.common.primitives.Bytes;
-import com.walmartlabs.concord.agent.cfg.AgentConfiguration;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentHeader;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentSerializer;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
@@ -37,21 +36,18 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 public class ProcessLogCharacterizationTest {
 
     @Test
     public void nonSegmentedRunnerOutputIsDeliveredBeforeShutdownCompletes() throws Exception {
         var appender = new RecordingLogAppender();
-        var log = newFactory(Files.createTempDirectory("non-segmented"), appender)
-                .createRedirectedLog(UUID.randomUUID(), false);
+        var log = newRedirectedLog(Files.createTempDirectory("non-segmented"), appender, UUID.randomUUID(), false);
 
         var stop = new AtomicBoolean(false);
         var failure = new AtomicReference<Throwable>();
@@ -73,8 +69,7 @@ public class ProcessLogCharacterizationTest {
     @Test
     public void segmentedRunnerOutputKeepsChunkBoundariesAndMapsInvalidBytesToSystemSegmentZero() throws Exception {
         var appender = new RecordingLogAppender();
-        var log = newFactory(Files.createTempDirectory("segmented"), appender)
-                .createRedirectedLog(UUID.randomUUID(), true);
+        var log = newRedirectedLog(Files.createTempDirectory("segmented"), appender, UUID.randomUUID(), true);
 
         var header = segmentHeader(1, 5, 0, 0, LogSegmentStatus.RUNNING);
         var payload = "hello".getBytes(StandardCharsets.UTF_8);
@@ -112,8 +107,7 @@ public class ProcessLogCharacterizationTest {
     @Test
     public void segmentedRunnerOutputPropagatesCountersAndFinalStatus() throws Exception {
         var appender = new RecordingLogAppender();
-        var log = newFactory(Files.createTempDirectory("segmented-status"), appender)
-                .createRedirectedLog(UUID.randomUUID(), true);
+        var log = newRedirectedLog(Files.createTempDirectory("segmented-status"), appender, UUID.randomUUID(), true);
 
         var running = segmentBytes(7, "hello", 2, 1, LogSegmentStatus.RUNNING);
         var done = segmentBytes(7, "", 0, 0, LogSegmentStatus.OK);
@@ -212,11 +206,18 @@ public class ProcessLogCharacterizationTest {
         assertEquals("tail", chunks.get()[1]);
     }
 
-    private static ProcessLogFactory newFactory(Path logDir, LogAppender appender) {
-        var cfg = mock(AgentConfiguration.class);
-        when(cfg.getLogDir()).thenReturn(logDir);
-        when(cfg.getLogMaxDelay()).thenReturn(5L);
-        return new ProcessLogFactory(cfg, appender);
+    private static RedirectedProcessLog newRedirectedLog(Path logDir, LogAppender appender, UUID instanceId, boolean segmented) throws Exception {
+        Consumer<RedirectedProcessLog.Chunk> logConsumer;
+        if (segmented) {
+            logConsumer = new SegmentedLogsConsumer(instanceId, appender);
+        } else {
+            logConsumer = chunk -> {
+                var bytes = new byte[chunk.len()];
+                System.arraycopy(chunk.bytes(), 0, bytes, 0, chunk.len());
+                appender.appendLog(instanceId, bytes);
+            };
+        }
+        return new RedirectedProcessLog(logDir, 5L, logConsumer);
     }
 
     private static Thread startDrainThread(RedirectedProcessLog log, AtomicBoolean stop, AtomicReference<Throwable> failure) {
