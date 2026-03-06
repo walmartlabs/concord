@@ -52,14 +52,19 @@ Verification:
 
 ## Milestone 2. Introduce New Logging Model
 
+Status:
+
+- complete
+- note: the new transport contract now reports explicit delivery status, but production call sites still remain on the legacy `LogAppender` path until later milestones switch them over
+
 ### 2.1 Add new core interfaces
 
 Tasks:
 
-- introduce `ProcessLogSession`
-- introduce `ProcessLogEvents`
-- introduce `ProcessOutputSink`
-- introduce `ProcessLogTransport`
+- [x] introduce `ProcessLogSession`
+- [x] introduce `ProcessLogEvents`
+- [x] introduce `ProcessOutputSink`
+- [x] introduce `ProcessLogTransport`
 
 Design constraints:
 
@@ -71,13 +76,24 @@ Done when:
 - new interfaces compile alongside the old ones
 - no production call sites depend on them yet
 
+Implemented in:
+
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/ProcessLogSession.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/ProcessLogEvents.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/ProcessOutputSink.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/ProcessLogTransport.java`
+
+Verification:
+
+- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -DskipTests compile`
+
 ### 2.2 Add transport implementations
 
 Tasks:
 
-- add `RemoteProcessLogTransport`
-- add `StdoutMirrorTransport`
-- add `CompositeProcessLogTransport`
+- [x] add `RemoteProcessLogTransport`
+- [x] add `StdoutMirrorTransport`
+- [x] add `CompositeProcessLogTransport`
 
 Behavior:
 
@@ -91,6 +107,17 @@ Done when:
 
 - new transport tests cover remote and stdout fan-out behavior
 - the transport API is expressive enough to replace `LogAppender`
+
+Implemented in:
+
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/RemoteProcessLogTransport.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/StdoutMirrorTransport.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/CompositeProcessLogTransport.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/ProcessLogTransportTest.java`
+
+Verification:
+
+- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessLogTransportTest test`
 
 ## Milestone 3. Add Direct Output Pumping
 
