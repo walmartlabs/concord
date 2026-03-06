@@ -32,5 +32,8 @@
   - full `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent test` passed
 - Separate production commit created:
   - `a8f529062` `agent: use shared log appender for worker logs`
+- Planning docs updated:
+  - `BACKLOG.md` now marks Milestone 1 complete and lists the added characterization coverage plus verification command
+  - `PLAN.md` now records the only observed M1 deviation: a minimal `WorkerModule` DI wiring fix was pulled forward so worker-stage stdout mirroring could be characterized
 - Next implementation steps:
   - leave the Milestone 1 test/doc changes ready for review

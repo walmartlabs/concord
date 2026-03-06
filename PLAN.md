@@ -143,6 +143,13 @@ Add tests that lock in current externally visible behavior before production cha
 - stdout mirroring with `REDIRECT_PROCESS_LOGS_TO_STDOUT`
 - completion and cancellation while output is still being delivered
 
+Phase 1 deviation recorded after M1:
+
+- a minimal subset of the later DI-composition work was pulled forward into M1
+- specifically, `WorkerModule` was changed to build the worker-level `RemoteProcessLog` from the shared injected `LogAppender` composition instead of a private `RemoteLogAppender`
+- this was done so the existing compatibility requirement for env-gated stdout mirroring could be locked in by characterization tests for worker-stage messages
+- no other staged-plan deviations were identified during M1
+
 ### Phase 2. Introduce new transport layer
 
 Add the new transport interfaces and implementations without changing call sites yet:

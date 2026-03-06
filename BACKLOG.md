@@ -10,28 +10,45 @@ Implement the logging rewrite described in [PLAN.md](/mnt/scratch/ibodrov/prj/wa
 
 ## Milestone 1. Lock In Current Behavior
 
+Status:
+
+- complete
+- note: a minimal prerequisite production wiring fix was landed separately so worker-stage stdout mirroring could be characterized against the shared appender composition
+- separate production commit: `a8f529062` `agent: use shared log appender for worker logs`
+
 ### 1.1 Add characterization tests for agent-side logging assembly
 
 Tasks:
 
-- add tests for worker-stage agent messages before runner startup
-- add tests for `REDIRECT_PROCESS_LOGS_TO_STDOUT` behavior
-- add tests for non-segmented runner output delivery
-- add tests for segmented runner output delivery
-- add tests for invalid/unframed bytes mapped to system segment `0`
-- add tests for segment warning/error counters and final status propagation
-- add tests for cancellation and shutdown while output is still being drained
+- [x] add tests for worker-stage agent messages before runner startup
+- [x] add tests for `REDIRECT_PROCESS_LOGS_TO_STDOUT` behavior
+- [x] add tests for non-segmented runner output delivery
+- [x] add tests for segmented runner output delivery
+- [x] add tests for invalid/unframed bytes mapped to system segment `0`
+- [x] add tests for segment warning/error counters and final status propagation
+- [x] add tests for cancellation and shutdown while output is still being drained
 
 Candidate files:
 
 - `agent/src/test/java/com/walmartlabs/concord/agent/logging/...`
 - `agent/src/test/java/com/walmartlabs/concord/agent/executors/runner/...`
 
+Implemented in:
+
+- `agent/src/test/java/com/walmartlabs/concord/agent/WorkerLoggingTest.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/guice/WorkerModuleTest.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/ProcessLogCharacterizationTest.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/RecordingLogAppender.java`
+
 Done when:
 
 - all current externally visible behaviors called out in `PLAN.md` are covered by tests
 - tests fail if worker-stage stdout mirroring regresses
 - tests fail if segment `0` fallback behavior changes
+
+Verification:
+
+- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent test`
 
 ## Milestone 2. Introduce New Logging Model
 
