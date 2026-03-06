@@ -2,6 +2,41 @@
 
 ### 2026-03-06
 
+- Milestone 2 committed:
+  - `8efbcca3e` `agent: add logging transport model`
+- Completed backlog item `3.1 Implement direct subprocess output pump`.
+- Added the new direct streaming primitive:
+  - `ProcessOutputPump`
+- Added focused coverage for the new pump:
+  - multi-read payload delivery without loss or duplication
+  - bounded delayed flush while the source stream remains open
+  - immediate flush-after-write behavior when `logMaxDelay <= 0`
+- Review result:
+  - the pump remains additive and does not yet migrate runner call sites
+  - a narrow internal scheduler is used to keep flush latency bounded without reintroducing temp-file reread logic
+- Verification:
+  - `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessOutputPumpTest test`
+- Next action:
+  - hand `3.2 Implement decoder layer` to a worker
+  - migrate the old parser/consumer behavior into the new decoder contracts before any executor wiring
+- Completed backlog item `3.2 Implement decoder layer`.
+- Added the new decoder layer on top of the direct pump path:
+  - `ProcessOutputDecoder`
+  - `PlainOutputDecoder`
+  - `SegmentedOutputDecoder`
+- Added focused decoder coverage:
+  - `PlainOutputDecoderTest`
+  - `SegmentedOutputDecoderTest`
+  - `RecordingProcessLogTransport`
+- Review result:
+  - non-segmented output is now batchable behind explicit `flush()` boundaries
+  - segmented decoding preserves invalid-byte fallback to system segment `0`
+  - partial headers and partial payloads across chunk boundaries are covered on the new path
+- Verification:
+  - `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=PlainOutputDecoderTest,SegmentedOutputDecoderTest test`
+- Milestone state:
+  - Milestone 3 is ready for a separate commit after one combined focused verification run
+
 - Completed backlog item `2.1 Add new core interfaces`.
 - Added the new additive interface layer under `agent/.../logging`:
   - `ProcessLogEvents`

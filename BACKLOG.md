@@ -121,33 +121,60 @@ Verification:
 
 ## Milestone 3. Add Direct Output Pumping
 
+Status:
+
+- complete
+- note: the new pump and decoders are additive and tested, but production runner/factory call sites still remain on the legacy path until Milestone 5 switches them over
+
 ### 3.1 Implement direct subprocess output pump
 
 Tasks:
 
-- add `ProcessOutputPump`
-- read subprocess output exactly once
-- remove dependency on temp-file reread behavior in the new path
-- implement flush behavior bounded by `logMaxDelay`
+- [x] add `ProcessOutputPump`
+- [x] read subprocess output exactly once
+- [x] remove dependency on temp-file reread behavior in the new path
+- [x] implement flush behavior bounded by `logMaxDelay`
 
 Done when:
 
 - the new pump can stream subprocess output without a local temp log file
 - flush cadence is bounded by `logMaxDelay`
 
+Implemented in:
+
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/ProcessOutputPump.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/ProcessOutputPumpTest.java`
+
+Verification:
+
+- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessOutputPumpTest test`
+
 ### 3.2 Implement decoder layer
 
 Tasks:
 
-- add `PlainOutputDecoder`
-- add `SegmentedOutputDecoder`
-- preserve system segment `0` fallback for invalid bytes
-- preserve partial-header and partial-payload handling across chunk boundaries
+- [x] add `PlainOutputDecoder`
+- [x] add `SegmentedOutputDecoder`
+- [x] preserve system segment `0` fallback for invalid bytes
+- [x] preserve partial-header and partial-payload handling across chunk boundaries
 
 Done when:
 
 - existing parser/consumer tests are either migrated or superseded
 - decoder tests cover chunk-boundary edge cases
+
+Implemented in:
+
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/ProcessOutputDecoder.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/PlainOutputDecoder.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/SegmentedOutputDecoder.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/RecordingProcessLogTransport.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/PlainOutputDecoderTest.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/SegmentedOutputDecoderTest.java`
+
+Verification:
+
+- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=PlainOutputDecoderTest,SegmentedOutputDecoderTest test`
 
 ## Milestone 4. Wire Agent Messages Into The Same Pipeline
 
