@@ -61,8 +61,8 @@ public class WorkerModule extends AbstractModule {
 
     @Provides
     @Singleton
-    ProcessLog getProcessLog(ApiClient apiClient) {
-        return new RemoteProcessLog(instanceId, new RemoteLogAppender(apiClient));
+    ProcessLog getProcessLog(LogAppender logAppender) {
+        return new RemoteProcessLog(instanceId, logAppender);
     }
 
     @Provides
