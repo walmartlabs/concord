@@ -179,10 +179,10 @@ Route agent-generated messages through the same session and transport stack used
 
 Recommended approach:
 
-- in segmented mode, treat agent-generated messages as system-segment events
+- in segmented mode, switch immediately to system segment `0` via the segmented API
 - in non-segmented mode, preserve current user-visible behavior exactly
 
-Keep a small compatibility adapter if needed so the deprecated whole-log endpoint can remain in use during migration, but structure the code so system logs conceptually map to segment `0`.
+Do not keep the legacy whole-log API as an internal compatibility path for segmented mode. The rewrite target is a single segmented delivery path with system logs mapped to segment `0`.
 
 ### Phase 5. Switch call sites
 
@@ -249,8 +249,8 @@ Use a two-step rollout:
 
 This keeps the blast radius mostly inside the agent logging package, `WorkerModule`, and the runner executor.
 
-## Open Questions
+## Resolved Scope Decisions
 
-- Should agent-generated messages switch immediately to segment `0` in segmented mode, or should the legacy whole-log API remain as an internal compatibility path for one release?
-- Should `logMaxDelay` preserve exact current batching semantics, or is preserving an equivalent flush interval enough?
-- Do we want metrics around dropped/retried log deliveries as part of the rewrite, or only harden correctness first?
+- In segmented mode, agent-generated messages switch immediately to system segment `0` using the segmented API.
+- The rewrite scope is correctness only for now. Do not expand this change to add new delivery metrics, counters, or dashboards.
+- `logMaxDelay` remains supported as an equivalent flush interval / batching bound. The rewrite does not need to preserve the exact current temp-file polling semantics.
