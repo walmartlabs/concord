@@ -20,29 +20,26 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
-import java.io.InputStream;
 import java.util.UUID;
 
 /**
- * Simple log implementation that sends all data into a {@link LogAppender} directly.
+ * Process log implementation for agent-generated messages.
  */
-public class RemoteProcessLog extends AbstractProcessLog {
-
-    private final UUID instanceId;
-    private final LogAppender appender;
+public class RemoteProcessLog extends SessionProcessLog {
 
     public RemoteProcessLog(UUID instanceId, LogAppender appender) {
-        this.instanceId = instanceId;
-        this.appender = appender;
+        this(instanceId, appender, false);
     }
 
-    @Override
-    public void log(InputStream src) {
-        throw new IllegalStateException("Not supported");
+    public RemoteProcessLog(UUID instanceId, LogAppender appender, boolean segmented) {
+        super(new DefaultProcessLogSession(createOutput(instanceId, appender, segmented)), 0L);
     }
 
-    @Override
-    protected void log(String message) {
-        appender.appendLog(instanceId, message.getBytes());
+    private static ProcessOutputDecoder createOutput(UUID instanceId, LogAppender appender, boolean segmented) {
+        var transport = new LogAppenderProcessLogTransport(instanceId, appender);
+        if (segmented) {
+            return new SegmentedOutputDecoder(transport);
+        }
+        return new PlainOutputDecoder(transport);
     }
 }

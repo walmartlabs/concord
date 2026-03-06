@@ -27,6 +27,7 @@ import com.walmartlabs.concord.agent.executors.runner.DefaultDependencies;
 import com.walmartlabs.concord.agent.executors.runner.ProcessPool;
 import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
+import com.walmartlabs.concord.agent.logging.ProcessLogModeConfigurator;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
@@ -52,6 +53,7 @@ public class JobExecutorFactory {
     private final DefaultDependencies defaultDependencies;
     private final ProcessPool processPool;
     private final ProcessLog processLog;
+    private final ProcessLogModeConfigurator processLogModeConfigurator;
     private final AttachmentsUploader attachmentsUploader;
     private final ProcessLogFactory processLogFactory;
 
@@ -67,6 +69,7 @@ public class JobExecutorFactory {
                               DefaultDependencies defaultDependencies,
                               ProcessPool processPool,
                               ProcessLog processLog,
+                              ProcessLogModeConfigurator processLogModeConfigurator,
                               AttachmentsUploader attachmentsUploader,
                               ProcessLogFactory processLogFactory) {
 
@@ -79,6 +82,7 @@ public class JobExecutorFactory {
         this.defaultDependencies = defaultDependencies;
         this.processPool = processPool;
         this.processLog = processLog;
+        this.processLogModeConfigurator = processLogModeConfigurator;
         this.attachmentsUploader = attachmentsUploader;
         this.processLogFactory = processLogFactory;
 
@@ -96,6 +100,7 @@ public class JobExecutorFactory {
             RuntimeConfiguration.Entry runtimeCfg = this.runtimeCfg.getForRuntime(runtimeName)
                     .orElseThrow(() -> new IllegalStateException("Runner configuration for '%s' not found.".formatted(runtimeName)));
 
+            processLogModeConfigurator.setSegmented(runtimeCfg.segmentedLogs());
             processLog.info("Runtime: {}", runtimeName);
 
             RunnerJobExecutor.RunnerJobExecutorConfiguration runnerExecutorCfg = RunnerJobExecutor.RunnerJobExecutorConfiguration.builder()

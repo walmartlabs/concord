@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agent.guice;
  * =====
  */
 
+import com.walmartlabs.concord.agent.cfg.AgentConfiguration;
 import com.walmartlabs.concord.agent.logging.CombinedLogAppender;
 import com.walmartlabs.concord.agent.logging.RecordingLogAppender;
 import com.walmartlabs.concord.agent.logging.StdOutLogAppender;
@@ -32,14 +33,23 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class WorkerModuleTest {
 
     @Test
     public void workerProcessLogUsesProvidedAppenderComposition() throws Exception {
+        var cfg = mock(AgentConfiguration.class);
+        when(cfg.getLogMaxDelay()).thenReturn(0L);
+
         var appender = new RecordingLogAppender();
         var combined = new CombinedLogAppender(Set.of(appender, new StdOutLogAppender()));
-        var processLog = new WorkerModule("agent", UUID.randomUUID(), "session").getProcessLog(combined);
+        var module = new WorkerModule("agent", UUID.randomUUID(), "session");
+        var modeAwareProcessLog = module.getModeAwareProcessLog(cfg, combined);
+        var processLog = module.getProcessLog(modeAwareProcessLog);
+        var modeConfigurator = module.getProcessLogModeConfigurator(modeAwareProcessLog);
+        modeConfigurator.setSegmented(false);
 
         var originalOut = System.out;
         var stdout = new ByteArrayOutputStream();

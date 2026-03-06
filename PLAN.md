@@ -191,6 +191,13 @@ Recommended approach:
 
 Do not keep the legacy whole-log API as an internal compatibility path for segmented mode. The rewrite target is a single segmented delivery path with system logs mapped to segment `0`.
 
+Phase 4 deviation recorded after M4:
+
+- worker-stage messages emitted before runtime resolution are now buffered until `JobExecutorFactory` resolves `segmentedLogs` for the runtime and then flushed through the shared session/transport path
+- this preserves segmented `system segment 0` delivery for the normal successful startup path and keeps worker-level stdout mirroring on the shared composition
+- however, if startup fails before runtime resolution is possible (for example during early repository export), the buffered worker-stage messages fall back to the non-segmented system-log path because the runtime-specific segmented mode is unknowable at that point
+- no other staged-plan deviations were identified during M4
+
 ### Phase 5. Switch call sites
 
 Move current call sites onto the new session:

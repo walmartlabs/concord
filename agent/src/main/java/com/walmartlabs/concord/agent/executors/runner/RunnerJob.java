@@ -63,7 +63,7 @@ public class RunnerJob {
         try {
             log = new RunnerLog(
                     processLogFactory.createRedirectedLog(jobRequest.getInstanceId(), runnerExecutorCfg.segmentedLogs()),
-                    processLogFactory.createRemoteLog(jobRequest.getInstanceId()));
+                    processLogFactory.createRemoteLog(jobRequest.getInstanceId(), runnerExecutorCfg.segmentedLogs()));
         } catch (IOException e) {
             throw new ExecutionException("Error while creating the runner's log: " + e.getMessage(), e);
         }

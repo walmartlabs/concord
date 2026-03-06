@@ -178,31 +178,60 @@ Verification:
 
 ## Milestone 4. Wire Agent Messages Into The Same Pipeline
 
+Status:
+
+- complete
+- note: worker-stage messages are buffered until runtime segmented mode is known and then flushed through the shared session/transport path
+- note: if startup fails before runtime resolution is possible, those buffered worker-stage messages fall back to the non-segmented system-log path because segmented mode cannot be determined yet
+
 ### 4.1 Route agent-generated messages through the new session
 
 Tasks:
 
-- ensure `info/warn/error` use the same session and transport stack as streamed subprocess output
-- in segmented mode, route agent-generated messages to system segment `0`
-- in non-segmented mode, preserve current visible behavior
+- [x] ensure `info/warn/error` use the same session and transport stack as streamed subprocess output
+- [x] in segmented mode, route agent-generated messages to system segment `0`
+- [x] in non-segmented mode, preserve current visible behavior
 
 Done when:
 
 - worker-stage messages and runner-stage messages both respect stdout mirroring
 - segmented mode no longer depends on the deprecated whole-log API for agent-generated messages
 
+Implemented in:
+
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/DefaultProcessLogSession.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/SessionProcessLog.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/SessionProcessLogTest.java`
+
+Verification:
+
+- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=SessionProcessLogTest test`
+
 ### 4.2 Fix DI composition
 
 Tasks:
 
-- update `WorkerModule` to construct one composite transport
-- ensure worker-level process logging uses the same transport composition as runner-level logging
-- remove direct instantiation of isolated `RemoteLogAppender` paths where obsolete
+- [x] update `WorkerModule` to construct one composite transport
+- [x] ensure worker-level process logging uses the same transport composition as runner-level logging
+- [x] remove direct instantiation of isolated `RemoteLogAppender` paths where obsolete
 
 Done when:
 
 - there is a single authoritative transport composition per worker
 - `REDIRECT_PROCESS_LOGS_TO_STDOUT` applies uniformly
+
+Implemented in:
+
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/ProcessLogModeConfigurator.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/ModeAwareProcessLog.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/guice/WorkerModule.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/executors/JobExecutorFactory.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/ModeAwareProcessLogTest.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/guice/WorkerModuleTest.java`
+
+Verification:
+
+- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ModeAwareProcessLogTest,WorkerModuleTest,DefaultProcessLogSessionTest,SessionProcessLogTest,ProcessLogFactoryTest test`
 
 ## Milestone 5. Migrate Executor And Factory Code
 

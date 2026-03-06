@@ -27,6 +27,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.agent.DefaultStateFetcher;
 import com.walmartlabs.concord.agent.StateFetcher;
+import com.walmartlabs.concord.agent.cfg.AgentConfiguration;
 import com.walmartlabs.concord.agent.logging.*;
 import com.walmartlabs.concord.agent.remote.ApiClientFactory;
 import com.walmartlabs.concord.agent.remote.ProcessStatusUpdater;
@@ -61,8 +62,20 @@ public class WorkerModule extends AbstractModule {
 
     @Provides
     @Singleton
-    ProcessLog getProcessLog(LogAppender logAppender) {
-        return new RemoteProcessLog(instanceId, logAppender);
+    ModeAwareProcessLog getModeAwareProcessLog(AgentConfiguration cfg, LogAppender logAppender) {
+        return new ModeAwareProcessLog(instanceId, logAppender, cfg.getLogMaxDelay());
+    }
+
+    @Provides
+    @Singleton
+    ProcessLog getProcessLog(ModeAwareProcessLog processLog) {
+        return processLog;
+    }
+
+    @Provides
+    @Singleton
+    ProcessLogModeConfigurator getProcessLogModeConfigurator(ModeAwareProcessLog processLog) {
+        return processLog;
     }
 
     @Provides

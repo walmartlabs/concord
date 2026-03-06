@@ -61,7 +61,7 @@ public class ProcessLogFactory {
         return new RedirectedProcessLog(dst, logStreamMaxDelay, logConsumer);
     }
 
-    public RemoteProcessLog createRemoteLog(UUID instanceId) {
-        return new RemoteProcessLog(instanceId, logAppender);
+    public RemoteProcessLog createRemoteLog(UUID instanceId, boolean segmented) {
+        return new RemoteProcessLog(instanceId, logAppender, segmented);
     }
 }

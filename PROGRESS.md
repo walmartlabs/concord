@@ -2,6 +2,37 @@
 
 ### 2026-03-06
 
+- Completed backlog item `4.2 Fix DI composition`.
+- Added the worker-level mode-selection bridge onto the shared composition:
+  - `ProcessLogModeConfigurator`
+  - `ModeAwareProcessLog`
+- Updated the injection path so the same singleton worker log is exposed as:
+  - `ProcessLog`
+  - `ProcessLogModeConfigurator`
+- Updated `JobExecutorFactory` to resolve runtime segmented mode before logging `Runtime: ...`, so buffered worker-stage messages can flush through the correct session-backed path on the normal startup path.
+- Verification:
+  - `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ModeAwareProcessLogTest,WorkerModuleTest,DefaultProcessLogSessionTest,SessionProcessLogTest,ProcessLogFactoryTest test`
+- Deviation recorded in `PLAN.md`:
+  - if startup fails before runtime resolution is possible, buffered worker-stage messages fall back to the non-segmented system-log path because segmented mode cannot be known yet
+- Milestone state:
+  - Milestone 4 is ready for a separate commit
+
+- Milestone 3 committed:
+  - `bf22bc101` `agent: add direct output log decoders`
+- Completed backlog item `4.1 Route agent-generated messages through the new session`.
+- Added the first concrete session-backed process log pieces:
+  - `DefaultProcessLogSession`
+  - `SessionProcessLog`
+- Added focused coverage for session-backed message routing:
+  - non-segmented agent messages stay on the system-log path
+  - segmented agent messages route to system segment `0`
+  - raw unframed output can flow through the new session adapter as segment-`0` data
+- Verification:
+  - `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=SessionProcessLogTest test`
+- Next action:
+  - hand `4.2 Fix DI composition` to a worker
+  - switch the worker-level authoritative logging composition from old `LogAppender` wiring to the new transport/session composition
+
 - Milestone 2 committed:
   - `8efbcca3e` `agent: add logging transport model`
 - Completed backlog item `3.1 Implement direct subprocess output pump`.
