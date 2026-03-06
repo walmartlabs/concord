@@ -358,17 +358,20 @@ Implemented in:
 - `agent/src/main/java/com/walmartlabs/concord/agent/cfg/AgentConfiguration.java`
 - `agent/src/main/resources/concord-agent.conf`
 - `agent/src/test/java/com/walmartlabs/concord/agent/logging/ProcessOutputPumpTest.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/SegmentedOutputDecoderTest.java`
 
 Notes:
 
 - the unused `logDir` configuration wiring was removed from `AgentConfiguration`
 - the sample agent config now describes `logMaxDelay` as the direct-stream flush interval
 - temp-file-internal characterization tests were removed alongside the obsolete redirector classes in `6.1`
+- the old drain-thread shutdown guarantees are now covered on the session/pump path by `ProcessOutputPumpTest`
+- partial-header and multi-segment parser behavior is now covered directly on `SegmentedOutputDecoderTest`
 
 Verification:
 
 - `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessOutputPumpTest,SegmentedOutputDecoderTest,ProcessLogFactoryTest,RunnerJobTest,JobDependenciesTest,ModeAwareProcessLogTest,WorkerModuleTest,DefaultProcessLogSessionTest,SessionProcessLogTest test`
-- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -DskipTests clean test-compile`
+- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent test`
 
 ## Cross-Cutting Acceptance Criteria
 

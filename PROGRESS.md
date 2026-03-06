@@ -6,8 +6,14 @@
 - Removed stale file-backed config wiring from the active agent configuration:
   - `AgentConfiguration` no longer reads or exposes the unused `logDir`
   - `concord-agent.conf` now documents `logMaxDelay` as the direct-stream flush interval
+- Kept the acceptance coverage on the new path after deleting the redirector characterization tests:
+  - `ProcessOutputPumpTest` now covers in-flight write completion and already-read multi-read output preservation
+  - `SegmentedOutputDecoderTest` now covers partial headers across chunk boundaries and multi-segment coalescing
 - Verification:
-  - `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -DskipTests clean test-compile`
+  - `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=SegmentedOutputDecoderTest,ProcessOutputPumpTest,ProcessLogFactoryTest,RunnerJobTest,JobDependenciesTest test`
+  - `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent test`
+- Milestone state:
+  - Milestone 6 committed in `34595e251` `agent: remove legacy logging path`
 
 - Completed backlog item `6.1 Delete obsolete classes`.
 - Removed the dead file-backed runner logging path and legacy parser/consumer helpers:
