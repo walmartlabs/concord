@@ -1,5 +1,40 @@
 # Change Log
 
+## [2.37.0] - 2026-03-05
+
+### Added
+
+- cli: add `--target-dir` option to specify custom payload
+target directory
+([#1275](https://github.com/walmartlabs/concord/pull/1275));
+- cli: allow tasks to interact with remote during local runs
+([#1269](https://github.com/walmartlabs/concord/pull/1269));
+- repository, server, agent: configurable limit for git cli
+output
+([#1266](https://github.com/walmartlabs/concord/pull/1266)).
+
+### Changed
+
+- runtime-v2: fix JoinCommand not waiting for threads in UNWINDING state
+([#1277](https://github.com/walmartlabs/concord/pull/1277));
+- runtime-v2: fix JoinCommand collecting failed threads from
+unrelated parallel blocks
+([#1276](https://github.com/walmartlabs/concord/pull/1276));
+- console2: fix copyToClipboard is not a function
+([#1274](https://github.com/walmartlabs/concord/pull/1274));
+- server: validate restored payload IDs on process restart
+([#1273](https://github.com/walmartlabs/concord/pull/1273));
+- runtime-v2: mask sensitive data in log segment names
+([#1272](https://github.com/walmartlabs/concord/pull/1272));
+- examples: fix/update runtime-v2 example dependencies
+([#1271](https://github.com/walmartlabs/concord/pull/1271));
+- project: build with postgres 14 image
+([#1148](https://github.com/walmartlabs/concord/pull/1148));
+- console2: reduce calls to trigger API
+([#1251](https://github.com/walmartlabs/concord/pull/1251)).
+
+
+
 ## [2.36.0] - 2026-02-04
 
 ### Added
