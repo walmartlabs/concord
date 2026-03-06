@@ -51,7 +51,6 @@ public class AgentConfiguration {
     private final Path payloadDir;
     private final Path workDirBase;
 
-    private final Path logDir;
     private final long logMaxDelay;
     private final boolean workDirMasking;
 
@@ -80,7 +79,6 @@ public class AgentConfiguration {
         this.payloadDir = getOrCreatePath(cfg, "payloadDir");
         this.workDirBase = getOrCreatePath(cfg, "workDirBase");
 
-        this.logDir = getOrCreatePath(cfg, "logDir");
         this.logMaxDelay = cfg.getDuration("logMaxDelay", TimeUnit.MILLISECONDS);
         this.workDirMasking = cfg.getBoolean("workDirMasking");
 
@@ -128,10 +126,6 @@ public class AgentConfiguration {
 
     public Path getWorkDirBase() {
         return workDirBase;
-    }
-
-    public Path getLogDir() {
-        return logDir;
     }
 
     public long getLogMaxDelay() {

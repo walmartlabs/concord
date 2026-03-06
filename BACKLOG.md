@@ -37,7 +37,9 @@ Implemented in:
 
 - `agent/src/test/java/com/walmartlabs/concord/agent/WorkerLoggingTest.java`
 - `agent/src/test/java/com/walmartlabs/concord/agent/guice/WorkerModuleTest.java`
-- `agent/src/test/java/com/walmartlabs/concord/agent/logging/ProcessLogCharacterizationTest.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/ProcessLogFactoryTest.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/ProcessOutputPumpTest.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/SegmentedOutputDecoderTest.java`
 - `agent/src/test/java/com/walmartlabs/concord/agent/logging/RecordingLogAppender.java`
 
 Done when:
@@ -239,7 +241,7 @@ Status:
 
 - complete
 - note: the active runner path now uses the session-backed process log directly
-- note: file-backed redirector classes remain on disk only as compatibility/test-covered legacy pieces until Milestone 6 removes them
+- note: file-backed redirector classes only remained temporarily as compatibility/test-covered legacy pieces until Milestone 6.1 removed them
 
 ### 5.1 Replace runner logging assembly
 
@@ -263,7 +265,7 @@ Implemented in:
 
 Verification:
 
-- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessLogFactoryTest,ProcessLogCharacterizationTest,JobDependenciesTest test`
+- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessLogFactoryTest,SegmentedOutputDecoderTest,ProcessOutputPumpTest,JobDependenciesTest test`
 
 ### 5.2 Replace process log factory responsibilities
 
@@ -282,14 +284,22 @@ Implemented in:
 
 - `agent/src/main/java/com/walmartlabs/concord/agent/logging/ProcessLogFactory.java`
 - `agent/src/test/java/com/walmartlabs/concord/agent/logging/ProcessLogFactoryTest.java`
-- `agent/src/test/java/com/walmartlabs/concord/agent/logging/ProcessLogCharacterizationTest.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/ProcessOutputPumpTest.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/SegmentedOutputDecoderTest.java`
 - `agent/src/test/java/com/walmartlabs/concord/agent/executors/runner/RunnerJobTest.java`
 
 Verification:
 
-- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessLogFactoryTest,ProcessLogCharacterizationTest,RunnerJobTest test`
+- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessLogFactoryTest,SegmentedOutputDecoderTest,ProcessOutputPumpTest,RunnerJobTest test`
 
 ## Milestone 6. Remove Legacy Logging Pieces
+
+Status:
+
+- complete
+- `6.1` complete
+- `6.2` complete
+- note: the `LogAppender` hierarchy is still the active backend for worker and runner transports, so it is not yet safe to remove
 
 ### 6.1 Delete obsolete classes
 
@@ -308,18 +318,57 @@ Done when:
 - production code no longer references the removed types
 - tests pass without compatibility shims for segmented mode whole-log append
 
+Implemented in:
+
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/SegmentedOutputDecoder.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/SegmentedOutputDecoderTest.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/ProcessOutputPumpTest.java`
+
+Removed:
+
+- `agent/src/main/java/com/walmartlabs/concord/agent/executors/runner/RunnerLog.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/AbstractProcessLog.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/LocalProcessLog.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/RedirectedProcessLog.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/SegmentHeaderParser.java`
+- `agent/src/main/java/com/walmartlabs/concord/agent/logging/SegmentedLogsConsumer.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/executors/runner/SegmentHeaderParserTest.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/executors/runner/SegmentedLogsConsumerTest.java`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/ProcessLogCharacterizationTest.java`
+
+Verification:
+
+- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=SegmentedOutputDecoderTest,ProcessOutputPumpTest,ProcessLogFactoryTest,DefaultProcessLogSessionTest,SessionProcessLogTest,RunnerJobTest,JobDependenciesTest test`
+
 ### 6.2 Clean up remaining config/docs/tests
 
 Tasks:
 
-- update code comments to match new behavior
-- update tests that referenced temp-file internals
-- verify `logMaxDelay` docs describe flush interval semantics accurately
+- [x] update code comments to match new behavior
+- [x] update tests that referenced temp-file internals
+- [x] verify `logMaxDelay` docs describe flush interval semantics accurately
 
 Done when:
 
 - comments and docs no longer describe file polling behavior
 - configuration behavior matches documentation
+
+Implemented in:
+
+- `agent/src/main/java/com/walmartlabs/concord/agent/cfg/AgentConfiguration.java`
+- `agent/src/main/resources/concord-agent.conf`
+- `agent/src/test/java/com/walmartlabs/concord/agent/logging/ProcessOutputPumpTest.java`
+
+Notes:
+
+- the unused `logDir` configuration wiring was removed from `AgentConfiguration`
+- the sample agent config now describes `logMaxDelay` as the direct-stream flush interval
+- temp-file-internal characterization tests were removed alongside the obsolete redirector classes in `6.1`
+
+Verification:
+
+- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessOutputPumpTest,SegmentedOutputDecoderTest,ProcessLogFactoryTest,RunnerJobTest,JobDependenciesTest,ModeAwareProcessLogTest,WorkerModuleTest,DefaultProcessLogSessionTest,SessionProcessLogTest test`
+- `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -DskipTests clean test-compile`
 
 ## Cross-Cutting Acceptance Criteria
 

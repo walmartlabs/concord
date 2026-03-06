@@ -68,6 +68,59 @@ public class SegmentedOutputDecoderTest {
     }
 
     @Test
+    public void preservesPartialHeadersAcrossChunkBoundaries() throws Exception {
+        var transport = new RecordingProcessLogTransport();
+        var decoder = new SegmentedOutputDecoder(transport);
+
+        var header = segmentHeader(1, 5, 2, 1, LogSegmentStatus.RUNNING);
+        var payload = "hello".getBytes(StandardCharsets.UTF_8);
+
+        decoder.write(copyOfRange(header, 0, header.length - 2));
+        decoder.flush();
+        assertEquals("", transport.segmentLog(1));
+        assertEquals(0, transport.updates().size());
+
+        decoder.write(Bytes.concat(copyOfRange(header, header.length - 2, header.length), payload));
+        decoder.flush();
+
+        assertEquals("hello", transport.segmentLog(1));
+        assertEquals(1, transport.updates().size());
+        assertEquals(new RecordingProcessLogTransport.SegmentUpdate(1, new LogSegmentStats(null, 2, 1)),
+                transport.updates().get(0));
+    }
+
+    @Test
+    public void coalescesMultipleSegmentsForTheSameIdInOneWrite() throws Exception {
+        var transport = new RecordingProcessLogTransport();
+        var decoder = new SegmentedOutputDecoder(transport);
+
+        decoder.write(Bytes.concat(
+                segmentBytes(1, "hello1\n", 2, 1, LogSegmentStatus.RUNNING),
+                segmentBytes(1, "hello223", 2, 1, LogSegmentStatus.RUNNING)));
+        decoder.flush();
+
+        assertEquals("hello1\nhello223", transport.segmentLog(1));
+        assertEquals(1, transport.updates().size());
+        assertEquals(new RecordingProcessLogTransport.SegmentUpdate(1, new LogSegmentStats(null, 2, 1)),
+                transport.updates().get(0));
+    }
+
+    @Test
+    public void flushesDifferentSegmentIdsSeparately() throws Exception {
+        var transport = new RecordingProcessLogTransport();
+        var decoder = new SegmentedOutputDecoder(transport);
+
+        decoder.write(Bytes.concat(
+                segmentBytes(1, "hello1\n", 0, 0, LogSegmentStatus.RUNNING),
+                segmentBytes(2, "hello223", 0, 0, LogSegmentStatus.RUNNING)));
+        decoder.flush();
+
+        assertEquals("hello1\n", transport.segmentLog(1));
+        assertEquals("hello223", transport.segmentLog(2));
+        assertEquals(0, transport.updates().size());
+    }
+
+    @Test
     public void mapsInvalidBytesToSystemSegmentZero() throws Exception {
         var transport = new RecordingProcessLogTransport();
         var decoder = new SegmentedOutputDecoder(transport);

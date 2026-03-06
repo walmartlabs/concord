@@ -2,12 +2,55 @@
 
 ### 2026-03-06
 
+- Completed backlog item `6.2 Clean up remaining config/docs/tests`.
+- Removed stale file-backed config wiring from the active agent configuration:
+  - `AgentConfiguration` no longer reads or exposes the unused `logDir`
+  - `concord-agent.conf` now documents `logMaxDelay` as the direct-stream flush interval
+- Verification:
+  - `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -DskipTests clean test-compile`
+
+- Completed backlog item `6.1 Delete obsolete classes`.
+- Removed the dead file-backed runner logging path and legacy parser/consumer helpers:
+  - `RunnerLog`
+  - `RedirectedProcessLog`
+  - `LocalProcessLog`
+  - `AbstractProcessLog`
+  - `SegmentHeaderParser`
+  - `SegmentedLogsConsumer`
+- Inlined segmented header parsing into `SegmentedOutputDecoder`, so the active decoder path no longer depends on a legacy helper class.
+- Replaced the removed legacy coverage with focused new-path tests:
+  - `SegmentedOutputDecoderTest`
+  - `ProcessOutputPumpTest`
+- Verification:
+  - `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=SegmentedOutputDecoderTest,ProcessOutputPumpTest,ProcessLogFactoryTest,DefaultProcessLogSessionTest,SessionProcessLogTest,RunnerJobTest,JobDependenciesTest test`
+- Note:
+  - the `LogAppender` hierarchy remains intentionally in place because `WorkerModule`, `ModeAwareProcessLog`, `RemoteProcessLog`, and `ProcessLogFactory` still use it as the active transport backend
+- Milestone state:
+  - Milestone 6 is ready for a separate commit
+
+- Started Milestone 6 review after the Milestone 5 commit.
+- Confirmed the remaining obsolete production classes are limited to the old file-backed runner path and parser/consumer helpers:
+  - `RunnerLog`
+  - `RedirectedProcessLog`
+  - `LocalProcessLog`
+  - `AbstractProcessLog`
+  - `SegmentHeaderParser`
+  - `SegmentedLogsConsumer`
+- Confirmed the legacy `LogAppender` DI hierarchy is still the active transport backend for:
+  - `WorkerModule`
+  - `ModeAwareProcessLog`
+  - `RemoteProcessLog`
+  - `ProcessLogFactory`
+- Next action:
+  - integrate a worker-owned `6.1` cleanup that deletes the obsolete redirector/parser classes
+  - keep or replace only the tests needed to preserve new-path coverage for chunk boundaries and already-read-byte delivery guarantees
+
 - Completed backlog item `5.2 Replace process log factory responsibilities`.
 - Shrunk the active factory surface to the session-backed runner log path:
   - `ProcessLogFactory` no longer builds the temp-file redirector path for active code
-  - temp-file redirector setup moved directly into characterization tests that still lock in the legacy behavior until Milestone 6 removes those classes
+  - equivalent boundary and delivery coverage now lives in `SegmentedOutputDecoderTest` and `ProcessOutputPumpTest` after the 6.1 removal pass
 - Verification:
-  - `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessLogFactoryTest,ProcessLogCharacterizationTest,RunnerJobTest test`
+  - `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessLogFactoryTest,SegmentedOutputDecoderTest,ProcessOutputPumpTest,RunnerJobTest test`
 - Milestone state:
   - Milestone 5 is ready for a separate commit
 
@@ -19,7 +62,7 @@
   - `RunnerJob` now stores `ProcessLog` instead of `RunnerLog`
   - `RunnerJobExecutor` no longer starts the extra `LogStream` maintenance thread
 - Verification:
-  - `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessLogFactoryTest,ProcessLogCharacterizationTest,JobDependenciesTest test`
+  - `./mvnw -Dmaven.repo.local=/tmp/m2 -pl agent -Dtest=ProcessLogFactoryTest,SegmentedOutputDecoderTest,ProcessOutputPumpTest,JobDependenciesTest test`
 - Next action:
   - hand `5.2 Replace process log factory responsibilities` to a worker
   - remove the now-unused file-backed factory responsibilities from active construction and tighten the factory around session creation only
@@ -142,16 +185,16 @@
   - `WorkerModule#getProcessLog()` always constructs `RemoteProcessLog` with `RemoteLogAppender`
   - stdout mirroring is only applied through DI-managed `LogAppender` composition used by runner logging
 - Located current test coverage:
-  - segmented parsing and aggregation are covered by `SegmentHeaderParserTest`
-  - segmented consumer behavior is covered by `SegmentedLogsConsumerTest`
+  - the legacy parser/consumer path had dedicated focused coverage before migration
+  - equivalent segmented decoding coverage now lives in `SegmentedOutputDecoderTest`
   - no focused worker-side characterization tests exist yet
-  - no focused drain/cancellation characterization tests exist yet
+  - equivalent already-read-byte and in-flight delivery coverage now lives in `ProcessOutputPumpTest`
 - Implemented the small production wiring change:
   - `WorkerModule#getProcessLog(...)` now uses the injected `LogAppender` composition instead of creating an isolated `RemoteLogAppender`
 - Added Milestone 1 test scaffolding:
   - `WorkerLoggingTest` for worker-stage messages emitted before runner startup
   - `WorkerModuleTest` for worker-stage stdout mirroring through the shared appender composition
-  - `ProcessLogCharacterizationTest` for non-segmented delivery, segmented chunk-boundary handling, invalid bytes -> segment `0`, segment stats/status propagation, shutdown while a chunk is in flight, and stop/cancel-style drain completion with buffered unread bytes
+  - runner/output behavior is now locked in through `ProcessLogFactoryTest`, `SegmentedOutputDecoderTest`, and `ProcessOutputPumpTest`
 - Added repo instructions in `AGENTS.md` for:
   - periodic `PROGRESS.md` updates
   - separate commits for small production changes

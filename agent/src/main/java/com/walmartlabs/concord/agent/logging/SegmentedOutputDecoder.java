@@ -20,6 +20,8 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.common.logger.ImmutableLogSegmentHeader;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentDeserializer;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentHeader;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentSerializer;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
@@ -33,12 +35,10 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
-import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Position;
-import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Segment;
-
 public class SegmentedOutputDecoder implements ProcessOutputDecoder {
 
     private static final byte[] EMPTY = new byte[0];
+    private static final int MAX_FIELD_BYTES = String.valueOf(Long.MAX_VALUE).length();
 
     private final ProcessLogTransport transport;
 
@@ -61,7 +61,7 @@ public class SegmentedOutputDecoder implements ProcessOutputDecoder {
 
         var segments = new ArrayList<Segment>();
         var invalidSegments = new ArrayList<Position>();
-        var pos = SegmentHeaderParser.parse(buffer, segments, invalidSegments);
+        var pos = parse(buffer, segments, invalidSegments);
 
         invalidSegmentsToSystemSegments(invalidSegments, segments);
         var segmentsById = byId(segments);
@@ -112,6 +112,103 @@ public class SegmentedOutputDecoder implements ProcessOutputDecoder {
     @Override
     public void close() throws IOException {
         flush();
+    }
+
+    private static int parse(byte[] bytes, List<Segment> segments, List<Position> invalidSegments) {
+        var field = Field.MSG_LENGTH;
+        var fieldData = new StringBuilder();
+        var headerBuilder = LogSegmentHeader.builder();
+        var mark = -1;
+        var state = State.FIND_HEADER;
+        var pos = 0;
+
+        var continueParse = true;
+        while (continueParse) {
+            switch (state) {
+                case FIND_HEADER: {
+                    if (pos >= bytes.length) {
+                        continueParse = false;
+                        break;
+                    }
+
+                    var ch = (char) bytes[pos++];
+                    if (ch == '|') {
+                        if (mark != -1) {
+                            invalidSegments.add(new Position(mark, pos - 1));
+                        }
+
+                        mark = pos - 1;
+                        state = State.FIELD_DATA;
+                    } else if (mark == -1) {
+                        mark = pos - 1;
+                    }
+                    break;
+                }
+                case FIELD_DATA: {
+                    if (pos >= bytes.length) {
+                        continueParse = false;
+                        break;
+                    }
+
+                    var ch = (char) bytes[pos++];
+                    if (ch == '|') {
+                        state = State.END_FIELD;
+                        break;
+                    }
+
+                    if (fieldData.length() > MAX_FIELD_BYTES || !Character.isDigit(ch)) {
+                        fieldData.setLength(0);
+                        field = Field.MSG_LENGTH;
+                        headerBuilder = LogSegmentHeader.builder();
+                        state = State.FIND_HEADER;
+                        break;
+                    }
+
+                    fieldData.append(ch);
+                    break;
+                }
+                case END_FIELD: {
+                    if (fieldData.isEmpty()) {
+                        field = Field.MSG_LENGTH;
+                        headerBuilder = LogSegmentHeader.builder();
+                        state = State.FIND_HEADER;
+                        pos--;
+                        break;
+                    }
+
+                    field.apply(fieldData.toString(), headerBuilder);
+
+                    field = field.next();
+                    if (field == null) {
+                        var header = headerBuilder.build();
+                        segments.add(new Segment(header, pos));
+
+                        var actualLength = Math.min(header.length(), bytes.length - pos);
+                        pos += actualLength;
+
+                        field = Field.MSG_LENGTH;
+                        headerBuilder = LogSegmentHeader.builder();
+                        mark = -1;
+                        state = State.FIND_HEADER;
+                    } else {
+                        state = State.FIELD_DATA;
+                    }
+
+                    fieldData.setLength(0);
+                    break;
+                }
+            }
+        }
+
+        if (mark != -1) {
+            if (state == State.FIND_HEADER) {
+                invalidSegments.add(new Position(mark, pos));
+                return pos;
+            }
+            return mark;
+        }
+
+        return pos;
     }
 
     private static void invalidSegmentsToSystemSegments(List<Position> invalidSegments, List<Segment> segments) {
@@ -195,5 +292,79 @@ public class SegmentedOutputDecoder implements ProcessOutputDecoder {
         var errors = next.errors() != null ? next.errors() : current.errors();
         var warnings = next.warnings() != null ? next.warnings() : current.warnings();
         return new LogSegmentStats(status, errors, warnings);
+    }
+
+    private record Position(int start, int end) {
+    }
+
+    private record Segment(LogSegmentHeader header, int msgStart) {
+    }
+
+    private enum State {
+        FIND_HEADER,
+        FIELD_DATA,
+        END_FIELD
+    }
+
+    private enum Field {
+        MSG_LENGTH {
+            @Override
+            Field next() {
+                return SEGMENT_ID;
+            }
+
+            @Override
+            void apply(String value, ImmutableLogSegmentHeader.Builder headerBuilder) {
+                headerBuilder.length(Integer.parseInt(value));
+            }
+        },
+        SEGMENT_ID {
+            @Override
+            Field next() {
+                return STATUS;
+            }
+
+            @Override
+            void apply(String value, ImmutableLogSegmentHeader.Builder headerBuilder) {
+                headerBuilder.segmentId(Long.parseLong(value));
+            }
+        },
+        STATUS {
+            @Override
+            Field next() {
+                return WARNINGS;
+            }
+
+            @Override
+            void apply(String value, ImmutableLogSegmentHeader.Builder headerBuilder) {
+                headerBuilder.status(LogSegmentDeserializer.deserializeStatus(value));
+            }
+        },
+        WARNINGS {
+            @Override
+            Field next() {
+                return ERRORS;
+            }
+
+            @Override
+            void apply(String value, ImmutableLogSegmentHeader.Builder headerBuilder) {
+                headerBuilder.warnCount(Integer.parseInt(value));
+            }
+        },
+        ERRORS {
+            @Override
+            Field next() {
+                return null;
+            }
+
+            @Override
+            void apply(String value, ImmutableLogSegmentHeader.Builder headerBuilder) {
+                headerBuilder.errorCount(Integer.parseInt(value));
+            }
+        };
+
+        abstract Field next();
+
+        abstract void apply(String value, ImmutableLogSegmentHeader.Builder headerBuilder);
     }
 }

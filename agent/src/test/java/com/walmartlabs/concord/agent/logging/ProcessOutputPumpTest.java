@@ -92,6 +92,61 @@ public class ProcessOutputPumpTest {
         assertEquals(3, sink.flushCount());
     }
 
+    @Test
+    public void waitsForAnInFlightWriteToCompleteBeforeReturning() throws Exception {
+        var sink = new BlockingSink();
+        var pump = new ProcessOutputPump(0L);
+        var failure = new AtomicReference<Throwable>();
+        var thread = new Thread(() -> {
+            try {
+                pump.pump(new ByteArrayInputStream("queued".getBytes(StandardCharsets.UTF_8)), sink);
+            } catch (Throwable e) {
+                failure.set(e);
+            }
+        });
+
+        thread.start();
+        assertTrue(sink.awaitWrite(Duration.ofSeconds(1)));
+        assertTrue(thread.isAlive());
+
+        sink.release();
+        thread.join(Duration.ofSeconds(1).toMillis());
+
+        assertFalse(thread.isAlive());
+        assertNull(failure.get());
+        assertEquals("queued", sink.output());
+        assertEquals(1, sink.flushCount());
+    }
+
+    @Test
+    public void preservesMultiReadOutputWhileTheFirstWriteIsBlocked() throws Exception {
+        var payload = "a".repeat(8192) + "tail";
+        var sink = new BlockingSink();
+        var pump = new ProcessOutputPump(0L);
+        var failure = new AtomicReference<Throwable>();
+        var thread = new Thread(() -> {
+            try {
+                pump.pump(new ChunkedInputStream(payload.getBytes(StandardCharsets.UTF_8), 8192), sink);
+            } catch (Throwable e) {
+                failure.set(e);
+            }
+        });
+
+        thread.start();
+        assertTrue(sink.awaitWrite(Duration.ofSeconds(1)));
+
+        thread.join(Duration.ofMillis(100).toMillis());
+        assertTrue(thread.isAlive());
+
+        sink.release();
+        thread.join(Duration.ofSeconds(1).toMillis());
+
+        assertFalse(thread.isAlive());
+        assertNull(failure.get());
+        assertEquals(payload, sink.output());
+        assertEquals(2, sink.flushCount());
+    }
+
     private static class RecordingSink implements ProcessOutputSink {
 
         private final ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -113,11 +168,11 @@ public class ProcessOutputPumpTest {
             return firstFlush.await(timeout.toMillis(), TimeUnit.MILLISECONDS);
         }
 
-        private synchronized String output() {
+        protected synchronized String output() {
             return out.toString(StandardCharsets.UTF_8);
         }
 
-        private int flushCount() {
+        protected int flushCount() {
             return flushCount.get();
         }
     }
@@ -134,6 +189,32 @@ public class ProcessOutputPumpTest {
         @Override
         public synchronized int read(byte[] bytes, int offset, int len) {
             return super.read(bytes, offset, Math.min(len, chunkSize));
+        }
+    }
+
+    private static class BlockingSink extends RecordingSink {
+
+        private final CountDownLatch writeEntered = new CountDownLatch(1);
+        private final CountDownLatch writeReleased = new CountDownLatch(1);
+
+        @Override
+        public synchronized void write(byte[] bytes, int offset, int len) {
+            super.write(bytes, offset, len);
+            writeEntered.countDown();
+            try {
+                assertTrue(writeReleased.await(1, TimeUnit.SECONDS));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            }
+        }
+
+        private boolean awaitWrite(Duration timeout) throws InterruptedException {
+            return writeEntered.await(timeout.toMillis(), TimeUnit.MILLISECONDS);
+        }
+
+        private void release() {
+            writeReleased.countDown();
         }
     }
 }
