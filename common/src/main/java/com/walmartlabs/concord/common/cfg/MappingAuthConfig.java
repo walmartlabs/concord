@@ -72,10 +72,10 @@ public interface MappingAuthConfig {
 
     @Value.Immutable
     @Value.Style(jdkOnly = true)
-    interface OauthAuthConfig extends MappingAuthConfig {
-        String token();
+    abstract class OauthAuthConfig implements MappingAuthConfig {
+        public abstract String token();
 
-        static ImmutableOauthAuthConfig.Builder builder() {
+        public static ImmutableOauthAuthConfig.Builder builder() {
             return ImmutableOauthAuthConfig.builder();
         }
     }
