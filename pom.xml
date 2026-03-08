@@ -491,6 +491,18 @@
             </properties>
         </profile>
         <profile>
+            <id>jdk25</id>
+            <properties>
+                <jdk.version>25</jdk.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>jdk25-aarch64</id>
+            <properties>
+                <jdk.version>25</jdk.version>
+            </properties>
+        </profile>
+        <profile>
             <id>concord-release</id>
             <build>
                 <plugins>
