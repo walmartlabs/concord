@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.38.0] - TBD
+
+### Changed
+
+- common: use abstract MappingAuthConfig for thenCallRealMethod() support on mocks
+([#1278](https://github.com/walmartlabs/concord/pull/1278)).
+
+
+
 ## [2.37.0] - 2026-03-05
 
 ### Added
