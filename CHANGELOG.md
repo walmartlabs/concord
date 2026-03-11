@@ -4,9 +4,10 @@
 
 ### Changed
 
+- server: make git allowedSchemes configurable and support non-string values in test server config
+([#12282](https://github.com/walmartlabs/concord/pull/1282));
 - common: use abstract MappingAuthConfig for thenCallRealMethod() support on mocks
 ([#1278](https://github.com/walmartlabs/concord/pull/1278)).
-
 
 
 ## [2.37.0] - 2026-03-05
