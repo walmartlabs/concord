@@ -56,7 +56,7 @@
         <glassfish.el.version>3.0.1-b12</glassfish.el.version>
         <graalvm.version>25.0.2</graalvm.version>
         <greenmail.version>1.6.5</greenmail.version>
-        <groovy.version>2.5.23</groovy.version>
+        <groovy.version>5.0.4</groovy.version>
         <guava.version>33.3.1-jre</guava.version>
         <guice.version>5.1.0</guice.version>
         <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
@@ -758,13 +758,13 @@
                 <version>${sshd.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.codehaus.groovy</groupId>
+                <groupId>org.apache.groovy</groupId>
                 <artifactId>groovy-all</artifactId>
                 <version>${groovy.version}</version>
                 <type>pom</type>
             </dependency>
             <dependency>
-                <groupId>org.codehaus.groovy</groupId>
+                <groupId>org.apache.groovy</groupId>
                 <artifactId>groovy</artifactId>
                 <version>${groovy.version}</version>
             </dependency>
