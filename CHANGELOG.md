@@ -5,7 +5,9 @@
 ### Changed
 
 - project: upgrade concord-maven-plugin to 0.0.37
-([#1283](https://github.com/walmartlabs/concord/pull/1283)).
+([#1283](https://github.com/walmartlabs/concord/pull/1283));
+- project: update groovy test dependencies to 5.X
+([#1280](https://github.com/walmartlabs/concord/pull/1280)).
 
 
 ## [2.38.0] - 2026-03-11
