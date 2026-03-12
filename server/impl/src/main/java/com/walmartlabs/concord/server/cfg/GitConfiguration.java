@@ -92,6 +92,10 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
     private long maxGitCliOutputBytes;
 
     @Inject
+    @Config("git.allowedSchemes")
+    private List<String> allowedSchemes;
+
+    @Inject
     @Config("git.systemAuth")
     List<com.typesafe.config.Config> authConfigs;
 
@@ -144,6 +148,10 @@ public class GitConfiguration implements OauthTokenConfig, Serializable {
 
     public long maxGitCliOutputBytes() {
         return maxGitCliOutputBytes;
+    }
+
+    public List<String> getAllowedSchemes() {
+        return allowedSchemes;
     }
 
     public List<MappingAuthConfig> getSystemAuth() {
