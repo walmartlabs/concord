@@ -1,0 +1,17 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+    - "mvn://com.walmartlabs.concord.it.tasks:schema-test:PROJECT_VERSION"
+  validation:
+    taskCalls:
+      in: fail
+      out: warn
+
+flows:
+  default:
+    - task: schemaTest
+      in:
+        message: "hello"
+        count: 5
+      out: result
+    - log: "Result: ${result.echo}"

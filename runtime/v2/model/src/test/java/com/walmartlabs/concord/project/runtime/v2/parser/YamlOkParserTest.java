@@ -614,6 +614,19 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertEquals("a", e.getKey());
     }
 
+    @Test
+    public void testValidationConfiguration() throws Exception {
+        ProcessDefinition pd = load("validationConfig.yml");
+
+        ValidationConfiguration validation = pd.configuration().validation();
+        assertNotNull(validation);
+
+        TaskCallValidation taskCalls = validation.taskCalls();
+        assertNotNull(taskCalls);
+        assertEquals(TaskCallValidation.ValidationMode.FAIL, taskCalls.in());
+        assertEquals(TaskCallValidation.ValidationMode.WARN, taskCalls.out());
+    }
+
     private static void assertMeta(StepOptions o) {
         assertMeta(null, o);
     }
