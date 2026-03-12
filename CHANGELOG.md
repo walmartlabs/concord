@@ -1,5 +1,13 @@
 # Change Log
 
+## [2.39.0] - TBD
+
+### Changed
+
+- project: upgrade concord-maven-plugin to 0.0.37
+([#1283](https://github.com/walmartlabs/concord/pull/1283)).
+
+
 ## [2.38.0] - 2026-03-11
 
 ### Changed
