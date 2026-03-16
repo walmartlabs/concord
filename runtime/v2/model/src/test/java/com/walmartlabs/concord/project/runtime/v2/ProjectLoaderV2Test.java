@@ -50,7 +50,8 @@ public class ProjectLoaderV2Test {
         ProjectLoaderV2 loader = new ProjectLoaderV2(mock(ImportManager.class));
 
         URI uri = ClassLoader.getSystemResource("multiProjectFile").toURI();
-        ProjectLoaderV2.Result result = loader.load(Paths.get(uri), new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER);
+        ProjectLoaderV2.Result result = loader.load(Paths.get(uri), new NoopImportsNormalizer(),
+                ImportsListener.NOP_LISTENER);
         assertNotNull(result);
         assertNotNull(result.getProjectDefinition());
 
@@ -72,7 +73,8 @@ public class ProjectLoaderV2Test {
         // configuration.dependencies: should be collected from ALL *.concord.yml
         assertEquals(Arrays.asList("2.concord.yml", "concord.yml"), cfg.dependencies());
 
-        // configuration.arguments: should be collected from ALL *.concord.yml and mereged
+        // configuration.arguments: should be collected from ALL *.concord.yml and
+        // mereged
         assertEquals("ttt", cfg.arguments().get("abc"));
         assertEquals("234", ((Map<String, Object>) cfg.arguments().get("nested")).get("value"));
 
@@ -125,11 +127,13 @@ public class ProjectLoaderV2Test {
 
         // triggers: should be collected from ALL *.concord.yml
         assertEquals(3, pd.triggers().size());
-        assertEquals(Arrays.asList("1.concord.yml", "2.concord.yml", "concord.yml"), pd.triggers().stream().map(t -> t.configuration().get("entryPoint")).collect(Collectors.toList()));
+        assertEquals(Arrays.asList("1.concord.yml", "2.concord.yml", "concord.yml"),
+                pd.triggers().stream().map(t -> t.configuration().get("entryPoint")).collect(Collectors.toList()));
 
         // imports: should be collected from ALL *.concord.yml
         assertEquals(2, pd.imports().items().size());
-        assertEquals(Arrays.asList("2.concord.yml", "concord.yml"), pd.imports().items().stream().map(i -> ((Import.GitDefinition) i).url()).collect(Collectors.toList()));
+        assertEquals(Arrays.asList("2.concord.yml", "concord.yml"),
+                pd.imports().items().stream().map(i -> ((Import.GitDefinition) i).url()).collect(Collectors.toList()));
 
         // forms: should be collected from ALL *.concord.yml
         // if form has same name then most recent used
@@ -139,6 +143,20 @@ public class ProjectLoaderV2Test {
         assertEquals("myName3", pd.forms().get("myForm").fields().get(0).name());
 
         // resources: should be collected from ALL *.concord.yml
-        assertEquals(Arrays.asList("glob:concord/{**/,}{*.,}concord.{yml,yaml}", "glob:tmp/1.yml"), pd.resources().concord());
+        assertEquals(Arrays.asList("glob:concord/{**/,}{*.,}concord.{yml,yaml}", "glob:tmp/1.yml"),
+                pd.resources().concord());
+    }
+
+    @Test
+    public void testDuplicateDependencies() throws Exception {
+        ProjectLoaderV2 loader = new ProjectLoaderV2(mock(ImportManager.class));
+
+        URI uri = ClassLoader.getSystemResource("duplicate_deps").toURI();
+        try {
+            loader.load(Paths.get(uri), new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().contains("Duplicate dependency found"));
+        }
     }
 }
