@@ -65,7 +65,9 @@ public class SsoLogoutFilter extends AbstractHttpFilter {
         }
         SsoCookies.clear(response);
         Subject subject = SecurityUtils.getSubject();
-        subject.logout();
+        if (subject != null) {
+            subject.logout();
+        }
 
         redirectHelper.sendRedirect(response, "/#/logout/done");
     }
