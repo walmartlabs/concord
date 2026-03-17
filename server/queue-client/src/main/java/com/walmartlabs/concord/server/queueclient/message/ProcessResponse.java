@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.imports.Imports;
 
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 public class ProcessResponse extends Message {
@@ -41,6 +42,7 @@ public class ProcessResponse extends Message {
     private final String repoBranch;
     private final String secretName;
     private final Imports imports;
+    private final Map<String, Object> requirements;
 
     @JsonCreator
     public ProcessResponse(
@@ -54,7 +56,8 @@ public class ProcessResponse extends Message {
             @JsonProperty("commitId") String commitId,
             @JsonProperty("repoBranch") String repoBranch,
             @JsonProperty("secretName") String secretName,
-            @JsonProperty("imports") Imports imports) {
+            @JsonProperty("imports") Imports imports,
+            @JsonProperty("requirements") Map<String, Object> requirements) {
 
         super(MessageType.PROCESS_RESPONSE);
 
@@ -69,6 +72,7 @@ public class ProcessResponse extends Message {
         this.repoBranch = repoBranch;
         this.secretName = secretName;
         this.imports = imports;
+        this.requirements = requirements;
     }
 
     public String getSessionToken() {
@@ -111,6 +115,10 @@ public class ProcessResponse extends Message {
         return imports;
     }
 
+    public Map<String, Object> getRequirements() {
+        return requirements;
+    }
+
     @Override
     public String toString() {
         return "ProcessResponse{" +
@@ -124,6 +132,7 @@ public class ProcessResponse extends Message {
                 ", repoBranch='" + repoBranch + '\'' +
                 ", secretName='" + secretName + '\'' +
                 ", imports=" + imports +
+                ", requirements=" + requirements +
                 '}';
     }
 }
