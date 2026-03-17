@@ -19,7 +19,6 @@
  */
 
 import { useCallback, useContext } from 'react';
-import ReactJson from 'react-json-view';
 import { Loader, Table } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
@@ -27,6 +26,7 @@ import { TriggerEntry, listTriggers as apiListTriggers } from '../../../api/org/
 import { useApi } from '../../../hooks/useApi';
 import { LoadingDispatch } from '../../../App';
 import { comparators } from '../../../utils';
+import { ReactJson } from '../../atoms';
 import { LocalTimestamp, RequestErrorMessage } from '../../molecules';
 
 import * as cronjsMatcher from '@datasert/cronjs-matcher';
