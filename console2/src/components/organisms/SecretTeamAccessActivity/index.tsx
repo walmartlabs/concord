@@ -19,83 +19,77 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
 import { Loader } from 'semantic-ui-react';
-import { ConcordKey, RequestError } from '../../../api/common';
-import { ResourceAccessEntry } from '../../../api/org';
 
-import { actions, State, selectors } from '../../../state/data/secrets';
+import { ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
+import { ResourceAccessEntry } from '../../../api/org';
+import {
+    getSecretAccess as apiGetSecretAccess,
+    updateSecretAccess as apiUpdateSecretAccess
+} from '../../../api/org/secret';
+import { useApi } from '../../../hooks/useApi';
 import { RequestErrorMessage, TeamAccessList } from '../../molecules';
 
 interface ExternalProps {
     orgName: ConcordKey;
     secretName: ConcordKey;
+    onUpdated?: () => void;
 }
 
-interface StateProps {
-    error: RequestError;
-    updating: boolean;
-    loading: boolean;
-    entries: ResourceAccessEntry[];
-}
+const SecretTeamAccessActivity = ({ orgName, secretName, onUpdated }: ExternalProps) => {
+    const [refresh, toggleRefresh] = React.useState(false);
+    const [updateValue, setUpdateValue] = React.useState({
+        access: [] as ResourceAccessEntry[]
+    });
 
-interface DispatchProps {
-    load: (orgName: ConcordKey, secretName: ConcordKey) => void;
-    update: (orgName: ConcordKey, secretName: ConcordKey, entries: ResourceAccessEntry[]) => void;
-}
+    const fetchData = React.useCallback(() => apiGetSecretAccess(orgName, secretName), [
+        orgName,
+        secretName
+    ]);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+    const { data, error, isLoading } = useApi<ResourceAccessEntry[]>(fetchData, {
+        fetchOnMount: true,
+        forceRequest: refresh
+    });
 
-class SecretTeamAccessActivity extends React.PureComponent<Props> {
-    componentDidMount() {
-        this.init();
+    const postData = React.useCallback(async () => {
+        const result = await apiUpdateSecretAccess(orgName, secretName, updateValue.access);
+        toggleRefresh((prevState) => !prevState);
+        onUpdated && onUpdated();
+        return result;
+    }, [onUpdated, orgName, secretName, updateValue]);
+
+    const update = useApi<GenericOperationResult>(postData, {
+        fetchOnMount: false,
+        requestByFetch: true
+    });
+
+    const handleUpdate = React.useCallback(
+        (entries: ResourceAccessEntry[]) => {
+            setUpdateValue({ access: entries });
+            update.fetch();
+        },
+        [update]
+    );
+
+    if (error) {
+        return <RequestErrorMessage error={error as RequestError} />;
     }
-    init() {
-        const { orgName, secretName, load } = this.props;
-        load(orgName, secretName);
+
+    if (!data || isLoading || update.isLoading) {
+        return <Loader active={true} />;
     }
-    render() {
-        const { error, entries, update, orgName, secretName, updating, loading } = this.props;
 
-        if (loading || updating) {
-            return <Loader active={true} />;
-        }
+    return (
+        <div>
+            <TeamAccessList
+                data={data}
+                submitting={update.isLoading}
+                orgName={orgName}
+                submit={handleUpdate}
+            />
+        </div>
+    );
+};
 
-        if (error) {
-            return <RequestErrorMessage error={error} />;
-        }
-
-        return (
-            <div>
-                <TeamAccessList
-                    data={entries}
-                    submitting={updating}
-                    orgName={orgName}
-                    submit={(data) => update(orgName, secretName, data)}
-                />
-            </div>
-        );
-    }
-}
-
-const mapStateToProps = (
-    { secrets }: { secrets: State },
-    { orgName, secretName }: ExternalProps
-): StateProps => ({
-    entries: selectors.secretAccesTeams(secrets, orgName, secretName),
-    error: secrets.secretTeamAccess.error,
-    updating: secrets.updateSecretTeamAccess.running,
-    loading: secrets.secretTeamAccess.running
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    load: (orgName, secretName) => {
-        dispatch(actions.secretTeamAccess(orgName, secretName));
-    },
-    update: (orgName, secretName, data) => {
-        dispatch(actions.updateSecretTeamAccess(orgName, secretName, data));
-    }
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(SecretTeamAccessActivity);
+export default SecretTeamAccessActivity;

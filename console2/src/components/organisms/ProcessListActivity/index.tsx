@@ -29,7 +29,7 @@ import {
     ProcessFilters,
     ProcessListQuery
 } from '../../../api/process';
-import { Pagination } from '../../../state/data/processes';
+import { Pagination } from '../../molecules/PaginationToolBar/usePagination';
 import {
     CREATED_AT_COLUMN,
     DURATION_COLUMN,
