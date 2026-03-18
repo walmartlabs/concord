@@ -23,7 +23,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'redux-vendor': ['redux', 'react-redux', 'redux-saga'],
+          'redux-vendor': ['redux', 'react-redux'],
           'ui-vendor': ['semantic-ui-react']
         }
       }

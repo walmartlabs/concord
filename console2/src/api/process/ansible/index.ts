@@ -195,7 +195,7 @@ export const listAnsibleEvents = (
     hostGroup?: string,
     status?: string,
     playbookId?: ConcordId
-): Promise<ProcessEventEntry<AnsibleEvent>> =>
+): Promise<ProcessEventEntry<AnsibleEvent>[]> =>
     fetchJson(
         `/api/v1/process/${instanceId}/ansible/events?${queryParams({
             host,
