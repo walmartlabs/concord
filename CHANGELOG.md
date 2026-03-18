@@ -7,7 +7,10 @@
 - project: upgrade concord-maven-plugin to 0.0.37
 ([#1283](https://github.com/walmartlabs/concord/pull/1283));
 - project: update groovy test dependencies to 5.X
-([#1280](https://github.com/walmartlabs/concord/pull/1280)).
+([#1280](https://github.com/walmartlabs/concord/pull/1280));
+- project: add AGENTS.md, update READMEs and notes
+([#1288](https://github.com/walmartlabs/concord/pull/1288)).
+
 
 
 ## [2.38.0] - 2026-03-11
@@ -18,6 +21,7 @@
 ([#12282](https://github.com/walmartlabs/concord/pull/1282));
 - common: use abstract MappingAuthConfig for thenCallRealMethod() support on mocks
 ([#1278](https://github.com/walmartlabs/concord/pull/1278)).
+
 
 
 ## [2.37.0] - 2026-03-05
