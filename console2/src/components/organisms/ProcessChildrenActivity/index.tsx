@@ -20,7 +20,6 @@
 
 import * as React from 'react';
 import { ConcordId, ConcordKey, queryParams } from '../../../api/common';
-import { Pagination } from '../../../state/data/processes';
 import {
     list as apiProcessList,
     isFinal,
@@ -45,6 +44,7 @@ import { usePolling } from '../../../api/usePolling';
 import { get as apiGetProject, ProjectEntry } from "../../../api/org/project";
 import { useApi } from "../../../hooks/useApi";
 import { LoadingDispatch } from "../../../App";
+import { Pagination } from '../../molecules/PaginationToolBar/usePagination';
 
 const COLUMNS = [
     STATUS_COLUMN,

@@ -19,29 +19,19 @@
  */
 
 import { RouterState, connectRouter } from 'connected-react-router';
-import { combineReducers } from 'redux';
 import { History } from 'history';
-
-import { reducers as formsReducers, State as FormsState } from '../state/data/forms';
-import { reducers as processesReducers, State as ProcessesState } from '../state/data/processes';
-import { reducers as secretsReducer, State as SecretsState } from '../state/data/secrets';
-import { reducers as teamReducers, State as TeamsState } from '../state/data/teams';
+import { Reducer } from 'redux';
 
 export interface State {
-    forms: FormsState;
-    processes: ProcessesState;
     router: RouterState;
-    secrets: SecretsState;
-    teams: TeamsState;
 }
 
-const reducers = (history: History) =>
-    combineReducers({
-        forms: formsReducers,
-        processes: processesReducers,
-        router: connectRouter(history),
-        secrets: secretsReducer,
-        teams: teamReducers
+const reducers = (history: History): Reducer<State> => {
+    const routerReducer = connectRouter(history);
+
+    return (state, action) => ({
+        router: routerReducer(state?.router, action)
     });
+};
 
 export default reducers;

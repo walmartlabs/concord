@@ -285,6 +285,36 @@ export const fetchJson = async <T>(uri: string, init?: RequestInit): Promise<T> 
     return response.json();
 };
 
+const wait = (delayMs: number) =>
+    new Promise<void>((resolve) => {
+        setTimeout(resolve, delayMs);
+    });
+
+export const retryRequest = async <T>(
+    request: () => Promise<T>,
+    shouldRetry: (error: RequestError) => boolean,
+    attempts = 5,
+    delayMs = 250
+): Promise<T> => {
+    let lastError: RequestError;
+
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+        try {
+            return await request();
+        } catch (e) {
+            lastError = e as RequestError;
+
+            if (attempt === attempts || !shouldRetry(lastError)) {
+                throw e;
+            }
+
+            await wait(delayMs);
+        }
+    }
+
+    throw lastError;
+};
+
 export interface EntityOwner {
     id: ConcordId;
     username: string;

@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2026 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,147 +17,172 @@
  * limitations under the License.
  * =====
  */
-
-import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { push as pushHistory } from 'connected-react-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useHistory } from 'react-router';
 import { Loader, Segment } from 'semantic-ui-react';
-import { ConcordId, RequestError } from '../../../api/common';
-import { FormInstanceEntry, FormSubmitErrors } from '../../../api/process/form';
-import { actions } from '../../../state/data/forms';
-import { FormDataType, State } from '../../../state/data/forms';
-import { ProcessForm, RequestErrorMessage } from '../../molecules';
 
-interface ExternalProps {
+import { ConcordId, RequestError } from '../../../api/common';
+import {
+    FormDataType,
+    FormInstanceEntry,
+    FormSubmitErrors,
+    get as apiGetForm,
+    submit as apiSubmitForm
+} from '../../../api/process/form';
+import { ProcessForm, RequestErrorMessage } from '../../molecules';
+import {
+    getProcessLocation,
+    getWizardLocation,
+    openProcessForm
+} from './processFormNavigation';
+
+interface Props {
     processInstanceId: ConcordId;
     formName: string;
     wizard: boolean;
 }
 
-interface StateProps {
-    form?: FormInstanceEntry;
-    loading: boolean;
-    loadError?: RequestError;
-    submitting: boolean;
-    submitError?: RequestError;
-    validationErrors?: FormSubmitErrors;
-    completed: boolean;
-}
+const ProcessFormActivity = ({ processInstanceId, formName, wizard }: Props) => {
+    const history = useHistory();
+    const redirectTimeoutRef = useRef<number | undefined>(undefined);
 
-interface DispatchProps {
-    load: (processInstanceId: ConcordId, formName: string) => void;
-    onSubmit: (
-        processInstanceId: ConcordId,
-        formName: string,
-        data: FormDataType,
-        yieldFlow: boolean
-    ) => void;
-    onReturn: (processInstanceId: ConcordId) => void;
-    onStartForm: (processInstanceId: ConcordId, formName: string) => void;
-}
+    const [form, setForm] = useState<FormInstanceEntry>();
+    const [loading, setLoading] = useState(false);
+    const [loadError, setLoadError] = useState<RequestError>();
+    const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<RequestError>();
+    const [validationErrors, setValidationErrors] = useState<FormSubmitErrors>();
+    const [completed, setCompleted] = useState(false);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+    const clearSubmitState = useCallback(() => {
+        setSubmitting(false);
+        setSubmitError(undefined);
+        setValidationErrors(undefined);
+        setCompleted(false);
+    }, []);
 
-class ProcessFormActivity extends React.PureComponent<Props> {
-    componentDidMount() {
-        this.init();
+    const loadForm = useCallback(async () => {
+        setLoading(true);
+        setLoadError(undefined);
+        setForm(undefined);
+
+        try {
+            const response = await apiGetForm(processInstanceId, formName);
+            setForm(response);
+        } catch (e) {
+            setLoadError(e);
+        } finally {
+            setLoading(false);
+        }
+    }, [formName, processInstanceId]);
+
+    useEffect(() => {
+        clearSubmitState();
+        loadForm();
+    }, [clearSubmitState, loadForm]);
+
+    useEffect(
+        () => () => {
+            if (redirectTimeoutRef.current !== undefined) {
+                window.clearTimeout(redirectTimeoutRef.current);
+            }
+        },
+        []
+    );
+
+    const onSubmit = useCallback(
+        async (data: FormDataType) => {
+            setSubmitting(true);
+            setSubmitError(undefined);
+            setValidationErrors(undefined);
+            setCompleted(false);
+
+            try {
+                const response = await apiSubmitForm(processInstanceId, formName, data);
+
+                setValidationErrors(response.errors);
+                setCompleted(response.ok);
+
+                if (!response.ok || !wizard || !form) {
+                    return;
+                }
+
+                if (form.yield) {
+                    redirectTimeoutRef.current = window.setTimeout(() => {
+                        history.push(getProcessLocation(processInstanceId));
+                    }, 1000);
+                    return;
+                }
+
+                history.push(getWizardLocation(processInstanceId));
+            } catch (e) {
+                setSubmitError(e);
+            } finally {
+                setSubmitting(false);
+            }
+        },
+        [form, formName, history, processInstanceId, wizard]
+    );
+
+    const onStartCustomForm = useCallback(
+        async (event: React.MouseEvent<HTMLAnchorElement>) => {
+            event.preventDefault();
+
+            if (!form) {
+                return;
+            }
+
+            try {
+                await openProcessForm({
+                    history,
+                    processInstanceId,
+                    formName,
+                    custom: form.custom,
+                    yieldFlow: form.yield
+                });
+            } catch (e) {
+                setSubmitError(e);
+            }
+        },
+        [form, formName, history, processInstanceId]
+    );
+
+    const onReturn = useCallback(() => {
+        history.push(getProcessLocation(processInstanceId));
+    }, [history, processInstanceId]);
+
+    if (loading) {
+        return <Loader active={true} />;
     }
 
-    componentDidUpdate(prevProps: Props) {
-        if (
-            this.props.processInstanceId !== prevProps.processInstanceId ||
-            this.props.formName !== prevProps.formName
-        ) {
-            this.init();
-        }
+    if (loadError) {
+        return <RequestErrorMessage error={loadError} />;
     }
 
-    init() {
-        const { load, processInstanceId, formName } = this.props;
-        load(processInstanceId, formName);
+    if (!form || !form.fields) {
+        return <h3>Form not found.</h3>;
     }
 
-    render() {
-        const {
-            form,
-            loading,
-            loadError,
-            onSubmit,
-            onReturn,
-            processInstanceId,
-            formName,
-            validationErrors,
-            submitting,
-            submitError,
-            completed,
-            onStartForm
-        } = this.props;
+    return (
+        <>
+            {form.custom && (
+                <Segment>
+                    This form has a {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                    <a href="#" onClick={onStartCustomForm}>custom view</a>.
+                </Segment>
+            )}
 
-        if (loading) {
-            return <Loader active={true} />;
-        }
+            <ProcessForm
+                form={form}
+                submitting={submitting}
+                submitError={submitError}
+                completed={completed}
+                errors={validationErrors}
+                onSubmit={onSubmit}
+                onReturn={onReturn}
+            />
+        </>
+    );
+};
 
-        if (loadError) {
-            return <RequestErrorMessage error={loadError} />;
-        }
-
-        if (!form || !form.fields) {
-            return <h3>Form not found.</h3>;
-        }
-
-        return (
-            <>
-                {form.custom && (
-                    <Segment>
-                        This form has a {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                        <a href="#" onClick={() => onStartForm(processInstanceId, formName)}>
-                            custom view
-                        </a>
-                        .
-                    </Segment>
-                )}
-
-                <ProcessForm
-                    form={form}
-                    submitting={submitting}
-                    submitError={submitError}
-                    completed={completed}
-                    errors={validationErrors}
-                    onSubmit={(values) => onSubmit(processInstanceId, formName, values, form.yield)}
-                    onReturn={() => onReturn(processInstanceId)}
-                />
-            </>
-        );
-    }
-}
-
-const mapStateToProps = ({ forms }: { forms: State }): StateProps => ({
-    form: forms.get.response ? forms.get.response : undefined,
-    loading: forms.get.running,
-    loadError: forms.get.error,
-    submitting: forms.submit.running,
-    submitError: forms.submit.error,
-    validationErrors: forms.submit.response ? forms.submit.response.errors : undefined,
-    completed: forms.submit.response ? forms.submit.response.ok : false
-});
-
-const mapDispatchToProps = (
-    dispatch: Dispatch<AnyAction>,
-    { wizard }: ExternalProps
-): DispatchProps => ({
-    load: (processInstanceId, formName) => {
-        dispatch(actions.reset());
-        dispatch(actions.getProcessForm(processInstanceId, formName));
-    },
-
-    onSubmit: (processInstanceId, formName, data, yieldFlow) =>
-        dispatch(actions.submitProcessForm(processInstanceId, formName, wizard, yieldFlow, data)),
-
-    onReturn: (processInstanceId) => dispatch(pushHistory(`/process/${processInstanceId}`)),
-
-    onStartForm: (processInstanceId, formName) =>
-        dispatch(actions.startForm(processInstanceId, formName))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(ProcessFormActivity);
+export default ProcessFormActivity;
