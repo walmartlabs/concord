@@ -17,6 +17,7 @@ different systems together using scenarios and plugins created by users.
 - [Integration tests](#integration-tests)
   * [Prerequisites](#prerequisites)
   * [Running tests](#running-tests)
+- [Repository Docs](#repository-docs)
 - [Examples](#examples)
 - [How To Release New Versions](#how-to-release-new-versions)
 - [Development Notes](#development-notes)
@@ -96,6 +97,16 @@ To run UI ITs in an IDE using the UI's dev mode:
 - start the UI's dev mode with `cd console2 && npm start`;
 - set up `IT_CONSOLE_BASE_URL=http://localhost:3000` environment variable before running
 any UI tests.
+
+## Repository Docs
+
+For repo-specific development entrypoints, see:
+
+- [Integration tests](./it/README.md)
+- [Development notes](./NOTES.md)
+- [Server README](./server/README.md)
+- [Console UI README](./console2/README.md)
+- [Agent operator README](./agent-operator/README.md)
 
 ## Examples
 
