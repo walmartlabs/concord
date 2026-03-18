@@ -1,0 +1,13 @@
+---
+- name: Smoke play
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Announce host
+      debug:
+        msg: "Hello from {{ inventory_hostname }}"
+        verbosity: 0
+    - name: Verify host
+      debug:
+        msg: "Verified {{ inventory_hostname }}"
+        verbosity: 0
