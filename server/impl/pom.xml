@@ -408,6 +408,7 @@
                 <configuration>
                     <verbose>false</verbose>
                     <dotGitDirectory>${project.basedir}/../../.git</dotGitDirectory>
+                    <useNativeGit>true</useNativeGit>
                 </configuration>
             </plugin>
         </plugins>
