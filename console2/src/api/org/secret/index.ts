@@ -18,7 +18,6 @@
  * =====
  */
 
-import { CreateSecretResponse } from '../../../state/data/secrets';
 import {
     ConcordId,
     ConcordKey,
@@ -78,6 +77,12 @@ export interface SecretEntry {
     storeType: SecretStoreType;
 
     owner?: EntityOwner;
+}
+
+export interface CreateSecretResponse extends GenericOperationResult {
+    id: ConcordId;
+    password?: string;
+    publicKey?: string;
 }
 
 export interface NewSecretEntry {
@@ -290,9 +295,7 @@ export const getPublicKey = (orgName: string, secretName: string): Promise<Publi
 export const getSecretAccess = (
     orgName: ConcordKey,
     secretName: ConcordKey
-): Promise<GenericOperationResult> => {
-    return fetchJson(`/api/v1/org/${orgName}/secret/${secretName}/access`);
-};
+): Promise<ResourceAccessEntry[]> => fetchJson(`/api/v1/org/${orgName}/secret/${secretName}/access`);
 
 export const updateSecretAccess = (
     orgName: ConcordKey,

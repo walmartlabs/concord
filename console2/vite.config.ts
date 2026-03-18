@@ -4,7 +4,7 @@ import path from 'path';
 
 const manualChunkGroups = [
   ['react-vendor', ['react', 'react-dom', 'react-router', 'react-router-dom']],
-  ['redux-vendor', ['redux', 'react-redux', 'redux-saga']],
+  ['redux-vendor', ['redux', 'react-redux']],
   ['ui-vendor', ['semantic-ui-react']]
 ] as const;
 
