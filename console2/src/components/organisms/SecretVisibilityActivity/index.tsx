@@ -19,15 +19,11 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
 import { Form } from 'semantic-ui-react';
+
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
-import { SecretVisibility } from '../../../api/org/secret';
-import { actions, State } from '../../../state/data/secrets';
+import { SecretVisibility, updateSecretVisibility as apiUpdateSecretVisibility } from '../../../api/org/secret';
 import { ButtonWithConfirmation, RequestErrorMessage } from '../../molecules';
-
-
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -35,92 +31,71 @@ interface ExternalProps {
     secretName: ConcordKey;
     visibility: SecretVisibility;
     renderOverride?: React.ReactNode;
+    onUpdated?: () => void;
 }
 
-interface StateProps {
-    updating: boolean;
-    error: RequestError;
-}
+const SecretVisibilityActivity = ({
+    orgName,
+    secretId,
+    secretName,
+    visibility,
+    renderOverride,
+    onUpdated
+}: ExternalProps) => {
+    const [newVisibility, setNewVisibility] = React.useState(visibility);
+    const [updating, setUpdating] = React.useState(false);
+    const [error, setError] = React.useState<RequestError>();
 
-interface DispatchProps {
-    update: (orgName: ConcordKey, secretId: ConcordId, secretName: ConcordKey, visibility: SecretVisibility) => void;
-}
+    React.useEffect(() => {
+        setNewVisibility(visibility);
+    }, [visibility]);
 
-interface OwnState { 
-    newVisibility: SecretVisibility;
-}
+    const changeVisibility = React.useCallback(async () => {
+        setUpdating(true);
+        setError(undefined);
 
-type Props = ExternalProps & StateProps & DispatchProps;
-
-class ProjectRenameActivity extends React.PureComponent<Props, OwnState> {
-    constructor(props: Props) {
-        super(props);
-        this.state = { newVisibility: this.props.visibility };
-    }
-    
-    onChange(value: string | undefined) {
-        if (!value) {
-            return;
+        try {
+            await apiUpdateSecretVisibility(orgName, secretName, newVisibility);
+            onUpdated && onUpdated();
+        } catch (e) {
+            setError(e);
+        } finally {
+            setUpdating(false);
         }
-        
-        this.setState({ newVisibility: SecretVisibility[value] });
-    }
-    
-    changeVisibility() {
-        const { update, orgName, secretName, secretId } = this.props;
-        update(orgName, secretId, secretName, this.state.newVisibility);
-    }
-    
-    render() {
-        const { error, updating, visibility, renderOverride } = this.props;
+    }, [newVisibility, onUpdated, orgName, secretName]);
 
-        return (
-            <>
-                {error && <RequestErrorMessage error={error} />}
-                <Form loading={updating}>
-                    <Form.Group>
-                        <Form.Dropdown
-                            selection={true}
-                            options={[
-                                {
-                                    text: 'Public',
-                                    icon: 'unlock',
-                                    value: SecretVisibility.PUBLIC
-                                },
-                                {
-                                    text: 'Private',
-                                    icon: 'lock',
-                                    value: SecretVisibility.PRIVATE
-                                }
-                            ]}
-                            defaultValue={visibility}
-                            onChange={(ev, data) => this.onChange(data.value as string)}
-                        />
-                        <ButtonWithConfirmation
-                            renderOverride={renderOverride}
-                            floated={'right'}
-                            disabled={visibility === this.state.newVisibility}
-                            content="Change"
-                            loading={updating}
-                            confirmationHeader="Change the visibility?"
-                            confirmationContent={`Are you sure you want to change the visibility to ${this.state.newVisibility}`}
-                            onConfirm={() => this.changeVisibility()}
-                        />
-                    </Form.Group>
-                </Form>
-            </>
-        );
-    }
-}
+    return (
+        <>
+            {error && <RequestErrorMessage error={error} />}
+            <Form loading={updating}>
+                <Form.Group>
+                    <Form.Field>
+                        <label>Visibility</label>
+                        <select
+                            className="ui dropdown"
+                            data-testid="secret-visibility-select"
+                            value={newVisibility}
+                            onChange={(ev) => setNewVisibility(ev.target.value as SecretVisibility)}
+                        >
+                            <option value={SecretVisibility.PUBLIC}>Public</option>
+                            <option value={SecretVisibility.PRIVATE}>Private</option>
+                        </select>
+                    </Form.Field>
+                    <ButtonWithConfirmation
+                        renderOverride={renderOverride}
+                        floated={'right'}
+                        disabled={visibility === newVisibility}
+                        content="Change"
+                        loading={updating}
+                        confirmationHeader="Change the visibility?"
+                        confirmationContent={`Are you sure you want to change the visibility to ${newVisibility}`}
+                        onConfirm={changeVisibility}
+                        data-testid="secret-visibility-change-button"
+                    />
+                </Form.Group>
+            </Form>
+        </>
+    );
+};
 
-const mapStateToProps = ({ secrets }: { secrets: State }): StateProps => ({
-    updating: secrets.updateSecretVisibility.running,
-    error: secrets.updateSecretVisibility.error
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    update: (orgName, secretId, secretName, visibility) =>
-        dispatch(actions.updateSecretVisibility(orgName, secretId, secretName, visibility))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(ProjectRenameActivity);
+export default SecretVisibilityActivity;

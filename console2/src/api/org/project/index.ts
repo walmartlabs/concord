@@ -26,7 +26,9 @@ import {
     fetchJson,
     GenericOperationResult,
     OperationResult,
-    queryParams
+    queryParams,
+    RequestError,
+    retryRequest
 } from '../../common';
 
 export enum ProjectVisibility {
@@ -64,6 +66,14 @@ export enum ProcessExecMode {
     READERS = 'READERS',
     WRITERS = 'WRITERS'
 }
+
+const shouldRetryProjectRequest = (error: RequestError) => {
+    if (!error || (error.status !== 400 && error.status !== 404)) {
+        return false;
+    }
+
+    return /(?:Organization|Project) not found:/i.test(error.details || '');
+};
 
 export interface ProjectEntry {
     id: ConcordId;
@@ -238,7 +248,10 @@ export const getProjectAccess = (
     orgName: ConcordKey,
     projectName: ConcordKey
 ): Promise<Array<ResourceAccessEntry>> => {
-    return fetchJson(`/api/v1/org/${orgName}/project/${projectName}/access`);
+    return retryRequest(
+        () => fetchJson(`/api/v1/org/${orgName}/project/${projectName}/access`),
+        shouldRetryProjectRequest
+    );
 };
 
 export const updateProjectAccess = (
@@ -254,7 +267,10 @@ export const updateProjectAccess = (
         body: JSON.stringify(entries)
     };
 
-    return fetchJson(`/api/v1/org/${orgName}/project/${projectName}/access/bulk`, opts);
+    return retryRequest(
+        () => fetchJson(`/api/v1/org/${orgName}/project/${projectName}/access/bulk`, opts),
+        shouldRetryProjectRequest
+    );
 };
 
 export const getProjectConfiguration = (

@@ -19,62 +19,56 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
+import { useHistory } from 'react-router-dom';
 
-import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
+import { ConcordKey, RequestError } from '../../../api/common';
 import { isSecretExists } from '../../../api/service/console';
-import { actions, State } from '../../../state/data/secrets';
+import { renameSecret as apiRenameSecret } from '../../../api/org/secret';
 import { secretAlreadyExistsError } from '../../../validation';
 import { EntityRenameForm, RequestErrorMessage } from '../../molecules';
 
 interface ExternalProps {
     orgName: ConcordKey;
-    secretId: ConcordId;
     secretName: ConcordKey;
 }
 
-interface StateProps {
-    renaming: boolean;
-    error: RequestError;
-}
+const SecretRenameActivity = ({ orgName, secretName }: ExternalProps) => {
+    const history = useHistory();
+    const [error, setError] = React.useState<RequestError>();
+    const [renaming, setRenaming] = React.useState(false);
 
-interface DispatchProps {
-    rename: (orgName: ConcordKey, secretName: ConcordKey, newSecretName: ConcordKey) => void;
-}
+    const rename = React.useCallback(
+        async (newSecretName: ConcordKey) => {
+            setRenaming(true);
+            setError(undefined);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+            try {
+                await apiRenameSecret(orgName, secretName, newSecretName);
+                history.push(`/org/${orgName}/secret`);
+            } catch (e) {
+                setError(e);
+            } finally {
+                setRenaming(false);
+            }
+        },
+        [history, orgName, secretName]
+    );
 
-class SecretRenameActivity extends React.PureComponent<Props> {
-    render() {
-        const { error, renaming, orgName, secretName, rename } = this.props;
+    return (
+        <>
+            {error && <RequestErrorMessage error={error} />}
+            <EntityRenameForm
+                originalName={secretName}
+                submitting={renaming}
+                onSubmit={(values) => rename(values.name)}
+                inputPlaceholder="Secret name"
+                confirmationHeader="Rename the secret?"
+                confirmationContent="Are you sure you want to rename the secret?"
+                isExists={(name) => isSecretExists(orgName, name)}
+                alreadyExistsTemplate={secretAlreadyExistsError}
+            />
+        </>
+    );
+};
 
-        return (
-            <>
-                {error && <RequestErrorMessage error={error} />}
-                <EntityRenameForm
-                    originalName={secretName}
-                    submitting={renaming}
-                    onSubmit={(values) => rename(orgName, secretName, values.name)}
-                    inputPlaceholder="Secret name"
-                    confirmationHeader="Rename the secret?"
-                    confirmationContent="Are you sure you want to rename the secret?"
-                    isExists={(name) => isSecretExists(orgName, name)}
-                    alreadyExistsTemplate={secretAlreadyExistsError}
-                />
-            </>
-        );
-    }
-}
-
-const mapStateToProps = ({ secrets }: { secrets: State }): StateProps => ({
-    renaming: secrets.renameSecret.running,
-    error: secrets.renameSecret.error
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    rename: (orgName, secretName, newSecretName) =>
-        dispatch(actions.renameSecret(orgName, secretName, newSecretName))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(SecretRenameActivity);
+export default SecretRenameActivity;
