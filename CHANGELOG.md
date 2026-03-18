@@ -9,7 +9,9 @@
 - project: update groovy test dependencies to 5.X
 ([#1280](https://github.com/walmartlabs/concord/pull/1280));
 - project: add AGENTS.md, update READMEs and notes
-([#1288](https://github.com/walmartlabs/concord/pull/1288)).
+([#1288](https://github.com/walmartlabs/concord/pull/1288));
+- project: enable useNativeGit in git-commit-id-plugin
+([#1289](https://github.com/walmartlabs/concord/pull/1289)).
 
 
 
