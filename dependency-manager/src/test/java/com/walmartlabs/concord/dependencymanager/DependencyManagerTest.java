@@ -20,8 +20,10 @@ package com.walmartlabs.concord.dependencymanager;
  * =====
  */
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.net.URI;
 import java.nio.file.Files;
@@ -35,11 +37,20 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
-@Disabled
 public class DependencyManagerTest {
 
+    private final String originalMavenRepoLocal = System.getProperty("maven.repo.local");
+    private final String originalUserHome = System.getProperty("user.home");
+
+    @AfterEach
+    public void restoreProperties() {
+        restoreProperty("maven.repo.local", originalMavenRepoLocal);
+        restoreProperty("user.home", originalUserHome);
+    }
+
+    @Disabled
     @Test
-    public void test() throws Exception {
+    public void testResolveDependencies() throws Exception {
         assertTimeout(Duration.ofMillis(30000), () -> {
             Path tmpDir = Files.createTempDirectory("test");
             URI uriA = new URI("mvn://com.walmartlabs.concord:concord-policy-engine:1.44.0?scope=runtime");
@@ -129,5 +140,33 @@ public class DependencyManagerTest {
             DependencyEntity deps = m.resolveSingle(uriC);
             assertEquals("2.11.1", deps.getArtifact().getVersion());
         });
+    }
+
+    @Test
+    public void shouldPreferMavenRepoLocal(@TempDir Path tmpDir) {
+        Path explicitRepo = tmpDir.resolve("custom-repository");
+        System.setProperty("maven.repo.local", explicitRepo.toString());
+        System.setProperty("user.home", tmpDir.resolve("home").toString());
+
+        assertEquals(explicitRepo.toAbsolutePath().normalize(), DependencyManager.resolveLocalCacheDir());
+    }
+
+    @Test
+    public void shouldFallbackToUserHomeM2Repository(@TempDir Path tmpDir) {
+        System.clearProperty("maven.repo.local");
+
+        Path userHome = tmpDir.resolve("home");
+        System.setProperty("user.home", userHome.toString());
+
+        assertEquals(userHome.resolve(".m2/repository").toAbsolutePath().normalize(),
+                DependencyManager.resolveLocalCacheDir());
+    }
+
+    private static void restoreProperty(String name, String value) {
+        if (value == null) {
+            System.clearProperty(name);
+        } else {
+            System.setProperty(name, value);
+        }
     }
 }
