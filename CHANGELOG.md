@@ -11,7 +11,9 @@
 - project: add AGENTS.md, update READMEs and notes
 ([#1288](https://github.com/walmartlabs/concord/pull/1288));
 - project: enable useNativeGit in git-commit-id-plugin
-([#1289](https://github.com/walmartlabs/concord/pull/1289)).
+([#1289](https://github.com/walmartlabs/concord/pull/1289));
+- concord-server-it: attempt to fix CronIT flakiness
+([#1293](https://github.com/walmartlabs/concord/pull/1293)).
 
 
 
