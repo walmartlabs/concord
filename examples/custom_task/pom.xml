@@ -15,7 +15,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <concord.version>2.24.0</concord.version>
-        <okhttp.version>3.12.1</okhttp.version>
+        <junit.version>4.13.2</junit.version>
+        <okhttp.version>4.9.2</okhttp.version>
     </properties>
 
     <dependencyManagement>
@@ -24,6 +25,7 @@
                 <groupId>com.walmartlabs.concord</groupId>
                 <artifactId>concord-targetplatform</artifactId>
                 <version>${concord.version}</version>
+                <type>pom</type>
                 <scope>import</scope>
             </dependency>
         </dependencies>
@@ -73,6 +75,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
