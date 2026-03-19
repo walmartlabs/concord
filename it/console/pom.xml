@@ -27,7 +27,9 @@
         <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
 
         <it.webdriver.type>local</it.webdriver.type>
-        <tmp.dir>/tmp</tmp.dir>
+        <local.repository.src.mount>${settings.localRepository}</local.repository.src.mount>
+        <tmp.dir.src.mount>${java.io.tmpdir}</tmp.dir.src.mount>
+        <tmp.dir>${java.io.tmpdir}</tmp.dir>
         <network>net-console-it</network>
     </properties>
 
@@ -191,9 +193,9 @@
                                         <volumes>
                                             <bind>
                                                 <!-- to access test files -->
-                                                <volume>${tmp.dir}:${tmp.dir}</volume>
+                                                <volume>${tmp.dir.src.mount}:${tmp.dir}</volume>
                                                 <!-- allows the server to pick up local dependencies -->
-                                                <volume>${settings.localRepository}:/home/concord/.m2/repository:ro</volume>
+                                                <volume>${local.repository.src.mount}:/home/concord/.m2/repository:ro</volume>
                                                 <volume>${basedir}/src/test/resources/server.conf:/opt/concord/conf/server.conf:ro</volume>
                                             </bind>
                                         </volumes>
@@ -230,9 +232,9 @@
                                         <volumes>
                                             <bind>
                                                 <!-- to share files between process containers -->
-                                                <volume>${tmp.dir}:${tmp.dir}</volume>
+                                                <volume>${tmp.dir.src.mount}:${tmp.dir}</volume>
                                                 <!-- share host artifacts -->
-                                                <volume>${settings.localRepository}:/host/.m2/repository:ro</volume>
+                                                <volume>${local.repository.src.mount}:/host/.m2/repository:ro</volume>
                                                 <volume>${basedir}/src/test/resources/console.conf:/opt/concord/console/nginx/app.conf:ro</volume>
                                                 <volume>${basedir}/src/test/resources/mvn.json:/opt/concord/conf/mvn.json:ro</volume>
                                                 <volume>${basedir}/src/test/resources/agent.conf:/opt/concord/conf/agent.conf:ro</volume>

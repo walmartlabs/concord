@@ -114,7 +114,7 @@ public final class GitUtils {
         if (base != null) {
             tmpDir = Files.createTempDirectory(base, "test");
         } else {
-            tmpDir = Files.createTempDirectory("test");
+            tmpDir = PathUtils.createTempDir("test");
         }
         Files.setPosixFilePermissions(tmpDir, PosixFilePermissions.fromString("rwxr-xr-x"));
         return tmpDir;
