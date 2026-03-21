@@ -133,6 +133,9 @@ public class Run implements Callable<Integer> {
     @Option(names = {"--no-default-cfg"}, description = "Do not load default configuration (including standard dependencies)")
     boolean noDefaultCfg = false;
 
+    @Option(names = {"--no-prompt"}, description = "Disable interactive prompts and print recovery commands instead")
+    boolean noPrompt = false;
+
     @Option(names = {"--no-gitignore"}, description = "Do not use .gitignore patterns when filtering files")
     boolean noGitIgnore = false;
 
@@ -147,20 +150,19 @@ public class Run implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        Verbosity verbosity = new Verbosity(this.verbosity);
+        var verbosity = new Verbosity(this.verbosity);
+        var cliConfigOverrides = new CliConfig.Overrides(secretStoreDir, vaultDir, vaultId);
+        CliConfigContext cliConfigContext = CliConfig.load(verbosity, context, cliConfigOverrides);
 
-        CliConfigContext cliConfigContext = CliConfig.load(verbosity, context,
-                new CliConfig.Overrides(secretStoreDir, vaultDir, vaultId));
-
-        Path sourceDir = resolveSourceDir(sourceDirOrFile.normalize().toAbsolutePath());
-        Path workDir = prepareWorkDir(sourceDirOrFile.normalize().toAbsolutePath(), verbosity);
+        var sourceDir = resolveSourceDir(sourceDirOrFile.normalize().toAbsolutePath());
+        var workDir = prepareWorkDir(sourceDirOrFile.normalize().toAbsolutePath(), verbosity);
 
         if (!noDefaultCfg) {
             copyDefaultCfg(workDir, defaultCfg, verbosity.verbose());
         }
 
-        DependencyManager dependencyManager = LocalCliRuntime.createDependencyManager(depsCacheDir);
-        ImportManager importManager = new ImportManagerFactory(dependencyManager,
+        var dependencyManager = LocalCliRuntime.createDependencyManager(depsCacheDir);
+        var importManager = new ImportManagerFactory(dependencyManager,
                 new CliRepositoryExporter(repoCacheDir), Collections.emptySet())
                 .create();
 
@@ -171,16 +173,15 @@ public class Run implements Callable<Integer> {
         } catch (ImportProcessingException e) {
             ObjectMapper om = new ObjectMapper();
             System.err.println("Error while processing import " + om.writeValueAsString(e.getImport()) + ": " + e.getMessage());
-            return -1;
+            return CliExitCodes.PROCESS_FAILED;
         } catch (Exception e) {
             System.err.println("Error while loading " + workDir);
             e.printStackTrace();
-            return -1;
+            return CliExitCodes.PROCESS_FAILED;
         }
 
-        ProcessDefinition processDefinition = loadResult.getProjectDefinition();
-
-        UUID instanceId = UUID.randomUUID();
+        var processDefinition = loadResult.getProjectDefinition();
+        var instanceId = UUID.randomUUID();
 
         if (verbosity.verbose() && !extraVars.isEmpty()) {
             System.out.println("Additional variables: " + extraVars);
@@ -191,28 +192,28 @@ public class Run implements Callable<Integer> {
         }
 
         // "deps" are the "dependencies" of the last profile in the list of active profiles (if present)
-        Map<String, Object> overlayCfg = EffectiveConfiguration.getEffectiveConfiguration(new ProcessDefinitionV2(processDefinition), profiles);
+        var overlayCfg = EffectiveConfiguration.getEffectiveConfiguration(new ProcessDefinitionV2(processDefinition), profiles);
         List<String> deps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
 
         // "extraDependencies" are additive: ALL extra dependencies from ALL ACTIVE profiles are added to the list
-        List<String> extraDeps = profiles.stream()
+        var extraDeps = profiles.stream()
                 .flatMap(profileName -> Stream.ofNullable(processDefinition.profiles().get(profileName)))
                 .flatMap(profile -> profile.configuration().extraDependencies().stream())
                 .toList();
 
-        List<String> allDeps = new ArrayList<>(deps);
+        var allDeps = new ArrayList<String>(deps);
         allDeps.addAll(extraDeps);
 
-        DependencyResolver resolver = new DependencyResolver(dependencyManager, verbosity.verbose());
+        var resolver = new DependencyResolver(dependencyManager, verbosity.verbose());
         Collection<String> resolvedDependencies;
         try {
             resolvedDependencies = resolver.resolveDeps(allDeps);
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            return -1;
+            return CliExitCodes.PROCESS_FAILED;
         }
 
-        RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
+        var runnerCfg = RunnerConfiguration.builder()
                 .api(buildApiConfiguration(cliConfigContext))
                 .dependencies(resolvedDependencies)
                 .debug(processDefinition.configuration().debug())
@@ -223,7 +224,7 @@ public class Run implements Callable<Integer> {
         }
 
         Map<String, Object> overlayArgs = MapUtils.getMap(overlayCfg, Constants.Request.ARGUMENTS_KEY, Collections.emptyMap());
-        Map<String, Object> args = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), overlayArgs, extraVars);
+        var args = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), overlayArgs, extraVars);
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, workDir.toAbsolutePath().toString());
         if (verbosity.verbose()) {
@@ -231,15 +232,15 @@ public class Run implements Callable<Integer> {
         }
 
         if (effectiveYaml) {
-            Map<String, Flow> flows = new HashMap<>(processDefinition.flows());
-            for (String ap : profiles) {
-                Profile p = processDefinition.profiles().get(ap);
+            var flows = new HashMap<String, Flow>(processDefinition.flows());
+            for (var ap : profiles) {
+                var p = processDefinition.profiles().get(ap);
                 if (p != null) {
                     flows.putAll(p.flows());
                 }
             }
 
-            ProcessDefinition pd = ProcessDefinition.builder().from(processDefinition)
+            var pd = ProcessDefinition.builder().from(processDefinition)
                     .configuration(ProcessDefinitionConfiguration.builder().from(processDefinition.configuration())
                             .arguments(args)
                             .dependencies(allDeps)
@@ -249,9 +250,9 @@ public class Run implements Callable<Integer> {
                     .profiles(Collections.emptyMap())
                     .build();
 
-            ProjectSerializerV2 serializer = new ProjectSerializerV2();
+            var serializer = new ProjectSerializerV2();
             serializer.write(pd, System.out);
-            return 0;
+            return CliExitCodes.SUCCESS;
         }
 
         System.out.println(ansi().fgBrightGreen().a("Starting...").reset());
@@ -292,67 +293,73 @@ public class Run implements Callable<Integer> {
         try {
             snapshot = runner.start(cfg, processDefinition, args);
         } catch (ParallelExecutionException | UserDefinedException e) {
-            return -1;
+            return CliExitCodes.PROCESS_FAILED;
         } catch (Exception e) {
             logException(verbosity, e);
-            return 1;
+            return CliExitCodes.ERROR;
         }
 
         if (LocalSuspendPersistence.isSuspended(snapshot)) {
             var resumeDir = CliPaths.preferredResumeDir(sourceDir, workDir);
-            LocalSuspendPersistence.ResumeMetadata metadata = LocalSuspendPersistence.ResumeMetadata.from(workDir,
+            var metadata = LocalSuspendPersistence.ResumeMetadata.from(workDir,
                     resumeDir,
                     defaultTaskVars,
                     depsCacheDir,
+                    context,
+                    cliConfigOverrides,
                     profiles,
                     cfg,
-                    runnerCfg,
-                    cliConfigContext);
+                    runnerCfg);
             LocalSuspendPersistence.save(workDir, snapshot, metadata);
             Set<String> events = LocalSuspendPersistence.getEvents(snapshot);
             List<Form> pendingForms = LocalFormState.syncPendingForms(workDir, events);
+            var interactiveAvailable = canPromptInteractively();
 
             if (pendingForms.isEmpty()) {
-                LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms);
-                return 0;
+                LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms, false);
+                return CliExitCodes.SUSPENDED;
             }
 
-            if (!PromptSupport.canPromptInteractively()) {
-                LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms);
-                return 0;
+            if (!interactiveAvailable) {
+                LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms, false);
+                return CliExitCodes.SUSPENDED;
             }
 
             if (!Confirmation.confirm("Fill pending form now? (Y/n)", true)) {
-                LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms);
-                return 0;
+                LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms, true);
+                return CliExitCodes.SUSPENDED;
             }
 
             try {
                 snapshot = LocalFormSession.resumePendingForms(workDir, runner, snapshot, metadata, false);
             } catch (ParallelExecutionException | UserDefinedException e) {
-                return -1;
+                return CliExitCodes.PROCESS_FAILED;
             } catch (Exception e) {
                 logException(verbosity, e);
-                return 1;
+                return CliExitCodes.ERROR;
             }
 
             if (!LocalSuspendPersistence.isSuspended(snapshot)) {
                 LocalSuspendPersistence.cleanup(workDir);
                 System.out.println(ansi().fgBrightGreen().a("...done!").reset());
-                return 0;
+                return CliExitCodes.SUCCESS;
             }
 
             LocalSuspendPersistence.save(workDir, snapshot, metadata);
             events = LocalSuspendPersistence.getEvents(snapshot);
             pendingForms = LocalFormState.syncPendingForms(workDir, events);
-            LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms);
-            return 0;
+            LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms, true);
+            return CliExitCodes.SUSPENDED;
         }
 
         LocalSuspendPersistence.cleanup(workDir);
         System.out.println(ansi().fgBrightGreen().a("...done!").reset());
 
-        return 0;
+        return CliExitCodes.SUCCESS;
+    }
+
+    private boolean canPromptInteractively() {
+        return !noPrompt && PromptSupport.canPromptInteractively();
     }
 
     private ApiConfiguration buildApiConfiguration(CliConfigContext cliConfigContext) {

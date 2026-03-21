@@ -89,47 +89,14 @@ final class LocalSuspendPersistence {
     }
 
     static void cleanup(Path workDir) throws IOException {
-        var stateDir = stateDir(workDir);
-        if (Files.exists(stateDir)) {
-            PathUtils.deleteRecursively(stateDir);
-        }
+        StateManager.cleanupState(workDir);
     }
 
-    static void printResumeGuidance(Path resumeDir, Set<String> events, Collection<Form> pendingForms) {
-        var cmd = resumeCommand(resumeDir);
-        if (!pendingForms.isEmpty()) {
-            var formNames = pendingForms.stream()
-                    .map(Form::name)
-                    .distinct()
-                    .toList();
-
-            if (formNames.size() == 1) {
-                System.out.println("Process suspended. Pending form: " + formNames.get(0));
-            } else {
-                System.out.println("Process suspended. Pending forms: " + String.join(", ", formNames));
-            }
-
-            var additionalEvents = new TreeSet<>(events);
-            additionalEvents.removeAll(LocalFormState.formEvents(pendingForms));
-            if (additionalEvents.size() == 1) {
-                System.out.println("Additional waiting event: " + additionalEvents.iterator().next());
-            } else if (!additionalEvents.isEmpty()) {
-                System.out.println("Additional waiting events: " + String.join(", ", additionalEvents));
-            }
-
-            System.out.println("Resume with: " + cmd);
-            return;
-        }
-
-        if (events.size() == 1) {
-            var event = events.iterator().next();
-            System.out.println("Process suspended. Waiting event: " + event);
-            System.out.println("Resume with: " + cmd + " --event " + event);
-            return;
-        }
-
-        System.out.println("Process suspended. Waiting events: " + String.join(", ", events));
-        System.out.println("Resume with: " + cmd + " --event <eventRef>");
+    static void printResumeGuidance(Path resumeDir,
+                                    Set<String> events,
+                                    Collection<Form> pendingForms,
+                                    boolean interactiveAvailable) {
+        LocalSuspendPrinter.printSuspendGuidance(resumeDir, events, pendingForms, interactiveAvailable);
     }
 
     static Set<String> getEvents(ProcessSnapshot snapshot) {
@@ -177,15 +144,6 @@ final class LocalSuspendPersistence {
         return stateDir(workDir).resolve("instance");
     }
 
-    private static String resumeCommand(Path resumeDir) {
-        var currentDir = Path.of(System.getProperty("user.dir")).normalize().toAbsolutePath();
-        var normalizedResumeDir = resumeDir.normalize().toAbsolutePath();
-        if (normalizedResumeDir.equals(currentDir)) {
-            return "concord resume";
-        }
-        return "concord resume " + normalizedResumeDir;
-    }
-
     record ResumeMetadata(ProcessConfiguration processConfiguration,
                           RunnerConfiguration runnerConfiguration,
                           List<String> activeProfiles,
@@ -193,17 +151,17 @@ final class LocalSuspendPersistence {
                           String workDir,
                           String defaultTaskVars,
                           String depsCacheDir,
-                          RemoteRunData remoteRun,
-                          SecretsData secrets) {
+                          CliConfigData cliConfig) {
 
         static ResumeMetadata from(Path workDir,
                                    Path resumeDir,
                                    Path defaultTaskVars,
                                    Path depsCacheDir,
+                                   String contextName,
+                                   CliConfig.Overrides cliConfigOverrides,
                                    List<String> activeProfiles,
                                    ProcessConfiguration processConfiguration,
-                                   RunnerConfiguration runnerConfiguration,
-                                   CliConfigContext cliConfigContext) {
+                                   RunnerConfiguration runnerConfiguration) {
 
             return new ResumeMetadata(processConfiguration,
                     runnerConfiguration,
@@ -212,13 +170,11 @@ final class LocalSuspendPersistence {
                     workDir.toString(),
                     defaultTaskVars.toString(),
                     depsCacheDir.toString(),
-                    RemoteRunData.from(cliConfigContext.remoteRun()),
-                    SecretsData.from(cliConfigContext.secrets()));
+                    CliConfigData.from(contextName, cliConfigOverrides));
         }
 
-        CliConfigContext toCliConfigContext() {
-            return new CliConfigContext(remoteRun != null ? remoteRun.toCliConfig() : null,
-                    Objects.requireNonNull(secrets, "secrets").toCliConfig());
+        CliConfigContext loadCliConfigContext(Verbosity verbosity) throws Exception {
+            return Objects.requireNonNull(cliConfig, "cliConfig").load(verbosity);
         }
 
         Path resumeDirPath() {
@@ -234,91 +190,42 @@ final class LocalSuspendPersistence {
         }
     }
 
-    record RemoteRunData(String baseUrl, ApiKeyRefData apiKeyRef) {
+    record CliConfigData(String contextName,
+                         boolean requiresUserConfig,
+                         String secretStoreDir,
+                         String vaultDir,
+                         String vaultId) {
 
-        static RemoteRunData from(CliConfig.RemoteRunConfiguration remoteRunConfiguration) {
-            if (remoteRunConfiguration == null) {
-                return null;
+        static CliConfigData from(String contextName, CliConfig.Overrides overrides) {
+            return new CliConfigData(contextName,
+                    CliConfig.hasUserConfig(),
+                    pathToString(overrides.secretStoreDir()),
+                    pathToString(overrides.vaultDir()),
+                    overrides.vaultId());
+        }
+
+        CliConfigContext load(Verbosity verbosity) throws Exception {
+            try {
+                if (requiresUserConfig && !CliConfig.hasUserConfig()) {
+                    throw new IllegalArgumentException("CLI configuration file is missing from ~/.concord. Resume requires the stored '" + contextName + "' context.");
+                }
+                return CliConfig.loadOrThrow(verbosity, contextName, toOverrides());
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Unable to reload CLI configuration context '" + contextName + "' for resume: " + e.getMessage(), e);
             }
-
-            return new RemoteRunData(remoteRunConfiguration.baseUrl(),
-                    ApiKeyRefData.from(remoteRunConfiguration.apiKeyRef()));
         }
 
-        CliConfig.RemoteRunConfiguration toCliConfig() {
-            return new CliConfig.RemoteRunConfiguration(baseUrl, apiKeyRef != null ? apiKeyRef.toCliConfig() : null);
+        private CliConfig.Overrides toOverrides() {
+            return new CliConfig.Overrides(stringToPath(secretStoreDir), stringToPath(vaultDir), vaultId);
         }
     }
 
-    record ApiKeyRefData(String orgName, String secretName) {
-
-        static ApiKeyRefData from(CliConfig.SecretRef secretRef) {
-            if (secretRef == null) {
-                return null;
-            }
-
-            return new ApiKeyRefData(secretRef.orgName(), secretRef.secretName());
-        }
-
-        CliConfig.SecretRef toCliConfig() {
-            return new CliConfig.SecretRef(orgName, secretName);
-        }
+    private static String pathToString(Path path) {
+        return path != null ? path.toString() : null;
     }
 
-    record SecretsData(VaultData vault, LocalSecretsData local, RemoteSecretsData remote) {
-
-        static SecretsData from(CliConfig.SecretsConfiguration secretsConfiguration) {
-            return new SecretsData(VaultData.from(secretsConfiguration.vault()),
-                    LocalSecretsData.from(secretsConfiguration.local()),
-                    RemoteSecretsData.from(secretsConfiguration.remote()));
-        }
-
-        CliConfig.SecretsConfiguration toCliConfig() {
-            return new CliConfig.SecretsConfiguration(vault.toCliConfig(), local.toCliConfig(), remote.toCliConfig());
-        }
-    }
-
-    record VaultData(String dir, String id) {
-
-        static VaultData from(CliConfig.SecretsConfiguration.VaultConfiguration vaultConfiguration) {
-            return new VaultData(vaultConfiguration.dir().toString(), vaultConfiguration.id());
-        }
-
-        CliConfig.SecretsConfiguration.VaultConfiguration toCliConfig() {
-            return new CliConfig.SecretsConfiguration.VaultConfiguration(Path.of(dir), id);
-        }
-    }
-
-    record LocalSecretsData(boolean enabled, boolean writable, String dir) {
-
-        static LocalSecretsData from(CliConfig.SecretsConfiguration.FileSecretsProviderConfiguration localSecretsConfiguration) {
-            return new LocalSecretsData(localSecretsConfiguration.enabled(),
-                    localSecretsConfiguration.writable(),
-                    localSecretsConfiguration.dir().toString());
-        }
-
-        CliConfig.SecretsConfiguration.FileSecretsProviderConfiguration toCliConfig() {
-            return new CliConfig.SecretsConfiguration.FileSecretsProviderConfiguration(enabled, writable, Path.of(dir));
-        }
-    }
-
-    record RemoteSecretsData(boolean enabled,
-                             boolean writable,
-                             String baseUrl,
-                             String apiKey,
-                             boolean confirmAccess) {
-
-        static RemoteSecretsData from(CliConfig.SecretsConfiguration.RemoteSecretsProviderConfiguration remoteSecretsConfiguration) {
-            return new RemoteSecretsData(remoteSecretsConfiguration.enabled(),
-                    remoteSecretsConfiguration.writable(),
-                    remoteSecretsConfiguration.baseUrl(),
-                    remoteSecretsConfiguration.apiKey(),
-                    remoteSecretsConfiguration.confirmAccess());
-        }
-
-        CliConfig.SecretsConfiguration.RemoteSecretsProviderConfiguration toCliConfig() {
-            return new CliConfig.SecretsConfiguration.RemoteSecretsProviderConfiguration(enabled, writable, baseUrl, apiKey, confirmAccess);
-        }
+    private static Path stringToPath(String value) {
+        return value != null ? Path.of(value) : null;
     }
 
     private LocalSuspendPersistence() {
