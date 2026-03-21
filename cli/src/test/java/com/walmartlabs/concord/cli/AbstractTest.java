@@ -27,6 +27,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
 import java.util.concurrent.Callable;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -76,6 +77,14 @@ public abstract class AbstractTest {
         return err.toString();
     }
 
+    protected void assertOutContainsRegex(String pattern) {
+        assertContainsRegex(stdOut(), pattern, "stdout");
+    }
+
+    protected void assertErrContainsRegex(String pattern) {
+        assertContainsRegex(stdErr(), pattern, "stderr");
+    }
+
     protected <T> T withInput(String value, Callable<T> action) throws Exception {
         var previous = System.getProperty(PromptSupport.ALLOW_STDIN_PROMPTS_PROPERTY);
         System.setIn(new java.io.ByteArrayInputStream(value.getBytes(StandardCharsets.UTF_8)));
@@ -102,5 +111,11 @@ public abstract class AbstractTest {
         }
 
         return cnt;
+    }
+
+    private static void assertContainsRegex(String value, String pattern, String streamName) {
+        if (!Pattern.compile(pattern, Pattern.DOTALL | Pattern.MULTILINE).matcher(value).find()) {
+            fail("Expected " + streamName + " to match: '" + pattern + "', got:\n" + value);
+        }
     }
 }

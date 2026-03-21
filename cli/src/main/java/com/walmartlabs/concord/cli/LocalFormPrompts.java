@@ -51,6 +51,7 @@ import static org.fusesource.jansi.Ansi.ansi;
 final class LocalFormPrompts {
 
     private static final DefaultFormValidatorLocale LOCALE = new DefaultFormValidatorLocale();
+    private static final String HIDDEN_VALUE = "<hidden>";
 
     private final Path workDir;
     private final boolean printHeader;
@@ -83,6 +84,7 @@ final class LocalFormPrompts {
                 var errors = validator.validate(form, converted);
                 if (!errors.isEmpty()) {
                     cleanupTempFormFiles(converted);
+                    clearSensitiveValues(form, rawValues);
                     printValidationErrors(errors);
                     continue;
                 }
@@ -97,13 +99,15 @@ final class LocalFormPrompts {
                 return payload;
             } catch (FormUtils.ValidationException e) {
                 cleanupTempFormFiles(converted);
+                clearSensitiveValues(form, rawValues);
                 printError(e.getMessage());
             }
         }
     }
 
     private void printHeader(Form form) {
-        System.out.println("Process suspended on form: " + form.name());
+        System.out.println("Pending form input:");
+        System.out.println("  " + form.name() + " -> " + form.eventName());
         if (form.options().isYield()) {
             printWarning("'yield' is informational only in local CLI.");
         }
@@ -156,7 +160,8 @@ final class LocalFormPrompts {
 
     private Object promptRepeatedField(FormField field, Object currentValue) {
         if (currentValue instanceof Collection && !((Collection<?>) currentValue).isEmpty()) {
-            System.out.println("Current values for " + label(field) + ": " + currentValue);
+            var current = isPasswordField(field) ? HIDDEN_VALUE : currentValue;
+            System.out.println("Current values for " + label(field) + ": " + current);
         }
 
         var values = new ArrayList<>();
@@ -304,9 +309,9 @@ final class LocalFormPrompts {
         }
 
         if (currentValue != null) {
-            details.add("current: " + currentValue);
+            details.add("current: " + promptValue(field, currentValue));
         } else if (field.defaultValue() != null) {
-            details.add("default: " + field.defaultValue());
+            details.add("default: " + promptValue(field, field.defaultValue()));
         }
 
         if (FormFields.DateField.TYPE.equals(field.type()) || FormFields.DateTimeField.TYPE.equals(field.type())) {
@@ -315,6 +320,22 @@ final class LocalFormPrompts {
 
         var name = idx != null ? label(field) + " [" + idx + "]" : label(field);
         return name + " [" + String.join(", ", details) + "]: ";
+    }
+
+    private static String promptValue(FormField field, Object value) {
+        return isPasswordField(field) ? HIDDEN_VALUE : String.valueOf(value);
+    }
+
+    private static boolean isPasswordField(FormField field) {
+        return "password".equals(field.getOption(FormFields.StringField.INPUT_TYPE));
+    }
+
+    private static void clearSensitiveValues(Form form, Map<String, Object> rawValues) {
+        for (var field : form.fields()) {
+            if (isPasswordField(field)) {
+                rawValues.remove(field.name());
+            }
+        }
     }
 
     private static boolean isRepeated(FormField field) {
