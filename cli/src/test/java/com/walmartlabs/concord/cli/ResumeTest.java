@@ -49,8 +49,7 @@ class ResumeTest extends AbstractTest {
 
         assertEquals(0, exitCode, () -> "out:\n" + stdOut() + "\n\nerr:\n" + stdErr());
         assertLog(".*before suspend.*");
-        assertLog(".*Process suspended\\..*");
-        assertLog(".*Waiting event: ev1.*");
+        assertLog(".*Process suspended\\. Waiting event: ev1.*");
         assertLog(".*Resume with: concord resume --event ev1.*");
         assertFalse(stdOut().contains("...done!"), stdOut());
         assertTrue(Files.exists(targetDir.resolve("_attachments").resolve("_state").resolve("instance")));
@@ -97,6 +96,72 @@ class ResumeTest extends AbstractTest {
 
         var resumeOutput = stdOut().substring(afterRun.length());
         assertTrue(resumeOutput.contains("after resume: resumed-inline"), resumeOutput);
+        assertTrue(resumeOutput.contains("...done!"), resumeOutput);
+        assertFalse(Files.exists(targetDir.resolve("_attachments").resolve("_state")), targetDir.toString());
+    }
+
+    @Test
+    void resumePromptsForPendingStandardForms() throws Exception {
+        var source = preparePayload("form");
+        var targetDir = CliPaths.defaultTargetDir(source);
+
+        var runExitCode = withInput("n\n", () -> executeIn(source, runArgs()));
+        assertEquals(0, runExitCode, () -> "out:\n" + stdOut() + "\n\nerr:\n" + stdErr());
+        assertTrue(stdOut().contains("Process suspended. Pending form: myForm"), stdOut());
+        assertTrue(stdOut().contains("Resume with: concord resume"), stdOut());
+        assertFalse(stdOut().contains("--event"), stdOut());
+        assertTrue(Files.exists(targetDir.resolve("_attachments").resolve("_state").resolve("V2forms").resolve("myForm")));
+
+        var afterRun = stdOut();
+
+        var resumeExitCode = withInput("John Smith\n33\n", () -> executeIn(source, List.of("resume")));
+
+        assertEquals(0, resumeExitCode, () -> "out:\n" + stdOut() + "\n\nerr:\n" + stdErr());
+
+        var resumeOutput = stdOut().substring(afterRun.length());
+        assertTrue(resumeOutput.contains("Process suspended on form: myForm"), resumeOutput);
+        assertTrue(resumeOutput.contains("after form: John Smith, 33"), resumeOutput);
+        assertTrue(resumeOutput.contains("...done!"), resumeOutput);
+        assertFalse(Files.exists(targetDir.resolve("_attachments").resolve("_state")), targetDir.toString());
+    }
+
+    @Test
+    void runOffersImmediateFormFill() throws Exception {
+        var source = preparePayload("form");
+        var targetDir = CliPaths.defaultTargetDir(source);
+
+        var exitCode = withInput("\nJohn Smith\n33\n", () -> executeIn(source, runArgs()));
+
+        assertEquals(0, exitCode, () -> "out:\n" + stdOut() + "\n\nerr:\n" + stdErr());
+        assertTrue(stdOut().contains("Fill pending form now? (Y/n)"), stdOut());
+        assertTrue(stdOut().contains("Name [string, required]:"), stdOut());
+        assertTrue(stdOut().contains("after form: John Smith, 33"), stdOut());
+        assertTrue(stdOut().contains("...done!"), stdOut());
+        assertFalse(stdOut().contains("Process suspended. Pending form: myForm"), stdOut());
+        assertFalse(stdOut().contains("Resume with: concord resume"), stdOut());
+        assertFalse(stdOut().contains("Process suspended on form: myForm"), stdOut());
+        assertFalse(Files.exists(targetDir.resolve("_attachments").resolve("_state")), targetDir.toString());
+    }
+
+    @Test
+    void interruptedImmediateFormFillCanBeResumed() throws Exception {
+        var source = preparePayload("parallelForms");
+        var targetDir = CliPaths.defaultTargetDir(source);
+
+        var runExitCode = withInput("\nfirst-value\n", () -> executeIn(source, runArgs()));
+
+        assertEquals(1, runExitCode, () -> "out:\n" + stdOut() + "\n\nerr:\n" + stdErr());
+        assertTrue(Files.exists(targetDir.resolve("_attachments").resolve("_state").resolve("_cliResume.json")));
+
+        var afterRun = stdOut();
+        var resumeExitCode = withInput("second-value\n", () -> executeIn(source, List.of("resume")));
+
+        assertEquals(0, resumeExitCode, () -> "out:\n" + stdOut() + "\n\nerr:\n" + stdErr());
+
+        var resumeOutput = stdOut().substring(afterRun.length());
+        assertTrue(resumeOutput.contains("Process suspended on form: form2"), resumeOutput);
+        assertTrue(stdOut().contains("parallel forms: form1=first-value"), stdOut());
+        assertTrue(resumeOutput.contains("parallel forms: done one=first-value two=second-value"), resumeOutput);
         assertTrue(resumeOutput.contains("...done!"), resumeOutput);
         assertFalse(Files.exists(targetDir.resolve("_attachments").resolve("_state")), targetDir.toString());
     }

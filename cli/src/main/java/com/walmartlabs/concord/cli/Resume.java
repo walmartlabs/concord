@@ -27,6 +27,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
@@ -42,6 +43,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -90,12 +92,15 @@ public class Resume implements Callable<Integer> {
         try {
             var metadata = loadMetadata(workDir);
             var waitingEvents = loadWaitingEvents(workDir);
-            var selectedEvent = selectEvent(waitingEvents);
-            if (selectedEvent == null) {
+            List<Form> pendingForms = LocalFormState.syncPendingForms(workDir, waitingEvents);
+            String selectedEvent = null;
+            if (!usesFormMode(pendingForms)) {
+                selectedEvent = selectEvent(waitingEvents);
+            }
+            if (!usesFormMode(pendingForms) && selectedEvent == null) {
                 return 1;
             }
 
-            var input = loadInput();
             var dependencyManager = LocalCliRuntime.createDependencyManager(Path.of(metadata.depsCacheDir()));
             var injector = LocalCliRuntime.createInjector(workDir,
                     metadata.runnerConfiguration(),
@@ -120,7 +125,13 @@ public class Resume implements Callable<Integer> {
             var runner = injector.getInstance(Runner.class);
 
             try {
-                snapshot = runner.resume(snapshot, Collections.singleton(selectedEvent), input);
+                if (usesFormMode(pendingForms)) {
+                    LocalFormState.assertSupported(workDir, pendingForms);
+                    snapshot = LocalFormSession.resumePendingForms(workDir, runner, snapshot, metadata);
+                } else {
+                    var input = loadInput();
+                    snapshot = runner.resume(snapshot, Collections.singleton(selectedEvent), input);
+                }
             } catch (ParallelExecutionException | UserDefinedException e) {
                 return -1;
             } catch (Exception e) {
@@ -130,7 +141,9 @@ public class Resume implements Callable<Integer> {
 
             if (LocalSuspendPersistence.isSuspended(snapshot)) {
                 LocalSuspendPersistence.save(workDir, snapshot, metadata);
-                LocalSuspendPersistence.printResumeGuidance(metadata.resumeDirPath(), LocalSuspendPersistence.getEvents(snapshot));
+                var events = LocalSuspendPersistence.getEvents(snapshot);
+                var nextPendingForms = LocalFormState.syncPendingForms(workDir, events);
+                LocalSuspendPersistence.printResumeGuidance(metadata.resumeDirPath(), events, nextPendingForms);
                 return 0;
             }
 
@@ -233,6 +246,14 @@ public class Resume implements Callable<Integer> {
         return 1;
     }
 
+    private boolean usesFormMode(List<Form> pendingForms) {
+        return !hasGenericManualFlags() && !pendingForms.isEmpty();
+    }
+
+    private boolean hasGenericManualFlags() {
+        return event != null || inputFile != null || saveAs != null || !extraVars.isEmpty();
+    }
+
     private Path resolveWorkDir() {
         var baseDir = workDir != null ? workDir : Paths.get(System.getProperty("user.dir"));
         var normalized = baseDir.normalize().toAbsolutePath();
@@ -265,20 +286,21 @@ public class Resume implements Callable<Integer> {
     }
 
     private static Set<String> loadWaitingEvents(Path workDir) throws Exception {
+        Set<String> waitingEvents;
         try {
-            var waitingEvents = LocalSuspendPersistence.readWaitingEvents(workDir);
-            if (waitingEvents == null || waitingEvents.isEmpty()) {
-                throw new IllegalArgumentException("Missing suspend marker in " + workDir);
-            }
-            return waitingEvents;
-        } catch (IllegalArgumentException e) {
-            throw e;
+            waitingEvents = LocalSuspendPersistence.readWaitingEvents(workDir);
         } catch (Exception e) {
             throw new IllegalArgumentException("Error while reading waiting events: " + e.getMessage(), e);
         }
+
+        if (waitingEvents == null || waitingEvents.isEmpty()) {
+            throw new IllegalArgumentException("Missing suspend marker in " + workDir);
+        }
+        return waitingEvents;
     }
 
     private static ProcessSnapshot loadSnapshot(Path workDir, ClassLoader classLoader) {
-        return LocalSuspendPersistence.applyBackwardCompatibility(StateManager.readProcessState(workDir, classLoader));
+        // We only resume state written by the current local CLI path, so no backward-compat fixups are needed here.
+        return StateManager.readProcessState(workDir, classLoader);
     }
 }

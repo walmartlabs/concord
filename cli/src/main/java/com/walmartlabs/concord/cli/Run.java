@@ -30,6 +30,7 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.FileVisitor;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
+import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.imports.*;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
@@ -308,7 +309,38 @@ public class Run implements Callable<Integer> {
                     runnerCfg,
                     cliConfigContext);
             LocalSuspendPersistence.save(workDir, snapshot, metadata);
-            LocalSuspendPersistence.printResumeGuidance(resumeDir, LocalSuspendPersistence.getEvents(snapshot));
+            Set<String> events = LocalSuspendPersistence.getEvents(snapshot);
+            List<Form> pendingForms = LocalFormState.syncPendingForms(workDir, events);
+
+            if (pendingForms.isEmpty()) {
+                LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms);
+                return 0;
+            }
+
+            if (!Confirmation.confirm("Fill pending form now? (Y/n)", true)) {
+                LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms);
+                return 0;
+            }
+
+            try {
+                snapshot = LocalFormSession.resumePendingForms(workDir, runner, snapshot, metadata, false);
+            } catch (ParallelExecutionException | UserDefinedException e) {
+                return -1;
+            } catch (Exception e) {
+                logException(verbosity, e);
+                return 1;
+            }
+
+            if (!LocalSuspendPersistence.isSuspended(snapshot)) {
+                LocalSuspendPersistence.cleanup(workDir);
+                System.out.println(ansi().fgBrightGreen().a("...done!").reset());
+                return 0;
+            }
+
+            LocalSuspendPersistence.save(workDir, snapshot, metadata);
+            events = LocalSuspendPersistence.getEvents(snapshot);
+            pendingForms = LocalFormState.syncPendingForms(workDir, events);
+            LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms);
             return 0;
         }
 
