@@ -35,6 +35,9 @@ jobs:
   build:
     needs: check-labels
     if: needs.check-labels.outputs.skip == 'false'
+    env:
+      WORK: ${{ github.workspace }}/tmp
+      MAVEN_REPO_LOCAL: ${{ github.workspace }}/tmp/.m2/repository
 
     strategy:
       matrix:
@@ -71,13 +74,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Restore Maven cache
+        id: restore-maven-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.MAVEN_REPO_LOCAL }}
+          key: ${{ runner.os }}-maven-${{ matrix.profile }}-${{ hashFiles('**/pom.xml', '.github/settings.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-${{ matrix.profile }}-
+            ${{ runner.os }}-maven-
+
       - name: Build and test with Maven
         env:
           SKIP_DOCKER_TESTS: "true"
         run: |
-          WORK=${{ github.workspace }}/tmp
-          mkdir -p ${WORK} && chmod 1777 ${WORK}
+          mkdir -p "${WORK}" "${MAVEN_REPO_LOCAL}"
+          chmod 1777 "${WORK}"
           ./mvnw -s .github/settings.xml -B clean install \
-            -Dmaven.repo.local=${WORK}/.m2/repository \
-            -Djava.io.tmpdir=${WORK} \
+            -Dmaven.repo.local="${MAVEN_REPO_LOCAL}" \
+            -Djava.io.tmpdir="${WORK}" \
             -Pgha -Pdocker -Pit -P${{ matrix.profile }}
+
+      - name: Remove local Concord artifacts from Maven cache
+        if: success()
+        run: rm -rf "${MAVEN_REPO_LOCAL}/com/walmartlabs/concord"
+
+      - name: Save Maven cache
+        if: success() && steps.restore-maven-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.MAVEN_REPO_LOCAL }}
+          key: ${{ steps.restore-maven-cache.outputs.cache-primary-key }}
