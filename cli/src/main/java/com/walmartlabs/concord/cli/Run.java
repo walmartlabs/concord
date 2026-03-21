@@ -30,25 +30,25 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.FileVisitor;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
-import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
-import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
 import com.walmartlabs.concord.imports.*;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.model.EffectiveConfiguration;
-import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
 import com.walmartlabs.concord.runtime.v2.model.Flow;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Profile;
-import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
+import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
-import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
+import com.walmartlabs.concord.runtime.v2.sdk.ImmutableProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelExecutionException;
-import com.walmartlabs.concord.runtime.v2.sdk.*;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessInfo;
+import com.walmartlabs.concord.runtime.v2.sdk.ProjectInfo;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.runtime.v2.wrapper.ProcessDefinitionV2;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
@@ -151,13 +151,14 @@ public class Run implements Callable<Integer> {
         CliConfigContext cliConfigContext = CliConfig.load(verbosity, context,
                 new CliConfig.Overrides(secretStoreDir, vaultDir, vaultId));
 
+        Path sourceDir = resolveSourceDir(sourceDirOrFile.normalize().toAbsolutePath());
         Path workDir = prepareWorkDir(sourceDirOrFile.normalize().toAbsolutePath(), verbosity);
 
         if (!noDefaultCfg) {
             copyDefaultCfg(workDir, defaultCfg, verbosity.verbose());
         }
 
-        DependencyManager dependencyManager = initDependencyManager();
+        DependencyManager dependencyManager = LocalCliRuntime.createDependencyManager(depsCacheDir);
         ImportManager importManager = new ImportManagerFactory(dependencyManager,
                 new CliRepositoryExporter(repoCacheDir), Collections.emptySet())
                 .create();
@@ -269,16 +270,16 @@ public class Run implements Callable<Integer> {
                 .dryRun(dryRunMode)
                 .build();
 
-        Injector injector = new InjectorFactory(new WorkingDirectory(workDir),
+        Injector injector = LocalCliRuntime.createInjector(workDir,
                 runnerCfg,
-                () -> cfg,
-                new ProcessDependenciesModule(workDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(cliConfigContext, workDir, defaultTaskVars, dependencyManager, verbosity))
-                .create();
+                cfg,
+                cliConfigContext,
+                defaultTaskVars,
+                dependencyManager,
+                verbosity);
 
         // Just to notify listeners
-        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
-        loader.load(workDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER);
+        LocalCliRuntime.notifyProjectLoaded(workDir);
 
         Runner runner = injector.getInstance(Runner.class);
 
@@ -286,8 +287,9 @@ public class Run implements Callable<Integer> {
             System.out.println("Available tasks: " + injector.getInstance(TaskProviders.class).names());
         }
 
+        ProcessSnapshot snapshot;
         try {
-            runner.start(cfg, processDefinition, args);
+            snapshot = runner.start(cfg, processDefinition, args);
         } catch (ParallelExecutionException | UserDefinedException e) {
             return -1;
         } catch (Exception e) {
@@ -295,6 +297,22 @@ public class Run implements Callable<Integer> {
             return 1;
         }
 
+        if (LocalSuspendPersistence.isSuspended(snapshot)) {
+            var resumeDir = CliPaths.preferredResumeDir(sourceDir, workDir);
+            LocalSuspendPersistence.ResumeMetadata metadata = LocalSuspendPersistence.ResumeMetadata.from(workDir,
+                    resumeDir,
+                    defaultTaskVars,
+                    depsCacheDir,
+                    profiles,
+                    cfg,
+                    runnerCfg,
+                    cliConfigContext);
+            LocalSuspendPersistence.save(workDir, snapshot, metadata);
+            LocalSuspendPersistence.printResumeGuidance(resumeDir, LocalSuspendPersistence.getEvents(snapshot));
+            return 0;
+        }
+
+        LocalSuspendPersistence.cleanup(workDir);
         System.out.println(ansi().fgBrightGreen().a("...done!").reset());
 
         return 0;
@@ -390,34 +408,12 @@ public class Run implements Callable<Integer> {
         }
     }
 
-    private DependencyManager initDependencyManager() throws IOException {
-        return new DependencyManager(getDependencyManagerConfiguration());
-    }
-
-    private DependencyManagerConfiguration getDependencyManagerConfiguration() {
-        Path cfgFile = Paths.get(System.getProperty("user.home"), ".concord", "mvn.json");
-        if (Files.exists(cfgFile)) {
-            return DependencyManagerConfiguration.of(depsCacheDir, DependencyManagerRepositories.get(cfgFile));
-        }
-        return DependencyManagerConfiguration.of(depsCacheDir);
-    }
-
     private Path prepareWorkDir(Path sourceDir, Verbosity verbosity) throws IOException {
-        Path srcDir;
-        if (Files.isRegularFile(sourceDir)) {
-            srcDir = sourceDir.getParent();
-            if (srcDir == null) {
-                throw new IllegalArgumentException("Cannot determine parent directory of: " + sourceDir);
-            }
-        } else if (Files.isDirectory(sourceDir)) {
-            srcDir = sourceDir;
-        } else {
-            throw new IllegalArgumentException("Invalid source (not a file or directory): " + sourceDir);
-        }
+        Path srcDir = resolveSourceDir(sourceDir);
 
         Path target = targetDir != null
                 ? targetDir.normalize().toAbsolutePath()
-                : srcDir.resolve("target");
+                : CliPaths.defaultTargetDir(srcDir);
 
         validatePaths(srcDir, target);
 
@@ -437,6 +433,20 @@ public class Run implements Callable<Integer> {
         }
 
         return target;
+    }
+
+    private static Path resolveSourceDir(Path sourceDir) {
+        if (Files.isRegularFile(sourceDir)) {
+            var parent = sourceDir.getParent();
+            if (parent == null) {
+                throw new IllegalArgumentException("Cannot determine parent directory of: " + sourceDir);
+            }
+            return parent;
+        }
+        if (Files.isDirectory(sourceDir)) {
+            return sourceDir;
+        }
+        throw new IllegalArgumentException("Invalid source (not a file or directory): " + sourceDir);
     }
 
     private static void validatePaths(Path src, Path target) {
@@ -481,7 +491,7 @@ public class Run implements Callable<Integer> {
         }
     }
 
-    private static void logException(Verbosity verbosity, Exception e) {
+    static void logException(Verbosity verbosity, Exception e) {
         if (verbosity.verbose()) {
             System.err.print(ansi().fgBrightRed().a("Error: "));
             e.printStackTrace(System.err);

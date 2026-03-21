@@ -1,0 +1,5 @@
+flows:
+  default:
+    - log: "before suspend"
+    - suspend: ev1
+    - log: "after resume: ${myForm.value}"

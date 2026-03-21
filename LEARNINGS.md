@@ -1,0 +1,26 @@
+# Session Learnings
+
+- Local `concord run` currently calls `Runner.start(...)` directly and discards the returned `ProcessSnapshot`; it does not use `runtime.v2.runner.Main.execute()`, so it has no built-in local suspend/resume loop and does not persist `_suspend`, `_resume`, or `instance`.
+- Runtime-v2 standard forms suspend by serializing `com.walmartlabs.concord.forms.Form` into `_attachments/_state/V2forms`, assigning a UUID event ref, and marking the current thread `SUSPENDED`.
+- Runtime-v2 resume is `Runner.resume(snapshot, eventRefs, input)`. For forms, the effective input shape is `{ formName -> submittedData }`, injected only into threads whose event ref matches.
+- The shared `forms` module already has the local building blocks needed for CLI form submit semantics: field metadata, conversion, validation, and file upload handling via the `FORM_FILES` marker.
+- For file fields, local CLI code should pass an `InputStream` into form conversion, then move the converted temp files into `_form_files/<form>/<field>` before resume, matching server-side behavior.
+- Server-side standard form submit path is `FormResourceV2 -> FormServiceV2.submit() -> PayloadManager.createResumePayload() -> ResumePipeline`.
+- Server-side form submit wraps field values under `arguments[formName]`, carries `_form_files`, preserves `_runAs`, and uses a resume hook to delete the stored form when resume starts.
+- Server resume pipeline order matters: `ChangeUserProcessor`, `ResumingProcessor`, `ResumingHooksProcessor`, `ResumeMarkerStoringProcessor`, `FormFilesStoringProcessor`, `ResumeConfigurationProcessor`, `ResumeEventsProcessor`, `StateImportingProcessor`, `ResumeProcessor`.
+- `yield` is mainly a web/custom-form UX concern; it does not materially change the core runtime-v2 resume contract for standard forms.
+- Standard forms and custom forms are different products. Standard forms use `/api/v1/process/{id}/form...`; custom forms use `/api/service/custom_form/...` plus `/forms/...`.
+- A process can have multiple pending forms when execution suspended in parallel; CLI form support must not assume a single pending form.
+- If a process is `SUSPENDED` but no form is listed, it may be waiting on a non-form suspend or wait condition.
+- Live API shape confirmed on `concord.ibodrov.ca`: form list returns `name/custom/yield/runAs`; form get returns field metadata (`name/type/cardinality/allowedValue/options`); form submit returns `ok/processInstanceId/errors`.
+- Live process behavior confirmed on March 21, 2026 UTC: standard form submit removed the form from the pending list immediately and moved the process out of `SUSPENDED`, though the specific cluster run used for inspection stalled later in `STARTING`.
+- Current local CLI behavior was also reproduced with the installed `concord` binary: a runtime-v2 form flow exits successfully without prompting, which matches the code path that drops the snapshot after `Runner.start(...)`.
+- Runtime-v2 already has a persisted local suspend/resume contract in `runtime/common/StateManager`: suspended state lives under `_attachments/_state` as `instance`, `_suspend`, and `_resume`, and `runtime.v2.runner.Main.execute()` uses those markers to choose start vs resume and to persist or clean state afterward.
+- Generic local resume is event-based, not form-based: the core primitive is `Runner.resume(snapshot, eventRefs, input)`, and forms are only one producer of suspended event refs alongside plain `suspend:` steps and reentrant tasks.
+- A detached local resume UX should use a new `concord resume <workDir>` command instead of `concord run --resume`, because `run` is source-oriented, prepares a target workspace, and can delete it with `--clean`, while resume must operate on an existing prepared workDir with persisted state.
+- The generic-first split is technically sound: commit 1 can add local suspend/resume for arbitrary runtime-v2 events, and commit 2 can layer standard-form UX on top of that generic resume path.
+- Commit-1 generic resume payload should be structured file input plus optional nesting, i.e. `concord resume <workDir> --event <eventRef> --input-file <json|yaml> [--save-as <path>]`, matching the server's generic resume API shape more closely than `key=value` flags.
+- Form UX should be built on top of `concord resume`, not inside `concord run`: when `run` suspends, it should persist state and print guidance with the prepared workspace path and suggested resume command.
+- `StateManager.saveResumeEvent(...)` currently writes a single event even though resume state reads as a set, so the first generic CLI resume cut should explicitly support one selected event per invocation unless that helper is expanded.
+- Form-specific concerns remain second-commit work: conversion/validation, `_form_files` handling, automatic nesting under the form name, custom-form detection, and any local treatment of `runAs`.
+- Treating a suspended `concord run` as exit code `0` is a reasonable contract for this feature because execution started successfully and produced resumable state rather than an error.
