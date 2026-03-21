@@ -24,13 +24,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Callable;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
 public abstract class AbstractTest {
     private final PrintStream originalOut = System.out;
     private final PrintStream originalErr = System.err;
+    private final InputStream originalIn = System.in;
     private final ByteArrayOutputStream out = new ByteArrayOutputStream();
     private final ByteArrayOutputStream err = new ByteArrayOutputStream();
 
@@ -46,6 +50,7 @@ public abstract class AbstractTest {
     public void restoreStreams() {
         System.setOut(originalOut);
         System.setErr(originalErr);
+        System.setIn(originalIn);
     }
 
     protected void assertLog(String pattern) {
@@ -69,6 +74,11 @@ public abstract class AbstractTest {
 
     protected String stdErr() {
         return err.toString();
+    }
+
+    protected <T> T withInput(String value, Callable<T> action) throws Exception {
+        System.setIn(new java.io.ByteArrayInputStream(value.getBytes(StandardCharsets.UTF_8)));
+        return action.call();
     }
 
     private static int grep(String str, String pattern) {

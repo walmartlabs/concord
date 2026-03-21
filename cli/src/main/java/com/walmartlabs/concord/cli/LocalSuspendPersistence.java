@@ -24,10 +24,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.cli.CliConfig.CliConfigContext;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
+import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
-import com.walmartlabs.concord.runtime.v2.runner.StateBackwardCompatibility;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
@@ -50,10 +50,6 @@ final class LocalSuspendPersistence {
     static boolean isSuspended(ProcessSnapshot snapshot) {
         return snapshot.vmState().threadStatus().entrySet().stream()
                 .anyMatch(e -> e.getValue() == ThreadStatus.SUSPENDED);
-    }
-
-    static ProcessSnapshot applyBackwardCompatibility(ProcessSnapshot snapshot) {
-        return StateBackwardCompatibility.apply(snapshot);
     }
 
     static void save(Path workDir, ProcessSnapshot snapshot, ResumeMetadata metadata) throws IOException {
@@ -99,19 +95,40 @@ final class LocalSuspendPersistence {
         }
     }
 
-    static void printResumeGuidance(Path resumeDir, Set<String> events) {
-        System.out.println("Process suspended.");
-
+    static void printResumeGuidance(Path resumeDir, Set<String> events, Collection<Form> pendingForms) {
         var cmd = resumeCommand(resumeDir);
+        if (!pendingForms.isEmpty()) {
+            var formNames = pendingForms.stream()
+                    .map(Form::name)
+                    .distinct()
+                    .toList();
+
+            if (formNames.size() == 1) {
+                System.out.println("Process suspended. Pending form: " + formNames.get(0));
+            } else {
+                System.out.println("Process suspended. Pending forms: " + String.join(", ", formNames));
+            }
+
+            var additionalEvents = new TreeSet<>(events);
+            additionalEvents.removeAll(LocalFormState.formEvents(pendingForms));
+            if (additionalEvents.size() == 1) {
+                System.out.println("Additional waiting event: " + additionalEvents.iterator().next());
+            } else if (!additionalEvents.isEmpty()) {
+                System.out.println("Additional waiting events: " + String.join(", ", additionalEvents));
+            }
+
+            System.out.println("Resume with: " + cmd);
+            return;
+        }
 
         if (events.size() == 1) {
             var event = events.iterator().next();
-            System.out.println("Waiting event: " + event);
+            System.out.println("Process suspended. Waiting event: " + event);
             System.out.println("Resume with: " + cmd + " --event " + event);
             return;
         }
 
-        System.out.println("Waiting events: " + String.join(", ", events));
+        System.out.println("Process suspended. Waiting events: " + String.join(", ", events));
         System.out.println("Resume with: " + cmd + " --event <eventRef>");
     }
 
