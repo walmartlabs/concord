@@ -1621,6 +1621,7 @@ public class MainTest  {
         byte[] log = run();
 
         assertNoLog(log, ".*should not reach here.*");
+        verify(runtime.checkpointService(), never()).upload(any(), any(), any(), any());
     }
 
     @Test
