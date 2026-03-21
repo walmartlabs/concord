@@ -105,10 +105,11 @@ class ResumeTest extends AbstractTest {
         var source = preparePayload("form");
         var targetDir = CliPaths.defaultTargetDir(source);
 
-        var runExitCode = withInput("n\n", () -> executeIn(source, runArgs()));
+        var runExitCode = executeIn(source, runArgs());
         assertEquals(0, runExitCode, () -> "out:\n" + stdOut() + "\n\nerr:\n" + stdErr());
         assertTrue(stdOut().contains("Process suspended. Pending form: myForm"), stdOut());
         assertTrue(stdOut().contains("Resume with: concord resume"), stdOut());
+        assertFalse(stdOut().contains("Fill pending form now?"), stdOut());
         assertFalse(stdOut().contains("--event"), stdOut());
         assertTrue(Files.exists(targetDir.resolve("_attachments").resolve("_state").resolve("V2forms").resolve("myForm")));
 
@@ -123,6 +124,20 @@ class ResumeTest extends AbstractTest {
         assertTrue(resumeOutput.contains("after form: John Smith, 33"), resumeOutput);
         assertTrue(resumeOutput.contains("...done!"), resumeOutput);
         assertFalse(Files.exists(targetDir.resolve("_attachments").resolve("_state")), targetDir.toString());
+    }
+
+    @Test
+    void resumeFailsFastForFormsWithoutInteractiveInput() throws Exception {
+        var source = preparePayload("form");
+
+        var runExitCode = executeIn(source, runArgs());
+        assertEquals(0, runExitCode, () -> "out:\n" + stdOut() + "\n\nerr:\n" + stdErr());
+
+        var resumeExitCode = executeIn(source, List.of("resume"));
+
+        assertEquals(1, resumeExitCode, () -> "out:\n" + stdOut() + "\n\nerr:\n" + stdErr());
+        assertTrue(stdErr().contains("Pending form requires interactive input."), stdErr());
+        assertTrue(stdErr().contains("--input-file"), stdErr());
     }
 
     @Test

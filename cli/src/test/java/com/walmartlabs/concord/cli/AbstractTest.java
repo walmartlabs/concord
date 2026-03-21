@@ -77,8 +77,18 @@ public abstract class AbstractTest {
     }
 
     protected <T> T withInput(String value, Callable<T> action) throws Exception {
+        var previous = System.getProperty(PromptSupport.ALLOW_STDIN_PROMPTS_PROPERTY);
         System.setIn(new java.io.ByteArrayInputStream(value.getBytes(StandardCharsets.UTF_8)));
-        return action.call();
+        System.setProperty(PromptSupport.ALLOW_STDIN_PROMPTS_PROPERTY, "true");
+        try {
+            return action.call();
+        } finally {
+            if (previous == null) {
+                System.clearProperty(PromptSupport.ALLOW_STDIN_PROMPTS_PROPERTY);
+            } else {
+                System.setProperty(PromptSupport.ALLOW_STDIN_PROMPTS_PROPERTY, previous);
+            }
+        }
     }
 
     private static int grep(String str, String pattern) {

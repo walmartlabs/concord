@@ -51,6 +51,8 @@ import java.util.concurrent.Callable;
 @Command(name = "resume", description = "Resume a previously suspended local runtime-v2 workspace.")
 public class Resume implements Callable<Integer> {
 
+    private static final String NON_INTERACTIVE_FORM_MESSAGE =
+            "Pending form requires interactive input. Use --input-file, -e/--extra-vars or run in a terminal.";
     private static final ObjectMapper INPUT_OBJECT_MAPPER = new ObjectMapper(new YAMLFactory());
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {
     };
@@ -99,6 +101,9 @@ public class Resume implements Callable<Integer> {
             }
             if (!usesFormMode(pendingForms) && selectedEvent == null) {
                 return 1;
+            }
+            if (usesFormMode(pendingForms) && !PromptSupport.canPromptInteractively()) {
+                return err(NON_INTERACTIVE_FORM_MESSAGE);
             }
 
             var dependencyManager = LocalCliRuntime.createDependencyManager(Path.of(metadata.depsCacheDir()));
