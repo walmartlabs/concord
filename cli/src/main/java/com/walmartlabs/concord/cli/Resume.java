@@ -51,8 +51,6 @@ import java.util.concurrent.Callable;
 @Command(name = "resume", description = "Resume a previously suspended local runtime-v2 workspace.")
 public class Resume implements Callable<Integer> {
 
-    private static final String NON_INTERACTIVE_FORM_MESSAGE =
-            "Pending form requires interactive input. Use --input-file, -e/--extra-vars or run in a terminal.";
     private static final ObjectMapper INPUT_OBJECT_MAPPER = new ObjectMapper(new YAMLFactory());
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {
     };
@@ -79,6 +77,12 @@ public class Resume implements Callable<Integer> {
     @Option(names = {"--save-as"}, description = "Wrap the payload under the specified variable path")
     String saveAs;
 
+    @Option(names = {"--describe-input"}, description = "Describe the expected input shape for a pending form")
+    boolean describeInput = false;
+
+    @Option(names = {"--no-prompt"}, description = "Disable interactive prompts and print recovery commands instead")
+    boolean noPrompt = false;
+
     @Parameters(arity = "0..1", description = "Prepared workspace directory containing suspended local state (default: current directory or ./target).")
     Path workDir;
 
@@ -88,29 +92,46 @@ public class Resume implements Callable<Integer> {
         var workDir = resolveWorkDir();
 
         if (saveAs != null && inputFile == null && extraVars.isEmpty()) {
-            return err("--save-as requires --input-file or -e/--extra-vars");
+            return err(CliExitCodes.USAGE, "--save-as requires --input-file or -e/--extra-vars");
+        }
+        if (describeInput && hasManualInputFlags()) {
+            return err(CliExitCodes.USAGE, "--describe-input can't be combined with --input-file, -e/--extra-vars or --save-as");
         }
 
         try {
             var metadata = loadMetadata(workDir);
             var waitingEvents = loadWaitingEvents(workDir);
-            List<Form> pendingForms = LocalFormState.syncPendingForms(workDir, waitingEvents);
-            String selectedEvent = null;
-            if (!usesFormMode(pendingForms)) {
-                selectedEvent = selectEvent(waitingEvents);
+            var pendingForms = LocalFormState.syncPendingForms(workDir, waitingEvents);
+            var resumeDir = metadata.resumeDirPath();
+            var interactiveAvailable = canPromptInteractively();
+            var formMode = usesFormMode(pendingForms);
+
+            if (describeInput) {
+                return describeInput(resumeDir, waitingEvents, pendingForms);
             }
-            if (!usesFormMode(pendingForms) && selectedEvent == null) {
-                return 1;
+
+            if (formMode && !interactiveAvailable) {
+                if (pendingForms.size() == 1
+                        && waitingEvents.size() == 1
+                        && !LocalSuspendPrinter.supportsNonInteractiveInput(pendingForms.get(0))) {
+                    LocalSuspendPrinter.printUnsupportedNonInteractiveForm(resumeDir, pendingForms.get(0), false);
+                    return CliExitCodes.NON_INTERACTIVE_UNSUPPORTED;
+                }
+
+                LocalSuspendPrinter.printInputRequired(resumeDir, waitingEvents, pendingForms, false);
+                return CliExitCodes.INPUT_REQUIRED;
             }
-            if (usesFormMode(pendingForms) && !PromptSupport.canPromptInteractively()) {
-                return err(NON_INTERACTIVE_FORM_MESSAGE);
+
+            var selectedEvent = formMode ? null : selectEvent(resumeDir, waitingEvents, pendingForms);
+            if (!formMode && selectedEvent.exitCode() != CliExitCodes.SUCCESS) {
+                return selectedEvent.exitCode();
             }
 
             var dependencyManager = LocalCliRuntime.createDependencyManager(Path.of(metadata.depsCacheDir()));
             var injector = LocalCliRuntime.createInjector(workDir,
                     metadata.runnerConfiguration(),
                     metadata.processConfiguration(),
-                    metadata.toCliConfigContext(),
+                    metadata.loadCliConfigContext(verbosity),
                     Path.of(metadata.defaultTaskVars()),
                     dependencyManager,
                     verbosity);
@@ -124,58 +145,100 @@ public class Resume implements Callable<Integer> {
             var classLoader = injector.getInstance(Key.get(ClassLoader.class, Names.named("runtime")));
             var snapshot = loadSnapshot(workDir, classLoader);
             if (snapshot == null) {
-                return err("Missing suspended snapshot in " + workDir);
+                return err(CliExitCodes.ERROR, "Missing suspended snapshot in " + workDir);
             }
 
             var runner = injector.getInstance(Runner.class);
 
             try {
-                if (usesFormMode(pendingForms)) {
+                if (formMode) {
                     LocalFormState.assertSupported(workDir, pendingForms);
                     snapshot = LocalFormSession.resumePendingForms(workDir, runner, snapshot, metadata);
                 } else {
+                    var selectedForm = findPendingForm(pendingForms, selectedEvent.event());
+                    if (selectedForm != null && !hasManualInputFlags()) {
+                        LocalSuspendPrinter.printInputRequired(resumeDir, waitingEvents, pendingForms, interactiveAvailable);
+                        return CliExitCodes.INPUT_REQUIRED;
+                    }
+                    if (selectedForm != null && !LocalSuspendPrinter.supportsNonInteractiveInput(selectedForm)) {
+                        LocalSuspendPrinter.printUnsupportedNonInteractiveForm(resumeDir, selectedForm, interactiveAvailable);
+                        return CliExitCodes.NON_INTERACTIVE_UNSUPPORTED;
+                    }
+
                     var input = loadInput();
-                    snapshot = runner.resume(snapshot, Collections.singleton(selectedEvent), input);
+                    snapshot = runner.resume(snapshot, Collections.singleton(selectedEvent.event()), input);
                 }
             } catch (ParallelExecutionException | UserDefinedException e) {
-                return -1;
+                return CliExitCodes.PROCESS_FAILED;
             } catch (Exception e) {
                 Run.logException(verbosity, e);
-                return 1;
+                return CliExitCodes.ERROR;
             }
 
             if (LocalSuspendPersistence.isSuspended(snapshot)) {
                 LocalSuspendPersistence.save(workDir, snapshot, metadata);
                 var events = LocalSuspendPersistence.getEvents(snapshot);
                 var nextPendingForms = LocalFormState.syncPendingForms(workDir, events);
-                LocalSuspendPersistence.printResumeGuidance(metadata.resumeDirPath(), events, nextPendingForms);
-                return 0;
+                LocalSuspendPersistence.printResumeGuidance(resumeDir, events, nextPendingForms, interactiveAvailable);
+                return CliExitCodes.SUSPENDED;
             }
 
             LocalSuspendPersistence.cleanup(workDir);
             System.out.println("...done!");
-            return 0;
+            return CliExitCodes.SUCCESS;
         } catch (Exception e) {
-            return err(e.getMessage());
+            return err(CliExitCodes.ERROR, e.getMessage());
         }
     }
 
-    private String selectEvent(Set<String> waitingEvents) {
+    private int describeInput(Path resumeDir, Set<String> waitingEvents, List<Form> pendingForms) throws Exception {
+        if (pendingForms.isEmpty()) {
+            return err(CliExitCodes.USAGE, "--describe-input requires a pending form");
+        }
+
         if (event == null || event.isBlank()) {
-            if (waitingEvents.size() == 1) {
-                return waitingEvents.iterator().next();
+            if (pendingForms.size() > 1) {
+                LocalSuspendPrinter.printDescribeSelectionRequired(resumeDir, waitingEvents, pendingForms);
+                return CliExitCodes.INPUT_REQUIRED;
             }
 
-            err("Multiple waiting events. Specify --event. Available events: " + String.join(", ", waitingEvents));
-            return null;
+            LocalSuspendPrinter.printDescribeInput(resumeDir, pendingForms.get(0));
+            return CliExitCodes.SUCCESS;
+        }
+
+        var form = findPendingForm(pendingForms, event);
+        if (form == null) {
+            if (waitingEvents.contains(event)) {
+                return err(CliExitCodes.USAGE, "--describe-input is only available for pending forms");
+            }
+            return err(CliExitCodes.USAGE, "Unknown event: " + event + ". Available events: " + String.join(", ", waitingEvents));
+        }
+
+        LocalSuspendPrinter.printDescribeInput(resumeDir, form);
+        return CliExitCodes.SUCCESS;
+    }
+
+    private SelectionResult selectEvent(Path resumeDir, Set<String> waitingEvents, List<Form> pendingForms) {
+        if (event == null || event.isBlank()) {
+            if (waitingEvents.size() == 1) {
+                return SelectionResult.success(waitingEvents.iterator().next());
+            }
+
+            if (!pendingForms.isEmpty()) {
+                LocalSuspendPrinter.printInputRequired(resumeDir, waitingEvents, pendingForms, canPromptInteractively());
+                return SelectionResult.error(CliExitCodes.INPUT_REQUIRED);
+            } else {
+                LocalSuspendPrinter.printEventSelectionRequired(resumeDir, waitingEvents);
+                return SelectionResult.error(CliExitCodes.INPUT_REQUIRED);
+            }
         }
 
         if (!waitingEvents.contains(event)) {
-            err("Unknown event: " + event + ". Available events: " + String.join(", ", waitingEvents));
-            return null;
+            err(CliExitCodes.USAGE, "Unknown event: " + event + ". Available events: " + String.join(", ", waitingEvents));
+            return SelectionResult.error(CliExitCodes.USAGE);
         }
 
-        return event;
+        return SelectionResult.success(event);
     }
 
     private Map<String, Object> loadInput() throws Exception {
@@ -246,9 +309,9 @@ public class Resume implements Callable<Integer> {
         return current;
     }
 
-    private static int err(String message) {
+    private static int err(int exitCode, String message) {
         System.err.println(message);
-        return 1;
+        return exitCode;
     }
 
     private boolean usesFormMode(List<Form> pendingForms) {
@@ -256,7 +319,26 @@ public class Resume implements Callable<Integer> {
     }
 
     private boolean hasGenericManualFlags() {
-        return event != null || inputFile != null || saveAs != null || !extraVars.isEmpty();
+        return event != null || hasManualInputFlags();
+    }
+
+    private boolean hasManualInputFlags() {
+        return inputFile != null || saveAs != null || !extraVars.isEmpty();
+    }
+
+    private boolean canPromptInteractively() {
+        return !noPrompt && PromptSupport.canPromptInteractively();
+    }
+
+    private static Form findPendingForm(List<Form> pendingForms, String event) {
+        if (event == null) {
+            return null;
+        }
+
+        return pendingForms.stream()
+                .filter(f -> event.equals(f.eventName()))
+                .findFirst()
+                .orElse(null);
     }
 
     private Path resolveWorkDir() {
@@ -304,8 +386,20 @@ public class Resume implements Callable<Integer> {
         return waitingEvents;
     }
 
+    private record SelectionResult(String event, int exitCode) {
+
+        static SelectionResult success(String event) {
+            return new SelectionResult(event, CliExitCodes.SUCCESS);
+        }
+
+        static SelectionResult error(int exitCode) {
+            return new SelectionResult(null, exitCode);
+        }
+    }
+
     private static ProcessSnapshot loadSnapshot(Path workDir, ClassLoader classLoader) {
-        // We only resume state written by the current local CLI path, so no backward-compat fixups are needed here.
+        // This branch is the first producer of local CLI suspended state, so direct reads are intentional for now.
+        // Revisit compatibility handling here if the on-disk local suspended-state format changes after release.
         return StateManager.readProcessState(workDir, classLoader);
     }
 }
