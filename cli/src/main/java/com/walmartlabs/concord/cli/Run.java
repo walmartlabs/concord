@@ -317,6 +317,11 @@ public class Run implements Callable<Integer> {
                 return 0;
             }
 
+            if (!PromptSupport.canPromptInteractively()) {
+                LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms);
+                return 0;
+            }
+
             if (!Confirmation.confirm("Fill pending form now? (Y/n)", true)) {
                 LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms);
                 return 0;
