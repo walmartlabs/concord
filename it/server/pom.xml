@@ -38,6 +38,7 @@
         <socat.image>alpine/socat</socat.image>
         <tmp.dir.src.mount>${java.io.tmpdir}</tmp.dir.src.mount>
         <tmp.dir>${java.io.tmpdir}</tmp.dir>
+        <agent.work.dir.base>${tmp.dir}/concord-agent/workDirs</agent.work.dir.base>
     </properties>
 
     <dependencies>
@@ -558,6 +559,7 @@
                                             <DOCKER_HOST>${docker.daemon.addr}</DOCKER_HOST>
                                             <SERVER_API_BASE_URL>http://localhost:${it.server.port}</SERVER_API_BASE_URL>
                                             <SERVER_WEBSOCKET_URL>ws://localhost:${it.server.port}/websocket</SERVER_WEBSOCKET_URL>
+                                            <WORK_DIR_BASE>${agent.work.dir.base}</WORK_DIR_BASE>
                                             <WORKERS_COUNT>3</WORKERS_COUNT>
                                         </env>
                                         <labels>
