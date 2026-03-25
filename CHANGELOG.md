@@ -20,7 +20,10 @@ flaky tests
 - project: upgrade and pin versions of GHA actions
 ([#1292](https://github.com/walmartlabs/concord/pull/1292));
 - concord-server-it: attempt to fix CronIT flakiness
-([#1293](https://github.com/walmartlabs/concord/pull/1293)).
+([#1293](https://github.com/walmartlabs/concord/pull/1293));
+- concord-console2: pass test-ids directly instead of using
+wrappers
+([#1296](https://github.com/walmartlabs/concord/pull/1296)).
 
 
 
