@@ -555,30 +555,6 @@
         </profile>
         <profile>
             <id>walmart</id>
-            <repositories>
-                <repository>
-                    <releases>
-                        <enabled>true</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                    <id>walmart-gec</id>
-                    <url>${public.nexusUrl}/content/groups/devtools-public</url>
-                </repository>
-            </repositories>
-            <pluginRepositories>
-                <pluginRepository>
-                    <releases>
-                        <enabled>true</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                    <id>walmart-gec</id>
-                    <url>${public.nexusUrl}/content/groups/devtools-public</url>
-                </pluginRepository>
-            </pluginRepositories>
             <distributionManagement>
                 <repository>
                     <id>${public-release.serverId}</id>
