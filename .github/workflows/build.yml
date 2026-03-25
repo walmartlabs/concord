@@ -45,9 +45,9 @@ jobs:
         include:
           - jdk_version: '17'
           - profile: 'jdk17'
-            runs_on: ubuntu-latest
+            runs_on: ubuntu-24.04
           - profile: 'jdk17-aarch64'
-            runs_on: arm64-runner-set
+            runs_on: ubuntu-24.04-arm
       fail-fast: false
 
     runs-on: ${{ matrix.runs_on }}
