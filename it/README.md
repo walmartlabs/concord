@@ -13,10 +13,20 @@ Commands:
   ./mvnw -pl it/console verify -Pit -Pdocker -Dit.test=LoginIT
   ```
 
+The `-Pdocker` IT flow uses the locally built `walmartlabs/concord-server` and
+`walmartlabs/concord-agent` images, along with their upstream dependencies. If
+you changed those areas, rebuild first with the full docker-profile command
+above before running `it/console`.
+
 Notes:
 
-- The single-test command starts Postgres, Concord Server, Concord Agent, and Selenium via Docker.
-- The first `LoginIT` run may need to pull browser images, so it can be noticeably slower than subsequent runs.
-- Failing `it/console` tests write screenshots to `it/console/target/screenshots/`.
-- New test modules should prefer `testcontainer-concord` instead of the older setup pattern used in `it/server`.
-- For broader context on prerequisites and the general `-Pit` flow, see [../README.md](../README.md).
+- The single-test command starts Postgres, Concord Server, Concord Agent,
+  and Selenium via Docker.
+- The first `LoginIT` run may need to pull browser images, so it can be
+  noticeably slower than subsequent runs.
+- Failing `it/console` tests write screenshots to
+  `it/console/target/screenshots/`.
+- New test modules should prefer `testcontainer-concord` instead of the
+  older setup pattern used in `it/server`.
+- For broader context on prerequisites and the general `-Pit` flow, see
+  [../README.md](../README.md).
