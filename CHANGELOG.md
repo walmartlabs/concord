@@ -11,6 +11,8 @@ flaky tests
 ([#1283](https://github.com/walmartlabs/concord/pull/1283));
 - project: update groovy test dependencies to 5.X
 ([#1280](https://github.com/walmartlabs/concord/pull/1280));
+- console2: upgrade to Vite 8
+([#1286](https://github.com/walmartlabs/concord/pull/1286));
 - project: add AGENTS.md, update READMEs and notes
 ([#1288](https://github.com/walmartlabs/concord/pull/1288));
 - project: enable useNativeGit in git-commit-id-plugin
