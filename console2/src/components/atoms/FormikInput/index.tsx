@@ -25,13 +25,14 @@ import { Form, FormInputProps, Input, Label } from 'semantic-ui-react';
 
 interface ExternalProps {
     validate?: (value: {}) => string | Promise<void> | undefined;
+    'data-testid'?: string;
 }
 
 type Props = FormInputProps & ExternalProps;
 
 export default class extends React.Component<Props> {
     render() {
-        const { name: fieldName, label, required, validate, ...rest } = this.props;
+        const { name: fieldName, label, required, validate, 'data-testid': dataTestId, ...rest } = this.props;
 
         return (
             <Field name={fieldName} validate={validate}>
@@ -45,7 +46,7 @@ export default class extends React.Component<Props> {
                     }
 
                     return (
-                        <Form.Field error={invalid} required={required}>
+                        <Form.Field error={invalid} required={required} data-testid={dataTestId}>
                             {label && <label>{label}</label>}
                             <Input {...rest} {...field} />
                             {invalid && error && (

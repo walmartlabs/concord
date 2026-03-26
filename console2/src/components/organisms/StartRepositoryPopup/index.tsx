@@ -22,12 +22,12 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 import { push as pushHistory } from 'connected-react-router';
-import ReactJson from 'react-json-view';
 import { Button, Dropdown, DropdownItemProps, Message, Table } from 'semantic-ui-react';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import { StartProcessResponse } from '../../../api/process';
 import { actions, State as ProcessState } from '../../../state/data/processes';
+import { ReactJson } from '../../atoms';
 import { GitHubLink, RequestErrorMessage, SingleOperationPopup } from '../../molecules';
 import { get as getRepo, RepositoryMeta } from '../../../api/org/project/repository';
 import { RefreshRepositoryPopup } from '../../organisms';
