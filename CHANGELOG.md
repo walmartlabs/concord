@@ -32,6 +32,8 @@ found via fallback lookup
 ([#1292](https://github.com/walmartlabs/concord/pull/1292));
 - concord-server-it: attempt to fix CronIT flakiness
 ([#1293](https://github.com/walmartlabs/concord/pull/1293));
+- project: update dependencies
+([#1294](https://github.com/walmartlabs/concord/pull/1294));
 - concord-console2: pass test-ids directly instead of using
 wrappers
 ([#1296](https://github.com/walmartlabs/concord/pull/1296)).
