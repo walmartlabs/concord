@@ -7,10 +7,13 @@
 - project: change label for arm64 GHA runners, fix more
 flaky tests
 ([#1268](https://github.com/walmartlabs/concord/pull/1268)).
-- project: upgrade concord-maven-plugin to 0.0.37
-([#1283](https://github.com/walmartlabs/concord/pull/1283));
 - project: update groovy test dependencies to 5.X
 ([#1280](https://github.com/walmartlabs/concord/pull/1280));
+- project: upgrade concord-maven-plugin to 0.0.37
+([#1283](https://github.com/walmartlabs/concord/pull/1283));
+- concord-server: add GitHub user mapping for user when
+found via fallback lookup
+([#1285](https://github.com/walmartlabs/concord/pull/1285));
 - console2: upgrade to Vite 8
 ([#1286](https://github.com/walmartlabs/concord/pull/1286));
 - project: add AGENTS.md, update READMEs and notes
