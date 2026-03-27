@@ -26,6 +26,8 @@ found via fallback lookup
 ([#1288](https://github.com/walmartlabs/concord/pull/1288));
 - project: enable useNativeGit in git-commit-id-plugin
 ([#1289](https://github.com/walmartlabs/concord/pull/1289));
+- project: update Node version
+([#1291](https://github.com/walmartlabs/concord/pull/1291));
 - project: upgrade and pin versions of GHA actions
 ([#1292](https://github.com/walmartlabs/concord/pull/1292));
 - concord-server-it: attempt to fix CronIT flakiness
