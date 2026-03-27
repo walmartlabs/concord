@@ -2,6 +2,12 @@
 
 ## [2.39.0] - TBD
 
+### Added
+
+- concord-server, queue-client: include requirements in
+ProcessResponse
+([#1287](https://github.com/walmartlabs/concord/pull/1287)).
+
 ### Changed
 
 - project: change label for arm64 GHA runners, fix more
