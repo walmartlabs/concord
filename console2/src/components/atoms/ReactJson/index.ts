@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2026 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,16 @@
  * limitations under the License.
  * =====
  */
+import type { ComponentType } from 'react';
+import ReactJsonModule, { type ReactJsonViewProps } from 'react-json-view';
 
-export { default as FormikCheckbox } from './FormikCheckbox';
-export { default as FormikDropdown } from './FormikDropdown';
-export { default as FormikFileInput } from './FormikFileInput';
-export { default as FormikInput } from './FormikInput';
-export { default as RefreshButton } from './RefreshButton';
-export { default as ReactJson } from './ReactJson';
-export { default as Truncate } from './Truncate';
-export { default as TableSearchFilter } from './TableSearchFilter';
+type ReactJsonModuleShape = ComponentType<ReactJsonViewProps> & {
+    default?: ComponentType<ReactJsonViewProps>;
+};
+
+// Vite 8 can surface this UMD dependency as either the component or a module object.
+const ReactJson =
+    (ReactJsonModule as ReactJsonModuleShape).default ??
+    (ReactJsonModule as ReactJsonModuleShape);
+
+export default ReactJson;
