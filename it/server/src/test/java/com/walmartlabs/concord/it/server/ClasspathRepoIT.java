@@ -61,6 +61,6 @@ public class ClasspathRepoIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(pe.getInstanceId());
-        assertLog(".*OK.*", ab);
+        assertLog("^.*\\[INFO \\] OK$", ab);
     }
 }
