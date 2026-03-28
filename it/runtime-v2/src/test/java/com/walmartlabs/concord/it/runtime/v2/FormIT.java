@@ -269,7 +269,7 @@ public class FormIT extends AbstractTest {
         http.disconnect();
     }
 
-    @SuppressWarnings({"unchecked", "UnstableApiUsage"})
+    @SuppressWarnings({"unchecked"})
     private static Map<String, Object> getDataJs(ConcordRule concord, UUID instanceId, String formName) throws Exception {
         URL url = new URL(concord.apiBaseUrl() + "/forms/" + instanceId + "/" + formName + "/form/data.js");
         HttpURLConnection http = (HttpURLConnection) url.openConnection();
@@ -282,7 +282,7 @@ public class FormIT extends AbstractTest {
             String str = CharStreams.toString(new InputStreamReader(is, StandardCharsets.UTF_8));
             ScriptEngine se = new ScriptEngineManager().getEngineByName("js");
             Object result = se.eval(str);
-            assertTrue(result instanceof Map);
+            assertInstanceOf(Map.class, result);
             return (Map<String, Object>) result;
         } finally {
             http.disconnect();
