@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2026 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,68 +17,59 @@
  * limitations under the License.
  * =====
  */
-
-import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
+import { useCallback, useState } from 'react';
 
 import { ConcordId, RequestError } from '../../../api/common';
-import { actions, State } from '../../../state/data/processes';
+import { killBulk as apiKillBulk } from '../../../api/process';
 import { SingleOperationPopup } from '../../molecules';
 
-interface ExternalProps {
+interface Props {
     data: ConcordId[];
     refresh: () => void;
     trigger: (onClick: () => void) => React.ReactNode;
 }
 
-interface DispatchProps {
-    reset: () => void;
-    onConfirm: () => void;
-}
+const BulkCancelProcessPopup = ({ data, refresh, trigger }: Props) => {
+    const [cancelling, setCancelling] = useState(false);
+    const [success, setSuccess] = useState(false);
+    const [error, setError] = useState<RequestError>();
 
-interface StateProps {
-    cancelling: boolean;
-    success: boolean;
-    error: RequestError;
-}
+    const reset = useCallback(() => {
+        setCancelling(false);
+        setSuccess(false);
+        setError(undefined);
+    }, []);
 
-type Props = DispatchProps & ExternalProps & StateProps;
+    const onConfirm = useCallback(async () => {
+        setCancelling(true);
+        setSuccess(false);
+        setError(undefined);
 
-class BulkCancelProcessPopup extends React.Component<Props> {
-    render() {
-        const { trigger, cancelling, success, error, reset, refresh, onConfirm } = this.props;
+        try {
+            await apiKillBulk(data);
+            setSuccess(true);
+        } catch (e) {
+            setError(e);
+        } finally {
+            setCancelling(false);
+        }
+    }, [data]);
 
-        return (
-            <SingleOperationPopup
-                trigger={trigger}
-                title="Cancel the process(es)?"
-                introMsg={<p>Are you sure you want to cancel the selected process(es)?</p>}
-                running={cancelling}
-                runningMsg={<p>Cancelling...</p>}
-                success={success}
-                successMsg={<p>The cancel command was sent successfully.</p>}
-                error={error}
-                reset={reset}
-                onConfirm={onConfirm}
-                onDone={refresh}
-            />
-        );
-    }
-}
+    return (
+        <SingleOperationPopup
+            trigger={trigger}
+            title="Cancel the process(es)?"
+            introMsg={<p>Are you sure you want to cancel the selected process(es)?</p>}
+            running={cancelling}
+            runningMsg={<p>Cancelling...</p>}
+            success={success}
+            successMsg={<p>The cancel command was sent successfully.</p>}
+            error={error}
+            reset={reset}
+            onConfirm={onConfirm}
+            onDone={refresh}
+        />
+    );
+};
 
-const mapStateToProps = ({ processes }: { processes: State }): StateProps => ({
-    cancelling: processes.cancelBulkProcess.running,
-    success: !!processes.cancelBulkProcess.response,
-    error: processes.cancelBulkProcess.error
-});
-
-const mapDispatchToProps = (
-    dispatch: Dispatch<AnyAction>,
-    { data }: ExternalProps
-): DispatchProps => ({
-    reset: () => dispatch(actions.resetBulk()),
-    onConfirm: () => dispatch(actions.cancelBulk(data))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(BulkCancelProcessPopup);
+export default BulkCancelProcessPopup;
