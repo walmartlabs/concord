@@ -181,9 +181,9 @@ public abstract class AbstractServerIT {
     }
 
     protected static Path createTempFile(String suffix) throws IOException {
-        Path tmpDir = Files.createTempFile("test", suffix);
-        Files.setPosixFilePermissions(tmpDir, PosixFilePermissions.fromString("rw-r--r--"));
-        return tmpDir;
+        Path tmpFile = PathUtils.createTempFile("test", suffix);
+        Files.setPosixFilePermissions(tmpFile, PosixFilePermissions.fromString("rw-r--r--"));
+        return tmpFile;
     }
 
     @SuppressWarnings("unchecked")

@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>2.36.1-SNAPSHOT</version>
+        <version>2.38.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -48,18 +48,11 @@
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-ext-jdk15on</artifactId>
-            <version>1.70</version> <!-- TODO use version in future targetplatform -->
+            <artifactId>bcpkix-jdk18on</artifactId>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk15on</artifactId>
-            <version>1.70</version> <!-- TODO use version in future targetplatform -->
-        </dependency>
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
-            <version>1.70</version>
+            <artifactId>bcprov-jdk18on</artifactId>
         </dependency>
         <dependency>
             <groupId>org.immutables</groupId>

@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
 import java.io.*;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -512,9 +513,15 @@ public class GitClient {
                 StringBuilder sb = new StringBuilder();
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
                     String line;
+                    long bytesRead = 0;
+
                     while ((line = reader.readLine()) != null) {
+                        bytesRead += line.getBytes().length;
+
                         log.info("GIT (stdout): {}", hideSensitiveData(line));
-                        sb.append(line).append("\n");
+                        if (bytesRead <= cfg.maxGitCliOutputBytes()) {
+                            sb.append(line).append("\n");
+                        }
                     }
                 }
                 return sb;
@@ -524,9 +531,14 @@ public class GitClient {
                 StringBuilder sb = new StringBuilder();
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()))) {
                     String line;
+                    long bytesRead = 0;
                     while ((line = reader.readLine()) != null) {
+                        bytesRead += line.getBytes().length;
+
                         log.info("GIT (stderr): {}", hideSensitiveData(line));
-                        sb.append(line).append("\n");
+                        if (bytesRead <= cfg.maxGitCliOutputBytes()) {
+                            sb.append(line).append("\n");
+                        }
                     }
                 }
                 return sb;

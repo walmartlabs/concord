@@ -73,6 +73,11 @@ public interface GitClientConfiguration {
         return 1;
     }
 
+    @Value.Default
+    default long maxGitCliOutputBytes() {
+        return 512;
+    }
+
     static ImmutableGitClientConfiguration.Builder builder() {
         return ImmutableGitClientConfiguration.builder();
     }

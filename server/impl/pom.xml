@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.server</groupId>
         <artifactId>parent</artifactId>
-        <version>2.36.1-SNAPSHOT</version>
+        <version>2.38.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -117,6 +117,14 @@
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-jackson2-provider</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-jaxb-annotations</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
@@ -408,6 +416,7 @@
                 <configuration>
                     <verbose>false</verbose>
                     <dotGitDirectory>${project.basedir}/../../.git</dotGitDirectory>
+                    <useNativeGit>true</useNativeGit>
                 </configuration>
             </plugin>
         </plugins>

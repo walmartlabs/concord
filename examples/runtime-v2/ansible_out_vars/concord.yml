@@ -1,7 +1,7 @@
 configuration:
   runtime: "concord-v2"
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.83.0"
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:2.36.0"
 
 flows:
   default:

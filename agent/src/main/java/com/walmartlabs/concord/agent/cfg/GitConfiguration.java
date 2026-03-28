@@ -46,6 +46,7 @@ public class GitConfiguration implements OauthTokenConfig {
     private final Duration sshTimeout;
     private final int sshTimeoutRetryCount;
     private final boolean skip;
+    private final long maxGitCliOutputBytes;
     private final List<? extends Config> authConfigs;
 
     @Inject
@@ -62,6 +63,7 @@ public class GitConfiguration implements OauthTokenConfig {
         this.sshTimeout = cfg.getDuration("git.sshTimeout");
         this.sshTimeoutRetryCount = cfg.getInt("git.sshTimeoutRetryCount");
         this.skip = cfg.getBoolean("git.skip");
+        this.maxGitCliOutputBytes = cfg.getLong("git.maxGitCliOutputBytes");
         this.authConfigs = cfg.getConfigList("git.systemAuth");
     }
 
@@ -114,6 +116,10 @@ public class GitConfiguration implements OauthTokenConfig {
 
     public boolean isSkip() {
         return skip;
+    }
+
+    public long maxGitCliOutputBytes() {
+        return maxGitCliOutputBytes;
     }
 
     public List<MappingAuthConfig> getSystemAuth() {

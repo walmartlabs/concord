@@ -33,6 +33,8 @@ import java.util.Base64;
 
 public final class ConcordConfiguration {
 
+    private static final String DEPENDENCY_RESOLVE_TIMEOUT = System.getProperty("it.runtime.v2.dependencyResolveTimeout", "2 minutes");
+
     private static final Path sharedDir = Paths.get(System.getProperty("java.io.tmpdir")).resolve("concord-it");
 
     public static Path sharedDir() {
@@ -55,7 +57,7 @@ public final class ConcordConfiguration {
         ConcordRule concord = new ConcordRule()
                 .pathToRunnerV1(null)
                 .pathToRunnerV2("target/runner-v2.jar")
-                .dbImage(System.getProperty("db.image", "library/postgres:10"))
+                .dbImage(System.getProperty("db.image", "library/postgres:14"))
                 .serverImage(System.getProperty("server.image", "walmartlabs/concord-server"))
                 .agentImage(System.getProperty("agent.image", "walmartlabs/concord-agent"))
                 .pullPolicy(PullPolicy.defaultPolicy())
@@ -76,14 +78,16 @@ public final class ConcordConfiguration {
                         }
                     }
                     concord-agent {
-                        dependencyResolveTimeout = "30 seconds"
+                        dependencyResolveTimeout = "%%dependencyResolveTimeout%%"
                         logMaxDelay = "250 milliseconds"
                         pollInterval = "250 milliseconds"
                         prefork {
                             enabled = true
                         }
                     }
-                    """.replaceAll("%%sharedDir%%", sharedDir().toString()));
+                    """
+                        .replace("%%sharedDir%%", sharedDir().toString())
+                        .replace("%%dependencyResolveTimeout%%", DEPENDENCY_RESOLVE_TIMEOUT));
 
         boolean localMode = Boolean.parseBoolean(System.getProperty("it.local.mode"));
         if (localMode) {

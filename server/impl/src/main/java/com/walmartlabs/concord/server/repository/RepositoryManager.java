@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -73,6 +74,8 @@ public class RepositoryManager {
                 .httpLowSpeedTime(gitCfg.getHttpLowSpeedTime())
                 .sshTimeout(gitCfg.getSshTimeout())
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
+                .maxGitCliOutputBytes(gitCfg.maxGitCliOutputBytes())
+                .allowedSchemes(new HashSet<>(gitCfg.getAllowedSchemes()))
                 .build();
 
         this.gitCfg = gitCfg;

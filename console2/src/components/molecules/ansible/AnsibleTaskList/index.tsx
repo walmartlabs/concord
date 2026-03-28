@@ -19,11 +19,11 @@
  */
 
 import * as React from 'react';
-import ReactJson from 'react-json-view';
 import { Header, Table } from 'semantic-ui-react';
 
 import { AnsibleEvent, AnsibleStatus } from '../../../../api/process/ansible';
 import { ProcessEventEntry } from '../../../../api/process/event';
+import { ReactJson } from '../../../atoms';
 import { HumanizedDuration, LocalTimestamp } from '../../../molecules';
 
 interface Props {

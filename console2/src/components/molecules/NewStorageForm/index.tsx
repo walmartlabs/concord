@@ -21,8 +21,7 @@
 import * as React from 'react';
 import { useEffect } from 'react';
 import { Dropdown, Form, Input, Label } from 'semantic-ui-react';
-import { useForm } from 'react-hook-form';
-import { ValidateResult } from 'react-hook-form/dist/types';
+import { useForm, type ValidateResult } from 'react-hook-form';
 
 import { ConcordKey } from '../../../api/common';
 import { StorageVisibility } from '../../../api/org/jsonstore';
