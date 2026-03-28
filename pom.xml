@@ -72,7 +72,7 @@
         <jooq.version>3.14.0</jooq.version>
         <junit.version>5.9.1</junit.version>
         <liquibase.version>4.29.2</liquibase.version>
-        <node.version>24.10.0</node.version>
+        <node.version>24.14.0</node.version>
         <frontend.plugin.version>1.15.1</frontend.plugin.version>
 
         <!-- used for ITs and db module(s) schema generation -->
@@ -555,30 +555,6 @@
         </profile>
         <profile>
             <id>walmart</id>
-            <repositories>
-                <repository>
-                    <releases>
-                        <enabled>true</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                    <id>walmart-gec</id>
-                    <url>${public.nexusUrl}/content/groups/devtools-public</url>
-                </repository>
-            </repositories>
-            <pluginRepositories>
-                <pluginRepository>
-                    <releases>
-                        <enabled>true</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                    <id>walmart-gec</id>
-                    <url>${public.nexusUrl}/content/groups/devtools-public</url>
-                </pluginRepository>
-            </pluginRepositories>
             <distributionManagement>
                 <repository>
                     <id>${public-release.serverId}</id>
