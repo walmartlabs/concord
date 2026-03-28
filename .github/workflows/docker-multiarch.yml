@@ -1,4 +1,4 @@
-name: docker-multiarch
+name: docker-multiarch-compare
 
 on:
   workflow_dispatch:
@@ -19,14 +19,26 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    name: build (${{ matrix.host_label }})
+    runs-on: ${{ matrix.runs_on }}
     timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host_label: amd64-host
+            runs_on: ubuntu-24.04
+            qemu_platforms: arm64
+          - host_label: arm64-host
+            runs_on: ubuntu-24.04-arm
+            qemu_platforms: amd64
     env:
       WORK: ${{ github.workspace }}/tmp
       MAVEN_REPO_LOCAL: ${{ github.workspace }}/tmp/.m2/repository
       IMAGE_PLATFORMS: linux/amd64,linux/arm64
       LOCAL_REGISTRY: localhost:5000
       DOCKER_NAMESPACE: localhost:5000/walmartlabs
+      HOST_LABEL: ${{ matrix.host_label }}
 
     steps:
       - name: Checkout
@@ -61,9 +73,9 @@ jobs:
         uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: ${{ env.MAVEN_REPO_LOCAL }}
-          key: ${{ runner.os }}-maven-docker-multiarch-${{ hashFiles('**/pom.xml', '.github/settings.xml') }}
+          key: ${{ runner.os }}-${{ matrix.host_label }}-maven-docker-multiarch-${{ hashFiles('**/pom.xml', '.github/settings.xml') }}
           restore-keys: |
-            ${{ runner.os }}-maven-docker-multiarch-
+            ${{ runner.os }}-${{ matrix.host_label }}-maven-docker-multiarch-
             ${{ runner.os }}-maven-
 
       - name: Set up JDK
@@ -75,7 +87,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: arm64
+          platforms: ${{ matrix.qemu_platforms }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
@@ -98,6 +110,9 @@ jobs:
 
           docker logs registry
           exit 1
+
+      - name: Record timing start
+        run: echo "BUILD_START_TS=$(date +%s)" >> "$GITHUB_ENV"
 
       - name: Build Docker images
         run: |
@@ -135,6 +150,23 @@ jobs:
             printf '%s\n' "${output}" | grep -q 'linux/amd64'
             printf '%s\n' "${output}" | grep -q 'linux/arm64'
           done
+
+      - name: Summarize duration
+        if: always()
+        run: |
+          end_ts=$(date +%s)
+          duration=$((end_ts - BUILD_START_TS))
+
+          {
+            echo "## Multi-Arch Build Comparison"
+            echo
+            echo "- Host runner: ${HOST_LABEL}"
+            echo "- Native architecture: ${RUNNER_ARCH}"
+            echo "- Emulated architecture via QEMU: ${{ matrix.qemu_platforms }}"
+            echo "- Target platforms: ${IMAGE_PLATFORMS}"
+            echo "- Build and verify duration: ${duration}s"
+            echo "- Final step status: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Remove local Concord artifacts from Maven cache
         if: success()
