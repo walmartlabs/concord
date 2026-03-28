@@ -36,7 +36,9 @@ found via fallback lookup
 ([#1294](https://github.com/walmartlabs/concord/pull/1294));
 - concord-console2: pass test-ids directly instead of using
 wrappers
-([#1296](https://github.com/walmartlabs/concord/pull/1296)).
+([#1296](https://github.com/walmartlabs/concord/pull/1296));
+- project: improve mvnd (and Maven 4) support
+([#1297](https://github.com/walmartlabs/concord/pull/1297)).
 
 
 
