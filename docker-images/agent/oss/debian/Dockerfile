@@ -1,8 +1,8 @@
 ARG docker_namespace=walmartlabs
-ARG container_version=latest
+ARG concord_version=latest
 ARG DEBIAN_FRONTEND=noninteractive
 
-FROM ${docker_namespace}/concord-ansible:${container_version}
+FROM ${docker_namespace}/concord-ansible:${concord_version}
 LABEL maintainer="amith.k.b@walmartlabs.com"
 
 ENV DOCKER_HOST=tcp://dind:2375
