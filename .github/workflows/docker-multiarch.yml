@@ -109,7 +109,7 @@ jobs:
             -Djava.io.tmpdir="${WORK}" \
             -DskipTests \
             -Pgha -Pdocker \
-            -pl docker-images -am \
+            -pl docker-images/base,docker-images/ansible,docker-images/agent,docker-images/server,docker-images/agent-operator -am \
             -Ddocker.namespace="${DOCKER_NAMESPACE}" \
             -Ddocker.imageTag="${BUILD_TAG}" \
             -Ddocker.extraTags= \
