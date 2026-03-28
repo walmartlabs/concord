@@ -47,27 +47,30 @@ public record CliConfig(Map<String, CliConfigContext> contexts) {
     private static final Logger log = LoggerFactory.getLogger(CliConfig.class);
 
     public static CliConfig.CliConfigContext load(Verbosity verbosity, String context, Overrides overrides) {
-        Path baseDir = Paths.get(System.getProperty("user.home"), ".concord");
-        Path cfgFile = baseDir.resolve("cli.yaml");
-        if (!Files.exists(cfgFile)) {
-            cfgFile = baseDir.resolve("cli.yml");
+        try {
+            return loadOrThrow(verbosity, context, overrides);
+        } catch (Exception e) {
+            handleCliConfigErrorAndBail(resolveCliConfigPath().toAbsolutePath().toString(), e);
+            throw new IllegalStateException("should be unreachable");
         }
-        if (!Files.exists(cfgFile)) {
-            CliConfig cfg = CliConfig.create();
-            return assertCliConfigContext(cfg, context).withOverrides(overrides);
+    }
+
+    public static CliConfig.CliConfigContext loadOrThrow(Verbosity verbosity,
+                                                         String context,
+                                                         Overrides overrides) throws IOException {
+
+        var cfgFile = resolveCliConfigPath();
+        if (Files.notExists(cfgFile)) {
+            var cfg = CliConfig.create();
+            return requireCliConfigContext(cfg, context).withOverrides(overrides);
         }
 
         if (verbosity.verbose()) {
             log.info("Using CLI configuration file: {} (\"{}\" context)", cfgFile, context);
         }
 
-        try {
-            CliConfig cfg = loadConfigFile(cfgFile);
-            return assertCliConfigContext(cfg, context).withOverrides(overrides);
-        } catch (Exception e) {
-            handleCliConfigErrorAndBail(cfgFile.toAbsolutePath().toString(), e);
-            throw new IllegalStateException("should be unreachable");
-        }
+        var cfg = loadConfigFile(cfgFile);
+        return requireCliConfigContext(cfg, context).withOverrides(overrides);
     }
 
     private static void handleCliConfigErrorAndBail(String cfgPath, Throwable e) {
@@ -93,11 +96,10 @@ public record CliConfig(Map<String, CliConfigContext> contexts) {
         System.exit(1);
     }
 
-    private static CliConfig.CliConfigContext assertCliConfigContext(CliConfig config, String context) {
-        CliConfig.CliConfigContext result = config.contexts().get(context);
+    private static CliConfig.CliConfigContext requireCliConfigContext(CliConfig config, String context) {
+        var result = config.contexts().get(context);
         if (result == null) {
-            System.out.println(ansi().fgRed().a("Configuration context not found: ").a(context).a(". Check the CLI configuration file."));
-            System.exit(1);
+            throw new IllegalArgumentException("Configuration context not found: " + context + ". Check the CLI configuration file.");
         }
         return result;
     }
@@ -163,6 +165,20 @@ public record CliConfig(Map<String, CliConfigContext> contexts) {
     }
 
     public record Overrides(@Nullable Path secretStoreDir, @Nullable Path vaultDir, @Nullable String vaultId) {
+    }
+
+    static boolean hasUserConfig() {
+        return Files.exists(Paths.get(System.getProperty("user.home"), ".concord", "cli.yaml"))
+                || Files.exists(Paths.get(System.getProperty("user.home"), ".concord", "cli.yml"));
+    }
+
+    private static Path resolveCliConfigPath() {
+        var baseDir = Paths.get(System.getProperty("user.home"), ".concord");
+        var cfgFile = baseDir.resolve("cli.yaml");
+        if (Files.exists(cfgFile)) {
+            return cfgFile;
+        }
+        return baseDir.resolve("cli.yml");
     }
 
     public record CliConfigContext(@Nullable RemoteRunConfiguration remoteRun, SecretsConfiguration secrets) {
