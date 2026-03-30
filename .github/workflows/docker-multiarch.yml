@@ -3,18 +3,20 @@ name: docker-multiarch
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: Git tag to build and the Docker tag to apply
+      ref:
+        description: Git ref to build (branch, tag, or commit SHA)
         required: true
         type: string
-  pull_request:
-    branches: [ 'master' ]
+      docker_tag:
+        description: Docker tag to apply to the published images
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: docker-multiarch-${{ github.event.pull_request.number || github.event.inputs.tag || github.ref }}
+  group: docker-multiarch-${{ github.event.inputs.docker_tag || github.event.inputs.ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -25,34 +27,27 @@ jobs:
       WORK: ${{ github.workspace }}/tmp
       MAVEN_REPO_LOCAL: ${{ github.workspace }}/tmp/.m2/repository
       IMAGE_PLATFORMS: linux/amd64,linux/arm64
-      LOCAL_REGISTRY: localhost:5000
-      DOCKER_NAMESPACE: localhost:5000/walmartlabs
+      DOCKER_NAMESPACE: ibodrov
 
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.inputs.ref }}
 
       - name: Resolve build target
         run: |
-          if [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]; then
-            build_tag='${{ github.event.inputs.tag }}'
+          build_ref='${{ github.event.inputs.ref }}'
+          build_tag='${{ github.event.inputs.docker_tag }}'
 
-            if ! [[ "${build_tag}" =~ ^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$ ]]; then
-              echo "Tag '${build_tag}' is not a valid Docker tag." >&2
-              exit 1
-            fi
-
-            if ! git fetch --no-tags --depth=1 origin "refs/tags/${build_tag}:refs/tags/${build_tag}"; then
-              echo "Git tag '${build_tag}' was not found in origin." >&2
-              exit 1
-            fi
-
-            git checkout --detach "refs/tags/${build_tag}"
-          else
-            build_tag="pr-${{ github.event.pull_request.number }}-$(git rev-parse --short=12 HEAD)"
+          if ! [[ "${build_tag}" =~ ^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$ ]]; then
+            echo "Tag '${build_tag}' is not a valid Docker tag." >&2
+            exit 1
           fi
 
           echo "BUILD_TAG=${build_tag}" >> "$GITHUB_ENV"
+          echo "BUILD_REF=${build_ref}" >> "$GITHUB_ENV"
+          echo "Using BUILD_REF=${build_ref}"
           echo "Using BUILD_TAG=${build_tag}"
           git rev-parse HEAD
 
@@ -84,20 +79,11 @@ jobs:
           driver-opts: |
             network=host
 
-      - name: Start local registry
-        run: |
-          docker run -d -p 5000:5000 --name registry registry:2
-
-          for i in $(seq 1 30); do
-            if curl -fsS "http://${LOCAL_REGISTRY}/v2/" >/dev/null; then
-              exit 0
-            fi
-
-            sleep 1
-          done
-
-          docker logs registry
-          exit 1
+      - name: Login to DockerHub
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        with:
+          username: ${{ secrets.OSS_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.OSS_DOCKERHUB_PASSWORD }}
 
       - name: Build Docker images
         run: |
