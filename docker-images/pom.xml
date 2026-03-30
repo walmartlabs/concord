@@ -29,6 +29,9 @@
         <docker.namespace>walmartlabs</docker.namespace>
         <docker.allowPull>true</docker.allowPull>
         <concord.baseDir>/opt/concord</concord.baseDir>
+        <docker.imageTag>${project.version}</docker.imageTag>
+        <docker.extraTags>-t ${docker.tagbase}:latest</docker.extraTags>
+        <docker.output>--load</docker.output>
         <image.platforms>linux/amd64</image.platforms>
     </properties>
 
@@ -46,33 +49,24 @@
                             </goals>
                             <configuration>
                                 <skip>${docker.skip}</skip>
-                                <executable>docker</executable>
+                                <executable>sh</executable>
                                 <workingDirectory>${project.basedir}</workingDirectory>
                                 <arguments>
-                                    <argument>buildx</argument>
-                                    <argument>build</argument>
-
-                                    <argument>-t</argument>
-                                    <argument>${docker.tagbase}:latest</argument>
-                                    <argument>-t</argument>
-                                    <argument>${docker.tagbase}:${project.version}</argument>
-
-                                    <argument>-f</argument>
-                                    <argument>${docker.file}</argument>
-
-                                    <argument>--build-arg=docker_namespace=${docker.namespace}</argument>
-                                    <argument>--build-arg=concord_version=${project.version}</argument>
-                                    <argument>--build-arg=jdk_version=${jdk.version}</argument>
-
-                                    <argument>--network</argument>
-                                    <argument>host</argument>
-
-                                    <argument>--platform=${image.platforms}</argument>
-
-                                    <argument>--load</argument>
-                                    <argument>--pull=${docker.allowPull}</argument>
-
-                                    <argument>.</argument>
+                                    <argument>-ec</argument>
+                                    <argument>
+                                        docker buildx build \
+                                          -t ${docker.tagbase}:${docker.imageTag} \
+                                          ${docker.extraTags} \
+                                          -f ${docker.file} \
+                                          --build-arg=docker_namespace=${docker.namespace} \
+                                          --build-arg=concord_version=${docker.imageTag} \
+                                          --build-arg=jdk_version=${jdk.version} \
+                                          --network host \
+                                          --platform=${image.platforms} \
+                                          ${docker.output} \
+                                          --pull=${docker.allowPull} \
+                                          .
+                                    </argument>
                                 </arguments>
                             </configuration>
                         </execution>
@@ -92,13 +86,13 @@
         <profile>
             <id>jdk17-aarch64</id>
             <properties>
-                <image.platforms>linux/aarch64</image.platforms>
+                <image.platforms>linux/arm64</image.platforms>
             </properties>
         </profile>
         <profile>
             <id>jdk21-aarch64</id>
             <properties>
-                <image.platforms>linux/aarch64</image.platforms>
+                <image.platforms>linux/arm64</image.platforms>
             </properties>
         </profile>
     </profiles>

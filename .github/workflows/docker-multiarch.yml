@@ -1,0 +1,142 @@
+name: docker-multiarch
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to build (branch, tag, or commit SHA)
+        required: true
+        type: string
+      docker_tag:
+        description: Docker tag to apply to the published images
+        required: true
+        type: string
+  pull_request:
+    branches: [ 'master' ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-multiarch-${{ github.event.pull_request.number || github.event.inputs.docker_tag || github.event.inputs.ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      WORK: ${{ github.workspace }}/tmp
+      MAVEN_REPO_LOCAL: ${{ github.workspace }}/tmp/.m2/repository
+      IMAGE_PLATFORMS: linux/amd64,linux/arm64
+      DOCKER_NAMESPACE: ibodrov
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ref || github.event.pull_request.head.sha }}
+
+      - name: Resolve build target
+        run: |
+          if [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]; then
+            build_ref='${{ github.event.inputs.ref }}'
+            build_tag='${{ github.event.inputs.docker_tag }}'
+          else
+            build_ref='${{ github.event.pull_request.head.sha }}'
+            build_tag="pr-${{ github.event.pull_request.number }}-$(git rev-parse --short=12 HEAD)"
+          fi
+
+          if ! [[ "${build_tag}" =~ ^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$ ]]; then
+            echo "Tag '${build_tag}' is not a valid Docker tag." >&2
+            exit 1
+          fi
+
+          echo "BUILD_TAG=${build_tag}" >> "$GITHUB_ENV"
+          echo "BUILD_REF=${build_ref}" >> "$GITHUB_ENV"
+          echo "Using BUILD_REF=${build_ref}"
+          echo "Using BUILD_TAG=${build_tag}"
+          git rev-parse HEAD
+
+      - name: Restore Maven cache
+        id: restore-maven-cache
+        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        with:
+          path: ${{ env.MAVEN_REPO_LOCAL }}
+          key: ${{ runner.os }}-maven-docker-multiarch-${{ hashFiles('**/pom.xml', '.github/settings.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-docker-multiarch-
+            ${{ runner.os }}-maven-
+
+      - name: Set up JDK
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+        with:
+          driver: docker-container
+          driver-opts: |
+            network=host
+
+      - name: Login to DockerHub
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        with:
+          username: ${{ secrets.OSS_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.OSS_DOCKERHUB_PASSWORD }}
+
+      - name: Build Docker images
+        run: |
+          mkdir -p "${WORK}" "${MAVEN_REPO_LOCAL}"
+          chmod 1777 "${WORK}"
+
+          ./mvnw -s .github/settings.xml -B clean package \
+            -Dmaven.repo.local="${MAVEN_REPO_LOCAL}" \
+            -Djava.io.tmpdir="${WORK}" \
+            -DskipTests \
+            -Pgha -Pdocker \
+            -pl docker-images/base,docker-images/ansible,docker-images/agent,docker-images/server,docker-images/agent-operator -am \
+            -Ddocker.namespace="${DOCKER_NAMESPACE}" \
+            -Ddocker.imageTag="${BUILD_TAG}" \
+            -Ddocker.extraTags= \
+            -Ddocker.output=--push \
+            -Dimage.platforms="${IMAGE_PLATFORMS}"
+
+      - name: Verify multi-arch manifests
+        run: |
+          images=(
+            concord-base
+            concord-ansible
+            concord-agent
+            concord-server
+            concord-agent-operator
+          )
+
+          for image in "${images[@]}"; do
+            ref="${DOCKER_NAMESPACE}/${image}:${BUILD_TAG}"
+            echo "Inspecting ${ref}"
+            output=$(docker buildx imagetools inspect "${ref}")
+            printf '%s\n' "${output}"
+
+            printf '%s\n' "${output}" | grep -q 'linux/amd64'
+            printf '%s\n' "${output}" | grep -q 'linux/arm64'
+          done
+
+      - name: Remove local Concord artifacts from Maven cache
+        if: success()
+        run: rm -rf "${MAVEN_REPO_LOCAL}/com/walmartlabs/concord"
+
+      - name: Save Maven cache
+        if: success() && steps.restore-maven-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        with:
+          path: ${{ env.MAVEN_REPO_LOCAL }}
+          key: ${{ steps.restore-maven-cache.outputs.cache-primary-key }}
