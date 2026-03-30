@@ -11,16 +11,19 @@ on:
         description: Docker tag to apply to the published images
         required: true
         type: string
+  pull_request:
+    branches: [ 'master' ]
 
 permissions:
   contents: read
 
 concurrency:
-  group: docker-multiarch-${{ github.event.inputs.docker_tag || github.event.inputs.ref || github.ref }}
+  group: docker-multiarch-${{ github.event.pull_request.number || github.event.inputs.docker_tag || github.event.inputs.ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     env:
@@ -33,12 +36,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          ref: ${{ github.event.inputs.ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ref || github.event.pull_request.head.sha }}
 
       - name: Resolve build target
         run: |
-          build_ref='${{ github.event.inputs.ref }}'
-          build_tag='${{ github.event.inputs.docker_tag }}'
+          if [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]; then
+            build_ref='${{ github.event.inputs.ref }}'
+            build_tag='${{ github.event.inputs.docker_tag }}'
+          else
+            build_ref='${{ github.event.pull_request.head.sha }}'
+            build_tag="pr-${{ github.event.pull_request.number }}-$(git rev-parse --short=12 HEAD)"
+          fi
 
           if ! [[ "${build_tag}" =~ ^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$ ]]; then
             echo "Tag '${build_tag}' is not a valid Docker tag." >&2
