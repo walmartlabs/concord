@@ -24,13 +24,18 @@ import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static java.util.Collections.singletonMap;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PolicyIT extends AbstractServerIT {
 
@@ -248,6 +253,52 @@ public class PolicyIT extends AbstractServerIT {
         assertLog(".*Maximum processTimeout value exceeded.*", ab);
     }
 
+    @Test
+    public void testEffectiveYamlMaxSizeAllowed() throws Exception {
+        long maxSize = 1024 * 4; // 4KB
+        ProcessEntry pir = startEffectiveYamlProcess(Map.of("maxSizeInBytes", maxSize));
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        byte[] contents = assertDoesNotThrow(
+                () -> getEffectiveYaml(processApi, pir.getInstanceId()));
+
+        assertTrue(contents.length < maxSize);
+    }
+
+    @Test
+    public void testEffectiveYamlMaxSizeTooLarge() throws Exception {
+        ProcessEntry pir = startEffectiveYamlProcess(Map.of("maxSizeInBytes", 512));
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ApiException ex = assertThrows(ApiException.class,
+                () -> getEffectiveYaml(processApi, pir.getInstanceId()));
+
+        assertEquals(404, ex.getCode());
+
+        byte[] ab = getLog(pir.getInstanceId());
+        assertLog(".*Effective concord.yml is too large \\(\\d+ bytes\\) to persist, skipping.*", 1, ab);
+    }
+
+    @Test
+    public void testEffectiveYamlMaxSizeTooLargeNoLogging() throws Exception {
+        ProcessEntry pir = startEffectiveYamlProcess(Map.of("maxSizeInBytes", 512, "logWarning", false));
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ApiException ex = assertThrows(ApiException.class,
+                () -> getEffectiveYaml(processApi, pir.getInstanceId()));
+
+        assertEquals(404, ex.getCode());
+
+        byte[] ab = getLog(pir.getInstanceId());
+        assertLog(".*Effective concord.yml is too large to persist\\(\\d+ bytes\\), skipping.*", 0, ab);
+    }
+
     private String createOrg() throws ApiException {
         String orgName = "org_" + randomString();
 
@@ -281,5 +332,36 @@ public class PolicyIT extends AbstractServerIT {
                 .projectName(projectName));
 
         return policyName;
+    }
+
+    private ProcessEntry startEffectiveYamlProcess(Map<String, Object> rule) throws Exception {
+        String orgName = createOrg();
+        String projectName = createProject(orgName);
+
+        Map<String, Object> rules = Map.of("effectiveYaml", rule);
+
+        createPolicy(orgName, projectName, rules);
+
+        // ---
+
+        byte[] payload = archive(ProcessIT.class.getResource("effectiveYaml").toURI());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("org", orgName);
+        input.put("project", projectName);
+
+        StartProcessResponse spr = start(input);
+
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(StatusEnum.FINISHED, pir.getStatus());
+
+        return pir;
+    }
+
+    private byte[] getEffectiveYaml(ProcessApi processApi, UUID instanceId) throws ApiException, IOException {
+        try (var response = processApi.downloadStateFile(instanceId, ".concord/effective.concord.yml")) {
+            return response.readAllBytes();
+        }
     }
 }

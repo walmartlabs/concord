@@ -120,6 +120,10 @@ public interface PolicyEngineRules extends Serializable {
     @Nullable
     KvRule kvRule();
 
+    @JsonProperty("effectiveYaml")
+    @Nullable
+    EffectiveYamlRule effectiveYamlRule();
+
     static ImmutablePolicyEngineRules.Builder builder() {
         return ImmutablePolicyEngineRules.builder();
     }
