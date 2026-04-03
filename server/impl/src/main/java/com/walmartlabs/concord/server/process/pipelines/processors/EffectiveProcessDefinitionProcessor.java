@@ -57,14 +57,12 @@ public class EffectiveProcessDefinitionProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        PolicyEngine policy = payload.getHeader(Payload.POLICY);
-        if (policy == null) {
-            return chain.process(payload);
-        }
+        EffectiveYamlPolicy policy = getPolicy(payload);
 
-        EffectiveYamlPolicy effectiveYamlPolicy = policy.getEffectiveYamlPolicy();
+        boolean renderEffectiveYaml = policy == null || policy.renderEffectiveYaml();
+        boolean logWarning = policy == null || policy.logWarning();
 
-        if (!effectiveYamlPolicy.renderEffectiveYaml()) {
+        if (!renderEffectiveYaml) {
             return chain.process(payload);
         }
 
@@ -85,10 +83,10 @@ public class EffectiveProcessDefinitionProcessor implements PayloadProcessor {
             pd.serialize(opts, out);
 
             byte[] bytes = out.toByteArray();
-            boolean isTooLarge = effectiveYamlPolicy.isTooLarge(bytes.length);
+            boolean isTooLarge = policy == null ? false : policy.isTooLarge(bytes.length);
 
             if (bytes.length == 0 || isTooLarge) {
-                if (isTooLarge && effectiveYamlPolicy.logWarning()) {
+                if (isTooLarge && logWarning) {
                     logManager.warn(payload.getProcessKey(), "Effective concord.yml is too large to persist ({} bytes), skipping...", bytes.length);
                 }
 
@@ -104,6 +102,11 @@ public class EffectiveProcessDefinitionProcessor implements PayloadProcessor {
             throw new ProcessException(payload.getProcessKey(), "Error while processing effective concord.yml: " + e.getMessage(), e);
         }
         return chain.process(payload);
+    }
+
+    private static EffectiveYamlPolicy getPolicy(Payload payload) {
+        PolicyEngine policy = payload.getHeader(Payload.POLICY);
+        return policy == null ? null : policy.getEffectiveYamlPolicy();
     }
 
     private Map<String, Object> sanitizeConfiguration(Map<String, Object> cfg) {

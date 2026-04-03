@@ -280,7 +280,7 @@ public class PolicyIT extends AbstractServerIT {
         assertEquals(404, ex.getCode());
 
         byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*Effective concord.yml is too large \\(\\d+ bytes\\) to persist, skipping.*", 1, ab);
+        assertLog(".*Effective concord.yml is too large to persist \\(\\d+ bytes\\), skipping.*", 1, ab);
     }
 
     @Test
@@ -297,6 +297,19 @@ public class PolicyIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Effective concord.yml is too large to persist\\(\\d+ bytes\\), skipping.*", 0, ab);
+    }
+
+    @Test
+    public void testEffectiveYamlDisabled() throws Exception {
+        ProcessEntry pir = startEffectiveYamlProcess(Map.of("renderEffectiveYaml", false));
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ApiException ex = assertThrows(ApiException.class,
+                () -> getEffectiveYaml(processApi, pir.getInstanceId()));
+
+        assertEquals(404, ex.getCode());
     }
 
     private String createOrg() throws ApiException {
