@@ -49,6 +49,7 @@ public class PolicyEngine {
     private final RuntimePolicy runtimePolicy;
     private final CronTriggerPolicy cronTriggerPolicy;
     private final KvPolicy kvPolicy;
+    private final EffectiveYamlPolicy effectiveYamlPolicy;
 
     public PolicyEngine(PolicyEngineRules rules) {
         this(Collections.emptyList(), rules);
@@ -82,6 +83,7 @@ public class PolicyEngine {
         this.defaultProcessCfgPolicy = new ProcessCfgPolicy(rules.defaultProcessCfg());
         this.defaultDependencyVersionsPolicy = new DependencyVersionsPolicy(rules.dependencyVersions());
         this.statePolicy = new StatePolicy(rules.stateRules());
+        this.effectiveYamlPolicy = new EffectiveYamlPolicy(rules.effectiveYamlRule());
         this.runtimePolicy = new RuntimePolicy(rules.runtimeRule());
         this.cronTriggerPolicy = new CronTriggerPolicy(rules.cronTriggerRule());
         this.kvPolicy = new KvPolicy(rules.kvRule());
@@ -177,6 +179,10 @@ public class PolicyEngine {
 
     public KvPolicy getKvPolicy() {
         return kvPolicy;
+    }
+
+    public EffectiveYamlPolicy getEffectiveYamlPolicy() {
+        return effectiveYamlPolicy;
     }
 
     @Override

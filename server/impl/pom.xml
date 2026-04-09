@@ -119,6 +119,14 @@
             <artifactId>resteasy-jackson2-provider</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-jaxb-annotations</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-core</artifactId>
         </dependency>
@@ -408,6 +416,7 @@
                 <configuration>
                     <verbose>false</verbose>
                     <dotGitDirectory>${project.basedir}/../../.git</dotGitDirectory>
+                    <useNativeGit>true</useNativeGit>
                 </configuration>
             </plugin>
         </plugins>

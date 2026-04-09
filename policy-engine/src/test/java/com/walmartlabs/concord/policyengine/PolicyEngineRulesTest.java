@@ -23,8 +23,8 @@ package com.walmartlabs.concord.policyengine;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
+import java.io.InputStream;
 import java.net.URI;
-import java.net.URL;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -326,15 +326,14 @@ public class PolicyEngineRulesTest {
     }
 
     @Test
-    @SuppressWarnings("rawtypes")
     public void deserializeTest6() throws Exception {
         PolicyEngineRules r = om.readValue(resource("policy6.json"), PolicyEngineRules.class);
 
-        assertEquals(2, ((Map)r.defaultProcessCfg().get("defaultTaskVariables")).size());
+        assertEquals(2, ((Map<?,?>)r.defaultProcessCfg().get("defaultTaskVariables")).size());
     }
 
-    private static URL resource(String name) {
-        URL r = PolicyEngineRulesTest.class.getResource(name);
+    private static InputStream resource(String name) {
+        InputStream r = PolicyEngineRulesTest.class.getResourceAsStream(name);
         assertNotNull(r);
         return r;
     }
