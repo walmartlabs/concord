@@ -6,7 +6,10 @@
 
 - concord-server, queue-client: include requirements in
 ProcessResponse
-([#1287](https://github.com/walmartlabs/concord/pull/1287)).
+([#1287](https://github.com/walmartlabs/concord/pull/1287));
+- concord-server: add EffectiveYamlPolicy to control
+rendering and persisting of effective.concord.yml
+([#1301](https://github.com/walmartlabs/concord/pull/1301)).
 
 ### Changed
 
