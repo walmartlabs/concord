@@ -38,7 +38,9 @@ found via fallback lookup
 wrappers
 ([#1296](https://github.com/walmartlabs/concord/pull/1296));
 - project: improve mvnd (and Maven 4) support
-([#1297](https://github.com/walmartlabs/concord/pull/1297)).
+([#1297](https://github.com/walmartlabs/concord/pull/1297));
+- console2: update dependencies
+([#1302](https://github.com/walmartlabs/concord/pull/1302)).
 
 
 
