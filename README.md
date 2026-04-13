@@ -131,8 +131,7 @@ See the [examples](examples) directory.
 - build and push the Docker images:
   ```
   $ git checkout RELEASE_TAG
-  $ ./mvnw -f docker-images clean package -Pdocker
-  $ ./docker-images/push.sh RELEASE_TAG
+  $ gh workflow run docker-multiarch.yml --ref master -f ref=RELEASE_TAG -f docker_tag=RELEASE_TAG -f docker_namespace=walmartlabs
   ```
 - sync to [Sonatype](https://oss.sonatype.org/);
 - check the Central repository if the sync is complete:
@@ -141,7 +140,7 @@ See the [examples](examples) directory.
   ```
 - once the sync is complete, push the `latest` Docker images:
   ```
-  $ ./docker-images/push.sh latest
+  $ gh workflow run docker-multiarch.yml --ref master -f ref=RELEASE_TAG -f docker_tag=latest -f docker_namespace=walmartlabs
   ```
 
 ## Development Notes

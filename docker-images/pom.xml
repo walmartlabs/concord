@@ -62,6 +62,8 @@
 
                                     <argument>--build-arg=docker_namespace=${docker.namespace}</argument>
                                     <argument>--build-arg=concord_version=${project.version}</argument>
+                                    <argument>--build-arg=concord_base_image=${docker.namespace}/concord-base:${project.version}</argument>
+                                    <argument>--build-arg=concord_ansible_image=${docker.namespace}/concord-ansible:${project.version}</argument>
                                     <argument>--build-arg=jdk_version=${jdk.version}</argument>
 
                                     <argument>--network</argument>
@@ -92,13 +94,13 @@
         <profile>
             <id>jdk17-aarch64</id>
             <properties>
-                <image.platforms>linux/aarch64</image.platforms>
+                <image.platforms>linux/arm64</image.platforms>
             </properties>
         </profile>
         <profile>
             <id>jdk21-aarch64</id>
             <properties>
-                <image.platforms>linux/aarch64</image.platforms>
+                <image.platforms>linux/arm64</image.platforms>
             </properties>
         </profile>
     </profiles>
