@@ -48,7 +48,7 @@ import java.util.UUID;
 
 public class LdapRealm extends AbstractLdapRealm {
 
-    private static final String REALM_NAME = "ldap";
+    static final String REALM_NAME = "ldap";
 
     private static final Logger log = LoggerFactory.getLogger(LdapRealm.class);
 
