@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.security.rememberme;
  */
 
 import com.walmartlabs.concord.server.cfg.RememberMeConfiguration;
-import com.walmartlabs.concord.server.security.SecurityUtils;
+import com.walmartlabs.concord.server.security.PrincipalCollectionSerializer;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.lang.io.SerializationException;
@@ -43,7 +43,7 @@ import java.util.Optional;
 public class ConcordRememberMeManager extends CookieRememberMeManager {
 
     @Inject
-    public ConcordRememberMeManager(RememberMeConfiguration cfg) {
+    public ConcordRememberMeManager(RememberMeConfiguration cfg, PrincipalCollectionSerializer principalCollectionSerializer) {
         byte[] cipherKey = cfg.getCipherKey();
         if (cipherKey != null) {
             if (cipherKey.length != 16 && cipherKey.length != 24 && cipherKey.length != 32) {
@@ -55,7 +55,7 @@ public class ConcordRememberMeManager extends CookieRememberMeManager {
         int maxAge = (int) cfg.getRememberMeMaxAge().getSeconds();
         getCookie().setMaxAge(maxAge);
 
-        setSerializer(new PrincipalCollectionSerializer());
+        setSerializer(new RememberMePrincipalSerializer(principalCollectionSerializer));
     }
 
     @Override
@@ -92,15 +92,22 @@ public class ConcordRememberMeManager extends CookieRememberMeManager {
                 .ifPresent(cookie -> super.forgetIdentity(subject));
     }
 
-    private static class PrincipalCollectionSerializer implements Serializer<PrincipalCollection> {
+    private static class RememberMePrincipalSerializer implements Serializer<PrincipalCollection> {
+
+        private final PrincipalCollectionSerializer principalCollectionSerializer;
+
+        private RememberMePrincipalSerializer(PrincipalCollectionSerializer principalCollectionSerializer) {
+            this.principalCollectionSerializer = principalCollectionSerializer;
+        }
+
         @Override
         public byte[] serialize(PrincipalCollection principalCollection) throws SerializationException {
-            return SecurityUtils.serialize(principalCollection);
+            return principalCollectionSerializer.serialize(principalCollection);
         }
 
         @Override
         public PrincipalCollection deserialize(byte[] bytes) throws SerializationException {
-            return SecurityUtils.deserialize(bytes).orElse(null);
+            return principalCollectionSerializer.deserialize(bytes).orElse(null);
         }
     }
 }

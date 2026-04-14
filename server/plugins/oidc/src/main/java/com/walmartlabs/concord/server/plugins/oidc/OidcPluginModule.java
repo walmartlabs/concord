@@ -21,8 +21,10 @@ package com.walmartlabs.concord.server.plugins.oidc;
  */
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.walmartlabs.concord.server.boot.FilterChainConfigurator;
 import com.walmartlabs.concord.server.boot.filters.AuthenticationHandler;
+import com.walmartlabs.concord.server.security.PrincipalSerializer;
 import org.apache.shiro.realm.Realm;
 
 import javax.inject.Named;
@@ -39,5 +41,7 @@ public class OidcPluginModule extends AbstractModule {
         newSetBinder(binder(), AuthenticationHandler.class).addBinding().to(OidcAuthenticationHandler.class);
         newSetBinder(binder(), FilterChainConfigurator.class).addBinding().to(OidcFilterChainConfigurator.class);
         newSetBinder(binder(), Realm.class).addBinding().to(OidcRealm.class);
+        newSetBinder(binder(), new TypeLiteral<PrincipalSerializer<?>>() {
+        }).addBinding().to(OidcTokenPrincipalSerializer.class);
     }
 }
