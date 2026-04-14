@@ -1,4 +1,4 @@
-# Slack
+# Slack Tasks
 
 The `slack` plugin supports interaction with the [Slack](https://slack.com/)
 messaging platform.

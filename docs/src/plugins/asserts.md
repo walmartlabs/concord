@@ -1,4 +1,4 @@
-# Asserts Plugin
+# Asserts Task
 
 _Available since version 2.19.0_
 

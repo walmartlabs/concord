@@ -1,4 +1,4 @@
-# Key-value
+# Key Value Task
 
 The key value `kv` task provides access to the server's simple string
 key-value store. All data is project-scoped e.a. processes only see the values

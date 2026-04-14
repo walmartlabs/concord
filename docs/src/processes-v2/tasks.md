@@ -5,7 +5,7 @@
 - [Development](#development)
   - [Complete Example](#complete-example)
   - [Creating Tasks](#creating-tasks)
-  - [Dry-run mode](dry-run-mode)
+  - [Dry-run mode](#dry-run-mode)
   - [Task Output](#task-output)
   - [Injectable Services](#injectable-services)
   - [Call Context](#call-context)

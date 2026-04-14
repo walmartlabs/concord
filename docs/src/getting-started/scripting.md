@@ -1,4 +1,4 @@
-# Scripting
+# Scripting Support
 
 Concord flows can include scripting language snippets for execution. The
 scripts run within the same JVM that is running Concord, and hence need to

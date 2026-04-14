@@ -1,4 +1,4 @@
-# Concord
+# Concord Task
 
 The `concord` task allows users to start and manage new processes from within
 running processes.

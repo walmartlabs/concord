@@ -1,4 +1,4 @@
-# Security
+# Security and Permissions
 
 - [Authentication](#authentication)
 - [Secret Management](#secret-management)

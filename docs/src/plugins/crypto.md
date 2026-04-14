@@ -1,4 +1,4 @@
-# Crypto
+# Crypto Task
 
 The `crypto` task provides methods to work with Concord's
 [secrets store](../api/secret.html) as well as the methods to encrypt and

@@ -1,4 +1,4 @@
-# Generic
+# Generic Triggers
 
 - [Version 1](#generic-v1)
 - [Version 2](#generic-v2)

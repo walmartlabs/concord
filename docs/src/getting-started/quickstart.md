@@ -1,4 +1,4 @@
-# Quick Start
+# Quickstart
 
 If you have [installed your own Concord server](./installation.md) or have
 access to a server already, you can set up your first simple Concord process

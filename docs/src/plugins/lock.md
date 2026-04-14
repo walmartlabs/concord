@@ -1,4 +1,4 @@
-# Lock
+# Lock Task
 
 The `lock` and `unlock` tasks provide methods to allow exclusive execution between
 one or more running Concord processes.

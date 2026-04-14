@@ -1,4 +1,4 @@
-# SMTP
+# SMTP Task
 
 To send email notifications as a step of a flow, use the `smtp` task.
 

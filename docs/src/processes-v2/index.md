@@ -1,4 +1,4 @@
-# Overview
+# Processes v2
 
 - [Directory Structure](#directory-structure)
 - [Additional Concord Files](#additional-concord-files)
@@ -255,7 +255,7 @@ execution in addition to the defined [variables](#variables):
   [session token](../getting-started/security.md#using-session-tokens) can be
   used to call Concord API from flows.
 
-LDAP attributes must be allowed in [the configuration](./configuration.md#server-configuration-file).
+LDAP attributes must be allowed in [the configuration](../getting-started/configuration.md#server-configuration-file).
 
 **Note:** only the processes started using [the browser link](../api/process.md#browser)
 provide the `requestInfo` variable. In other cases (e.g. processes

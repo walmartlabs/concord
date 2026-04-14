@@ -1,4 +1,4 @@
-# Overview
+# CLI
 
 Concord provides a command-line tool to simplify some of the common operations.
 

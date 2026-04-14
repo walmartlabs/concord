@@ -1,4 +1,4 @@
-# HTTP
+# HTTP Task
 
 The HTTP task provides a basic HTTP/RESTful client that allows you to call
 RESTful endpoints. It is provided automatically by Concord, and does not

@@ -1,4 +1,4 @@
-# JSON Store
+# JSON Store Task
 
 The `jsonStore` task provides access to [JSON Stores](../getting-started/json-store.html).
 It allows users to add, update and remove JSON store items using Concord flows.

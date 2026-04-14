@@ -1,4 +1,4 @@
-# Manual
+# Manual Triggers
 
 Manual triggers can be used to add items to the repository action drop down
 in the Concord Console, similar to the default added _Run_ action.

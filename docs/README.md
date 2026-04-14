@@ -27,3 +27,9 @@ To build and view the documentation:
    The documentation will be available at `http://localhost:3000`
 
 The built documentation is output to the `book/` directory.
+
+## Website Metadata
+
+`website.yml` stores the Jekyll metadata used when the docs are imported into
+`walmartlabs/concord-website`. Keep that metadata out of the Markdown files so mdBook can render the
+same files without a front-matter stripping preprocessor.

@@ -1,4 +1,4 @@
-# Overview
+# Triggers
 
 Triggers provide a way to automatically start specific Concord flows as a
 response to specific events.

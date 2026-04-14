@@ -1,4 +1,4 @@
-# Ansible
+# Ansible Task
 
 Concord supports running [Ansible](https://www.ansible.com/) playbooks with the
 `ansible` task as part of any flow. This allows you to provision and manage

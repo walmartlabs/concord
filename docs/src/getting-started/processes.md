@@ -1,4 +1,4 @@
-# Processes
+# Overview
 
 A process is an execution of flows written in [Concord DSL](../processes-v1/index.md#dsl)
 running in a [project](../getting-started/projects.md) or standalone.

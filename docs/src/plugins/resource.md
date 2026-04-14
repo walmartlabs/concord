@@ -1,4 +1,4 @@
-# Resource
+# Resource Task
 
 The `resource` task provides methods to persist data to a file in the scope of a
 process as well as to load data from files. The `resource` task supports JSON,

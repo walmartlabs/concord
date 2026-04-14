@@ -1,4 +1,4 @@
-# Docker
+# Docker Support
 
 Concord supports running [Docker](https://hub.docker.com/) images within a process flow.
 

@@ -22,7 +22,7 @@ Process `configuration` values can come from different sources: the section in
 the `concord.yml` file, request parameters, policies, etc. Here's the order in
 which all `configuration` sources are merged before the process starts:
 
-- environment-specific [default values](./configuration.md#default-process-variables);
+- environment-specific [default values](../getting-started/configuration.md#default-process-variables);
 - [defaultCfg](../getting-started/policies.md#default-process-configuration-rule) policy values;
 - the current organization's configuration values;
 - the current [project's configuration](../api/project.md#get-project-configuration) values;

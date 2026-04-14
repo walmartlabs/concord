@@ -1,4 +1,4 @@
-# Sleep
+# Sleep Task
 
 The `sleep` task provides methods to make the process wait or suspend for a
 certain amount of time.

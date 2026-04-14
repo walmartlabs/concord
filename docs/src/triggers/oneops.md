@@ -1,4 +1,4 @@
-# OneOps
+# OneOps Triggers
 
 - [Version 2](#oneops-v2)
 - [Version 1](#oneops-v1)

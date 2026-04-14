@@ -281,7 +281,7 @@ flows:
 ```
 
 The way Concord handles timeouts is described in more details in
-the [error handling](./flows.md#handling-cancellations-failures-and-timeouts)
+the [error handling](./flows.md#error-handling)
 section.
 
 #### Running Timeout
