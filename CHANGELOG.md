@@ -7,6 +7,11 @@
 - project: build multi-arch Docker images
 ([#1299](https://github.com/walmartlabs/concord/pull/1299)).
 
+### Changed
+
+- project: respect PR labels in docker-multiarch flow
+([#1304](https://github.com/walmartlabs/concord/pull/1304)).
+
 
 
 ## [2.39.0] - 2026-04-09
