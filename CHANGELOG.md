@@ -4,6 +4,9 @@
 
 ### Added
 
+- runtime-v2: initial support for JSON schema validation for
+task in/out parameters
+([#1263](https://github.com/walmartlabs/concord/pull/1263));
 - project: build multi-arch Docker images
 ([#1299](https://github.com/walmartlabs/concord/pull/1299)).
 
