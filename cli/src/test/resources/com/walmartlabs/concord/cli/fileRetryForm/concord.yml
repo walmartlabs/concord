@@ -1,0 +1,14 @@
+flows:
+  default:
+    - form: uploadForm
+    - log: "after upload retry: ${uploadForm.age}"
+
+forms:
+  uploadForm:
+    - attachment:
+        label: Attachment
+        type: file
+    - age:
+        label: Age
+        type: int
+        min: 21
