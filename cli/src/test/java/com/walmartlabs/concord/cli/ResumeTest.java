@@ -30,7 +30,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -288,6 +290,92 @@ class ResumeTest extends AbstractTest {
     }
 
     @Test
+    void nonInteractiveFormInputIsConvertedAndValidated() throws Exception {
+        var source = preparePayload("validatedForm");
+        var targetDir = CliPaths.defaultTargetDir(source);
+        var invalidInputFile = tempDir.resolve("invalidValidatedForm.yml");
+        var validInputFile = tempDir.resolve("validValidatedForm.yml");
+
+        Files.writeString(invalidInputFile, """
+                validatedForm:
+                  name: Alice
+                  age: 10
+                  choice: green
+                """);
+        Files.writeString(validInputFile, """
+                name: Alice
+                age: 33
+                choice: red
+                """);
+
+        var runExitCode = executeIn(source, runArgs());
+        assertEquals(CliExitCodes.SUSPENDED, runExitCode, () -> "out:\n" + stdOut() + "\n\nerr:\n" + stdErr());
+
+        var invalidResumeExitCode = executeIn(source, List.of("resume", "--input-file", invalidInputFile.toString()));
+        assertEquals(CliExitCodes.INPUT_REQUIRED, invalidResumeExitCode, () -> "out:\n" + stdOut() + "\n\nerr:\n" + stdErr());
+        assertTrue(stdErr().contains("Invalid form input:"), stdErr());
+        assertTrue(stdErr().contains("Age"), stdErr());
+        assertTrue(stdErr().contains("Choice"), stdErr());
+        assertTrue(Files.exists(targetDir.resolve("_attachments").resolve("_state").resolve("instance")));
+
+        var afterInvalidResume = stdOut();
+        var validResumeExitCode = executeIn(source, List.of("resume", "--input-file", validInputFile.toString()));
+
+        assertEquals(CliExitCodes.SUCCESS, validResumeExitCode, () -> "out:\n" + stdOut() + "\n\nerr:\n" + stdErr());
+
+        var resumeOutput = stdOut().substring(afterInvalidResume.length());
+        assertTrue(resumeOutput.contains("validated form: name=Alice, age=33, choice=red, note=default-note, readOnly=locked"), resumeOutput);
+        assertTrue(resumeOutput.contains("...done!"), resumeOutput);
+        assertFalse(Files.exists(targetDir.resolve("_attachments").resolve("_state")), targetDir.toString());
+    }
+
+    @Test
+    void fileUploadFormRetryCleansFailedAttemptTempFiles() throws Exception {
+        var source = preparePayload("fileRetryForm");
+        var uploadFile = tempDir.resolve("upload.txt");
+        Files.writeString(uploadFile, "upload contents");
+
+        var beforeTmpFiles = listTmpFiles("attachment");
+        var exitCode = withInput("\n" + uploadFile + "\n10\n" + uploadFile + "\n33\n", () -> executeIn(source, runArgs()));
+
+        assertEquals(CliExitCodes.SUCCESS, exitCode, () -> "out:\n" + stdOut() + "\n\nerr:\n" + stdErr());
+        assertTrue(stdOut().contains("after upload retry: 33"), stdOut());
+        assertEquals(beforeTmpFiles, listTmpFiles("attachment"));
+    }
+
+    @Test
+    void resumeMetadataStoresAbsolutePathsAndResolvesOldRelativePaths() {
+        var metadata = LocalSuspendPersistence.ResumeMetadata.from(Path.of("work"),
+                Path.of("resume"),
+                Path.of("defaultTaskVars.json"),
+                Path.of("deps"),
+                "default",
+                new CliConfig.Overrides(Path.of("secrets"), Path.of("vault"), "test"),
+                List.of(),
+                null,
+                null);
+
+        assertTrue(Path.of(metadata.workDir()).isAbsolute());
+        assertTrue(Path.of(metadata.resumeDir()).isAbsolute());
+        assertTrue(Path.of(metadata.defaultTaskVars()).isAbsolute());
+        assertTrue(Path.of(metadata.depsCacheDir()).isAbsolute());
+        assertTrue(Path.of(metadata.cliConfig().secretStoreDir()).isAbsolute());
+        assertTrue(Path.of(metadata.cliConfig().vaultDir()).isAbsolute());
+
+        var oldMetadata = new LocalSuspendPersistence.ResumeMetadata(null,
+                null,
+                List.of(),
+                "resume",
+                "resume/target",
+                "defaultTaskVars.json",
+                "deps",
+                new LocalSuspendPersistence.CliConfigData("default", false, "secrets", "vault", "test"));
+
+        assertEquals(Path.of("resume", "defaultTaskVars.json").normalize().toAbsolutePath(), oldMetadata.defaultTaskVarsPath());
+        assertEquals(Path.of("resume", "deps").normalize().toAbsolutePath(), oldMetadata.depsCacheDirPath());
+    }
+
+    @Test
     void suspendedMetadataOmitsApiKeyAndResumeReloadsStoredContextAndOverrides() throws Exception {
         var source = preparePayload("secretResume");
         var targetDir = CliPaths.defaultTargetDir(source);
@@ -456,5 +544,15 @@ class ResumeTest extends AbstractTest {
             count++;
         }
         return count;
+    }
+
+    private static Set<Path> listTmpFiles(String prefix) throws IOException {
+        try (var files = Files.list(PathUtils.TMP_DIR)) {
+            return files.filter(p -> {
+                        var fileName = p.getFileName().toString();
+                        return fileName.startsWith(prefix) && fileName.endsWith(".tmp");
+                    })
+                    .collect(Collectors.toSet());
+        }
     }
 }

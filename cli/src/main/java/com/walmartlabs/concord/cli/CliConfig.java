@@ -62,7 +62,7 @@ public record CliConfig(Map<String, CliConfigContext> contexts) {
         var cfgFile = resolveCliConfigPath();
         if (Files.notExists(cfgFile)) {
             var cfg = CliConfig.create();
-            return requireCliConfigContext(cfg, context).withOverrides(overrides);
+            return requireCliConfigContext(cfg, context, false).withOverrides(overrides);
         }
 
         if (verbosity.verbose()) {
@@ -70,7 +70,7 @@ public record CliConfig(Map<String, CliConfigContext> contexts) {
         }
 
         var cfg = loadConfigFile(cfgFile);
-        return requireCliConfigContext(cfg, context).withOverrides(overrides);
+        return requireCliConfigContext(cfg, context, true).withOverrides(overrides);
     }
 
     private static void handleCliConfigErrorAndBail(String cfgPath, Throwable e) {
@@ -79,6 +79,11 @@ public record CliConfig(Map<String, CliConfigContext> contexts) {
             if (ex.getCause() instanceof IllegalArgumentException) {
                 e = ex.getCause();
             }
+        }
+
+        if (e instanceof MissingContextException) {
+            System.out.println(ansi().fgRed().a(e.getMessage()));
+            System.exit(1);
         }
 
         // handle YAML errors
@@ -96,12 +101,26 @@ public record CliConfig(Map<String, CliConfigContext> contexts) {
         System.exit(1);
     }
 
-    private static CliConfig.CliConfigContext requireCliConfigContext(CliConfig config, String context) {
+    private static CliConfig.CliConfigContext requireCliConfigContext(CliConfig config, String context, boolean userConfigLoaded) {
         var result = config.contexts().get(context);
         if (result == null) {
-            throw new IllegalArgumentException("Configuration context not found: " + context + ". Check the CLI configuration file.");
+            throw new MissingContextException(context, userConfigLoaded);
         }
         return result;
+    }
+
+    static final class MissingContextException extends IllegalArgumentException {
+
+        private MissingContextException(String context, boolean userConfigLoaded) {
+            super(message(context, userConfigLoaded));
+        }
+
+        private static String message(String context, boolean userConfigLoaded) {
+            if (userConfigLoaded) {
+                return "Configuration context not found: " + context + ". Check the CLI configuration file.";
+            }
+            return "Configuration context not found: " + context + ". No CLI configuration file was found in ~/.concord; only the built-in 'default' context is available.";
+        }
     }
 
     @VisibleForTesting

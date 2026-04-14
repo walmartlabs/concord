@@ -127,12 +127,12 @@ public class Resume implements Callable<Integer> {
                 return selectedEvent.exitCode();
             }
 
-            var dependencyManager = LocalCliRuntime.createDependencyManager(Path.of(metadata.depsCacheDir()));
+            var dependencyManager = LocalCliRuntime.createDependencyManager(metadata.depsCacheDirPath());
             var injector = LocalCliRuntime.createInjector(workDir,
                     metadata.runnerConfiguration(),
                     metadata.processConfiguration(),
                     metadata.loadCliConfigContext(verbosity),
-                    Path.of(metadata.defaultTaskVars()),
+                    metadata.defaultTaskVarsPath(),
                     dependencyManager,
                     verbosity);
 
@@ -166,6 +166,15 @@ public class Resume implements Callable<Integer> {
                     }
 
                     var input = loadInput();
+                    if (selectedForm != null) {
+                        try {
+                            input = LocalFormInputs.convertAndValidate(selectedForm, input, true).payload(selectedForm);
+                        } catch (LocalFormInputs.InputException e) {
+                            printFormInputErrors(e);
+                            LocalSuspendPrinter.printInputRequired(resumeDir, waitingEvents, pendingForms, interactiveAvailable);
+                            return CliExitCodes.INPUT_REQUIRED;
+                        }
+                    }
                     snapshot = runner.resume(snapshot, Collections.singleton(selectedEvent.event()), input);
                 }
             } catch (ParallelExecutionException | UserDefinedException e) {
@@ -312,6 +321,13 @@ public class Resume implements Callable<Integer> {
     private static int err(int exitCode, String message) {
         System.err.println(message);
         return exitCode;
+    }
+
+    private static void printFormInputErrors(LocalFormInputs.InputException e) {
+        for (var message : e.messages()) {
+            System.err.println("Invalid form input: " + message);
+        }
+        System.err.println();
     }
 
     private boolean usesFormMode(List<Form> pendingForms) {

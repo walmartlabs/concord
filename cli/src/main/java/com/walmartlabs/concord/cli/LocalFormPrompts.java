@@ -20,19 +20,14 @@ package com.walmartlabs.concord.cli;
  * =====
  */
 
-import com.walmartlabs.concord.forms.DefaultFormValidator;
-import com.walmartlabs.concord.forms.DefaultFormValidatorLocale;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.forms.FormField;
 import com.walmartlabs.concord.forms.FormFields;
 import com.walmartlabs.concord.forms.FormFields.FileField;
-import com.walmartlabs.concord.forms.FormUtils;
-import com.walmartlabs.concord.forms.ValidationError;
 
 import java.io.BufferedReader;
 import java.io.Console;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
@@ -42,7 +37,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import static com.walmartlabs.concord.forms.Constants.FORM_FILES;
@@ -50,12 +44,10 @@ import static org.fusesource.jansi.Ansi.ansi;
 
 final class LocalFormPrompts {
 
-    private static final DefaultFormValidatorLocale LOCALE = new DefaultFormValidatorLocale();
     private static final String HIDDEN_VALUE = "<hidden>";
 
     private final Path workDir;
     private final boolean printHeader;
-    private final DefaultFormValidator validator;
     private final PromptIo promptIo;
 
     LocalFormPrompts(Path workDir) {
@@ -65,7 +57,6 @@ final class LocalFormPrompts {
     LocalFormPrompts(Path workDir, boolean printHeader) {
         this.workDir = workDir;
         this.printHeader = printHeader;
-        this.validator = new DefaultFormValidator(LOCALE);
         this.promptIo = new PromptIo();
     }
 
@@ -78,29 +69,18 @@ final class LocalFormPrompts {
             }
             collectRawValues(form, rawValues);
 
-            Map<String, Object> converted = null;
             try {
-                converted = convert(form, rawValues);
-                var errors = validator.validate(form, converted);
-                if (!errors.isEmpty()) {
-                    cleanupTempFormFiles(converted);
-                    clearSensitiveValues(form, rawValues);
-                    printValidationErrors(errors);
-                    continue;
+                var converted = LocalFormInputs.convertAndValidate(form, rawValues);
+                try {
+                    moveFormFiles(converted.values());
+                } catch (IOException e) {
+                    converted.cleanupTempFiles();
+                    throw e;
                 }
-
-                moveFormFiles(converted);
-
-                var values = new LinkedHashMap<>(converted);
-                values.remove(FORM_FILES);
-
-                var payload = new LinkedHashMap<String, Object>();
-                payload.put(form.name(), values);
-                return payload;
-            } catch (FormUtils.ValidationException e) {
-                cleanupTempFormFiles(converted);
+                return converted.payload(form);
+            } catch (LocalFormInputs.InputException e) {
                 clearSensitiveValues(form, rawValues);
-                printError(e.getMessage());
+                printInputErrors(e);
             }
         }
     }
@@ -201,53 +181,6 @@ final class LocalFormPrompts {
         return line;
     }
 
-    private Map<String, Object> convert(Form form, Map<String, Object> rawValues) throws Exception {
-        var convertedInput = new LinkedHashMap<String, Object>();
-        var opened = new ArrayList<InputStream>();
-
-        try {
-            for (var field : form.fields()) {
-                var value = rawValues.get(field.name());
-                if (value == null) {
-                    continue;
-                }
-
-                convertedInput.put(field.name(), toFormInput(value, field, opened));
-            }
-            return new LinkedHashMap<>(FormUtils.convert(LOCALE, form, convertedInput));
-        } finally {
-            for (var in : opened) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
-                }
-            }
-        }
-    }
-
-    private Object toFormInput(Object value, FormField field, List<InputStream> opened) throws IOException {
-        if (!FileField.TYPE.equals(field.type())) {
-            return value;
-        }
-
-        if (value instanceof Path) {
-            var in = Files.newInputStream((Path) value);
-            opened.add(in);
-            return in;
-        }
-
-        if (value instanceof Collection) {
-            var result = new ArrayList<>();
-            for (var item : (Collection<?>) value) {
-                result.add(toFormInput(item, field, opened));
-            }
-            return result;
-        }
-
-        return value;
-    }
-
     @SuppressWarnings("unchecked")
     private void moveFormFiles(Map<String, Object> converted) throws IOException {
         var formFiles = (Map<String, String>) converted.get(FORM_FILES);
@@ -265,29 +198,9 @@ final class LocalFormPrompts {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private static void cleanupTempFormFiles(Map<String, Object> converted) {
-        if (converted == null) {
-            return;
-        }
-
-        var formFiles = (Map<String, String>) converted.get(FORM_FILES);
-        if (formFiles == null) {
-            return;
-        }
-
-        for (var tmpFile : formFiles.values()) {
-            try {
-                Files.deleteIfExists(Path.of(tmpFile));
-            } catch (IOException ignored) {
-                // best effort cleanup for validation retries
-            }
-        }
-    }
-
-    private static void printValidationErrors(List<ValidationError> errors) {
-        for (var error : errors) {
-            printError(error.error());
+    private static void printInputErrors(LocalFormInputs.InputException e) {
+        for (var message : e.messages()) {
+            printError(message);
         }
     }
 

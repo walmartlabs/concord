@@ -166,15 +166,23 @@ final class LocalSuspendPersistence {
             return new ResumeMetadata(processConfiguration,
                     runnerConfiguration,
                     List.copyOf(activeProfiles),
-                    resumeDir.toString(),
-                    workDir.toString(),
-                    defaultTaskVars.toString(),
-                    depsCacheDir.toString(),
+                    pathToString(resumeDir),
+                    pathToString(workDir),
+                    pathToString(defaultTaskVars),
+                    pathToString(depsCacheDir),
                     CliConfigData.from(contextName, cliConfigOverrides));
         }
 
         CliConfigContext loadCliConfigContext(Verbosity verbosity) throws Exception {
-            return Objects.requireNonNull(cliConfig, "cliConfig").load(verbosity);
+            return Objects.requireNonNull(cliConfig, "cliConfig").load(verbosity, resumeDirPath());
+        }
+
+        Path defaultTaskVarsPath() {
+            return stringToPath(defaultTaskVars, resumeDirPath());
+        }
+
+        Path depsCacheDirPath() {
+            return stringToPath(depsCacheDir, resumeDirPath());
         }
 
         Path resumeDirPath() {
@@ -204,28 +212,37 @@ final class LocalSuspendPersistence {
                     overrides.vaultId());
         }
 
-        CliConfigContext load(Verbosity verbosity) throws Exception {
+        CliConfigContext load(Verbosity verbosity, Path fallbackBaseDir) throws Exception {
             try {
                 if (requiresUserConfig && !CliConfig.hasUserConfig()) {
                     throw new IllegalArgumentException("CLI configuration file is missing from ~/.concord. Resume requires the stored '" + contextName + "' context.");
                 }
-                return CliConfig.loadOrThrow(verbosity, contextName, toOverrides());
+                return CliConfig.loadOrThrow(verbosity, contextName, toOverrides(fallbackBaseDir));
             } catch (Exception e) {
                 throw new IllegalArgumentException("Unable to reload CLI configuration context '" + contextName + "' for resume: " + e.getMessage(), e);
             }
         }
 
-        private CliConfig.Overrides toOverrides() {
-            return new CliConfig.Overrides(stringToPath(secretStoreDir), stringToPath(vaultDir), vaultId);
+        private CliConfig.Overrides toOverrides(Path fallbackBaseDir) {
+            return new CliConfig.Overrides(stringToPath(secretStoreDir, fallbackBaseDir), stringToPath(vaultDir, fallbackBaseDir), vaultId);
         }
     }
 
     private static String pathToString(Path path) {
-        return path != null ? path.toString() : null;
+        return path != null ? path.normalize().toAbsolutePath().toString() : null;
     }
 
-    private static Path stringToPath(String value) {
-        return value != null ? Path.of(value) : null;
+    private static Path stringToPath(String value, Path fallbackBaseDir) {
+        if (value == null) {
+            return null;
+        }
+
+        var path = Path.of(value);
+        if (path.isAbsolute()) {
+            return path.normalize();
+        }
+
+        return fallbackBaseDir.resolve(path).normalize().toAbsolutePath();
     }
 
     private LocalSuspendPersistence() {
