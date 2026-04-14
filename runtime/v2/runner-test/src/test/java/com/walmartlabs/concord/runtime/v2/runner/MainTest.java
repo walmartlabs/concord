@@ -25,6 +25,7 @@ import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.ReentrantTaskExample;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskSchemaValidationException;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -999,6 +1000,24 @@ public class MainTest  {
         log = resume(ReentrantTaskExample.EVENT_NAME, ProcessConfiguration.builder().build());
         assertLog(log, ".*error handled: java.lang.RuntimeException: Error on resume.*");
         assertLog(log, ".*process finished.*");
+    }
+
+    @Test
+    public void testReentrantOutputValidation() throws Exception {
+        deploy("reentrantTaskSchemaValidation");
+        save(ProcessConfiguration.builder()
+                .putArguments("actionName", "boo")
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*execute .*action=boo.*");
+
+        TaskSchemaValidationException e = assertThrows(TaskSchemaValidationException.class,
+                () -> resume(ReentrantTaskExample.EVENT_NAME, ProcessConfiguration.builder().build()));
+        assertEquals("reentrantTask", e.getTaskName());
+        assertEquals("out", e.getSection());
+        assertEquals("reentrantTask.schema.json", e.getSchemaResource());
+        assertLog(runtime.lastLog(), ".*Task 'reentrantTask' out validation failed.*");
     }
 
     @Test

@@ -23,10 +23,9 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.sun.el.util.ReflectionUtil;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
+import com.walmartlabs.concord.runtime.v2.model.TaskCallValidation;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.SensitiveDataProcessor;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskException;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.*;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
@@ -81,6 +80,11 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         TaskCallOptions opts = Objects.requireNonNull(call.getOptions());
         Variables input = new MapBackedVariables(VMUtils.prepareInput(ecf, expressionEvaluator, ctx, opts.input(), opts.inputExpression()));
 
+        // Input/output validation (null-safe for backward compatibility with old serialized state)
+        TaskCallValidation validation = TaskSchemaValidation.getTaskCallValidation(ctx);
+        Class<? extends Task> taskClass = TaskSchemaValidation.getTaskClass(taskProviders, ctx, t, taskName);
+        TaskSchemaValidation.validateInput(runtime, taskName, taskClass, input, validation);
+
         TaskResult result;
         try {
             result = interceptor.invoke(callContext, Method.of(t.getClass(), "execute", Collections.singletonList(input)),
@@ -98,6 +102,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
             throw new RuntimeException(e);
         }
 
+        TaskSchemaValidation.validateOutput(runtime, taskName, taskClass, result, validation);
         TaskCallUtils.processTaskResult(runtime, ctx, taskName, opts, result);
     }
 }

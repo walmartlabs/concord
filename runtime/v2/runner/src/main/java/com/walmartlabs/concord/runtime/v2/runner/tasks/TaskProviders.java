@@ -63,6 +63,17 @@ public class TaskProviders {
         return null;
     }
 
+    public Class<? extends Task> getTaskClass(Context ctx, String key) {
+        for (TaskProvider p : taskProviders) {
+            Class<? extends Task> taskClass = p.getTaskClass(ctx, key);
+            if (taskClass != null) {
+                return taskClass;
+            }
+        }
+
+        return null;
+    }
+
     public boolean hasTask(String key) {
         for (TaskProvider p : taskProviders) {
             if (p.hasTask(key)) {
@@ -89,4 +100,3 @@ public class TaskProviders {
         return priority.value();
     }
 }
-

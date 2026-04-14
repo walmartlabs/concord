@@ -1907,7 +1907,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test1306() throws Exception {
         String msg =
-                "(006.yml): Error @ line: 8, col: 9. Unknown options: ['trash' [NULL] @ line: 8, col: 9], expected: [activeProfiles, arguments, debug, dependencies, entryPoint, events, exclusive, extraDependencies, meta, out, parallelLoopParallelism, processTimeout, requirements, runtime, suspendTimeout, template]. Remove invalid options and/or fix indentation\n" +
+                "(006.yml): Error @ line: 8, col: 9. Unknown options: ['trash' [NULL] @ line: 8, col: 9], expected: [activeProfiles, arguments, debug, dependencies, entryPoint, events, exclusive, extraDependencies, meta, out, parallelLoopParallelism, processTimeout, requirements, runtime, suspendTimeout, template, validation]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'configuration' @ line: 1, col: 1";
 
@@ -2387,6 +2387,19 @@ public class YamlErrorParserTest extends AbstractParserTest {
                         "\t\t'configuration' @ line: 1, col: 1";
 
         assertErrorMessage("errors/configuration/023.yml", msg);
+    }
+
+    @Test
+    public void test1905() throws Exception {
+        String msg =
+                "(024.yml): Error @ line: 4, col: 11. Invalid value: fatal, expected: [DISABLED, WARN, FAIL]\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'in' @ line: 4, col: 7\n" +
+                        "\t\t'taskCalls' @ line: 3, col: 5\n" +
+                        "\t\t\t'validation' @ line: 2, col: 3\n" +
+                        "\t\t\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/024.yml", msg);
     }
 
     private void assertErrorMessage(String resource, String expectedError) throws Exception {
