@@ -1,4 +1,4 @@
-# {{ page.title }}
+# Installation using Docker Compose
 
 The [Docker Compose template]({{ site.concord_source }}/tree/master/docker-images/compose)
 can be used to quickly spin up a local Concord environment.

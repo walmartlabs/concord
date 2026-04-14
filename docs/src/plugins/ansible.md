@@ -526,13 +526,12 @@ Concord provides a special
 [Ansible lookup plugin](https://docs.ansible.com/ansible/devel/plugins/lookup.html)
 to retrieve password-protected secrets in playbooks:
 
-<!-- use {% raw %}{% endraw %} tags to handle jinja templating -->
 ```yaml
-{% raw %}- hosts: local
+- hosts: local
   tasks:
   - debug:
       msg: "We got {{ lookup('concord_data_secret', 'myOrg', 'mySecret', 'myPwd') }}"
-      verbosity: 0{% endraw %}
+      verbosity: 0
 ```
 
 In this example `myOrg` is the name of the organization that owns the secret,
@@ -542,22 +541,22 @@ for accessing the secret.
 Use `None` to retrieve a secret created without a password:
 
 ```yaml
-{% raw %}- hosts: local
+- hosts: local
   tasks:
   - debug:
       msg: "We got {{ lookup('concord_data_secret', 'myOrg', 'mySecret', None) }}"
-      verbosity: 0{% endraw %}
+      verbosity: 0
 ```
 
 If the process was started using a project, then the organization name can be
 omitted. Concord will automatically use the name of the project's organization:
 
 ```yaml
-{% raw %}- hosts: local
+- hosts: local
   tasks:
   - debug:
       msg: "We got {{ lookup('concord_data_secret', 'mySecret', 'myPwd') }}"
-      verbosity: 0{% endraw %}
+      verbosity: 0
 ```
 
 Currently, only simple string value secrets are supported.

@@ -1,4 +1,4 @@
-# {{ page.title }}
+# Installation using Vagrant
 
 Requires Vagrant 2.2+.
 

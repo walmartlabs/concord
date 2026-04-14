@@ -4,8 +4,18 @@ language = "en"
 src = "src"
 title = "Concord"
 
+[preprocessor.variables.variables]
+# Keep literal Jinja examples from being interpreted by mdbook-variables.
+artifactDest = "{{ artifactDest }}"
+message = "{{ message }}"
+"lookup('concord_data_secret', 'myOrg', 'mySecret', 'myPwd')" = "{{ lookup('concord_data_secret', 'myOrg', 'mySecret', 'myPwd') }}"
+"lookup('concord_data_secret', 'myOrg', 'mySecret', None)" = "{{ lookup('concord_data_secret', 'myOrg', 'mySecret', None) }}"
+"lookup('concord_data_secret', 'mySecret', 'myPwd')" = "{{ lookup('concord_data_secret', 'mySecret', 'myPwd') }}"
+
 [preprocessor.variables.variables.site]
-concord_core_version = "2.32.0"
+concord_core_version = "2.35.0"
+concord_plugins_version = "2.11.0"
+concord_ansible_version = "2.14"
 concord_source = "https://github.com/walmartlabs/concord/"
 concord_plugins_source = "https://github.com/walmartlabs/concord-plugins/"
 concord_plugins_v1_docs = "https://concord.walmartlabs.com/docs/plugins-v1"

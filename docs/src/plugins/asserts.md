@@ -1,5 +1,7 @@
 # Asserts Plugin
 
+_Available since version 2.19.0_
+
 The `asserts` task allows you to verify conditions within your flows. 
 It ensures that required variables, inputs, or states are correctly set during process execution. 
 If a condition fails, the flow will terminate with an error, preventing further execution

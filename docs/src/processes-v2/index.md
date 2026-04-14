@@ -338,6 +338,8 @@ Any value type that can be represented as JSON is supported.
 
 ### Dry-run mode
 
+_Available since version 2.19.0_
+
 The dry-run mode allows you to execute a process without making any dangerous side-effects.
 This is useful for testing and validating the flow logic before running it in production. 
 

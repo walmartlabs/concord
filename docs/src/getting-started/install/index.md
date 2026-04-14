@@ -1,4 +1,4 @@
-# {{ page.title }}
+# Concord Installation
 
 There are several options to install Concord:
 

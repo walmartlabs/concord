@@ -60,7 +60,7 @@ The playbook:
   tasks:
   - get_url:
       url: "http://central.maven.org/maven2/com/walmartlabs/concord/concord-cli/{{ site.concord_core_version }}/concord-cli-{{ site.concord_core_version }}-executable.jar"
-      dest: "{% raw %}{{ artifactDest }}{% endraw %}"
+      dest: "{{ artifactDest }}"
 ```
 
 To run the example, either put it into a Git repository and follow

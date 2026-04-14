@@ -213,8 +213,9 @@ You can update a single value as a secret on Concord as follows:
 curl -u myusername \
 -F org=Default \
 -F name=mySecret \
+-F type=data \
 -F data="$(echo -n "your-secret-value" | base64)" \
-http://concord.example.com/api/v1/org/Default/secret/myKey
+http://concord.example.com/api/v2/org/Default/secret/myKey
 ```
 
 <a name="meta-data"/>

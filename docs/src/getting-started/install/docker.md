@@ -1,4 +1,4 @@
-# {{ page.title }}
+# Installation using Docker
 
 Pre-built Docker images can be used to run all four components of Concord:
 

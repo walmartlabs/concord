@@ -238,15 +238,26 @@ configuration:
 To access external Git repositories Concord supports both the username and
 password, and the SSH key pair authentication.
 
-Additionally, an access token can be configured to use when no custom
-authentication specified:
+Additionally, one or more access tokens can be configured to use when no custom
+authentication specified. A list of authentication configurations can be specified,
+each with the following attributes:
+
+* `type` - authentication type, currently only `OAUTH_TOKEN` is supported
+* `token` - the access token value
+* `username` - optional, username to send with the auth token
+* `urlPattern` - required, regex to match against target git host + port + path
 
 ```
 # concord-server.conf
 concord-server {
     git {
-        # GitHub username and an access token separated by a colon
-        oauth: "jsmith:af3f...f"
+        systemAuth = [
+            {
+                type = "OAUTH_TOKEN",
+                token = "ghp_...",
+                urlPattern = "my.git.host"
+            }
+        ]
     }
 }
 ```
@@ -257,8 +268,114 @@ The same token must be added to the Agent's configuration as well:
 # concord-agent.conf
 concord-agent {
     git {
-        oauth: "..."
+        systemAuth = [
+            # list of auth configs
+        ]
     }
+}
+```
+
+### GitHub App Installation
+
+Repository access authentication can be configured through a
+[GitHub App installation](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation).
+System-provided default authentication is configured in the server and agent
+configuration files. Multiple installations can be configured for different
+GitHub instances or even URL patterns (e.g. to match limited organizations or
+specific repositories).
+
+[Generate a private key](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/managing-private-keys-for-github-apps#generating-private-keys)
+for the GitHub App and save it to a file accessible by the server or agent.
+
+A GitHub App authentication configuration consists of the following parameters:
+
+* `id` - an arbitrary identifier for the configuration, e.g. for metrics
+* `type` - either `GITHUB_APP_INSTALLATION` or `OAUTH_TOKEN`
+* `urlPattern` - a regex pattern to match the GitHub repository URLs
+* `username` - optional, defaults to `x-access-token`
+* `apiUrl` - GitHub API URL. e.g. `https://api.github.com` for GitHub.com or
+  `https://ghe.example.com/api/v3` for GitHub Enterprise installations
+* `clientId` - GitHub App's Client ID. Older GitHub Enterprise installations may
+    require the [App ID instead of the Client ID](https://github.blog/changelog/2024-05-01-github-apps-can-now-use-the-client-id-to-fetch-installation-tokens/).
+
+**IMPORTANT:** `urlPattern` must contain a `(?<baseUrl>...)` named capture group.
+This is used to differentiate between the GitHub instance base url and repository
+owner and name.
+
+```
+# concord-server.conf
+concord-server {
+    github {
+        appInstallation {
+            auth = [
+                {
+                    id = "my-gh-app",
+                    type = "GITHUB_APP_INSTALLATION",
+                    urlPattern = "(?<baseUrl>github.com)",  # regex
+                    username = "...",  # optional, defaults to "x-access-token"
+                    apiUrl = "https://api.github.com",
+                    clientId = "abc123",
+                    privateKey = "/path/to/pk.pem"
+                }
+            ]
+        }
+    }
+}
+```
+
+A static access token (e.g. a personal access token for a user) can be used as well:
+
+```
+# concord-server.conf
+concord-server {
+    github {
+        appInstallation {
+            auth = [
+                {
+                    id = "my-users-token",
+                    type = "OAUTH_TOKEN",
+                    urlPattern = "(?<baseUrl>my.ghe.com)",
+                    username = "myuser",  # optional, defaults to null
+                    apiUrl = "https://my.ghe.com/api/v3",
+                    token = "ghp_..."
+                }
+            ]
+        }
+    }
+}
+```
+
+Similar configuration must be added to the Agent's configuration as well:
+
+```
+# concord-agent.conf
+concord-agent {
+    github {
+        appInstallation {
+            auth = [
+                # list of auth configs
+            ]
+        }
+    }
+}
+```
+
+### Secret-Provided GitHub App Installation
+
+Users can configure their own GitHub App installation authentication for apps
+not managed by the Concord system administrators. The same app installation info
+must be provided in a JSON-formatted single-value (file) Secret in the following
+structure:
+
+```json
+{
+  "githubAppInstallation": {
+    "apiUrl": "https://api.github.com",
+    "clientId": "abc123",
+    "privateKey": "-----BEGIN RSA PRIVATE KEY-----\nMIIEowI...",
+    "username": "x-access-token",
+    "urlPattern": "(?<baseUrl>github.com)/myorg/.*"
+  }
 }
 ```
 

@@ -320,6 +320,7 @@ Currently, the following steps can use `name`:
 - `expr`
 - `log`
 - `throw`
+- `script`
 
 If `name` is not specified, the runtime pick a default value, e.g.
 `task: <...>` for task calls.

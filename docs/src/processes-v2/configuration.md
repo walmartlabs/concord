@@ -125,10 +125,9 @@ as:
 configuration:
   dependencies:
     # maven URLs...
-    - "mvn://org.codehaus.groovy:groovy-all:2.4.12"
+    - mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:{{ site.concord_core_version }}
     # or direct URLs
-    - "https://repo1.maven.org/maven2/org/codehaus/groovy/groovy-all/2.4.12/groovy-all-2.4.12.jar"
-    - "https://repo1.maven.org/maven2/org/apache/commons/commons-lang3/3.6/commons-lang3-3.6.jar"
+    - https://repo1.maven.org/maven2/org/apache/commons/commons-lang3/3.6/commons-lang3-3.6.jar"
 ```
 
 Concord downloads the artifacts and adds them to the process' classpath.
@@ -154,41 +153,41 @@ the dependency's URL:
 ```yaml
 configuration:
   dependencies:
-    - "mvn://com.walmartlabs.concord:concord-client:{{site.concord_core_version}}?transitive=false"
+    - "mvn://com.walmartlabs.concord:concord-client2:{{site.concord_core_version}}?transitive=false"
 ```
 
 The syntax for the Maven URL uses the groupId, artifactId, optionally packaging,
-and version values - the GAV coordinates of a project. For example the Maven
-`pom.xml` for the Groovy scripting language runtime has the following
-definition:
+and version values - the GAV coordinates of a project. For example, the Maven
+`pom.xml` for the Concord's HTTP client library has the following definition:
 
 ```xml
 <project>
-  <groupId>org.codehaus.groovy</groupId>
-  <artifactId>groovy-all</artifactId>
-  <version>2.4.12</version>
+  <groupId>com.walmartlabs.concord</groupId>
+  <artifactId>concord-client2</artifactId>
+  <version>{{ site.concord_core_version }}</version>
   ...
 </project>
 ```
 
 This results in the path
-`org/codehaus/groovy/groovy-all/2.4.12/groovy-all-2.4.12.jar` in the
-Central Repository and any repository manager proxying the repository.
+`com/walmartlabs/concord/concord-client2/{{ site.concord_core_version }}/concord-client2-{{ site.concord_core_version }}.jar`
+in the Central Repository and any repository manager proxying the repository.
 
 The `mvn` syntax uses the short form for GAV coordinates
 `groupId:artifactId:version`, so for example
-`org.codehaus.groovy:groovy-all:2.4.12` for Groovy.
+`com.walmartlabs.concord.plugins.basic:ansible-tasks:{{ site.concord_core_version }}`
+for Concord's Ansible plugin.
 
-Newer versions of groovy-all use `<packaging>pom</packaging>` and define
+Some packages use `<packaging>pom</packaging>` and define
 dependencies. To use a project that applies this approach, called Bill of
 Material (BOM), as a dependency you need to specify the packaging in between
-the artifactId and version. For example, version `2.5.21` has to be specified as
-`org.codehaus.groovy:groovy-all:pom:2.5.21`:
+the artifactId and version. For example, version `5.0.4` has to be specified as
+`org.apache.groovy:groovy-all:pom:5.0.4`:
 
 ```yaml
 configuration:
   dependencies:
-  - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.21"
+    - "mvn://org.apache.groovy:groovy-all:pom:5.0.4"
 ```
 
 The same logic and syntax usage applies to all other dependencies including
