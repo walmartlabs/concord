@@ -1,6 +1,6 @@
 # Change Log
 
-## [2.39.1] - TBD
+## [2.40.0] - TBD
 
 ### Added
 
