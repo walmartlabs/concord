@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2026 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,21 +19,8 @@
  */
 
 import { createHashHistory } from 'history';
-import { routerMiddleware } from 'connected-react-router';
-import { applyMiddleware, createStore } from 'redux';
-import { createLogger } from 'redux-logger';
-import { composeWithDevTools } from 'redux-devtools-extension';
 import { History } from 'history';
-
-import reducers from '../reducers';
 
 const history: History = createHashHistory();
 
-const middleware = [routerMiddleware(history)];
-if (process.env.NODE_ENV !== 'production') {
-    middleware.push(createLogger());
-}
-
-const store = createStore(reducers(history), composeWithDevTools(applyMiddleware(...middleware)));
-
-export { store, history };
+export { history };

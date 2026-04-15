@@ -56,7 +56,7 @@ class PublicKeyPopup extends React.Component<Props, State> {
 
         this.setState({ open: true, loading: true });
 
-        // TODO replace with redux
+        // TODO cache public key in shared state
         apiGetPublicKey(orgName, secretName)
             .then((r) => {
                 this.setState({

@@ -19,9 +19,7 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { push as pushHistory } from 'connected-react-router';
+import { useHistory } from 'react-router';
 import { Button } from 'semantic-ui-react';
 import { ButtonProps } from 'semantic-ui-react/dist/commonjs/elements/Button/Button';
 
@@ -29,22 +27,10 @@ interface ExternalProps extends ButtonProps {
     location: string;
 }
 
-interface DispatchProps {
-    redirect: () => void;
-}
+const RedirectButton = ({ location, ...rest }: ExternalProps) => {
+    const history = useHistory();
 
-class RedirectButton extends React.PureComponent<ExternalProps & DispatchProps> {
-    render() {
-        const { redirect, location, ...rest } = this.props;
-        return <Button {...rest} onClick={() => redirect()} />;
-    }
-}
+    return <Button {...rest} onClick={() => history.push(location)} />;
+};
 
-const mapDispatchToProps = (
-    dispatch: Dispatch<AnyAction>,
-    { location }: ExternalProps
-): DispatchProps => ({
-    redirect: () => dispatch(pushHistory(location))
-});
-
-export default connect(null, mapDispatchToProps)(RedirectButton);
+export default RedirectButton;
