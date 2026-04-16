@@ -14,6 +14,8 @@ task in/out parameters
 
 ### Changed
 
+- concord-console2: remove redux-saga dependency
+([#1290](https://github.com/walmartlabs/concord/pull/1290));
 - project: respect PR labels in docker-multiarch flow
 ([#1304](https://github.com/walmartlabs/concord/pull/1304)).
 
