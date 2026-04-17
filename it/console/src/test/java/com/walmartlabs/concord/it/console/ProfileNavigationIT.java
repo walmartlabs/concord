@@ -78,8 +78,34 @@ public class ProfileNavigationIT {
         assertFalse(currentUrl.contains("_new"));
     }
 
+    @Test
+    public void testDirectNavigationRedirects() throws Exception {
+        consoleRule.login(Concord.ADMIN_API_KEY);
+
+        consoleRule.navigateToRelative("/#/");
+        waitForUrlContaining("/#/activity");
+        consoleRule.waitFor(By.id("concordLogo"));
+
+        consoleRule.navigateToRelative("/#/profile");
+        waitForUrlContaining("/#/profile/api-token");
+        consoleRule.waitFor(By.xpath("//h4[contains(text(), 'API Tokens')]"));
+    }
+
+    @Test
+    public void testProtectedRouteRedirectsToLogin() throws Exception {
+        consoleRule.navigateToRelative("/#/profile/api-token");
+
+        waitForUrlContaining("/#/login");
+        consoleRule.waitFor(By.id("loginButton"));
+    }
+
     private static WebElement clickable(By by) {
         return new WebDriverWait(consoleRule.getDriver(), Duration.ofSeconds(30))
                 .until(ExpectedConditions.elementToBeClickable(by));
+    }
+
+    private static void waitForUrlContaining(String value) {
+        new WebDriverWait(consoleRule.getDriver(), Duration.ofSeconds(30))
+                .until(ExpectedConditions.urlContains(value));
     }
 }
