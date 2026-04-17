@@ -19,10 +19,7 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
 import { RouteComponentProps, withRouter } from 'react-router';
-import { push as pushHistory } from 'connected-react-router';
 
 import { CustomResources, LinkMeta } from '../../../../cfg';
 import { GlobalNavMenu, GlobalNavTab } from '../../molecules';
@@ -57,16 +54,25 @@ const getCustomResources = (): CustomResources => {
     return customResources || {};
 };
 
-interface DispatchProps {
+interface NavigationProps {
     openUrl: (url: string) => void;
     openAbout: () => void;
     openProfile: () => void;
     openCustomResource: (name: string) => void;
 }
 
-export type TopBarProps = DispatchProps & RouteComponentProps<{}>;
+export type TopBarProps = RouteComponentProps<{}>;
 
 class TopBar extends React.PureComponent<TopBarProps> {
+    getNavigationProps(): NavigationProps {
+        return {
+            openUrl: (url: string) => window.open(url, '_blank'),
+            openAbout: () => this.props.history.push('/about'),
+            openProfile: () => this.props.history.push('/profile'),
+            openCustomResource: (name: string) => this.props.history.push(`/custom/${name}`),
+        };
+    }
+
     getLogout(userSession: UserSession) {
         const logoutUrl = window.concord?.logoutUrl;
         if (logoutUrl) {
@@ -86,7 +92,7 @@ class TopBar extends React.PureComponent<TopBarProps> {
                         extraSystemLinks={getExtraSystemLinks()}
                         customResources={getCustomResources()}
                         userDisplayName={value.userInfo?.displayName}
-                        {...this.props}
+                        {...this.getNavigationProps()}
                         logOut={this.getLogout(value)}
                     />
                 )}
@@ -95,11 +101,4 @@ class TopBar extends React.PureComponent<TopBarProps> {
     }
 }
 
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    openUrl: (url: string) => window.open(url, '_blank'),
-    openAbout: () => dispatch(pushHistory('/about')),
-    openProfile: () => dispatch(pushHistory('/profile')),
-    openCustomResource: (name: string) => dispatch(pushHistory(`/custom/${name}`))
-});
-
-export default withRouter(connect(null, mapDispatchToProps)(TopBar));
+export default withRouter(TopBar);
