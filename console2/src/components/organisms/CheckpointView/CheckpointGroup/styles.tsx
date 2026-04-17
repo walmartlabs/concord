@@ -17,27 +17,25 @@
  * limitations under the License.
  * =====
  */
-import styled from 'styled-components';
+import * as React from 'react';
 import { ProcessStatus } from '../../../../api/process';
 import { SemanticCOLORS } from 'semantic-ui-react';
 
-export const FlexWrapper = styled.div`
-    height: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: left;
-    padding: 2rem 1.5rem;
-    white-space: nowrap;
-`;
+import './styles.css';
 
-export const GroupWrapper = styled.div`
-    margin: auto 1rem;
-`;
+const classNames = (...values: Array<string | undefined>) => values.filter(Boolean).join(' ');
 
-export const CheckpointNode = styled.div`
-    cursor: pointer;
-    padding: 4px;
-`;
+export const FlexWrapper = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+    <div {...props} className={classNames('checkpoint-group-flex-wrapper', className)} />
+);
+
+export const GroupWrapper = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+    <div {...props} className={classNames('checkpoint-group-wrapper', className)} />
+);
+
+export const CheckpointNode = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+    <div {...props} className={classNames('checkpoint-node', className)} />
+);
 
 export const getStatusColor = (status: string): string => {
     switch (status) {
@@ -87,30 +85,23 @@ interface CheckpointBoxProps {
     statusColor?: any;
 }
 
-export const CheckpointBox = styled('div')<CheckpointBoxProps>`
-    background: ${(prop: CheckpointBoxProps) => (prop.statusColor ? prop.statusColor : 'gray')};
-    padding: 0.7rem 0.7rem;
-    text-align: center;
-    border-radius: 5px;
-    color: #ffffff;
-    font-size: 1rem;
-    font-weight: 900;
-`;
+export const CheckpointBox = ({
+    className,
+    statusColor,
+    style,
+    ...props
+}: CheckpointBoxProps & React.HTMLAttributes<HTMLDivElement>) => (
+    <div
+        {...props}
+        className={classNames('checkpoint-box', className)}
+        style={{ background: statusColor || 'gray', ...style }}
+    />
+);
 
-export const EmptyBox = styled('div')`
-    background: lightgray;
-    padding: 0.7rem 0.7rem;
-    text-align: center;
-    border-radius: 5px;
-    color: #ffffff;
-    font-size: 1rem;
-    font-weight: 900;
-`;
+export const EmptyBox = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+    <div {...props} className={classNames('checkpoint-empty-box', className)} />
+);
 
-export const GroupItems = styled.div`
-    display: flex;
-    flex-direction: row;
-    border-left: 1px solid gray;
-    padding: 0 0.5rem;
-    margin: 1rem;
-`;
+export const GroupItems = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+    <div {...props} className={classNames('checkpoint-group-items', className)} />
+);

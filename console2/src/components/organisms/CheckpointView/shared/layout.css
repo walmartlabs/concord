@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2026 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,19 @@
  * limitations under the License.
  * =====
  */
-import * as React from 'react';
 
-import './Scrollable.css';
+.checkpoint-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    margin: 24px 0;
+    border-radius: 5px;
+    box-shadow: 0 1px 2px 0 rgba(34, 36, 38, 0.15);
+}
 
-const classNames = (...values: Array<string | undefined>) => values.filter(Boolean).join(' ');
-
-export const ScrollableX = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-    <div {...props} className={classNames('scrollable-x', className)} />
-);
+.checkpoint-column {
+    display: flex;
+    flex-direction: column;
+    flex-basis: 100%;
+}

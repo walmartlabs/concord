@@ -19,41 +19,33 @@
  */
 import * as React from 'react';
 import { ClassIcon } from '../../../atoms/ClassIcon';
-import styled from 'styled-components';
 
-const TextBase = styled.span`
-    font-family: lato;
-    color: #706f70;
-`;
+import './labels.css';
 
-export const Label = styled(TextBase)`
-    font-weight: bold;
-    font-size: 1rem;
-`;
+const classNames = (...values: Array<string | undefined>) => values.filter(Boolean).join(' ');
 
-export const StatusText = styled(TextBase)`
-    font-size: 1rem;
-    display: inline;
-`;
+export const Label = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) => (
+    <span {...props} className={classNames('checkpoint-text checkpoint-label', className)} />
+);
 
-export const CheckpointName = styled(TextBase)`
-    font-size: 1rem;
-    font-weight: bold;
-    margin-bottom: 4px;
-`;
+export const StatusText = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) => (
+    <span {...props} className={classNames('checkpoint-text checkpoint-status-text', className)} />
+);
 
-export const CheckpointGroupName = styled(CheckpointName)`
-    font-size: 1.2rem;
-    font-weight: bold;
-`;
+export const CheckpointName = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) => (
+    <span {...props} className={classNames('checkpoint-text checkpoint-name', className)} />
+);
 
-export const LoadError = styled.div`
-    color: grey;
-    font-weight: bold;
-    font-size: 1.2rem;
-    margin: auto auto;
-    padding: 1em;
-`;
+export const CheckpointGroupName = ({
+    className,
+    ...props
+}: React.HTMLAttributes<HTMLSpanElement>) => (
+    <span {...props} className={classNames('checkpoint-text checkpoint-group-name', className)} />
+);
+
+export const LoadError = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+    <div {...props} className={classNames('checkpoint-load-error', className)} />
+);
 
 export const Status: React.SFC<{ as?: 'span' | 'div' | 'td' }> = ({ as = 'span', children }) => {
     switch (children) {
