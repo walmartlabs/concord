@@ -29,7 +29,7 @@ import {
 import { get as apiGet, UserInfoEntry } from '../../../api/profile/user';
 import {RequestErrorMessage, WithCopyToClipboard} from '../../molecules';
 import { useApi } from '../../../hooks/useApi';
-import {Link} from "react-router-dom";
+import {Link} from "react-router";
 
 export default () => {
     const { data, error, isLoading } = useApi<UserInfoEntry>(apiGet, {

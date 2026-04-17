@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { useCallback, useRef, useState, useEffect } from 'react';
 
-import { Link, Redirect, Route, Switch } from 'react-router-dom';
+import { Link, Navigate, Route, Routes } from 'react-router';
 import { Icon, Menu } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
@@ -36,7 +36,7 @@ import {
     ProcessLogActivity,
     ProcessLogActivityV2,
     ProcessStatusActivity,
-    ProcessWaitActivity
+    ProcessWaitActivity,
 } from '../index';
 import ProcessToolbar from './Toolbar';
 import { usePolling } from '../../../api/usePolling';
@@ -162,7 +162,7 @@ const ProcessActivity = (props: ExternalProps) => {
         },
         onIdle: () => {
             setDataFetchInterval(DATA_FETCH_INTERVAL_IDLE);
-        }
+        },
     });
 
     const error = usePolling(fetchData, dataFetchInterval, loadingHandler, refresh);
@@ -221,98 +221,122 @@ const ProcessActivity = (props: ExternalProps) => {
                 </Menu.Item>
             </Menu>
 
-            <Switch>
-                <Route path={baseUrl} exact={true}>
-                    <Redirect to={`${baseUrl}/status`} />
-                </Route>
-                <Route path={`${baseUrl}/status`}>
-                    <ProcessStatusActivity
-                        instanceId={instanceId}
-                        loadingHandler={loadingHandler}
-                        forceRefresh={refresh}
-                        refreshHandler={refreshHandler}
-                        dataFetchInterval={dataFetchInterval}
-                    />
-                </Route>
-
-                <Route path={`${baseUrl}/events`}>
-                    <ProcessEventsActivity
-                        instanceId={instanceId}
-                        processStatus={process ? process.status : undefined}
-                        loadingHandler={loadingHandler}
-                        forceRefresh={refresh}
-                        definitionLinkBase={buildDefinitionLinkBase(process)}
-                        dataFetchInterval={dataFetchInterval}
-                    />
-                </Route>
-                <Route path={`${baseUrl}/ansible`}>
-                    <ProcessAnsibleActivity
-                        instanceId={instanceId}
-                        loadingHandler={loadingHandler}
-                        forceRefresh={refresh}
-                        dataFetchInterval={dataFetchInterval}
-                    />
-                </Route>
-                <Route path={`${baseUrl}/log`} exact={true}>
-                    {process &&
-                        (process.runtime === 'concord-v1') && (
-                            <ProcessLogActivity
-                                instanceId={instanceId}
-                                processStatus={process ? process.status : undefined}
-                                loadingHandler={loadingHandler}
-                                forceRefresh={refresh}
-                                dataFetchInterval={dataFetchInterval}
-                            />
-                        )}
-                    {process && (process.runtime === 'concord-v2' || process.runtime === undefined) && (
-                        <ProcessLogActivityV2
+            <Routes>
+                <Route index={true} element={<Navigate to="status" replace={true} />} />
+                <Route
+                    path="status"
+                    element={
+                        <ProcessStatusActivity
+                            instanceId={instanceId}
+                            loadingHandler={loadingHandler}
+                            forceRefresh={refresh}
+                            refreshHandler={refreshHandler}
+                            dataFetchInterval={dataFetchInterval}
+                        />
+                    }
+                />
+                <Route
+                    path="events"
+                    element={
+                        <ProcessEventsActivity
+                            instanceId={instanceId}
+                            processStatus={process ? process.status : undefined}
+                            loadingHandler={loadingHandler}
+                            forceRefresh={refresh}
+                            definitionLinkBase={buildDefinitionLinkBase(process)}
+                            dataFetchInterval={dataFetchInterval}
+                        />
+                    }
+                />
+                <Route
+                    path="ansible"
+                    element={
+                        <ProcessAnsibleActivity
+                            instanceId={instanceId}
+                            loadingHandler={loadingHandler}
+                            forceRefresh={refresh}
+                            dataFetchInterval={dataFetchInterval}
+                        />
+                    }
+                />
+                <Route
+                    path="log"
+                    element={
+                        <>
+                            {process && process.runtime === 'concord-v1' && (
+                                <ProcessLogActivity
+                                    instanceId={instanceId}
+                                    processStatus={process ? process.status : undefined}
+                                    loadingHandler={loadingHandler}
+                                    forceRefresh={refresh}
+                                    dataFetchInterval={dataFetchInterval}
+                                />
+                            )}
+                            {process &&
+                                (process.runtime === 'concord-v2' ||
+                                    process.runtime === undefined) && (
+                                    <ProcessLogActivityV2
+                                        instanceId={instanceId}
+                                        processStatus={process ? process.status : undefined}
+                                        loadingHandler={loadingHandler}
+                                        forceRefresh={refresh}
+                                        dataFetchInterval={dataFetchInterval}
+                                    />
+                                )}
+                        </>
+                    }
+                />
+                <Route
+                    path="history"
+                    element={
+                        <ProcessHistoryActivity
+                            instanceId={instanceId}
+                            loadingHandler={loadingHandler}
+                            forceRefresh={refresh}
+                            dataFetchInterval={dataFetchInterval}
+                        />
+                    }
+                />
+                <Route
+                    path="wait"
+                    element={
+                        <ProcessWaitActivity
                             instanceId={instanceId}
                             processStatus={process ? process.status : undefined}
                             loadingHandler={loadingHandler}
                             forceRefresh={refresh}
                             dataFetchInterval={dataFetchInterval}
                         />
-                    )}
-                </Route>
-                <Route path={`${baseUrl}/history`} exact={true}>
-                    <ProcessHistoryActivity
-                        instanceId={instanceId}
-                        loadingHandler={loadingHandler}
-                        forceRefresh={refresh}
-                        dataFetchInterval={dataFetchInterval}
-                    />
-                </Route>
-                <Route path={`${baseUrl}/wait`} exact={true}>
-                    <ProcessWaitActivity
-                        instanceId={instanceId}
-                        processStatus={process ? process.status : undefined}
-                        loadingHandler={loadingHandler}
-                        forceRefresh={refresh}
-                        dataFetchInterval={dataFetchInterval}
-                    />
-                </Route>
-                <Route path={`${baseUrl}/children`} exact={true}>
-                    <ProcessChildrenActivity
-                        instanceId={instanceId}
-                        processStatus={process ? process.status : undefined}
-                        processOrgName={process ? process.orgName : undefined}
-                        processProjectName={process ? process.projectName : undefined}
-                        loadingHandler={loadingHandler}
-                        forceRefresh={refresh}
-                        dataFetchInterval={dataFetchInterval}
-                    />
-                </Route>
-                <Route path={`${baseUrl}/attachments`} exact={true}>
-                    <ProcessAttachmentsActivity
-                        instanceId={instanceId}
-                        processStatus={process ? process.status : undefined}
-                        loadingHandler={loadingHandler}
-                        forceRefresh={refresh}
-                        dataFetchInterval={dataFetchInterval}
-                    />
-                </Route>
-                <Route component={NotFoundPage} />
-            </Switch>
+                    }
+                />
+                <Route
+                    path="children"
+                    element={
+                        <ProcessChildrenActivity
+                            instanceId={instanceId}
+                            processStatus={process ? process.status : undefined}
+                            processOrgName={process ? process.orgName : undefined}
+                            processProjectName={process ? process.projectName : undefined}
+                            loadingHandler={loadingHandler}
+                            forceRefresh={refresh}
+                            dataFetchInterval={dataFetchInterval}
+                        />
+                    }
+                />
+                <Route
+                    path="attachments"
+                    element={
+                        <ProcessAttachmentsActivity
+                            instanceId={instanceId}
+                            processStatus={process ? process.status : undefined}
+                            loadingHandler={loadingHandler}
+                            forceRefresh={refresh}
+                            dataFetchInterval={dataFetchInterval}
+                        />
+                    }
+                />
+                <Route path="*" element={<NotFoundPage />} />
+            </Routes>
         </div>
     );
 };

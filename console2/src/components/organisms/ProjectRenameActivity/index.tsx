@@ -29,7 +29,7 @@ import { memo, useCallback, useState } from 'react';
 import { rename as apiRename } from '../../../api/org/project';
 import { useApi } from '../../../hooks/useApi';
 import { FormValues } from '../../molecules/EntityRenameForm';
-import { Redirect } from 'react-router';
+import { Navigate } from 'react-router';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -58,7 +58,7 @@ const ProjectRenameActivity = memo(
 
         const { data, error, isLoading, fetch, clearState } = useApi<string>(postData, {
             fetchOnMount: false,
-            requestByFetch: true
+            requestByFetch: true,
         });
 
         const renameHandler = useCallback(
@@ -71,7 +71,7 @@ const ProjectRenameActivity = memo(
         );
 
         if (data && data !== projectName) {
-            return <Redirect to={`/org/${orgName}/project/${value}/settings`} />;
+            return <Navigate to={`/org/${orgName}/project/${value}/settings`} />;
         }
 
         return (

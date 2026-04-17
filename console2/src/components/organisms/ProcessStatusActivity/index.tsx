@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { useCallback, useState } from 'react';
-import { Route } from 'react-router';
+import { useNavigate } from 'react-router';
 import { Divider } from 'semantic-ui-react';
 
 import { get as apiGet, isFinal, ProcessEntry, ProcessStatus } from '../../../api/process';
@@ -47,8 +47,9 @@ const ProcessStatusActivity = ({
     loadingHandler,
     forceRefresh,
     refreshHandler,
-    dataFetchInterval
+    dataFetchInterval,
 }: ExternalProps) => {
+    const navigate = useNavigate();
     const [process, setProcess] = useState<ProcessEntry>();
     const [forms, setForms] = useState<FormListEntry[]>([]);
 
@@ -77,16 +78,12 @@ const ProcessStatusActivity = ({
             {process && forms.length > 0 && process.status === ProcessStatus.SUSPENDED && (
                 <>
                     <Divider content="Required Actions" horizontal={true} />
-                    <Route
-                        render={({ history }) => (
-                            <ProcessActionList
-                                instanceId={instanceId}
-                                forms={forms}
-                                onOpenWizard={() =>
-                                    history.push(`/process/${instanceId}/wizard?fullScreen=true`)
-                                }
-                            />
-                        )}
+                    <ProcessActionList
+                        instanceId={instanceId}
+                        forms={forms}
+                        onOpenWizard={() =>
+                            navigate(`/process/${instanceId}/wizard?fullScreen=true`)
+                        }
                     />
                 </>
             )}

@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router';
+import { RouteComponentProps, withRouter } from '@/router';
 import { Container, Header, Segment } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';

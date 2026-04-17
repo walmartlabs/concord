@@ -25,7 +25,7 @@ import {
     isFinal,
     ProcessListQuery,
     PaginatedProcessEntries,
-    ProcessStatus
+    ProcessStatus,
 } from '../../../api/process';
 import ProcessListWithSearch from '../../molecules/ProcessListWithSearch';
 import {
@@ -33,17 +33,23 @@ import {
     INITIATOR_COLUMN,
     INSTANCE_ID_COLUMN,
     REPO_COLUMN,
-    STATUS_COLUMN
+    STATUS_COLUMN,
 } from '../../molecules/ProcessList';
-import { useHistory, useLocation } from 'react-router';
-import { addBuiltInColumns, filtersToQuery, parseSearchFilter, ProcessSearchFilter } from '../ProcessListActivity';
+import { useLocation } from 'react-router';
+import { useHistory } from '@/router';
+import {
+    addBuiltInColumns,
+    filtersToQuery,
+    parseSearchFilter,
+    ProcessSearchFilter,
+} from '../ProcessListActivity';
 import { ProcessFilters } from '../../../api/process';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePolling } from '../../../api/usePolling';
-import { get as apiGetProject, ProjectEntry } from "../../../api/org/project";
-import { useApi } from "../../../hooks/useApi";
-import { LoadingDispatch } from "../../../App";
+import { get as apiGetProject, ProjectEntry } from '../../../api/org/project';
+import { useApi } from '../../../hooks/useApi';
+import { LoadingDispatch } from '../../../App';
 import { Pagination } from '../../molecules/PaginationToolBar/usePagination';
 
 const COLUMNS = [
@@ -51,7 +57,7 @@ const COLUMNS = [
     INSTANCE_ID_COLUMN,
     REPO_COLUMN,
     INITIATOR_COLUMN,
-    CREATED_AT_COLUMN
+    CREATED_AT_COLUMN,
 ];
 
 interface ExternalProps {
@@ -71,7 +77,7 @@ const ProcessChildrenActivity = ({
     forceRefresh,
     dataFetchInterval,
     processOrgName,
-    processProjectName
+    processProjectName,
 }: ExternalProps) => {
     const dispatch = React.useContext(LoadingDispatch);
 
@@ -91,11 +97,14 @@ const ProcessChildrenActivity = ({
         return apiGetProject(processOrgName, processProjectName);
     }, [processOrgName, processProjectName]);
 
-    const { data : project, error : projectError} = useApi<ProjectEntry | undefined>(fetchProjectData, {
-        fetchOnMount: true,
-        forceRequest: forceRefresh,
-        dispatch: dispatch
-    });
+    const { data: project, error: projectError } = useApi<ProjectEntry | undefined>(
+        fetchProjectData,
+        {
+            fetchOnMount: true,
+            forceRequest: forceRefresh,
+            dispatch: dispatch,
+        }
+    );
 
     useEffect(() => {
         if (isInitialMount.current) {
@@ -108,7 +117,7 @@ const ProcessChildrenActivity = ({
     const fetchData = useCallback(async () => {
         const query = {
             parentInstanceId: instanceId,
-            ...searchFilter.pagination
+            ...searchFilter.pagination,
         } as ProcessListQuery;
 
         const processEntries = await apiProcessList(filtersToQuery(query, searchFilter.filters));

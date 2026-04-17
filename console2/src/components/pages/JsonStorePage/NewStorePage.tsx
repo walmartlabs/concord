@@ -19,8 +19,8 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps } from 'react-router';
-import { Link } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from '@/router';
+import { Link } from 'react-router';
 import { Breadcrumb, Container, Header, Segment } from 'semantic-ui-react';
 
 import { MainToolbar } from '../../molecules';
@@ -73,4 +73,4 @@ const renderBreadcrumbs = (orgName: string) => {
     );
 };
 
-export default NewStorePage;
+export default withRouter(NewStorePage);

@@ -19,13 +19,13 @@
  */
 
 import * as React from 'react';
-import {ConcordKey, GenericOperationResult} from '../../../api/common';
+import { ConcordKey, GenericOperationResult } from '../../../api/common';
 import { ButtonWithConfirmation } from '../../molecules';
 import { RequestErrorActivity } from '../index';
-import {useCallback} from "react";
-import {deleteProject as apiDelete} from "../../../api/org/project";
-import {useApi} from "../../../hooks/useApi";
-import {Redirect} from "react-router";
+import { useCallback } from 'react';
+import { deleteProject as apiDelete } from '../../../api/org/project';
+import { useApi } from '../../../hooks/useApi';
+import { Navigate } from 'react-router';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -34,26 +34,27 @@ interface ExternalProps {
 }
 
 const ProjectDeleteActivity = (props: ExternalProps) => {
-    const {orgName, projectName, disabled} = props;
+    const { orgName, projectName, disabled } = props;
 
     const deleteData = useCallback(async () => {
         return await apiDelete(orgName, projectName);
     }, [orgName, projectName]);
 
-    const { data, error, isLoading, fetch, clearState } = useApi<GenericOperationResult>(deleteData, {
-        fetchOnMount: false,
-        requestByFetch: true
-    });
-
-    const confirmHandler = useCallback(() => {
-            clearState();
-            fetch();
-        },
-        [clearState, fetch]
+    const { data, error, isLoading, fetch, clearState } = useApi<GenericOperationResult>(
+        deleteData,
+        {
+            fetchOnMount: false,
+            requestByFetch: true,
+        }
     );
 
+    const confirmHandler = useCallback(() => {
+        clearState();
+        fetch();
+    }, [clearState, fetch]);
+
     if (data) {
-        return <Redirect to={`/org/${orgName}/project`} />;
+        return <Navigate to={`/org/${orgName}/project`} />;
     }
 
     return (

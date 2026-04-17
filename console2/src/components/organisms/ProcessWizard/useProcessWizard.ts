@@ -18,7 +18,7 @@
  * =====
  */
 import { useEffect, useState } from 'react';
-import { useHistory } from 'react-router';
+import { useHistory } from '@/router';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import { get as apiGetProcess, isFinal, ProcessStatus } from '../../../api/process';
@@ -59,7 +59,7 @@ export const useProcessWizard = (processInstanceId: ConcordId) => {
                         processInstanceId,
                         formName: listedForm.name,
                         custom: listedForm.custom,
-                        yieldFlow: listedForm.yield
+                        yieldFlow: listedForm.yield,
                     });
                     return;
                 }
