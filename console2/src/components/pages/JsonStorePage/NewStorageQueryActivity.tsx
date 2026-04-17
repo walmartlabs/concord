@@ -24,10 +24,10 @@ import { useCallback, useState } from 'react';
 import { ConcordKey, GenericOperationResult } from '../../../api/common';
 import {
     createOrUpdateStorageQuery as apiCreate,
-    executeQuery as apiExecuteQuery
+    executeQuery as apiExecuteQuery,
 } from '../../../api/org/jsonstore';
 import { useApi } from '../../../hooks/useApi';
-import { Redirect } from 'react-router';
+import { Redirect } from 'react-router-dom';
 import { RequestErrorActivity } from '../../organisms';
 import NewStorageQueryForm, { NewStorageQueryFormValues } from './NewStorageQueryForm';
 import ExecuteQueryResult from './ExecuteQueryResult';
@@ -40,7 +40,7 @@ interface ExternalProps {
 
 const INIT_VALUES = {
     name: '',
-    query: 'select cast(item_data as varchar) \nfrom json_store_data'
+    query: 'select cast(item_data as varchar) \nfrom json_store_data',
 };
 
 const NewStorageQueryActivity = (props: ExternalProps) => {
@@ -57,7 +57,7 @@ const NewStorageQueryActivity = (props: ExternalProps) => {
     const { error, isLoading, data, fetch } = useApi<GenericOperationResult>(postQuery, {
         fetchOnMount: false,
         requestByFetch: true,
-        dispatch: dispatch
+        dispatch: dispatch,
     });
 
     const execQuery = useCallback(() => {
@@ -69,11 +69,11 @@ const NewStorageQueryActivity = (props: ExternalProps) => {
         isLoading: isExecLoading,
         data: execData,
         fetch: execFetch,
-        clearState: execClearState
+        clearState: execClearState,
     } = useApi<Object>(execQuery, {
         fetchOnMount: false,
         requestByFetch: true,
-        dispatch: dispatch
+        dispatch: dispatch,
     });
 
     const handleSubmit = useCallback(

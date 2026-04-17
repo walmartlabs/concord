@@ -21,15 +21,13 @@
 import * as React from 'react';
 import { useCallback, useState } from 'react';
 
-import {
-    createOrUpdate as apiChangeOrganization
-} from '../../../api/org/jsonstore';
+import { createOrUpdate as apiChangeOrganization } from '../../../api/org/jsonstore';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { SingleOperationPopup } from '../../molecules';
 import { Form, Input } from 'semantic-ui-react';
-import { Redirect } from 'react-router';
-import {FindOrganizationsField, RequestErrorActivity} from "../../organisms";
+import { Redirect } from 'react-router-dom';
+import { FindOrganizationsField, RequestErrorActivity } from '../../organisms';
 
 interface Props {
     orgName: ConcordKey;
@@ -50,12 +48,7 @@ const StoreOrganizationChangeActivity = ({ orgName, storeName, disabled }: Props
         setChanging(true);
 
         try {
-            const result = await apiChangeOrganization(
-                orgName,
-                storeName,
-                undefined,
-                state
-            );
+            const result = await apiChangeOrganization(orgName, storeName, undefined, state);
             setSuccess(result.ok);
         } catch (e) {
             setError(e);
@@ -120,7 +113,8 @@ const StoreOrganizationChangeActivity = ({ orgName, storeName, disabled }: Props
                                 <div
                                     className={`ui input ${
                                         confirmation !== storeName ? 'error' : ''
-                                    }`}>
+                                    }`}
+                                >
                                     <Input
                                         type="text"
                                         name="name"
@@ -141,8 +135,8 @@ const StoreOrganizationChangeActivity = ({ orgName, storeName, disabled }: Props
                         success={success}
                         successMsg={
                             <p>
-                                The JSON store <strong>{storeName}</strong> was moved successfully to{' '}
-                                <strong>{state}</strong> organization.
+                                The JSON store <strong>{storeName}</strong> was moved successfully
+                                to <strong>{state}</strong> organization.
                             </p>
                         }
                         error={error}
