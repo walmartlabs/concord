@@ -36,7 +36,7 @@ import LogSegmentActivity from './LogSegmentActivity';
 import { FormWizardAction, ProcessToolbar } from '../../molecules';
 import { Button, Divider, Dropdown, DropdownProps, Popup, Radio } from 'semantic-ui-react';
 import { LogProcessorOptions } from '../../../state/data/processes/logs/processors';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { FormListEntry, list as apiListForms } from '../../../api/process/form';
 
 const DEFAULT_SEGMENT_OPTS: LogProcessorOptions = {

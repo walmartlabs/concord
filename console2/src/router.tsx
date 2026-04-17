@@ -26,7 +26,7 @@ import {
     useParams,
     type Location,
     type NavigateFunction,
-} from 'react-router-dom';
+} from 'react-router';
 
 interface HistoryCompat {
     location: Location;

@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Dropdown, Image, Menu } from 'semantic-ui-react';
 import { CustomResources, LinkMeta } from '../../../../cfg';
 

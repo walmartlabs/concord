@@ -36,7 +36,7 @@ import { whoami as apiWhoami } from '../../../api/service/console';
 import { UserSessionContext } from '../../../session';
 
 import './styles.css';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { parse as parseQueryString } from 'query-string';
 
 const nonEmpty = (s?: string) => {

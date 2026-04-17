@@ -25,7 +25,7 @@ import { useCallback, useState } from 'react';
 import { deleteStorage as apiDelete } from '../../../api/org/jsonstore';
 import { useApi } from '../../../hooks/useApi';
 import RequestErrorActivity from '../../organisms/RequestErrorActivity';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 
 interface ExternalProps {
     orgName: ConcordKey;

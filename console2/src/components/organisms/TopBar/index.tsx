@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { useContext } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router';
 
 import { CustomResources, LinkMeta } from '../../../../cfg';
 import { GlobalNavMenu, GlobalNavTab } from '../../molecules';
