@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { useCallback, useRef, useState, useEffect } from 'react';
 
-import { Link, Navigate, Route, Routes } from 'react-router-dom';
+import { Link, Navigate, Route, Routes } from 'react-router';
 import { Icon, Menu } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';

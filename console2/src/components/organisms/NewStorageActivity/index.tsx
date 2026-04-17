@@ -27,7 +27,7 @@ import { useCallback, useState } from 'react';
 import { StorageVisibility, createOrUpdate as apiCreate } from '../../../api/org/jsonstore';
 import { useApi } from '../../../hooks/useApi';
 import { NewStorageFormValues } from '../../molecules/NewStorageForm';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 
 interface ExternalProps {
     orgName: ConcordKey;

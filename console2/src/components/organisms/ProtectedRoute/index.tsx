@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { ReactNode, useContext } from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router';
 import { Dimmer, Loader } from 'semantic-ui-react';
 
 import { UserSessionContext } from '../../../session';

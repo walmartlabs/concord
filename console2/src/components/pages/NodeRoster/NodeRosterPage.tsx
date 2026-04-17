@@ -23,8 +23,8 @@ import { useCallback, useRef, useState } from 'react';
 import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
 import { LoadingState } from '../../../App';
-import { Link } from 'react-router-dom';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Link } from 'react-router';
+import { Navigate, Route, Routes } from 'react-router';
 import { RouteComponentProps, withRouter } from '@/router';
 import { NotFoundPage } from '../index';
 import NodeRosterHostsList from './NodeRosterHostsList';

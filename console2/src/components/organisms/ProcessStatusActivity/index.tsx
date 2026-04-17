@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Divider } from 'semantic-ui-react';
 
 import { get as apiGet, isFinal, ProcessEntry, ProcessStatus } from '../../../api/process';

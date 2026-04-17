@@ -29,7 +29,7 @@ import {
     StorageQueryEntry,
 } from '../../../api/org/jsonstore';
 import { useApi } from '../../../hooks/useApi';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 import { RequestErrorActivity } from '../../organisms';
 import EditStoreQueryForm from './EditStoreQueryForm';
 import ExecuteQueryResult from './ExecuteQueryResult';

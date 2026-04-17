@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Link, Navigate, Route, Routes } from 'react-router-dom';
+import { Link, Navigate, Route, Routes } from 'react-router';
 import { Divider, Grid, Header, Icon, Loader, Menu, Segment, Table } from 'semantic-ui-react';
 import { parseISO as parseDate } from 'date-fns';
 

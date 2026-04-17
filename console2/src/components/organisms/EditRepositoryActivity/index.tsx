@@ -31,7 +31,7 @@ import {
 } from '../../../api/org/project/repository';
 import { useApi } from '../../../hooks/useApi';
 import { ConcordKey, RequestError } from '../../../api/common';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 
 interface ExternalProps {
     orgName: ConcordKey;

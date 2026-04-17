@@ -19,11 +19,11 @@
  */
 
 import * as React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 
 import { RequestError } from '../../../api/common';
 import { RequestErrorMessage } from '../../molecules';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { Dimmer, Loader } from 'semantic-ui-react';
 import { setQueryParam } from '../../../utils';
 

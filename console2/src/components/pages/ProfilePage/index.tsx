@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router';
 import { Breadcrumb, Grid, Menu } from 'semantic-ui-react';
 
 import { BreadcrumbSegment } from '../../molecules';

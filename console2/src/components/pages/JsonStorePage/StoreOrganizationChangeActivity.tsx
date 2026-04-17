@@ -26,7 +26,7 @@ import { createOrUpdate as apiChangeOrganization } from '../../../api/org/jsonst
 import { ConcordKey, RequestError } from '../../../api/common';
 import { SingleOperationPopup } from '../../molecules';
 import { Form, Input } from 'semantic-ui-react';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 import { FindOrganizationsField, RequestErrorActivity } from '../../organisms';
 
 interface Props {

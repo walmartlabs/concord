@@ -28,7 +28,7 @@ import { useCallback, useState } from 'react';
 import { createOrUpdate as apiCreate } from '../../../api/org/project';
 import { useApi } from '../../../hooks/useApi';
 import { LoadingDispatch } from '../../../App';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 
 interface ExternalProps {
     orgName: ConcordKey;
