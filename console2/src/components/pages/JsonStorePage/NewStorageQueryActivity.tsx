@@ -27,7 +27,7 @@ import {
     executeQuery as apiExecuteQuery,
 } from '../../../api/org/jsonstore';
 import { useApi } from '../../../hooks/useApi';
-import { Redirect } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { RequestErrorActivity } from '../../organisms';
 import NewStorageQueryForm, { NewStorageQueryFormValues } from './NewStorageQueryForm';
 import ExecuteQueryResult from './ExecuteQueryResult';
@@ -93,7 +93,7 @@ const NewStorageQueryActivity = (props: ExternalProps) => {
     );
 
     if (data) {
-        return <Redirect to={`/org/${orgName}/jsonstore/${storeName}/query`} />;
+        return <Navigate to={`/org/${orgName}/jsonstore/${storeName}/query`} />;
     }
 
     return (

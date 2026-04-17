@@ -27,7 +27,7 @@ import { useCallback, useState } from 'react';
 import { StorageVisibility, createOrUpdate as apiCreate } from '../../../api/org/jsonstore';
 import { useApi } from '../../../hooks/useApi';
 import { NewStorageFormValues } from '../../molecules/NewStorageForm';
-import { Redirect } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -54,7 +54,7 @@ const NewStoreActivity = ({ orgName }: ExternalProps) => {
     }, []);
 
     if (data) {
-        return <Redirect to={`/org/${orgName}/jsonstore/${values.name}`} />;
+        return <Navigate to={`/org/${orgName}/jsonstore/${values.name}`} />;
     }
 
     return (

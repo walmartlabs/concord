@@ -30,7 +30,7 @@ import { ConcordKey, RequestError } from '../../../api/common';
 import { SingleOperationPopup } from '../../molecules';
 import { Form, Input } from 'semantic-ui-react';
 import { FindOrganizationsField, RequestErrorActivity } from '../index';
-import { Redirect } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 interface Props {
     orgName: ConcordKey;
@@ -79,7 +79,7 @@ export default ({ orgName, projectName, disabled }: Props) => {
     }, []);
 
     if (redirect) {
-        return <Redirect to={`/org/${state}/project/${projectName}`} />;
+        return <Navigate to={`/org/${state}/project/${projectName}`} />;
     }
 
     return (

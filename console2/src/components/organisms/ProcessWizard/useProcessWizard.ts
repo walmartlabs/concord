@@ -18,7 +18,7 @@
  * =====
  */
 import { useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useHistory } from '@/router';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import { get as apiGetProcess, isFinal, ProcessStatus } from '../../../api/process';

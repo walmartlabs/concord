@@ -25,7 +25,7 @@ import { RequestErrorActivity } from '../index';
 import { useCallback } from 'react';
 import { deleteProject as apiDelete } from '../../../api/org/project';
 import { useApi } from '../../../hooks/useApi';
-import { Redirect } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -54,7 +54,7 @@ const ProjectDeleteActivity = (props: ExternalProps) => {
     }, [clearState, fetch]);
 
     if (data) {
-        return <Redirect to={`/org/${orgName}/project`} />;
+        return <Navigate to={`/org/${orgName}/project`} />;
     }
 
     return (

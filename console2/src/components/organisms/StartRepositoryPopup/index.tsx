@@ -18,7 +18,7 @@
  * =====
  */
 import { ReactNode, useCallback, useMemo, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useHistory } from '@/router';
 import { Dropdown, DropdownItemProps, Message, Table } from 'semantic-ui-react';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';

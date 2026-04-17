@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from '@/router';
 import { Link } from 'react-router-dom';
 import { Breadcrumb } from 'semantic-ui-react';
 
@@ -88,4 +88,4 @@ const ProjectPage = (props: RouteComponentProps<RouteProps>) => {
     );
 };
 
-export default ProjectPage;
+export default withRouter(ProjectPage);
