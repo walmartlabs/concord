@@ -63,10 +63,11 @@ public class CronMatcherIT {
         consoleRule.navigateToRelative("/#/org/" + orgName + "/project/" + projectName + "/repository/" + repoName + "/triggers");
         consoleRule.waitForLoad();
 
-        var conditions = consoleRule.waitFor(By.xpath("//pre[contains(., 'Expression:') and contains(., '0 0 1 1 *')]"));
+        var conditions = consoleRule.waitFor(By.xpath("//pre[contains(., 'Expression:') and contains(., '0 10 * * *')]"));
         var text = conditions.getText();
 
         assertTrue(text.contains("Next run:"));
+        assertTrue(text.contains("Timezone: America/Toronto"));
         assertFalse(text.contains("Unavailable"));
         assertFalse(text.contains("Bad date value"));
     }

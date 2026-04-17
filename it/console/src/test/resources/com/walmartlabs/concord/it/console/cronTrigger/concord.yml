@@ -4,5 +4,6 @@ flows:
 
 triggers:
 - cron:
-    spec: "0 0 1 1 *"
+    spec: "0 10 * * *"
+    timezone: "America/Toronto"
     entryPoint: default

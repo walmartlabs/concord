@@ -36,8 +36,8 @@ interface ExternalProps {
     repoName: ConcordKey;
 }
 
-const renderNextRun = (spec?: string) => {
-    const nextRun = getFutureCronMatches(spec, { matchCount: 1 })[0];
+const renderNextRun = (spec?: string, timeZone?: string) => {
+    const nextRun = getFutureCronMatches(spec, { matchCount: 1, timeZone })[0];
 
     if (!nextRun) {
         return 'Unavailable';
@@ -103,7 +103,17 @@ const RepositoryTriggersActivity = ({ orgName, projectName, repoName }: External
                                             <pre>
                                                 Expression: <b>{t.conditions?.spec}</b>
                                                 <br />
-                                                Next run: {renderNextRun(t.conditions?.spec)}
+                                                {t.conditions?.timezone && (
+                                                    <>
+                                                        Timezone: <b>{t.conditions.timezone}</b>
+                                                        <br />
+                                                    </>
+                                                )}
+                                                Next run:{' '}
+                                                {renderNextRun(
+                                                    t.conditions?.spec,
+                                                    t.conditions?.timezone
+                                                )}
                                             </pre>
                                         )}
                                     </Table.Cell>
