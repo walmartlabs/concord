@@ -18,12 +18,12 @@
  * =====
  */
 
-import copyToClipboard from 'copy-to-clipboard';
 import * as React from 'react';
 import { Button, Loader, Popup, TextArea } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { getPublicKey as apiGetPublicKey } from '../../../api/org/secret';
+import { copyToClipboard } from '../../../clipboard';
 import { RequestErrorMessage } from '../../molecules';
 
 import './styles.css';
@@ -91,7 +91,7 @@ class PublicKeyPopup extends React.Component<Props, State> {
                     size="mini"
                     icon="copy"
                     content="Copy"
-                    onClick={() => (copyToClipboard as any)(publicKey)}
+                    onClick={() => copyToClipboard(publicKey)}
                 />
                 <TextArea className="publicKeyData" value={publicKey} />
             </>
