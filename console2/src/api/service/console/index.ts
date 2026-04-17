@@ -18,9 +18,9 @@
  * =====
  */
 
-import { throttle } from 'lodash';
 import { ConcordKey, fetchJson, managedFetch, queryParams } from '../../common';
 import { Organizations } from '../../../state/data/orgs/types';
+import { throttle } from '../../../utils';
 
 export interface UserResponse {
     username: string;

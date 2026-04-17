@@ -20,9 +20,9 @@
 
 import React, { useRef, useState } from 'react';
 import { Button } from 'semantic-ui-react';
-import _ from 'lodash';
 import './styles.css';
 import LoadingEditor from '../LoadingEditor';
+import { deepEqual } from '../../../utils';
 
 interface Props {
     config?: Object;
@@ -46,7 +46,7 @@ const ProjectConfiguration: React.FunctionComponent<Props> = ({ config, submitti
                 // @ts-ignore: Cannot invoke an object which is possibly 'undefined'.
                 const jsonObj = JSON.parse(valueGetter.current());
                 setJsonError('');
-                if (!_.isEqual(jsonObj, config)) {
+                if (!deepEqual(jsonObj, config)) {
                     submit(jsonObj);
                 } else {
                     setJsonError('No changes detected');

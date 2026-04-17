@@ -48,7 +48,7 @@ import RequestErrorActivity from '../RequestErrorActivity';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApi } from '../../../hooks/useApi';
 import { LoadingDispatch } from '../../../App';
-import _ from 'lodash';
+import { deepEqual } from '../../../utils';
 
 // list of "built-in" columns, i.e. columns that can be referenced using "builtin" parameter
 // of the custom column configuration
@@ -174,7 +174,7 @@ const ProcessListActivity = ({
             isInitialMount.current = false;
         } else {
             const filter = parseSearchFilter(location.search);
-            setSearchFilter((prev) => (_.isEqual(filter, prev) ? prev : filter));
+            setSearchFilter((prev) => (deepEqual(filter, prev) ? prev : filter));
         }
     }, [location]);
 
