@@ -35,7 +35,8 @@ import {
     REPO_COLUMN,
     STATUS_COLUMN,
 } from '../../molecules/ProcessList';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useHistory } from '@/router';
 import {
     addBuiltInColumns,
     filtersToQuery,

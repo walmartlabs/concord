@@ -24,7 +24,7 @@ import { RedirectButton } from '../../organisms';
 
 import './styles.css';
 import { Card, CardContent, CardDescription, CardHeader, Divider, Image } from 'semantic-ui-react';
-import { withRouter } from 'react-router-dom';
+import { withRouter } from '@/router';
 
 export default withRouter((props) => {
     const error = new URLSearchParams(props.location.search).get('error');

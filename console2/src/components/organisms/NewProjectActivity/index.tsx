@@ -28,7 +28,7 @@ import { useCallback, useState } from 'react';
 import { createOrUpdate as apiCreate } from '../../../api/org/project';
 import { useApi } from '../../../hooks/useApi';
 import { LoadingDispatch } from '../../../App';
-import { Redirect } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -65,7 +65,7 @@ const NewProjectActivity = (props: ExternalProps) => {
     );
 
     if (data) {
-        return <Redirect to={`/org/${orgName}/project/${values.name}`} />;
+        return <Navigate to={`/org/${orgName}/project/${values.name}`} />;
     }
 
     return (

@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from '@/router';
 import { Link } from 'react-router-dom';
 import { Breadcrumb, Container, Header, Segment } from 'semantic-ui-react';
 
@@ -88,4 +88,4 @@ const renderBreadcrumbs = (orgName: string, storeName: string, queryName: string
     );
 };
 
-export default EditStoreQueryPage;
+export default withRouter(EditStoreQueryPage);
