@@ -63,10 +63,7 @@ public class ProjectProcessResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectProcessResource.class);
 
-    private static final String DEFAULT_LIST_LIMIT = "100";
-
     private final ProcessManager processManager;
-    private final OrganizationManager orgManager;
     private final OrganizationDao orgDao;
     private final ProcessQueueDao queueDao;
     private final ProcessQueueManager processQueueManager;
@@ -85,7 +82,6 @@ public class ProjectProcessResource implements Resource {
                                   FormServiceV1 formServiceV1,
                                   FormServiceV2 formServiceV2,
                                   ResponseTemplates responseTemplates,
-                                  OrganizationManager orgManager,
                                   ProjectDao projectDao,
                                   RepositoryDao repositoryDao,
                                   ProcessStateManager stateManager) {
@@ -97,7 +93,6 @@ public class ProjectProcessResource implements Resource {
         this.formServiceV1 = formServiceV1;
         this.formServiceV2 = formServiceV2;
         this.responseTemplates = responseTemplates;
-        this.orgManager = orgManager;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
         this.stateManager = stateManager;
