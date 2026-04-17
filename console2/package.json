@@ -30,6 +30,7 @@
     "scripts": {
         "start": "vite",
         "dev": "vite",
+        "test": "node --test src/*.test.ts",
         "build": "vite build",
         "build:check": "tsc && vite build",
         "preview": "vite preview",

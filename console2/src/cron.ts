@@ -33,6 +33,8 @@ interface CronExpression {
 
 interface FutureMatchOptions {
     matchCount?: number;
+    now?: Date;
+    timeZone?: string;
 }
 
 const aliases: Record<string, string> = {
@@ -70,7 +72,66 @@ const dayNames: Record<string, number> = {
     SAT: 6,
 };
 
+interface DateParts {
+    minute: number;
+    hour: number;
+    dayOfMonth: number;
+    month: number;
+    dayOfWeek: number;
+}
+
+const formatterCache = new Map<string, Intl.DateTimeFormat>();
+
 const normalizeDayOfWeek = (value: number) => (value === 7 ? 0 : value);
+
+const getFormatter = (timeZone: string) => {
+    let formatter = formatterCache.get(timeZone);
+    if (!formatter) {
+        formatter = new Intl.DateTimeFormat('en-US-u-ca-gregory', {
+            timeZone,
+            weekday: 'short',
+            month: 'numeric',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            hourCycle: 'h23',
+        });
+        formatterCache.set(timeZone, formatter);
+    }
+
+    return formatter;
+};
+
+const getDateParts = (date: Date, timeZone: string): DateParts => {
+    if (timeZone === 'UTC') {
+        return {
+            minute: date.getUTCMinutes(),
+            hour: date.getUTCHours(),
+            dayOfMonth: date.getUTCDate(),
+            month: date.getUTCMonth() + 1,
+            dayOfWeek: date.getUTCDay(),
+        };
+    }
+
+    const parts = getFormatter(timeZone).formatToParts(date);
+    const getPart = (type: Intl.DateTimeFormatPartTypes) =>
+        parts.find((part) => part.type === type)?.value;
+
+    const weekday = getPart('weekday')?.toUpperCase().slice(0, 3);
+    const dayOfWeek = weekday ? dayNames[weekday] : undefined;
+
+    if (dayOfWeek === undefined) {
+        throw new Error(`Unable to read day of week for timezone: ${timeZone}`);
+    }
+
+    return {
+        minute: Number(getPart('minute')),
+        hour: Number(getPart('hour')),
+        dayOfMonth: Number(getPart('day')),
+        month: Number(getPart('month')),
+        dayOfWeek,
+    };
+};
 
 const parseValue = (value: string, min: number, max: number, names?: Record<string, number>) => {
     const parsed = names?.[value] ?? Number(value);
@@ -171,9 +232,9 @@ const parseCronExpression = (expression: string): CronExpression => {
     };
 };
 
-const matchesDay = (date: Date, expression: CronExpression) => {
-    const dayOfMonthMatches = expression.dayOfMonth.values.has(date.getUTCDate());
-    const dayOfWeekMatches = expression.dayOfWeek.values.has(date.getUTCDay());
+const matchesDay = (parts: DateParts, expression: CronExpression) => {
+    const dayOfMonthMatches = expression.dayOfMonth.values.has(parts.dayOfMonth);
+    const dayOfWeekMatches = expression.dayOfWeek.values.has(parts.dayOfWeek);
 
     if (expression.dayOfMonth.wildcard && expression.dayOfWeek.wildcard) {
         return true;
@@ -190,17 +251,22 @@ const matchesDay = (date: Date, expression: CronExpression) => {
     return dayOfMonthMatches || dayOfWeekMatches;
 };
 
-const matches = (date: Date, expression: CronExpression) =>
-    expression.minute.values.has(date.getUTCMinutes()) &&
-    expression.hour.values.has(date.getUTCHours()) &&
-    expression.month.values.has(date.getUTCMonth() + 1) &&
-    matchesDay(date, expression);
+const matches = (date: Date, expression: CronExpression, timeZone: string) => {
+    const parts = getDateParts(date, timeZone);
+
+    return (
+        expression.minute.values.has(parts.minute) &&
+        expression.hour.values.has(parts.hour) &&
+        expression.month.values.has(parts.month) &&
+        matchesDay(parts, expression)
+    );
+};
 
 const formatMatch = (date: Date) => date.toISOString().replace('.000Z', 'Z');
 
 export const getFutureCronMatches = (
     expression?: string,
-    { matchCount = 1 }: FutureMatchOptions = {}
+    { matchCount = 1, now = new Date(), timeZone = 'UTC' }: FutureMatchOptions = {}
 ): string[] => {
     if (!expression || matchCount < 1) {
         return [];
@@ -216,18 +282,23 @@ export const getFutureCronMatches = (
     }
 
     const result = [];
-    const cursor = new Date();
+    const cursor = new Date(now);
     cursor.setUTCSeconds(0, 0);
     cursor.setUTCMinutes(cursor.getUTCMinutes() + 1);
 
     const maxAttempts = 5 * 366 * 24 * 60;
 
-    for (let attempts = 0; attempts < maxAttempts && result.length < matchCount; attempts++) {
-        if (matches(cursor, parsed)) {
-            result.push(formatMatch(cursor));
-        }
+    try {
+        for (let attempts = 0; attempts < maxAttempts && result.length < matchCount; attempts++) {
+            if (matches(cursor, parsed, timeZone)) {
+                result.push(formatMatch(cursor));
+            }
 
-        cursor.setUTCMinutes(cursor.getUTCMinutes() + 1);
+            cursor.setUTCMinutes(cursor.getUTCMinutes() + 1);
+        }
+    } catch (e) {
+        console.warn('Unable to match cron expression:', expression, e);
+        return [];
     }
 
     return result;
