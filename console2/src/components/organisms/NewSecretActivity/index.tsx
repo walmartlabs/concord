@@ -18,11 +18,11 @@
  * =====
  */
 
-import copyToClipboard from 'copy-to-clipboard';
 import * as React from 'react';
 import { Button, Message, TextArea } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
+import { copyToClipboard } from '../../../clipboard';
 import {
     CreateSecretResponse,
     SecretStoreType,
@@ -86,7 +86,7 @@ const NewSecretActivity = ({ orgName }: ExternalProps) => {
                                 icon="copy"
                                 size="mini"
                                 basic={true}
-                                onClick={() => (copyToClipboard as any)(publicKey)}
+                                onClick={() => copyToClipboard(publicKey)}
                             />
                             <TextArea className="secretData" value={publicKey} rows={5} />
                         </div>
@@ -99,7 +99,7 @@ const NewSecretActivity = ({ orgName }: ExternalProps) => {
                                 icon="copy"
                                 size="mini"
                                 basic={true}
-                                onClick={() => (copyToClipboard as any)(password)}
+                                onClick={() => copyToClipboard(password)}
                             />
                             <TextArea className="secretData" value={password} rows={2} />
                         </div>
