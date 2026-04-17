@@ -19,7 +19,7 @@
  */
 
 import { format as formatDate, parseISO as parseDate } from 'date-fns';
-import {AnsiUp} from "ansi_up/ansi_up";
+import { ansiToHtml } from './ansi';
 
 interface HasName {
     name: string;
@@ -261,9 +261,6 @@ export interface HighlighterProps {
     global?: boolean;
 }
 
-const ansiUp = new AnsiUp();
-ansiUp.escape_html = false;
-
 export const highlight = (value: string, props: HighlighterProps): string => {
     const { config, caseInsensitive = false, global = true } = props;
     const regExpCfg = `${caseInsensitive ? 'i' : ''}
@@ -282,7 +279,7 @@ export const highlight = (value: string, props: HighlighterProps): string => {
         }
     }
 
-    txt = ansiUp.ansi_to_html(txt);
+    txt = ansiToHtml(txt);
 
     return txt;
 };

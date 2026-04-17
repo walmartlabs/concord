@@ -16,7 +16,6 @@
     "dependencies": {
         "@datasert/cronjs-matcher": "^1.4.0",
         "@monaco-editor/react": "4.3.1",
-        "ansi_up": "6.0.6",
         "date-fns": "2.27.0",
         "formik": "2.2.9",
         "react": "18.2.0",
