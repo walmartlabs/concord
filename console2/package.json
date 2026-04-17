@@ -4,7 +4,6 @@
     "private": true,
     "type": "module",
     "devDependencies": {
-        "@types/lodash": "4.14.178",
         "@types/node": "^24.12.2",
         "@types/react": "^17.0.91",
         "@types/react-dom": "^17.0.26",
@@ -23,7 +22,6 @@
         "copy-to-clipboard": "3.3.1",
         "date-fns": "2.27.0",
         "formik": "2.2.9",
-        "lodash": "4.18.1",
         "react": "18.2.0",
         "react-dom": "18.2.0",
         "react-hook-form": "7.21.2",
