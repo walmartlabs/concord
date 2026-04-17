@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 
 import { CustomResources, LinkMeta } from '../../../../cfg';
 import { GlobalNavMenu, GlobalNavTab } from '../../molecules';
@@ -79,7 +79,11 @@ class TopBar extends React.PureComponent<TopBarProps> {
             return () => (window.location.href = logoutUrl);
         }
 
-        return () => logout(userSession);
+        return async () => {
+            if (await logout(userSession)) {
+                this.props.history.push('/logout/done');
+            }
+        };
     }
 
     render() {

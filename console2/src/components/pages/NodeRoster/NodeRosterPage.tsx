@@ -24,7 +24,7 @@ import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
 import { LoadingState } from '../../../App';
 import { Link } from 'react-router-dom';
-import { Redirect, Route, RouteComponentProps, Switch } from 'react-router';
+import { Redirect, Route, RouteComponentProps, Switch } from 'react-router-dom';
 import { NotFoundPage } from '../index';
 import NodeRosterHostsList from './NodeRosterHostsList';
 import NodeRosterArtifactsList from './NodeRosterArtifactsList';

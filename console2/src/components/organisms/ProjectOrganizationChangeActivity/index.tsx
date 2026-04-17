@@ -23,14 +23,14 @@ import { useCallback, useState } from 'react';
 
 import {
     createOrUpdate as apiChangeOrganization,
-    UpdateProjectEntry
+    UpdateProjectEntry,
 } from '../../../api/org/project';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { SingleOperationPopup } from '../../molecules';
 import { Form, Input } from 'semantic-ui-react';
 import { FindOrganizationsField, RequestErrorActivity } from '../index';
-import { Redirect } from 'react-router';
+import { Redirect } from 'react-router-dom';
 
 interface Props {
     orgName: ConcordKey;
@@ -50,7 +50,7 @@ export default ({ orgName, projectName, disabled }: Props) => {
     const toUpdateProjectEntry = (orgName: string, projectName: string): UpdateProjectEntry => {
         return {
             name: projectName,
-            orgName
+            orgName,
         };
     };
 
@@ -141,7 +141,8 @@ export default ({ orgName, projectName, disabled }: Props) => {
                                 <div
                                     className={`ui input ${
                                         confirmation !== projectName ? 'error' : ''
-                                    }`}>
+                                    }`}
+                                >
                                     <Input
                                         type="text"
                                         name="name"

@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { useCallback, useContext, useState } from 'react';
 import {
     Card,
@@ -29,7 +29,7 @@ import {
     Form,
     Image,
     Loader,
-    Message
+    Message,
 } from 'semantic-ui-react';
 
 import { whoami as apiWhoami } from '../../../api/service/console';
@@ -139,15 +139,7 @@ const Login = (props: RouteComponentProps<{}>) => {
         } finally {
             setLoggingIn(false);
         }
-    }, [
-        username,
-        password,
-        rememberMe,
-        apiKey,
-        setLoggingIn,
-        setUserInfo,
-        props,
-    ]);
+    }, [username, password, rememberMe, apiKey, setLoggingIn, setUserInfo, props]);
 
     const onChangeLoginType = useCallback(() => {
         clearLastLoginType();
@@ -173,7 +165,8 @@ const Login = (props: RouteComponentProps<{}>) => {
 
                 <Form
                     error={!!apiError || validationError !== undefined}
-                    onSubmit={() => handleSubmit()}>
+                    onSubmit={() => handleSubmit()}
+                >
                     {!useApiKey && (
                         <>
                             <Form.Input

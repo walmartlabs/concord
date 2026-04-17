@@ -20,11 +20,11 @@
 
 import * as React from 'react';
 import { ReactNode } from 'react';
-import { Redirect, Route, RouteComponentProps, RouteProps, withRouter } from 'react-router';
+import { Redirect, Route, RouteComponentProps, RouteProps, withRouter } from 'react-router-dom';
 import { Dimmer, Loader } from 'semantic-ui-react';
 
 import { UserSession, UserSessionContext } from '../../../session';
-import {setQueryParam} from "../../../utils";
+import { setQueryParam } from '../../../utils';
 
 interface ProtectedRouteStateProps {
     component?: React.ComponentType<RouteComponentProps<{}>>;
@@ -54,7 +54,7 @@ const renderRoute = (
             const requested = new URL(window.location.href).hash;
             // delay the redirect to avoid layout issues
             setTimeout(() => {
-                window.location.href = setQueryParam(loginUrl, 'from', '/' + requested)
+                window.location.href = setQueryParam(loginUrl, 'from', '/' + requested);
             }, 1000);
 
             return (
@@ -68,8 +68,8 @@ const renderRoute = (
                     to={{
                         pathname: '/login',
                         state: {
-                            from: props.location
-                        }
+                            from: props.location,
+                        },
                     }}
                 />
             );

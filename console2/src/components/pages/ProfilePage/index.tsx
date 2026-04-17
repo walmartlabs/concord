@@ -23,7 +23,7 @@ import { Link } from 'react-router-dom';
 import { Breadcrumb, Grid, Menu } from 'semantic-ui-react';
 
 import { BreadcrumbSegment } from '../../molecules';
-import { Redirect, Route, RouteComponentProps, Switch, withRouter } from 'react-router';
+import { Redirect, Route, RouteComponentProps, Switch, withRouter } from 'react-router-dom';
 import { NotFoundPage } from '../index';
 import { APITokensListPage, NewAPITokenPage, UserInfoPage } from '../../../components/pages';
 
@@ -31,13 +31,13 @@ interface RouteProps {
     orgName: string;
 }
 
-type TabLink = 'user-info' |'token' | null;
+type TabLink = 'user-info' | 'token' | null;
 
 const pathToTab = (s: string): TabLink => {
     if (s.includes('/api-token')) {
         return 'token';
     } else if (s.includes('/user-info')) {
-        return 'user-info'
+        return 'user-info';
     }
 
     return null;

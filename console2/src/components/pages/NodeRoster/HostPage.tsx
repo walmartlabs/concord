@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Redirect, Route, RouteComponentProps, Switch } from 'react-router';
+import { Redirect, Route, RouteComponentProps, Switch } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
@@ -72,7 +72,7 @@ const HostPage = (props: RouteComponentProps<RouteProps>) => {
     const { data, error } = useApi<HostEntry>(fetchData, {
         fetchOnMount: true,
         forceRequest: refresh,
-        dispatch: dispatch
+        dispatch: dispatch,
     });
 
     const refreshHandler = useCallback(() => {
