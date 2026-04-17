@@ -5,9 +5,8 @@
     "type": "module",
     "devDependencies": {
         "@datasert/cronjs-matcher": "^1.4.0",
-        "@testing-library/react": "12.1.2",
-        "@types/jest": "27.0.3",
         "@types/lodash": "4.14.178",
+        "@types/node": "^24.12.2",
         "@types/react": "^17.0.91",
         "@types/react-dom": "^17.0.26",
         "@types/styled-components": "5.1.17",
@@ -45,7 +44,6 @@
         "build": "vite build",
         "build:check": "tsc && vite build",
         "preview": "vite preview",
-        "test": "vitest",
         "pretty": "prettier --tab-width 4 --print-width 100 --single-quote --jsx-bracket-same-line --arrow-parens 'always' parser 'typescript' --write 'src/**/*.{ts,tsx}'"
     },
     "browserslist": [
