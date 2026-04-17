@@ -19,8 +19,8 @@
  */
 
 import * as React from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
-import { Link } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router';
+import { Link } from 'react-router';
 import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
 import { RouteComponentProps, withRouter } from '@/router';

@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Dispatch, useEffect, useReducer, useState } from 'react';
-import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { HashRouter, Navigate, Route, Routes } from 'react-router';
 
 import { ProtectedRoute } from './components/organisms';
 import {

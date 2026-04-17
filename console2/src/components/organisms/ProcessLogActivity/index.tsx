@@ -37,7 +37,7 @@ import {
 } from 'react';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { getLog as apiGetLog, LogRange } from '../../../api/process/log';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 
 interface ExternalProps {
     instanceId: ConcordId;

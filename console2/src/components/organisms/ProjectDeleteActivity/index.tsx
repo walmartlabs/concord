@@ -25,7 +25,7 @@ import { RequestErrorActivity } from '../index';
 import { useCallback } from 'react';
 import { deleteProject as apiDelete } from '../../../api/org/project';
 import { useApi } from '../../../hooks/useApi';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 
 interface ExternalProps {
     orgName: ConcordKey;

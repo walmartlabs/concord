@@ -27,7 +27,7 @@ import { LoadingState } from '../../../App';
 import { useCallback, useState } from 'react';
 import { BreadcrumbsToolbar } from '../../organisms';
 import { Breadcrumb } from 'semantic-ui-react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 interface RouteProps {
     orgName: string;

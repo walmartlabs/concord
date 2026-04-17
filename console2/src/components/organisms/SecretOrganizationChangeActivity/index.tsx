@@ -27,7 +27,7 @@ import { RequestError } from '../../../api/common';
 import { SingleOperationPopup } from '../../molecules';
 import { Form, Input } from 'semantic-ui-react';
 import { FindOrganizationsField, RequestErrorActivity } from '../index';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 
 interface Props {
     orgName: string;
