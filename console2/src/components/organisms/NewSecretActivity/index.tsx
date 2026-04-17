@@ -37,7 +37,7 @@ import './styles.css';
 import { LoadingDispatch } from '../../../App';
 import { useCallback, useState } from 'react';
 import { RequestErrorActivity } from '../index';
-import { useHistory } from 'react-router-dom';
+import { useHistory } from '@/router';
 
 interface ExternalProps {
     orgName: ConcordKey;

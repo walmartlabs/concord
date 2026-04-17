@@ -25,7 +25,7 @@ import { useCallback, useState } from 'react';
 import { deleteStorage as apiDelete } from '../../../api/org/jsonstore';
 import { useApi } from '../../../hooks/useApi';
 import RequestErrorActivity from '../../organisms/RequestErrorActivity';
-import { Redirect } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -50,7 +50,7 @@ const StoreDeleteActivity = ({ orgName, storeName, disabled }: ExternalProps) =>
     }, []);
 
     if (data) {
-        return <Redirect to={`/org/${orgName}/jsonstore`} />;
+        return <Navigate to={`/org/${orgName}/jsonstore`} />;
     }
 
     return (

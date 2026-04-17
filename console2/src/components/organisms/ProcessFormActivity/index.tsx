@@ -18,7 +18,7 @@
  * =====
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useHistory } from '@/router';
 import { Loader, Segment } from 'semantic-ui-react';
 
 import { ConcordId, RequestError } from '../../../api/common';

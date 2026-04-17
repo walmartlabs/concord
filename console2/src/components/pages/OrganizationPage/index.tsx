@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from '@/router';
 
 import { TabLink } from '../../organisms/OrganizationActivity';
 import { OrganizationActivity } from '../../organisms';
@@ -81,4 +81,4 @@ const OrganizationPage = (props: RouteComponentProps<RouteProps>) => {
     );
 };
 
-export default OrganizationPage;
+export default withRouter(OrganizationPage);

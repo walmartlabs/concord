@@ -26,7 +26,7 @@ import { createOrUpdate as apiChangeOrganization } from '../../../api/org/jsonst
 import { ConcordKey, RequestError } from '../../../api/common';
 import { SingleOperationPopup } from '../../molecules';
 import { Form, Input } from 'semantic-ui-react';
-import { Redirect } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { FindOrganizationsField, RequestErrorActivity } from '../../organisms';
 
 interface Props {
@@ -66,7 +66,7 @@ const StoreOrganizationChangeActivity = ({ orgName, storeName, disabled }: Props
     }, []);
 
     if (redirect) {
-        return <Redirect to={`/org/${state}/jsonstore/${storeName}`} />;
+        return <Navigate to={`/org/${state}/jsonstore/${storeName}`} />;
     }
 
     return (

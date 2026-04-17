@@ -31,7 +31,7 @@ import {
 } from '../../../api/org/project/repository';
 import { useApi } from '../../../hooks/useApi';
 import { ConcordKey, RequestError } from '../../../api/common';
-import { Redirect } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -100,7 +100,7 @@ const EditRepositoryActivity = (props: ExternalProps) => {
     );
 
     if (success) {
-        return <Redirect to={`/org/${orgName}/project/${projectName}/repository`} />;
+        return <Navigate to={`/org/${orgName}/project/${projectName}/repository`} />;
     }
 
     if (loadError) {

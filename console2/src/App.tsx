@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Dispatch, useEffect, useReducer, useState } from 'react';
-import { HashRouter, Redirect, Route, Switch } from 'react-router-dom';
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { ProtectedRoute } from './components/organisms';
 import {
@@ -81,177 +81,105 @@ const App = () => {
                     <UserSessionContext.Provider
                         value={{ userInfo, setUserInfo, loggingIn, setLoggingIn }}
                     >
-                        <Switch>
-                            <Route exact={true} path="/">
-                                <Redirect to="/activity" />
-                            </Route>
+                        <Routes>
+                            <Route path="/" element={<Navigate to="/activity" replace={true} />} />
 
                             {/* pages with no decorations */}
-                            <Route path="/login">
-                                <LoginPage />
-                            </Route>
-
-                            <Route path="/logout/done">
-                                <LogoutPage />
-                            </Route>
-
-                            <Route path="/unauthorized">
-                                <UnauthorizedPage />
-                            </Route>
-
-                            <ProtectedRoute path="/processCard/:cardId/form">
-                                <ProcessCardFormPage />
-                            </ProtectedRoute>
+                            <Route path="/login" element={<LoginPage />} />
+                            <Route path="/logout/done" element={<LogoutPage />} />
+                            <Route path="/unauthorized" element={<UnauthorizedPage />} />
+                            <Route
+                                path="/processCard/:cardId/form"
+                                element={
+                                    <ProtectedRoute>
+                                        <ProcessCardFormPage />
+                                    </ProtectedRoute>
+                                }
+                            />
 
                             {/* pages with standard decorations (provided by Layout) */}
-                            <Layout>
-                                <Switch>
-                                    <ProtectedRoute
-                                        path="/activity"
-                                        exact={true}
-                                        component={UserActivityPage}
+                            <Route element={<ProtectedRoute />}>
+                                <Route element={<Layout />}>
+                                    <Route path="/activity" element={<UserActivityPage />} />
+                                    <Route path="/org" element={<OrganizationListPage />} />
+                                    <Route
+                                        path="/org/:orgName/project/:projectName/repository/_new"
+                                        element={<AddRepositoryPage />}
+                                    />
+                                    <Route
+                                        path="/org/:orgName/project/:projectName/repository/:repoName/*"
+                                        element={<RepositoryPage />}
+                                    />
+                                    <Route
+                                        path="/org/:orgName/project/_new"
+                                        element={<NewProjectPage />}
+                                    />
+                                    <Route
+                                        path="/org/:orgName/project/:projectName/*"
+                                        element={<ProjectPage />}
+                                    />
+                                    <Route
+                                        path="/org/:orgName/secret/_new"
+                                        element={<NewSecretPage />}
+                                    />
+                                    <Route
+                                        path="/org/:orgName/secret/:secretName/*"
+                                        element={<SecretPage />}
+                                    />
+                                    <Route
+                                        path="/org/:orgName/team/_new"
+                                        element={<NewTeamPage />}
+                                    />
+                                    <Route
+                                        path="/org/:orgName/team/:teamName/*"
+                                        element={<TeamPage />}
+                                    />
+                                    <Route
+                                        path="/org/:orgName/jsonstore/_new"
+                                        element={<NewStorePage />}
+                                    />
+                                    <Route
+                                        path="/org/:orgName/jsonstore/:storeName/query/_new"
+                                        element={<NewStorageQueryPage />}
+                                    />
+                                    <Route
+                                        path="/org/:orgName/jsonstore/:storeName/query/:queryName/edit"
+                                        element={<EditStoreQueryPage />}
+                                    />
+                                    <Route
+                                        path="/org/:orgName/jsonstore/:storeName/*"
+                                        element={<JsonStorePage />}
+                                    />
+                                    <Route path="/org/:orgName/*" element={<OrganizationPage />} />
+
+                                    <Route path="/process" element={<ProcessListPage />} />
+                                    <Route
+                                        path="/process/:processInstanceId/form/:formName/:mode"
+                                        element={<ProcessFormPage />}
+                                    />
+                                    <Route
+                                        path="/process/:instanceId/wizard"
+                                        element={<ProcessWizardPage />}
+                                    />
+                                    <Route
+                                        path="/process/:instanceId/*"
+                                        element={<ProcessPage />}
                                     />
 
-                                    <ProtectedRoute path="/org">
-                                        <Switch>
-                                            <Route
-                                                path="/org"
-                                                exact={true}
-                                                component={OrganizationListPage}
-                                            />
+                                    <Route path="/noderoster/host/:id/*" element={<HostPage />} />
+                                    <Route path="/noderoster/*" element={<NodeRosterPage />} />
 
-                                            <Route
-                                                path="/org/:orgName/project/:projectName/repository/_new"
-                                                exact={true}
-                                                component={AddRepositoryPage}
-                                            />
-
-                                            <Route
-                                                path="/org/:orgName/project/:projectName/repository/:repoName"
-                                                component={RepositoryPage}
-                                            />
-
-                                            <Route
-                                                path="/org/:orgName/project/_new"
-                                                exact={true}
-                                                component={NewProjectPage}
-                                            />
-
-                                            <Route
-                                                path="/org/:orgName/project/:projectName"
-                                                component={ProjectPage}
-                                            />
-
-                                            <Route
-                                                path="/org/:orgName/secret/_new"
-                                                exact={true}
-                                                component={NewSecretPage}
-                                            />
-
-                                            <Route
-                                                path="/org/:orgName/secret/:secretName"
-                                                component={SecretPage}
-                                            />
-
-                                            <Route
-                                                path="/org/:orgName/team/_new"
-                                                exact={true}
-                                                component={NewTeamPage}
-                                            />
-
-                                            <Route
-                                                path="/org/:orgName/team/:teamName"
-                                                component={TeamPage}
-                                            />
-
-                                            <Route
-                                                path="/org/:orgName/jsonstore/_new"
-                                                exact={true}
-                                                component={NewStorePage}
-                                            />
-
-                                            <Route
-                                                path="/org/:orgName/jsonstore/:storeName/query/_new"
-                                                exact={true}
-                                                component={NewStorageQueryPage}
-                                            />
-
-                                            <Route
-                                                path="/org/:orgName/jsonstore/:storeName/query/:queryName/edit"
-                                                exact={true}
-                                                component={EditStoreQueryPage}
-                                            />
-
-                                            <Route
-                                                path="/org/:orgName/jsonstore/:storeName"
-                                                component={JsonStorePage}
-                                            />
-
-                                            <Route
-                                                path="/org/:orgName"
-                                                component={OrganizationPage}
-                                            />
-                                        </Switch>
-                                    </ProtectedRoute>
-
-                                    <ProtectedRoute path="/process">
-                                        <Switch>
-                                            <Route
-                                                path="/process"
-                                                exact={true}
-                                                component={ProcessListPage}
-                                            />
-
-                                            <Route
-                                                path="/process/:processInstanceId/form/:formName/:mode"
-                                                component={ProcessFormPage}
-                                            />
-
-                                            <ProtectedRoute
-                                                path="/process/:instanceId/wizard"
-                                                exact={true}
-                                                component={ProcessWizardPage}
-                                            />
-
-                                            <Route
-                                                path="/process/:instanceId"
-                                                component={ProcessPage}
-                                            />
-                                        </Switch>
-                                    </ProtectedRoute>
-
-                                    <ProtectedRoute path="/noderoster">
-                                        <Switch>
-                                            <Route
-                                                path="/noderoster/host/:id"
-                                                component={HostPage}
-                                            />
-
-                                            <Route path="/noderoster" component={NodeRosterPage} />
-                                        </Switch>
-                                    </ProtectedRoute>
-
-                                    <ProtectedRoute
-                                        path="/about"
-                                        exact={true}
-                                        component={AboutPage}
+                                    <Route path="/about" element={<AboutPage />} />
+                                    <Route path="/profile/*" element={<ProfilePage />} />
+                                    <Route
+                                        path="/custom/:resourceName"
+                                        element={<CustomResourcePage />}
                                     />
-
-                                    <ProtectedRoute path="/profile" component={ProfilePage} />
-
-                                    <ProtectedRoute path="/custom">
-                                        <Switch>
-                                            <Route
-                                                path="/custom/:resourceName"
-                                                component={CustomResourcePage}
-                                            />
-                                        </Switch>
-                                    </ProtectedRoute>
-
-                                    <Route component={NotFoundPage} />
-                                </Switch>
-                            </Layout>
-                        </Switch>
+                                    <Route path="*" element={<NotFoundPage />} />
+                                </Route>
+                            </Route>
+                            <Route path="*" element={<NotFoundPage />} />
+                        </Routes>
                     </UserSessionContext.Provider>
                 </HashRouter>
             </LoadingDispatch.Provider>

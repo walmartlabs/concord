@@ -29,7 +29,7 @@ import { memo, useCallback, useState } from 'react';
 import { rename as apiRename } from '../../../api/org/project';
 import { useApi } from '../../../hooks/useApi';
 import { FormValues } from '../../molecules/EntityRenameForm';
-import { Redirect } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -71,7 +71,7 @@ const ProjectRenameActivity = memo(
         );
 
         if (data && data !== projectName) {
-            return <Redirect to={`/org/${orgName}/project/${value}/settings`} />;
+            return <Navigate to={`/org/${orgName}/project/${value}/settings`} />;
         }
 
         return (

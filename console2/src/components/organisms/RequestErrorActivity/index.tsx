@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Redirect } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 import { RequestError } from '../../../api/common';
 import { RequestErrorMessage } from '../../molecules';
@@ -50,12 +50,11 @@ export default ({ error }: Props) => {
             );
         } else {
             return (
-                <Redirect
-                    to={{
-                        pathname: '/login',
-                        state: {
-                            from: location,
-                        },
+                <Navigate
+                    to="/login"
+                    replace={true}
+                    state={{
+                        from: location,
                     }}
                 />
             );

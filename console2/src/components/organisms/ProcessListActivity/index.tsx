@@ -20,7 +20,8 @@
 
 import { parse as parseQueryString } from 'query-string';
 import * as React from 'react';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useHistory } from '@/router';
 
 import { queryParams } from '../../../api/common';
 import {

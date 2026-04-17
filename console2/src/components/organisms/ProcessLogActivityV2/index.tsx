@@ -36,7 +36,7 @@ import LogSegmentActivity from './LogSegmentActivity';
 import { FormWizardAction, ProcessToolbar } from '../../molecules';
 import { Button, Divider, Dropdown, DropdownProps, Popup, Radio } from 'semantic-ui-react';
 import { LogProcessorOptions } from '../../../state/data/processes/logs/processors';
-import { Route } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FormListEntry, list as apiListForms } from '../../../api/process/form';
 
 const DEFAULT_SEGMENT_OPTS: LogProcessorOptions = {
@@ -104,6 +104,7 @@ const ProcessLogActivityV2 = ({
     forceRefresh,
     dataFetchInterval,
 }: ExternalProps) => {
+    const navigate = useNavigate();
     const [segments, setSegments] = useState<LogSegmentEntry[]>([]);
     const [logOpts, setLogOptions] = useState<LogOptions>(getStoredOpts());
     const [forms, setForms] = useState<FormListEntry[]>([]);
@@ -182,16 +183,10 @@ const ProcessLogActivityV2 = ({
 
                 {forms.length > 0 && processStatus === ProcessStatus.SUSPENDED && (
                     <div style={{ marginRight: 20 }}>
-                        <Route
-                            render={({ history }) => (
-                                <FormWizardAction
-                                    onOpenWizard={() =>
-                                        history.push(
-                                            `/process/${instanceId}/wizard?fullScreen=true`
-                                        )
-                                    }
-                                />
-                            )}
+                        <FormWizardAction
+                            onOpenWizard={() =>
+                                navigate(`/process/${instanceId}/wizard?fullScreen=true`)
+                            }
                         />
                     </div>
                 )}
