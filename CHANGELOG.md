@@ -1,5 +1,28 @@
 # Change Log
 
+## [2.40.0] - TBD
+
+### Added
+
+- runtime-v2: initial support for JSON schema validation for
+task in/out parameters
+([#1263](https://github.com/walmartlabs/concord/pull/1263));
+- concord-cli: basic support for suspend/resume and forms
+([#1295](https://github.com/walmartlabs/concord/pull/1295));
+- project: build multi-arch Docker images
+([#1299](https://github.com/walmartlabs/concord/pull/1299)).
+
+### Changed
+
+- concord-console2: remove redux-saga dependency
+([#1290](https://github.com/walmartlabs/concord/pull/1290));
+- project: respect PR labels in docker-multiarch flow
+([#1304](https://github.com/walmartlabs/concord/pull/1304));
+- concord-console2: remove redux dependency and dead code
+([#1306](https://github.com/walmartlabs/concord/pull/1306)).
+
+
+
 ## [2.39.0] - 2026-04-09
 
 ### Added
