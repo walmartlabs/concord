@@ -19,37 +19,38 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router';
+import { Outlet, useLocation } from 'react-router';
 import { Grid } from 'semantic-ui-react';
 
 import { TopBar } from '../../organisms';
 
 import './styles.css';
 
-type Props = RouteComponentProps<{}>;
-
-class Layout extends React.PureComponent<Props> {
-    render() {
-        // TODO is there a better way?
-        const fullScreen = this.props.location.search.search('fullScreen=true') >= 0;
-
-        return (
-            <Grid centered={true}>
-                {!fullScreen && (
-                    <Grid.Column width={16} className="topBar">
-                        <Grid centered={true}>
-                            <Grid.Column width={14} className="topBarColumn">
-                                <TopBar />
-                            </Grid.Column>
-                        </Grid>
-                    </Grid.Column>
-                )}
-                <Grid.Column width={14} className="contentColumn">
-                    {this.props.children}
-                </Grid.Column>
-            </Grid>
-        );
-    }
+interface Props {
+    children?: React.ReactNode;
 }
 
-export default withRouter(Layout);
+const Layout = ({ children }: Props) => {
+    const location = useLocation();
+    // TODO is there a better way?
+    const fullScreen = location.search.search('fullScreen=true') >= 0;
+
+    return (
+        <Grid centered={true}>
+            {!fullScreen && (
+                <Grid.Column width={16} className="topBar">
+                    <Grid centered={true}>
+                        <Grid.Column width={14} className="topBarColumn">
+                            <TopBar />
+                        </Grid.Column>
+                    </Grid>
+                </Grid.Column>
+            )}
+            <Grid.Column width={14} className="contentColumn">
+                {children || <Outlet />}
+            </Grid.Column>
+        </Grid>
+    );
+};
+
+export default Layout;

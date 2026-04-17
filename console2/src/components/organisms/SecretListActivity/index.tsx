@@ -25,7 +25,7 @@ import { Icon, Input, Menu, Table } from 'semantic-ui-react';
 import { ConcordKey, EntityType } from '../../../api/common';
 import { checkResult as apiCheckResult } from '../../../api/org';
 import { CreateNewEntityButton, PaginationToolBar } from '../../molecules';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import {
     PaginatedSecretEntries,
     SecretEntry,

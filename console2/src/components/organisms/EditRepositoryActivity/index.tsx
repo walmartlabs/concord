@@ -19,19 +19,19 @@
  */
 
 import * as React from 'react';
-import {useCallback, useEffect, useState} from 'react';
-import {testRepository} from '../../../api/service/console';
-import {RepositoryForm, RepositoryFormValues, RepositorySourceType} from '../../molecules';
-import {RequestErrorActivity} from '../index';
+import { useCallback, useEffect, useState } from 'react';
+import { testRepository } from '../../../api/service/console';
+import { RepositoryForm, RepositoryFormValues, RepositorySourceType } from '../../molecules';
+import { RequestErrorActivity } from '../index';
 import {
     createOrUpdate as apiCreateOrUpdate,
     EditRepositoryEntry,
     get as apiGetRepo,
-    RepositoryEntry
-} from "../../../api/org/project/repository";
-import {useApi} from "../../../hooks/useApi";
-import {ConcordKey, RequestError} from "../../../api/common";
-import {Redirect} from "react-router";
+    RepositoryEntry,
+} from '../../../api/org/project/repository';
+import { useApi } from '../../../hooks/useApi';
+import { ConcordKey, RequestError } from '../../../api/common';
+import { Navigate } from 'react-router';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -43,16 +43,16 @@ interface ExternalProps {
     forceRefresh: any;
 }
 
-const INITIAL_VALUES:RepositoryFormValues = {
+const INITIAL_VALUES: RepositoryFormValues = {
     name: '',
     url: '',
     enabled: true,
     sourceType: RepositorySourceType.BRANCH_OR_TAG,
-    triggersEnabled: true
+    triggersEnabled: true,
 };
 
 const EditRepositoryActivity = (props: ExternalProps) => {
-    const {orgName, projectName, repoName, forceRefresh} = props;
+    const { orgName, projectName, repoName, forceRefresh } = props;
 
     const [success, setSuccess] = useState<boolean>(false);
     const [error, setError] = useState<RequestError>();
@@ -62,12 +62,16 @@ const EditRepositoryActivity = (props: ExternalProps) => {
         return apiGetRepo(orgName, projectName, repoName!);
     }, [orgName, projectName, repoName]);
 
-    const { fetch: loadRepoFetch, clearState: loadRepoClearState, data: loadRepoData, error: loadError } =
-        useApi<RepositoryEntry>(loadRepo, { fetchOnMount: false });
+    const {
+        fetch: loadRepoFetch,
+        clearState: loadRepoClearState,
+        data: loadRepoData,
+        error: loadError,
+    } = useApi<RepositoryEntry>(loadRepo, { fetchOnMount: false });
 
     useEffect(() => {
         if (repoName === undefined) {
-            return
+            return;
         }
 
         loadRepoClearState();
@@ -79,7 +83,11 @@ const EditRepositoryActivity = (props: ExternalProps) => {
             setLoading(true);
 
             try {
-                const result= await apiCreateOrUpdate(orgName, projectName, toEditRepositoryEntry(values));
+                const result = await apiCreateOrUpdate(
+                    orgName,
+                    projectName,
+                    toEditRepositoryEntry(values)
+                );
                 setSuccess(result.ok);
             } catch (e) {
                 setError(e);
@@ -92,11 +100,11 @@ const EditRepositoryActivity = (props: ExternalProps) => {
     );
 
     if (success) {
-        return <Redirect to={`/org/${orgName}/project/${projectName}/repository`} />;
+        return <Navigate to={`/org/${orgName}/project/${projectName}/repository`} />;
     }
 
     if (loadError) {
-        return <RequestErrorActivity error={loadError} />
+        return <RequestErrorActivity error={loadError} />;
     }
 
     return (
@@ -109,9 +117,7 @@ const EditRepositoryActivity = (props: ExternalProps) => {
                 onSubmit={handleSubmit}
                 submitting={isLoading}
                 editMode={true}
-                initial={
-                    toFormValues(loadRepoData) || INITIAL_VALUES
-                }
+                initial={toFormValues(loadRepoData) || INITIAL_VALUES}
                 testRepository={({ name, sourceType, id, ...rest }) =>
                     testRepository({ orgName, projectName, ...rest })
                 }
@@ -120,9 +126,7 @@ const EditRepositoryActivity = (props: ExternalProps) => {
     );
 };
 
-const toFormValues = (
-    r?: RepositoryEntry
-): RepositoryFormValues | undefined => {
+const toFormValues = (r?: RepositoryEntry): RepositoryFormValues | undefined => {
     if (!r) {
         return;
     }
@@ -142,7 +146,7 @@ const toFormValues = (
         secretId: r.secretId,
         secretName: r.secretName,
         enabled: !r.disabled,
-        triggersEnabled: !r.triggersDisabled
+        triggersEnabled: !r.triggersDisabled,
     };
 };
 
@@ -158,9 +162,7 @@ const notEmpty = (s: string | undefined): string | undefined => {
     return s;
 };
 
-const toEditRepositoryEntry = (
-    repo: RepositoryFormValues
-): EditRepositoryEntry => {
+const toEditRepositoryEntry = (repo: RepositoryFormValues): EditRepositoryEntry => {
     let branch = notEmpty(repo.branch);
     if (repo.sourceType !== RepositorySourceType.BRANCH_OR_TAG) {
         branch = undefined;
@@ -180,8 +182,8 @@ const toEditRepositoryEntry = (
         path: repo.path,
         secretId: repo.secretId!,
         disabled: !repo.enabled,
-        triggersDisabled: !repo.triggersEnabled
+        triggersDisabled: !repo.triggersEnabled,
     };
-}
+};
 
 export default EditRepositoryActivity;

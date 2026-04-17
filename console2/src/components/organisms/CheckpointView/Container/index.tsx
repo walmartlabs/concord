@@ -17,8 +17,8 @@
  * limitations under the License.
  * =====
  */
-import { useEffect, useState } from 'react';
-import constate from "constate";
+import { createContext, useContext, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import {
     ProcessEntry,
     PaginatedProcessEntries,
@@ -41,8 +41,6 @@ export interface InitialProps {
 
 /**
  * Custom React hook to isolate state and features specific to the Checkpoint page.
- * We are exporting this as a [constate](https://github.com/diegohaz/constate) container
- * Use with the useContext react hook
  *
  * TODO: This hook is probably too big at this point, think about refactoring into more composable hooks
  * TODO: Add Error handling and error states
@@ -358,4 +356,26 @@ export const useCheckpoint = (initial: InitialProps) => {
         setActiveFilters
     };
 };
-export const [CheckpointProvider, useCheckpointContext] = constate(useCheckpoint);
+
+type CheckpointContextValue = ReturnType<typeof useCheckpoint>;
+
+const CheckpointContext = createContext<CheckpointContextValue | undefined>(undefined);
+
+export const CheckpointProvider = ({
+    children,
+    ...initial
+}: InitialProps & { children?: ReactNode }) => {
+    const value = useCheckpoint(initial);
+
+    return <CheckpointContext.Provider value={value}>{children}</CheckpointContext.Provider>;
+};
+
+export const useCheckpointContext = () => {
+    const value = useContext(CheckpointContext);
+
+    if (value === undefined) {
+        throw new Error('useCheckpointContext must be used within CheckpointProvider');
+    }
+
+    return value;
+};

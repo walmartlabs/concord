@@ -17,9 +17,9 @@
  * limitations under the License.
  * =====
  */
-import { useState } from 'react';
+import { createContext, useContext, useState } from 'react';
+import type { ReactNode } from 'react';
 import fetchLogData from '../../../api/process/log/fetchLogAsBlobURL';
-import constate from "constate";
 
 type logDetails = {
     // Blob URL containing log data
@@ -97,6 +97,20 @@ export const useLog = () => {
     };
 };
 
-export const [LogProvider, useLogContext] = constate(useLog);
+type LogContextValue = ReturnType<typeof useLog>;
+
+const LogContext = createContext<LogContextValue | undefined>(undefined);
+
+export const LogProvider = ({ children }: { children?: ReactNode }) => {
+    const value = useLog();
+
+    return <LogContext.Provider value={value}>{children}</LogContext.Provider>;
+};
+
+export const useLogContext = () => {
+    const value = useContext(LogContext);
+
+    return value ?? ({} as LogContextValue);
+};
 
 export default LogProvider;

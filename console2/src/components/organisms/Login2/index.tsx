@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router';
+import { RouteComponentProps, withRouter } from '@/router';
 import { useCallback, useContext, useState } from 'react';
 import {
     Card,
@@ -29,15 +29,14 @@ import {
     Form,
     Image,
     Loader,
-    Message
+    Message,
 } from 'semantic-ui-react';
 
 import { whoami as apiWhoami } from '../../../api/service/console';
 import { UserSessionContext } from '../../../session';
 
 import './styles.css';
-import { Link } from 'react-router-dom';
-import { parse as parseQueryString } from 'query-string';
+import { Link } from 'react-router';
 
 const nonEmpty = (s?: string) => {
     if (!s) {
@@ -66,6 +65,10 @@ const clearLastLoginType = () => {
 
 const DEFAULT_FROM_VALUE = '/';
 
+const getQueryValue = (search: string, key: string) => {
+    return new URLSearchParams(search).get(key) ?? undefined;
+};
+
 const getFrom = (props: RouteComponentProps<{}>): string => {
     const location = props.location as any;
 
@@ -73,21 +76,16 @@ const getFrom = (props: RouteComponentProps<{}>): string => {
         return location.state.from.pathname;
     }
 
-    const fromUrl = parseQueryString(props.location.search);
-
-    if (fromUrl && typeof fromUrl.from === 'string') {
-        return fromUrl.from;
+    const from = getQueryValue(props.location.search, 'from');
+    if (from) {
+        return from;
     }
 
     return DEFAULT_FROM_VALUE;
 };
 
 const getRedirectTo = (props: RouteComponentProps<{}>): string | undefined => {
-    const qs = parseQueryString(props.location.search);
-    const redirectTo = qs ? qs.redirectTo : undefined;
-    if (typeof redirectTo === 'string') {
-        return redirectTo;
-    }
+    return getQueryValue(props.location.search, 'redirectTo');
 };
 
 const Login = (props: RouteComponentProps<{}>) => {
@@ -139,15 +137,7 @@ const Login = (props: RouteComponentProps<{}>) => {
         } finally {
             setLoggingIn(false);
         }
-    }, [
-        username,
-        password,
-        rememberMe,
-        apiKey,
-        setLoggingIn,
-        setUserInfo,
-        props,
-    ]);
+    }, [username, password, rememberMe, apiKey, setLoggingIn, setUserInfo, props]);
 
     const onChangeLoginType = useCallback(() => {
         clearLastLoginType();
@@ -173,7 +163,8 @@ const Login = (props: RouteComponentProps<{}>) => {
 
                 <Form
                     error={!!apiError || validationError !== undefined}
-                    onSubmit={() => handleSubmit()}>
+                    onSubmit={() => handleSubmit()}
+                >
                     {!useApiKey && (
                         <>
                             <Form.Input

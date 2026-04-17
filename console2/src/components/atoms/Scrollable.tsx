@@ -17,8 +17,12 @@
  * limitations under the License.
  * =====
  */
-import styled from 'styled-components';
+import * as React from 'react';
 
-export const ScrollableX = styled.div`
-    overflow-x: auto;
-`;
+import './Scrollable.css';
+
+const classNames = (...values: Array<string | undefined>) => values.filter(Boolean).join(' ');
+
+export const ScrollableX = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+    <div {...props} className={classNames('scrollable-x', className)} />
+);

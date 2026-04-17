@@ -20,28 +20,28 @@
 
 import * as React from 'react';
 
-import {ConcordKey, GenericOperationResult} from '../../../api/common';
+import { ConcordKey, GenericOperationResult } from '../../../api/common';
 import { ProjectVisibility } from '../../../api/org/project';
-import {NewProjectForm, NewProjectFormValues} from '../../molecules';
-import {RequestErrorActivity} from "../index";
-import {useCallback, useState} from "react";
-import {createOrUpdate as apiCreate} from "../../../api/org/project";
-import {useApi} from "../../../hooks/useApi";
-import {LoadingDispatch} from "../../../App";
-import {Redirect} from "react-router";
+import { NewProjectForm, NewProjectFormValues } from '../../molecules';
+import { RequestErrorActivity } from '../index';
+import { useCallback, useState } from 'react';
+import { createOrUpdate as apiCreate } from '../../../api/org/project';
+import { useApi } from '../../../hooks/useApi';
+import { LoadingDispatch } from '../../../App';
+import { Navigate } from 'react-router';
 
 interface ExternalProps {
     orgName: ConcordKey;
 }
 
-const INIT_VALUES : NewProjectFormValues = {
+const INIT_VALUES: NewProjectFormValues = {
     name: '',
     visibility: ProjectVisibility.PRIVATE,
-    description: ''
-}
+    description: '',
+};
 
 const NewProjectActivity = (props: ExternalProps) => {
-    const {orgName} = props;
+    const { orgName } = props;
 
     const dispatch = React.useContext(LoadingDispatch);
     const [values, setValues] = useState(INIT_VALUES);
@@ -53,7 +53,7 @@ const NewProjectActivity = (props: ExternalProps) => {
     const { error, isLoading, data, fetch } = useApi<GenericOperationResult>(postQuery, {
         fetchOnMount: false,
         requestByFetch: true,
-        dispatch: dispatch
+        dispatch: dispatch,
     });
 
     const handleSubmit = useCallback(
@@ -65,7 +65,7 @@ const NewProjectActivity = (props: ExternalProps) => {
     );
 
     if (data) {
-        return <Redirect to={`/org/${orgName}/project/${values.name}`} />;
+        return <Navigate to={`/org/${orgName}/project/${values.name}`} />;
     }
 
     return (

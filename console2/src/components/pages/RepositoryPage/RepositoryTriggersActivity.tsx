@@ -25,17 +25,26 @@ import { ConcordKey } from '../../../api/common';
 import { TriggerEntry, listTriggers as apiListTriggers } from '../../../api/org/project/repository';
 import { useApi } from '../../../hooks/useApi';
 import { LoadingDispatch } from '../../../App';
+import { getFutureCronMatches } from '../../../cron';
 import { comparators } from '../../../utils';
 import { ReactJson } from '../../atoms';
 import { LocalTimestamp, RequestErrorMessage } from '../../molecules';
-
-import * as cronjsMatcher from '@datasert/cronjs-matcher';
 
 interface ExternalProps {
     orgName: ConcordKey;
     projectName: ConcordKey;
     repoName: ConcordKey;
 }
+
+const renderNextRun = (spec?: string, timeZone?: string) => {
+    const nextRun = getFutureCronMatches(spec, { matchCount: 1, timeZone })[0];
+
+    if (!nextRun) {
+        return 'Unavailable';
+    }
+
+    return <LocalTimestamp value={nextRun} />;
+};
 
 const prepareData = (data: TriggerEntry[] | undefined) => {
     if (!data) {
@@ -56,7 +65,7 @@ const RepositoryTriggersActivity = ({ orgName, projectName, repoName }: External
 
     const { data, error, isLoading } = useApi<TriggerEntry[]>(fetchData, {
         fetchOnMount: true,
-        dispatch
+        dispatch,
     });
 
     if (error) {
@@ -73,116 +82,131 @@ const RepositoryTriggersActivity = ({ orgName, projectName, repoName }: External
 
     return (
         <>
-            {cronTriggers && <>
-                <h3>Cron Triggers</h3>
-                <Table celled={true} striped={true}>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.HeaderCell width={3}>Conditions</Table.HeaderCell>
-                            <Table.HeaderCell collapsing={true}>Entry Point</Table.HeaderCell>
-                            <Table.HeaderCell width={5}>Configuration</Table.HeaderCell>
-                            <Table.HeaderCell width={5}>Arguments</Table.HeaderCell>
-                        </Table.Row>
-                    </Table.Header>
-
-                    <Table.Body>
-                        {cronTriggers.map((t, idx) => (
-                            <Table.Row key={idx}>
-                                <Table.Cell>
-                                    {t.conditions?.spec !== undefined && (
-                                        <pre>
-                                            Expression: <b>{t.conditions?.spec}</b>
-                                            <br/>
-                                            Next run: <LocalTimestamp value={cronjsMatcher.getFutureMatches(t.conditions?.spec, {matchCount: 1})[0]}/>
-                                        </pre>)}
-                                </Table.Cell>
-                                <Table.Cell>
-                                    <pre>{t.cfg.entryPoint}</pre>
-                                </Table.Cell>
-                                <Table.Cell>
-                                    <ReactJson
-                                        src={t.cfg}
-                                        collapsed={true}
-                                        name={null}
-                                        enableClipboard={false}
-                                    />
-                                </Table.Cell>
-                                <Table.Cell>
-                                    {t.arguments && (
-                                        <ReactJson
-                                            src={t.arguments}
-                                            collapsed={true}
-                                            name={null}
-                                            enableClipboard={false}
-                                        />
-                                    )}
-                                </Table.Cell>
-                            </Table.Row>
-                        ))}
-                        {cronTriggers.length === 0 && (
+            {cronTriggers && (
+                <>
+                    <h3>Cron Triggers</h3>
+                    <Table celled={true} striped={true}>
+                        <Table.Header>
                             <Table.Row>
-                                <Table.Cell colSpan={5}>No cron triggers</Table.Cell>
+                                <Table.HeaderCell width={3}>Conditions</Table.HeaderCell>
+                                <Table.HeaderCell collapsing={true}>Entry Point</Table.HeaderCell>
+                                <Table.HeaderCell width={5}>Configuration</Table.HeaderCell>
+                                <Table.HeaderCell width={5}>Arguments</Table.HeaderCell>
                             </Table.Row>
-                        )}
-                    </Table.Body>
-                </Table>
-            </>}
-            {otherTriggers && <>
-                <h3>Other Triggers</h3>
-                <Table celled={true} striped={true}>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.HeaderCell collapsing={true}>Source</Table.HeaderCell>
-                            <Table.HeaderCell>Conditions</Table.HeaderCell>
-                            <Table.HeaderCell collapsing={true}>Entry Point</Table.HeaderCell>
-                            <Table.HeaderCell>Configuration</Table.HeaderCell>
-                            <Table.HeaderCell>Arguments</Table.HeaderCell>
-                        </Table.Row>
-                    </Table.Header>
+                        </Table.Header>
 
-                    <Table.Body>
-                        {otherTriggers.map((t, idx) => (
-                            <Table.Row key={idx}>
-                                <Table.Cell>{t.eventSource}</Table.Cell>
-                                <Table.Cell>
-                                    {t.conditions && (
+                        <Table.Body>
+                            {cronTriggers.map((t, idx) => (
+                                <Table.Row key={idx}>
+                                    <Table.Cell>
+                                        {t.conditions?.spec !== undefined && (
+                                            <pre>
+                                                Expression: <b>{t.conditions?.spec}</b>
+                                                <br />
+                                                {t.conditions?.timezone && (
+                                                    <>
+                                                        Timezone: <b>{t.conditions.timezone}</b>
+                                                        <br />
+                                                    </>
+                                                )}
+                                                Next run:{' '}
+                                                {renderNextRun(
+                                                    t.conditions?.spec,
+                                                    t.conditions?.timezone
+                                                )}
+                                            </pre>
+                                        )}
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        <pre>{t.cfg.entryPoint}</pre>
+                                    </Table.Cell>
+                                    <Table.Cell>
                                         <ReactJson
-                                            src={t.conditions}
+                                            src={t.cfg}
                                             collapsed={true}
                                             name={null}
                                             enableClipboard={false}
                                         />
-                                    )}
-                                </Table.Cell>
-                                <Table.Cell>{t.cfg.entryPoint}</Table.Cell>
-                                <Table.Cell>
-                                    <ReactJson
-                                        src={t.cfg}
-                                        collapsed={true}
-                                        name={null}
-                                        enableClipboard={false}
-                                    />
-                                </Table.Cell>
-                                <Table.Cell>
-                                    {t.arguments && (
-                                        <ReactJson
-                                            src={t.arguments}
-                                            collapsed={true}
-                                            name={null}
-                                            enableClipboard={false}
-                                        />
-                                    )}
-                                </Table.Cell>
-                            </Table.Row>
-                        ))}
-                        {otherTriggers.length === 0 && (
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        {t.arguments && (
+                                            <ReactJson
+                                                src={t.arguments}
+                                                collapsed={true}
+                                                name={null}
+                                                enableClipboard={false}
+                                            />
+                                        )}
+                                    </Table.Cell>
+                                </Table.Row>
+                            ))}
+                            {cronTriggers.length === 0 && (
+                                <Table.Row>
+                                    <Table.Cell colSpan={5}>No cron triggers</Table.Cell>
+                                </Table.Row>
+                            )}
+                        </Table.Body>
+                    </Table>
+                </>
+            )}
+            {otherTriggers && (
+                <>
+                    <h3>Other Triggers</h3>
+                    <Table celled={true} striped={true}>
+                        <Table.Header>
                             <Table.Row>
-                                <Table.Cell colSpan={5}>No other triggers</Table.Cell>
+                                <Table.HeaderCell collapsing={true}>Source</Table.HeaderCell>
+                                <Table.HeaderCell>Conditions</Table.HeaderCell>
+                                <Table.HeaderCell collapsing={true}>Entry Point</Table.HeaderCell>
+                                <Table.HeaderCell>Configuration</Table.HeaderCell>
+                                <Table.HeaderCell>Arguments</Table.HeaderCell>
                             </Table.Row>
-                        )}
-                    </Table.Body>
-                </Table>
-            </>}
+                        </Table.Header>
+
+                        <Table.Body>
+                            {otherTriggers.map((t, idx) => (
+                                <Table.Row key={idx}>
+                                    <Table.Cell>{t.eventSource}</Table.Cell>
+                                    <Table.Cell>
+                                        {t.conditions && (
+                                            <ReactJson
+                                                src={t.conditions}
+                                                collapsed={true}
+                                                name={null}
+                                                enableClipboard={false}
+                                            />
+                                        )}
+                                    </Table.Cell>
+                                    <Table.Cell>{t.cfg.entryPoint}</Table.Cell>
+                                    <Table.Cell>
+                                        <ReactJson
+                                            src={t.cfg}
+                                            collapsed={true}
+                                            name={null}
+                                            enableClipboard={false}
+                                        />
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        {t.arguments && (
+                                            <ReactJson
+                                                src={t.arguments}
+                                                collapsed={true}
+                                                name={null}
+                                                enableClipboard={false}
+                                            />
+                                        )}
+                                    </Table.Cell>
+                                </Table.Row>
+                            ))}
+                            {otherTriggers.length === 0 && (
+                                <Table.Row>
+                                    <Table.Cell colSpan={5}>No other triggers</Table.Cell>
+                                </Table.Row>
+                            )}
+                        </Table.Body>
+                    </Table>
+                </>
+            )}
         </>
     );
 };

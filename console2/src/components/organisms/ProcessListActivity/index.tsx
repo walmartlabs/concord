@@ -18,16 +18,16 @@
  * =====
  */
 
-import { parse as parseQueryString } from 'query-string';
 import * as React from 'react';
-import { useHistory, useLocation } from 'react-router';
+import { useLocation } from 'react-router';
+import { useHistory } from '@/router';
 
 import { queryParams } from '../../../api/common';
 import {
     list as apiProcessList,
     PaginatedProcessEntries,
     ProcessFilters,
-    ProcessListQuery
+    ProcessListQuery,
 } from '../../../api/process';
 import { Pagination } from '../../molecules/PaginationToolBar/usePagination';
 import {
@@ -40,7 +40,7 @@ import {
     REPO_COLUMN,
     Status,
     STATUS_COLUMN,
-    UPDATED_AT_COLUMN
+    UPDATED_AT_COLUMN,
 } from '../../molecules/ProcessList';
 import { ColumnDefinition } from '../../../api/org';
 import ProcessListWithSearch from '../../molecules/ProcessListWithSearch';
@@ -48,7 +48,7 @@ import RequestErrorActivity from '../RequestErrorActivity';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApi } from '../../../hooks/useApi';
 import { LoadingDispatch } from '../../../App';
-import _ from 'lodash';
+import { deepEqual } from '../../../utils';
 
 // list of "built-in" columns, i.e. columns that can be referenced using "builtin" parameter
 // of the custom column configuration
@@ -60,7 +60,7 @@ const builtInColumns = [
     INITIATOR_COLUMN,
     CREATED_AT_COLUMN,
     UPDATED_AT_COLUMN,
-    ENTRY_POINT_COLUMN
+    ENTRY_POINT_COLUMN,
 ];
 
 // list of columns visible by default
@@ -70,7 +70,7 @@ const defaultColumns = [
     DURATION_COLUMN,
     PROJECT_COLUMN,
     INITIATOR_COLUMN,
-    CREATED_AT_COLUMN
+    CREATED_AT_COLUMN,
 ];
 
 // list of columns visible by default for views without the project column
@@ -79,13 +79,30 @@ const withoutProjectColumns = [
     INSTANCE_ID_COLUMN,
     REPO_COLUMN,
     INITIATOR_COLUMN,
-    CREATED_AT_COLUMN
+    CREATED_AT_COLUMN,
 ];
 
 export interface ProcessSearchFilter {
     filters?: ProcessFilters;
     pagination?: Pagination;
 }
+
+const parseQueryString = (s: string): Record<string, string | string[]> => {
+    const result: Record<string, string | string[]> = {};
+
+    new URLSearchParams(s).forEach((value, key) => {
+        const existing = result[key];
+        if (existing === undefined) {
+            result[key] = value;
+        } else if (Array.isArray(existing)) {
+            existing.push(value);
+        } else {
+            result[key] = [existing, value];
+        }
+    });
+
+    return result;
+};
 
 interface ExternalProps {
     orgName?: string;
@@ -109,7 +126,7 @@ export const parseSearchFilter = (s: string): ProcessSearchFilter => {
 
     return {
         pagination: { limit: Number(v.limit) || undefined, offset: Number(v.offset) || undefined },
-        filters
+        filters,
     };
 };
 
@@ -126,7 +143,7 @@ export const addBuiltInColumns = (columns?: ColumnDefinition[]): ColumnDefinitio
             if (!b) {
                 return {
                     caption: `Built-in column not found: ${c.builtin}`,
-                    source: 'n/a'
+                    source: 'n/a',
                 };
             }
             return b;
@@ -141,7 +158,7 @@ const ProcessListActivity = ({
     columns,
     orgName,
     projectName,
-    forceRefresh
+    forceRefresh,
 }: ExternalProps) => {
     const dispatch = React.useContext(LoadingDispatch);
 
@@ -157,7 +174,7 @@ const ProcessListActivity = ({
             isInitialMount.current = false;
         } else {
             const filter = parseSearchFilter(location.search);
-            setSearchFilter((prev) => (_.isEqual(filter, prev) ? prev : filter));
+            setSearchFilter((prev) => (deepEqual(filter, prev) ? prev : filter));
         }
     }, [location]);
 
@@ -165,7 +182,7 @@ const ProcessListActivity = ({
         const query = {
             orgName,
             projectName,
-            ...searchFilter.pagination
+            ...searchFilter.pagination,
         } as ProcessListQuery;
 
         return apiProcessList(filtersToQuery(query, searchFilter.filters));
@@ -174,7 +191,7 @@ const ProcessListActivity = ({
     const { error, isLoading, data } = useApi<PaginatedProcessEntries>(fetchData, {
         fetchOnMount: true,
         dispatch: dispatch,
-        forceRequest: forceRefresh
+        forceRequest: forceRefresh,
     });
 
     const onRefresh = useCallback(
@@ -202,7 +219,7 @@ const ProcessListActivity = ({
     const showProjectColumn = !projectName;
     const cols =
         addBuiltInColumns(columns) || (showProjectColumn ? defaultColumns : withoutProjectColumns);
-    const f = parseSearchFilter(history.location.search);
+    const f = parseSearchFilter(location.search);
 
     return (
         <>

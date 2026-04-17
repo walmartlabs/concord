@@ -33,7 +33,7 @@ import {
     useCallback,
     useEffect,
     useRef,
-    useState
+    useState,
 } from 'react';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { getLog as apiGetLog, LogRange } from '../../../api/process/log';
@@ -59,7 +59,7 @@ const ProcessLogActivity = ({
     processStatus,
     loadingHandler,
     forceRefresh,
-    dataFetchInterval
+    dataFetchInterval,
 }: ExternalProps) => {
     const location = useLocation();
     const didMountRef = useRef(false);
@@ -135,13 +135,21 @@ const ProcessLogActivity = ({
 
             return {
                 data: processedData,
-                range: chunk.range
+                range: chunk.range,
             };
         },
         [instanceId, opts]
     );
 
-    const error = usePolling(fetchData, range, setData, loadingHandler, refresh, stopPolling, dataFetchInterval);
+    const error = usePolling(
+        fetchData,
+        range,
+        setData,
+        loadingHandler,
+        refresh,
+        stopPolling,
+        dataFetchInterval
+    );
 
     if (error) {
         return <RequestErrorActivity error={error} />;
@@ -164,7 +172,7 @@ const ProcessLogActivity = ({
 const DEFAULT_OPTS: LogProcessorOptions = {
     useLocalTime: true,
     showDate: false,
-    separateTasks: true
+    separateTasks: true,
 };
 
 const getStoredOpts = (): LogProcessorOptions => {
@@ -230,7 +238,15 @@ const usePolling = (
             cancelled = true;
             stopPolling();
         };
-    }, [request, setData, rangeRef, refresh, loadingHandler, stopPollingIndicator, dataFetchInterval]);
+    }, [
+        request,
+        setData,
+        rangeRef,
+        refresh,
+        loadingHandler,
+        stopPollingIndicator,
+        dataFetchInterval,
+    ]);
 
     const stopPolling = () => {
         if (poll.current) {

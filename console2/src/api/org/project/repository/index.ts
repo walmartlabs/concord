@@ -72,6 +72,7 @@ export interface TriggerCfg {
 
 export interface TriggerConditions {
     spec?: string;
+    timezone?: string;
     version?: string;
 }
 

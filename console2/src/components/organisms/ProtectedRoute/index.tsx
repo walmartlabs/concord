@@ -19,25 +19,21 @@
  */
 
 import * as React from 'react';
-import { ReactNode } from 'react';
-import { Redirect, Route, RouteComponentProps, RouteProps, withRouter } from 'react-router';
+import { ReactNode, useContext } from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router';
 import { Dimmer, Loader } from 'semantic-ui-react';
 
-import { UserSession, UserSessionContext } from '../../../session';
-import {setQueryParam} from "../../../utils";
+import { UserSessionContext } from '../../../session';
+import { setQueryParam } from '../../../utils';
 
-interface ProtectedRouteStateProps {
-    component?: React.ComponentType<RouteComponentProps<{}>>;
+interface ProtectedRouteProps {
+    children?: ReactNode;
 }
 
-type ProtectedRouteProps = ProtectedRouteStateProps;
+const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+    const { loggingIn, userInfo } = useContext(UserSessionContext);
+    const location = useLocation();
 
-const renderRoute = (
-    props: any,
-    { loggingIn, userInfo }: UserSession,
-    component?: React.ComponentType<RouteComponentProps<{}>>,
-    children?: ReactNode
-) => {
     if (loggingIn) {
         return (
             <Dimmer active={true} inverted={true} page={true}>
@@ -54,7 +50,7 @@ const renderRoute = (
             const requested = new URL(window.location.href).hash;
             // delay the redirect to avoid layout issues
             setTimeout(() => {
-                window.location.href = setQueryParam(loginUrl, 'from', '/' + requested)
+                window.location.href = setQueryParam(loginUrl, 'from', '/' + requested);
             }, 1000);
 
             return (
@@ -64,43 +60,18 @@ const renderRoute = (
             );
         } else {
             return (
-                <Redirect
-                    to={{
-                        pathname: '/login',
-                        state: {
-                            from: props.location
-                        }
+                <Navigate
+                    to="/login"
+                    replace={true}
+                    state={{
+                        from: location,
                     }}
                 />
             );
         }
     }
 
-    if (component) {
-        const Component = component;
-        return <Component {...props} />;
-    }
-
-    return children;
+    return <>{children || <Outlet />}</>;
 };
 
-class ProtectedRoute extends React.PureComponent<ProtectedRouteProps> {
-    render() {
-        const { component, children, ...rest } = this.props;
-
-        return (
-            <UserSessionContext.Consumer>
-                {(userSession) => (
-                    <Route
-                        {...rest}
-                        render={(props) => renderRoute(props, userSession, component, children)}
-                    />
-                )}
-            </UserSessionContext.Consumer>
-        );
-    }
-}
-
-// TODO better types
-/* tslint:disable */
-export default withRouter(ProtectedRoute as any) as React.ComponentType<RouteProps>;
+export default ProtectedRoute;

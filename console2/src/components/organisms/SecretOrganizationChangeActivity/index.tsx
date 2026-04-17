@@ -27,7 +27,7 @@ import { RequestError } from '../../../api/common';
 import { SingleOperationPopup } from '../../molecules';
 import { Form, Input } from 'semantic-ui-react';
 import { FindOrganizationsField, RequestErrorActivity } from '../index';
-import { Redirect } from 'react-router';
+import { Navigate } from 'react-router';
 
 interface Props {
     orgName: string;
@@ -68,7 +68,7 @@ export default ({ orgName, secretName }: Props) => {
     }, []);
 
     if (redirect) {
-        return <Redirect to={`/org/${orgNameValue}/secret/${secretName}`} />;
+        return <Navigate to={`/org/${orgNameValue}/secret/${secretName}`} />;
     }
 
     return (
@@ -126,7 +126,8 @@ export default ({ orgName, secretName }: Props) => {
                                 <div
                                     className={`ui input ${
                                         confirmation !== secretName ? 'error' : ''
-                                    }`}>
+                                    }`}
+                                >
                                     <Input
                                         type="text"
                                         name="name"

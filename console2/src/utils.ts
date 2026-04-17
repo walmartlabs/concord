@@ -19,7 +19,7 @@
  */
 
 import { format as formatDate, parseISO as parseDate } from 'date-fns';
-import {AnsiUp} from "ansi_up/ansi_up";
+import { ansiToHtml } from './ansi';
 
 interface HasName {
     name: string;
@@ -70,6 +70,102 @@ export const notEmpty = (x: {}) => {
     }
 
     return false;
+};
+
+type ThrottledFunction<T extends (...args: any[]) => any> = ((
+    ...args: Parameters<T>
+) => ReturnType<T> | undefined) & {
+    cancel: () => void;
+};
+
+export const throttle = <T extends (...args: any[]) => any>(
+    fn: T,
+    delay = 0
+): ThrottledFunction<T> => {
+    let lastInvokeTime = 0;
+    let timeoutId: number | undefined;
+    let lastArgs: Parameters<T> | undefined;
+    let lastThis: any;
+    let lastResult: ReturnType<T> | undefined;
+
+    const invoke = () => {
+        lastInvokeTime = Date.now();
+        timeoutId = undefined;
+
+        const args = lastArgs;
+        const thisArg = lastThis;
+        lastArgs = undefined;
+        lastThis = undefined;
+
+        if (args !== undefined) {
+            lastResult = fn.apply(thisArg, args);
+        }
+
+        return lastResult;
+    };
+
+    const throttled = function (this: any, ...args: Parameters<T>) {
+        const now = Date.now();
+        const remaining = delay - (now - lastInvokeTime);
+
+        lastArgs = args;
+        lastThis = this;
+
+        if (lastInvokeTime === 0 || remaining <= 0 || remaining > delay) {
+            if (timeoutId !== undefined) {
+                window.clearTimeout(timeoutId);
+            }
+
+            return invoke();
+        }
+
+        if (timeoutId === undefined) {
+            timeoutId = window.setTimeout(invoke, remaining);
+        }
+
+        return lastResult;
+    } as ThrottledFunction<T>;
+
+    throttled.cancel = () => {
+        if (timeoutId !== undefined) {
+            window.clearTimeout(timeoutId);
+            timeoutId = undefined;
+        }
+
+        lastArgs = undefined;
+        lastThis = undefined;
+    };
+
+    return throttled;
+};
+
+export const deepEqual = (a: unknown, b: unknown): boolean => {
+    if (Object.is(a, b)) {
+        return true;
+    }
+
+    if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) {
+        return false;
+    }
+
+    if (Array.isArray(a) || Array.isArray(b)) {
+        if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) {
+            return false;
+        }
+
+        return a.every((value, idx) => deepEqual(value, b[idx]));
+    }
+
+    const aKeys = Object.keys(a as Record<string, unknown>);
+    const bKeys = Object.keys(b as Record<string, unknown>);
+    if (aKeys.length !== bKeys.length) {
+        return false;
+    }
+
+    return aKeys.every((key) =>
+        Object.prototype.hasOwnProperty.call(b, key) &&
+        deepEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key])
+    );
 };
 
 export const formatTimestamp = (t?: string): string | undefined => {
@@ -165,9 +261,6 @@ export interface HighlighterProps {
     global?: boolean;
 }
 
-const ansiUp = new AnsiUp();
-ansiUp.escape_html = false;
-
 export const highlight = (value: string, props: HighlighterProps): string => {
     const { config, caseInsensitive = false, global = true } = props;
     const regExpCfg = `${caseInsensitive ? 'i' : ''}
@@ -186,7 +279,7 @@ export const highlight = (value: string, props: HighlighterProps): string => {
         }
     }
 
-    txt = ansiUp.ansi_to_html(txt);
+    txt = ansiToHtml(txt);
 
     return txt;
 };
