@@ -14,7 +14,6 @@
         "vite": "^8.0.5"
     },
     "dependencies": {
-        "@datasert/cronjs-matcher": "^1.4.0",
         "@monaco-editor/react": "4.3.1",
         "date-fns": "2.27.0",
         "formik": "2.2.9",
