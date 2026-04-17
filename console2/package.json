@@ -4,7 +4,6 @@
     "private": true,
     "type": "module",
     "devDependencies": {
-        "@datasert/cronjs-matcher": "^1.4.0",
         "@types/lodash": "4.14.178",
         "@types/node": "^24.12.2",
         "@types/react": "^17.0.91",
@@ -17,6 +16,7 @@
         "vite": "^8.0.5"
     },
     "dependencies": {
+        "@datasert/cronjs-matcher": "^1.4.0",
         "@monaco-editor/react": "4.3.1",
         "ansi_up": "6.0.6",
         "constate": "3.3.0",
