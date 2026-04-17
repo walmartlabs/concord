@@ -37,7 +37,6 @@ import { UserSessionContext } from '../../../session';
 
 import './styles.css';
 import { Link } from 'react-router';
-import { parse as parseQueryString } from 'query-string';
 
 const nonEmpty = (s?: string) => {
     if (!s) {
@@ -66,6 +65,10 @@ const clearLastLoginType = () => {
 
 const DEFAULT_FROM_VALUE = '/';
 
+const getQueryValue = (search: string, key: string) => {
+    return new URLSearchParams(search).get(key) ?? undefined;
+};
+
 const getFrom = (props: RouteComponentProps<{}>): string => {
     const location = props.location as any;
 
@@ -73,21 +76,16 @@ const getFrom = (props: RouteComponentProps<{}>): string => {
         return location.state.from.pathname;
     }
 
-    const fromUrl = parseQueryString(props.location.search);
-
-    if (fromUrl && typeof fromUrl.from === 'string') {
-        return fromUrl.from;
+    const from = getQueryValue(props.location.search, 'from');
+    if (from) {
+        return from;
     }
 
     return DEFAULT_FROM_VALUE;
 };
 
 const getRedirectTo = (props: RouteComponentProps<{}>): string | undefined => {
-    const qs = parseQueryString(props.location.search);
-    const redirectTo = qs ? qs.redirectTo : undefined;
-    if (typeof redirectTo === 'string') {
-        return redirectTo;
-    }
+    return getQueryValue(props.location.search, 'redirectTo');
 };
 
 const Login = (props: RouteComponentProps<{}>) => {
