@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Dispatch, useEffect, useReducer, useState } from 'react';
-import { Redirect, Route, Router, Switch } from 'react-router';
+import { HashRouter, Redirect, Route, Switch } from 'react-router-dom';
 
 import { ProtectedRoute } from './components/organisms';
 import {
@@ -50,7 +50,6 @@ import {
     UserActivityPage,
 } from './components/pages';
 import { Layout } from './components/templates';
-import { history } from './history';
 import NewStorageQueryPage from './components/pages/JsonStorePage/NewStorageQueryPage';
 import EditStoreQueryPage from './components/pages/JsonStorePage/EditStoreQueryPage';
 import { initialState, LoadingAction, reducer } from './reducers/loading';
@@ -78,9 +77,9 @@ const App = () => {
     return (
         <LoadingState.Provider value={state.loading}>
             <LoadingDispatch.Provider value={dispatch}>
-                <Router history={history}>
+                <HashRouter>
                     <UserSessionContext.Provider
-                        value={{ userInfo, setUserInfo, loggingIn, setLoggingIn, history }}
+                        value={{ userInfo, setUserInfo, loggingIn, setLoggingIn }}
                     >
                         <Switch>
                             <Route exact={true} path="/">
@@ -254,7 +253,7 @@ const App = () => {
                             </Layout>
                         </Switch>
                     </UserSessionContext.Provider>
-                </Router>
+                </HashRouter>
             </LoadingDispatch.Provider>
         </LoadingState.Provider>
     );

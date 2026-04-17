@@ -25,7 +25,7 @@ import { useCallback, useState } from 'react';
 import { deleteStorage as apiDelete } from '../../../api/org/jsonstore';
 import { useApi } from '../../../hooks/useApi';
 import RequestErrorActivity from '../../organisms/RequestErrorActivity';
-import { Redirect } from 'react-router';
+import { Redirect } from 'react-router-dom';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -42,7 +42,7 @@ const StoreDeleteActivity = ({ orgName, storeName, disabled }: ExternalProps) =>
 
     const { data, error, isLoading } = useApi<GenericOperationResult>(deleteData, {
         fetchOnMount: false,
-        forceRequest
+        forceRequest,
     });
 
     const confirmHandler = useCallback(() => {

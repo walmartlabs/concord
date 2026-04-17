@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 
 import { ConcordId } from '../../../api/common';
 import { ProcessWizard } from '../../organisms';

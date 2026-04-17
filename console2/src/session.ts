@@ -18,7 +18,6 @@
  * =====
  */
 import * as React from 'react';
-import { History } from 'history';
 
 import { Organizations } from './state/data/orgs/types';
 import { logout as apiLogout, whoami as apiWhoami } from './api/service/console';
@@ -35,14 +34,12 @@ export interface UserSession {
 
     loggingIn: boolean;
     setLoggingIn: (loggingIn: boolean) => void;
-
-    history?: History; // TODO consider moving into a separate Context or migrating to Reach Router
 }
 
 export const UserSessionContext = React.createContext<UserSession>({
     loggingIn: true,
     setUserInfo: () => {},
-    setLoggingIn: () => {}
+    setLoggingIn: () => {},
 });
 
 export const checkSession = async (session: UserSession) => {
@@ -68,12 +65,13 @@ const refreshSession = async ({ setUserInfo, setLoggingIn }: UserSession) => {
     }
 };
 
-export const logout = async ({ history, setUserInfo }: UserSession, redirect?: boolean) => {
+export const logout = async ({ setUserInfo }: UserSession): Promise<boolean> => {
     try {
         await apiLogout();
-        history?.push('/logout/done');
         setUserInfo(undefined);
+        return true;
     } catch (e) {
         console.error('logout:', e);
+        return false;
     }
 };

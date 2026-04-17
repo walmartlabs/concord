@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { useCallback, useState } from 'react';
-import { Route } from 'react-router';
+import { Route } from 'react-router-dom';
 import { Divider } from 'semantic-ui-react';
 
 import { get as apiGet, isFinal, ProcessEntry, ProcessStatus } from '../../../api/process';
@@ -47,7 +47,7 @@ const ProcessStatusActivity = ({
     loadingHandler,
     forceRefresh,
     refreshHandler,
-    dataFetchInterval
+    dataFetchInterval,
 }: ExternalProps) => {
     const [process, setProcess] = useState<ProcessEntry>();
     const [forms, setForms] = useState<FormListEntry[]>([]);

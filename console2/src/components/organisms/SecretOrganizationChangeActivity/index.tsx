@@ -27,7 +27,7 @@ import { RequestError } from '../../../api/common';
 import { SingleOperationPopup } from '../../molecules';
 import { Form, Input } from 'semantic-ui-react';
 import { FindOrganizationsField, RequestErrorActivity } from '../index';
-import { Redirect } from 'react-router';
+import { Redirect } from 'react-router-dom';
 
 interface Props {
     orgName: string;
@@ -126,7 +126,8 @@ export default ({ orgName, secretName }: Props) => {
                                 <div
                                     className={`ui input ${
                                         confirmation !== secretName ? 'error' : ''
-                                    }`}>
+                                    }`}
+                                >
                                     <Input
                                         type="text"
                                         name="name"

@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Breadcrumb, Container, Header, Segment } from 'semantic-ui-react';
 

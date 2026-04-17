@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { useCallback, useState } from 'react';
-import { Redirect, Route, RouteComponentProps, Switch } from 'react-router';
+import { Redirect, Route, RouteComponentProps, Switch } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
