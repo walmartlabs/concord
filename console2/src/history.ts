@@ -18,22 +18,8 @@
  * =====
  */
 
-import { createHashHistory } from 'history';
-import { routerMiddleware } from 'connected-react-router';
-import { applyMiddleware, createStore } from 'redux';
-import { createLogger } from 'redux-logger';
-import { composeWithDevTools } from 'redux-devtools-extension';
-import { History } from 'history';
-
-import reducers from '../reducers';
+import { createHashHistory, History } from 'history';
 
 const history: History = createHashHistory();
 
-const middleware = [routerMiddleware(history)];
-if (process.env.NODE_ENV !== 'production') {
-    middleware.push(createLogger());
-}
-
-const store = createStore(reducers(history), composeWithDevTools(applyMiddleware(...middleware)));
-
-export { store, history };
+export { history };
