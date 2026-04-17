@@ -17,42 +17,27 @@
  * limitations under the License.
  * =====
  */
-import styled from 'styled-components';
+import * as React from 'react';
 
-export const FullBar = styled.div`
-    width: 100%;
-    min-height: 2.85714286em;
+import './styles.css';
 
-    display: flex;
-    vertical-align: middle;
+const classNames = (...values: Array<string | undefined>) => values.filter(Boolean).join(' ');
 
-    margin-top: 1rem;
-    margin-bottom: 1rem;
+export const FullBar = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+    <div {...props} className={classNames('checkpoint-actionbar-full', className)} />
+);
 
-    border: 1px solid #d4d4d5;
-    border-radius: 5px;
+export interface ItemProps extends React.HTMLAttributes<HTMLDivElement> {
+    pushRight?: boolean;
+}
 
-    @media (min-width: 769px) {
-        align-items: center;
-    }
-
-    @media (max-width: 768px) {
-        align-items: left;
-        flex-direction: column;
-    }
-`;
-
-export const Item = styled.div`
-    padding: 0.92857143em 1.14285714em;
-    position: relative;
-    vertical-align: middle;
-    line-height: 1;
-    text-decoration: none;
-
-    ${({ pushRight }: { pushRight?: boolean }) => (pushRight ? `margin-left: auto` : ``)}
-    @media (max-width: 768px) {
-        margin-left: initial;
-        align-items: left;
-        flex-direction: column;
-    }
-`;
+export const Item = ({ className, pushRight, ...props }: ItemProps) => (
+    <div
+        {...props}
+        className={classNames(
+            'checkpoint-actionbar-item',
+            pushRight ? 'checkpoint-actionbar-item-push-right' : undefined,
+            className
+        )}
+    />
+);
