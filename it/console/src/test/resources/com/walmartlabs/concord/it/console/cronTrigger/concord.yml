@@ -1,0 +1,8 @@
+flows:
+  default:
+    - log: "cron"
+
+triggers:
+- cron:
+    spec: "0 0 1 1 *"
+    entryPoint: default
