@@ -35,7 +35,7 @@ import com.walmartlabs.concord.server.security.SecurityUtils;
 import org.apache.shiro.subject.PrincipalCollection;
 
 import javax.inject.Inject;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.HashMap;

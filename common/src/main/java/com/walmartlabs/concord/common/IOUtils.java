@@ -22,7 +22,7 @@ package com.walmartlabs.concord.common;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.io.*;
 import java.nio.file.CopyOption;
 import java.nio.file.Path;

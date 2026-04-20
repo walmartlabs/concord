@@ -22,11 +22,11 @@ package ca.ibodrov.concord.webapp;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.walmartlabs.concord.server.sdk.rest.ApiDescriptor;
-import org.eclipse.jetty.ee8.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
 
 import javax.inject.Inject;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;

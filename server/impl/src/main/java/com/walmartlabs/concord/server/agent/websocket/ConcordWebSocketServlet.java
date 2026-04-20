@@ -22,11 +22,11 @@ package com.walmartlabs.concord.server.agent.websocket;
 
 import com.walmartlabs.concord.server.message.MessageChannelManager;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
-import org.eclipse.jetty.ee8.websocket.server.JettyWebSocketServlet;
-import org.eclipse.jetty.ee8.websocket.server.JettyWebSocketServletFactory;
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServletFactory;
 
 import javax.inject.Inject;
-import javax.servlet.annotation.WebServlet;
+import jakarta.servlet.annotation.WebServlet;
 
 @WebServlet("/websocket")
 public class ConcordWebSocketServlet extends JettyWebSocketServlet {

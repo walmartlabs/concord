@@ -34,10 +34,6 @@
             <artifactId>jetty-websocket-jetty-client</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee8.websocket</groupId>
-            <artifactId>jetty-ee8-websocket-jetty-client</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.eclipse.jetty.websocket</groupId>
             <artifactId>jetty-websocket-jetty-api</artifactId>
         </dependency>
@@ -54,8 +50,8 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.jboss.spec.javax.ws.rs</groupId>
-            <artifactId>jboss-jaxrs-api_2.1_spec</artifactId>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

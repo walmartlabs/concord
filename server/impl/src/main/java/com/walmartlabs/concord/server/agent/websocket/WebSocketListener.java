@@ -22,8 +22,8 @@ package com.walmartlabs.concord.server.agent.websocket;
 
 import com.walmartlabs.concord.server.message.MessageChannelManager;
 import com.walmartlabs.concord.server.queueclient.MessageSerializer;
-import org.eclipse.jetty.ee8.websocket.api.Session;
-import org.eclipse.jetty.ee8.websocket.api.WebSocketPingPongListener;
+import org.eclipse.jetty.websocket.api.Callback;
+import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +31,7 @@ import java.nio.ByteBuffer;
 
 import static java.util.Objects.requireNonNull;
 
-public class WebSocketListener implements org.eclipse.jetty.ee8.websocket.api.WebSocketListener, WebSocketPingPongListener {
+public class WebSocketListener implements Session.Listener.AutoDemanding {
 
     private static final Logger log = LoggerFactory.getLogger(WebSocketListener.class);
 
@@ -61,9 +61,10 @@ public class WebSocketListener implements org.eclipse.jetty.ee8.websocket.api.We
     }
 
     @Override
-    public void onWebSocketBinary(byte[] payload, int offset, int len) {
+    public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
         log.error("onWebSocketBinary ['{}'] -> not supported, closing channel", channelId);
         channelManager.close(channelId);
+        callback.succeed();
     }
 
     @Override
@@ -80,10 +81,10 @@ public class WebSocketListener implements org.eclipse.jetty.ee8.websocket.api.We
     }
 
     @Override
-    public void onWebSocketConnect(Session session) {
+    public void onWebSocketOpen(Session session) {
         var channel = new WebSocketChannel(channelId, agentId, session, userAgent);
         channelManager.add(channel);
-        log.debug("onWebSocketConnect ['{}'] -> '{}'", channelId, userAgent);
+        log.debug("onWebSocketOpen ['{}'] -> '{}'", channelId, userAgent);
     }
 
     @Override

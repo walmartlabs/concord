@@ -75,12 +75,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import javax.ws.rs.core.Response.Status;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.*;
+import jakarta.ws.rs.core.Response.Status;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -96,7 +96,7 @@ import static com.walmartlabs.concord.server.process.state.ProcessStateManager.p
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
 import static java.util.Objects.requireNonNull;
 
-@javax.ws.rs.Path("/api/v1/process")
+@jakarta.ws.rs.Path("/api/v1/process")
 @Tag(name = "Process")
 public class ProcessResource implements Resource {
 
@@ -187,7 +187,7 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
-    @javax.ws.rs.Path("/{entryPoint}")
+    @jakarta.ws.rs.Path("/{entryPoint}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer(suffix = "_queryparams")
     @Deprecated
@@ -205,7 +205,7 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
-    @javax.ws.rs.Path("/{entryPoint}")
+    @jakarta.ws.rs.Path("/{entryPoint}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer(suffix = "_json")
@@ -265,7 +265,7 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
-    @javax.ws.rs.Path("/{entryPoint}")
+    @jakarta.ws.rs.Path("/{entryPoint}")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer(suffix = "_with_entrypoint")
@@ -285,7 +285,7 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
-    @javax.ws.rs.Path("/{entryPoint}")
+    @jakarta.ws.rs.Path("/{entryPoint}")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer(suffix = "_octetstream_and_entrypoint")
@@ -300,7 +300,7 @@ public class ProcessResource implements Resource {
     }
 
     @POST
-    @javax.ws.rs.Path("/{id}/restart")
+    @jakarta.ws.rs.Path("/{id}/restart")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Restart process", operationId = "restartProcess")
     public StartProcessResponse restart(@PathParam("id") UUID instanceId) {
@@ -313,7 +313,7 @@ public class ProcessResource implements Resource {
      * Resumes an existing process.
      */
     @POST
-    @javax.ws.rs.Path("/{id}/resume/{eventName}")
+    @jakarta.ws.rs.Path("/{id}/resume/{eventName}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
@@ -349,7 +349,7 @@ public class ProcessResource implements Resource {
      * Starts a new child process by forking the start of the specified parent process.
      */
     @POST
-    @javax.ws.rs.Path("/{id}/fork")
+    @jakarta.ws.rs.Path("/{id}/fork")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
@@ -393,7 +393,7 @@ public class ProcessResource implements Resource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @javax.ws.rs.Path("/{id}/waitForCompletion")
+    @jakarta.ws.rs.Path("/{id}/waitForCompletion")
     @Operation
     public ProcessEntry waitForCompletion(@PathParam("id") UUID instanceId,
                                           @QueryParam("timeout") @DefaultValue("-1") long timeout) {
@@ -436,7 +436,7 @@ public class ProcessResource implements Resource {
      * Disable a process.
      */
     @POST
-    @javax.ws.rs.Path("/{id}/disable/{disabled}")
+    @jakarta.ws.rs.Path("/{id}/disable/{disabled}")
     @WithTimer
     @Operation
     public void disable(@PathParam("id") UUID instanceId,
@@ -449,7 +449,7 @@ public class ProcessResource implements Resource {
      * Forcefully stops a process.
      */
     @DELETE
-    @javax.ws.rs.Path("/{id}")
+    @jakarta.ws.rs.Path("/{id}")
     @WithTimer
     @Operation
     public void kill(@PathParam("id") UUID instanceId) {
@@ -461,7 +461,7 @@ public class ProcessResource implements Resource {
      * Forcefully stops list of processes.
      */
     @DELETE
-    @javax.ws.rs.Path("/bulk")
+    @jakarta.ws.rs.Path("/bulk")
     @WithTimer
     @Operation(description = "Forcefully stop processes")
     public void batchKill(List<UUID> instanceIdList) {
@@ -472,7 +472,7 @@ public class ProcessResource implements Resource {
      * Forcefully stops a process and all its children.
      */
     @DELETE
-    @javax.ws.rs.Path("/{id}/cascade")
+    @jakarta.ws.rs.Path("/{id}/cascade")
     @WithTimer
     @Operation(description = "Forcefully stops a process and its all children")
     public void killCascade(@PathParam("id") UUID instanceId) {
@@ -486,7 +486,7 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link ProcessResourceV2#get(UUID, Set)}
      */
     @GET
-    @javax.ws.rs.Path("/{id}")
+    @jakarta.ws.rs.Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Deprecated
@@ -504,7 +504,7 @@ public class ProcessResource implements Resource {
      * Returns a process status history.
      */
     @GET
-    @javax.ws.rs.Path("/{instanceId}/history")
+    @jakarta.ws.rs.Path("/{instanceId}/history")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Operation(description = "Get process status history")
@@ -517,7 +517,7 @@ public class ProcessResource implements Resource {
      * Returns current process' wait conditions.
      */
     @GET
-    @javax.ws.rs.Path("/{instanceId}/waits")
+    @jakarta.ws.rs.Path("/{instanceId}/waits")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Operation(description = "Get process' wait conditions")
@@ -530,7 +530,7 @@ public class ProcessResource implements Resource {
      * Returns a process' attachment file.
      */
     @GET
-    @javax.ws.rs.Path("/{id}/attachment/{name:.*}")
+    @jakarta.ws.rs.Path("/{id}/attachment/{name:.*}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(description = "Download a process' attachment")
     @ApiResponse(responseCode = "200", description = "File content",
@@ -544,7 +544,7 @@ public class ProcessResource implements Resource {
         assertProcessAccess(processEntry, "attachment");
         PartialProcessKey processKey = new ProcessKey(processEntry.instanceId(), processEntry.createdAt());
 
-        // TODO replace with javax.validation
+        // TODO replace with jakarta.validation
         if (attachmentName.endsWith("/")) {
             throw new ConcordApplicationException("Invalid attachment name: " + attachmentName, Status.BAD_REQUEST);
         }
@@ -583,7 +583,7 @@ public class ProcessResource implements Resource {
      * Lists process attachments.
      */
     @GET
-    @javax.ws.rs.Path("/{id}/attachment")
+    @jakarta.ws.rs.Path("/{id}/attachment")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Operation(description = "List attachments")
@@ -632,7 +632,7 @@ public class ProcessResource implements Resource {
      * Returns a list of subprocesses for a given parent process.
      */
     @GET
-    @javax.ws.rs.Path("/{id}/subprocess")
+    @jakarta.ws.rs.Path("/{id}/subprocess")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Operation(description = "List subprocesses of a parent process")
@@ -647,7 +647,7 @@ public class ProcessResource implements Resource {
     }
 
     @GET
-    @javax.ws.rs.Path("/{id}/root")
+    @jakarta.ws.rs.Path("/{id}/root")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Operation(description = "Get super parent for a process")
@@ -666,7 +666,7 @@ public class ProcessResource implements Resource {
      * Updates a process' status
      */
     @POST
-    @javax.ws.rs.Path("{id}/status")
+    @jakarta.ws.rs.Path("{id}/status")
     @Consumes(MediaType.TEXT_PLAIN)
     @WithTimer
     @Operation(description = "Update process status")
@@ -682,7 +682,7 @@ public class ProcessResource implements Resource {
      * Retrieves a process' log.
      */
     @GET
-    @javax.ws.rs.Path("/{id}/log")
+    @jakarta.ws.rs.Path("/{id}/log")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
     @Operation(description = "Retrieves a process' log", operationId = "getProcessLog")
@@ -708,7 +708,7 @@ public class ProcessResource implements Resource {
      * @deprecated in favor of the /api/v2/process/{id}/log* endpoints. The endpoint is still used for the runtime-v1.
      */
     @POST
-    @javax.ws.rs.Path("{id}/log")
+    @jakarta.ws.rs.Path("{id}/log")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
     @Deprecated()
@@ -741,7 +741,7 @@ public class ProcessResource implements Resource {
      * Downloads the current state snapshot of a process.
      */
     @GET
-    @javax.ws.rs.Path("/{id}/state/snapshot")
+    @jakarta.ws.rs.Path("/{id}/state/snapshot")
     @Produces("application/zip")
     @Operation(description = "Download a process state snapshot")
     @ApiResponse(responseCode = "200", description = "File content",
@@ -774,7 +774,7 @@ public class ProcessResource implements Resource {
      * Downloads a single file from the current state snapshot of a process.
      */
     @GET
-    @javax.ws.rs.Path("/{id}/state/snapshot/{name:.*}")
+    @jakarta.ws.rs.Path("/{id}/state/snapshot/{name:.*}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Validate
     @Operation(description = "Download a single file from a process state snapshot")
@@ -810,7 +810,7 @@ public class ProcessResource implements Resource {
      * Upload process attachments.
      */
     @POST
-    @javax.ws.rs.Path("{id}/attachment")
+    @jakarta.ws.rs.Path("{id}/attachment")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(description = "Upload process attachments", operationId = "uploadProcessAttachments")
     @RequestBody(description = "Attachment content", required = true,
@@ -872,7 +872,7 @@ public class ProcessResource implements Resource {
      * Decrypt a base64 string previosly encrypted with the process' project key.
      */
     @POST
-    @javax.ws.rs.Path("{id}/decrypt")
+    @jakarta.ws.rs.Path("{id}/decrypt")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
@@ -922,7 +922,7 @@ public class ProcessResource implements Resource {
      * Update process metadata.
      */
     @POST
-    @javax.ws.rs.Path("{id}/meta")
+    @jakarta.ws.rs.Path("{id}/meta")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
@@ -941,7 +941,7 @@ public class ProcessResource implements Resource {
      * Set the process' wait condition.
      */
     @POST
-    @javax.ws.rs.Path("{id}/wait")
+    @jakarta.ws.rs.Path("{id}/wait")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer

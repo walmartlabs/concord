@@ -31,10 +31,10 @@ import com.walmartlabs.concord.server.boot.validation.ValidationModule;
 import com.walmartlabs.concord.server.agent.websocket.ConcordWebSocketServlet;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.web.mgt.WebSecurityManager;
-import org.eclipse.jetty.ee8.servlet.FilterHolder;
+import org.eclipse.jetty.ee10.servlet.FilterHolder;
 
-import javax.servlet.ServletContextListener;
-import javax.servlet.http.HttpServlet;
+import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.http.HttpServlet;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;

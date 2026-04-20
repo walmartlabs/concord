@@ -20,14 +20,13 @@ package com.walmartlabs.concord.server.boot;
  * =====
  */
 
-import org.eclipse.jetty.ee8.nested.ErrorHandler;
-import org.eclipse.jetty.ee8.nested.Request;
+import org.eclipse.jetty.ee10.servlet.ErrorHandler;
+import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
 import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Callback;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.Set;
 
 public class CustomErrorHandler extends ErrorHandler {
@@ -39,18 +38,23 @@ public class CustomErrorHandler extends ErrorHandler {
     }
 
     @Override
-    public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        for (RequestErrorHandler h : handlers) {
-            if (h.handle(request, response)) {
-                // automatically set the correct Cache-Control headers
-                String cacheControl = getCacheControl();
-                if (cacheControl != null) {
-                    response.setHeader(HttpHeader.CACHE_CONTROL.asString(), cacheControl);
+    public boolean handle(Request request, Response response, Callback callback) throws Exception {
+        if (request instanceof ServletContextRequest servletRequest) {
+            var httpRequest = servletRequest.getServletApiRequest();
+            var httpResponse = servletRequest.getHttpServletResponse();
+            for (RequestErrorHandler h : handlers) {
+                if (h.handle(httpRequest, httpResponse)) {
+                    // automatically set the correct Cache-Control headers
+                    String cacheControl = getCacheControl();
+                    if (cacheControl != null) {
+                        httpResponse.setHeader(HttpHeader.CACHE_CONTROL.asString(), cacheControl);
+                    }
+                    callback.succeeded();
+                    return true;
                 }
-                return;
             }
         }
 
-        super.handle(target, baseRequest, request, response);
+        return super.handle(request, response, callback);
     }
 }

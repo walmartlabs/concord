@@ -22,11 +22,11 @@ package com.walmartlabs.concord.server.boot;
 
 import com.walmartlabs.concord.server.sdk.rest.ApiDescriptor;
 import com.walmartlabs.concord.server.cfg.ServerConfiguration;
-import org.eclipse.jetty.ee8.nested.SessionHandler;
-import org.eclipse.jetty.ee8.servlet.FilterHolder;
-import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
-import org.eclipse.jetty.ee8.servlet.ServletHolder;
-import org.eclipse.jetty.ee8.websocket.server.config.JettyWebSocketServletContainerInitializer;
+import org.eclipse.jetty.ee10.servlet.SessionHandler;
+import org.eclipse.jetty.ee10.servlet.FilterHolder;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.*;
@@ -36,13 +36,13 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Priority;
+import jakarta.annotation.Priority;
 import javax.inject.Inject;
-import javax.servlet.*;
-import javax.servlet.annotation.WebFilter;
-import javax.servlet.annotation.WebListener;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
+import jakarta.servlet.*;
+import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.annotation.WebListener;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
 import java.lang.management.ManagementFactory;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -78,6 +78,8 @@ public class HttpServer {
         // init http transport
         HttpConfiguration httpCfg = new HttpConfiguration();
         httpCfg.setRequestHeaderSize(cfg.getRequestHeaderSize());
+        // TODO remove once the '/' escaping is fixed in clients
+        httpCfg.setUriCompliance(UriCompliance.LEGACY);
         httpCfg.addCustomizer(new ForwardedRequestCustomizer());
 
         int cores = Runtime.getRuntime().availableProcessors();
@@ -87,15 +89,13 @@ public class HttpServer {
         http.setName("http");
         this.port = cfg.getPort();
         http.setPort(port);
-        // TODO remove once the '/' escaping is fixed in clients
-        http.getConnectionFactory(HttpConnectionFactory.class)
-                .getHttpConfiguration()
-                .setUriCompliance(UriCompliance.LEGACY);
         server.addConnector(http);
 
         // servlets, filters, etc...
         ServletContextHandler contextHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
         contextHandler.setContextPath("/");
+        // Keep servlet path decoding compatible with older clients that encode '/' in path parameters.
+        contextHandler.getServletHandler().setDecodeAmbiguousURIs(true);
 
         // custom 404s and other error handlers
         contextHandler.setErrorHandler(new CustomErrorHandler(requestErrorHandlers));

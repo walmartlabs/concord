@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.agent.websocket;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 
-import javax.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServlet;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;

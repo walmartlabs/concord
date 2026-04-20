@@ -22,8 +22,8 @@ package com.walmartlabs.concord.server.boot.filters;
 
 import org.apache.shiro.authc.AuthenticationToken;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import java.io.IOException;
 
 public interface AuthenticationHandler {

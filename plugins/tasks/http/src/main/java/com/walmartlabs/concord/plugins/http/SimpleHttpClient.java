@@ -53,7 +53,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HostnameVerifier;
-import javax.ws.rs.core.Response.Status.Family;
+import jakarta.ws.rs.core.Response.Status.Family;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;

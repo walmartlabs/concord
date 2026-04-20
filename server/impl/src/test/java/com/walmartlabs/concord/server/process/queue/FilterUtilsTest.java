@@ -22,8 +22,8 @@ package com.walmartlabs.concord.server.process.queue;
 
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.UriInfo;
 import java.util.Collections;
 import java.util.List;
 

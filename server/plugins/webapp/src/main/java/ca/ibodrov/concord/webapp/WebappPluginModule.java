@@ -23,11 +23,11 @@ package ca.ibodrov.concord.webapp;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.walmartlabs.concord.server.sdk.rest.ApiDescriptor;
-import org.eclipse.jetty.ee8.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
 
 import javax.inject.Named;
-import javax.servlet.Filter;
-import javax.servlet.http.HttpServlet;
+import jakarta.servlet.Filter;
+import jakarta.servlet.http.HttpServlet;
 
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
 

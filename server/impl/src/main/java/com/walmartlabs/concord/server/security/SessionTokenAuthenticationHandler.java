@@ -29,10 +29,10 @@ import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
 
 import javax.inject.Inject;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.HttpHeaders;
 import java.util.Base64;
 import java.util.UUID;
 

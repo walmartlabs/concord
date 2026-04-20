@@ -40,12 +40,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.*;
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.*;
+import jakarta.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -98,7 +98,7 @@ public class CustomFormServiceV2 {
     }
 
     @POST
-    @javax.ws.rs.Path("{processInstanceId}/{formName}/start")
+    @jakarta.ws.rs.Path("{processInstanceId}/{formName}/start")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
     public FormSessionResponse startSession(@PathParam("processInstanceId") UUID processInstanceId,
@@ -145,7 +145,7 @@ public class CustomFormServiceV2 {
     }
 
     @POST
-    @javax.ws.rs.Path("{processInstanceId}/{formName}/continue")
+    @jakarta.ws.rs.Path("{processInstanceId}/{formName}/continue")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
@@ -160,7 +160,7 @@ public class CustomFormServiceV2 {
     }
 
     @POST
-    @javax.ws.rs.Path("{processInstanceId}/{formName}/continue")
+    @jakarta.ws.rs.Path("{processInstanceId}/{formName}/continue")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public Response continueSession(@Context UriInfo uriInfo,

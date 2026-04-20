@@ -24,7 +24,8 @@ import com.walmartlabs.concord.server.message.MessageChannel;
 import com.walmartlabs.concord.server.queueclient.MessageSerializer;
 import com.walmartlabs.concord.server.queueclient.message.Message;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
-import org.eclipse.jetty.ee8.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.Callback;
+import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,7 +86,9 @@ public class WebSocketChannel implements MessageChannel {
         }
 
         try {
-            session.getRemote().sendString(MessageSerializer.serialize(response));
+            Callback.Completable callback = new Callback.Completable();
+            session.sendText(MessageSerializer.serialize(response), callback);
+            callback.get();
             return true;
         } catch (Exception e) {
             log.error("response ['{}', '{}'] -> error", channelId, response, e);
@@ -124,7 +127,7 @@ public class WebSocketChannel implements MessageChannel {
 
     void pong() {
         try {
-            session.getRemote().sendPong(ByteBuffer.wrap("pong".getBytes()));
+            session.sendPong(ByteBuffer.wrap("pong".getBytes()), Callback.NOOP);
         } catch (Exception e) {
             log.warn("pong ['{}'] -> error", channelId, e);
         }

@@ -34,9 +34,9 @@ package com.walmartlabs.concord.server.boot.validation;
 import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorXO;
 
-import javax.ws.rs.core.*;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.*;
+import jakarta.ws.rs.core.Response.ResponseBuilder;
+import jakarta.ws.rs.core.Response.Status;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
