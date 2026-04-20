@@ -198,21 +198,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- JDK9 compatibility -->
-        <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.activation</groupId>
-                    <artifactId>javax.activation-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.xml.bind</groupId>
-            <artifactId>jaxb-impl</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.sun.activation</groupId>
             <artifactId>javax.activation</artifactId>

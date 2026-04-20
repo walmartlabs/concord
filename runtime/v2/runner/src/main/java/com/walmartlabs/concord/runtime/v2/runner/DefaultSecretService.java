@@ -30,9 +30,9 @@ import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 import com.walmartlabs.concord.sdk.Secret;
 
 import javax.inject.Inject;
-import javax.xml.bind.DatatypeConverter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.Objects;
 
 public class DefaultSecretService implements SecretService {
@@ -93,7 +93,7 @@ public class DefaultSecretService implements SecretService {
         byte[] input;
 
         try {
-            input = DatatypeConverter.parseBase64Binary(encryptedValue);
+            input = Base64.getDecoder().decode(encryptedValue);
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid encrypted string value, please verify that it was specified/copied correctly: " + e.getMessage());
         }

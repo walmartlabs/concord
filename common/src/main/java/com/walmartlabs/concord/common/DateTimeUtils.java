@@ -22,6 +22,8 @@ package com.walmartlabs.concord.common;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.Objects;
 
 public final class DateTimeUtils {
 
@@ -33,6 +35,12 @@ public final class DateTimeUtils {
      */
     public static String toIsoString(OffsetDateTime t) {
         return FORMAT.format(t);
+    }
+
+    public static String toIsoString(Calendar t) {
+        Objects.requireNonNull(t);
+        OffsetDateTime value = OffsetDateTime.ofInstant(t.toInstant(), t.getTimeZone().toZoneId());
+        return toIsoString(value);
     }
 
     /**

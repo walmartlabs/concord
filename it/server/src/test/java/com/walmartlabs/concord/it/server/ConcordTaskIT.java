@@ -22,9 +22,9 @@ package com.walmartlabs.concord.it.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.common.DateTimeUtils;
 import org.junit.jupiter.api.Test;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.InputStream;
 import java.util.*;
 
@@ -148,7 +148,7 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         Calendar c = Calendar.getInstance();
         c.add(Calendar.SECOND, 30);
-        input.put("arguments.startAt", DatatypeConverter.printDateTime(c));
+        input.put("arguments.startAt", DateTimeUtils.toIsoString(c));
 
         StartProcessResponse spr = start(input);
 

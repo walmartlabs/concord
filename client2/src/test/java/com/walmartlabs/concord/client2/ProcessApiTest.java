@@ -24,7 +24,7 @@ import com.walmartlabs.concord.client2.impl.auth.ApiKey;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import javax.xml.bind.DatatypeConverter;
+import java.util.Base64;
 import java.util.UUID;
 
 public class ProcessApiTest {
@@ -43,7 +43,7 @@ public class ProcessApiTest {
         byte[] input;
 
         try {
-            input = DatatypeConverter.parseBase64Binary(encryptedValue);
+            input = Base64.getDecoder().decode(encryptedValue);
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid encrypted string value, please verify that it was specified/copied correctly: " + e.getMessage());
         }

@@ -22,7 +22,6 @@ package com.walmartlabs.concord.common;
 
 import org.junit.jupiter.api.Test;
 
-import javax.xml.bind.DatatypeConverter;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoField;
@@ -37,10 +36,9 @@ public class DateTimeUtilsTest {
         Calendar now1 = Calendar.getInstance();
         now1.set(Calendar.MILLISECOND, 123);
 
-        String a = DatatypeConverter.printDateTime(now1);
-
         OffsetDateTime now2 = OffsetDateTime.ofInstant(now1.toInstant(), ZoneId.of(now1.getTimeZone().getID()));
-        String b = DateTimeUtils.toIsoString(now2);
+        String a = DateTimeUtils.toIsoString(now2);
+        String b = DateTimeUtils.toIsoString(now1);
 
         assertEquals(a, b);
 

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.common.DateTimeUtils;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.*;
@@ -30,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -918,9 +918,9 @@ public class ConcordTask extends AbstractConcordTask {
         } else if (v instanceof Date) {
             Calendar c = Calendar.getInstance();
             c.setTime((Date) v);
-            return DatatypeConverter.printDateTime(c);
+            return DateTimeUtils.toIsoString(c);
         } else if (v instanceof Calendar) {
-            return DatatypeConverter.printDateTime((Calendar) v);
+            return DateTimeUtils.toIsoString((Calendar) v);
         } else {
             throw new IllegalArgumentException("'" + START_AT_KEY + "' must be a string, java.util.Date or java.util.Calendar value. Got: " + v);
         }

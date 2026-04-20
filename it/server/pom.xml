@@ -194,18 +194,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- JDK9 compatibility -->
-        <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.xml.bind</groupId>
-            <artifactId>jaxb-impl</artifactId>
-            <scope>test</scope>
-        </dependency>
-
         <!-- download large dependencies beforehand -->
         <dependency>
             <groupId>org.apache.groovy</groupId>

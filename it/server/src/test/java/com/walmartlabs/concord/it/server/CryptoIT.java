@@ -25,7 +25,7 @@ import com.walmartlabs.concord.client2.*;
 import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
 
-import javax.xml.bind.DatatypeConverter;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -301,7 +301,7 @@ public class CryptoIT extends AbstractServerIT {
                 "org", orgName,
                 "project", projectName,
                 "archive", payload,
-                "arguments.encryptedValue", DatatypeConverter.printBase64Binary(new byte[]{0, 1, 2})));
+                "arguments.encryptedValue", Base64.getEncoder().encodeToString(new byte[]{0, 1, 2})));
 
         // ---
 
