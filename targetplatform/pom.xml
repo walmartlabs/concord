@@ -76,6 +76,7 @@
         <javax.inject.version>1</javax.inject.version>
         <javax.mail.version>1.6.2</javax.mail.version>
         <jakarta.annotations.api.version>2.1.1</jakarta.annotations.api.version>
+        <jakarta.inject.version>2.0.1</jakarta.inject.version>
         <jakarta.servlet.version>6.0.0</jakarta.servlet.version>
         <jakarta.validation.version>3.0.2</jakarta.validation.version>
         <jakarta.ws.rs.version>3.1.0</jakarta.ws.rs.version>
@@ -652,6 +653,11 @@
                 <groupId>javax.inject</groupId>
                 <artifactId>javax.inject</artifactId>
                 <version>${javax.inject.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.inject</groupId>
+                <artifactId>jakarta.inject-api</artifactId>
+                <version>${jakarta.inject.version}</version>
             </dependency>
             <dependency>
                 <groupId>jakarta.servlet</groupId>

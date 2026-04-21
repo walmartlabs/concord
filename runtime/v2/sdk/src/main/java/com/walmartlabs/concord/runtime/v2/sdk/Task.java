@@ -21,8 +21,8 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  */
 
 /**
- * Task interface. All implementations should be annotated with {@code @Named}
- * using process-wide unique names.
+ * Task interface. All implementations should be annotated with {@code javax.inject.Named}
+ * or {@code jakarta.inject.Named} using process-wide unique names.
  */
 public interface Task {
 

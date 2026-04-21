@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el.resolvers;
  * =====
  */
 
-import com.walmartlabs.concord.common.ReflectionUtils;
+import com.walmartlabs.concord.runtime.common.injector.InjectAnnotationUtils;
 import com.walmartlabs.concord.runtime.v2.model.Expression;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.el.MethodNotFoundException;
@@ -33,7 +33,6 @@ import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
 import javax.el.ELContext;
 import javax.el.ELResolver;
-import javax.inject.Named;
 import java.beans.FeatureDescriptor;
 import java.util.*;
 
@@ -145,12 +144,7 @@ public class TaskMethodResolver extends ELResolver {
         }
 
         private static String getName(Object task) {
-            Named n = ReflectionUtils.findAnnotation(task.getClass(), Named.class);
-            if (n != null) {
-                return n.value();
-            }
-
-            return null;
+            return InjectAnnotationUtils.findNamedValue(task.getClass()).orElse(null);
         }
     }
 

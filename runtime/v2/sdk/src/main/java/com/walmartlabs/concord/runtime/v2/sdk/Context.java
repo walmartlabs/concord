@@ -27,7 +27,8 @@ import java.util.UUID;
 
 /**
  * Provides access to the current call's environment.
- * Can be injected into task classes using {@link javax.inject.Inject} annotation.
+ * Can be injected into task classes using {@code javax.inject.Inject}
+ * or {@code jakarta.inject.Inject} annotations.
  */
 public interface Context {
 

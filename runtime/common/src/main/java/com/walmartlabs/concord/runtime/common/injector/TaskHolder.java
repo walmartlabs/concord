@@ -36,11 +36,17 @@ public class TaskHolder<T> {
 
     public void add(String key, Class<T> value) {
         log.debug("Registering {} as '{}'...", value, key);
-        Class<T> old = classes.put(key, value);
+        Class<T> old = classes.get(key);
+        if (old == value) {
+            return;
+        }
+
         if (old != null) {
             throw new IllegalStateException("Non-unique task name: " + key + ". " +
                     "Another task with the same name: old: " + old.getName() + ", new: " + value.getName());
         }
+
+        classes.put(key, value);
     }
 
     public Class<T> get(String key) {

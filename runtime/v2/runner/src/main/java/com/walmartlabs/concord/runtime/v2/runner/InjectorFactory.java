@@ -32,6 +32,7 @@ import com.walmartlabs.concord.runtime.common.injector.TaskHolder;
 import com.walmartlabs.concord.runtime.v2.runner.guice.CurrentClasspathModule;
 import com.walmartlabs.concord.runtime.v2.runner.guice.DefaultRunnerModule;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskDiscoveryInitializer;
 import com.walmartlabs.concord.runtime.v2.runner.logging.CustomLayout;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.V2;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
@@ -91,7 +92,10 @@ public class InjectorFactory {
                 bindListener(InjectorUtils.subClassesOf(Task.class), InjectorUtils.taskClassesListener(holder));
 
                 bind(new TypeLiteral<TaskHolder<Task>>() {
+                }).toInstance(holder);
+                bind(new TypeLiteral<TaskHolder<Task>>() {
                 }).annotatedWith(V2.class).toInstance(holder);
+                bind(TaskDiscoveryInitializer.class).asEagerSingleton();
             }
         };
         l.add(tasks);

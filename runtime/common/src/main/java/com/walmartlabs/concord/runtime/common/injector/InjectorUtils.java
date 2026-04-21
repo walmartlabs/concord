@@ -24,12 +24,8 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
-import com.walmartlabs.concord.common.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.inject.Named;
-import javax.inject.Singleton;
 
 public final class InjectorUtils {
 
@@ -56,18 +52,17 @@ public final class InjectorUtils {
         public <I> void hear(TypeLiteral<I> typeLiteral, TypeEncounter<I> typeEncounter) {
             Class<T> klass = (Class<T>) typeLiteral.getRawType();
 
-            Named n = klass.getAnnotation(Named.class);
-            if (n == null) {
+            String key = InjectAnnotationUtils.findNamedValue(klass).orElse(null);
+            if (key == null) {
                 log.warn("Ignoring task class without @Named: {}", klass);
                 return;
             }
 
-            if (ReflectionUtils.findAnnotation(klass, Singleton.class) != null) {
+            if (InjectAnnotationUtils.hasSingleton(klass)) {
                 log.warn("Ignoring task class with @Singleton: {}", klass);
                 return;
             }
 
-            String key = n.value();
             if ("".equals(key)) {
                 log.warn("Task class with an empty @Named value: {}", klass);
                 return;
