@@ -201,7 +201,10 @@ public class ProjectLoaderV2 implements ProjectLoader {
             imports.addAll(pd.imports().items());
             forms.putAll(pd.forms());
             resources.addAll(pd.resources().concord());
+            checkDuplicates(pd.configuration().dependencies());
             dependencies.addAll(pd.configuration().dependencies());
+
+            checkDuplicates(pd.configuration().extraDependencies());
             extraDependencies.addAll(pd.configuration().extraDependencies());
             arguments = ConfigurationUtils.deepMerge(arguments, pd.configuration().arguments());
         }
@@ -290,5 +293,14 @@ public class ProjectLoaderV2 implements ProjectLoader {
                 return pd;
             }
         };
+    }
+
+    private static void checkDuplicates(List<String> items) {
+        Set<String> s = new HashSet<>();
+        for (String i : items) {
+            if (!s.add(i)) {
+                throw new IllegalArgumentException("Duplicate dependency found: " + i);
+            }
+        }
     }
 }
