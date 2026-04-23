@@ -45,15 +45,18 @@ import java.util.*;
 
 public class ProcessQueueManager {
 
+    private static final Set<ProcessDataInclude> DEFAULT_INCLUDES = Collections.singleton(ProcessDataInclude.CHILDREN_IDS);
+    private static final Set<ProcessStatus> TO_ENQUEUED_STATUSES = Set.of(
+            ProcessStatus.PREPARING,
+            ProcessStatus.RESUMING,
+            ProcessStatus.SUSPENDED
+    );
+
     private final ProcessQueueDao queueDao;
     private final ProcessKeyCache keyCache;
     private final ProcessEventManager eventManager;
     private final ProcessLogManager processLogManager;
     private final Set<ProcessStatusListener> statusListeners;
-
-    private static final Set<ProcessStatus> TO_ENQUEUED_STATUSES = new HashSet<>(Arrays.asList(
-            ProcessStatus.PREPARING, ProcessStatus.RESUMING, ProcessStatus.SUSPENDED
-    ));
 
     @Inject
     public ProcessQueueManager(ProcessQueueDao queueDao,
@@ -198,12 +201,16 @@ public class ProcessQueueManager {
         notifyStatusChange(tx, processKey, status);
     }
 
+    public ProcessEntry get(ProcessKey processKey) {
+        return queueDao.get(processKey, DEFAULT_INCLUDES);
+    }
+
     public ProcessEntry get(PartialProcessKey partialProcessKey) {
         ProcessKey key = keyCache.get(partialProcessKey.getInstanceId());
         if (key == null) {
             return null;
         }
-        return queueDao.get(key);
+        return queueDao.get(key, DEFAULT_INCLUDES);
     }
 
     public UUID getProjectId(PartialProcessKey partialProcessKey) {
