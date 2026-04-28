@@ -38,7 +38,7 @@
         <activation.api.version>1.2.2</activation.api.version>
         <aopalliance.version>1.0</aopalliance.version>
         <aws.version>1.11.475</aws.version>
-        <bouncycastle.version>1.82</bouncycastle.version>
+        <bouncycastle.version>1.84</bouncycastle.version>
         <bpm.version>1.0.3</bpm.version>
         <bytebuddy.version>1.14.9</bytebuddy.version>
         <commons.beanutils.version>1.11.0</commons.beanutils.version>
@@ -80,7 +80,7 @@
         <jboss.logging>3.4.2.Final</jboss.logging>
         <jcl-over-slf4j.version>1.7.36</jcl-over-slf4j.version>
         <jetbrain.annotations.version>23.0.0</jetbrain.annotations.version>
-        <jetty.version>12.0.32</jetty.version>
+        <jetty.version>12.0.33</jetty.version>
         <jgit.version>6.10.1.202505221210-r</jgit.version>
         <jna.version>5.18.1</jna.version>
         <jooq.version>3.14.0</jooq.version>
@@ -89,7 +89,7 @@
         <json.smart.version>2.5.2</json.smart.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>5.9.1</junit.version>
-        <kafka.client.version>3.9.1</kafka.client.version>
+        <kafka.client.version>3.9.2</kafka.client.version>
         <kerby.version>2.0.1</kerby.version>
         <kubernetes.client.version>7.0.1</kubernetes.client.version>
         <launcher.version>0.128</launcher.version>
