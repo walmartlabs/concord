@@ -19,7 +19,9 @@ task in/out parameters
 - project: respect PR labels in docker-multiarch flow
 ([#1304](https://github.com/walmartlabs/concord/pull/1304));
 - concord-console2: remove redux dependency and dead code
-([#1306](https://github.com/walmartlabs/concord/pull/1306)).
+([#1306](https://github.com/walmartlabs/concord/pull/1306));
+- project: update dependencies
+([#1310](https://github.com/walmartlabs/concord/pull/1310)).
 
 
 
