@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Link, Redirect, Route, Switch } from 'react-router-dom';
+import { Link, Navigate, Route, Routes } from 'react-router';
 import { Divider, Grid, Header, Icon, Loader, Menu, Segment, Table } from 'semantic-ui-react';
 import { parseISO as parseDate } from 'date-fns';
 
@@ -29,7 +29,7 @@ import {
     SecretEntry,
     SecretType,
     SecretVisibility,
-    typeToText
+    typeToText,
 } from '../../../api/org/secret';
 import { get as apiGetSecret } from '../../../api/org/secret';
 import { useApi } from '../../../hooks/useApi';
@@ -37,7 +37,7 @@ import {
     HumanizedDuration,
     LocalTimestamp,
     RequestErrorMessage,
-    WithCopyToClipboard
+    WithCopyToClipboard,
 } from '../../molecules';
 import {
     AuditLogActivity,
@@ -48,7 +48,7 @@ import {
     SecretProjectActivity,
     SecretRenameActivity,
     SecretTeamAccessActivity,
-    SecretVisibilityActivity
+    SecretVisibilityActivity,
 } from '../../organisms';
 import { NotFoundPage } from '../../pages';
 
@@ -60,7 +60,8 @@ interface ExternalProps {
     secretName: ConcordKey;
 }
 
-const visibilityToText = (v: SecretVisibility) => (v === SecretVisibility.PUBLIC ? 'Public' : 'Private');
+const visibilityToText = (v: SecretVisibility) =>
+    v === SecretVisibility.PUBLIC ? 'Public' : 'Private';
 
 const encryptedByToText = (t: SecretEncryptedByType) =>
     t === SecretEncryptedByType.SERVER_KEY ? 'Server key' : 'Password';
@@ -75,10 +76,13 @@ const renderUser = (e: Owner) => {
 
 const SecretActivity = ({ activeTab, orgName, secretName }: ExternalProps) => {
     const [refreshSecret, toggleRefresh] = React.useState(false);
-    const fetchData = React.useCallback(() => apiGetSecret(orgName, secretName), [orgName, secretName]);
+    const fetchData = React.useCallback(
+        () => apiGetSecret(orgName, secretName),
+        [orgName, secretName]
+    );
     const { data, error, isLoading } = useApi<SecretEntry>(fetchData, {
         fetchOnMount: true,
-        forceRequest: refreshSecret
+        forceRequest: refreshSecret,
     });
 
     const reloadSecret = React.useCallback(() => {
@@ -134,7 +138,9 @@ const SecretActivity = ({ activeTab, orgName, secretName }: ExternalProps) => {
                                 {entry.projects && entry.projects.length > 0
                                     ? entry.projects.map((project, index) => (
                                           <span key={index}>
-                                              <Link to={`/org/${entry.orgName}/project/${project.name}`}>
+                                              <Link
+                                                  to={`/org/${entry.orgName}/project/${project.name}`}
+                                              >
                                                   {project.name}
                                               </Link>
                                               <span>
@@ -148,7 +154,9 @@ const SecretActivity = ({ activeTab, orgName, secretName }: ExternalProps) => {
                         <Table.Row>
                             <Table.Cell>Age</Table.Cell>
                             <Table.Cell>
-                                <HumanizedDuration value={Date.now() - parseDate(entry.createdAt).getTime()}>
+                                <HumanizedDuration
+                                    value={Date.now() - parseDate(entry.createdAt).getTime()}
+                                >
                                     <div>
                                         created at:<div>{entry.createdAt}</div>
                                     </div>
@@ -158,7 +166,11 @@ const SecretActivity = ({ activeTab, orgName, secretName }: ExternalProps) => {
                         <Table.Row>
                             <Table.Cell>Last updated at</Table.Cell>
                             <Table.Cell>
-                                {entry.lastUpdatedAt ? <LocalTimestamp value={entry.lastUpdatedAt} /> : '-'}
+                                {entry.lastUpdatedAt ? (
+                                    <LocalTimestamp value={entry.lastUpdatedAt} />
+                                ) : (
+                                    '-'
+                                )}
                             </Table.Cell>
                         </Table.Row>
                     </Table.Body>
@@ -199,10 +211,7 @@ const SecretActivity = ({ activeTab, orgName, secretName }: ExternalProps) => {
                     />
 
                     <Header as="h4">Secret name</Header>
-                    <SecretRenameActivity
-                        orgName={entry.orgName}
-                        secretName={entry.name}
-                    />
+                    <SecretRenameActivity orgName={entry.orgName} secretName={entry.name} />
 
                     <Header as="h4">Secret owner</Header>
                     <SecretOwnerChangeActivity
@@ -271,26 +280,14 @@ const SecretActivity = ({ activeTab, orgName, secretName }: ExternalProps) => {
                 </Menu.Item>
             </Menu>
 
-            <Switch>
-                <Route path={baseUrl} exact={true}>
-                    <Redirect to={`${baseUrl}/info`} />
-                </Route>
-
-                <Route path={`${baseUrl}/info`} exact={true}>
-                    {renderInfo(data)}
-                </Route>
-                <Route path={`${baseUrl}/settings`} exact={true}>
-                    {renderSettings(data)}
-                </Route>
-                <Route path={`${baseUrl}/access`} exact={true}>
-                    {renderTeamAccess(data)}
-                </Route>
-                <Route path={`${baseUrl}/audit`} exact={true}>
-                    {renderAuditLog(data)}
-                </Route>
-
-                <Route component={NotFoundPage} />
-            </Switch>
+            <Routes>
+                <Route index={true} element={<Navigate to="info" replace={true} />} />
+                <Route path="info" element={renderInfo(data)} />
+                <Route path="settings" element={renderSettings(data)} />
+                <Route path="access" element={renderTeamAccess(data)} />
+                <Route path="audit" element={renderAuditLog(data)} />
+                <Route path="*" element={<NotFoundPage />} />
+            </Routes>
         </>
     );
 };

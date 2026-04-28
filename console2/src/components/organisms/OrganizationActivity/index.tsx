@@ -19,15 +19,15 @@
  */
 
 import * as React from 'react';
-import { Redirect, Route, Switch } from 'react-router';
-import { Link } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router';
+import { Link } from 'react-router';
 import { Icon, Menu } from 'semantic-ui-react';
 import { ConcordKey } from '../../../api/common';
 import {
     AuditLogActivity,
     ProjectListActivity,
     SecretListActivity,
-    TeamListActivity
+    TeamListActivity,
 } from '../../organisms';
 
 import { NotFoundPage } from '../../pages';
@@ -87,38 +87,46 @@ const OrganizationActivity = ({ activeTab, orgName, forceRefresh }: ExternalProp
                 </Menu.Item>
             </Menu>
 
-            <Switch>
-                <Route path={baseUrl} exact={true}>
-                    <Redirect to={`${baseUrl}/project`} />
-                </Route>
-                <Route path={`${baseUrl}/project`}>
-                    <ProjectListActivity orgName={orgName} forceRefresh={forceRefresh} />
-                </Route>
-                <Route path={`${baseUrl}/process`}>
-                    <OrganizationProcesses orgName={orgName} forceRefresh={forceRefresh} />
-                </Route>
-                <Route path={`${baseUrl}/secret`} exact={true}>
-                    <SecretListActivity orgName={orgName} forceRefresh={forceRefresh} />
-                </Route>
-                <Route path={`${baseUrl}/team`} exact={true}>
-                    <TeamListActivity orgName={orgName} forceRefresh={forceRefresh} />
-                </Route>
-                <Route path={`${baseUrl}/jsonstore`} exact={true}>
-                    <StorageListActivity orgName={orgName} forceRefresh={forceRefresh} />
-                </Route>
-                <Route path={`${baseUrl}/settings`} exact={true}>
-                    <OrganizationSettings orgName={orgName} forceRefresh={forceRefresh} />
-                </Route>
-                <Route path={`${baseUrl}/audit`} exact={true}>
-                    <AuditLogActivity
-                        showRefreshButton={false}
-                        filter={{ details: { orgName: orgName } }}
-                        forceRefresh={forceRefresh}
-                    />
-                </Route>
-
-                <Route component={NotFoundPage} />
-            </Switch>
+            <Routes>
+                <Route index={true} element={<Navigate to="project" replace={true} />} />
+                <Route
+                    path="project"
+                    element={<ProjectListActivity orgName={orgName} forceRefresh={forceRefresh} />}
+                />
+                <Route
+                    path="process"
+                    element={
+                        <OrganizationProcesses orgName={orgName} forceRefresh={forceRefresh} />
+                    }
+                />
+                <Route
+                    path="secret"
+                    element={<SecretListActivity orgName={orgName} forceRefresh={forceRefresh} />}
+                />
+                <Route
+                    path="team"
+                    element={<TeamListActivity orgName={orgName} forceRefresh={forceRefresh} />}
+                />
+                <Route
+                    path="jsonstore"
+                    element={<StorageListActivity orgName={orgName} forceRefresh={forceRefresh} />}
+                />
+                <Route
+                    path="settings"
+                    element={<OrganizationSettings orgName={orgName} forceRefresh={forceRefresh} />}
+                />
+                <Route
+                    path="audit"
+                    element={
+                        <AuditLogActivity
+                            showRefreshButton={false}
+                            filter={{ details: { orgName: orgName } }}
+                            forceRefresh={forceRefresh}
+                        />
+                    }
+                />
+                <Route path="*" element={<NotFoundPage />} />
+            </Routes>
         </>
     );
 };

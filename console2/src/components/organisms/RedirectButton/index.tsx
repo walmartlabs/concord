@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { useHistory } from 'react-router';
+import { useHistory } from '@/router';
 import { Button } from 'semantic-ui-react';
 import { ButtonProps } from 'semantic-ui-react/dist/commonjs/elements/Button/Button';
 

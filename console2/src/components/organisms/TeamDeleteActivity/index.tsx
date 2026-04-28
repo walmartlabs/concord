@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { useHistory } from 'react-router-dom';
+import { useHistory } from '@/router';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { deleteTeam as apiDeleteTeam } from '../../../api/org/team';

@@ -18,7 +18,7 @@
  * =====
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useHistory } from 'react-router';
+import { useHistory } from '@/router';
 import { Loader, Segment } from 'semantic-ui-react';
 
 import { ConcordId, RequestError } from '../../../api/common';
@@ -27,14 +27,10 @@ import {
     FormInstanceEntry,
     FormSubmitErrors,
     get as apiGetForm,
-    submit as apiSubmitForm
+    submit as apiSubmitForm,
 } from '../../../api/process/form';
 import { ProcessForm, RequestErrorMessage } from '../../molecules';
-import {
-    getProcessLocation,
-    getWizardLocation,
-    openProcessForm
-} from './processFormNavigation';
+import { getProcessLocation, getWizardLocation, openProcessForm } from './processFormNavigation';
 
 interface Props {
     processInstanceId: ConcordId;
@@ -106,10 +102,7 @@ const ProcessFormActivity = ({ processInstanceId, formName, wizard }: Props) => 
         };
     }, [clearRedirectTimeout, clearSubmitState, formName, processInstanceId]);
 
-    useEffect(
-        () => () => clearRedirectTimeout(),
-        [clearRedirectTimeout]
-    );
+    useEffect(() => () => clearRedirectTimeout(), [clearRedirectTimeout]);
 
     const onSubmit = useCallback(
         async (data: FormDataType) => {
@@ -179,7 +172,7 @@ const ProcessFormActivity = ({ processInstanceId, formName, wizard }: Props) => 
                     processInstanceId,
                     formName,
                     custom: form.custom,
-                    yieldFlow: form.yield
+                    yieldFlow: form.yield,
                 });
             } catch (e) {
                 if (submitRequestIdRef.current === requestId) {
@@ -211,7 +204,10 @@ const ProcessFormActivity = ({ processInstanceId, formName, wizard }: Props) => 
             {form.custom && (
                 <Segment>
                     This form has a {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                    <a href="#" onClick={onStartCustomForm}>custom view</a>.
+                    <a href="#" onClick={onStartCustomForm}>
+                        custom view
+                    </a>
+                    .
                 </Segment>
             )}
 

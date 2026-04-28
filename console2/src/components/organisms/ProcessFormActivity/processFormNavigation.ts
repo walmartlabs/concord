@@ -17,13 +17,21 @@
  * limitations under the License.
  * =====
  */
-import { History, LocationDescriptorObject } from 'history';
-
 import { ConcordId } from '../../../api/common';
 import { startSession as apiStartSession } from '../../../api/service/custom_form';
 
+export interface RouterLocation {
+    pathname: string;
+    search?: string;
+}
+
+interface NavigationHistory {
+    push(location: RouterLocation): void;
+    replace(location: RouterLocation): void;
+}
+
 interface OpenProcessFormArgs {
-    history: History;
+    history: NavigationHistory;
     processInstanceId: ConcordId;
     formName: string;
     custom: boolean;
@@ -57,7 +65,10 @@ const startCustomFormSession = async (processInstanceId: ConcordId, formName: st
         try {
             return await apiStartSession(processInstanceId, formName);
         } catch (error) {
-            if (!shouldRetryCustomFormSession(error) || attempt === CUSTOM_FORM_SESSION_RETRIES - 1) {
+            if (
+                !shouldRetryCustomFormSession(error) ||
+                attempt === CUSTOM_FORM_SESSION_RETRIES - 1
+            ) {
                 throw error;
             }
 
@@ -68,22 +79,22 @@ const startCustomFormSession = async (processInstanceId: ConcordId, formName: st
     throw new Error('Unreachable');
 };
 
-export const getProcessLocation = (processInstanceId: ConcordId): LocationDescriptorObject => ({
-    pathname: `/process/${processInstanceId}`
+export const getProcessLocation = (processInstanceId: ConcordId): RouterLocation => ({
+    pathname: `/process/${processInstanceId}`,
 });
 
-export const getWizardLocation = (processInstanceId: ConcordId): LocationDescriptorObject => ({
+export const getWizardLocation = (processInstanceId: ConcordId): RouterLocation => ({
     pathname: `/process/${processInstanceId}/wizard`,
-    search: 'fullScreen=true'
+    search: 'fullScreen=true',
 });
 
 export const getWizardFormLocation = (
     processInstanceId: ConcordId,
     formName: string,
     yieldFlow: boolean
-): LocationDescriptorObject => ({
+): RouterLocation => ({
     pathname: `/process/${processInstanceId}/form/${formName}/wizard`,
-    search: `fullScreen=true&yieldFlow=${yieldFlow}`
+    search: `fullScreen=true&yieldFlow=${yieldFlow}`,
 });
 
 export const openProcessForm = async ({
@@ -91,7 +102,7 @@ export const openProcessForm = async ({
     processInstanceId,
     formName,
     custom,
-    yieldFlow
+    yieldFlow,
 }: OpenProcessFormArgs) => {
     if (custom) {
         const { uri } = await startCustomFormSession(processInstanceId, formName);

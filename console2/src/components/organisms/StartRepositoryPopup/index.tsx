@@ -18,7 +18,7 @@
  * =====
  */
 import { ReactNode, useCallback, useMemo, useState } from 'react';
-import { useHistory } from 'react-router';
+import { useHistory } from '@/router';
 import { Dropdown, DropdownItemProps, Message, Table } from 'semantic-ui-react';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
@@ -97,7 +97,7 @@ const SimpleDropdown = ({
     onAdd,
     onChange,
     loading,
-    testId
+    testId,
 }: DropdownProps) => (
     <Dropdown
         clearable={true}
@@ -120,7 +120,7 @@ const MultiSelectDropdown = ({
     disabled,
     onAdd,
     onChange,
-    loading
+    loading,
 }: MultiSelectDropdownProps) => (
     <Dropdown
         clearable={true}
@@ -151,7 +151,7 @@ const StartRepositoryPopup = ({
     allowProfile,
     profiles,
     showArgs,
-    args
+    args,
 }: Props) => {
     const history = useHistory();
 
@@ -259,7 +259,7 @@ const StartRepositoryPopup = ({
                 displayObjectSize={false}
                 src={{
                     ok: response.ok,
-                    instanceId: response.instanceId
+                    instanceId: response.instanceId,
                 }}
             />
         );

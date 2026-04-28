@@ -19,8 +19,8 @@
  */
 
 import * as React from 'react';
-import { Redirect, Route, Switch } from 'react-router';
-import { Link } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router';
+import { Link } from 'react-router';
 import { Icon, Menu } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
@@ -85,59 +85,76 @@ const ProjectActivity = ({ activeTab, orgName, projectName, forceRefresh }: Exte
                 </Menu.Item>
             </Menu>
 
-            <Switch>
-                <Route path={baseUrl} exact={true}>
-                    <Redirect to={`${baseUrl}/process`} />
-                </Route>
-
-                <Route path={`${baseUrl}/process`} exact={true}>
-                    <ProjectProcesses
-                        orgName={orgName}
-                        projectName={projectName}
-                        forceRefresh={forceRefresh}
-                    />
-                </Route>
-                <Route path={`${baseUrl}/checkpoint`} exact={true}>
-                    <ProjectCheckpoints
-                        orgName={orgName}
-                        projectName={projectName}
-                        forceRefresh={forceRefresh}
-                    />
-                </Route>
-                <Route path={`${baseUrl}/repository`} exact={true}>
-                    <ProjectRepositories
-                        orgName={orgName}
-                        projectName={projectName}
-                        forceRefresh={forceRefresh}
-                    />
-                </Route>
-                <Route path={`${baseUrl}/access`} exact={true}>
-                    <ProjectTeamAccessActivity orgName={orgName} projectName={projectName} />
-                </Route>
-                <Route path={`${baseUrl}/configuration`} exact={true}>
-                    <ProjectConfigurationActivity
-                        orgName={orgName}
-                        projectName={projectName}
-                        forceRefresh={forceRefresh}
-                    />
-                </Route>
-                <Route path={`${baseUrl}/settings`} exact={true}>
-                    <ProjectSettings
-                        orgName={orgName}
-                        projectName={projectName}
-                        forceRefresh={forceRefresh}
-                    />
-                </Route>
-                <Route path={`${baseUrl}/audit`} exact={true}>
-                    <AuditLogActivity
-                        showRefreshButton={false}
-                        filter={{ details: { orgName: orgName, projectName: projectName } }}
-                        forceRefresh={forceRefresh}
-                    />
-                </Route>
-
-                <Route component={NotFoundPage} />
-            </Switch>
+            <Routes>
+                <Route index={true} element={<Navigate to="process" replace={true} />} />
+                <Route
+                    path="process"
+                    element={
+                        <ProjectProcesses
+                            orgName={orgName}
+                            projectName={projectName}
+                            forceRefresh={forceRefresh}
+                        />
+                    }
+                />
+                <Route
+                    path="checkpoint"
+                    element={
+                        <ProjectCheckpoints
+                            orgName={orgName}
+                            projectName={projectName}
+                            forceRefresh={forceRefresh}
+                        />
+                    }
+                />
+                <Route
+                    path="repository"
+                    element={
+                        <ProjectRepositories
+                            orgName={orgName}
+                            projectName={projectName}
+                            forceRefresh={forceRefresh}
+                        />
+                    }
+                />
+                <Route
+                    path="access"
+                    element={
+                        <ProjectTeamAccessActivity orgName={orgName} projectName={projectName} />
+                    }
+                />
+                <Route
+                    path="configuration"
+                    element={
+                        <ProjectConfigurationActivity
+                            orgName={orgName}
+                            projectName={projectName}
+                            forceRefresh={forceRefresh}
+                        />
+                    }
+                />
+                <Route
+                    path="settings"
+                    element={
+                        <ProjectSettings
+                            orgName={orgName}
+                            projectName={projectName}
+                            forceRefresh={forceRefresh}
+                        />
+                    }
+                />
+                <Route
+                    path="audit"
+                    element={
+                        <AuditLogActivity
+                            showRefreshButton={false}
+                            filter={{ details: { orgName: orgName, projectName: projectName } }}
+                            forceRefresh={forceRefresh}
+                        />
+                    }
+                />
+                <Route path="*" element={<NotFoundPage />} />
+            </Routes>
         </>
     );
 };

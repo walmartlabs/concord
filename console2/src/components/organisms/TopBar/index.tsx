@@ -19,11 +19,12 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router';
+import { useContext } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 
 import { CustomResources, LinkMeta } from '../../../../cfg';
 import { GlobalNavMenu, GlobalNavTab } from '../../molecules';
-import { logout, UserSession, UserSessionContext } from '../../../session';
+import { logout, UserSessionContext } from '../../../session';
 
 const pathToTab = (s: string): GlobalNavTab => {
     if (s.startsWith('/activity')) {
@@ -61,44 +62,41 @@ interface NavigationProps {
     openCustomResource: (name: string) => void;
 }
 
-export type TopBarProps = RouteComponentProps<{}>;
+const TopBar = () => {
+    const userSession = useContext(UserSessionContext);
+    const location = useLocation();
+    const navigate = useNavigate();
 
-class TopBar extends React.PureComponent<TopBarProps> {
-    getNavigationProps(): NavigationProps {
-        return {
-            openUrl: (url: string) => window.open(url, '_blank'),
-            openAbout: () => this.props.history.push('/about'),
-            openProfile: () => this.props.history.push('/profile'),
-            openCustomResource: (name: string) => this.props.history.push(`/custom/${name}`),
-        };
-    }
+    const navigationProps: NavigationProps = {
+        openUrl: (url: string) => window.open(url, '_blank'),
+        openAbout: () => navigate('/about'),
+        openProfile: () => navigate('/profile'),
+        openCustomResource: (name: string) => navigate(`/custom/${name}`),
+    };
 
-    getLogout(userSession: UserSession) {
+    const logOut = async () => {
         const logoutUrl = window.concord?.logoutUrl;
         if (logoutUrl) {
-            return () => (window.location.href = logoutUrl);
+            window.location.href = logoutUrl;
+            return;
         }
 
-        return () => logout(userSession);
-    }
+        if (await logout(userSession)) {
+            navigate('/logout/done');
+        }
+    };
 
-    render() {
-        const activeTab = pathToTab(this.props.location.pathname);
-        return (
-            <UserSessionContext.Consumer>
-                {(value) => (
-                    <GlobalNavMenu
-                        activeTab={activeTab}
-                        extraSystemLinks={getExtraSystemLinks()}
-                        customResources={getCustomResources()}
-                        userDisplayName={value.userInfo?.displayName}
-                        {...this.getNavigationProps()}
-                        logOut={this.getLogout(value)}
-                    />
-                )}
-            </UserSessionContext.Consumer>
-        );
-    }
-}
+    const activeTab = pathToTab(location.pathname);
+    return (
+        <GlobalNavMenu
+            activeTab={activeTab}
+            extraSystemLinks={getExtraSystemLinks()}
+            customResources={getCustomResources()}
+            userDisplayName={userSession.userInfo?.displayName}
+            {...navigationProps}
+            logOut={logOut}
+        />
+    );
+};
 
-export default withRouter(TopBar);
+export default TopBar;

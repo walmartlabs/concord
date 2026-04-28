@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Link, Redirect, Route, Switch } from 'react-router-dom';
+import { Link, Navigate, Route, Routes } from 'react-router';
 import { Divider, Header, Icon, Loader, Menu, Segment } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
@@ -32,7 +32,7 @@ import {
     TeamDeleteActivity,
     TeamMemberList2,
     TeamLdapGroupList2,
-    TeamRenameActivity
+    TeamRenameActivity,
 } from '../../organisms';
 
 export type TabLink = 'members' | 'ldapGroups' | 'settings' | 'audit' | null;
@@ -46,7 +46,7 @@ interface ExternalProps {
 const TeamActivity = ({ orgName, teamName, activeTab }: ExternalProps) => {
     const fetchData = React.useCallback(() => apiGetTeam(orgName, teamName), [orgName, teamName]);
     const { data, error, isLoading } = useApi<TeamEntry>(fetchData, {
-        fetchOnMount: true
+        fetchOnMount: true,
     });
 
     const renderSetting = (team: TeamEntry) => (
@@ -98,26 +98,23 @@ const TeamActivity = ({ orgName, teamName, activeTab }: ExternalProps) => {
                 </Menu.Item>
             </Menu>
 
-            <Switch>
-                <Route path={baseUrl} exact={true}>
-                    <Redirect to={`${baseUrl}/members`} />
-                </Route>
-
-                <Route path={`${baseUrl}/members`} exact={true}>
-                    <TeamMemberList2 orgName={orgName} teamName={teamName} />
-                </Route>
-                <Route path={`${baseUrl}/ldapGroups`} exact={true}>
-                    <TeamLdapGroupList2 orgName={orgName} teamName={teamName} />
-                </Route>
-                <Route path={`${baseUrl}/settings`} exact={true}>
-                    {renderSetting(data)}
-                </Route>
-                <Route path={`${baseUrl}/audit`} exact={true}>
-                    <AuditLogActivity filter={{ details: { orgName, teamName } }} />
-                </Route>
-
-                <Route component={NotFoundPage} />
-            </Switch>
+            <Routes>
+                <Route index={true} element={<Navigate to="members" replace={true} />} />
+                <Route
+                    path="members"
+                    element={<TeamMemberList2 orgName={orgName} teamName={teamName} />}
+                />
+                <Route
+                    path="ldapGroups"
+                    element={<TeamLdapGroupList2 orgName={orgName} teamName={teamName} />}
+                />
+                <Route path="settings" element={renderSetting(data)} />
+                <Route
+                    path="audit"
+                    element={<AuditLogActivity filter={{ details: { orgName, teamName } }} />}
+                />
+                <Route path="*" element={<NotFoundPage />} />
+            </Routes>
         </>
     );
 };

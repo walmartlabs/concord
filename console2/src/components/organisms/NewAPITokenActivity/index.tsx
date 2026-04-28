@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { useState } from 'react';
-import { useHistory } from 'react-router';
+import { useHistory } from '@/router';
 import { Button, Icon, Message } from 'semantic-ui-react';
 
 import { RequestError } from '../../../api/common';

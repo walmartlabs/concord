@@ -39,7 +39,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useApi } from '../../../hooks/useApi';
 import { LoadingDispatch } from '../../../App';
 import RequestErrorActivity from '../RequestErrorActivity';
-import {Link} from "react-router-dom";
+import {Link} from "react-router";
 import './styles.css';
 
 export interface ExternalProps {

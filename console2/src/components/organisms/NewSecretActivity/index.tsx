@@ -28,7 +28,7 @@ import {
     SecretStoreType,
     SecretTypeExt,
     SecretVisibility,
-    create as apiCreate
+    create as apiCreate,
 } from '../../../api/org/secret';
 import { useApi } from '../../../hooks/useApi';
 import NewSecretForm, { NewSecretFormValues } from '../../molecules/NewSecretForm';
@@ -37,7 +37,7 @@ import './styles.css';
 import { LoadingDispatch } from '../../../App';
 import { useCallback, useState } from 'react';
 import { RequestErrorActivity } from '../index';
-import { useHistory } from 'react-router';
+import { useHistory } from '@/router';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -47,7 +47,7 @@ const INIT_VALUES: NewSecretFormValues = {
     name: '',
     visibility: SecretVisibility.PRIVATE,
     type: SecretTypeExt.NEW_KEY_PAIR,
-    storeType: SecretStoreType.CONCORD
+    storeType: SecretStoreType.CONCORD,
 };
 
 const NewSecretActivity = ({ orgName }: ExternalProps) => {
@@ -60,7 +60,7 @@ const NewSecretActivity = ({ orgName }: ExternalProps) => {
     const { error, isLoading, data, fetch } = useApi<CreateSecretResponse>(postQuery, {
         fetchOnMount: false,
         requestByFetch: true,
-        dispatch
+        dispatch,
     });
 
     const handleSubmit = useCallback(

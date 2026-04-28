@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 const manualChunkGroups = [
-  ['react-vendor', ['react', 'react-dom', 'react-router', 'react-router-dom']],
+  ['react-vendor', ['react', 'react-dom', 'react-router']],
   ['ui-vendor', ['semantic-ui-react']]
 ] as const;
 
@@ -57,7 +57,7 @@ export default defineConfig({
     include: [
       'react',
       'react-dom',
-      'react-router-dom',
+      'react-router',
       'semantic-ui-react'
     ]
   }
