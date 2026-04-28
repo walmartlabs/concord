@@ -21,7 +21,9 @@ task in/out parameters
 - concord-console2: remove redux dependency and dead code
 ([#1306](https://github.com/walmartlabs/concord/pull/1306));
 - project: update dependencies
-([#1310](https://github.com/walmartlabs/concord/pull/1310)).
+([#1310](https://github.com/walmartlabs/concord/pull/1310));
+- concord-console2: migrate to react-router v7
+([#1307](https://github.com/walmartlabs/concord/pull/1307)).
 
 
 
