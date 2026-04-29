@@ -21,8 +21,9 @@ package com.walmartlabs.concord.server.repository;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.process.loader.ProjectLoader;
+import com.walmartlabs.concord.common.AuthTokenProvider;
+import com.walmartlabs.concord.common.PathUtils;
+import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.repository.*;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.cfg.GitConfiguration;
@@ -38,11 +39,13 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+
+import static com.walmartlabs.concord.process.loader.ProjectLoaderUtils.isConcordFileExists;
 
 public class RepositoryManager {
 
@@ -60,22 +63,28 @@ public class RepositoryManager {
                              GitConfiguration gitCfg,
                              RepositoryConfiguration repoCfg,
                              ProjectDao projectDao,
-                             SecretManager secretManager) throws IOException {
+                             SecretManager secretManager,
+                             DependencyManager dependencyManager,
+                             AuthTokenProvider authProvider) throws IOException {
 
         GitClientConfiguration gitCliCfg = GitClientConfiguration.builder()
-                .oauthToken(gitCfg.getOauthToken())
                 .defaultOperationTimeout(gitCfg.getDefaultOperationTimeout())
                 .fetchTimeout(gitCfg.getFetchTimeout())
                 .httpLowSpeedLimit(gitCfg.getHttpLowSpeedLimit())
                 .httpLowSpeedTime(gitCfg.getHttpLowSpeedTime())
                 .sshTimeout(gitCfg.getSshTimeout())
                 .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
+                .maxGitCliOutputBytes(gitCfg.maxGitCliOutputBytes())
+                .allowedSchemes(new HashSet<>(gitCfg.getAllowedSchemes()))
                 .build();
 
-        List<RepositoryProvider> providers = Arrays.asList(new ClasspathRepositoryProvider(), new GitCliRepositoryProvider(gitCliCfg));
-
         this.gitCfg = gitCfg;
-        this.providers = new RepositoryProviders(providers);
+        this.providers =
+                new RepositoryProviders(List.of(
+                        new ClasspathRepositoryProvider(),
+                        new MavenRepositoryProvider(dependencyManager),
+                        new GitCliRepositoryProvider(gitCliCfg, authProvider)
+                ));
         this.secretManager = secretManager;
         this.projectDao = projectDao;
         this.repoCfg = repoCfg;
@@ -91,7 +100,7 @@ public class RepositoryManager {
     public void testConnection(UUID orgId, UUID projectId, String uri, String branch, String commitId, String path, String secretName) {
         Path tmpDir = null;
         try {
-            tmpDir = IOUtils.createTempDir("repository");
+            tmpDir = PathUtils.createTempDir("repository");
 
             Secret secret = getSecret(orgId, projectId, secretName);
 
@@ -105,7 +114,7 @@ public class RepositoryManager {
                             .build(), path);
 
             if (repoCfg.isConcordFileValidationEnabled()) {
-                if (!ProjectLoader.isConcordFileExists(repo.path())) {
+                if (!isConcordFileExists(repo.path())) {
                     throw new InvalidRepositoryPathException("Invalid repository path: `concord.yml` or `.concord.yml` is missing!");
                 }
             }
@@ -115,7 +124,7 @@ public class RepositoryManager {
         } finally {
             if (tmpDir != null) {
                 try {
-                    IOUtils.deleteRecursively(tmpDir);
+                    PathUtils.deleteRecursively(tmpDir);
                 } catch (IOException e) {
                     log.warn("testConnection -> cleanup error: {}", e.getMessage());
                 }

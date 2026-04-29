@@ -20,11 +20,15 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.AuthTokenProvider;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,9 +42,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * test for checkout prev commitId on master branch + checkAlreadyFetched=true
  */
+@ExtendWith(MockitoExtension.class)
 public class GitClientFetch2Test {
 
     private GitClient client;
+
+    @Mock
+    AuthTokenProvider authProvider;
 
     @BeforeEach
     public void init() {
@@ -49,7 +57,7 @@ public class GitClientFetch2Test {
                 .sshTimeoutRetryCount(1)
                 .httpLowSpeedLimit(1)
                 .httpLowSpeedTime(Duration.ofMinutes(10))
-                .build());
+                .build(), authProvider);
     }
 
     @Test
@@ -58,7 +66,7 @@ public class GitClientFetch2Test {
         RevCommit commit0 = GitUtils.addContent(repo, resourceToPath("/test5/0_concord.yml"));
         GitUtils.addContent(repo, resourceToPath("/test5/1_concord.yml"));
 
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             // fetch master
             fetch(repo.toString(), "master", null, repoPath.path());
             assertContent(repoPath, "master.txt", "master");
@@ -77,7 +85,7 @@ public class GitClientFetch2Test {
         RevCommit commit0 = GitUtils.addContent(repo, resourceToPath("/test5/0_concord.yml"));
         GitUtils.addContent(repo, resourceToPath("/test5/1_concord.yml"));
 
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             // fetch master
             fetch(repo.toString(), "master", null, repoPath.path());
             assertContent(repoPath, "master.txt", "master");
@@ -98,7 +106,7 @@ public class GitClientFetch2Test {
         RevCommit commit0 = GitUtils.addContent(repo, resourceToPath("/test5/0_concord.yml"));
         GitUtils.addContent(repo, resourceToPath("/test5/1_concord.yml"));
 
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+        try (TemporaryPath repoPath = PathUtils.tempDir("git-client-test")) {
             // fetch master
             fetch(repo.toString(), "master", null, repoPath.path());
             assertContent(repoPath, "master.txt", "master");

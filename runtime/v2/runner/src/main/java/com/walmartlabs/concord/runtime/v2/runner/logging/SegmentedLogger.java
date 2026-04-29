@@ -36,8 +36,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
 
-import static ch.qos.logback.classic.ClassicConstants.FINALIZE_SESSION_MARKER;
-
 public class SegmentedLogger implements RunnerLogger {
 
     private static final long SYSTEM_SEGMENT_ID = 0;

@@ -41,8 +41,10 @@ public interface FetchRequest {
     Path destination();
 
     /**
-     * Concord secret for authentication.
-     * If not provided {@link GitClientConfiguration#oauthToken()} is used for {@code https://} URLs.
+     * Concord secret for authentication. If not provided, an available
+     * {@link com.walmartlabs.concord.common.AuthTokenProvider} matching
+     * {@link #url()} will be used for {@code https://} URLs. Otherwise,
+     * anonymous auth is attempted.
      */
     @Nullable
     Secret secret();

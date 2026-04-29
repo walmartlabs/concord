@@ -31,14 +31,13 @@ public class ConsoleModule implements Module {
 
     @Override
     public void configure(Binder binder) {
-        bindServletHolder(binder, ConsoleServletHolder.class);
-
         binder.bind(CustomFormServiceV1.class).in(SINGLETON);
         binder.bind(CustomFormServiceV2.class).in(SINGLETON);
 
-        bindJaxRsResource(binder, UserActivityResourceV2.class);
-        bindJaxRsResource(binder, CustomFormService.class);
         bindJaxRsResource(binder, ConsoleService.class);
+        bindJaxRsResource(binder, CustomFormService.class);
+        bindJaxRsResource(binder, ProcessCardResource.class);
+        bindJaxRsResource(binder, UserActivityResourceV2.class);
 
         binder.bind(ResponseTemplates.class).in(SINGLETON);
     }

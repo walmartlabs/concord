@@ -161,8 +161,12 @@ public class FormResourceV1 {
                                      @PathParam("formName") String formName,
                                      MultipartInput data) {
 
-        Map<String, Object> m = MultipartUtils.toMap(data);
-        return submit(processInstanceId, formName, m);
+        try {
+            Map<String, Object> m = MultipartUtils.toMap(data);
+            return submit(processInstanceId, formName, m);
+        } finally {
+            data.close();
+        }
     }
 
     private static FormInstanceEntry.Cardinality map(FormField.Cardinality c) {

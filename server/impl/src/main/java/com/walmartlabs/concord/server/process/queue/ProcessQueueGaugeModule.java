@@ -29,11 +29,9 @@ import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.GaugeProvider;
 
-import javax.inject.Named;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-@Named
 public class ProcessQueueGaugeModule extends AbstractModule {
 
     @Override
@@ -59,7 +57,7 @@ public class ProcessQueueGaugeModule extends AbstractModule {
     }
 
     private static GaugeProvider<Map<String, Integer>> createBaseProvider(Gauge<Map<String, Integer>> base) {
-        return new GaugeProvider<Map<String, Integer>>() {
+        return new GaugeProvider<>() {
             @Override
             public String name() {
                 return "process-queue-statistics";
@@ -73,7 +71,7 @@ public class ProcessQueueGaugeModule extends AbstractModule {
     }
 
     private static GaugeProvider<Integer> create(Gauge<Map<String, Integer>> base, String status) {
-        return new GaugeProvider<Integer>() {
+        return new GaugeProvider<>() {
             @Override
             public String name() {
                 return "process-queue-" + status.toLowerCase();
@@ -81,7 +79,7 @@ public class ProcessQueueGaugeModule extends AbstractModule {
 
             @Override
             public Gauge<Integer> gauge() {
-                return new DerivativeGauge<Map<String, Integer>, Integer>(base) {
+                return new DerivativeGauge<>(base) {
                     @Override
                     protected Integer transform(Map<String, Integer> value) {
                         return value.getOrDefault(status, 0);

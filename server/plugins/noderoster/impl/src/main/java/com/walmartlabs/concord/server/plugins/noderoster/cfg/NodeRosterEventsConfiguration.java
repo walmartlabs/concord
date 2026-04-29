@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.plugins.noderoster.cfg;
  * =====
  */
 
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.config.Config;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -44,6 +44,14 @@ public class NodeRosterEventsConfiguration implements Serializable {
     @Config("noderoster.events.fetchLimit")
     private int fetchLimit;
 
+    @Inject
+    @Config("noderoster.events.hostCacheSize")
+    private long hostCacheSize;
+
+    @Inject
+    @Config("noderoster.events.hostCacheDuration")
+    private Duration hostCacheDuration;
+
     private final Instant startTimestamp;
 
     @Inject
@@ -57,6 +65,14 @@ public class NodeRosterEventsConfiguration implements Serializable {
 
     public int getFetchLimit() {
         return fetchLimit;
+    }
+
+    public long getHostCacheSize() {
+        return hostCacheSize;
+    }
+
+    public Duration getHostCacheDuration() {
+        return hostCacheDuration;
     }
 
     @Nullable

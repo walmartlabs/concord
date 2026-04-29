@@ -23,9 +23,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.server.process.Payload;
 import org.slf4j.MDC;
 
-import javax.inject.Named;
-
-@Named
 public class LoggingMDCProcessor implements PayloadProcessor {
 
     @Override

@@ -28,6 +28,7 @@ import com.walmartlabs.concord.runtime.v2.runner.script.ScriptResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -42,7 +43,7 @@ import java.util.UUID;
 /**
  * Calls the specified script task. Responsible for preparing the script's input.
  */
-public class ScriptCallCommand extends StepCommand<ScriptCall> {
+public class ScriptCallCommand extends StepCommand<ScriptCall> implements ElementEventProducer {
 
     private static final Logger log = LoggerFactory.getLogger(ScriptCallCommand.class);
 
@@ -50,6 +51,11 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
 
     public ScriptCallCommand(UUID correlationId, ScriptCall step) {
         super(correlationId, step);
+    }
+
+    @Override
+    public String getDescription(State state, ThreadId threadId) {
+        return "Script: " + getStep().getLanguageOrRef();
     }
 
     @Override
@@ -65,6 +71,9 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
 
         ScriptCall call = getStep();
         ScriptCallOptions opts = Objects.requireNonNull(call.getOptions());
+
+        assertScriptDryRunReady(ctx, opts);
+
         Map<String, Object> input = VMUtils.prepareInput(ecf, expressionEvaluator, ctx, opts.input(), opts.inputExpression());
 
         String language = getLanguage(ecf, expressionEvaluator, scriptEvaluator, ctx, call);
@@ -113,7 +122,7 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
             return normalizedLanguage;
         }
 
-        throw new RuntimeException("Unknown language '" + language + "'. Check process dependencies.");
+        throw new UserDefinedException("Unknown language '" + language + "'. Check process dependencies.");
     }
 
     private static String getExtension(String s) {
@@ -140,5 +149,17 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static void assertScriptDryRunReady(Context ctx, ScriptCallOptions opts) {
+        if (!ctx.processConfiguration().dryRun()) {
+            return;
+        }
+
+        if (StepOptionsUtils.isDryRunReady(ctx, opts)) {
+            return;
+        }
+
+        throw new UserDefinedException("Dry-run mode is not supported for this 'script' step");
     }
 }

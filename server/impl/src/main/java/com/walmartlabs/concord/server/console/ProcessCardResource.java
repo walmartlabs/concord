@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.console;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
@@ -41,8 +41,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -53,9 +51,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 
-@Named
-@Singleton
-@javax.ws.rs.Path("/api/v1/")
+@Path("/api/v1/")
 @Tag(name = "ProcessCards")
 public class ProcessCardResource implements Resource {
 
@@ -139,20 +135,25 @@ public class ProcessCardResource implements Resource {
     public ProcessCardOperationResponse createOrUpdate(
             @Parameter(schema = @Schema(type = "object", implementation = ProcessCardRequest.class)) MultipartInput input) throws IOException {
 
-        ProcessCardRequest r = ProcessCardRequest.from(input);
+        try {
+            ProcessCardRequest r = ProcessCardRequest.from(input);
 
-        UUID orgId = organizationManager.assertAccess(r.getOrgId(), r.getOrgName(), false).getId();
-        UUID projectId = assertProject(orgId, r);
-        UUID repoId = getRepo(projectId, r);
-        String name = r.getName();
-        String entryPoint = r.getEntryPoint();
-        String description = r.getDescription();
-        Map<String, Object> data = r.getData();
-        UUID id = r.getId();
+            UUID orgId = organizationManager.assertAccess(r.getOrgId(), r.getOrgName(), false).getId();
+            UUID projectId = assertProject(orgId, r);
+            UUID repoId = getRepo(projectId, r);
+            String name = r.getName();
+            Optional<String> entryPoint = Optional.ofNullable(r.getEntryPoint());
+            String description = r.getDescription();
+            Map<String, Object> data = r.getData();
+            UUID id = r.getId();
+            Integer orderId = r.getOrderId();
 
-        try (InputStream icon = r.getIcon();
-             InputStream form = r.getForm()) {
-            return processCardManager.createOrUpdate(id, projectId, repoId, name, entryPoint, description, icon, form, data);
+            try (InputStream icon = r.getIcon();
+                 InputStream form = r.getForm()) {
+                return processCardManager.createOrUpdate(id, projectId, repoId, name, entryPoint, description, icon, form, data, orderId);
+            }
+        } finally {
+            input.close();
         }
     }
 
@@ -169,7 +170,7 @@ public class ProcessCardResource implements Resource {
 
         Optional<java.nio.file.Path> o = processCardManager.getForm(cardId, src -> {
             try {
-                java.nio.file.Path tmp = IOUtils.createTempFile("process-form", ".html");
+                java.nio.file.Path tmp = PathUtils.createTempFile("process-form", ".html");
                 Files.copy(src, tmp, StandardCopyOption.REPLACE_EXISTING);
                 return Optional.of(tmp);
             } catch (IOException e) {
@@ -253,7 +254,7 @@ public class ProcessCardResource implements Resource {
     private static Response toBinaryResponse(java.nio.file.Path file) {
         return Response.ok((StreamingOutput) out -> {
             try (InputStream in = Files.newInputStream(file)) {
-                IOUtils.copy(in, out);
+                in.transferTo(out);
             } finally {
                 Files.delete(file);
             }

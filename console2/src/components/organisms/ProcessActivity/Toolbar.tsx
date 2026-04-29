@@ -37,7 +37,7 @@ import {
     MenuItem,
     Sticky
 } from 'semantic-ui-react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { formatDistanceToNow, isAfter, parseISO as parseDate } from 'date-fns';
 import { SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic';
 

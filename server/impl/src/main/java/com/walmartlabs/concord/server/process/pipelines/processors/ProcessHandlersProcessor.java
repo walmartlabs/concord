@@ -20,14 +20,13 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
-import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
+import com.walmartlabs.concord.runtime.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.model.Profile;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -38,7 +37,6 @@ import java.util.Set;
  * configured. If there is a relevant flow defined and it is not disabled in
  * the process arguments, it will be added to the list of the process' handlers.
  */
-@Named
 public class ProcessHandlersProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessHandlersProcessor.class);
@@ -64,19 +62,32 @@ public class ProcessHandlersProcessor implements PayloadProcessor {
     }
 
     private static void update(Payload payload, ProcessDefinition pd, Collection<String> profiles, Set<String> handlers, String flow, String disableFlag) {
-        if (hasFlow(pd, profiles, flow)) {
-            boolean suppressed = getBoolean(payload, disableFlag);
-            if (suppressed) {
-                log.debug("process -> {} is suppressed, skipping...", flow);
-            } else {
-                handlers.add(flow);
-                log.debug("process -> added {} handler", flow);
-            }
+        if (!hasFlow(pd, profiles, flow)) {
+            return;
+        }
+
+        boolean suppressed = getBoolean(payload, disableFlag);
+        if (suppressed) {
+            log.debug("process -> {} is suppressed, skipping...", flow);
+        } else {
+            handlers.add(flow);
+            log.debug("process -> added {} handler", flow);
         }
     }
 
-    private static boolean hasFlow(ProcessDefinition pd, Collection<String> profiles, String key) {
-        return ProcessDefinitionUtils.getFlow(pd, profiles, key) != null;
+    private static boolean hasFlow(ProcessDefinition pd, Collection<String> activeProfiles, String flow) {
+        if (pd.flows() != null && pd.flows().containsKey(flow)) {
+            return true;
+        }
+
+        for (String activeProfile : activeProfiles) {
+            Profile profile = pd.profiles().get(activeProfile);
+            if (profile != null && profile.flows().containsKey(flow)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static boolean getBoolean(Payload payload, String key) {

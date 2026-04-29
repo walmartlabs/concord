@@ -21,39 +21,52 @@ package com.walmartlabs.concord.runtime.v2;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.imports.ImportsListener;
+import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.YamlParserV2;
-import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.runtime.v2.wrapper.ProcessDefinitionV2;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class ProjectLoaderV2 {
+import static com.walmartlabs.concord.process.loader.StandardRuntimeTypes.CONCORD_V2_RUNTIME_TYPE;
+import static com.walmartlabs.concord.process.loader.StandardRuntimeTypes.PROJECT_ROOT_FILE_NAMES;
+
+public class ProjectLoaderV2 implements ProjectLoader {
 
     private final ImportManager importManager;
 
+    @Inject
     public ProjectLoaderV2(ImportManager importManager) {
         this.importManager = importManager;
     }
 
-    public Result load(Path baseDir, ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception {
-        return load(baseDir, importsNormalizer, listener, new NopProjectLoadListener());
+    @Override
+    public boolean supports(String runtime) {
+        return CONCORD_V2_RUNTIME_TYPE.equals(runtime);
     }
 
-    public Result load(Path baseDir, ImportsNormalizer importsNormalizer, ImportsListener listener, ProjectLoadListener loadListener) throws Exception {
+    @Override
+    public ProjectLoader.Result loadProject(Path workDir, String runtime, com.walmartlabs.concord.process.loader.ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception {
+        var v2Result = load(workDir, importsNormalizer::normalize, listener);
+        return toCommonResultType(v2Result);
+    }
+
+    public Result load(Path baseDir, ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception {
         YamlParserV2 parser = new YamlParserV2();
 
         // load the initial ProcessDefinition from the root concord.yml file
         // it will be used to determine whether we need to load other resources (e.g. imports)
-        ProcessDefinition root = loadRoot(parser, baseDir, loadListener);
+        ProcessDefinition root = loadRoot(parser, baseDir);
 
         List<Snapshot> snapshots = Collections.emptyList();
         if (root != null) {
@@ -67,7 +80,6 @@ public class ProjectLoaderV2 {
         List<ProcessDefinition> definitions = new ArrayList<>();
         for (Path p : files) {
             ProcessDefinition pd = parser.parse(baseDir, p);
-            loadListener.afterFlowDefinitionLoaded(p);
             definitions.add(pd);
         }
 
@@ -79,15 +91,13 @@ public class ProjectLoaderV2 {
             throw new IllegalStateException("Can't find any Concord process definition files in '" + baseDir + "'");
         }
 
-        loadListener.afterProjectLoaded();
-
         return new Result(snapshots, merge(definitions));
     }
 
     public void export(Path baseDir, Path destDir, ImportsNormalizer importsNormalizer, ImportsListener listener, CopyOption... options) throws Exception {
         YamlParserV2 parser = new YamlParserV2();
 
-        ProcessDefinition root = loadRoot(parser, baseDir, new NopProjectLoadListener());
+        ProcessDefinition root = loadRoot(parser, baseDir);
 
         Resources resources = root != null ? root.resources() : Resources.builder().build();
         boolean hasImports = root != null && root.imports() != null && !root.imports().isEmpty();
@@ -98,7 +108,7 @@ public class ProjectLoaderV2 {
 
         Path tmpDir = null;
         try {
-            tmpDir = IOUtils.createTempDir("concord-export");
+            tmpDir = PathUtils.createTempDir("concord-export");
             copyResources(baseDir, resources, tmpDir, options);
 
             Imports imports = importsNormalizer.normalize(root.imports());
@@ -107,17 +117,16 @@ public class ProjectLoaderV2 {
             copyResources(tmpDir, resources, destDir, options);
         } finally {
             if (tmpDir != null) {
-                IOUtils.deleteRecursively(tmpDir);
+                PathUtils.deleteRecursively(tmpDir);
             }
         }
     }
 
-    private ProcessDefinition loadRoot(YamlParserV2 parser, Path baseDir, ProjectLoadListener loadListener) throws IOException {
-        for (String fileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
+    private ProcessDefinition loadRoot(YamlParserV2 parser, Path baseDir) throws IOException {
+        for (String fileName : PROJECT_ROOT_FILE_NAMES) {
             Path p = baseDir.resolve(fileName);
             if (Files.exists(p)) {
                 ProcessDefinition result = parser.parse(baseDir, p);
-                loadListener.afterFlowDefinitionLoaded(p);
                 return result;
             }
         }
@@ -175,13 +184,14 @@ public class ProjectLoaderV2 {
             throw new IllegalArgumentException("Definitions is empty");
         }
 
-        Map<String, List<Step>> flows = new LinkedHashMap<>();
+        Map<String, Flow> flows = new LinkedHashMap<>();
         Map<String, Profile> profiles = new LinkedHashMap<>();
         List<Trigger> triggers = new ArrayList<>();
         List<Import> imports = new ArrayList<>();
         Map<String, Form> forms = new LinkedHashMap<>();
         Set<String> resources = new HashSet<>();
         Set<String> dependencies = new HashSet<>();
+        Set<String> extraDependencies = new HashSet<>();
         Map<String, Object> arguments = new LinkedHashMap<>();
 
         for (ProcessDefinition pd : definitions) {
@@ -192,6 +202,7 @@ public class ProjectLoaderV2 {
             forms.putAll(pd.forms());
             resources.addAll(pd.resources().concord());
             dependencies.addAll(pd.configuration().dependencies());
+            extraDependencies.addAll(pd.configuration().extraDependencies());
             arguments = ConfigurationUtils.deepMerge(arguments, pd.configuration().arguments());
         }
 
@@ -200,6 +211,7 @@ public class ProjectLoaderV2 {
         return ProcessDefinition.builder().from(root)
                 .configuration(ProcessDefinitionConfiguration.builder().from(root.configuration())
                         .dependencies(dependencies)
+                        .extraDependencies(extraDependencies)
                         .arguments(arguments)
                         .build())
                 .flows(flows)
@@ -221,7 +233,7 @@ public class ProjectLoaderV2 {
 
     private static void copyResources(Path baseDir, Resources resources, Path destDir, CopyOption... options) throws IOException {
         List<Path> files = loadResources(baseDir, resources);
-        for (String fileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
+        for (String fileName : PROJECT_ROOT_FILE_NAMES) {
             Path p = baseDir.resolve(fileName);
             files.add(p);
         }
@@ -261,5 +273,22 @@ public class ProjectLoaderV2 {
         public ProcessDefinition getProjectDefinition() {
             return projectDefinition;
         }
+    }
+
+    private static ProjectLoader.Result toCommonResultType(Result r) {
+        List<Snapshot> snapshots = r.getSnapshots();
+        com.walmartlabs.concord.runtime.model.ProcessDefinition pd = new ProcessDefinitionV2(r.getProjectDefinition());
+
+        return new ProjectLoader.Result() {
+            @Override
+            public List<Snapshot> snapshots() {
+                return snapshots;
+            }
+
+            @Override
+            public com.walmartlabs.concord.runtime.model.ProcessDefinition projectDefinition() {
+                return pd;
+            }
+        };
     }
 }

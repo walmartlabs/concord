@@ -497,7 +497,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
 
     @Test
     public void test129() throws Exception {
-        String msg = "(029.yml): Error @ line: 8, col: 13. Invalid value type, expected: PATTERN, got: INT\n" +
+        String msg = "(029.yml): Error @ line: 8, col: 11. Invalid value type, expected: PATTERN, got: ARRAY\n" +
                 "\twhile processing steps:\n" +
                 "\t'githubOrg' @ line: 7, col: 9\n" +
                 "\t\t'conditions' @ line: 5, col: 7\n" +
@@ -1630,6 +1630,16 @@ public class YamlErrorParserTest extends AbstractParserTest {
     }
 
     @Test
+    public void test913() throws Exception {
+        String msg =
+                "(013.yml): Error @ line: 2, col: 3. Invalid value: invalid.name, expected: [String matching regex \"^[A-Za-z0-9_ $]+$\"]\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'forms' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/forms/013.yml", msg);
+    }
+
+    @Test
     public void test1000() throws Exception {
         String msg =
                 "(000.yml): Error @ line: 3, col: 12. Invalid value type, expected: STRING, got: NULL. Remove attribute or complete the definition\n" +
@@ -1897,7 +1907,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test1306() throws Exception {
         String msg =
-                "(006.yml): Error @ line: 8, col: 9. Unknown options: ['trash' [NULL] @ line: 8, col: 9], expected: [activeProfiles, arguments, debug, dependencies, entryPoint, events, exclusive, meta, out, parallelLoopParallelism, processTimeout, requirements, runtime, suspendTimeout, template]. Remove invalid options and/or fix indentation\n" +
+                "(006.yml): Error @ line: 8, col: 9. Unknown options: ['trash' [NULL] @ line: 8, col: 9], expected: [activeProfiles, arguments, debug, dependencies, entryPoint, events, exclusive, extraDependencies, meta, out, parallelLoopParallelism, processTimeout, requirements, runtime, suspendTimeout, template, validation]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'configuration' @ line: 1, col: 1";
 
@@ -2377,6 +2387,19 @@ public class YamlErrorParserTest extends AbstractParserTest {
                         "\t\t'configuration' @ line: 1, col: 1";
 
         assertErrorMessage("errors/configuration/023.yml", msg);
+    }
+
+    @Test
+    public void test1905() throws Exception {
+        String msg =
+                "(024.yml): Error @ line: 4, col: 11. Invalid value: fatal, expected: [DISABLED, WARN, FAIL]\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'in' @ line: 4, col: 7\n" +
+                        "\t\t'taskCalls' @ line: 3, col: 5\n" +
+                        "\t\t\t'validation' @ line: 2, col: 3\n" +
+                        "\t\t\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/024.yml", msg);
     }
 
     private void assertErrorMessage(String resource, String expectedError) throws Exception {

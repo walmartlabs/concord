@@ -20,14 +20,13 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
-import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
@@ -37,10 +36,9 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -52,7 +50,6 @@ import java.util.function.Function;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.exclude;
 
-@Named
 public class PayloadManager {
 
     private static final String FORMS_PATH_PATTERN = String.format("%s/%s/%s/.*", Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
@@ -62,20 +59,17 @@ public class PayloadManager {
     private final OrganizationDao orgDao;
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
-    private final ProcessKeyCache processKeyCache;
 
     @Inject
     public PayloadManager(ProcessStateManager stateManager,
                           OrganizationDao orgDao,
                           ProjectDao projectDao,
-                          RepositoryDao repositoryDao,
-                          ProcessKeyCache processKeyCache) {
+                          RepositoryDao repositoryDao) {
 
         this.stateManager = stateManager;
         this.orgDao = orgDao;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
-        this.processKeyCache = processKeyCache;
     }
 
     @WithTimer
@@ -119,83 +113,6 @@ public class PayloadManager {
     }
 
     /**
-     * Creates a payload. It is implied that all necessary resources to start a process are
-     * supplied in the multipart data and/or provided by a project's repository or a template.
-     *
-     * @deprecated prefer {@link #createPayload(MultipartInput, Map<String, Object>)}
-     */
-    @Deprecated
-    public Payload createPayload(PartialProcessKey processKey, UUID parentInstanceId, UUID initiatorId, String initiator,
-                                 EntryPoint entryPoint, MultipartInput input, String[] out) throws IOException {
-
-        return PayloadBuilder.start(processKey)
-                .parentInstanceId(parentInstanceId)
-                .with(input)
-                .apply(p(entryPoint))
-                .initiator(initiatorId, initiator)
-                .outExpressions(out)
-                .build();
-    }
-
-    /**
-     * Creates a payload from the supplied map of parameters.
-     *
-     * @deprecated prefer {@link #createPayload(MultipartInput, Map<String, Object>)}
-     */
-    @Deprecated
-    public Payload createPayload(PartialProcessKey processKey, UUID parentInstanceId, UUID initiatorId, String initiator,
-                                 EntryPoint entryPoint, Map<String, Object> request, String[] out) throws IOException {
-
-        return PayloadBuilder.start(processKey)
-                .parentInstanceId(parentInstanceId)
-                .initiator(initiatorId, initiator)
-                .apply(p(entryPoint))
-                .configuration(request)
-                .outExpressions(out)
-                .build();
-    }
-
-    /**
-     * Creates a payload from an archive, containing all necessary resources.
-     *
-     * @deprecated prefer {@link #createPayload(MultipartInput, Map<String, Object>)}
-     */
-    @Deprecated
-    public Payload createPayload(PartialProcessKey processKey, UUID parentInstanceId, UUID initiatorId, String initiator,
-                                 EntryPoint entryPoint, InputStream in, String[] out) throws IOException {
-
-        return PayloadBuilder.start(processKey)
-                .parentInstanceId(parentInstanceId)
-                .initiator(initiatorId, initiator)
-                .apply(p(entryPoint))
-                .workspace(in)
-                .outExpressions(out)
-                .build();
-    }
-
-    /**
-     * Creates a payload from an archive, containing all necessary resources.
-     *
-     * @deprecated prefer {@link #createPayload(MultipartInput, Map<String, Object>)}
-     */
-    @Deprecated
-    public Payload createPayload(PartialProcessKey processKey, UUID parentInstanceId, UUID initiatorId, String initiator,
-                                 InputStream in, String[] out) throws IOException {
-
-        return PayloadBuilder.start(processKey)
-                .parentInstanceId(parentInstanceId)
-                .initiator(initiatorId, initiator)
-                .workspace(in)
-                .outExpressions(out)
-                .build();
-    }
-
-    public Payload createResumePayload(PartialProcessKey partialKey, String eventName, Map<String, Object> req) throws IOException {
-        ProcessKey pk = processKeyCache.assertKey(partialKey.getInstanceId());
-        return createResumePayload(pk, eventName, req);
-    }
-
-    /**
      * Creates a payload to resume a suspended process, pulling the necessary data from the state storage.
      */
     public Payload createResumePayload(ProcessKey processKey, String eventName, Map<String, Object> req) throws IOException {
@@ -206,9 +123,9 @@ public class PayloadManager {
      * Creates a payload to resume a suspended process, pulling the necessary data from the state storage.
      */
     public Payload createResumePayload(ProcessKey processKey, Set<String> events, Map<String, Object> req) throws IOException {
-        Path tmpDir = IOUtils.createTempDir("payload");
+        Path tmpDir = PathUtils.createTempDir("payload");
         if (!stateManager.export(processKey, copyTo(tmpDir))) {
-            throw new ProcessException(processKey, "Can't resume '" + processKey + "', state snapshot not found");
+            throw new ProcessException(processKey, "Can't resume '" + processKey + "', state snapshot not found", Response.Status.NOT_FOUND);
         }
 
         return PayloadBuilder.resume(processKey)
@@ -225,7 +142,7 @@ public class PayloadManager {
                               UUID initiatorId, String initiator, UUID projectId, Map<String, Object> req, String[] out,
                               Set<String> handlers, Imports imports) throws IOException {
 
-        Path tmpDir = IOUtils.createTempDir("payload");
+        Path tmpDir = PathUtils.createTempDir("payload");
 
         // skip forms and the parent process' arguments
         if (!stateManager.export(parentProcessKey, exclude(copyTo(tmpDir), FORMS_PATH_PATTERN))) {
@@ -243,53 +160,6 @@ public class PayloadManager {
                 .handlers(handlers)
                 .imports(imports)
                 .build();
-    }
-
-    public EntryPoint parseEntryPoint(PartialProcessKey processKey, UUID orgId, String entryPoint) {
-        if (entryPoint == null) {
-            return null;
-        }
-
-        String[] as = entryPoint.split(":");
-        if (as.length < 1 || as.length > 3) {
-            throw new ValidationErrorsException("Invalid entry point format: " + entryPoint);
-        }
-
-        String projectName = as[0].trim();
-        UUID projectId = projectDao.getId(orgId, projectName);
-        if (projectId == null) {
-            throw new ProcessException(processKey, "Project not found: " + projectName);
-        }
-
-        String repoName = null;
-        if (as.length > 1) {
-            repoName = as[1].trim();
-
-        }
-
-        String flow = null;
-        if (as.length > 2) {
-            flow = as[2].trim();
-        }
-
-        return createEntryPoint(processKey, orgId, projectName, repoName, flow);
-    }
-
-    public EntryPoint createEntryPoint(PartialProcessKey processKey, UUID orgId, String projectName, String repoName, String flow) {
-        UUID projectId = projectDao.getId(orgId, projectName);
-        if (projectId == null) {
-            throw new ProcessException(processKey, "Project not found: " + projectName);
-        }
-
-        UUID repoId = null;
-        if (repoName != null) {
-            repoId = repositoryDao.getId(projectId, repoName);
-            if (repoId == null) {
-                throw new ProcessException(processKey, "Repository not found: " + repoName);
-            }
-        }
-
-        return new EntryPoint(orgId, projectId, repoId, flow);
     }
 
     private UUID getOrg(MultipartInput input) {

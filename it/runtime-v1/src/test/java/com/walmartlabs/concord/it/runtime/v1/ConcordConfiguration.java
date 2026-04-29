@@ -29,14 +29,31 @@ public final class ConcordConfiguration {
         ConcordRule concord = new ConcordRule()
                 .pathToRunnerV1("target/runner-v1.jar")
                 .pathToRunnerV2(null)
-                .dbImage(System.getProperty("db.image", "library/postgres:10"))
+                .dbImage(System.getProperty("db.image", "library/postgres:14"))
                 .serverImage(System.getProperty("server.image", "walmartlabs/concord-server"))
                 .agentImage(System.getProperty("agent.image", "walmartlabs/concord-agent"))
                 .pullPolicy(PullPolicy.defaultPolicy())
                 .streamServerLogs(true)
                 .streamAgentLogs(true)
                 .useLocalMavenRepository(true)
-                .extraConfigurationSupplier(() -> "concord-agent { prefork { enabled = true } }");
+                .extraConfigurationSupplier(() -> """
+                        concord-server {
+                            queue {
+                                enqueuePollInterval = "250 milliseconds"
+                                dispatcher {
+                                    pollDelay = "250 milliseconds"
+                                }
+                            }
+                        }
+                        concord-agent {
+                            dependencyResolveTimeout = "30 seconds"
+                            logMaxDelay = "250 milliseconds"
+                            pollInterval = "250 milliseconds"
+                            prefork {
+                                enabled = true
+                            }
+                        }
+                        """);
 
         boolean localMode = Boolean.parseBoolean(System.getProperty("it.local.mode"));
         if (localMode) {

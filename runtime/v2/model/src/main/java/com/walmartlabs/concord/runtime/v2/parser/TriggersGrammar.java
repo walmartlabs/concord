@@ -95,12 +95,12 @@ public final class TriggersGrammar {
                     with((Supplier<HashMap<String, Object>>) LinkedHashMap::new,
                             o -> options(
                                 mandatory("type", stringVal.map(v -> o.put("type", v))),
-                                optional("githubOrg", regexpOrArrayVal.map(v -> o.put("githubOrg", v))),
-                                optional("githubRepo", regexpOrArrayVal.map(v -> o.put("githubRepo", v))),
+                                optional("githubOrg", regexpVal.map(v -> o.put("githubOrg", v))),
+                                optional("githubRepo", regexpVal.map(v -> o.put("githubRepo", v))),
                                 optional("githubHost", regexpVal.map(v -> o.put("githubHost", v))),
-                                optional("branch", regexpOrArrayVal.map(v -> o.put("branch", v))),
-                                optional("sender", regexpOrArrayVal.map(v -> o.put("sender", v))),
-                                optional("status", regexpOrArrayVal.map(v -> o.put("status", v))),
+                                optional("branch", regexpVal.map(v -> o.put("branch", v))),
+                                optional("sender", regexpVal.map(v -> o.put("sender", v))),
+                                optional("status", regexpVal.map(v -> o.put("status", v))),
                                 optional("repositoryInfo", githubTriggerRepositoryInfoVal.map(v -> o.put("repositoryInfo", v))),
                                 optional("files", githubTriggerFilesVal.map(v -> o.put("files", v))),
                                 optional("payload", mapVal.map(v -> o.put("payload", v)))))
@@ -170,7 +170,8 @@ public final class TriggersGrammar {
                                     optional("name", stringVal.map(v -> o.putConfiguration("name", v))),
                                     mandatory("entryPoint", stringVal.map(v -> o.putConfiguration("entryPoint", v))),
                                     optional("activeProfiles", stringArrayVal.map(o::activeProfiles)),
-                                    optional("arguments", mapVal.map(o::arguments)))))
+                                    optional("arguments", mapVal.map(o::arguments)),
+                                    optional("exclusive", exclusiveVal.map(v -> o.putConfiguration("exclusive", v))))))
                     .map(t -> t.name("manual"))
                     .map(ImmutableTrigger.Builder::build);
 

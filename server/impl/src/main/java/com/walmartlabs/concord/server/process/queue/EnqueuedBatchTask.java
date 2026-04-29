@@ -44,10 +44,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
@@ -70,6 +71,8 @@ public class EnqueuedBatchTask extends PeriodicTask {
     private final List<String> inflightRepoUrls;
     private final AtomicInteger freeWorkersCount;
 
+    private final Lock mutex = new ReentrantLock();
+
     @Inject
     public EnqueuedBatchTask(Dao dao,
                              EnqueueWorkersConfiguration cfg,
@@ -85,7 +88,7 @@ public class EnqueuedBatchTask extends PeriodicTask {
 
         this.queue = new ArrayBlockingQueue<>(cfg.getWorkersCount());
         this.freeWorkersCount = new AtomicInteger(cfg.getWorkersCount());
-        this.inflightRepoUrls = Collections.synchronizedList(new ArrayList<>(cfg.getWorkersCount()));
+        this.inflightRepoUrls = new ArrayList<>(cfg.getWorkersCount());
 
         this.executor = Executors.newFixedThreadPool(cfg.getWorkersCount());
         for (int i = 0; i < cfg.getWorkersCount(); i++) {
@@ -93,13 +96,20 @@ public class EnqueuedBatchTask extends PeriodicTask {
         }
 
         metricRegistry.gauge("enqueued-workers-available", () -> freeWorkersCount::get);
-        metricRegistry.gauge("enqueued-inflight-urls", () -> inflightRepoUrls::size);
+        metricRegistry.gauge("enqueued-inflight-urls", () -> () -> {
+            mutex.lock();
+            try {
+                return inflightRepoUrls.size();
+            } finally {
+                mutex.unlock();
+            }
+        });
     }
 
     @Override
     public void stop() {
         super.stop();
-        
+
         executor.shutdownNow();
 
         try {
@@ -117,12 +127,7 @@ public class EnqueuedBatchTask extends PeriodicTask {
         }
 
         int limit = Math.min(freeWorkersCount.get(), cfg.getWorkersCount());
-
-        List<String> ignoreRepoUrls;
-        synchronized (inflightRepoUrls) {
-            ignoreRepoUrls = new ArrayList<>(inflightRepoUrls);
-        }
-
+        List<String> ignoreRepoUrls = copyInFlightRepos();
         Collection<Batch> batches = dao.poll(ignoreRepoUrls, limit);
         if (batches.isEmpty()) {
             return false;
@@ -141,10 +146,15 @@ public class EnqueuedBatchTask extends PeriodicTask {
             freeWorkersCount.decrementAndGet();
         }
 
-        for (Batch b : batches) {
-            if (b.repoUrl() != null) {
-                inflightRepoUrls.add(b.repoUrl());
+        mutex.lock();
+        try {
+            for (Batch b : batches) {
+                if (b.repoUrl() != null) {
+                    inflightRepoUrls.add(b.repoUrl());
+                }
             }
+        } finally {
+            mutex.unlock();
         }
 
         queue.addAll(batches);
@@ -155,7 +165,21 @@ public class EnqueuedBatchTask extends PeriodicTask {
     private void onWorkerFree(String repoUrl) {
         freeWorkersCount.incrementAndGet();
         if (repoUrl != null) {
-            inflightRepoUrls.remove(repoUrl);
+            mutex.lock();
+            try {
+                inflightRepoUrls.remove(repoUrl);
+            } finally {
+                mutex.unlock();
+            }
+        }
+    }
+
+    private List<String> copyInFlightRepos() {
+        mutex.lock();
+        try {
+            return List.copyOf(inflightRepoUrls);
+        } finally {
+            mutex.unlock();
         }
     }
 
@@ -309,7 +333,6 @@ public class EnqueuedBatchTask extends PeriodicTask {
         }
     }
 
-    @Named
     static class Dao extends AbstractDao {
 
         @Inject
@@ -405,7 +428,7 @@ public class EnqueuedBatchTask extends PeriodicTask {
             for (Batch b : batches) {
                 if (b.repoUrl() == null) {
                     result.add(b);
-                } else if (!repoUrls.contains(b.repoUrl())){
+                } else if (!repoUrls.contains(b.repoUrl())) {
                     result.add(b);
                     repoUrls.add(b.repoUrl());
                 }

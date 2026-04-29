@@ -22,14 +22,11 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.ExceptionUtils;
-import com.walmartlabs.concord.runtime.v2.runner.el.functions.*;
-import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.BeanELResolver;
-import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.MapELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.*;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.MapELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
-import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
+import com.walmartlabs.concord.runtime.v2.runner.vm.WrappedException;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.el.*;
 import java.lang.reflect.Method;
@@ -47,10 +44,20 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     private final ExpressionFactory expressionFactory = ExpressionFactory.newInstance();
     private final TaskProviders taskProviders;
     private final FunctionMapper functionMapper;
+    private final List<CustomTaskMethodResolver> taskMethodResolvers;
+    private final List<CustomBeanMethodResolver> beanMethodResolvers;
+    private final SensitiveDataProcessor sensitiveDataProcessor;
 
-    public LazyExpressionEvaluator(TaskProviders taskProviders) {
+    public LazyExpressionEvaluator(TaskProviders taskProviders,
+                                   FunctionHolder functionHolder,
+                                   List<CustomTaskMethodResolver> taskMethodResolvers,
+                                   List<CustomBeanMethodResolver> beanMethodResolvers,
+                                   SensitiveDataProcessor sensitiveDataProcessor) {
         this.taskProviders = taskProviders;
-        this.functionMapper = createFunctionMapper();
+        this.sensitiveDataProcessor = sensitiveDataProcessor;
+        this.functionMapper = new DelegatingFunctionMapper(functionHolder);
+        this.taskMethodResolvers = taskMethodResolvers;
+        this.beanMethodResolvers = beanMethodResolvers;
     }
 
     @Override
@@ -61,12 +68,12 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         }
 
         if (value instanceof Map) {
-            Map<String, Object> m = nestedToMap((Map<String, Object>)value);
+            var m = nestedToMap((Map<String, Object>) value);
             value = mergeWithVariables(ctx, m, ((Map<String, Object>) value).keySet().stream().filter(ConfigurationUtils::isNestedKey).collect(Collectors.toSet()));
         }
 
         if (ctx.useIntermediateResults() && value instanceof Map) {
-            Map<String, Object> m = (Map<String, Object>) value;
+            var m = (Map<String, Object>) value;
             if (m.isEmpty()) {
                 return expectedType.cast(m);
             }
@@ -84,23 +91,20 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         }
 
         if (value instanceof Map) {
-            Map<String, Object> m = (Map<String, Object>) value;
+            var m = (Map<String, Object>) value;
             return expectedType.cast(new LazyEvalMap(this, ctx, m));
-        } else if (value instanceof List) {
-            List<Object> src = (List<Object>) value;
+        } else if (value instanceof List<?> src) {
             return expectedType.cast(new LazyEvalList(this, ctx, src));
-        } else if (value instanceof Set) {
-            Set<Object> src = (Set<Object>) value;
-
+        } else if (value instanceof Set<?> src) {
             // use LinkedHashSet to preserve the order of keys
-            Set<Object> dst = new LinkedHashSet<>(src.size());
-            for (Object vv : src) {
+            var dst = new LinkedHashSet<>(src.size());
+            for (var vv : src) {
                 dst.add(evalValue(ctx, vv, Object.class));
             }
 
             return expectedType.cast(dst);
         } else if (value.getClass().isArray()) {
-            Object[] src = (Object[]) value;
+            var src = (Object[]) value;
             if (src.length == 0) {
                 return expectedType.cast(src);
             }
@@ -110,8 +114,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             }
 
             return expectedType.cast(src);
-        } else if (value instanceof String) {
-            String s = (String) value;
+        } else if (value instanceof String s) {
             if (hasExpression(s)) {
                 return evalExpr(ctx, s, expectedType);
             }
@@ -121,9 +124,9 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     }
 
     private <T> T evalExpr(LazyEvalContext ctx, String expr, Class<T> type) {
-        ELResolver resolver = createResolver(ctx, expressionFactory);
+        var resolver = createResolver(ctx, expressionFactory);
 
-        StandardELContext sc = new StandardELContext(expressionFactory) {
+        var sc = new StandardELContext(expressionFactory) {
             @Override
             public ELResolver getELResolver() {
                 return resolver;
@@ -136,33 +139,38 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         };
         sc.putContext(ExpressionFactory.class, expressionFactory);
 
-        ValueExpression x = expressionFactory.createValueExpression(sc, expr, type);
         try {
-            Object v = withEvalContext(ctx, () -> x.getValue(sc));
+            var x = expressionFactory.createValueExpression(sc, expr, type);
+            var v = withEvalContext(ctx, () -> x.getValue(sc));
             return type.cast(v);
         } catch (PropertyNotFoundException e) {
             if (ctx.undefinedVariableAsNull()) {
                 return null;
             }
 
-            String errorMessage;
+            var errorMessage = propertyNameFromException(e)
+                    .map(propName -> String.format("Can't find a variable %s. " +
+                            "Check if it is defined in the current scope. Details: %s", propName, e.getMessage()))
+                    .orElse(String.format("Can't find the specified variable. " +
+                            "Check if it is defined in the current scope. Details: %s", e.getMessage()));
 
-            String propName = propertyNameFromException(e);
-            if (propName != null) {
-                errorMessage = String.format("Can't find a variable %s used in '%s'. " +
-                        "Check if it is defined in the current scope. Details: %s", propName, expr, e.getMessage());
-            } else {
-                errorMessage = String.format("Can't find the specified variable in '%s'. " +
-                        "Check if it is defined in the current scope. Details: %s", expr, e.getMessage());
+            throw new UserDefinedException(exceptionPrefix(expr) + errorMessage);
+        } catch (MethodNotFoundException e) {
+            throw new UserDefinedException(exceptionPrefix(expr) + e.getMessage());
+        } catch (UserDefinedException e) {
+            throw e;
+        } catch (javax.el.ELException e) {
+            var lastElException = ExceptionUtils.findLastException(e, javax.el.ELException.class);
+            if (lastElException.getCause() instanceof UserDefinedException ue) {
+                throw ue;
+            } else if (e.getCause() instanceof com.sun.el.parser.ParseException pe) {
+                throw new UserDefinedException("while parsing expression '" + expr + "': " + pe.getMessage());
+            } else if (lastElException.getCause() instanceof Exception ee) {
+                throw new WrappedException(exceptionPrefix(expr), ee);
             }
-
-            throw new UserDefinedException(errorMessage);
+            throw lastElException;
         } catch (Exception e) {
-            UserDefinedException u = ExceptionUtils.filterException(e, UserDefinedException.class);
-            if (u != null) {
-                throw u;
-            }
-            throw new RuntimeException("while evaluating expression '" + expr + "': " + e.getMessage());
+            throw new WrappedException(exceptionPrefix(expr), e);
         }
     }
 
@@ -173,7 +181,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     private ELResolver createResolver(LazyEvalContext evalContext,
                                       ExpressionFactory expressionFactory) {
 
-        CompositeELResolver r = new CompositeELResolver();
+        var r = new CompositeELResolver();
         if (evalContext.scope() != null) {
             r.add(new VariableResolver(evalContext.scope()));
         }
@@ -183,31 +191,16 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         }
         r.add(expressionFactory.getStreamELResolver());
         r.add(new StaticFieldELResolver());
-        r.add(new MapELResolver());
-        r.add(new MethodAccessorResolver());
+        r.add(new MapELResolver(sensitiveDataProcessor));
+        r.add(new MethodAccessorResolver(sensitiveDataProcessor));
         r.add(new ResourceBundleELResolver());
         r.add(new ListELResolver());
         r.add(new ArrayELResolver());
         if (evalContext.context() != null) {
-            r.add(new TaskMethodResolver(evalContext.context()));
+            r.add(new TaskMethodResolver(taskMethodResolvers, evalContext.context(), sensitiveDataProcessor));
         }
-        r.add(new BeanELResolver());
+        r.add(new CompositeBeanELResolver(taskMethodResolvers, beanMethodResolvers, sensitiveDataProcessor));
         return r;
-    }
-
-    private static FunctionMapper createFunctionMapper() {
-        Map<String, Method> functions = new HashMap<>();
-        functions.put("hasVariable", HasVariableFunction.getMethod());
-        functions.put("hasNonNullVariable", HasNonNullVariableFunction.getMethod());
-        functions.put("orDefault", OrDefaultFunction.getMethod());
-        functions.put("allVariables", AllVariablesFunction.getMethod());
-        functions.put("currentFlowName", CurrentFlowNameFunction.getMethod());
-        functions.put("evalAsMap", EvalAsMapFunction.getMethod());
-        functions.put("isDebug", IsDebugFunction.getMethod());
-        functions.put("throw", ThrowFunction.getMethod());
-        functions.put("hasFlow", HasFlowFunction.getMethod());
-        functions.put("uuid", UuidFunction.getMethod());
-        return new FunctionMapper(functions);
     }
 
     private static boolean hasExpression(String s) {
@@ -215,10 +208,10 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     }
 
     private static Map<String, Object> nestedToMap(Map<String, Object> value) {
-        Map<String, Object> result = new LinkedHashMap<>();
-        for (Map.Entry<String, Object> e : value.entrySet()) {
+        Map<String, Object> result = new LinkedHashMap<String, Object>();
+        for (var e : value.entrySet()) {
             if (isNestedKey(e.getKey())) {
-                Map<String, Object> m = toNested(e.getKey(), e.getValue());
+                var m = toNested(e.getKey(), e.getValue());
                 result = deepMerge(result, m);
             } else {
                 result.put(e.getKey(), e.getValue());
@@ -229,16 +222,16 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
 
     @SuppressWarnings("unchecked")
     private static Map<String, Object> mergeWithVariables(EvalContext ctx, Map<String, Object> m, Set<String> nestedKeys) {
-        Map<String, Object> result = new LinkedHashMap<>();
-        for (Map.Entry<String, Object> e : m.entrySet()) {
-            String key = e.getKey();
-            Object value = e.getValue();
-            boolean isNested = nestedKeys.stream().anyMatch(s -> s.startsWith(key + "."));
+        var result = new LinkedHashMap<String, Object>();
+        for (var e : m.entrySet()) {
+            var key = e.getKey();
+            var value = e.getValue();
+            var isNested = nestedKeys.stream().anyMatch(s -> s.startsWith(key + "."));
             if (isNested && ctx.variables().has(key)) {
-                Object o = ctx.variables().get(key);
+                var o = ctx.variables().get(key);
                 if (o instanceof Map && e.getValue() instanceof Map) {
-                    Map<String, Object> valuesFromVars = (Map<String, Object>)o;
-                    value = deepMerge(valuesFromVars, (Map<String, Object>)value);
+                    var valuesFromVars = (Map<String, Object>) o;
+                    value = deepMerge(valuesFromVars, (Map<String, Object>) value);
                 }
             }
             result.put(key, value);
@@ -246,17 +239,37 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         return result;
     }
 
+    private static String exceptionPrefix(String expr) {
+        return "while evaluating expression '" + expr + "': ";
+    }
+
     private static final String PROP_NOT_FOUND_EL_MESSAGE = "ELResolver cannot handle a null base Object with identifier ";
 
-    private static String propertyNameFromException(PropertyNotFoundException e) {
+    private static Optional<String> propertyNameFromException(PropertyNotFoundException e) {
         if (e.getMessage() == null) {
-            return null;
+            return Optional.empty();
         }
 
         if (e.getMessage().startsWith(PROP_NOT_FOUND_EL_MESSAGE)) {
-            return e.getMessage().substring(PROP_NOT_FOUND_EL_MESSAGE.length());
+            return Optional.of(e.getMessage().substring(PROP_NOT_FOUND_EL_MESSAGE.length()));
         }
 
-        return null;
+        return Optional.empty();
+    }
+
+    private static class DelegatingFunctionMapper extends FunctionMapper {
+        final FunctionHolder functionHolder;
+
+        DelegatingFunctionMapper(FunctionHolder functionHolder) {
+            this.functionHolder = functionHolder;
+        }
+
+        @Override
+        public Method resolveFunction(String prefix, String localName) {
+            if (prefix != null && !prefix.isBlank()) {
+                return functionHolder.resolve(prefix + ":" + localName);
+            }
+            return functionHolder.resolve(localName);
+        }
     }
 }

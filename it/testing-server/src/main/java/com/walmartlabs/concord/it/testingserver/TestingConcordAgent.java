@@ -84,6 +84,7 @@ public class TestingConcordAgent implements AutoCloseable {
 
         var testConfig = ConfigFactory.parseMap(Map.of(
                 "maintenanceModeListenerPort", 0,
+                "workDirBase", "workDirs",
                 "server.apiBaseUrl", "http://localhost:" + apiPort,
                 "server.websocketUrl", "ws://localhost:" + apiPort + "/websocket",
                 "server.apiKey", agentApiKey

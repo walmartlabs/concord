@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.forms.FormOptions;
 import com.walmartlabs.concord.runtime.common.FormService;
+import com.walmartlabs.concord.runtime.v2.exception.InvalidValueException;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.FormFieldParser;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
@@ -32,12 +33,17 @@ import com.walmartlabs.concord.svm.*;
 import java.io.Serializable;
 import java.util.*;
 
-public class FormCallCommand extends StepCommand<FormCall> {
+public class FormCallCommand extends StepCommand<FormCall> implements ElementEventProducer {
 
     private static final long serialVersionUID = 1L;
 
     public FormCallCommand(FormCall formCall) {
         super(formCall);
+    }
+
+    @Override
+    public String getDescription(State state, ThreadId threadId) {
+        return "Form call: " + getStep().getName();
     }
 
     @Override
@@ -52,6 +58,14 @@ public class FormCallCommand extends StepCommand<FormCall> {
         FormCall call = getStep();
         ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
         String formName = expressionEvaluator.eval(evalContext, call.getName(), String.class);
+
+        if (!formName.matches("^[A-Za-z0-9_ $]+$")) {
+            throw InvalidValueException.builder()
+                    .location(call.getLocation())
+                    .actual(formName)
+                    .expected("name matching regex \"^[A-Za-z0-9_ $]+$\"")
+                    .build();
+        }
 
         ProcessDefinition processDefinition = runtime.getService(ProcessDefinition.class);
         ProcessConfiguration processConfiguration = runtime.getService(ProcessConfiguration.class);

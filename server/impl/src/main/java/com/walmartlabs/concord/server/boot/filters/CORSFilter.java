@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebFilter({"/api/*", "/logs/*", "/forms/*"})
+@WebFilter({"/api/*", "/forms/*"})
 public class CORSFilter implements Filter {
 
     private static final Logger log = LoggerFactory.getLogger(CORSFilter.class);

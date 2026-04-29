@@ -4,6 +4,9 @@ configuration:
   dependencies:
     - "d1"
     - "d2"
+  extraDependencies:
+    - "d3"
+    - "d4"
   arguments:
     k: "v"
   requirements:

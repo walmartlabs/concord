@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.state;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.common.secret.SecretUtils;
 import com.walmartlabs.concord.db.AbstractDao;
@@ -35,9 +34,9 @@ import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.policy.PolicyException;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
-import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKeyCache;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -104,7 +103,10 @@ public class ProcessStateManager extends AbstractDao {
     }
 
     public <T> Optional<T> get(PartialProcessKey partialProcessKey, String path, Function<InputStream, Optional<T>> converter) {
-        ProcessKey processKey = processKeyCache.assertKey(partialProcessKey.getInstanceId());
+        ProcessKey processKey = processKeyCache.get(partialProcessKey.getInstanceId());
+        if (processKey == null) {
+            throw new IllegalStateException("Can't determine the process key of " + partialProcessKey.getInstanceId());
+        }
         return get(processKey, path, converter);
     }
 
@@ -222,7 +224,7 @@ public class ProcessStateManager extends AbstractDao {
     }
 
     public boolean exists(PartialProcessKey partialProcessKey, String path) {
-        ProcessKey processKey = processKeyCache.assertKey(partialProcessKey.getInstanceId());
+        ProcessKey processKey = processKeyCache.get(partialProcessKey.getInstanceId());
         return exists(processKey, path);
     }
 
@@ -776,7 +778,7 @@ public class ProcessStateManager extends AbstractDao {
                 }
 
                 try (OutputStream dst = Files.newOutputStream(p, options)) {
-                    IOUtils.copy(src, dst);
+                    src.transferTo(dst);
                 }
 
                 Files.setPosixFilePermissions(p, Posix.posix(unixMode));
@@ -801,7 +803,7 @@ public class ProcessStateManager extends AbstractDao {
 
             try {
                 dst.putArchiveEntry(entry);
-                IOUtils.copy(src, dst);
+                src.transferTo(dst);
                 dst.closeArchiveEntry();
             } catch (IOException e) {
                 throw new RuntimeException(e);

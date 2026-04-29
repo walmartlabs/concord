@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,14 +24,12 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.server.process.pipelines.processors.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 
 /**
  * Handles NEW "regular" processes. Puts the processes into the ENQUEUED status.
  * Forks are processed by {@link ForkPipeline}.
  */
-@Named
 public class EnqueueProcessPipeline extends Pipeline {
 
     private final ExceptionProcessor exceptionProcessor;
@@ -43,6 +41,7 @@ public class EnqueueProcessPipeline extends Pipeline {
         super(List.of(
                 injector.getInstance(LoggingMDCProcessor.class),
                 injector.getInstance(PayloadRestoreProcessor.class),
+                injector.getInstance(RestoredPayloadValidationProcessor.class),
                 injector.getInstance(RunAsCurrentProcessUserProcessor.class),
                 injector.getInstance(PolicyExportProcessor.class),
                 injector.getInstance(WorkspaceArchiveProcessor.class),
@@ -53,6 +52,7 @@ public class EnqueueProcessPipeline extends Pipeline {
                 injector.getInstance(ProcessDefinitionProcessor.class),
                 injector.getInstance(SessionTokenProcessor.class),
                 injector.getInstance(ConfigurationProcessor.class),
+                customProcessors.handleConfiguration(),
                 injector.getInstance(AssertOutVariablesProcessor.class),
                 injector.getInstance(ExclusiveGroupProcessor.class),
                 injector.getInstance(EntryPointProcessor.class),
@@ -65,7 +65,6 @@ public class EnqueueProcessPipeline extends Pipeline {
                 injector.getInstance(ResumeEventsProcessor.class),
                 injector.getInstance(ConfigurationStoringProcessor.class),
                 injector.getInstance(PolicyProcessor.class),
-                injector.getInstance(DependencyVersionsExportProcessor.class),
                 customProcessors.handleState(),
                 injector.getInstance(StateImportingProcessor.class),
                 injector.getInstance(ProcessHandlersProcessor.class),

@@ -70,10 +70,10 @@ public class HttpTask implements Task {
      * @return Map
      * @throws Exception exception
      */
-    private Map<String, Object> executeRequest(Configuration config) throws Exception {
+    Map<String, Object> executeRequest(Configuration config) throws Exception {
         log.info("Request method: {}", config.getMethodType());
 
-        Map<String, Object> response = SimpleHttpClient.create(config).execute().getResponse();
+        Map<String, Object> response = SimpleHttpClient.create(config, false).execute().getResponse();
         log.info("Response status code: {}", response.get(STATUS_CODE_PARAM));
         log.info("Success response: {}", response.get(SUCCESS_PARAM));
 

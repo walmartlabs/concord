@@ -20,14 +20,13 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -37,7 +36,6 @@ import java.nio.file.StandardCopyOption;
 /**
  * Unpacks payload's workspace file, parses request data.
  */
-@Named
 public class WorkspaceArchiveProcessor implements PayloadProcessor {
 
     private final ProcessLogManager logManager;
@@ -63,7 +61,7 @@ public class WorkspaceArchiveProcessor implements PayloadProcessor {
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         try {
-            IOUtils.unzip(archive, workspace, StandardCopyOption.REPLACE_EXISTING);
+            ZipUtils.unzip(archive, workspace, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             logManager.error(processKey, "Error while unpacking an archive: " + archive, e);
             throw new ProcessException(processKey, "Error while unpacking an archive: " + archive, e);

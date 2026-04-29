@@ -29,7 +29,7 @@ import com.walmartlabs.concord.agent.guice.WorkerModule;
 import com.walmartlabs.concord.agent.mmode.MaintenanceModeListener;
 import com.walmartlabs.concord.agent.mmode.MaintenanceModeNotifier;
 import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.server.queueclient.QueueClient;
 import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
 import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
@@ -77,16 +77,25 @@ public class Agent {
     }
 
     public void start() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            log.info("Received SIGTERM, stopping...");
+            Agent.this.stop();
+        }, "shutdown-hook"));
+
         executor.submit(() -> {
             run();
             return null;
         });
+
+        log.info("start -> done");
     }
 
     @SuppressWarnings("unused")
     public void stop() {
         queueClient.stop();
         executor.shutdownNow();
+
+        log.info("stop -> done");
     }
 
     private void run() throws Exception {
@@ -226,7 +235,7 @@ public class Agent {
             return null;
         }
 
-        Path workDir = IOUtils.createTempDir(agentCfg.getPayloadDir(), "workDir");
+        Path workDir = PathUtils.createTempDir(agentCfg.getPayloadDir(), "workDir");
 
         return JobRequest.from(resp, workDir);
     }

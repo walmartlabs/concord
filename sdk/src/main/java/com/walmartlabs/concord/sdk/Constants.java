@@ -108,6 +108,11 @@ public class Constants {
         public static final String DEPENDENCIES_KEY = "dependencies";
 
         /**
+         * Key of a process dependencies list in a request data JSON.
+         */
+        public static final String EXTRA_DEPENDENCIES_KEY = "extraDependencies";
+
+        /**
          * Process entry point.
          */
         public static final String ENTRY_POINT_KEY = "entryPoint";
@@ -116,6 +121,11 @@ public class Constants {
          * Name of the default entry point.
          */
         public static final String DEFAULT_ENTRY_POINT_NAME = "default";
+
+        /**
+         * Run process in dry-run mode?.
+         */
+        public static final String DRY_RUN_MODE_KEY = "dryRun";
 
         /**
          * Active profiles.
@@ -332,16 +342,6 @@ public class Constants {
      * Project files and directories.
      */
     public static class Files {
-
-        /**
-         * Files that the runtime considers "root" project files.
-         */
-        public static final String[] PROJECT_ROOT_FILE_NAMES = {
-                ".concord.yml",
-                "concord.yml",
-                ".concord.yaml",
-                "concord.yaml"
-        };
 
         /**
          * Directory which contains payload data.
@@ -605,6 +605,8 @@ public class Constants {
         public static final String SYNC = "sync";
 
         public static final String META = "meta";
+
+        public static final String ORDER_ID = "orderId";
     }
 
     public static class Headers {
@@ -614,6 +616,8 @@ public class Constants {
         public static final String SECRET_TYPE = "X-Concord-SecretType";
 
         public static final String ENABLE_HTTP_SESSION = "X-Concord-EnableSession";
+
+        public static final String REMEMBER_ME_HEADER = "X-Concord-RememberMe";
     }
 
     /**

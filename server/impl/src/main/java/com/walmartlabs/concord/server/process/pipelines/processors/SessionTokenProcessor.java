@@ -24,12 +24,10 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.SessionTokenCreator;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  * Generates and saves the process' session token (key).
  */
-@Named
 public class SessionTokenProcessor implements PayloadProcessor {
 
     private final SessionTokenCreator sessionTokenCreator;

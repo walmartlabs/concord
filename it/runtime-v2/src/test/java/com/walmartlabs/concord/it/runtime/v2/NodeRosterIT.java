@@ -26,27 +26,33 @@ import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client2.HostEntry;
 import com.walmartlabs.concord.client2.NodeRosterHostsApi;
 import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.it.common.Version;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 import static com.walmartlabs.concord.it.runtime.v2.Utils.resourceToString;
 
 public class NodeRosterIT extends AbstractTest {
 
     @RegisterExtension
-    public final ConcordRule concord = ConcordConfiguration.configure();
+    public static final ConcordRule concord = ConcordConfiguration.configure();
 
     /**
      * Tests various methods of the 'noderoster' plugin.
      */
     @Test
+    @Timeout(value = 5, unit = TimeUnit.MINUTES)
     public void test() throws Exception {
         // run the Ansible flow first to get some data
 
         String concordYml = resourceToString(NodeRosterIT.class.getResource("noderoster/ansible.yml"))
-                .replaceAll("PROJECT_VERSION", ITConstants.PROJECT_VERSION);
+                .replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION);
 
         ConcordProcess proc = concord.processes().start(new Payload()
                 .concordYml(concordYml)
@@ -57,17 +63,25 @@ public class NodeRosterIT extends AbstractTest {
         // wait for the Node Roster data to appear
 
         NodeRosterHostsApi hostsApi = new NodeRosterHostsApi(concord.apiClient());
-        while (true) {
+        long deadline = System.nanoTime() + TimeUnit.MINUTES.toNanos(3);
+        boolean hasHosts = false;
+        while (System.nanoTime() < deadline) {
             List<HostEntry> l = hostsApi.listKnownHosts(null, null, pe.getInstanceId(), null, 10, 0);
             if (!l.isEmpty()) {
+                hasHosts = true;
                 break;
             }
+
+            Thread.sleep(1000);
+        }
+        if (!hasHosts) {
+            fail("Timed out waiting for Node Roster data for process " + pe.getInstanceId());
         }
 
         // run the Node Roster flow next to test the plugin
 
         concordYml = resourceToString(ProcessIT.class.getResource("noderoster/noderoster.yml"))
-                .replaceAll("PROJECT_VERSION", ITConstants.PROJECT_VERSION);
+                .replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION);
 
         proc = concord.processes().start(new Payload()
                 .concordYml(concordYml));

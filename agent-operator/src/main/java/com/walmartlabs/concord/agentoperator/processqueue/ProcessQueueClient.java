@@ -4,7 +4,7 @@ package com.walmartlabs.concord.agentoperator.processqueue;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2024 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,32 +26,39 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.escape.Escaper;
 import com.google.common.net.UrlEscapers;
 import com.walmartlabs.concord.agentoperator.scheduler.QueueSelector;
-import okhttp3.*;
+import com.walmartlabs.concord.sdk.Constants;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
-import java.util.HashMap;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.List;
-import java.util.Map;
 
 public class ProcessQueueClient {
 
-    private static final TypeReference<List<ProcessQueueEntry>> LIST_OF_PROCESS_QUEUE_ENTRIES = new TypeReference<List<ProcessQueueEntry>>() {
+    private static final TypeReference<List<ProcessQueueEntry>> LIST_OF_PROCESS_QUEUE_ENTRIES = new TypeReference<>() {
     };
 
     private final String baseUrl;
     private final String apiToken;
-    private final OkHttpClient client;
     private final ObjectMapper objectMapper;
+    private final HttpClient client;
 
     public ProcessQueueClient(String baseUrl, String apiToken) {
         this.baseUrl = baseUrl;
         this.apiToken = apiToken;
-        this.client = initClient();
         this.objectMapper = new ObjectMapper();
+        this.client = initClient();
     }
 
     public List<ProcessQueueEntry> query(String processStatus, int limit, QueueSelector queueSelector) throws IOException {
@@ -66,109 +73,58 @@ public class ProcessQueueClient {
                 queryUrl.append("&").append(escapeQueryParam(queryParam));
             }
         }
-        Request req = new Request.Builder()
-                .url(queryUrl.toString())
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(queryUrl.toString()))
                 .header("Authorization", apiToken)
-                .addHeader("User-Agent", "k8s-agent-operator")
+                .header("User-Agent", "k8s-agent-operator")
+                .header(Constants.Headers.ENABLE_HTTP_SESSION, "true")
+                .GET()
                 .build();
 
-        Call call = client.newCall(req);
-        try (Response resp = call.execute()) {
-            if (!resp.isSuccessful()) {
-                throw new IOException("Error while fetching the process queue data: " + resp.code());
-            }
-
-            ResponseBody body = resp.body();
-            if (body == null) {
-                throw new IOException("Error while fetching the process queue data: empty response");
-            }
-
-            return objectMapper.readValue(body.byteStream(), LIST_OF_PROCESS_QUEUE_ENTRIES);
+        HttpResponse<String> response;
+        try {
+            response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Interrupted while fetching the queue data", e);
         }
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Error while fetching the process queue data: " + response.statusCode());
+        }
+
+        return objectMapper.readValue(response.body(), LIST_OF_PROCESS_QUEUE_ENTRIES);
     }
 
-    private static OkHttpClient initClient() {
+    private static HttpClient initClient() {
         try {
             TrustManager[] trustAllCerts = new TrustManager[]{
                     new X509TrustManager() {
-                        @Override
-                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {
+                        public X509Certificate[] getAcceptedIssuers() {
+                            return new X509Certificate[0];
                         }
 
-                        @Override
-                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {
+                        public void checkClientTrusted(X509Certificate[] certs, String authType) {
                         }
 
-                        @Override
-                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                            return new java.security.cert.X509Certificate[]{};
+                        public void checkServerTrusted(X509Certificate[] certs, String authType) {
                         }
                     }
             };
 
             SSLContext sslContext = SSLContext.getInstance("SSL");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            sslContext.init(null, trustAllCerts, new SecureRandom());
 
-            SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+            CookieManager cookieManager = new CookieManager();
+            cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
 
-            OkHttpClient.Builder builder = new OkHttpClient.Builder();
-            builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
-            builder.hostnameVerifier((hostname, session) -> true);
-
-            Map<String, String> cookieJar = new HashMap<>();
-            builder.addInterceptor(new AddCookiesInterceptor(cookieJar));
-            builder.addInterceptor(new ReceivedCookiesInterceptor(cookieJar));
-
-            return builder.build();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static class AddCookiesInterceptor implements Interceptor {
-
-        private final Map<String, String> cookieJar;
-
-        private AddCookiesInterceptor(Map<String, String> cookieJar) {
-            this.cookieJar = cookieJar;
-        }
-
-        @Override
-        public Response intercept(Chain chain) throws IOException {
-            Request.Builder builder = chain.request().newBuilder();
-            for (Map.Entry<String, String> cookie : cookieJar.entrySet()) {
-                builder.addHeader("Cookie", cookie.getValue());
-            }
-            return chain.proceed(builder.build());
-        }
-    }
-
-    private static class ReceivedCookiesInterceptor implements Interceptor {
-
-        private static final String SESSION_COOKIE_NAME = "JSESSIONID";
-
-        private final Map<String, String> cookieJar;
-
-        private ReceivedCookiesInterceptor(Map<String, String> cookieJar) {
-            this.cookieJar = cookieJar;
-        }
-
-        @Override
-        public Response intercept(Chain chain) throws IOException {
-            Response resp = chain.proceed(chain.request());
-
-            List<String> cookies = resp.headers("Set-Cookie");
-            if (cookies.isEmpty()) {
-                return resp;
-            }
-
-            for (String cookie : cookies) {
-                if (cookie.startsWith(SESSION_COOKIE_NAME)) {
-                    cookieJar.put(SESSION_COOKIE_NAME, cookie);
-                }
-            }
-
-            return resp;
+            return HttpClient.newBuilder()
+                    .sslContext(sslContext)
+                    .cookieHandler(cookieManager)
+                    .build();
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            throw new RuntimeException("Error while initializing the HTTP client", e);
         }
     }
 

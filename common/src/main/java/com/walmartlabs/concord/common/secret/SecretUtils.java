@@ -20,8 +20,6 @@ package com.walmartlabs.concord.common.secret;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -42,7 +40,7 @@ public final class SecretUtils {
 
     public static byte[] encrypt(byte[] input, byte[] password, byte[] salt, HashAlgorithm hashAlgorithm) {
         try {
-            return IOUtils.toByteArray(encrypt(new ByteArrayInputStream(input), password, salt, hashAlgorithm));
+            return encrypt(new ByteArrayInputStream(input), password, salt, hashAlgorithm).readAllBytes();
         } catch (IOException e) {
             throw new SecurityException("Error encrypting a secret: " + e);
         }
@@ -68,7 +66,7 @@ public final class SecretUtils {
     public static byte[] decrypt(byte[] input, byte[] password, byte[] salt, HashAlgorithm hashAlgorithm) {
         try {
             InputStream out = decrypt(new ByteArrayInputStream(input), password, salt, hashAlgorithm);
-            return IOUtils.toByteArray(out);
+            return out.readAllBytes();
         } catch (IOException e) {
             Throwable t = e.getCause() == null ? e : e.getCause();
             if (t instanceof BadPaddingException) {

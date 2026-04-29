@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,12 +36,12 @@ public class MethodNotFoundException extends ELException {
 
     private static final int MAX_HINTS = 3;
 
-    public MethodNotFoundException(Object base, Object method, Class<?>[] paramTypes) {
-        super(formatMessage(base, method, paramTypes));
+    public MethodNotFoundException(Class<?> clazz, Object method, Class<?>[] paramTypes) {
+        super(formatMessage(clazz, method, paramTypes));
     }
 
-    private static String formatMessage(Object base, Object method, Class<?>[] paramTypes) {
-        Class<?> baseClass = getBaseClass(base);
+    private static String formatMessage(Class<?> clazz, Object method, Class<?>[] paramTypes) {
+        Class<?> baseClass = getBaseClass(clazz);
 
         String baseName = baseClass != null ? baseClass.getName() : "n/a";
         String methodName = method != null ? method.toString() : "n/a";
@@ -66,12 +66,10 @@ public class MethodNotFoundException extends ELException {
      * Returns the base's class.
      * Tries to unwrap Guice proxy classes to get the original class.
      */
-    private static Class<?> getBaseClass(Object base) {
-        if (base == null) {
+    private static Class<?> getBaseClass(Class<?> klass) {
+        if (klass == null) {
             return null;
         }
-
-        Class<?> klass = base.getClass();
 
         String name = klass.getName();
         if (name.contains("EnhancerByGuice")) {

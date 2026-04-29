@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * *****
  * Concord
  * -----
- * Copyright (C) 2020 Ivan Bodrov
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,47 +20,49 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
-import org.pac4j.core.config.Config;
-import org.pac4j.core.context.JEEContext;
-import org.pac4j.core.exception.http.RedirectionAction;
-import org.pac4j.core.util.Pac4jConstants;
-import org.pac4j.oidc.client.OidcClient;
-
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.UUID;
 
+// TODO can be implemented as a JAX-RS resource
 public class OidcAuthFilter implements Filter {
 
     public static final String URL = "/api/service/oidc/auth";
+    private static final String SESSION_STATE_KEY = "OIDC_STATE";
+    private static final String SESSION_REDIRECT_KEY = "OIDC_REDIRECT_URL";
 
-    private final Config config;
-    private final OidcClient<?> client;
+    private final PluginConfiguration pluginConfig;
+    private final OidcService oidcService;
 
     @Inject
-    public OidcAuthFilter(@Named("oidc") Config config, OidcClient<?> client) {
-        this.config = config;
-        this.client = client;
+    public OidcAuthFilter(PluginConfiguration pluginConfig, OidcService oidcService) {
+        this.pluginConfig = pluginConfig;
+        this.oidcService = oidcService;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        HttpServletRequest req = (HttpServletRequest) request;
-        HttpServletResponse resp = (HttpServletResponse) response;
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException {
+        var req = (HttpServletRequest) request;
+        var resp = (HttpServletResponse) response;
 
-        JEEContext context = new JEEContext(req, resp);
+        if (!pluginConfig.isEnabled()) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "OIDC disabled");
+            return;
+        }
 
-        String redirectUrl = req.getParameter("from");
-        context.getSessionStore().set(context, Pac4jConstants.REQUESTED_URL, redirectUrl);
+        var redirectUrl = req.getParameter("from");
+        var state = UUID.randomUUID().toString();
+        var callbackUrl = pluginConfig.getUrlBase() + OidcCallbackFilter.URL + "?client_name=oidc";
 
-        RedirectionAction action = client.getRedirectionAction(context)
-                .orElseThrow(() -> new IllegalStateException("Can't get a redirection action for the request"));
+        var session = req.getSession(true);
+        session.setAttribute(SESSION_STATE_KEY, state);
+        session.setAttribute(SESSION_REDIRECT_KEY, redirectUrl);
 
-        config.getHttpActionAdapter().adapt(action, context);
+        var authUrl = oidcService.buildAuthorizationUrl(callbackUrl, state);
+        resp.sendRedirect(authUrl);
     }
 
     @Override

@@ -135,6 +135,8 @@ public class SecretResource implements Resource {
             }
         } catch (IOException e) {
             throw new ConcordApplicationException("Error while processing the request: " + e.getMessage(), e);
+        } finally {
+            input.close();
         }
     }
 
@@ -179,8 +181,8 @@ public class SecretResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Deprecated
-    public SecretEntry get(@PathParam("orgName") @ConcordKey String orgName,
-                           @PathParam("secretName") @ConcordKey String secretName) {
+    public SecretEntryV2 get(@PathParam("orgName") @ConcordKey String orgName,
+                             @PathParam("secretName") @ConcordKey String secretName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return secretManager.assertAccess(org.getId(), null, secretName, ResourceAccessLevel.READER, false);
@@ -201,33 +203,37 @@ public class SecretResource implements Resource {
                             @PathParam("secretName") @ConcordKey String secretName,
                             @Parameter(schema = @Schema(type = "object", implementation = GetDataRequest.class)) MultipartInput input) {
 
-        GetDataRequest request = GetDataRequest.from(input);
-
-        OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        String password = request.getPassword();
-
-        SecretDao.SecretDataEntry entry;
         try {
-            entry = secretManager.getRaw(SecretManager.AccessScope.apiRequest(), org.getId(), secretName, password);
-            if (entry == null) {
-                throw new WebApplicationException("Secret not found: " + secretName, Status.NOT_FOUND);
+            GetDataRequest request = GetDataRequest.from(input);
+
+            OrganizationEntry org = orgManager.assertAccess(orgName, false);
+            String password = request.getPassword();
+
+            SecretDao.SecretDataEntry entry;
+            try {
+                entry = secretManager.getRaw(SecretManager.AccessScope.apiRequest(), org.getId(), secretName, password);
+                if (entry == null) {
+                    throw new WebApplicationException("Secret not found: " + secretName, Status.NOT_FOUND);
+                }
+            } catch (SecurityException e) {
+                log.warn("fetchSecret -> error: {}", e.getMessage());
+                throw new SecretException("Error while fetching a secret '" + secretName + "': " + e.getMessage());
+            } catch (ValidationErrorsException e) {
+                log.warn("fetchSecret -> error: {}", e.getMessage());
+                return null;
             }
-        } catch (SecurityException e) {
-            log.warn("fetchSecret -> error: {}", e.getMessage());
-            throw new SecretException("Error while fetching a secret '" + secretName + "': " + e.getMessage());
-        } catch (ValidationErrorsException e) {
-            log.warn("fetchSecret -> error: {}", e.getMessage());
-            return null;
-        }
 
-        try {
-            return Response.ok((StreamingOutput) output -> output.write(entry.getData()),
-                            MediaType.APPLICATION_OCTET_STREAM)
-                    .header(Constants.Headers.SECRET_TYPE, entry.getType().name())
-                    .build();
-        } catch (Exception e) {
-            log.error("fetchSecret ['{}'] -> error while fetching a secret", secretName, e);
-            throw new ConcordApplicationException("Error while fetching a secret '" + secretName + "': " + e.getMessage());
+            try {
+                return Response.ok((StreamingOutput) output -> output.write(entry.getData()),
+                                MediaType.APPLICATION_OCTET_STREAM)
+                        .header(Constants.Headers.SECRET_TYPE, entry.getType().name())
+                        .build();
+            } catch (Exception e) {
+                log.error("fetchSecret ['{}'] -> error while fetching a secret", secretName, e);
+                throw new ConcordApplicationException("Error while fetching a secret '" + secretName + "': " + e.getMessage());
+            }
+        } finally {
+            input.close();
         }
     }
 
@@ -255,12 +261,12 @@ public class SecretResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
     @Deprecated
-    public List<SecretEntry> list(@PathParam("orgName") @ConcordKey String orgName,
-                                  @QueryParam("offset") int offset,
-                                  @QueryParam("limit") int limit,
-                                  @QueryParam("filter") String filter) {
+    public List<SecretEntryV2> list(@PathParam("orgName") @ConcordKey String orgName,
+                                    @QueryParam("offset") int offset,
+                                    @QueryParam("limit") int limit,
+                                    @QueryParam("filter") String filter) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        return secretManager.list(org.getId(), offset, limit, filter).stream().map(e -> (SecretEntry) e).collect(Collectors.toList());
+        return secretManager.list(org.getId(), offset, limit, filter);
     }
 
     @DELETE

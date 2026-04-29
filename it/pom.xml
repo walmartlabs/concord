@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>2.17.1-SNAPSHOT</version>
+        <version>2.40.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -13,12 +13,14 @@
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <modules>
         <module>tasks/broken-deps</module>
         <module>tasks/dependency-manager-test</module>
+        <module>tasks/schema-test</module>
         <module>tasks/serialization-test</module>
         <module>tasks/suspend-test</module>
-        <module>tasks/client1-test</module>
 
         <module>common</module>
         <module>server</module>

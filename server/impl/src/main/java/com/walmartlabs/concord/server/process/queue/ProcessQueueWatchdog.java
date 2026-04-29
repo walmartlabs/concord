@@ -37,13 +37,13 @@ import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
+import com.walmartlabs.concord.server.security.UserSecurityContext;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.jooq.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -112,7 +112,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     private final PayloadManager payloadManager;
     private final ProcessManager processManager;
     private final ProcessQueueManager queueManager;
-    private final ProcessSecurityContext processSecurityContext;
+    private final UserSecurityContext userSecurityContext;
 
     @Inject
     public ProcessQueueWatchdog(ProcessWatchdogConfiguration cfg,
@@ -124,7 +124,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                                 PayloadManager payloadManager,
                                 ProcessManager processManager,
                                 ProcessQueueManager queueManager,
-                                ProcessSecurityContext processSecurityContext) {
+                                UserSecurityContext userSecurityContext) {
         this.cfg = cfg;
 
         this.queueDao = queueDao;
@@ -135,7 +135,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         this.payloadManager = payloadManager;
         this.processManager = processManager;
         this.queueManager = queueManager;
-        this.processSecurityContext = processSecurityContext;
+        this.userSecurityContext = userSecurityContext;
     }
 
     @Override
@@ -162,41 +162,70 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         @Override
         public void run() {
             Field<OffsetDateTime> maxAge = PgUtils.nowMinus(cfg.getMaxFailureHandlingAge());
+            boolean doWork = true;
 
             for (PollEntry e : POLL_ENTRIES) {
                 List<ProcessEntry> parents = watchdogDao.poll(e, maxAge, 1);
 
                 for (ProcessEntry parent : parents) {
-                    process(e, parent);
+                    doWork = process(e, parent);
+                    if (!doWork) {
+                        break;
+                    }
+                }
+
+                if (!doWork) {
+                    break;
                 }
             }
         }
 
-        private void process(PollEntry entry, ProcessEntry parent) {
-            String username = userDao.getUsername(parent.initiatorId);
-
+        /**
+         * @return {@code true} on success, {@code false} on error
+         */
+        private boolean process(PollEntry entry, ProcessEntry parent) {
             Map<String, Object> req = new HashMap<>();
             req.put(Constants.Request.ENTRY_POINT_KEY, entry.flow);
             req.put(Constants.Request.TAGS_KEY, null); // clear tags
 
             PartialProcessKey childKey = PartialProcessKey.create();
             try {
+                String username = assertUserEnabled(parent.initiatorId);
                 Payload payload = payloadManager.createFork(childKey, parent.processKey, entry.handlerKind,
                         parent.initiatorId, username, parent.projectId, req, null,
                         null, parent.imports);
 
-                processSecurityContext.runAs(parent.initiatorId, () -> processManager.startFork(payload));
+                userSecurityContext.runAs(parent.initiatorId, () -> processManager.startFork(payload));
 
                 logManager.info(parent.processKey, "{} started: {}", toString(entry.handlerKind), LogTags.instanceId(payload.getProcessKey().getInstanceId()));
 
                 log.info("process -> created a new child process '{}' (parent '{}', entryPoint: '{}')",
                         childKey, parent.processKey, entry.flow);
+                return true;
             } catch (Exception e) {
                 // remove the handler from the parent process to avoid infinite retries
                 queueDao.removeHandler(parent.processKey, entry.flow);
                 logManager.warn(parent.processKey, "Error while starting {} handler: {}", entry.flow, e.getMessage());
-                throw new RuntimeException(e);
+                log.warn("Error while starting {}/{} handler: {}", parent.processKey, entry.flow, e.getMessage());
+                return false;
             }
+        }
+
+        /**
+         * @return username
+         */
+        private String assertUserEnabled(UUID initiatorId) {
+            var user = userDao.get(initiatorId);
+
+            if (user == null) {
+                throw new IllegalStateException("initiator not found");
+            }
+
+            if (user.isDisabled()) {
+                throw new IllegalArgumentException("initiator is disabled");
+            }
+
+            return user.getName();
         }
 
         private String toString(ProcessKind kind) {
@@ -289,7 +318,6 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         }
     }
 
-    @Named
     private static final class WatchdogDao extends AbstractDao {
 
         private final ConcordObjectMapper objectMapper;

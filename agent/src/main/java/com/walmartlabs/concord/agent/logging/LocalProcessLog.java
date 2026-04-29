@@ -20,7 +20,6 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +61,7 @@ public class LocalProcessLog extends AbstractProcessLog {
     public void log(InputStream src) throws IOException {
         Path f = logFile();
         try (OutputStream dst = Files.newOutputStream(f, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
-             IOUtils.copy(src, dst);
+            src.transferTo(dst);
         }
     }
 

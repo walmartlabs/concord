@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2025 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.plugins.oidc;
 
 import com.typesafe.config.ConfigException;
 import com.walmartlabs.concord.server.org.team.TeamRole;
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.config.Config;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
@@ -57,6 +57,10 @@ public class PluginConfiguration {
     @Inject
     @Config("oidc.afterLogoutUrl")
     private String afterLogoutUrl;
+
+    @Inject
+    @Config("oidc.onErrorUrl")
+    private String onErrorUrl;
 
     @Inject
     @Nullable
@@ -100,6 +104,10 @@ public class PluginConfiguration {
 
     public String getAfterLogoutUrl() {
         return afterLogoutUrl;
+    }
+
+    public String getOnErrorUrl() {
+        return onErrorUrl;
     }
 
     public List<String> getScopes() {
@@ -195,43 +203,9 @@ public class PluginConfiguration {
         }
     }
 
-    public static class Source {
-
-        private final String attribute;
-
-        private final String pattern;
-
-        public Source(String attribute, String pattern) {
-            this.attribute = attribute;
-            this.pattern = pattern;
-        }
-
-        public String getAttribute() {
-            return attribute;
-        }
-
-        public String getPattern() {
-            return pattern;
-        }
+    public record Source(String attribute, String pattern) {
     }
 
-    public static class TeamMapping {
-
-        private final List<Source> sources;
-
-        private final TeamRole role;
-
-        public TeamMapping(List<Source> sources, TeamRole role) {
-            this.sources = sources;
-            this.role = role;
-        }
-
-        public List<Source> getSources() {
-            return sources;
-        }
-
-        public TeamRole getRole() {
-            return role;
-        }
+    public record TeamMapping(List<Source> sources, TeamRole role) {
     }
 }

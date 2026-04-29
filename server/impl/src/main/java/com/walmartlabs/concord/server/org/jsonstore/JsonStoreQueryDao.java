@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.org.jsonstore;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.server.UuidGenerator;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record4;
@@ -29,16 +30,21 @@ import org.jooq.SelectJoinStep;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.JsonStoreQueries.JSON_STORE_QUERIES;
+import static java.util.Objects.requireNonNull;
 import static org.jooq.impl.DSL.value;
 
 public class JsonStoreQueryDao extends AbstractDao {
 
+    private final UuidGenerator uuidGenerator;
+
     @Inject
-    public JsonStoreQueryDao(@MainDB Configuration cfg) {
+    public JsonStoreQueryDao(@MainDB Configuration cfg, UuidGenerator uuidGenerator) {
         super(cfg);
+        this.uuidGenerator = requireNonNull(uuidGenerator);
     }
 
     public UUID getId(UUID storeId, String queryName) {
@@ -102,9 +108,10 @@ public class JsonStoreQueryDao extends AbstractDao {
     }
 
     private UUID insert(DSLContext tx, UUID storeId, String queryName, String text) {
+        UUID queryId = uuidGenerator.generate();
         return tx.insertInto(JSON_STORE_QUERIES)
-                .columns(JSON_STORE_QUERIES.JSON_STORE_ID, JSON_STORE_QUERIES.QUERY_NAME, JSON_STORE_QUERIES.QUERY_TEXT)
-                .values(value(storeId), value(queryName), value(text))
+                .columns(JSON_STORE_QUERIES.QUERY_ID, JSON_STORE_QUERIES.JSON_STORE_ID, JSON_STORE_QUERIES.QUERY_NAME, JSON_STORE_QUERIES.QUERY_TEXT)
+                .values(value(queryId), value(storeId), value(queryName), value(text))
                 .returning(JSON_STORE_QUERIES.QUERY_ID)
                 .fetchOne()
                 .getQueryId();

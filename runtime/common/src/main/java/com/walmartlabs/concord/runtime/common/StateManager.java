@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.common;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,11 +20,10 @@ package com.walmartlabs.concord.runtime.common;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.ObjectInputStreamWithClassLoader;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Constants;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -69,11 +68,11 @@ public final class StateManager {
         Path stateDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(Constants.Files.JOB_STATE_DIR_NAME);
 
-        IOUtils.deleteRecursively(stateDir);
+        PathUtils.deleteRecursively(stateDir);
 
         Path sessionFilesDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(Constants.Files.JOB_SESSION_FILES_DIR_NAME);
-        IOUtils.deleteRecursively(sessionFilesDir);
+        PathUtils.deleteRecursively(sessionFilesDir);
     }
 
     public static void saveResumeEvent(Path baseDir, String eventName) {
@@ -145,22 +144,11 @@ public final class StateManager {
 
         Path dst = stateDir.resolve("instance");
 
-        try (TemporaryPath tmp = IOUtils.tempFile("instance", "state");
+        try (TemporaryPath tmp = PathUtils.tempFile("instance", "state");
              OutputStream out = Files.newOutputStream(tmp.path())) {
 
             SerializationUtils.serialize(out, state);
             Files.move(tmp.path(), dst, REPLACE_EXISTING);
-        }
-    }
-
-    public static void archive(Path baseDir, Serializable state, Path result) throws IOException {
-        try (TemporaryPath tmp = IOUtils.tempDir("state-archive")) {
-            saveProcessState(tmp.path(), state);
-
-            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(result))) {
-                zip(zip, Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/", tmp.path().resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
-                zip(zip, Constants.Files.CONCORD_SYSTEM_DIR_NAME + "/", baseDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME));
-            }
         }
     }
 
@@ -192,13 +180,6 @@ public final class StateManager {
         } catch (IOException e) {
             throw new RuntimeException("Error while reading persisted storage " + storageName + ": " + e.getMessage(), e);
         }
-    }
-
-    private static void zip(ZipArchiveOutputStream zip, String name, Path src) throws IOException {
-        if (Files.notExists(src)) {
-            return;
-        }
-        IOUtils.zip(zip, name, src);
     }
 
     private StateManager() {

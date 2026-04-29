@@ -1,0 +1,44 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    # create a new API key
+    - task: concord
+      in:
+        action: createApiKey
+        username: admin
+        name: ${apiKeyName1}
+      out: result1
+    - log: "result1=${result1}"
+
+    # try creating a new API key with the same name
+    - try:
+        - task: concord
+          in:
+            action: createApiKey
+            username: admin
+            name: ${apiKeyName1}
+        - log: "result2=${result2}"
+      error:
+        - log: "error=${lastError}"
+
+    # try creating a new API key with the same name but ignore existings
+    - task: concord
+      in:
+        action: createApiKey
+        username: admin
+        name: ${apiKeyName1}
+        ignoreExisting: true
+      out: result3
+    - log: "result3=${result3}"
+
+    # create a new API key with predefined value
+    - task: concord
+      in:
+        action: createApiKey
+        username: admin
+        name: ${apiKeyName2}
+        key: ${apiKeyValue2}
+      out: result4
+    - log: "result4=${result4}"

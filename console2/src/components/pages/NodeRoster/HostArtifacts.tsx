@@ -34,7 +34,7 @@ import { useApi } from '../../../hooks/useApi';
 import { InputOnChangeData } from 'semantic-ui-react/dist/commonjs/elements/Input/Input';
 import RequestErrorActivity from '../../organisms/RequestErrorActivity';
 import { LoadingDispatch } from '../../../App';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 export interface ExternalProps {
     hostId: ConcordId;

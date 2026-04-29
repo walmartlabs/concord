@@ -21,9 +21,21 @@ package com.walmartlabs.concord.server.events;
  */
 
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
+import com.walmartlabs.concord.server.org.triggers.TriggerUtils;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 
-public interface TriggerEventInitiatorResolver {
+public class TriggerEventInitiatorResolver {
 
-    UserEntry resolve(TriggerEntry trigger, Event event);
+    public UserEntry resolve(TriggerEntry trigger, Event event) {
+        boolean useInitiator = TriggerUtils.isUseInitiator(trigger);
+        if (useInitiator) {
+            UserEntry initiator = event.initiator().get();
+            if (initiator != null) {
+                return initiator;
+            }
+        }
+
+        return UserPrincipal.assertCurrent().getUser();
+    }
 }

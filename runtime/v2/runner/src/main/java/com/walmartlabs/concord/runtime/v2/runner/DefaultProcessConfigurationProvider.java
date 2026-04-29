@@ -43,9 +43,11 @@ public class DefaultProcessConfigurationProvider implements Provider<ProcessConf
     private static final Logger log = LoggerFactory.getLogger(DefaultProcessConfigurationProvider.class);
 
     private final Path workDir;
+    private final ObjectMapper objectMapper;
 
     public DefaultProcessConfigurationProvider(Path workDir) {
         this.workDir = workDir;
+        this.objectMapper = new ObjectMapperProvider().get();
     }
 
     @Override
@@ -88,7 +90,7 @@ public class DefaultProcessConfigurationProvider implements Provider<ProcessConf
         }
     }
 
-    private static ProcessConfiguration readProcessConfiguration(UUID instanceId, Path workDir) throws IOException {
+    private ProcessConfiguration readProcessConfiguration(UUID instanceId, Path workDir) throws IOException {
         Path p = workDir.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
         if (!Files.exists(p)) {
             return ProcessConfiguration.builder()
@@ -96,11 +98,9 @@ public class DefaultProcessConfigurationProvider implements Provider<ProcessConf
                     .build();
         }
 
-        ObjectMapper om = ObjectMapperProvider.getInstance();
-
         try (InputStream in = Files.newInputStream(p)) {
             return ProcessConfiguration.builder()
-                    .from(om.readValue(in, ProcessConfiguration.class))
+                    .from(objectMapper.readValue(in, ProcessConfiguration.class))
                     .instanceId(instanceId)
                     .build();
         }

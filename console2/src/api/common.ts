@@ -85,13 +85,21 @@ export const parseTextError = async (resp: Response) => {
 };
 
 export const makeError = async (resp: Response): Promise<RequestError> => {
-    const contentType = resp.headers.get('Content-Type') || '';
-    if (contentType.indexOf('vnd.concord-validation-errors-v1+json') >= 0) {
-        return parseSiestaError(resp);
-    } else if (contentType.indexOf('json') >= 0) {
-        return parseJsonError(resp);
-    } else if (contentType.indexOf('text/plain') >= 0) {
-        return parseTextError(resp);
+    const contentLength = resp.headers.get('Content-Length');
+    if (contentLength !== '0') {
+        const contentType = resp.headers.get('Content-Type') || '';
+        try {
+            if (contentType.indexOf('vnd.concord-validation-errors-v1+json') >= 0) {
+                return parseSiestaError(resp);
+            } else if (contentType.indexOf('json') >= 0) {
+                return parseJsonError(resp);
+            } else if (contentType.indexOf('text/plain') >= 0) {
+                return parseTextError(resp);
+            }
+        } catch (e) {
+            console.warn('makeError -> error while parsing the response: %o', e);
+            // fall back to the default error handling
+        }
     }
 
     return {
@@ -275,6 +283,36 @@ export const parseNestedQueryParams = (params: QueryParams, keys: string[]): Que
 export const fetchJson = async <T>(uri: string, init?: RequestInit): Promise<T> => {
     const response = await managedFetch(uri, init);
     return response.json();
+};
+
+const wait = (delayMs: number) =>
+    new Promise<void>((resolve) => {
+        setTimeout(resolve, delayMs);
+    });
+
+export const retryRequest = async <T>(
+    request: () => Promise<T>,
+    shouldRetry: (error: RequestError) => boolean,
+    attempts = 5,
+    delayMs = 250
+): Promise<T> => {
+    let lastError: RequestError;
+
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+        try {
+            return await request();
+        } catch (e) {
+            lastError = e as RequestError;
+
+            if (attempt === attempts || !shouldRetry(lastError)) {
+                throw e;
+            }
+
+            await wait(delayMs);
+        }
+    }
+
+    throw lastError;
 };
 
 export interface EntityOwner {

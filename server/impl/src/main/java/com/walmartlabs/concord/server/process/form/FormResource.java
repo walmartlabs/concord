@@ -116,10 +116,14 @@ public class FormResource implements Resource {
                                      @PathParam("formName") String formName,
                                      @Parameter(schema = @Schema(type = "object", implementation = Object.class)) MultipartInput data) {
 
-        if (isV2(processInstanceId)) {
-            return formResourceV2.submit(processInstanceId, formName, data);
-        } else {
-            return formResourceV1.submit(processInstanceId, formName, data);
+        try {
+            if (isV2(processInstanceId)) {
+                return formResourceV2.submit(processInstanceId, formName, data);
+            } else {
+                return formResourceV1.submit(processInstanceId, formName, data);
+            }
+        } finally {
+            data.close();
         }
     }
 

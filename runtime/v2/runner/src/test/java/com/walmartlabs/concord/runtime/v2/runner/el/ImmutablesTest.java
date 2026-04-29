@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.SensitiveDataProcessor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
@@ -28,9 +29,11 @@ import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
 
 public class ImmutablesTest {
 
@@ -41,7 +44,7 @@ public class ImmutablesTest {
                 .build();
 
         EvalContextFactory ecf = new EvalContextFactoryImpl();
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders(), new FunctionHolder(), List.of(), List.of(), mock(SensitiveDataProcessor.class));
         Map<String, Object> vars = Collections.singletonMap("testBean", testBean);
 
         // ---

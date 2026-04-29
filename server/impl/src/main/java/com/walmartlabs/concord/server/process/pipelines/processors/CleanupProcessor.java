@@ -20,19 +20,17 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.slf4j.MDC;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-@Named
 public class CleanupProcessor implements FinalizerProcessor {
 
     private final ProcessLogManager logManager;
@@ -57,7 +55,7 @@ public class CleanupProcessor implements FinalizerProcessor {
         }
 
         try {
-            IOUtils.deleteRecursively(p);
+            PathUtils.deleteRecursively(p);
         } catch (IOException e) {
             logManager.warn(processKey, "Unable to delete the working directory: {}", p, e);
         }

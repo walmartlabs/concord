@@ -41,14 +41,14 @@ import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryE
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
-import org.jooq.Record;
 import org.jooq.*;
+import org.jooq.Record;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.jooq.util.postgres.PostgresDSL;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -63,12 +63,9 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QU
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class ProcessQueueDao extends AbstractDao {
 
     public static final String ENQUEUED_NOW_METRIC = "ENQUEUED_NOW";
-
-    private static final Set<ProcessDataInclude> DEFAULT_INCLUDES = Collections.singleton(ProcessDataInclude.CHILDREN_IDS);
 
     private static final TypeReference<List<ProcessCheckpointEntry>> LIST_OF_CHECKPOINTS = new TypeReference<List<ProcessCheckpointEntry>>() {
     };
@@ -140,7 +137,7 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
+    public void updateAgentId(DSLContext tx, ProcessKey processKey, @Nullable String agentId, ProcessStatus status) {
         UUID instanceId = processKey.getInstanceId();
 
         int i = tx.update(PROCESS_QUEUE)
@@ -381,10 +378,6 @@ public class ProcessQueueDao extends AbstractDao {
 
             return i == 1;
         });
-    }
-
-    public ProcessEntry get(ProcessKey processKey) {
-        return get(processKey, DEFAULT_INCLUDES);
     }
 
     public ProcessEntry get(ProcessKey processKey, Set<ProcessDataInclude> includes) {

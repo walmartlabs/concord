@@ -32,28 +32,31 @@ import com.walmartlabs.concord.server.process.event.ProcessEventManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKeyCache;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-@Named
 public class ProcessQueueManager {
+
+    private static final Set<ProcessDataInclude> DEFAULT_INCLUDES = Collections.singleton(ProcessDataInclude.CHILDREN_IDS);
+    private static final Set<ProcessStatus> TO_ENQUEUED_STATUSES = Set.of(
+            ProcessStatus.PREPARING,
+            ProcessStatus.RESUMING,
+            ProcessStatus.SUSPENDED
+    );
 
     private final ProcessQueueDao queueDao;
     private final ProcessKeyCache keyCache;
     private final ProcessEventManager eventManager;
     private final ProcessLogManager processLogManager;
     private final Set<ProcessStatusListener> statusListeners;
-
-    private static final Set<ProcessStatus> TO_ENQUEUED_STATUSES = new HashSet<>(Arrays.asList(
-            ProcessStatus.PREPARING, ProcessStatus.RESUMING, ProcessStatus.SUSPENDED
-    ));
 
     @Inject
     public ProcessQueueManager(ProcessQueueDao queueDao,
@@ -193,9 +196,13 @@ public class ProcessQueueManager {
     /**
      * Updates the process' agent ID and status.
      */
-    public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
+    public void updateAgentId(DSLContext tx, ProcessKey processKey, @Nullable String agentId, ProcessStatus status) {
         queueDao.updateAgentId(tx, processKey, agentId, status);
         notifyStatusChange(tx, processKey, status);
+    }
+
+    public ProcessEntry get(ProcessKey processKey) {
+        return queueDao.get(processKey, DEFAULT_INCLUDES);
     }
 
     public ProcessEntry get(PartialProcessKey partialProcessKey) {
@@ -203,7 +210,7 @@ public class ProcessQueueManager {
         if (key == null) {
             return null;
         }
-        return queueDao.get(key);
+        return queueDao.get(key, DEFAULT_INCLUDES);
     }
 
     public UUID getProjectId(PartialProcessKey partialProcessKey) {

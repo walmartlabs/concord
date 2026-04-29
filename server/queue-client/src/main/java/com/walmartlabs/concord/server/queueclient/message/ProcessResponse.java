@@ -21,15 +21,20 @@ package com.walmartlabs.concord.server.queueclient.message;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.imports.Imports;
 
+import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 public class ProcessResponse extends Message {
 
     private final String sessionToken;
     private final UUID processId;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    private final OffsetDateTime processCreatedAt;
     private final String orgName; // TODO rename to secretOrgName
     private final String repoUrl;
     private final String repoPath;
@@ -37,25 +42,29 @@ public class ProcessResponse extends Message {
     private final String repoBranch;
     private final String secretName;
     private final Imports imports;
+    private final Map<String, Object> requirements;
 
     @JsonCreator
     public ProcessResponse(
             @JsonProperty("correlationId") long correlationId,
             @JsonProperty("sessionToken") String sessionToken,
             @JsonProperty("processId") UUID processId,
+            @JsonProperty("processCreatedAt") OffsetDateTime processCreatedAt,
             @JsonProperty("orgName") String orgName,
             @JsonProperty("repoUrl") String repoUrl,
             @JsonProperty("repoPath") String repoPath,
             @JsonProperty("commitId") String commitId,
             @JsonProperty("repoBranch") String repoBranch,
             @JsonProperty("secretName") String secretName,
-            @JsonProperty("imports") Imports imports) {
+            @JsonProperty("imports") Imports imports,
+            @JsonProperty("requirements") Map<String, Object> requirements) {
 
         super(MessageType.PROCESS_RESPONSE);
 
         setCorrelationId(correlationId);
         this.sessionToken = sessionToken;
         this.processId = processId;
+        this.processCreatedAt = processCreatedAt;
         this.orgName = orgName;
         this.repoUrl = repoUrl;
         this.repoPath = repoPath;
@@ -63,6 +72,7 @@ public class ProcessResponse extends Message {
         this.repoBranch = repoBranch;
         this.secretName = secretName;
         this.imports = imports;
+        this.requirements = requirements;
     }
 
     public String getSessionToken() {
@@ -71,6 +81,10 @@ public class ProcessResponse extends Message {
 
     public UUID getProcessId() {
         return processId;
+    }
+
+    public OffsetDateTime getProcessCreatedAt() {
+        return processCreatedAt;
     }
 
     public String getOrgName() {
@@ -101,11 +115,16 @@ public class ProcessResponse extends Message {
         return imports;
     }
 
+    public Map<String, Object> getRequirements() {
+        return requirements;
+    }
+
     @Override
     public String toString() {
         return "ProcessResponse{" +
-                "sessionToken='" + sessionToken + '\'' +
+                "sessionToken='***'" +
                 ", processId=" + processId +
+                ", processCreatedAt=" + processCreatedAt + '\'' +
                 ", orgName='" + orgName + '\'' +
                 ", repoUrl='" + repoUrl + '\'' +
                 ", repoPath='" + repoPath + '\'' +
@@ -113,6 +132,7 @@ public class ProcessResponse extends Message {
                 ", repoBranch='" + repoBranch + '\'' +
                 ", secretName='" + secretName + '\'' +
                 ", imports=" + imports +
+                ", requirements=" + requirements +
                 '}';
     }
 }

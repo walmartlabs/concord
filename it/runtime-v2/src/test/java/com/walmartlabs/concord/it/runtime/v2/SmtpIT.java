@@ -28,6 +28,7 @@ import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetup;
 import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.it.common.Version;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.Testcontainers;
@@ -40,10 +41,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class SmtpIT extends AbstractTest {
 
     @RegisterExtension
-    GreenMailExtension mailServer = new GreenMailExtension(new ServerSetup(0, "0.0.0.0", ServerSetup.PROTOCOL_SMTP));
+    public static final GreenMailExtension mailServer = new GreenMailExtension(new ServerSetup(0, "0.0.0.0", ServerSetup.PROTOCOL_SMTP))
+            .withPerMethodLifecycle(false);
 
     @RegisterExtension
-    public final ConcordRule concord = ConcordConfiguration.configure()
+    public static final ConcordRule concord = ConcordConfiguration.configure()
             .containerListener(new ContainerListener() {
                 @Override
                 public void beforeStart(ContainerType type) {
@@ -60,7 +62,7 @@ public class SmtpIT extends AbstractTest {
 
         // SMTP host and port must be accessible by the process
         // i.e. when running in a container the host must point to the docker host's address
-        concordYml = concordYml.replaceAll("PROJECT_VERSION", ITConstants.PROJECT_VERSION)
+        concordYml = concordYml.replaceAll("PROJECT_VERSION", Version.PROJECT_VERSION)
                 .replaceAll("SMTP_HOST", concord.hostAddressAccessibleByContainers())
                 .replaceAll("SMTP_PORT", String.valueOf(mailServer.getSmtp().getPort()));
 

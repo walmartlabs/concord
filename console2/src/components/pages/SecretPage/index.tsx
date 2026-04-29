@@ -19,16 +19,15 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps } from 'react-router';
-import { Link } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from '@/router';
+import { Link } from 'react-router';
 import { Breadcrumb } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
+import { LoadingState } from '../../../App';
+import { BreadcrumbsToolbar } from '../../organisms';
 import { SecretActivity } from '../../organisms';
 import { TabLink } from '../../organisms/SecretActivity';
-import { BreadcrumbsToolbar } from '../../organisms';
-import { LoadingState } from '../../../App';
-import { useCallback, useState } from 'react';
 
 interface RouteProps {
     orgName: ConcordKey;
@@ -51,14 +50,12 @@ const pathToTab = (s: string): TabLink => {
 
 const SecretPage = (props: RouteComponentProps<RouteProps>) => {
     const loading = React.useContext(LoadingState);
-
     const { orgName, secretName } = props.match.params;
     const activeTab = pathToTab(props.location.pathname);
+    const [refreshKey, setRefreshKey] = React.useState(0);
 
-    const [refresh, toggleRefresh] = useState<boolean>(false);
-
-    const refreshHandler = useCallback(() => {
-        toggleRefresh((prevState) => !prevState);
+    const refreshHandler = React.useCallback(() => {
+        setRefreshKey((prevState) => prevState + 1);
     }, []);
 
     return (
@@ -72,13 +69,13 @@ const SecretPage = (props: RouteComponentProps<RouteProps>) => {
             </BreadcrumbsToolbar>
 
             <SecretActivity
+                key={refreshKey}
                 orgName={orgName}
                 secretName={secretName}
                 activeTab={activeTab}
-                forceRefresh={refresh}
             />
         </>
     );
 };
 
-export default SecretPage;
+export default withRouter(SecretPage);

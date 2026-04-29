@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.console;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.server.cfg.ConsoleConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -56,13 +57,13 @@ import com.walmartlabs.concord.server.user.UserManager;
 import org.jooq.Configuration;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import java.net.URI;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
@@ -85,6 +86,7 @@ public class ConsoleService implements Resource {
     private final JsonStoreQueryDao storageQueryDao;
     private final JsonStoreAccessManager jsonStoreAccessManager;
     private final ConsoleServiceDao consoleServiceDao;
+    private final ConsoleConfiguration consoleCfg;
 
     @Inject
     public ConsoleService(ProjectDao projectDao,
@@ -99,7 +101,8 @@ public class ConsoleService implements Resource {
                           JsonStoreDao storageDao,
                           JsonStoreQueryDao storageQueryDao,
                           JsonStoreAccessManager jsonStoreAccessManager,
-                          ConsoleServiceDao consoleServiceDao) {
+                          ConsoleServiceDao consoleServiceDao,
+                          ConsoleConfiguration consoleCfg) {
 
         this.projectDao = projectDao;
         this.repositoryManager = repositoryManager;
@@ -114,6 +117,17 @@ public class ConsoleService implements Resource {
         this.storageQueryDao = storageQueryDao;
         this.jsonStoreAccessManager = jsonStoreAccessManager;
         this.consoleServiceDao = consoleServiceDao;
+        this.consoleCfg = consoleCfg;
+    }
+
+    @GET
+    @Path("/cfg")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response getCfg() {
+        if (consoleCfg.isUseDefaultCfg()) {
+            return Response.seeOther(URI.create("/cfg.js")).build();
+        }
+        return Response.ok(consoleCfg.getCfg()).build();
     }
 
     @GET
@@ -133,10 +147,11 @@ public class ConsoleService implements Resource {
         }
 
         Set<String> userLdapGroups = Optional.ofNullable(LdapPrincipal.getCurrent())
-                    .map(LdapPrincipal::getGroups)
-                    .orElse(Set.of());
+                .map(LdapPrincipal::getGroups)
+                .orElse(Set.of());
 
         return UserInfoResponse.builder()
+                .id(u.getId())
                 .displayName(displayName(u, p))
                 .teams(consoleServiceDao.listTeams(p.getId()))
                 .roles(u.getRoles().stream().map(RoleEntry::getName).toList())
@@ -162,6 +177,10 @@ public class ConsoleService implements Resource {
 
         UserEntry user = userManager.get(p.getId())
                 .orElseThrow(() -> new ConcordApplicationException("Unknown user: " + p.getId()));
+
+        if (user.isDisabled()) {
+            throw new UnauthorizedException("User is disabled: " + p.getId());
+        }
 
         return new UserResponse(p.getRealm(), user.getName(), user.getDomain(), displayName(u, p), user.getOrgs());
     }
@@ -367,7 +386,6 @@ public class ConsoleService implements Resource {
         return displayName;
     }
 
-    @Named
     public static class ConsoleServiceDao extends AbstractDao {
 
         @Inject

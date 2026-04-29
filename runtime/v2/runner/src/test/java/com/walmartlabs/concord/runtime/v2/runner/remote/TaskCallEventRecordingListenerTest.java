@@ -38,33 +38,33 @@ public class TaskCallEventRecordingListenerTest {
     @Test
     public void testMaskVars() throws Exception {
         String in = "{" +
-                "   \"a\":1," +
-                "   \"b\":2," +
-                "   \"c\":{" +
-                "      \"c1\":3," +
-                "      \"c2\":4," +
-                "      \"c3\":{" +
-                "         \"c31\":5," +
-                "         \"c32\":6" +
-                "      }" +
-                "   }" +
-                "}";
+                    "   \"a\":1," +
+                    "   \"b\":2," +
+                    "   \"c\":{" +
+                    "      \"c1\":3," +
+                    "      \"c2\":4," +
+                    "      \"c3\":{" +
+                    "         \"c31\":5," +
+                    "         \"c32\":6" +
+                    "      }" +
+                    "   }" +
+                    "}";
 
         List<String> blackList = Arrays.asList("b", "c.c1", "c.c3.c31");
         Map<String, Object> result = TaskCallEventRecordingListener.maskVars(vars(in), blackList);
 
         String expected = "{" +
-                "   \"a\":1," +
-                "   \"b\":\"***\"," +
-                "   \"c\":{" +
-                "      \"c1\":\"***\"," +
-                "      \"c2\":4," +
-                "      \"c3\":{" +
-                "         \"c31\":\"***\"," +
-                "         \"c32\":6" +
-                "      }" +
-                "   }" +
-                "}";
+                          "   \"a\":1," +
+                          "   \"b\":\"***\"," +
+                          "   \"c\":{" +
+                          "      \"c1\":\"***\"," +
+                          "      \"c2\":4," +
+                          "      \"c3\":{" +
+                          "         \"c31\":\"***\"," +
+                          "         \"c32\":6" +
+                          "      }" +
+                          "   }" +
+                          "}";
         assertEquals(vars(expected), result);
     }
 

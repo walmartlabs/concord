@@ -20,7 +20,6 @@
 import { isObject } from 'formik';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import ReactJson from 'react-json-view';
 import { Grid, Loader, Table } from 'semantic-ui-react';
 
 import { ConcordId, RequestError } from '../../../api/common';
@@ -31,6 +30,7 @@ import {
     VariableMapping
 } from '../../../api/process/event';
 import { comparators } from '../../../utils';
+import { ReactJson } from '../../atoms';
 import { RequestErrorMessage } from '../../molecules';
 import { ScrollableX } from '../../atoms/Scrollable';
 
@@ -126,7 +126,7 @@ const renderDetailsV2 = (label: string, data: {}) => (
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {Object.keys(data).map((key, index) =>
+                    {Object.keys(data).sort().map((key, index) =>
                         renderVariablesV2(key, data[key], index)
                     )}
                 </Table.Body>

@@ -28,7 +28,6 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,7 +37,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-@Named
 public class AttachmentStoringProcessor implements PayloadProcessor {
 
     /**

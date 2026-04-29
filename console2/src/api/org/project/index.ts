@@ -26,7 +26,9 @@ import {
     fetchJson,
     GenericOperationResult,
     OperationResult,
-    queryParams
+    queryParams,
+    RequestError,
+    retryRequest
 } from '../../common';
 
 export enum ProjectVisibility {
@@ -36,6 +38,7 @@ export enum ProjectVisibility {
 
 export interface ProjectEntryMetaUI {
     processList?: ColumnDefinition[];
+    childrenProcessList?: ColumnDefinition[];
 }
 
 export interface ProjectEntryMeta {
@@ -58,6 +61,20 @@ export enum OutVariablesMode {
     EVERYONE = 'EVERYONE'
 }
 
+export enum ProcessExecMode {
+    DISABLED = 'DISABLED',
+    READERS = 'READERS',
+    WRITERS = 'WRITERS'
+}
+
+const shouldRetryProjectRequest = (error: RequestError) => {
+    if (!error || (error.status !== 400 && error.status !== 404)) {
+        return false;
+    }
+
+    return /(?:Organization|Project) not found:/i.test(error.details || '');
+};
+
 export interface ProjectEntry {
     id: ConcordId;
     name: ConcordKey;
@@ -75,6 +92,8 @@ export interface ProjectEntry {
     meta?: ProjectEntryMeta;
 
     outVariablesMode: OutVariablesMode;
+
+    processExecMode: ProcessExecMode;
 }
 
 export interface NewProjectEntry {
@@ -92,6 +111,7 @@ export interface UpdateProjectEntry {
     visibility?: ProjectVisibility;
     rawPayloadMode?: RawPayloadMode;
     outVariablesMode?: OutVariablesMode;
+    processExecMode?: ProcessExecMode;
 }
 
 export interface PaginatedProjectEntries {
@@ -227,8 +247,11 @@ export const encrypt = (
 export const getProjectAccess = (
     orgName: ConcordKey,
     projectName: ConcordKey
-): Promise<GenericOperationResult> => {
-    return fetchJson(`/api/v1/org/${orgName}/project/${projectName}/access`);
+): Promise<Array<ResourceAccessEntry>> => {
+    return retryRequest(
+        () => fetchJson(`/api/v1/org/${orgName}/project/${projectName}/access`),
+        shouldRetryProjectRequest
+    );
 };
 
 export const updateProjectAccess = (
@@ -244,7 +267,10 @@ export const updateProjectAccess = (
         body: JSON.stringify(entries)
     };
 
-    return fetchJson(`/api/v1/org/${orgName}/project/${projectName}/access/bulk`, opts);
+    return retryRequest(
+        () => fetchJson(`/api/v1/org/${orgName}/project/${projectName}/access/bulk`, opts),
+        shouldRetryProjectRequest
+    );
 };
 
 export const getProjectConfiguration = (

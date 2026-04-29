@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.runtime.v2;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,8 +27,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.util.Base64;
 
 public final class ConcordConfiguration {
+
+    private static final String DEPENDENCY_RESOLVE_TIMEOUT = System.getProperty("it.runtime.v2.dependencyResolveTimeout", "2 minutes");
 
     private static final Path sharedDir = Paths.get(System.getProperty("java.io.tmpdir")).resolve("concord-it");
 
@@ -44,13 +49,15 @@ public final class ConcordConfiguration {
                 throw new RuntimeException(e);
             }
         }
+
+        writePrivateKey(sharedDir.resolve("signing.pem"));
     }
 
     public static ConcordRule configure() {
         ConcordRule concord = new ConcordRule()
                 .pathToRunnerV1(null)
                 .pathToRunnerV2("target/runner-v2.jar")
-                .dbImage(System.getProperty("db.image", "library/postgres:10"))
+                .dbImage(System.getProperty("db.image", "library/postgres:14"))
                 .serverImage(System.getProperty("server.image", "walmartlabs/concord-server"))
                 .agentImage(System.getProperty("agent.image", "walmartlabs/concord-agent"))
                 .pullPolicy(PullPolicy.defaultPolicy())
@@ -58,7 +65,29 @@ public final class ConcordConfiguration {
                 .streamAgentLogs(true)
                 .sharedContainerDir(sharedDir)
                 .useLocalMavenRepository(true)
-                .extraConfigurationSupplier(() -> "concord-agent { prefork { enabled = true } }");
+                .extraConfigurationSupplier(() -> """
+                    concord-server {
+                        queue {
+                            enqueuePollInterval = "250 milliseconds"
+                            dispatcher {
+                                pollDelay = "250 milliseconds"
+                            }
+                        }
+                        process {
+                            signingKeyPath = "%%sharedDir%%/signing.pem"
+                        }
+                    }
+                    concord-agent {
+                        dependencyResolveTimeout = "%%dependencyResolveTimeout%%"
+                        logMaxDelay = "250 milliseconds"
+                        pollInterval = "250 milliseconds"
+                        prefork {
+                            enabled = true
+                        }
+                    }
+                    """
+                        .replace("%%sharedDir%%", sharedDir().toString())
+                        .replace("%%dependencyResolveTimeout%%", DEPENDENCY_RESOLVE_TIMEOUT));
 
         boolean localMode = Boolean.parseBoolean(System.getProperty("it.local.mode"));
         if (localMode) {
@@ -87,6 +116,23 @@ public final class ConcordConfiguration {
             default:
                 throw new IllegalArgumentException("Unknown mode: " + concord.mode());
         }
+    }
+
+    private static Path writePrivateKey(Path targetFile) {
+        try {
+            return Files.writeString(targetFile, generatePkcs8PemPrivateKey());
+        } catch (Exception e) {
+            throw new IllegalStateException("Error writing server username signing key.", e);
+        }
+    }
+
+    private static String generatePkcs8PemPrivateKey() throws Exception {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(2048);
+        KeyPair pair = keyGen.generateKeyPair();
+        byte[] pkcs8 = pair.getPrivate().getEncoded();
+        String base64 = Base64.getMimeEncoder(64, "\n".getBytes()).encodeToString(pkcs8);
+        return "-----BEGIN PRIVATE KEY-----\n" + base64 + "\n-----END PRIVATE KEY-----";
     }
 
     private ConcordConfiguration() {

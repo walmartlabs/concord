@@ -20,7 +20,8 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.AuthTokenProvider;
+import com.walmartlabs.concord.common.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +38,8 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
 
     private final GitClient client;
 
-    public GitCliRepositoryProvider(GitClientConfiguration cfg) {
-        this.client = new GitClient(cfg);
+    public GitCliRepositoryProvider(GitClientConfiguration cfg, AuthTokenProvider authProvider) {
+        this.client = new GitClient(cfg, authProvider);
     }
 
     @Override
@@ -62,7 +63,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
             } catch (RepositoryException e) {
                 lastException = e;
                 try {
-                    IOUtils.deleteRecursively(request.destination());
+                    PathUtils.deleteRecursively(request.destination());
                 } catch (IOException ee) {
                     log.warn("fetch ['{}', '{}', '{}'] -> cleanup error: {}",
                             request.url(), request.version(), request.destination(), e.getMessage());
@@ -79,7 +80,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
         List<String> allIgnorePatterns = new ArrayList<>();
         allIgnorePatterns.add(GIT_FILES);
         allIgnorePatterns.addAll(ignorePatterns);
-        IOUtils.copy(src, dst, allIgnorePatterns, snapshot, StandardCopyOption.REPLACE_EXISTING);
+        PathUtils.copy(src, dst, allIgnorePatterns, snapshot, StandardCopyOption.REPLACE_EXISTING);
         return snapshot;
     }
 }

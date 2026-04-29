@@ -27,21 +27,55 @@ import com.walmartlabs.concord.agentoperator.crd.AgentPoolConfiguration;
 import com.walmartlabs.concord.agentoperator.scheduler.AgentPoolInstance;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 public final class AgentConfigMap {
 
+    private static final Logger log = LoggerFactory.getLogger(AgentConfigMap.class);
+
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public static ConfigMap get(KubernetesClient client, String configMapName) {
-        return client.configMaps().withName(configMapName).get();
+        try {
+            return client.configMaps().withName(configMapName).get();
+        } catch (KubernetesClientException e) {
+            log.warn("get ['{}'] -> error while getting a configmap: {}", configMapName, e.getMessage());
+            throw e;
+        }
     }
 
     public static void create(KubernetesClient client, AgentPoolInstance poolInstance, String configMapName) throws IOException {
-        ConfigMap m = prepare(client, poolInstance, configMapName);
-        client.configMaps().create(m);
+        try {
+            ConfigMap m = prepare(client, poolInstance, configMapName);
+            client.configMaps().resource(m).create();
+        } catch (KubernetesClientException e) {
+            log.warn("create ['{}', '{}'] -> error while creating a configmap: {}", poolInstance.getName(), configMapName, e.getMessage());
+            throw e;
+        }
+    }
+
+    public static void delete(KubernetesClient client, String configMapName) {
+        try {
+            client.configMaps().withName(configMapName).delete();
+
+            // wait till it's actually removed
+            while (client.configMaps().withName(configMapName).get() != null) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+        } catch (KubernetesClientException e) {
+            log.warn("delete ['{}'] -> error while deleting a configmap: {}", configMapName, e.getMessage());
+            throw e;
+        }
     }
 
     public static boolean hasChanges(KubernetesClient client, AgentPoolInstance poolInstance, ConfigMap a) throws IOException {
@@ -54,13 +88,18 @@ public final class AgentConfigMap {
     }
 
     private static ConfigMap prepare(KubernetesClient client, AgentPoolInstance poolInstance, String configMapName) throws IOException {
-        AgentPoolConfiguration spec = poolInstance.getResource().getSpec();
+        try {
+            AgentPoolConfiguration spec = poolInstance.getResource().getSpec();
 
-        String configMapYaml = objectMapper.writeValueAsString(spec.getConfigMap())
-                .replaceAll("%%configMapName%%", configMapName)
-                .replace("%%preStopHook%%", escape(Resources.get("/prestop-hook.sh")));
+            String configMapYaml = objectMapper.writeValueAsString(spec.getConfigMap())
+                    .replaceAll("%%configMapName%%", configMapName)
+                    .replace("%%preStopHook%%", escape(Resources.get("/prestop-hook.sh")));
 
-        return client.configMaps().load(new ByteArrayInputStream(configMapYaml.getBytes())).get();
+            return client.configMaps().load(new ByteArrayInputStream(configMapYaml.getBytes())).item();
+        } catch (KubernetesClientException e) {
+            log.warn("prepare ['{}', '{}'] -> error while preparing a configmap: {}", poolInstance.getName(), configMapName, e.getMessage());
+            throw e;
+        }
     }
 
     private static String escape(String str) throws JsonProcessingException {

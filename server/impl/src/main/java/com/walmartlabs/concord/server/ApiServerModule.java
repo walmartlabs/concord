@@ -28,7 +28,7 @@ import com.walmartlabs.concord.server.boot.resteasy.ResteasyModule;
 import com.walmartlabs.concord.server.boot.servlets.FormServletHolder;
 import com.walmartlabs.concord.server.boot.statics.StaticResourcesConfigurator;
 import com.walmartlabs.concord.server.boot.validation.ValidationModule;
-import com.walmartlabs.concord.server.websocket.ConcordWebSocketServlet;
+import com.walmartlabs.concord.server.agent.websocket.ConcordWebSocketServlet;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.web.mgt.WebSecurityManager;
 import org.eclipse.jetty.ee8.servlet.FilterHolder;
@@ -60,11 +60,6 @@ public class ApiServerModule implements Module {
 
         newSetBinder(binder, FilterHolder.class).addBinding().to(ShiroFilterHolder.class).in(SINGLETON);
 
-        // HttpServlet
-
-        newSetBinder(binder, HttpServlet.class).addBinding().to(LogServlet.class).in(SINGLETON);
-        newSetBinder(binder, HttpServlet.class).addBinding().to(ConcordWebSocketServlet.class).in(SINGLETON);
-
         // ServletHolder
 
         bindServletHolder(binder, FormServletHolder.class);
@@ -72,6 +67,7 @@ public class ApiServerModule implements Module {
         // RequestErrorHandler
 
         newSetBinder(binder, RequestErrorHandler.class).addBinding().to(FormRequestErrorHandler.class);
+        newSetBinder(binder, RequestErrorHandler.class).addBinding().to(GenericRequestErrorHandler.class);
 
         // ContextHandlerConfigurator
 
@@ -81,7 +77,6 @@ public class ApiServerModule implements Module {
 
         newSetBinder(binder, ServletContextListener.class).addBinding().to(ShiroListener.class).in(SINGLETON);
         newSetBinder(binder, FilterChainConfigurator.class).addBinding().to(ConcordFilterChainConfigurator.class).in(SINGLETON);
-        newSetBinder(binder, AuthenticationHandler.class).addBinding().to(ConcordAuthenticationHandler.class).in(SINGLETON);
 
         binder.bind(ConcordSecurityManager.class).in(SINGLETON);
         binder.bind(SecurityManager.class).to(ConcordSecurityManager.class);

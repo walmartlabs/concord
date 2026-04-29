@@ -27,7 +27,7 @@ import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.jupiter.api.Test;
@@ -47,7 +47,7 @@ import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static com.walmartlabs.concord.common.IOUtils.createTempFile;
+import static com.walmartlabs.concord.common.PathUtils.createTempFile;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 
 public class TemplateIT extends AbstractTest {
@@ -128,7 +128,7 @@ public class TemplateIT extends AbstractTest {
                     .willReturn(WireMock.aResponse()
                             .withStatus(200)
                             .withHeader("Content-Type", "application/octet-stream")
-                            .withBody(IOUtils.toByteArray(is))
+                            .withBody(is.readAllBytes())
                     )
             );
         } catch (Exception e) {
@@ -148,7 +148,7 @@ public class TemplateIT extends AbstractTest {
     private static Path createTemplate(Path templateDir) throws IOException {
         Path tmpZip = createTempFile("runtime-v2Template", ".zip");
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmpZip))) {
-            IOUtils.zip(zip, templateDir);
+            ZipUtils.zip(zip, templateDir);
         }
 
         if (!tmpZip.toFile().setReadable(true, false)) {

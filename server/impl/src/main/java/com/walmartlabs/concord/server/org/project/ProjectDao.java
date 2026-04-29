@@ -25,7 +25,9 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
+import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.jooq.enums.OutVariablesMode;
+import com.walmartlabs.concord.server.jooq.enums.ProcessExecMode;
 import com.walmartlabs.concord.server.jooq.enums.RawPayloadMode;
 import com.walmartlabs.concord.server.jooq.tables.Organizations;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
@@ -39,10 +41,7 @@ import org.jooq.*;
 
 import javax.inject.Inject;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 
 import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
@@ -52,17 +51,21 @@ import static com.walmartlabs.concord.server.jooq.tables.ProjectTeamAccess.PROJE
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
+import static java.util.Objects.requireNonNull;
 import static org.jooq.impl.DSL.*;
 
 public class ProjectDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
+    private final UuidGenerator uuidGenerator;
 
     @Inject
     public ProjectDao(@MainDB Configuration cfg,
-                      ConcordObjectMapper objectMapper) {
+                      ConcordObjectMapper objectMapper,
+                      UuidGenerator uuidGenerator) {
         super(cfg);
-        this.objectMapper = objectMapper;
+        this.objectMapper = requireNonNull(objectMapper);
+        this.uuidGenerator = requireNonNull(uuidGenerator);
     }
 
     @Override
@@ -119,7 +122,7 @@ public class ProjectDao extends AbstractDao {
 
         Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME).from(ORGANIZATIONS).where(ORGANIZATIONS.ORG_ID.eq(p.ORG_ID)).asField();
 
-        Record16<UUID, String, String, UUID, String, JSONB, String, UUID, String, String, String, String, RawPayloadMode, JSONB, OutVariablesMode, OffsetDateTime> r = tx.select(
+        Record17<UUID, String, String, UUID, String, JSONB, String, UUID, String, String, String, String, RawPayloadMode, JSONB, OutVariablesMode, ProcessExecMode, OffsetDateTime> r = tx.select(
                 p.PROJECT_ID,
                 p.PROJECT_NAME,
                 p.DESCRIPTION,
@@ -135,6 +138,7 @@ public class ProjectDao extends AbstractDao {
                 p.RAW_PAYLOAD_MODE,
                 p.META,
                 p.OUT_VARIABLES_MODE,
+                p.PROCESS_EXEC_MODE,
                 p.CREATED_AT)
                 .from(p)
                 .leftJoin(u).on(u.USER_ID.eq(p.OWNER_ID))
@@ -156,30 +160,33 @@ public class ProjectDao extends AbstractDao {
                 cfg,
                 ProjectVisibility.valueOf(r.get(p.VISIBILITY)),
                 toOwner(r.get(p.OWNER_ID), r.get(u.USERNAME), r.get(u.DOMAIN), r.get(u.DISPLAY_NAME), r.get(u.USER_TYPE)),
-                r.get(p.RAW_PAYLOAD_MODE) != RawPayloadMode.DISABLED,
                 r.get(p.RAW_PAYLOAD_MODE),
                 objectMapper.fromJSONB(r.get(p.META)),
                 r.get(p.OUT_VARIABLES_MODE),
+                r.get(p.PROCESS_EXEC_MODE),
                 r.get(p.CREATED_AT));
     }
 
     public UUID insert(UUID orgId, String name, String description, UUID ownerId, Map<String, Object> cfg,
                        ProjectVisibility visibility, RawPayloadMode rawPayloadMode, byte[] encryptedKey, Map<String, Object> meta,
-                       OutVariablesMode outVariablesMode) {
+                       OutVariablesMode outVariablesMode, ProcessExecMode processExecMode) {
 
-        return txResult(tx -> insert(tx, orgId, name, description, ownerId, cfg, visibility, rawPayloadMode, encryptedKey, meta, outVariablesMode));
+        return txResult(tx -> insert(tx, orgId, name, description, ownerId, cfg, visibility, rawPayloadMode, encryptedKey, meta, outVariablesMode, processExecMode));
     }
 
     public UUID insert(DSLContext tx, UUID orgId, String name, String description, UUID ownerId, Map<String, Object> cfg,
                        ProjectVisibility visibility, RawPayloadMode rawPayloadMode, byte[] encryptedKey, Map<String, Object> meta,
-                       OutVariablesMode outVariablesMode) {
+                       OutVariablesMode outVariablesMode, ProcessExecMode processExecMode) {
 
         if (visibility == null) {
             visibility = ProjectVisibility.PUBLIC;
         }
 
+        UUID projectId = uuidGenerator.generate();
+
         return tx.insertInto(PROJECTS)
-                .columns(PROJECTS.PROJECT_NAME,
+                .columns(PROJECTS.PROJECT_ID,
+                        PROJECTS.PROJECT_NAME,
                         PROJECTS.DESCRIPTION,
                         PROJECTS.ORG_ID,
                         PROJECTS.PROJECT_CFG,
@@ -189,8 +196,10 @@ public class ProjectDao extends AbstractDao {
                         PROJECTS.SECRET_KEY,
                         PROJECTS.META,
                         PROJECTS.OUT_VARIABLES_MODE,
+                        PROJECTS.PROCESS_EXEC_MODE,
                         PROJECTS.CREATED_AT)
-                .values(value(name),
+                .values(value(projectId),
+                        value(name),
                         value(description),
                         value(orgId),
                         value(objectMapper.toJSONB(cfg)),
@@ -200,6 +209,7 @@ public class ProjectDao extends AbstractDao {
                         value(encryptedKey),
                         value(objectMapper.toJSONB(meta)),
                         value(outVariablesMode != null ? outVariablesMode : OutVariablesMode.DISABLED),
+                        value(processExecMode != null ? processExecMode : ProcessExecMode.READERS),
                         currentOffsetDateTime())
                 .returning(PROJECTS.PROJECT_ID)
                 .fetchOne()
@@ -208,7 +218,8 @@ public class ProjectDao extends AbstractDao {
 
     public void update(DSLContext tx, UUID orgId, UUID id, ProjectVisibility visibility,
                        String name, String description, Map<String, Object> cfg, RawPayloadMode rawPayloadMode,
-                       UUID ownerId, Map<String, Object> meta, OutVariablesMode outVariablesMode) {
+                       UUID ownerId, Map<String, Object> meta, OutVariablesMode outVariablesMode,
+                       ProcessExecMode processExecMode) {
 
         UpdateSetFirstStep<ProjectsRecord> q = tx.update(PROJECTS);
 
@@ -242,6 +253,10 @@ public class ProjectDao extends AbstractDao {
 
         if (outVariablesMode != null) {
             q.set(PROJECTS.OUT_VARIABLES_MODE, outVariablesMode);
+        }
+
+        if (processExecMode != null) {
+            q.set(PROJECTS.PROCESS_EXEC_MODE, processExecMode);
         }
 
         q.set(PROJECTS.ORG_ID, orgId)
@@ -284,7 +299,7 @@ public class ProjectDao extends AbstractDao {
         sortField = p.field(sortField);
 
 
-        SelectOnConditionStep<Record14<UUID, String, String, UUID, String, String, UUID, String, String, String, String, RawPayloadMode, OutVariablesMode, OffsetDateTime>> q = dsl().select(
+        SelectOnConditionStep<Record15<UUID, String, String, UUID, String, String, UUID, String, String, String, String, RawPayloadMode, OutVariablesMode, ProcessExecMode, OffsetDateTime>> q = dsl().select(
                 p.PROJECT_ID,
                 p.PROJECT_NAME,
                 p.DESCRIPTION,
@@ -298,6 +313,7 @@ public class ProjectDao extends AbstractDao {
                 u.USER_TYPE,
                 p.RAW_PAYLOAD_MODE,
                 p.OUT_VARIABLES_MODE,
+                p.PROCESS_EXEC_MODE,
                 p.CREATED_AT)
                 .from(p)
                 .leftJoin(u).on(u.USER_ID.eq(p.OWNER_ID))
@@ -451,7 +467,7 @@ public class ProjectDao extends AbstractDao {
                 .execute();
     }
 
-    private static ProjectEntry toEntry(Record14<UUID, String, String, UUID, String, String, UUID, String, String, String, String, RawPayloadMode, OutVariablesMode, OffsetDateTime> r) {
+    private static ProjectEntry toEntry(Record15<UUID, String, String, UUID, String, String, UUID, String, String, String, String, RawPayloadMode, OutVariablesMode, ProcessExecMode, OffsetDateTime> r) {
         return new ProjectEntry(r.get(PROJECTS.PROJECT_ID),
                 r.get(PROJECTS.PROJECT_NAME),
                 r.get(PROJECTS.DESCRIPTION),
@@ -461,10 +477,10 @@ public class ProjectDao extends AbstractDao {
                 null,
                 ProjectVisibility.valueOf(r.get(PROJECTS.VISIBILITY)),
                 toOwner(r.get(PROJECTS.OWNER_ID), r.get(USERS.USERNAME), r.get(USERS.DOMAIN), r.get(USERS.DISPLAY_NAME), r.get(USERS.USER_TYPE)),
-                r.get(PROJECTS.RAW_PAYLOAD_MODE) != RawPayloadMode.DISABLED,
                 r.get(PROJECTS.RAW_PAYLOAD_MODE),
                 null,
                 r.get(PROJECTS.OUT_VARIABLES_MODE),
+                r.get(PROJECTS.PROCESS_EXEC_MODE),
                 r.get(PROJECTS.CREATED_AT));
     }
 

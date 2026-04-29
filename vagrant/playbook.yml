@@ -78,7 +78,7 @@
     become: true
     docker_container:
       name: db
-      image: library/postgres:10
+      image: library/postgres:14
       env:
         POSTGRES_PASSWORD: "q1"
       restart_policy: always

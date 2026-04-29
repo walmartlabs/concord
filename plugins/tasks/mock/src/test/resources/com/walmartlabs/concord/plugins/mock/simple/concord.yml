@@ -1,0 +1,14 @@
+flows:
+  default:
+    - task: testTask
+      out: result
+
+    - log: "result.ok: ${result.ok}"
+    - log: "result.fromMock: ${result.fromMock}"
+
+configuration:
+  arguments:
+    mocks:
+      - task: "testTask"
+        out:
+          fromMock: "good"

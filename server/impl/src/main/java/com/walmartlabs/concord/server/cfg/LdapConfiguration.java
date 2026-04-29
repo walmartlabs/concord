@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.config.Config;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
@@ -106,6 +106,10 @@ public class LdapConfiguration implements Serializable {
     @Nullable
     @Config("ldap.dnsSRVName")
     private String dnsSRVName;
+
+    @Inject
+    @Config("ldap.trustAllCertificates")
+    private boolean trustAllCertificates;
 
     private final Set<String> exposeAttributes;
 
@@ -193,6 +197,10 @@ public class LdapConfiguration implements Serializable {
 
     public String getDnsSRVName() {
         return dnsSRVName;
+    }
+
+    public boolean isTrustAllCertificates() {
+        return trustAllCertificates;
     }
 
     private static Set<String> split(String s) {

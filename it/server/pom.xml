@@ -6,18 +6,19 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>2.17.1-SNAPSHOT</version>
+        <version>2.40.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-server-it</artifactId>
     <packaging>jar</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <properties>
         <agent.image>walmartlabs/concord-agent</agent.image>
         <ansible.image>walmartlabs/concord-ansible</ansible.image>
         <base.dir>${basedir}</base.dir>
-        <db.image>library/postgres</db.image>
         <deps.dir.src.mount>${project.basedir}/target/deps</deps.dir.src.mount>
         <deps.dir>${project.basedir}/target/deps</deps.dir>
         <dind.image>docker:dind</dind.image>
@@ -34,9 +35,10 @@
         <oldap.image>osixia/openldap</oldap.image>
         <server.image>walmartlabs/concord-server</server.image>
         <skip.socat>true</skip.socat>
-        <socat.image>bobrik/socat</socat.image>
+        <socat.image>alpine/socat</socat.image>
         <tmp.dir.src.mount>${java.io.tmpdir}</tmp.dir.src.mount>
         <tmp.dir>${java.io.tmpdir}</tmp.dir>
+        <agent.work.dir.base>${tmp.dir}/concord-agent/workDirs</agent.work.dir.base>
     </properties>
 
     <dependencies>
@@ -117,9 +119,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.jcraft</groupId>
+            <groupId>com.github.mwiede</groupId>
             <artifactId>jsch</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -147,7 +148,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.codehaus.groovy</groupId>
+            <groupId>org.apache.groovy</groupId>
             <artifactId>groovy</artifactId>
             <scope>test</scope>
         </dependency>
@@ -201,26 +202,31 @@
         </dependency>
         <dependency>
             <groupId>com.sun.xml.bind</groupId>
-            <artifactId>jaxb-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.xml.bind</groupId>
             <artifactId>jaxb-impl</artifactId>
             <scope>test</scope>
         </dependency>
 
         <!-- download large dependencies beforehand -->
         <dependency>
-            <groupId>org.codehaus.groovy</groupId>
+            <groupId>org.apache.groovy</groupId>
             <artifactId>groovy-all</artifactId>
             <type>pom</type>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.groovy</groupId>
+                    <artifactId>groovy-test</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.groovy</groupId>
+                    <artifactId>groovy-test-junit5</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.python</groupId>
             <artifactId>jython-standalone</artifactId>
-            <version>2.7.1</version>
+            <version>2.7.4</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -255,6 +261,7 @@
                     <systemProperties>
                         <java.io.tmpdir>${tmp.dir}</java.io.tmpdir>
                         <isDocker>${is.docker.profile}</isDocker>
+                        <local.mvn.repo>${local.repository.src.mount}</local.mvn.repo>
                     </systemProperties>
                 </configuration>
             </plugin>
@@ -273,64 +280,33 @@
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins.basic</groupId>
-                                    <artifactId>ansible-tasks</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>ansible-template</artifactId>
                                     <version>${project.version}</version>
                                     <destFileName>ansible-template.jar</destFileName>
                                 </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
-                                    <artifactId>concord-tasks</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
-                                    <artifactId>dynamic-tasks</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
 
-                                <!-- TODO this should be automated -->
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
-                                    <artifactId>noderoster-tasks</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
-                                    <artifactId>concord-noderoster-plugin-client2</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-
-                                <!-- TODO this should be automated -->
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
-                                    <artifactId>smtp-tasks</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>org.apache.commons</groupId>
-                                    <artifactId>commons-email</artifactId>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.sun.mail</groupId>
-                                    <artifactId>javax.mail</artifactId>
-                                </artifactItem>
-                                <dependency>
-                                    <groupId>com.sun.activation</groupId>
-                                    <artifactId>javax.activation</artifactId>
-                                </dependency>
-
-                                <!-- used by DependenciesIT as an example dependency -->
+                                <!-- used by DependenciesIT as example dependencies -->
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>example-tasks</artifactId>
                                     <version>${project.version}</version>
                                     <destFileName>example.jar</destFileName>
                                 </artifactItem>
+                                <dependency>
+                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+                                    <artifactId>ansible-tasks</artifactId>
+                                    <version>2.15.0</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+                                    <artifactId>ansible-tasks</artifactId>
+                                    <version>2.16.0</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>com.walmartlabs.concord.plugins</groupId>
+                                    <artifactId>confluence-task</artifactId>
+                                    <version>2.5.0</version>
+                                </dependency>
                             </artifactItems>
                             <outputDirectory>${deps.dir}</outputDirectory>
                         </configuration>
@@ -518,6 +494,9 @@
                                                 <volume>${base.dir}/src/test/resources/server.conf:/opt/concord/conf/server.conf:ro</volume>
                                                 <!-- provide the default process variables cfg -->
                                                 <volume>${base.dir}/src/test/resources/default_vars.yml:/opt/concord/conf/default_vars.yml:ro</volume>
+                                                <!-- share host artifacts -->
+                                                <volume>${local.repository.src.mount}:/host/.m2/repository:ro</volume>
+                                                <volume>${base.dir}/src/test/resources/mvn.json:/opt/concord/conf/mvn.json:ro</volume>
                                             </bind>
                                         </volumes>
                                         <env>
@@ -532,6 +511,7 @@
                                             <NODEROSTER_DB_PASSWORD>it</NODEROSTER_DB_PASSWORD>
                                             <NODEROSTER_DB_URL>jdbc:postgresql://${it.db.addr}/postgres</NODEROSTER_DB_URL>
                                             <NODEROSTER_DB_USERNAME>postgres</NODEROSTER_DB_USERNAME>
+                                            <CONCORD_MAVEN_CFG>/opt/concord/conf/mvn.json</CONCORD_MAVEN_CFG>
                                         </env>
                                         <wait>
                                             <!--suppress MavenModelInspection -->
@@ -579,6 +559,7 @@
                                             <DOCKER_HOST>${docker.daemon.addr}</DOCKER_HOST>
                                             <SERVER_API_BASE_URL>http://localhost:${it.server.port}</SERVER_API_BASE_URL>
                                             <SERVER_WEBSOCKET_URL>ws://localhost:${it.server.port}/websocket</SERVER_WEBSOCKET_URL>
+                                            <WORK_DIR_BASE>${agent.work.dir.base}</WORK_DIR_BASE>
                                             <WORKERS_COUNT>3</WORKERS_COUNT>
                                         </env>
                                         <labels>

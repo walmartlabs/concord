@@ -1,9 +1,11 @@
+configuration:
+  dependencies:
+    - mvn://com.walmartlabs.concord.plugins.basic:example-tasks:PROJECT_VERSION
+  entryPoint: main
+
 flows:
   main:
   - task: exampleDelegate
     out:
       msg: ${exampleOutput}
   - log: "I said: ${msg}"
-
-variables:
-  entryPoint: main

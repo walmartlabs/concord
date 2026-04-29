@@ -99,7 +99,7 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
                     .warnCount(0)
                     .length(s.end() - s.start())
                     .build();
-            segments.add(Segment.of(header, s.start()));
+            segments.add(new Segment(header, s.start()));
         }
     }
 
@@ -108,7 +108,7 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
     }
 
     private static Map<Long, List<Segment>> byId(List<Segment> segments) {
-        Map<Long, List<Segment>> result = new HashMap<>();
+        Map<Long, List<Segment>> result = new LinkedHashMap<>();
         for (Segment s : segments) {
             result.computeIfAbsent(s.header().segmentId(), id -> new ArrayList<>())
                     .add(s);
@@ -160,11 +160,7 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
         }
 
         if (done || errorCount > 0 || warnCount > 0) {
-            return LogSegmentStats.builder()
-                    .status(status)
-                    .errors(errorCount)
-                    .warnings(warnCount)
-                    .build();
+            return new LogSegmentStats(status, errorCount, warnCount);
         }
         return null;
     }

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agentoperator.planner;
  * =====
  */
 
+import com.walmartlabs.concord.agentoperator.resources.AgentConfigMap;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,24 +37,14 @@ public class DeleteConfigMapChange implements Change {
 
     @Override
     public void apply(KubernetesClient client) {
-        if (client.configMaps().withName(configMapName).delete()) {
-            // wait till it's actually removed
-            while (client.configMaps().withName(configMapName).get() != null) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-
-            log.info("apply -> removed a configmap {}", configMapName);
-        }
+        AgentConfigMap.delete(client, configMapName);
+        log.info("apply -> removed a configmap {}", configMapName);
     }
 
     @Override
     public String toString() {
         return "DeleteConfigMapChange{" +
-                "configMapName='" + configMapName + '\'' +
-                '}';
+               "configMapName='" + configMapName + '\'' +
+               '}';
     }
 }

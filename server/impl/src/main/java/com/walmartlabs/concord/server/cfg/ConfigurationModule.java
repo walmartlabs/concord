@@ -23,6 +23,9 @@ package com.walmartlabs.concord.server.cfg;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.typesafe.config.Config;
+import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
+import com.walmartlabs.concord.config.ConfigModule;
+import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
 
 import static com.google.inject.Scopes.SINGLETON;
 
@@ -38,20 +41,22 @@ public class ConfigurationModule implements Module {
     public void configure(Binder binder) {
         binder.bind(Config.class).toInstance(config);
 
-        binder.install(new com.walmartlabs.ollie.config.OllieConfigurationModule("com.walmartlabs.concord.server", config));
+        binder.install(new ConfigModule("com.walmartlabs.concord.server", config));
 
         binder.bind(AgentConfiguration.class).in(SINGLETON);
         binder.bind(ApiKeyConfiguration.class).in(SINGLETON);
         binder.bind(AuditConfiguration.class).in(SINGLETON);
         binder.bind(ConcordSecretStoreConfiguration.class).in(SINGLETON);
+        binder.bind(ConsoleConfiguration.class).in(SINGLETON);
         binder.bind(CustomFormConfiguration.class).in(SINGLETON);
         binder.bind(DependenciesConfiguration.class).in(SINGLETON);
-        binder.bind(DependencyVersionConfiguration.class).in(SINGLETON);
         binder.bind(EmailNotifierConfiguration.class).in(SINGLETON);
         binder.bind(EnqueueWorkersConfiguration.class).in(SINGLETON);
         binder.bind(ExternalEventsConfiguration.class).in(SINGLETON);
         binder.bind(GitConfiguration.class).in(SINGLETON);
+        binder.bind(OauthTokenConfig.class).to(GitConfiguration.class).in(SINGLETON);
         binder.bind(GithubConfiguration.class).in(SINGLETON);
+        binder.bind(GitHubAppInstallationConfig.class).to(GithubConfiguration.class).in(SINGLETON);
         binder.bind(ImportConfiguration.class).in(SINGLETON);
         binder.bind(LdapConfiguration.class).in(SINGLETON);
         binder.bind(LdapGroupSyncConfiguration.class).in(SINGLETON);
@@ -66,6 +71,7 @@ public class ConfigurationModule implements Module {
         binder.bind(RepositoryConfiguration.class).in(SINGLETON);
         binder.bind(SecretStoreConfiguration.class).in(SINGLETON);
         binder.bind(ServerConfiguration.class).in(SINGLETON);
+        binder.bind(TemplatesConfiguration.class).in(SINGLETON);
         binder.bind(TriggersConfiguration.class).in(SINGLETON);
         binder.bind(WorkerMetricsConfiguration.class).in(SINGLETON);
     }

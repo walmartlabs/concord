@@ -20,6 +20,7 @@ package com.walmartlabs.concord.it.testingserver;
  * =====
  */
 
+import ca.ibodrov.concord.webapp.WebappPluginModule;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
 import com.typesafe.config.Config;
@@ -47,7 +48,7 @@ import static java.util.Objects.requireNonNull;
 public class TestingConcordServer implements AutoCloseable {
 
     private final PostgreSQLContainer<?> db;
-    private final Map<String, String> extraConfiguration;
+    private final Map<String, Object> extraConfiguration;
     private final List<Function<Config, Module>> extraModules;
     private final int apiPort;
     private final String adminApiKey;
@@ -59,7 +60,7 @@ public class TestingConcordServer implements AutoCloseable {
         this(db, 8001, Map.of(), List.of());
     }
 
-    public TestingConcordServer(PostgreSQLContainer<?> db, int apiPort, Map<String, String> extraConfiguration, List<Function<Config, Module>> extraModules) {
+    public TestingConcordServer(PostgreSQLContainer<?> db, int apiPort, Map<String, Object> extraConfiguration, List<Function<Config, Module>> extraModules) {
         this.db = requireNonNull(db);
         this.extraConfiguration = requireNonNull(extraConfiguration);
         this.apiPort = apiPort;
@@ -73,7 +74,8 @@ public class TestingConcordServer implements AutoCloseable {
 
         var config = prepareConfig(db);
         var system = new ConcordServerModule(config);
-        var allModules = Stream.concat(extraModules.stream().map(f -> f.apply(config)), Stream.of(system)).toList();
+        var webapp = new WebappPluginModule();
+        var allModules = Stream.concat(extraModules.stream().map(f -> f.apply(config)), Stream.of(system, webapp)).toList();
         server = ConcordServer.withModules(allModules)
                 .start();
 
@@ -155,13 +157,13 @@ public class TestingConcordServer implements AutoCloseable {
             server.start();
             System.out.printf("""
                             ==============================================================
-                                        
+                            
                               UI: http://localhost:8001/
                               DB:
                                 JDBC URL: %s
                                 username: %s
                                 password: %s
-                                        
+                            
                               admin API key: %s
                               agent API key: %s
                             %n""", db.getJdbcUrl(),

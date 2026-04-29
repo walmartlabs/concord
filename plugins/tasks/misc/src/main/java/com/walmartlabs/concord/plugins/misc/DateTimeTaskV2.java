@@ -20,6 +20,7 @@ package com.walmartlabs.concord.plugins.misc;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.DryRunReady;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
 import javax.inject.Named;
@@ -31,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 @Named("datetime")
+@DryRunReady
 public class DateTimeTaskV2 implements Task {
 
     public Date current() {
@@ -39,6 +41,10 @@ public class DateTimeTaskV2 implements Task {
 
     public String current(String pattern) {
         return DateTimeFormatter.ofPattern(pattern).format(ZonedDateTime.now());
+    }
+
+    public String currentISO() {
+        return current("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
     }
 
     public String currentWithZone(String zone, String pattern) {

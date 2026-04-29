@@ -48,9 +48,9 @@ public class WaitConditionUpdater implements ProcessStatusListener {
             SET wait_conditions =
                     (SELECT jsonb_agg(
                         CASE
-                            WHEN obj->>'type' = 'PROCESS_COMPLETION' and obj->>'completeCondition' = 'ALL'
+                            WHEN obj->>'type' = 'PROCESS_COMPLETION' and obj->>'completeCondition' = 'ALL' and obj->>'processes' is not null
                                 THEN jsonb_set(obj, '{processes}', (obj->'processes') - ?)
-                            WHEN obj->>'type' = 'PROCESS_COMPLETION' and obj->>'completeCondition' = 'ONE_OF' and obj->'processes' ?? ?
+                            WHEN obj->>'type' = 'PROCESS_COMPLETION' and obj->>'completeCondition' = 'ONE_OF' and obj->>'processes' is not null and obj->'processes' ?? ?
                                 THEN jsonb_set(obj, '{processes}', '[]')
                             ELSE obj
                         END

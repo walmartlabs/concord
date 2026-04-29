@@ -24,31 +24,35 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.typesafe.config.Config;
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.ObjectMapperProvider;
+import com.walmartlabs.concord.config.ConfigModule;
 import com.walmartlabs.concord.db.DatabaseModule;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.server.agent.AgentModule;
+import com.walmartlabs.concord.server.agent.websocket.WebSocketModule;
 import com.walmartlabs.concord.server.audit.AuditLogModule;
 import com.walmartlabs.concord.server.boot.BackgroundTasks;
 import com.walmartlabs.concord.server.cfg.ConfigurationModule;
 import com.walmartlabs.concord.server.cfg.DatabaseConfigurationModule;
 import com.walmartlabs.concord.server.console.ConsoleModule;
 import com.walmartlabs.concord.server.events.EventModule;
+import com.walmartlabs.concord.server.message.MessageChannelManager;
 import com.walmartlabs.concord.server.metrics.MetricModule;
 import com.walmartlabs.concord.server.org.OrganizationModule;
 import com.walmartlabs.concord.server.policy.PolicyModule;
 import com.walmartlabs.concord.server.process.ProcessModule;
 import com.walmartlabs.concord.server.repository.RepositoryModule;
+import com.walmartlabs.concord.server.repository.ServerAuthTokenProvider;
 import com.walmartlabs.concord.server.role.RoleModule;
 import com.walmartlabs.concord.server.security.SecurityModule;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyModule;
 import com.walmartlabs.concord.server.task.TaskSchedulerModule;
 import com.walmartlabs.concord.server.template.TemplateModule;
-import com.walmartlabs.ollie.config.ConfigurationProcessor;
-import com.walmartlabs.ollie.config.Environment;
-import com.walmartlabs.ollie.config.EnvironmentSelector;
+import com.walmartlabs.concord.server.user.UserModule;
 
 import javax.inject.Named;
+import java.security.SecureRandom;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
@@ -71,7 +75,9 @@ public class ConcordServerModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        binder.bind(UuidGenerator.class).in(SINGLETON);
         binder.bind(ObjectMapper.class).toProvider(ObjectMapperProvider.class);
+        binder.bind(ConcordObjectMapper.class).in(SINGLETON);
 
         binder.install(new ConfigurationModule(config));
         binder.install(new MetricModule());
@@ -82,10 +88,16 @@ public class ConcordServerModule implements Module {
         binder.install(new TaskSchedulerModule());
         binder.bind(BackgroundTasks.class).in(SINGLETON);
 
+        binder.bind(Listeners.class).in(SINGLETON);
+        binder.bind(SecureRandom.class).toProvider(SecureRandomProvider.class);
+
+        binder.bind(AuthTokenProvider.class).to(ServerAuthTokenProvider.class).in(SINGLETON);
+
+        binder.bind(MessageChannelManager.class).in(SINGLETON);
+
         binder.bind(DependencyManagerConfiguration.class).toProvider(DependencyManagerConfigurationProvider.class);
 
         binder.install(new ApiServerModule());
-
         binder.install(new AgentModule());
         binder.install(new ApiKeyModule());
         binder.install(new AuditLogModule());
@@ -98,12 +110,13 @@ public class ConcordServerModule implements Module {
         binder.install(new RoleModule());
         binder.install(new SecurityModule());
         binder.install(new TemplateModule());
+        binder.install(new UserModule());
+        binder.install(new WebSocketModule());
 
         bindJaxRsResource(binder, ServerResource.class);
     }
 
     private static Config loadDefaultConfig() {
-        Environment env = new EnvironmentSelector().select();
-        return new ConfigurationProcessor("concord-server", env, null, null).process();
+        return ConfigModule.load("concord-server");
     }
 }

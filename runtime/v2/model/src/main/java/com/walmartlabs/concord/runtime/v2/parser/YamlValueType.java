@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.model.TaskCallValidation.ValidationMode;
 
 import java.io.Serializable;
 import java.time.Duration;
@@ -80,8 +81,8 @@ public final class YamlValueType<T> {
     public static final YamlValueType<Import.MvnDefinition> MVN_IMPORT = type("MVN_IMPORT");
     public static final YamlValueType<Import.DirectoryDefinition> DIR_IMPORT = type("DIR_IMPORT");
     public static final YamlValueType<Import.SecretDefinition> IMPORT_SECRET = type("IMPORT_SECRET");
-    public static final YamlValueType<Map<String, List<Step>>> FLOWS = type("FLOWS");
-    public static final YamlValueType<KV<String, List<Step>>> FLOW = type("FLOW");
+    public static final YamlValueType<Map<String, Flow>> FLOWS = type("FLOWS");
+    public static final YamlValueType<KV<String, Flow>> FLOW = type("FLOW");
     public static final YamlValueType<FlowCall> FLOW_CALL = type("FLOW_CALL");
     public static final YamlValueType<ImmutableFlowCallOptions.Builder> FLOW_CALL_INPUT = type("OBJECT or EXPRESSION");
     public static final YamlValueType<ImmutableFlowCallOptions.Builder> FLOW_CALL_OUT = type("STRING or ARRAY_OF_STRING or OBJECT");
@@ -112,6 +113,9 @@ public final class YamlValueType<T> {
     public static final YamlValueType<List<Map<String, Object>>> ARRAY_OF_GITHUB_REPOSITORY_INFO = array("REPOSITORY_INFO", GITHUB_REPOSITORY_INFO);
     public static final YamlValueType<Loop> LOOP = type("LOOP");
     public static final YamlValueType<ImmutableLoop.Builder> LOOP_PARALLELISM = type("int or expression");
+    public static final YamlValueType<TaskCallValidation.ValidationMode> VALIDATION_MODE = type("VALIDATION_MODE");
+    public static final YamlValueType<TaskCallValidation> TASK_CALL_VALIDATION = type("TASK_CALL_VALIDATION");
+    public static final YamlValueType<ValidationConfiguration> VALIDATION_CFG = type("VALIDATION_CONFIGURATION");
 
     private final String name;
 

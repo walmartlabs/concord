@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
@@ -31,8 +31,6 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.template.TemplateAliasDao;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -43,8 +41,6 @@ import java.util.Optional;
 /**
  * Extracts template files into the workspace.
  */
-@Named
-@Singleton
 public class TemplateFilesProcessor implements PayloadProcessor {
 
     private final ProcessLogManager logManager;
@@ -112,6 +108,6 @@ public class TemplateFilesProcessor implements PayloadProcessor {
         Path workspacePath = payload.getHeader(Payload.WORKSPACE_DIR);
 
         // copy template's files to the payload, skipping the existing files
-        IOUtils.unzip(template, workspacePath, true);
+        ZipUtils.unzip(template, workspacePath, true);
     }
 }

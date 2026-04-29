@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.*;
 import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaInject;
 import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaString;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
+import com.walmartlabs.concord.runtime.v2.model.GithubTriggerExclusiveMode;
 import com.walmartlabs.concord.runtime.v2.model.Trigger;
 
 import java.util.List;
@@ -45,9 +46,6 @@ public interface TriggerMixIn extends Trigger {
     @JsonTypeName("ManualTrigger")
     interface ManualTriggerMixIn extends TriggerMixIn {
 
-        @JsonProperty("exclusive")
-        ExclusiveMode exclusive();
-
         @JsonProperty("manual")
         ManualTriggerParams params();
 
@@ -55,6 +53,9 @@ public interface TriggerMixIn extends Trigger {
 
             @JsonProperty("name")
             String name();
+
+            @JsonProperty("exclusive")
+            ExclusiveMode exclusive();
         }
     }
 
@@ -111,33 +112,28 @@ public interface TriggerMixIn extends Trigger {
             GithubTriggerConditions conditions();
 
             @JsonProperty("exclusive")
-            ExclusiveMode exclusive();
+            GithubTriggerExclusiveMode exclusive();
 
             interface GithubTriggerConditions {
                 @JsonProperty(value = "type", required = true)
                 String type();
 
                 @JsonProperty("githubOrg")
-                @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"array\", \"items\" : {\"type\" : \"string\"}}, {\"type\": \"string\"} ]}", merge = false)
                 String githubOrg();
 
                 @JsonProperty("githubRepo")
-                @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"array\", \"items\" : {\"type\" : \"string\"}}, {\"type\": \"string\"} ]}", merge = false)
                 String githubRepo();
 
                 @JsonProperty("githubHost")
                 String githubHost();
 
                 @JsonProperty("branch")
-                @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"array\", \"items\" : {\"type\" : \"string\"}}, {\"type\": \"string\"} ]}", merge = false)
                 String branch();
 
                 @JsonProperty("sender")
-                @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"array\", \"items\" : {\"type\" : \"string\"}}, {\"type\": \"string\"} ]}", merge = false)
                 String sender();
 
                 @JsonProperty("status")
-                @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"array\", \"items\" : {\"type\" : \"string\"}}, {\"type\": \"string\"} ]}", merge = false)
                 String status();
 
                 @JsonProperty("repositoryInfo")
@@ -174,6 +170,9 @@ public interface TriggerMixIn extends Trigger {
 
             @JsonProperty("conditions")
             Map<String, Object> conditions();
+
+            @JsonProperty("exclusive")
+            ExclusiveMode exclusive();
         }
     }
 
@@ -187,8 +186,5 @@ public interface TriggerMixIn extends Trigger {
 
         @JsonProperty("arguments")
         Map<String, Object> arguments();
-
-        @JsonProperty("exclusive")
-        ExclusiveMode exclusive();
     }
 }

@@ -22,8 +22,10 @@ package com.walmartlabs.concord.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.LogTags;
 import com.walmartlabs.concord.sdk.MapUtils;
@@ -36,6 +38,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
@@ -69,35 +72,31 @@ public class ConcordTaskCommon {
     private final String currentOrgName;
     private final Path workDir;
     private final boolean globalDebug;
+    private final boolean dryRun;
 
-    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, UUID currentProcessId, String currentOrgName, Path workDir, boolean globalDebug) {
+    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, UUID currentProcessId, String currentOrgName, Path workDir, boolean globalDebug, boolean dryRun) {
         this.sessionToken = sessionToken;
         this.apiClientFactory = apiClientFactory;
         this.currentProcessId = currentProcessId;
         this.currentOrgName = currentOrgName;
         this.workDir = workDir;
         this.globalDebug = globalDebug;
+        this.dryRun = dryRun;
     }
 
     public TaskResult execute(ConcordTaskParams in) throws Exception {
         Action action = in.action();
-        switch (action) {
-            case START: {
-                return startChildProcess((StartParams) in);
-            }
-            case STARTEXTERNAL: {
-                return startExternalProcess((StartExternalParams) in);
-            }
-            case FORK: {
-                return fork((ForkParams) in);
-            }
-            case KILL: {
+        return switch (action) {
+            case START -> startChildProcess((StartParams) in);
+            case STARTEXTERNAL -> startExternalProcess((StartExternalParams) in);
+            case FORK -> fork((ForkParams) in);
+            case KILL -> {
                 kill((KillParams) in);
-                return TaskResult.success();
+                yield TaskResult.success();
             }
-            default:
-                throw new IllegalArgumentException("Unsupported action type: " + action);
-        }
+            case CREATEAPIKEY -> createApiKey((CreateOrUpdateApiKeyParams) in);
+            case CREATEORUPDATEAPIKEY -> createOrUpdateApiKey((CreateOrUpdateApiKeyParams) in);
+        };
     }
 
     public List<ProcessEntry> listSubProcesses(ListSubProcesses in) throws Exception {
@@ -182,6 +181,85 @@ public class ConcordTaskCommon {
         }
     }
 
+    public TaskResult createApiKey(CreateOrUpdateApiKeyParams in) throws Exception {
+        return withClient(in.baseUrl(), in.apiKey(), client -> {
+            log.info("Creating a new API key in {}", client.getBaseUri());
+
+            UUID userId = assertUserId(client, in);
+
+            String keyName = in.name();
+            if (keyName != null) {
+                ApiKeysApi api = new ApiKeysApi(client);
+                List<ApiKeyEntry> existingKeys = api.listUserApiKeys(userId);
+                Optional<ApiKeyEntry> maybeExistingKey = existingKeys.stream().filter(k -> k.getName().equals(keyName)).findFirst();
+                if (maybeExistingKey.isPresent()) {
+                    if (in.ignoreExisting()) {
+                        log.info("API key '{}' already exists, nothing to do.", keyName);
+                        ApiKeyEntry existingKey = maybeExistingKey.get();
+                        return TaskResult.success()
+                                .value("id", existingKey.getId())
+                                .value("expiredAt", Optional.ofNullable(existingKey.getExpiredAt()).map(OffsetDateTime::toString).orElse(null));
+                    } else {
+                        throw new IllegalArgumentException("API key '" + keyName + "' already exists.");
+                    }
+                }
+            }
+
+            ApiKeysApi apiKeysApi = new ApiKeysApi(client);
+            CreateApiKeyResponse response = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
+                    .name(keyName)
+                    .userId(userId)
+                    .userDomain(in.userDomain())
+                    .userType(in.userType())
+                    .key(in.key()));
+
+            return TaskResult.success()
+                    .value("id", response.getId())
+                    .value("name", response.getName())
+                    .value("key", response.getKey());
+        });
+    }
+
+    public TaskResult createOrUpdateApiKey(CreateOrUpdateApiKeyParams in) throws Exception {
+        return withClient(in.baseUrl(), in.apiKey(), client -> {
+            log.info("Creating or updating an API key in {}", client.getBaseUri());
+
+            UUID userId = assertUserId(client, in);
+
+            ApiKeysV2Api apiKeysApi = new ApiKeysV2Api(client);
+            CreateApiKeyResponse response = apiKeysApi.createOrUpdateUserApiKey(new CreateApiKeyRequest()
+                    .name(in.name())
+                    .userId(userId)
+                    .userDomain(in.userDomain())
+                    .userType(in.userType())
+                    .key(in.key()));
+
+            return TaskResult.success()
+                    .value("id", response.getId())
+                    .value("name", response.getName())
+                    .value("key", response.getKey())
+                    .value("result", response.getResult().toString());
+        });
+    }
+
+    private UUID assertUserId(ApiClient client, CreateOrUpdateApiKeyParams in) throws ApiException {
+        UUID userId = in.userId();
+        if (userId == null) {
+            String username = in.username();
+            if (username == null) {
+                throw new IllegalArgumentException("User ID or user name is required");
+            }
+
+            UsersApi usersApi = new UsersApi(client);
+            UserEntry user = usersApi.findByUsername(username);
+            if (user == null) {
+                throw new IllegalArgumentException("User '" + username + "' not found.");
+            }
+            userId = user.getId();
+        }
+        return userId;
+    }
+
     public Map<String, Map<String, Object>> getOutVars(String baseUrl, String apiKey, List<UUID> ids, long timeout) {
         return waitForCompletion(ids, timeout, p -> {
             try {
@@ -216,7 +294,7 @@ public class ConcordTaskCommon {
         Map<String, Object> input = new HashMap<>();
 
         if (archive != null) {
-            input.put("archive", Files.readAllBytes(archive));
+            input.put("archive", archive);
         }
 
         Map<String, Object> req = createRequest(in);
@@ -415,7 +493,7 @@ public class ConcordTaskCommon {
         }
 
         if (hasErrors) {
-            throw new IllegalStateException(errors.toString());
+            throw new UserDefinedException(errors.toString());
         }
     }
 
@@ -557,9 +635,9 @@ public class ConcordTaskCommon {
         }
 
         if (Files.isDirectory(path)) {
-            Path tmp = IOUtils.createTempFile("payload", ".zip");
+            Path tmp = PathUtils.createTempFile("payload", ".zip");
             try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
-                IOUtils.zip(out, path);
+                ZipUtils.zip(out, path);
             }
             return tmp;
         }
@@ -567,7 +645,7 @@ public class ConcordTaskCommon {
         return path;
     }
 
-    private static Map<String, Object> createRequest(StartParams in) {
+    private Map<String, Object> createRequest(StartParams in) {
         Map<String, Object> req = new HashMap<>();
 
         Set<String> activeProfiles = in.activeProfiles();
@@ -618,6 +696,10 @@ public class ConcordTaskCommon {
         Map<String, Object> requirements = in.requirements();
         if (!requirements.isEmpty()) {
             req.put(Constants.Request.REQUIREMENTS, new HashMap<>(requirements));
+        }
+
+        if (in.dryRunMode(dryRun)) {
+            req.put(Constants.Request.DRY_RUN_MODE_KEY, true);
         }
 
         return req;

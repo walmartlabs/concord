@@ -24,34 +24,35 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.google.inject.Injector;
+import com.walmartlabs.concord.cli.CliConfig.CliConfigContext;
 import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.FileVisitor;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
-import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
-import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
+import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.imports.*;
-import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
-import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
+import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
-import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
+import com.walmartlabs.concord.runtime.model.EffectiveConfiguration;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
+import com.walmartlabs.concord.runtime.v2.model.Flow;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Profile;
-import com.walmartlabs.concord.runtime.v2.model.Step;
-import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
-import com.walmartlabs.concord.runtime.v2.runner.ProjectLoadListeners;
+import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
-import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
+import com.walmartlabs.concord.runtime.v2.sdk.ImmutableProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.runtime.v2.runner.vm.LoggedException;
+import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelExecutionException;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessInfo;
+import com.walmartlabs.concord.runtime.v2.sdk.ProjectInfo;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
+import com.walmartlabs.concord.runtime.v2.wrapper.ProcessDefinitionV2;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.svm.ParallelExecutionException;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -60,14 +61,15 @@ import picocli.CommandLine.Spec;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.stream.Stream;
 
-@Command(name = "run", description = "Run the current directory as a Concord process")
+import static org.fusesource.jansi.Ansi.ansi;
+
+@Command(name = "run", description = "Execute flows locally. Sends the specified <workDir> as the process payload.")
 public class Run implements Callable<Integer> {
 
     @Spec
@@ -75,6 +77,9 @@ public class Run implements Callable<Integer> {
 
     @Option(names = {"-h", "--help"}, usageHelp = true, description = "display the command's help message")
     boolean helpRequested = false;
+
+    @Option(names = {"--context"}, description = "Configuration context to use")
+    String context = "default";
 
     @Option(names = {"-e", "--extra-vars"}, description = "additional process variables")
     Map<String, Object> extraVars = new LinkedHashMap<>();
@@ -92,13 +97,13 @@ public class Run implements Callable<Integer> {
     Path repoCacheDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("repoCache");
 
     @Option(names = {"--secret-dir"}, description = "secret store dir")
-    Path secretStoreDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("secrets");
+    Path secretStoreDir;
 
     @Option(names = {"--vault-dir"}, description = "vault dir")
-    Path vaultDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("vaults");
+    Path vaultDir;
 
     @Option(names = {"--vault-id"}, description = "vault id")
-    String vaultId = "default";
+    String vaultId;
 
     @Option(names = {"--imports-source"}, description = "default imports source")
     String importsSource = "https://github.com";
@@ -128,64 +133,55 @@ public class Run implements Callable<Integer> {
     @Option(names = {"--no-default-cfg"}, description = "Do not load default configuration (including standard dependencies)")
     boolean noDefaultCfg = false;
 
+    @Option(names = {"--no-prompt"}, description = "Disable interactive prompts and print recovery commands instead")
+    boolean noPrompt = false;
+
+    @Option(names = {"--no-gitignore"}, description = "Do not use .gitignore patterns when filtering files")
+    boolean noGitIgnore = false;
+
+    @Option(names = {"--target-dir"}, description = "Target directory for the assembled payload (default: <sourceDir>/target)")
+    Path targetDir;
+
     @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")
-    Path sourceDir = Paths.get(System.getProperty("user.dir"));
+    Path sourceDirOrFile = Paths.get(System.getProperty("user.dir"));
+
+    @Option(names = {"--dry-run"}, description = "execute process in dry-run mode?")
+    boolean dryRunMode = false;
 
     @Override
     public Integer call() throws Exception {
-        Verbosity verbosity = new Verbosity(this.verbosity);
+        var verbosity = new Verbosity(this.verbosity);
+        var cliConfigOverrides = new CliConfig.Overrides(secretStoreDir, vaultDir, vaultId);
+        CliConfigContext cliConfigContext = CliConfig.load(verbosity, context, cliConfigOverrides);
 
-        sourceDir = sourceDir.normalize().toAbsolutePath();
-        Path targetDir;
-
-        if (Files.isRegularFile(sourceDir)) {
-            Path src = sourceDir.toAbsolutePath();
-            System.out.println("Running a single Concord file: " + src);
-
-            targetDir = Files.createTempDirectory("payload");
-
-            Files.copy(src, targetDir.resolve("concord.yml"), StandardCopyOption.REPLACE_EXISTING);
-        } else if (Files.isDirectory(sourceDir)) {
-            targetDir = sourceDir.resolve("target");
-            if (cleanup && Files.exists(targetDir)) {
-                if (verbosity.verbose()) {
-                    System.out.println("Cleaning target directory");
-                }
-                IOUtils.deleteRecursively(targetDir);
-            }
-
-            // copy everything into target except target
-            IOUtils.copy(sourceDir, targetDir, "^target$", new CopyNotifier(verbosity.verbose() ? 0 : 100), StandardCopyOption.REPLACE_EXISTING);
-        } else {
-            throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
-        }
+        var sourceDir = resolveSourceDir(sourceDirOrFile.normalize().toAbsolutePath());
+        var workDir = prepareWorkDir(sourceDirOrFile.normalize().toAbsolutePath(), verbosity);
 
         if (!noDefaultCfg) {
-            copyDefaultCfg(targetDir, defaultCfg, verbosity.verbose());
+            copyDefaultCfg(workDir, defaultCfg, verbosity.verbose());
         }
 
-        DependencyManager dependencyManager = initDependencyManager();
-        ImportManager importManager = new ImportManagerFactory(dependencyManager,
+        var dependencyManager = LocalCliRuntime.createDependencyManager(depsCacheDir);
+        var importManager = new ImportManagerFactory(dependencyManager,
                 new CliRepositoryExporter(repoCacheDir), Collections.emptySet())
                 .create();
 
         ProjectLoaderV2.Result loadResult;
         try {
             loadResult = new ProjectLoaderV2(importManager)
-                    .load(targetDir, new CliImportsNormalizer(importsSource, verbosity.verbose(), defaultVersion), verbosity.verbose() ? new CliImportsListener() : null);
+                    .load(workDir, new CliImportsNormalizer(importsSource, verbosity.verbose(), defaultVersion), verbosity.verbose() ? new CliImportsListener() : null);
         } catch (ImportProcessingException e) {
             ObjectMapper om = new ObjectMapper();
             System.err.println("Error while processing import " + om.writeValueAsString(e.getImport()) + ": " + e.getMessage());
-            return -1;
+            return CliExitCodes.PROCESS_FAILED;
         } catch (Exception e) {
-            System.err.println("Error while loading " + targetDir);
+            System.err.println("Error while loading " + workDir);
             e.printStackTrace();
-            return -1;
+            return CliExitCodes.PROCESS_FAILED;
         }
 
-        ProcessDefinition processDefinition = loadResult.getProjectDefinition();
-
-        UUID instanceId = UUID.randomUUID();
+        var processDefinition = loadResult.getProjectDefinition();
+        var instanceId = UUID.randomUUID();
 
         if (verbosity.verbose() && !extraVars.isEmpty()) {
             System.out.println("Additional variables: " + extraVars);
@@ -195,74 +191,97 @@ public class Run implements Callable<Integer> {
             System.out.println("Active profiles: " + profiles);
         }
 
-        Map<String, Object> overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), profiles);
-        List<String> overlayDeps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
+        // "deps" are the "dependencies" of the last profile in the list of active profiles (if present)
+        var overlayCfg = EffectiveConfiguration.getEffectiveConfiguration(new ProcessDefinitionV2(processDefinition), profiles);
+        List<String> deps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
 
-        Collection<String> dependencies;
+        // "extraDependencies" are additive: ALL extra dependencies from ALL ACTIVE profiles are added to the list
+        var extraDeps = profiles.stream()
+                .flatMap(profileName -> Stream.ofNullable(processDefinition.profiles().get(profileName)))
+                .flatMap(profile -> profile.configuration().extraDependencies().stream())
+                .toList();
 
+        var allDeps = new ArrayList<String>(deps);
+        allDeps.addAll(extraDeps);
+
+        var resolver = new DependencyResolver(dependencyManager, verbosity.verbose());
+        Collection<String> resolvedDependencies;
         try {
-            dependencies = new DependencyResolver(dependencyManager, verbosity.verbose())
-                    .resolveDeps(overlayDeps);
+            resolvedDependencies = resolver.resolveDeps(allDeps);
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            return -1;
+            return CliExitCodes.PROCESS_FAILED;
         }
 
-        RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
-                .dependencies(dependencies)
+        var runnerCfg = RunnerConfiguration.builder()
+                .api(buildApiConfiguration(cliConfigContext))
+                .dependencies(resolvedDependencies)
                 .debug(processDefinition.configuration().debug())
                 .build();
 
+        if (verbosity.verbose()) {
+            System.out.println("Using '" + runnerCfg.api().baseUrl() + "' as API base URL");
+        }
+
         Map<String, Object> overlayArgs = MapUtils.getMap(overlayCfg, Constants.Request.ARGUMENTS_KEY, Collections.emptyMap());
-        Map<String, Object> args = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), overlayArgs, extraVars);
+        var args = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), overlayArgs, extraVars);
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
-        args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
+        args.put(Constants.Context.WORK_DIR_KEY, workDir.toAbsolutePath().toString());
         if (verbosity.verbose()) {
             dumpArguments(args);
         }
 
         if (effectiveYaml) {
-            Map<String, List<Step>> flows = new HashMap<>(processDefinition.flows());
-            for (String ap : profiles) {
-                Profile p = processDefinition.profiles().get(ap);
+            var flows = new HashMap<String, Flow>(processDefinition.flows());
+            for (var ap : profiles) {
+                var p = processDefinition.profiles().get(ap);
                 if (p != null) {
                     flows.putAll(p.flows());
                 }
             }
 
-            ProcessDefinition pd = ProcessDefinition.builder().from(processDefinition)
+            var pd = ProcessDefinition.builder().from(processDefinition)
                     .configuration(ProcessDefinitionConfiguration.builder().from(processDefinition.configuration())
                             .arguments(args)
-                            .dependencies(overlayDeps)
+                            .dependencies(allDeps)
                             .build())
                     .flows(flows)
                     .imports(Imports.builder().build())
                     .profiles(Collections.emptyMap())
                     .build();
 
-            ProjectSerializerV2 serializer = new ProjectSerializerV2();
+            var serializer = new ProjectSerializerV2();
             serializer.write(pd, System.out);
-            return 0;
+            return CliExitCodes.SUCCESS;
         }
 
-        System.out.println("Starting...");
+        System.out.println(ansi().fgBrightGreen().a("Starting...").reset());
 
-        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(args, profiles), projectInfo(args))
-                .entryPoint(entryPoint)
-                .instanceId(instanceId)
+        if (dryRunMode) {
+            System.out.println("Running in the dry-run mode.");
+        }
+
+        ProcessInfo processInfo = ProcessInfo.builder()
+                .activeProfiles(profiles)
+                .sessionToken("<undefined>")
                 .build();
 
-        Injector injector = new InjectorFactory(new WorkingDirectory(targetDir),
+        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo, projectInfo(args))
+                .entryPoint(entryPoint)
+                .instanceId(instanceId)
+                .dryRun(dryRunMode)
+                .build();
+
+        Injector injector = LocalCliRuntime.createInjector(workDir,
                 runnerCfg,
-                () -> cfg,
-                new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(secretStoreDir, targetDir, defaultTaskVars, new VaultProvider(vaultDir, vaultId), dependencyManager, verbosity))
-                .create();
+                cfg,
+                cliConfigContext,
+                defaultTaskVars,
+                dependencyManager,
+                verbosity);
 
         // Just to notify listeners
-        ProjectLoadListeners loadListeners = injector.getInstance(ProjectLoadListeners.class);
-        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
-        loader.load(targetDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, loadListeners);
+        LocalCliRuntime.notifyProjectLoaded(workDir);
 
         Runner runner = injector.getInstance(Runner.class);
 
@@ -270,43 +289,87 @@ public class Run implements Callable<Integer> {
             System.out.println("Available tasks: " + injector.getInstance(TaskProviders.class).names());
         }
 
+        ProcessSnapshot snapshot;
         try {
-            runner.start(cfg, processDefinition, args);
-        } catch (LoggedException e) {
-            return -1;
-        } catch (ParallelExecutionException e) {
-            System.err.println(e.getMessage());
-            return -1;
+            snapshot = runner.start(cfg, processDefinition, args);
+        } catch (ParallelExecutionException | UserDefinedException e) {
+            return CliExitCodes.PROCESS_FAILED;
         } catch (Exception e) {
-            if (verbosity.verbose()) {
-                System.err.print("Error: ");
-                e.printStackTrace(System.err);
-            } else {
-                System.err.println("Error: " + e.getMessage());
-            }
-            return 1;
+            logException(verbosity, e);
+            return CliExitCodes.ERROR;
         }
 
-        System.out.println("...done!");
+        if (LocalSuspendPersistence.isSuspended(snapshot)) {
+            var resumeDir = CliPaths.preferredResumeDir(sourceDir, workDir);
+            var metadata = LocalSuspendPersistence.ResumeMetadata.from(workDir,
+                    resumeDir,
+                    defaultTaskVars,
+                    depsCacheDir,
+                    context,
+                    cliConfigOverrides,
+                    profiles,
+                    cfg,
+                    runnerCfg);
+            LocalSuspendPersistence.save(workDir, snapshot, metadata);
+            Set<String> events = LocalSuspendPersistence.getEvents(snapshot);
+            List<Form> pendingForms = LocalFormState.syncPendingForms(workDir, events);
+            var interactiveAvailable = canPromptInteractively();
 
-        return 0;
+            if (pendingForms.isEmpty()) {
+                LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms, false);
+                return CliExitCodes.SUSPENDED;
+            }
+
+            if (!interactiveAvailable) {
+                LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms, false);
+                return CliExitCodes.SUSPENDED;
+            }
+
+            if (!Confirmation.confirm("Fill pending form now? (Y/n)", true)) {
+                LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms, true);
+                return CliExitCodes.SUSPENDED;
+            }
+
+            try {
+                snapshot = LocalFormSession.resumePendingForms(workDir, runner, snapshot, metadata, false);
+            } catch (ParallelExecutionException | UserDefinedException e) {
+                return CliExitCodes.PROCESS_FAILED;
+            } catch (Exception e) {
+                logException(verbosity, e);
+                return CliExitCodes.ERROR;
+            }
+
+            if (!LocalSuspendPersistence.isSuspended(snapshot)) {
+                LocalSuspendPersistence.cleanup(workDir);
+                System.out.println(ansi().fgBrightGreen().a("...done!").reset());
+                return CliExitCodes.SUCCESS;
+            }
+
+            LocalSuspendPersistence.save(workDir, snapshot, metadata);
+            events = LocalSuspendPersistence.getEvents(snapshot);
+            pendingForms = LocalFormState.syncPendingForms(workDir, events);
+            LocalSuspendPersistence.printResumeGuidance(resumeDir, events, pendingForms, true);
+            return CliExitCodes.SUSPENDED;
+        }
+
+        LocalSuspendPersistence.cleanup(workDir);
+        System.out.println(ansi().fgBrightGreen().a("...done!").reset());
+
+        return CliExitCodes.SUCCESS;
     }
 
-    @SuppressWarnings("unchecked")
-    private static ProcessInfo processInfo(Map<String, Object> args, List<String> profiles) {
-        Object processInfoObject = args.get("processInfo");
-        if (processInfoObject == null) {
-            processInfoObject = fromExtraVars("processInfo", args);
+    private boolean canPromptInteractively() {
+        return !noPrompt && PromptSupport.canPromptInteractively();
+    }
+
+    private ApiConfiguration buildApiConfiguration(CliConfigContext cliConfigContext) {
+        CliConfig.RemoteRunConfiguration remoteRun = cliConfigContext.remoteRun();
+        if (remoteRun == null || remoteRun.baseUrl() == null) {
+            return ApiConfiguration.builder().build();
         }
 
-        Map<String, Object> processInfo = Collections.emptyMap();
-        if (processInfoObject instanceof Map) {
-            processInfo = (Map<String, Object>) processInfoObject;
-        }
-
-        return ProcessInfo.builder()
-                .sessionToken(MapUtils.getString(processInfo, "sessionToken", "<undefined>"))
-                .activeProfiles(profiles)
+        return ApiConfiguration.builder()
+                .baseUrl(remoteRun.baseUrl())
                 .build();
     }
 
@@ -389,36 +452,108 @@ public class Run implements Callable<Integer> {
         }
     }
 
-    private DependencyManager initDependencyManager() throws IOException {
-        return new DependencyManager(getDependencyManagerConfiguration());
+    private Path prepareWorkDir(Path sourceDir, Verbosity verbosity) throws IOException {
+        Path srcDir = resolveSourceDir(sourceDir);
+
+        Path target = targetDir != null
+                ? targetDir.normalize().toAbsolutePath()
+                : CliPaths.defaultTargetDir(srcDir);
+
+        validatePaths(srcDir, target);
+
+        if (cleanup) {
+            cleanTargetDirectory(target, verbosity);
+        }
+
+        if (!Files.exists(target)) {
+            Files.createDirectories(target);
+        }
+
+        if (Files.isRegularFile(sourceDir)) {
+            System.out.println("Running a single Concord file: " + sourceDir);
+            Files.copy(sourceDir, target.resolve("concord.yml"), StandardCopyOption.REPLACE_EXISTING);
+        } else {
+            copySourceToTarget(srcDir, target, verbosity);
+        }
+
+        return target;
     }
 
-    private DependencyManagerConfiguration getDependencyManagerConfiguration() {
-        Path cfgFile = Paths.get(System.getProperty("user.home"), ".concord", "mvn.json");
-        if (Files.exists(cfgFile)) {
-            return DependencyManagerConfiguration.of(depsCacheDir, DependencyManagerRepositories.get(cfgFile));
+    private static Path resolveSourceDir(Path sourceDir) {
+        if (Files.isRegularFile(sourceDir)) {
+            var parent = sourceDir.getParent();
+            if (parent == null) {
+                throw new IllegalArgumentException("Cannot determine parent directory of: " + sourceDir);
+            }
+            return parent;
         }
-        return DependencyManagerConfiguration.of(depsCacheDir);
+        if (Files.isDirectory(sourceDir)) {
+            return sourceDir;
+        }
+        throw new IllegalArgumentException("Invalid source (not a file or directory): " + sourceDir);
+    }
+
+    private static void validatePaths(Path src, Path target) {
+        if (target.equals(src)) {
+            throw new IllegalArgumentException("Target directory cannot be the same as the source: " + target);
+        }
+        if (src.startsWith(target)) {
+            throw new IllegalArgumentException("Target directory cannot be a parent of the source: " + target);
+        }
+        if (Files.isSymbolicLink(target)) {
+            throw new IllegalArgumentException("Target directory cannot be a symbolic link: " + target);
+        }
+    }
+
+    private static void cleanTargetDirectory(Path target, Verbosity verbosity) throws IOException {
+        if (Files.exists(target)) {
+            if (verbosity.verbose()) {
+                System.out.println("Cleaning target directory: " + target);
+            }
+            PathUtils.deleteRecursively(target);
+        }
+    }
+
+    private void copySourceToTarget(Path src, Path target, Verbosity verbosity) throws IOException {
+        Path skipDir = target.startsWith(src) ? target : null;
+        GitIgnoreFilter filter = noGitIgnore ? null : GitIgnoreFilter.load(src);
+
+        String targetRelPath = skipDir != null ? src.relativize(target).toString() : null;
+        String displayPath = (targetRelPath != null) ? "./" + targetRelPath : target.toString();
+        CopyNotifier notifier = new CopyNotifier(verbosity.verbose() ? 0 : 100, displayPath);
+
+        copyWithGitIgnore(src, target, skipDir, filter, notifier, StandardCopyOption.REPLACE_EXISTING);
     }
 
     private static void dumpArguments(Map<String, Object> args) {
         ObjectMapper om = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
         try {
-            System.out.println("Process arguments:");
-            System.out.println(om.writerWithDefaultPrettyPrinter().writeValueAsString(args));
+            System.out.print(ansi().fgYellow().a("\nProcess arguments:\n\t"));
+            System.out.println(om.writerWithDefaultPrettyPrinter().writeValueAsString(args).replace("\n", "\n\t"));
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    static void logException(Verbosity verbosity, Exception e) {
+        if (verbosity.verbose()) {
+            System.err.print(ansi().fgBrightRed().a("Error: "));
+            e.printStackTrace(System.err);
+        } else {
+            System.err.println("Error: " + e.getMessage()); // TODO
         }
     }
 
     private static class CopyNotifier implements FileVisitor {
 
         private final long notifyOnCount;
+        private final String targetDirDisplay;
 
         private long currentCount = 0;
 
-        public CopyNotifier(long notifyOnCount) {
+        public CopyNotifier(long notifyOnCount, String targetDirDisplay) {
             this.notifyOnCount = notifyOnCount;
+            this.targetDirDisplay = targetDirDisplay;
         }
 
         @Override
@@ -428,12 +563,75 @@ public class Run implements Callable<Integer> {
             }
 
             if (currentCount == notifyOnCount) {
-                System.out.println("Copying files into the target directory...");
+                System.out.println(ansi().fgBrightBlack().a("Copying files into " + targetDirDisplay + " directory..."));
                 currentCount = -1;
                 return;
             }
 
             currentCount++;
         }
+    }
+
+    private static void copyWithGitIgnore(Path src, Path dst, Path skipDir,
+                                          GitIgnoreFilter filter,
+                                          FileVisitor visitor, CopyOption... options) throws IOException {
+        Files.walkFileTree(src, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                if (dir.equals(src)) {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                // Skip the target directory (if it's inside the source directory)
+                if (skipDir != null && Files.isSameFile(dir, skipDir)) {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+
+                Path rel = src.relativize(dir);
+                // Check gitignore
+                if (filter != null && filter.isIgnored(rel, true)) {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Path rel = src.relativize(file);
+                if (filter != null && filter.isIgnored(rel, false)) {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                Path dstFile = dst.resolve(rel);
+                Path parent = dstFile.getParent();
+                if (!Files.exists(parent)) {
+                    Files.createDirectories(parent);
+                }
+
+                if (Files.isSymbolicLink(file)) {
+                    Path link = Files.readSymbolicLink(file);
+                    Path target = file.getParent().resolve(link).normalize();
+
+                    if (!target.startsWith(src)) {
+                        throw new IOException("Symlinks outside the base directory are not supported: " + file + " -> " + target);
+                    }
+
+                    if (Files.notExists(target)) {
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    Files.deleteIfExists(dstFile);
+                    Files.createSymbolicLink(dstFile, link);
+                } else {
+                    Files.copy(file, dstFile, options);
+                }
+
+                if (visitor != null) {
+                    visitor.visit(file, dstFile);
+                }
+
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 }

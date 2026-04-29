@@ -21,7 +21,7 @@ package com.walmartlabs.concord.agentoperator.planner;
  */
 
 import com.walmartlabs.concord.agentoperator.agent.AgentClient;
-import com.walmartlabs.concord.agentoperator.PodUtils;
+import com.walmartlabs.concord.agentoperator.PodLabels;
 import com.walmartlabs.concord.agentoperator.resources.AgentPod;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
@@ -48,7 +48,7 @@ public class TagForRemovalChange implements Change {
             return;
         }
 
-        PodUtils.applyTag(client, podName, AgentPod.TAGGED_FOR_REMOVAL_LABEL, "true");
+        PodLabels.applyTag(client, podName, AgentPod.TAGGED_FOR_REMOVAL_LABEL, "true");
     }
 
     @Override

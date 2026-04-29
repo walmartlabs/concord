@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import 'typeface-lato';
 import 'semantic-ui-css/semantic.min.css';
@@ -28,17 +28,9 @@ import App from './App';
 import './index.css';
 
 const rootEl = document.getElementById('root') as HTMLElement;
+const root = createRoot(rootEl);
 
-ReactDOM.render(<App />, rootEl);
-
-// @ts-ignore
-if (module.hot) {
-    // @ts-ignore
-    module.hot.accept('./App', () => {
-        const NextApp = require('./App').default;
-        ReactDOM.render(<NextApp />, rootEl);
-    });
-}
+root.render(<App />);
 
 // remove any old service worker
 if (navigator.serviceWorker) {

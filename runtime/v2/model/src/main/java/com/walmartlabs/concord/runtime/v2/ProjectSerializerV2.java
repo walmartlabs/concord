@@ -76,7 +76,8 @@ public class ProjectSerializerV2 {
                 .addSerializer(Form.class, new FormDefinitionSerializer())
                 .addSerializer(Trigger.class, new TriggerSerializer())
                 .addSerializer(ProcessDefinition.class, new ProcessDefinitionSerializer())
-                .addSerializer(Duration.class, new DurationSerializer());
+                .addSerializer(Duration.class, new DurationSerializer())
+                .addSerializer(Flow.class, new FlowSerializer());
 
         return new ObjectMapper(new YAMLFactory()
                 .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER))

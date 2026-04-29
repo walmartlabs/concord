@@ -20,17 +20,18 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.pipelines.processors.signing.Signing;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.user.UserInfoProvider.BaseUserInfo;
+import com.walmartlabs.concord.server.user.UserInfoProvider;
 import com.walmartlabs.concord.server.user.UserManager;
-import org.immutables.value.Value;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Collects and stores the current user's data.
@@ -40,22 +41,39 @@ public abstract class UserInfoProcessor implements PayloadProcessor {
     private final String key;
     private final UserManager userManager;
     private final Signing signing;
+    private final ObjectMapper objectMapper;
 
-    public UserInfoProcessor(String key, UserManager userManager, Signing signing) {
-        this.key = key;
-        this.userManager = userManager;
-        this.signing = signing;
+    public UserInfoProcessor(String key,
+                             UserManager userManager,
+                             Signing signing,
+                             ObjectMapper objectMapper) {
+
+        this.key = requireNonNull(key);
+        this.userManager = requireNonNull(userManager);
+        this.signing = requireNonNull(signing);
+        this.objectMapper = requireNonNull(objectMapper);
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        BaseUserInfo info = userManager.getCurrentUserInfo();
+        var info = userManager.getCurrentUserInfo();
+        var user = userManager.get(info.id());
 
-        if (signing.isEnabled()) {
-            info = sign(info);
+        if (user.isPresent() && user.get().isDisabled()) {
+            throw new ConcordApplicationException(String.format("User '%s' is disabled", info.id()));
         }
 
-        Map<String, BaseUserInfo> m = new HashMap<>();
+        if (signing.isEnabled()) {
+            var signature = Optional.ofNullable(info.username())
+                    .map(this::sign);
+
+            info = signature.isEmpty() ? info : UserInfoProvider.UserInfo.builder()
+                    .from(info)
+                    .usernameSignature(signature.get())
+                    .build();
+        }
+
+        Map<String, UserInfoProvider.UserInfo> m = new HashMap<>();
         m.put(key, info);
 
         payload = payload.mergeValues(Payload.CONFIGURATION, m);
@@ -63,28 +81,11 @@ public abstract class UserInfoProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
-    private BaseUserInfo sign(BaseUserInfo i) {
-        if (i == null || i.username() == null) {
-            return i;
-        }
-
+    private String sign(String username) {
         try {
-            String s = signing.sign(i.username());
-            return SignedUserInfo.from(i).usernameSignature(s).build();
+            return signing.sign(username);
         } catch (Exception e) {
             throw new ConcordApplicationException("Error while singing process data: " + e.getMessage(), e);
-        }
-    }
-
-    @Value.Immutable
-    @JsonSerialize(as = ImmutableSignedUserInfo.class)
-    @JsonDeserialize(as = ImmutableSignedUserInfo.class)
-    public interface SignedUserInfo extends BaseUserInfo {
-
-        String usernameSignature();
-
-        public static ImmutableSignedUserInfo.Builder from(BaseUserInfo i) {
-            return ImmutableSignedUserInfo.builder().from(i);
         }
     }
 }

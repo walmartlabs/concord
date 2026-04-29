@@ -1,3 +1,7 @@
+configuration:
+  dependencies:
+    - mvn://com.walmartlabs.concord.plugins.basic:noderoster-tasks:PROJECT_VERSION
+
 flows:
   default:
   - task: nodeRoster

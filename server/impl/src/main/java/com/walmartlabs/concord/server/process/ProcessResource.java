@@ -22,7 +22,8 @@ package com.walmartlabs.concord.server.process;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
+import com.walmartlabs.concord.common.ZipUtils;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.policyengine.AttachmentsRule;
 import com.walmartlabs.concord.policyengine.CheckResult;
@@ -31,16 +32,15 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.HttpUtils;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.OffsetDateTimeParam;
+import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.events.ExpressionUtils;
-import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.policy.PolicyException;
 import com.walmartlabs.concord.server.policy.PolicyManager;
-import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitEntry;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
@@ -48,16 +48,12 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogAccessManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
-import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.process.waits.AbstractWaitCondition;
 import com.walmartlabs.concord.server.process.waits.ProcessWaitManager;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.sdk.PartialProcessKey;
-import com.walmartlabs.concord.server.sdk.ProcessKey;
-import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.sdk.*;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
@@ -98,6 +94,7 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
+import static java.util.Objects.requireNonNull;
 
 @javax.ws.rs.Path("/api/v1/process")
 @Tag(name = "Process")
@@ -121,6 +118,7 @@ public class ProcessResource implements Resource {
     private final ProcessLogAccessManager logAccessManager;
     private final ProcessLogManager processLogManager;
     private final PolicyManager policyManager;
+    private final UuidGenerator uuidGenerator;
 
     private final ProcessResourceV2 v2;
 
@@ -141,24 +139,26 @@ public class ProcessResource implements Resource {
                            ProcessLogAccessManager logAccessManager,
                            ProcessLogManager processLogManager,
                            PolicyManager policyManager,
+                           UuidGenerator uuidGenerator,
                            ProcessResourceV2 v2) {
 
-        this.processWaitManager = processWaitManager;
-        this.processManager = processManager;
-        this.queueDao = queueDao;
-        this.processQueueManager = processQueueManager;
-        this.payloadManager = payloadManager;
-        this.stateManager = stateManager;
-        this.secretStoreCfg = secretStoreCfg;
-        this.encryptedValueManager = encryptedValueManager;
-        this.projectAccessManager = projectAccessManager;
-        this.processKeyCache = processKeyCache;
-        this.objectMapper = objectMapper;
-        this.processCfg = processCfg;
-        this.logManager = logManager;
-        this.logAccessManager = logAccessManager;
-        this.processLogManager = processLogManager;
-        this.policyManager = policyManager;
+        this.processWaitManager = requireNonNull(processWaitManager);
+        this.processManager = requireNonNull(processManager);
+        this.queueDao = requireNonNull(queueDao);
+        this.processQueueManager = requireNonNull(processQueueManager);
+        this.payloadManager = requireNonNull(payloadManager);
+        this.stateManager = requireNonNull(stateManager);
+        this.secretStoreCfg = requireNonNull(secretStoreCfg);
+        this.encryptedValueManager = requireNonNull(encryptedValueManager);
+        this.projectAccessManager = requireNonNull(projectAccessManager);
+        this.processKeyCache = requireNonNull(processKeyCache);
+        this.objectMapper = requireNonNull(objectMapper);
+        this.processCfg = requireNonNull(processCfg);
+        this.logManager = requireNonNull(logManager);
+        this.logAccessManager = requireNonNull(logAccessManager);
+        this.processLogManager = requireNonNull(processLogManager);
+        this.policyManager = requireNonNull(policyManager);
+        this.uuidGenerator = requireNonNull(uuidGenerator);
 
         this.v2 = v2;
     }
@@ -178,25 +178,7 @@ public class ProcessResource implements Resource {
                                       @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @QueryParam("out") String[] out) {
 
-        if (sync) {
-            throw syncIsForbidden();
-        }
-
-        assertPartialKey(parentInstanceId);
-
-        PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
-
-        UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
-
-        Payload payload;
-        try {
-            payload = payloadManager.createPayload(processKey, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), in, out);
-        } catch (IOException e) {
-            log.error("start -> error creating a payload: {}", e.getMessage());
-            throw new ConcordApplicationException("Error creating a payload", e);
-        }
-
-        return toResponse(processManager.start(payload));
+        throw new ConcordApplicationException("This API endpoint is no longer supported.");
     }
 
     /**
@@ -214,7 +196,7 @@ public class ProcessResource implements Resource {
                                       @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @QueryParam("out") String[] out) {
 
-        return start(entryPoint, Collections.emptyMap(), parentInstanceId, sync, out);
+        throw new ConcordApplicationException("This API endpoint is no longer supported.");
     }
 
     /**
@@ -234,27 +216,7 @@ public class ProcessResource implements Resource {
                                       @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @QueryParam("out") String[] out) {
 
-        if (sync) {
-            throw syncIsForbidden();
-        }
-
-        assertPartialKey(parentInstanceId);
-
-        PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
-
-        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
-        EntryPoint ep = payloadManager.parseEntryPoint(processKey, orgId, entryPoint);
-        UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
-
-        Payload payload;
-        try {
-            payload = payloadManager.createPayload(processKey, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, req, out);
-        } catch (IOException e) {
-            log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e.getMessage());
-            throw new ConcordApplicationException("Error creating a payload", e);
-        }
-
-        return toResponse(processManager.start(payload));
+        throw new ConcordApplicationException("This API endpoint is no longer supported.");
     }
 
     /**
@@ -271,26 +233,30 @@ public class ProcessResource implements Resource {
                                       @Parameter(hidden = true) @Deprecated @QueryParam("out") String[] out,
                                       @Context HttpServletRequest request) {
 
-        boolean sync2 = MultipartUtils.getBoolean(input, Constants.Multipart.SYNC, false);
-        if (sync || sync2) {
-            throw syncIsForbidden();
-        }
-
-        Payload payload;
         try {
-            payload = payloadManager.createPayload(input, request);
+            boolean sync2 = MultipartUtils.getBoolean(input, Constants.Multipart.SYNC, false);
+            if (sync || sync2) {
+                throw syncIsForbidden();
+            }
 
-            // TODO remove after deprecating the old endpoints
-            payload = PayloadBuilder.basedOn(payload)
-                    .parentInstanceId(parentInstanceId)
-                    .mergeOutExpressions(out)
-                    .build();
-        } catch (IOException e) {
-            log.error("start -> error creating a payload: {}", e.getMessage());
-            throw new ConcordApplicationException("Error creating a payload", e);
+            Payload payload;
+            try {
+                payload = payloadManager.createPayload(input, request);
+
+                // TODO remove after deprecating the old endpoints
+                payload = PayloadBuilder.basedOn(payload)
+                        .parentInstanceId(parentInstanceId)
+                        .mergeOutExpressions(out)
+                        .build();
+            } catch (IOException e) {
+                log.error("start -> error creating a payload: {}", e.getMessage());
+                throw new ConcordApplicationException("Error creating a payload", e);
+            }
+
+            return toResponse(processManager.start(payload));
+        } finally {
+            input.close();
         }
-
-        return toResponse(processManager.start(payload));
     }
 
     /**
@@ -310,27 +276,7 @@ public class ProcessResource implements Resource {
                                       @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @QueryParam("out") String[] out) {
 
-        if (sync) {
-            throw syncIsForbidden();
-        }
-
-        assertPartialKey(parentInstanceId);
-
-        PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
-
-        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
-        EntryPoint ep = payloadManager.parseEntryPoint(processKey, orgId, entryPoint);
-        UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
-
-        Payload payload;
-        try {
-            payload = payloadManager.createPayload(processKey, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, input, out);
-        } catch (IOException e) {
-            log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
-            throw new ConcordApplicationException("Error creating a payload", e);
-        }
-
-        return toResponse(processManager.start(payload));
+        throw new ConcordApplicationException("This API endpoint is no longer supported.");
     }
 
     /**
@@ -350,32 +296,7 @@ public class ProcessResource implements Resource {
                                       @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @QueryParam("out") String[] out) {
 
-        if (sync) {
-            throw syncIsForbidden();
-        }
-
-        // allow empty POST requests
-        if (isEmpty(in)) {
-            return start(entryPoint, parentInstanceId, sync, out);
-        }
-
-        assertPartialKey(parentInstanceId);
-
-        PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
-
-        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
-        EntryPoint ep = payloadManager.parseEntryPoint(processKey, orgId, entryPoint);
-        UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
-
-        Payload payload;
-        try {
-            payload = payloadManager.createPayload(processKey, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, in, out);
-        } catch (IOException e) {
-            log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e.getMessage());
-            throw new ConcordApplicationException("Error creating a payload", e);
-        }
-
-        return toResponse(processManager.start(payload));
+        throw new ConcordApplicationException("This API endpoint is no longer supported.");
     }
 
     @POST
@@ -447,7 +368,7 @@ public class ProcessResource implements Resource {
             throw new ValidationErrorsException("Unknown parent instance ID: " + parentInstanceId);
         }
 
-        PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
+        PartialProcessKey processKey = PartialProcessKey.from(uuidGenerator.generate());
         ProcessKey parentProcessKey = new ProcessKey(parent.instanceId(), parent.createdAt());
 
         UUID projectId = parent.projectId();
@@ -570,13 +491,7 @@ public class ProcessResource implements Resource {
     @WithTimer
     @Deprecated
     public ProcessEntry get(@PathParam("id") UUID instanceId) {
-        PartialProcessKey processKey = PartialProcessKey.from(instanceId);
-        ProcessEntry e = processQueueManager.get(processKey);
-        if (e == null) {
-            log.warn("get ['{}'] -> not found", instanceId);
-            throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
-        }
-        return e;
+        return v2.get(instanceId, Set.of());
     }
 
     /**
@@ -588,7 +503,7 @@ public class ProcessResource implements Resource {
     @WithTimer
     @Operation(description = "Get process status history")
     public List<ProcessStatusHistoryEntry> getStatusHistory(@PathParam("instanceId") UUID instanceId) throws IOException {
-        ProcessKey pk = assertKey(instanceId);
+        ProcessKey pk = processKeyCache.assertKey(instanceId);
         return queueDao.getStatusHistory(pk);
     }
 
@@ -601,7 +516,7 @@ public class ProcessResource implements Resource {
     @WithTimer
     @Operation(description = "Get process' wait conditions")
     public ProcessWaitEntry getWait(@PathParam("instanceId") UUID instanceId) {
-        ProcessKey pk = assertKey(instanceId);
+        ProcessKey pk = processKeyCache.assertKey(instanceId);
         return processWaitManager.getWait(pk);
     }
 
@@ -633,9 +548,9 @@ public class ProcessResource implements Resource {
 
         Optional<Path> o = stateManager.get(processKey, resource, src -> {
             try {
-                Path tmp = IOUtils.createTempFile("attachment", ".bin");
+                Path tmp = PathUtils.createTempFile("attachment", ".bin");
                 try (OutputStream dst = Files.newOutputStream(tmp)) {
-                    IOUtils.copy(src, dst);
+                    src.transferTo(dst);
                 }
                 return Optional.of(tmp);
             } catch (IOException e) {
@@ -651,7 +566,7 @@ public class ProcessResource implements Resource {
 
         return Response.ok((StreamingOutput) out -> {
             try (InputStream in = Files.newInputStream(tmp)) {
-                IOUtils.copy(in, out);
+                in.transferTo(out);
             } finally {
                 Files.delete(tmp);
             }
@@ -784,13 +699,13 @@ public class ProcessResource implements Resource {
     /**
      * Appends a process' log.
      *
-     * @deprecated in favor of the /api/v2/process/{id}/log* endpoints
+     * @deprecated in favor of the /api/v2/process/{id}/log* endpoints. The endpoint is still used for the runtime-v1.
      */
     @POST
     @javax.ws.rs.Path("{id}/log")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
-    @Deprecated
+    @Deprecated()
     @Operation(description = "Appends a process' log", operationId = "appendProcessLog")
     @RequestBody(description = "Log content", required = true,
             content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM,
@@ -801,7 +716,7 @@ public class ProcessResource implements Resource {
         ProcessKey processKey = assertProcessKey(instanceId);
 
         try {
-            byte[] ab = IOUtils.toByteArray(data);
+            byte[] ab = data.readAllBytes();
             int upper = logManager.log(processKey, ab);
 
             // whenever we accept logs from an external source (e.g. from an Agent) we need to check
@@ -875,7 +790,7 @@ public class ProcessResource implements Resource {
                     .orElseThrow(() -> new ConcordApplicationException("State file not found: " + fileName, Status.NOT_FOUND));
 
             try (InputStream in = Files.newInputStream(tmp)) {
-                IOUtils.copy(in, output);
+                in.transferTo(output);
             } finally {
                 Files.delete(tmp);
             }
@@ -904,11 +819,11 @@ public class ProcessResource implements Resource {
         Path tmpIn = null;
         Path tmpDir = null;
         try {
-            tmpIn = IOUtils.createTempFile("attachments", ".zip");
+            tmpIn = PathUtils.createTempFile("attachments", ".zip");
             Files.copy(data, tmpIn, StandardCopyOption.REPLACE_EXISTING);
 
-            tmpDir = IOUtils.createTempDir("attachments");
-            IOUtils.unzip(tmpIn, tmpDir);
+            tmpDir = PathUtils.createTempDir("attachments");
+            ZipUtils.unzip(tmpIn, tmpDir);
 
             assertAttachmentsPolicy(tmpDir, entry);
 
@@ -932,7 +847,7 @@ public class ProcessResource implements Resource {
         } finally {
             if (tmpDir != null) {
                 try {
-                    IOUtils.deleteRecursively(tmpDir);
+                    PathUtils.deleteRecursively(tmpDir);
                 } catch (IOException e) {
                     log.warn("uploadAttachments -> cleanup error: {}", e.getMessage());
                 }
@@ -1028,6 +943,9 @@ public class ProcessResource implements Resource {
     public Response setWaitCondition(@PathParam("id") UUID instanceId, Map<String, Object> waitCondition) {
         ProcessKey processKey = assertProcessKey(instanceId);
         AbstractWaitCondition condition = objectMapper.convertValue(waitCondition, AbstractWaitCondition.class);
+        if (condition == null) {
+            throw new ConcordApplicationException("Wait condition is required", Status.BAD_REQUEST);
+        }
         processWaitManager.addWait(processKey, condition);
         return Response.ok().build();
     }
@@ -1108,24 +1026,11 @@ public class ProcessResource implements Resource {
         return k;
     }
 
-    private ProcessKey assertKey(UUID id) {
-        Optional<ProcessKey> key = processKeyCache.getUncached(id);
-        return key.orElseThrow(() -> new ValidationErrorsException("Unknown instance ID: " + id));
-    }
-
-    private static boolean isEmpty(InputStream in) {
-        try {
-            return in.available() <= 0;
-        } catch (IOException e) {
-            throw new ConcordApplicationException("Internal error", e);
-        }
-    }
-
     private static Optional<Path> copyToTmp(InputStream in) {
         try {
-            Path p = IOUtils.createTempFile("state", ".bin");
+            Path p = PathUtils.createTempFile("state", ".bin");
             try (OutputStream out = Files.newOutputStream(p)) {
-                IOUtils.copy(in, out);
+                in.transferTo(out);
             }
             return Optional.of(p);
         } catch (IOException e) {
@@ -1163,7 +1068,7 @@ public class ProcessResource implements Resource {
             long actualSize = e.getEntity();
             long limit = r.maxSizeInBytes();
 
-            sb.append(MessageFormat.format(Objects.requireNonNull(msg), actualSize, limit)).append(';');
+            sb.append(MessageFormat.format(requireNonNull(msg), actualSize, limit)).append(';');
         }
         return sb.toString();
     }

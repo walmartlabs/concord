@@ -23,7 +23,7 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.client2.CreateSecretRequest;
 import com.walmartlabs.concord.client2.ProcessListFilter;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -32,14 +32,14 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.walmartlabs.concord.common.IOUtils.grep;
+import static com.walmartlabs.concord.common.GrepUtils.grep;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
 import static com.walmartlabs.concord.it.server.AbstractServerIT.DEFAULT_TEST_TIMEOUT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -76,9 +76,8 @@ public class CronIT extends AbstractServerIT {
 
         // ---
 
-        Set<String> expectedPatterns = new HashSet<>();
-        expectedPatterns.add(".*Hello, AAA!.*");
-        expectedPatterns.add(".*Hello, BBB!.*");
+        UUID aaaProcessId = null;
+        UUID bbbProcessId = null;
 
         while (true) {
             Thread.sleep(1000);
@@ -97,21 +96,25 @@ public class CronIT extends AbstractServerIT {
                 assertNotEquals(ProcessEntry.StatusEnum.FAILED, e.getStatus());
             }
 
-            Set<String> patterns = new HashSet<>(expectedPatterns);
-            for (String p : patterns) {
-                for (ProcessEntry e : processes) {
-                    if (hasLogEntry(e, p)) {
-                        expectedPatterns.remove(p);
-                    }
-                }
+            if (aaaProcessId == null) {
+                aaaProcessId = findProcessWithLogEntry(aaaProcesses, ".*Hello, AAA!.*");
             }
 
-            if (expectedPatterns.isEmpty()) {
+            if (bbbProcessId == null) {
+                bbbProcessId = findProcessWithLogEntry(bbbProcesses, ".*Hello, BBB!.*");
+            }
+
+            if (aaaProcessId != null && bbbProcessId != null) {
                 break;
             }
         }
 
         // --- clean up
+
+        ProcessEntry aaaProcess = waitForStatus(getApiClient(), aaaProcessId, ProcessEntry.StatusEnum.FINISHED);
+        ProcessEntry bbbProcess = waitForStatus(getApiClient(), bbbProcessId, ProcessEntry.StatusEnum.FINISHED);
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, aaaProcess.getStatus());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, bbbProcess.getStatus());
 
         projectsApi.deleteProject(orgName, projectName);
     }
@@ -180,6 +183,8 @@ public class CronIT extends AbstractServerIT {
 
             ProcessEntry pe = processes.get(0);
             assertNotEquals(ProcessEntry.StatusEnum.FAILED, pe.getStatus());
+            pe = waitForStatus(getApiClient(), pe.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
+            assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
             assertEquals(cur.getId(), pe.getInitiatorId());
             assertEquals(username, pe.getInitiator());
             break;
@@ -194,7 +199,7 @@ public class CronIT extends AbstractServerIT {
         Path tmpDir = createTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource(initResource).toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        PathUtils.copy(src.toPath(), tmpDir);
 
         try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
             repo.add().addFilepattern(".").call();
@@ -233,5 +238,14 @@ public class CronIT extends AbstractServerIT {
         byte[] ab = getLog(e.getInstanceId());
         List<String> l = grep(pattern, ab);
         return !l.isEmpty();
+    }
+
+    private UUID findProcessWithLogEntry(List<ProcessEntry> processes, String pattern) throws Exception {
+        for (ProcessEntry e : processes) {
+            if (hasLogEntry(e, pattern)) {
+                return e.getInstanceId();
+            }
+        }
+        return null;
     }
 }

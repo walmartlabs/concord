@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { Button, Dropdown, Icon, Table } from 'semantic-ui-react';
+import { Dropdown, Icon, Table } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import {
@@ -39,6 +39,7 @@ interface ExternalProps {
     orgName: ConcordKey;
     projectName: ConcordKey;
     repo: RepositoryEntry;
+    triggerData: TriggerEntry[];
     refresh: () => void;
 }
 
@@ -89,31 +90,6 @@ const renderManualTrigger = ({
 const RepositoryActionDropdown = (props: ExternalProps) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<RequestError>();
-    const [manualTriggers, setManualTriggers] = useState<TriggerEntry[]>();
-
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            setError(undefined);
-
-            try {
-                const result = await apiListTriggers({
-                    type: 'manual',
-                    orgName: props.orgName,
-                    projectName: props.projectName,
-                    repoName: props.repo.name
-                });
-
-                setManualTriggers(result);
-            } catch (e) {
-                setError(e);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [props.orgName, props.projectName, props.repo.name]);
 
     const { orgName, projectName, repo, refresh } = props;
 
@@ -133,7 +109,7 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
     return (
         <>
             <Table.Cell style={{ paddingRight: '0px' }}>
-                {manualTriggers && manualTriggers.length > 0 ? (
+                {props.triggerData?.length > 0 ? (
                     <Dropdown
                         icon="play green"
                         pointing={'top right'}
@@ -154,14 +130,15 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
                                     <Dropdown.Item
                                         onClick={onClick}
                                         disabled={repoDisabled}
-                                        key={'run'}>
+                                        key={'run'}
+                                        data-testid={`repository-run-button-${repoName}`}>
                                         <Icon name="play" color="blue" />
                                         <span className="text">Run</span>
                                     </Dropdown.Item>
                                 )}
                             />
                             <Dropdown.Divider />
-                            {manualTriggers.map((t) =>
+                            {props.triggerData.map((t) =>
                                 renderManualTrigger({
                                     trigger: t,
                                     orgName,
@@ -186,20 +163,21 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
                         allowEntryPoint={true}
                         allowProfile={true}
                         trigger={(onClick: any) => (
-                            <Button
+                            <button
+                                type="button"
                                 onClick={onClick}
+                                className="ui medium compact button"
                                 style={{
                                     backgroundColor: 'rgba(255, 255, 255, 0)',
                                     paddingLeft: '25%'
                                 }}
-                                size="medium"
-                                icon={true}
                                 disabled={repoDisabled}
-                                compact={true}>
+                                data-testid={`repository-run-button-${repoName}`}
+                            >
                                 <div data-toggle="tooltip" data-placement="bottom" title="Run">
                                     <Icon name="play" color="blue" />
                                 </div>
-                            </Button>
+                            </button>
                         )}
                     />
                 )}

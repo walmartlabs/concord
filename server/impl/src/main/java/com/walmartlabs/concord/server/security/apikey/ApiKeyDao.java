@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.security.apikey;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.server.UuidGenerator;
 import org.jooq.Configuration;
 import org.jooq.Record4;
 
@@ -35,17 +36,20 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ApiKeys.API_KEYS;
 import static com.walmartlabs.concord.server.security.apikey.ApiKeyUtils.hash;
+import static java.util.Objects.requireNonNull;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.selectFrom;
 
 public class ApiKeyDao extends AbstractDao {
 
     private final SecureRandom rnd;
+    private final UuidGenerator uuidGenerator;
 
     @Inject
-    public ApiKeyDao(@MainDB Configuration cfg, SecureRandom rnd) {
+    public ApiKeyDao(@MainDB Configuration cfg, SecureRandom rnd, UuidGenerator uuidGenerator) {
         super(cfg);
-        this.rnd = rnd;
+        this.rnd = requireNonNull(rnd);
+        this.uuidGenerator = requireNonNull(uuidGenerator);
     }
 
     public String newApiKey() {
@@ -77,12 +81,21 @@ public class ApiKeyDao extends AbstractDao {
     }
 
     public UUID insert(UUID userId, String key, String name, OffsetDateTime expiredAt) {
+        UUID keyId = uuidGenerator.generate();
         return txResult(tx -> tx.insertInto(API_KEYS)
-                .columns(API_KEYS.USER_ID, API_KEYS.API_KEY, API_KEYS.KEY_NAME, API_KEYS.EXPIRED_AT)
-                .values(userId, hash(key), name, expiredAt)
+                .columns(API_KEYS.KEY_ID, API_KEYS.USER_ID, API_KEYS.API_KEY, API_KEYS.KEY_NAME, API_KEYS.EXPIRED_AT)
+                .values(keyId, userId, hash(key), name, expiredAt)
                 .returning(API_KEYS.KEY_ID)
                 .fetchOne()
                 .getKeyId());
+    }
+
+    public void update(UUID keyId, String key, OffsetDateTime expiredAt) {
+        tx(tx -> tx.update(API_KEYS)
+                .set(API_KEYS.API_KEY, hash(key))
+                .set(API_KEYS.EXPIRED_AT, expiredAt)
+                .where(API_KEYS.KEY_ID.eq(keyId))
+                .execute());
     }
 
     public void delete(UUID id) {

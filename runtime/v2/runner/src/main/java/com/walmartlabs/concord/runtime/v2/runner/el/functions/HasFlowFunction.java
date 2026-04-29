@@ -22,21 +22,13 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
 
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Profile;
+import com.walmartlabs.concord.runtime.v2.sdk.ELFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.ThreadLocalEvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 
-import java.lang.reflect.Method;
-
 public final class HasFlowFunction {
 
-    public static Method getMethod() {
-        try {
-            return HasFlowFunction.class.getMethod("hasFlow", String.class);
-        } catch (Exception e) {
-            throw new RuntimeException("Method not found");
-        }
-    }
-
+    @ELFunction
     public static boolean hasFlow(String name) {
         if (name == null || name.trim().isEmpty()) {
             return false;

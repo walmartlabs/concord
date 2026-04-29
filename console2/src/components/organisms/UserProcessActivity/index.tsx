@@ -24,7 +24,7 @@ import {
     getActivity as apiGetActivity,
     listProcessCards as apiListProcessCards, ProcessCardEntry
 } from '../../../api/service/console/user';
-import { Button, Card, CardGroup, Header, Icon, Image, Modal } from 'semantic-ui-react';
+import {Button, Card, CardGroup, Header, Icon, Image, Modal, Popup, PopupContent} from 'semantic-ui-react';
 import { ProcessList } from '../../molecules/index';
 import { ProcessEntry } from '../../../api/process';
 import {
@@ -39,7 +39,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useApi } from '../../../hooks/useApi';
 import { LoadingDispatch } from '../../../App';
 import RequestErrorActivity from '../RequestErrorActivity';
-import {Link} from "react-router-dom";
+import {Link} from "react-router";
 import './styles.css';
 
 export interface ExternalProps {
@@ -53,7 +53,13 @@ const renderCard = (card: ProcessCardEntry) => {
         <Card key={card.id}>
             <Card.Content>
                 {card.icon && <Image floated='right' size='mini' src={`data:image/png;base64, ${card.icon}`}/>}
-                <Card.Header>{card.name}</Card.Header>
+                <Card.Header>{card.name}&nbsp;
+                    <Popup trigger={<a href={`/#/processCard/${card.id}/form`} target="_blank" rel="noreferrer"><Icon name="share" color="grey"/></a>}>
+                        <PopupContent>
+                            Shareable link to this process card.
+                        </PopupContent>
+                    </Popup>
+                </Card.Header>
 
                 <Card.Meta>
                     Project: <Link to={`/org/${card.orgName}/project/${card.projectName}`}>{card.projectName}</Link>

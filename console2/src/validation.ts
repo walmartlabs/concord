@@ -30,7 +30,7 @@ export const REPOSITORY_SSH_URL_PATTERN = /^(ssh:\/\/)?([a-zA-Z0-9\-_.]+)@([^:]+
 const requiredError = () => 'Required';
 const tooLongError = (n: number) => `Must be not more than ${n} characters.`;
 const invalidRepositoryUrlError = () =>
-    "Invalid repository URL: must begin with 'https://', 'ssh://' or use 'user@host:path' scheme.";
+    "Invalid repository URL: must begin with 'https://', 'mvn://', 'ssh://' or use 'user@host:path' scheme.";
 const invalidCommitIdError = () => 'Invalid commit ID: must be a valid revision.';
 const concordKeyPatternError = () =>
     "Must start with a digit or a letter, may contain only digits, letters, underscores, hyphens, tildes, '.' or '@' or. Must be between 3 and 128 characters in length.";
@@ -70,7 +70,7 @@ const repositoryUrlValidator = (v?: string) => {
         return requiredError();
     }
 
-    if (!v.startsWith('https://') && !v.match(REPOSITORY_SSH_URL_PATTERN)) {
+    if (!v.startsWith('https://') && !v.match(REPOSITORY_SSH_URL_PATTERN) && !v.startsWith('mvn://')) {
         return invalidRepositoryUrlError();
     }
 

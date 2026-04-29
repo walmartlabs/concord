@@ -1,0 +1,25 @@
+flows:
+  default:
+    - expr: "${testTask.myMethod(1, 'b', false, [1, 2, 3], {'k': 'v'})}"
+      out: result
+
+    - log: "result.ok: ${result}"
+
+    # call original method
+    - expr: "${testTask.doAction('original')}"
+      out: original
+
+    - log: "original: ${original}"
+
+    - set:
+        original2: "${testTask.doAction('original2')}"
+
+    - log: "original2: ${original2}"
+
+configuration:
+  arguments:
+    mocks:
+      - task: "testTask"
+        method: "myMethod"
+        args: [1, 'b', false, [1, 2, 3], {k: 'v'}]
+        result: "BOO"

@@ -33,8 +33,7 @@ public class VariablesInjectionIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        byte[] payload = archive(VariablesInjectionIT.class.getResource("inject").toURI(),
-                ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(VariablesInjectionIT.class.getResource("inject").toURI());
 
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());

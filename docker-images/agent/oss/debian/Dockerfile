@@ -1,11 +1,12 @@
 ARG docker_namespace=walmartlabs
-ARG container_version=latest
+ARG concord_version=latest
+ARG concord_ansible_image=${docker_namespace}/concord-ansible:${concord_version}
 ARG DEBIAN_FRONTEND=noninteractive
 
-FROM ${docker_namespace}/concord-ansible:${container_version}
+FROM ${concord_ansible_image}
 LABEL maintainer="amith.k.b@walmartlabs.com"
 
-ENV DOCKER_HOST tcp://dind:2375
+ENV DOCKER_HOST=tcp://dind:2375
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
 USER root

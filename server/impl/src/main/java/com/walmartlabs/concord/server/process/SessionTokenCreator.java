@@ -25,11 +25,9 @@ import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Base64;
 import java.util.UUID;
 
-@Named
 public class SessionTokenCreator {
 
     private final SecretStoreConfiguration secretCfg;

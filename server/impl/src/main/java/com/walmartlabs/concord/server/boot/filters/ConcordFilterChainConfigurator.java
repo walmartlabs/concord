@@ -46,6 +46,7 @@ public class ConcordFilterChainConfigurator implements FilterChainConfigurator {
         manager.createChain("/api/v1/server/ping", "anon");
         manager.createChain("/api/v1/server/version", "anon");
         manager.createChain("/api/service/console/logout", "anon");
+        manager.createChain("/api/service/console/cfg", "anon");
 
         // local requests only
         manager.addFilter("local", new LocalRequestFilter());
@@ -55,7 +56,6 @@ public class ConcordFilterChainConfigurator implements FilterChainConfigurator {
         manager.addFilter("concord", concordAuthenticatingFilter);
         manager.createChain("/api/**", "concord");
         manager.createChain("/forms/**", "concord");
-        manager.createChain("/logs/**", "concord");
 
         // special auth for GitHub
         manager.addFilter("github", githubAuthenticatingFilter);

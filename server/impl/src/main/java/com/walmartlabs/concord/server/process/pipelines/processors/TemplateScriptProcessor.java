@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.CycleChecker;
+import com.walmartlabs.concord.server.cfg.TemplatesConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
@@ -32,8 +33,6 @@ import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Value;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
@@ -47,8 +46,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-@Named
-@Singleton
 public class TemplateScriptProcessor implements PayloadProcessor {
 
     public static final String REQUEST_DATA_TEMPLATE_FILE_NAME = "_main.js";
@@ -58,21 +55,17 @@ public class TemplateScriptProcessor implements PayloadProcessor {
     private final ScriptEngine scriptEngine;
 
     @Inject
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public TemplateScriptProcessor(ProcessLogManager logManager) {
+    public TemplateScriptProcessor(ProcessLogManager logManager, TemplatesConfiguration cfg) {
         this.logManager = logManager;
-
-        // workaround for:
-        // Javascript array is converted in Java to an empty map #214 (https://github.com/oracle/graaljs/issues/214)
-        HostAccess access = HostAccess.newBuilder(HostAccess.ALL)
-                .targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build();
-        this.scriptEngine = GraalJSScriptEngine.create(null,
-                Context.newBuilder("js")
-                        .allowHostAccess(access));
+        this.scriptEngine = cfg.isAllowScripting() ? createScriptEngine() : null;
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
+        if (scriptEngine == null) {
+            return chain.process(payload);
+        }
+
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
         // process _main.js
@@ -91,11 +84,22 @@ public class TemplateScriptProcessor implements PayloadProcessor {
         CycleChecker.CheckResult result = CycleChecker.check(INPUT_REQUEST_DATA_KEY, merged);
         if (result.isHasCycle()) {
             throw new ProcessException(processKey, "Found cycle in " + REQUEST_DATA_TEMPLATE_FILE_NAME + ": " +
-                    result.getNode1() + " <-> " + result.getNode2() );
+                                                   result.getNode1() + " <-> " + result.getNode2());
         }
         payload = payload.putHeader(Payload.CONFIGURATION, merged);
 
         return chain.process(payload);
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private ScriptEngine createScriptEngine() {
+        // workaround for:
+        // Javascript array is converted in Java to an empty map #214 (https://github.com/oracle/graaljs/issues/214)
+        HostAccess access = HostAccess.newBuilder(HostAccess.ALL)
+                .targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build();
+        return GraalJSScriptEngine.create(null,
+                Context.newBuilder("js")
+                        .allowHostAccess(access));
     }
 
     @SuppressWarnings("unchecked")

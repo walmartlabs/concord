@@ -36,7 +36,7 @@ import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 public class CryptoIT extends AbstractTest {
 
     @RegisterExtension
-    public final ConcordRule concord = ConcordConfiguration.configure();
+    public static final ConcordRule concord = ConcordConfiguration.configure();
 
     /**
      * Tests various methods of the 'crypto' plugin.

@@ -1,0 +1,13 @@
+flows:
+  default:
+    - set:
+        mocks:
+          - task: testTask
+            in:
+              action: "clone"
+
+    - task: testTask
+      in:
+        action: "clone"
+
+    - expr: "${verify.task('testTask', 1).execute({'action': 'clone'})}"

@@ -1,0 +1,30 @@
+flows:
+  default:
+    - log: "sensitive: ${sensitiveTask.getSensitive('BOOM')}"
+
+    - expr: "${sensitiveTask.getSensitive('MASK_ME')}"
+      out: mySecret
+
+    - log: "log value: ${mySecret}"
+
+    - log: "hack: ${mySecret.replaceAll('.', '$0 ')}"
+
+    - log: "map: ${sensitiveTask.getSensitiveMap('XXX-MAP')}"
+    - log: "map: ${sensitiveTask.getSensitiveMapStrict('XXX-MAP')}"
+    - log: "map.nested: ${sensitiveTask.getSensitiveMapWithNested('top-secret-nested-value')}"
+    - log: "map.path: ${sensitiveTask.getSensitiveMapWithPath('mask-this-value')}"
+
+    - log: "plain: ${sensitiveTask.getPlain('plain')}"
+
+    - log: "secret from map: ${sensitiveTask.mySecretKey}"
+    - set:
+        fromGet: ${sensitiveTask.get('mySecretKey2')}
+    - log: "secret from map with get method: ${fromGet}"
+
+    - task: sensitiveTask
+      out: taskResult
+    - log: "secret from task execute: ${taskResult}"
+
+    - suspend: ev1
+
+    - log: "mySecret after suspend: ${mySecret}"

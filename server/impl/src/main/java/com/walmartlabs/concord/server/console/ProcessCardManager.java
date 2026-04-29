@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.console;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,13 +22,16 @@ package com.walmartlabs.concord.server.console;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.OperationResult;
+import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.jooq.tables.UiProcessCards;
 import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.UiProcessCardsRecord;
 import com.walmartlabs.concord.server.org.EntityOwner;
 import com.walmartlabs.concord.server.org.ResourceAccessUtils;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -36,7 +39,6 @@ import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -47,9 +49,9 @@ import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
+import static java.util.Objects.requireNonNull;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class ProcessCardManager {
 
     private final Dao dao;
@@ -80,7 +82,7 @@ public class ProcessCardManager {
         }
 
         throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
-                "access to the process card: " + cardId);
+                                        "access to the process card: " + cardId);
     }
 
     public void updateAccess(UUID cardId, List<UUID> teamIds, List<UUID> userIds) {
@@ -94,19 +96,28 @@ public class ProcessCardManager {
         return dao.listCards(userId);
     }
 
-    public ProcessCardOperationResponse createOrUpdate(UUID id, UUID projectId, UUID repoId, String name, String entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data) {
-        boolean exists = false;
-        if (id != null) {
-            exists = dao.exists(id);
+    public ProcessCardOperationResponse createOrUpdate(UUID id, UUID projectId, UUID repoId, String name, Optional<String> entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data, Integer orderId) {
+        boolean exists;
+        if (id == null) {
+            if (projectId == null) {
+                throw new ConcordApplicationException("projectId or projectName is required");
+            }
+            if (name == null) {
+                throw new ConcordApplicationException("name is required");
+            }
+            id = dao.getIdByName(projectId, name).orElse(null);
+            exists = id != null;
+        } else {
+            exists = dao.get(id) != null;
         }
 
         if (!exists) {
-            UUID resultId = dao.insert(id, projectId, repoId, name, entryPoint, description, icon, form, data);
+            UUID resultId = dao.insert(id, projectId, repoId, name, entryPoint.orElse(Constants.Request.DEFAULT_ENTRY_POINT_NAME), description, icon, form, data, orderId);
             return new ProcessCardOperationResponse(resultId, OperationResult.CREATED);
         } else {
             assertAccess(id);
 
-            dao.update(id, projectId, repoId, name, entryPoint, description, icon, form, data);
+            dao.update(id, projectId, repoId, name, entryPoint.orElse(null), description, icon, form, data, orderId);
             return new ProcessCardOperationResponse(id, OperationResult.UPDATED);
         }
     }
@@ -119,14 +130,19 @@ public class ProcessCardManager {
         return dao.getFormData(cardId);
     }
 
+    @SuppressWarnings("resource")
     public static class Dao extends AbstractDao {
 
         private final ConcordObjectMapper objectMapper;
+        private final UuidGenerator uuidGenerator;
 
         @Inject
-        protected Dao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
+        protected Dao(@MainDB Configuration cfg,
+                      ConcordObjectMapper objectMapper,
+                      UuidGenerator uuidGenerator) {
             super(cfg);
-            this.objectMapper = objectMapper;
+            this.objectMapper = requireNonNull(objectMapper);
+            this.uuidGenerator = requireNonNull(uuidGenerator);
         }
 
         protected void tx(Tx t) {
@@ -143,126 +159,134 @@ public class ProcessCardManager {
                     .fetchOne(this::toEntry);
         }
 
-        public UUID insert(UUID cardId, UUID projectId, UUID repoId, String name, String entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data) {
-            return txResult(tx -> insert(tx, cardId, projectId, repoId, name, entryPoint, description, icon, form, data));
+        public Optional<UUID> getIdByName(UUID projectId, String name) {
+            return dsl().select(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
+                    .from(UI_PROCESS_CARDS)
+                    .where(UI_PROCESS_CARDS.PROJECT_ID.eq(projectId)
+                            .and(UI_PROCESS_CARDS.NAME.eq(name)))
+                    .fetchOptional(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID);
         }
 
-        private UUID insert(DSLContext tx, UUID cardId, UUID projectId, UUID repoId, String name, String entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data) {
-            String sql = tx.insertInto(UI_PROCESS_CARDS)
-                    .columns(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID,
-                            UI_PROCESS_CARDS.PROJECT_ID,
-                            UI_PROCESS_CARDS.REPO_ID,
-                            UI_PROCESS_CARDS.NAME,
-                            UI_PROCESS_CARDS.ENTRY_POINT,
-                            UI_PROCESS_CARDS.DESCRIPTION,
-                            UI_PROCESS_CARDS.ICON,
-                            UI_PROCESS_CARDS.FORM,
-                            UI_PROCESS_CARDS.DATA,
-                            UI_PROCESS_CARDS.OWNER_ID)
-                    .values((UUID)null, null, null, null, null, null, null, null, null, null)
-                    .returning(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
-                    .getSQL();
+        public UUID insert(UUID cardId, UUID projectId, UUID repoId, String name, String entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data, Integer orderId) {
+            return txResult(tx -> {
+                String sql = tx.insertInto(UI_PROCESS_CARDS)
+                        .columns(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID,
+                                UI_PROCESS_CARDS.PROJECT_ID,
+                                UI_PROCESS_CARDS.REPO_ID,
+                                UI_PROCESS_CARDS.NAME,
+                                UI_PROCESS_CARDS.ENTRY_POINT,
+                                UI_PROCESS_CARDS.DESCRIPTION,
+                                UI_PROCESS_CARDS.ICON,
+                                UI_PROCESS_CARDS.FORM,
+                                UI_PROCESS_CARDS.DATA,
+                                UI_PROCESS_CARDS.OWNER_ID,
+                                UI_PROCESS_CARDS.ORDER_ID)
+                        .values((UUID) null, null, null, null, null, null, null, null, null, null, null)
+                        .returning(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
+                        .getSQL();
 
-            return tx.connectionResult(conn -> {
-                try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setObject(1, cardId == null ? UUID.randomUUID() : cardId);
-                    ps.setObject(2, projectId);
-                    ps.setObject(3, repoId);
-                    ps.setString(4, name);
-                    ps.setString(5, entryPoint);
-                    ps.setString(6, description);
-                    ps.setBinaryStream(7, icon);
-                    ps.setBinaryStream(8, form);
-                    ps.setObject(9, data != null ? objectMapper.toJSONB(data).data() : null);
-                    ps.setObject(10, UserPrincipal.assertCurrent().getId());
+                return tx.connectionResult(conn -> {
+                    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                        ps.setObject(1, cardId == null ? uuidGenerator.generate() : cardId);
+                        ps.setObject(2, projectId);
+                        ps.setObject(3, repoId);
+                        ps.setString(4, name);
+                        ps.setString(5, entryPoint);
+                        ps.setString(6, description);
+                        ps.setBinaryStream(7, icon);
+                        ps.setBinaryStream(8, form);
+                        ps.setObject(9, data != null ? objectMapper.toJSONB(data).data() : null);
+                        ps.setObject(10, UserPrincipal.assertCurrent().getId());
+                        ps.setObject(11, orderId);
 
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (!rs.next()) {
-                            throw new RuntimeException("Can't insert process card");
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (!rs.next()) {
+                                throw new RuntimeException("Can't insert process card");
+                            }
+
+                            return UUID.fromString(rs.getString(1));
                         }
-
-                        return UUID.fromString(rs.getString(1));
                     }
-                }
+                });
             });
         }
 
         public void update(UUID cardId, UUID projectId, UUID repoId, String name,
                            String entryPoint, String description, InputStream icon, InputStream form,
-                           Map<String, Object> data) {
-            tx(tx -> update(tx, cardId, projectId, repoId, name, entryPoint, description, icon, form, data));
-        }
+                           Map<String, Object> data, Integer orderId) {
+            tx(tx -> {
+                List<Object> params = new ArrayList<>();
+                UpdateSetStep<UiProcessCardsRecord> q = tx.update(UI_PROCESS_CARDS);
 
-        public void update(DSLContext tx, UUID cardId, UUID projectId, UUID repoId, String name,
-                           String entryPoint, String description, InputStream icon, InputStream form,
-                           Map<String, Object> data) {
-
-            List<Object> params = new ArrayList<>();
-            UpdateSetStep<UiProcessCardsRecord> q = tx.update(UI_PROCESS_CARDS);
-
-            if (projectId != null) {
-                q.set(UI_PROCESS_CARDS.PROJECT_ID, (UUID)null);
-                params.add(projectId);
-            }
-
-            if (repoId != null) {
-                q.set(UI_PROCESS_CARDS.REPO_ID, (UUID)null);
-                params.add(repoId);
-            }
-
-            if (name != null) {
-                q.set(UI_PROCESS_CARDS.NAME, (String)null);
-                params.add(name);
-            }
-
-            if (entryPoint != null) {
-                q.set(UI_PROCESS_CARDS.ENTRY_POINT, (String)null);
-                params.add(entryPoint);
-            }
-
-            if (description != null) {
-                q.set(UI_PROCESS_CARDS.DESCRIPTION, (String)null);
-                params.add(description);
-            }
-
-            if (icon != null) {
-                q.set(UI_PROCESS_CARDS.ICON, (byte[]) null);
-                params.add(icon);
-            }
-
-            if (form != null) {
-                q.set(UI_PROCESS_CARDS.FORM, (byte[])null);
-                params.add(form);
-            }
-
-            if (data != null) {
-                q.set(UI_PROCESS_CARDS.DATA, (JSONB)null);
-                params.add(objectMapper.toJSONB(data).data());
-            }
-
-            if (params.isEmpty()) {
-                return;
-            }
-
-            String sql = q.set(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID, cardId)
-                    .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(cardId))
-                    .getSQL();
-            params.add(cardId);
-            params.add(cardId);
-
-            tx.connection(conn -> {
-                try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    for (int i = 0; i < params.size(); i++) {
-                        Object p = params.get(i);
-                        if (p instanceof InputStream) {
-                            ps.setBinaryStream(i + 1, (InputStream) p);
-                        } else {
-                            ps.setObject(i + 1, p);
-                        }
-                    }
-
-                    ps.executeUpdate();
+                if (projectId != null) {
+                    q.set(UI_PROCESS_CARDS.PROJECT_ID, (UUID) null);
+                    params.add(projectId);
                 }
+
+                if (repoId != null) {
+                    q.set(UI_PROCESS_CARDS.REPO_ID, (UUID) null);
+                    params.add(repoId);
+                }
+
+                if (name != null) {
+                    q.set(UI_PROCESS_CARDS.NAME, (String) null);
+                    params.add(name);
+                }
+
+                if (entryPoint != null) {
+                    q.set(UI_PROCESS_CARDS.ENTRY_POINT, (String) null);
+                    params.add(entryPoint);
+                }
+
+                if (description != null) {
+                    q.set(UI_PROCESS_CARDS.DESCRIPTION, (String) null);
+                    params.add(description);
+                }
+
+                if (icon != null) {
+                    q.set(UI_PROCESS_CARDS.ICON, (byte[]) null);
+                    params.add(icon);
+                }
+
+                if (form != null) {
+                    q.set(UI_PROCESS_CARDS.FORM, (byte[]) null);
+                    params.add(form);
+                }
+
+                if (data != null) {
+                    q.set(UI_PROCESS_CARDS.DATA, (JSONB) null);
+                    params.add(objectMapper.toJSONB(data).data());
+                }
+
+                if (params.isEmpty()) {
+                    return;
+                }
+
+                if (orderId != null) {
+                    q.set(UI_PROCESS_CARDS.ORDER_ID, (Integer) null);
+                    params.add(orderId);
+                }
+
+                String sql = q.set(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID, cardId)
+                        .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(cardId))
+                        .getSQL();
+                params.add(cardId);
+                params.add(cardId);
+
+                tx.connection(conn -> {
+                    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                        for (int i = 0; i < params.size(); i++) {
+                            Object p = params.get(i);
+                            if (p instanceof InputStream) {
+                                ps.setBinaryStream(i + 1, (InputStream) p);
+                            } else {
+                                ps.setObject(i + 1, p);
+                            }
+                        }
+
+                        ps.executeUpdate();
+                    }
+                });
             });
         }
 
@@ -270,13 +294,6 @@ public class ProcessCardManager {
             tx(tx -> tx.delete(UI_PROCESS_CARDS)
                     .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(id))
                     .execute());
-        }
-
-        public boolean exists(UUID id) {
-            return txResult(tx -> tx.select(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
-                    .from(UI_PROCESS_CARDS)
-                    .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(id))
-                    .fetchOne(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)) != null;
         }
 
         public void rewriteTeamAccess(DSLContext tx, UUID cardId, List<UUID> teamIds) {
@@ -309,7 +326,7 @@ public class ProcessCardManager {
             Users u = USERS.as("u");
             UiProcessCards c = UI_PROCESS_CARDS.as("c");
 
-            return txResult(tx -> select(
+            return txResult(tx -> tx.select(
                     c.OWNER_ID,
                     u.USER_ID,
                     u.USERNAME,
@@ -354,7 +371,7 @@ public class ProcessCardManager {
                     .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.in(userCardsFilter));
 
             return query
-                    .orderBy(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
+                    .orderBy(UI_PROCESS_CARDS.ORDER_ID, UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
                     .fetch(this::toEntry);
         }
 
@@ -400,7 +417,7 @@ public class ProcessCardManager {
             });
         }
 
-        private static SelectOnConditionStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean>> buildSelect(DSLContext tx) {
+        private static SelectOnConditionStep<Record13<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean, Integer>> buildSelect(DSLContext tx) {
             Field<Boolean> isCustomForm = when(field(UI_PROCESS_CARDS.FORM).isNotNull(), true).otherwise(false);
 
             return tx.select(
@@ -415,14 +432,15 @@ public class ProcessCardManager {
                             UI_PROCESS_CARDS.ENTRY_POINT,
                             UI_PROCESS_CARDS.DESCRIPTION,
                             UI_PROCESS_CARDS.ICON,
-                            isCustomForm.as("isCustomForm"))
+                            isCustomForm.as("isCustomForm"),
+                            UI_PROCESS_CARDS.ORDER_ID)
                     .from(UI_PROCESS_CARDS)
                     .leftJoin(REPOSITORIES).on(REPOSITORIES.REPO_ID.eq(UI_PROCESS_CARDS.REPO_ID))
                     .leftJoin(PROJECTS).on(PROJECTS.PROJECT_ID.eq(UI_PROCESS_CARDS.PROJECT_ID))
                     .leftJoin(ORGANIZATIONS).on(ORGANIZATIONS.ORG_ID.eq(PROJECTS.ORG_ID));
         }
 
-        private ProcessCardEntry toEntry(Record12<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean> r) {
+        private ProcessCardEntry toEntry(Record13<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean, Integer> r) {
             return ProcessCardEntry.builder()
                     .id(r.get(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID))
                     .orgName(r.get(ORGANIZATIONS.ORG_NAME))
@@ -433,6 +451,7 @@ public class ProcessCardManager {
                     .description(r.get(UI_PROCESS_CARDS.DESCRIPTION))
                     .icon(encodeBase64(r.get(UI_PROCESS_CARDS.ICON)))
                     .isCustomForm(r.get("isCustomForm", Boolean.class))
+                    .orderId(r.get(UI_PROCESS_CARDS.ORDER_ID))
                     .build();
         }
 

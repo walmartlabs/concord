@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
-import javax.inject.Named;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,7 +34,6 @@ import java.util.List;
  *
  * @see Payload#RESUME_HOOKS
  */
-@Named
 public class ResumingHooksProcessor implements PayloadProcessor {
 
     @Override

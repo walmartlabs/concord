@@ -73,7 +73,7 @@ public class SmtpTask implements Task {
         Object scope = getScope(ctx, mail);
         boolean debug = ContextUtils.getBoolean(ctx, Constants.DEBUG_KEY, false);
 
-        SmtpTaskUtils.send(smtp, mail, baseDir, scope, debug);
+        SmtpTaskUtils.send(smtp, mail, baseDir, scope, debug, false);
     }
 
     private static Path getWorkDir(Context ctx) {

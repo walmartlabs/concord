@@ -17,6 +17,7 @@ different systems together using scenarios and plugins created by users.
 - [Integration tests](#integration-tests)
   * [Prerequisites](#prerequisites)
   * [Running tests](#running-tests)
+- [Repository Docs](#repository-docs)
 - [Examples](#examples)
 - [How To Release New Versions](#how-to-release-new-versions)
 - [Development Notes](#development-notes)
@@ -28,7 +29,7 @@ Dependencies:
 - [Java 17](https://adoptium.net/)
 - [Docker Community Edition](https://www.docker.com/community-edition)
 - [Docker Buildx](https://docs.docker.com/build/buildx/install/)
-- (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 20 or greater)
+- (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 24 LTS)
 
 ```shell
 git clone https://github.com/walmartlabs/concord.git
@@ -67,7 +68,7 @@ npm run start
 
 Prerequisites:
 
-- Git 2.3+
+- Git 2.18+
 - Docker, listening on `tcp://127.0.0.1:2375`;
 - Ansible 2.6.0+ must be installed and available in `$PATH`.
   See [the official documentation](http://docs.ansible.com/ansible/intro_installation.html);
@@ -97,6 +98,16 @@ To run UI ITs in an IDE using the UI's dev mode:
 - set up `IT_CONSOLE_BASE_URL=http://localhost:3000` environment variable before running
 any UI tests.
 
+## Repository Docs
+
+For repo-specific development entrypoints, see:
+
+- [Integration tests](./it/README.md)
+- [Development notes](./NOTES.md)
+- [Server README](./server/README.md)
+- [Console UI README](./console2/README.md)
+- [Agent operator README](./agent-operator/README.md)
+
 ## Examples
 
 See the [examples](examples) directory.
@@ -107,16 +118,29 @@ See the [examples](examples) directory.
   ```
   $ ./mvnw release:prepare release:perform
   ```
-- push the new tag:
+- update and commit the CHANGELOG.md file
+  ```
+  $ git add CHANGELOG.md
+  $ git commit -m 'update changelog'
+  ```
+- push the new tag and the master branch:
   ```
   $ git push origin RELEASE_TAG
+  $ git push origin master
   ```
-- sync to [Central](https://central.sonatype.com/);
 - build and push the Docker images:
   ```
   $ git checkout RELEASE_TAG
-  $ ./mvnw -f docker-images clean package -Pdocker
-  $ ./docker-images/push.sh RELEASE_TAG
+  $ gh workflow run docker-multiarch.yml --ref master -f ref=RELEASE_TAG -f docker_tag=RELEASE_TAG -f docker_namespace=walmartlabs
+  ```
+- sync to [Sonatype](https://oss.sonatype.org/);
+- check the Central repository if the sync is complete:
+  ```
+  https://repo.maven.apache.org/maven2/com/walmartlabs/concord/parent/RELEASE_TAG
+  ```
+- once the sync is complete, push the `latest` Docker images:
+  ```
+  $ gh workflow run docker-multiarch.yml --ref master -f ref=RELEASE_TAG -f docker_tag=latest -f docker_namespace=walmartlabs
   ```
 
 ## Development Notes

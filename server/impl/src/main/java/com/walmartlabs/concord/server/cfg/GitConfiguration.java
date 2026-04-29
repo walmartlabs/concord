@@ -20,21 +20,40 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
+import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
+import com.walmartlabs.concord.config.Config;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.List;
+import java.util.Optional;
 
-public class GitConfiguration implements Serializable {
+import static com.walmartlabs.concord.common.cfg.MappingAuthConfig.assertBaseUrlPattern;
+import static com.walmartlabs.concord.server.cfg.Utils.getStringOrDefault;
 
+public class GitConfiguration implements OauthTokenConfig, Serializable {
+
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Inject
     @Config("git.oauth")
     @Nullable
     private String oauthToken;
+
+    @Inject
+    @Config("git.oauthUsername")
+    @Nullable
+    private String oauthUsername;
+
+    @Inject
+    @Config("git.oauthUrlPattern")
+    @Nullable
+    private String oauthUrlPattern;
 
     @Inject
     @Config("git.shallowClone")
@@ -68,6 +87,18 @@ public class GitConfiguration implements Serializable {
     @Config("git.sshTimeoutRetryCount")
     private int sshTimeoutRetryCount;
 
+    @Inject
+    @Config("git.maxGitCliOutputBytes")
+    private long maxGitCliOutputBytes;
+
+    @Inject
+    @Config("git.allowedSchemes")
+    private List<String> allowedSchemes;
+
+    @Inject
+    @Config("git.systemAuth")
+    List<com.typesafe.config.Config> authConfigs;
+
     public boolean isShallowClone() {
         return shallowClone;
     }
@@ -84,8 +115,19 @@ public class GitConfiguration implements Serializable {
         return fetchTimeout;
     }
 
-    public String getOauthToken() {
-        return oauthToken;
+    @Override
+    public Optional<String> getOauthToken() {
+        return Optional.ofNullable(oauthToken);
+    }
+
+    @Override
+    public Optional<String> getOauthUsername() {
+        return Optional.ofNullable(oauthUsername);
+    }
+
+    @Override
+    public Optional<String> getOauthUrlPattern() {
+        return Optional.ofNullable(oauthUrlPattern);
     }
 
     public int getHttpLowSpeedLimit() {
@@ -102,5 +144,56 @@ public class GitConfiguration implements Serializable {
 
     public int getSshTimeoutRetryCount() {
         return sshTimeoutRetryCount;
+    }
+
+    public long maxGitCliOutputBytes() {
+        return maxGitCliOutputBytes;
+    }
+
+    public List<String> getAllowedSchemes() {
+        return allowedSchemes;
+    }
+
+    public List<MappingAuthConfig> getSystemAuth() {
+        return authConfigs.stream()
+                .map(o -> {
+                    AuthSource type = AuthSource.valueOf(o.getString("type").toUpperCase());
+
+                    return (AuthConfig) switch (type) {
+                        case OAUTH_TOKEN -> OauthConfig.from(o);
+                    };
+                })
+                .map(AuthConfig::toGitAuth)
+                .toList();
+    }
+
+    enum AuthSource {
+        OAUTH_TOKEN
+    }
+
+    public interface AuthConfig {
+        MappingAuthConfig toGitAuth();
+    }
+
+    public record OauthConfig(String id,
+                              String urlPattern,
+                              String token) implements AuthConfig {
+
+        static OauthConfig from(com.typesafe.config.Config cfg) {
+            return new OauthConfig(
+                    getStringOrDefault(cfg, "id", () -> "system-oauth-token"),
+                    cfg.getString("urlPattern"),
+                    cfg.getString("token")
+            );
+        }
+
+        @Override
+        public MappingAuthConfig.OauthAuthConfig toGitAuth() {
+            return MappingAuthConfig.OauthAuthConfig.builder()
+                    .id(this.id())
+                    .urlPattern(assertBaseUrlPattern(this.urlPattern()))
+                    .token(this.token())
+                    .build();
+        }
     }
 }

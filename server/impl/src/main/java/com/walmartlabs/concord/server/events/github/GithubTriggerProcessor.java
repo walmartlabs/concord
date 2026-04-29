@@ -39,8 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.core.UriInfo;
 import java.util.*;
 import java.util.function.Consumer;
@@ -54,12 +52,12 @@ public class GithubTriggerProcessor {
     private static final Logger log = LoggerFactory.getLogger(GithubTriggerProcessor.class);
 
     private final Dao dao;
-    private final List<EventEnricher> eventEnrichers;
+    private final Set<EventEnricher> eventEnrichers;
     private final boolean isDisableReposOnDeletedRef;
 
     @Inject
     public GithubTriggerProcessor(Dao dao,
-                                  List<EventEnricher> eventEnrichers,
+                                  Set<EventEnricher> eventEnrichers,
                                   GithubConfiguration githubCfg) {
         this.dao = dao;
         this.eventEnrichers = eventEnrichers;
@@ -203,8 +201,7 @@ public class GithubTriggerProcessor {
      * Adds {@link Trigger#REPOSITORY_INFO} property to the event, but only if
      * the trigger's conditions contained the clause with the same key.
      */
-    @Named
-    private static class RepositoryInfoEnricher implements EventEnricher {
+    public static class RepositoryInfoEnricher implements EventEnricher {
 
         private final Dao dao;
 
@@ -247,8 +244,6 @@ public class GithubTriggerProcessor {
         }
     }
 
-    @Named
-    @Singleton
     public static class Dao {
         private final RepositoryDao repoDao;
         private final TriggersDao triggersDao;
@@ -258,6 +253,7 @@ public class GithubTriggerProcessor {
         public Dao(@MainDB Configuration cfg,
                    RepositoryDao repoDao,
                    TriggersDao triggersDao) {
+
             this.cfg = cfg;
             this.triggersDao = triggersDao;
             this.repoDao = repoDao;

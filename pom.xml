@@ -5,7 +5,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>parent</artifactId>
-    <version>2.17.1-SNAPSHOT</version>
+    <version>2.40.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -32,23 +32,22 @@
     </developers>
 
     <modules>
+        <module>config</module>
         <module>sdk</module>
         <module>common</module>
         <module>policy-engine</module>
         <module>dependency-manager</module>
+        <module>github-app-installation</module>
         <module>repository</module>
         <module>imports</module>
         <module>forms</module>
         <module>server</module>
-        <module>client</module>
         <module>client2</module>
+        <module>runtime/model</module>
         <module>runtime/common</module>
+        <module>runtime/loader</module>
         <module>runtime/v1</module>
         <module>runtime/v2</module>
-        <!-- TODO fix the build order/directory structure -->
-        <!-- runtime/loader only needs models, but runtime folder itself logically depends on server -->
-        <!-- which depends on loader -->
-        <module>runtime/loader</module>
         <module>plugins</module>
         <module>agent</module>
         <module>console2</module>
@@ -69,12 +68,15 @@
 
         <scm.connection>scm:git:https://github.com/walmartlabs/concord.git</scm.connection>
 
-        <docker.plugin.version>0.38.1</docker.plugin.version>
+        <docker.plugin.version>0.48.0</docker.plugin.version>
         <jooq.version>3.14.0</jooq.version>
         <junit.version>5.9.1</junit.version>
-        <liquibase.version>4.8.0</liquibase.version>
-        <node.version>20.12.2</node.version>
-        <frontend.plugin.version>1.12.0</frontend.plugin.version>
+        <liquibase.version>4.29.2</liquibase.version>
+        <node.version>24.14.0</node.version>
+        <frontend.plugin.version>1.15.1</frontend.plugin.version>
+
+        <!-- used for ITs and db module(s) schema generation -->
+        <db.image>library/postgres:14.21-alpine</db.image>
 
         <jdk.version>17</jdk.version>
         <failsafe.args>
@@ -105,13 +107,15 @@
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>3.14.0</version>
+                <configuration>
+                    <compilerArgs>-proc:full</compilerArgs>
+                </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>1.14</version>
+                <version>2.5.0</version>
                 <executions>
                     <execution>
                         <id>first</id>
@@ -130,6 +134,7 @@
                     <processStartTag>*****</processStartTag>
                     <sectionDelimiter>-----</sectionDelimiter>
                     <processEndTag>=====</processEndTag>
+                    <trimHeaderLine>true</trimHeaderLine>
                     <roots>
                         <root>src/main/java</root>
                         <root>src/test/java</root>
@@ -142,7 +147,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.2.1</version>
+                <version>3.6.0</version>
                 <configuration>
                     <configLocation>checkstyle.xml</configLocation>
                     <consoleOutput>true</consoleOutput>
@@ -160,8 +165,9 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.0.0-M3</version>
+                <version>3.5.0</version>
                 <executions>
                     <execution>
                         <phase>validate</phase>
@@ -200,6 +206,15 @@
         <pluginManagement>
             <plugins>
                 <plugin>
+                    <groupId>org.sonatype.central</groupId>
+                    <artifactId>central-publishing-maven-plugin</artifactId>
+                    <version>0.7.0</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <publishingServerId>central</publishingServerId>
+                    </configuration>
+                </plugin>
+                <plugin>
                     <groupId>com.github.eirslett</groupId>
                     <artifactId>frontend-maven-plugin</artifactId>
                     <version>${frontend.plugin.version}</version>
@@ -220,7 +235,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5.3</version>
+                    <version>3.1.1</version>
                     <configuration>
                         <indentSize>4</indentSize>
                         <tagNameFormat>@{project.version}</tagNameFormat>
@@ -228,7 +243,7 @@
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                         <pushChanges>false</pushChanges>
                         <useReleaseProfile>false</useReleaseProfile>
-                        <goals>deploy</goals>
+                        <goals>install org.sonatype.central:central-publishing-maven-plugin:publish</goals>
                         <arguments>--batch-mode -DskipTests -Pconcord-release</arguments>
                     </configuration>
                 </plugin>
@@ -339,12 +354,28 @@
                 <plugin>
                     <groupId>org.eclipse.sisu</groupId>
                     <artifactId>sisu-maven-plugin</artifactId>
-                    <version>0.3.3</version>
+                    <version>0.9.0.M4</version>
                     <executions>
                         <execution>
                             <id>index</id>
                             <goals>
                                 <goal>main-index</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>dev.ybrig.concord</groupId>
+                    <artifactId>concord-maven-plugin</artifactId>
+                    <version>0.0.37</version>
+                    <configuration>
+                        <concordVersion>${project.version}</concordVersion>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>sisu-index</goal>
+                                <goal>verify</goal>
                             </goals>
                         </execution>
                     </executions>
@@ -357,37 +388,37 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
-                    <version>3.0.0</version>
+                    <version>3.6.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>3.2.1</version>
+                    <version>3.6.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-plugin-plugin</artifactId>
-                    <version>3.5</version>
+                    <version>3.15.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
-                    <version>1.6.0</version>
+                    <version>3.5.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.0.2</version>
+                    <version>3.3.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.openapitools</groupId>
                     <artifactId>openapi-generator-maven-plugin</artifactId>
-                    <version>7.0.1</version>
+                    <version>7.12.0</version>
                 </plugin>
                 <plugin>
                     <groupId>pl.project13.maven</groupId>
                     <artifactId>git-commit-id-plugin</artifactId>
-                    <version>2.2.6</version>
+                    <version>4.9.10</version>
                 </plugin>
                 <plugin>
                     <groupId>org.revapi</groupId>
@@ -411,12 +442,17 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-dependency-plugin</artifactId>
-                    <version>3.1.2</version>
+                    <version>3.8.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.2.0</version>
+                    <version>3.11.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.skife.maven</groupId>
+                    <artifactId>really-executable-jar-maven-plugin</artifactId>
+                    <version>2.1.1</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -519,30 +555,6 @@
         </profile>
         <profile>
             <id>walmart</id>
-            <repositories>
-                <repository>
-                    <releases>
-                        <enabled>true</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                    <id>walmart-gec</id>
-                    <url>${public.nexusUrl}/content/groups/devtools-public</url>
-                </repository>
-            </repositories>
-            <pluginRepositories>
-                <pluginRepository>
-                    <releases>
-                        <enabled>true</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                    <id>walmart-gec</id>
-                    <url>${public.nexusUrl}/content/groups/devtools-public</url>
-                </pluginRepository>
-            </pluginRepositories>
             <distributionManagement>
                 <repository>
                     <id>${public-release.serverId}</id>

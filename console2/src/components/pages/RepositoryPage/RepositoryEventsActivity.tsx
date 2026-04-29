@@ -36,7 +36,7 @@ import { LoadingDispatch } from '../../../App';
 import RequestErrorActivity from '../../organisms/RequestErrorActivity';
 import { useApi } from '../../../hooks/useApi';
 import { ConcordKey } from '../../../api/common';
-import ReactJson from 'react-json-view';
+import { ReactJson } from '../../atoms';
 import { DateTimeInput } from 'semantic-ui-calendar-react';
 import { addHours, format as formatDate } from 'date-fns';
 import {

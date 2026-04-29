@@ -31,10 +31,7 @@ import org.junit.jupiter.api.Test;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static java.util.Collections.singletonMap;
@@ -124,12 +121,11 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
 
         // ---
 
-        try (InputStream resp = processApi.downloadAttachment(spr.getInstanceId(), "ansible_stats.json")) {
+        try (InputStream resp = downloadAttachment(spr.getInstanceId(), "ansible_stats.json")) {
             assertNotNull(resp);
 
             Map<String, Object> stats = fromJson(resp);
@@ -180,7 +176,6 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         ProcessEntry psr = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
@@ -193,7 +188,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        try (InputStream resp = processApi.downloadAttachment(spr.getInstanceId(), "ansible_stats.json")) {
+        try (InputStream resp = downloadAttachment(spr.getInstanceId(), "ansible_stats.json")) {
             assertNotNull(resp);
             Map<String, Object> stats = fromJson(resp);
 
@@ -206,5 +201,20 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
     private static InputStream resource(String path) {
         return AnsibleProjectIT.class.getResourceAsStream(path);
+    }
+
+    private InputStream downloadAttachment(UUID instanceId, String name) throws InterruptedException, ApiException {
+        int attemptsLeft = 3;
+        while (true) {
+            try {
+                return new ProcessApi(getApiClient()).downloadAttachment(instanceId, name);
+            } catch (ApiException e) {
+                if (attemptsLeft-- > 0 && (e.getCode() == 404 || e.getCode() >= 500)) {
+                    Thread.sleep(500);
+                } else {
+                    throw e;
+                }
+            }
+        }
     }
 }

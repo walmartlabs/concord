@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.runner.SerializationUtils;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.Form;
@@ -45,10 +45,11 @@ public class FileFormStorage implements FormStorage {
 
     @Override
     public void save(Form form) throws ExecutionException {
+        assertValidFormName(form);
         UUID id = form.getFormInstanceId();
-        Path p = dir.resolve(form.getFormDefinition().getName());
         try {
-            Path tmp = IOUtils.createTempFile(id.toString(), "form");
+            Path p = PathUtils.assertInPath(dir, form.getFormDefinition().getName());
+            Path tmp = PathUtils.createTempFile(id.toString(), "form");
             try (OutputStream out = Files.newOutputStream(tmp)) {
                 SerializationUtils.serialize(out, form);
             }
@@ -74,6 +75,13 @@ public class FileFormStorage implements FormStorage {
             return (Form) out.readObject();
         } catch (ClassNotFoundException | IOException e) {
             throw new ExecutionException("Error while reading a form", e);
+        }
+    }
+
+    private static void assertValidFormName(Form form) {
+        String name = form.getFormDefinition().getName();
+        if (!name.matches("^[A-Za-z0-9_ $]+$")) {
+            throw new IllegalArgumentException(String.format("Invalid form name: '%s'", name));
         }
     }
 }

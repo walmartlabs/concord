@@ -257,4 +257,43 @@ public class FailureHandlingIT extends AbstractServerIT {
         List<ProcessEntry> childWithoutOnFailureChildren = processApi.listSubprocesses(childWithoutOnFailure.getInstanceId(), null);
         assertEquals(0, childWithoutOnFailureChildren.size());
     }
+
+    @Test
+    void testNoHandlingForDisabledUser() throws Exception {
+        // create user to be disabled
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+
+        String userAName = "user_" + randomString();
+        var user = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userAName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
+
+        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse apiKeyA = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
+
+        // switch to temp user's api key
+
+        setApiKey(apiKeyA.getKey());
+
+        // start the process as temp user
+
+        byte[] payload = archive(ProcessIT.class.getResource("cancelHandling").toURI());
+        StartProcessResponse spr = start(payload);
+        waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.RUNNING);
+
+        // back to admin api token, disable the user
+
+        resetApiKey();
+        usersApi.disableUser(user.getId(), true);
+
+        // cancel the running process
+
+        new ProcessApi(getApiClient()).kill(spr.getInstanceId());
+        waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.CANCELLED);
+
+        // expect error starting child process, may take 3+ seconds for the watchdog to do it's work
+
+        waitForLog(spr.getInstanceId(), 15, ".*Error while starting onCancel handler: initiator is disabled.*");
+    }
 }

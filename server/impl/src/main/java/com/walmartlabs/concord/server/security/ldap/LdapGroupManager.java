@@ -25,12 +25,10 @@ import com.walmartlabs.concord.server.cfg.LdapGroupSyncConfiguration;
 import org.jooq.Field;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
 
-@Named
 public class LdapGroupManager {
 
     private final LdapGroupSyncConfiguration syncCfg;

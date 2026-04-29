@@ -1,0 +1,11 @@
+flows:
+  default:
+    - log: "before file form"
+    - form: uploadForm
+    - log: "after upload: ${uploadForm.attachment}"
+
+forms:
+  uploadForm:
+    - attachment:
+        label: Attachment
+        type: file

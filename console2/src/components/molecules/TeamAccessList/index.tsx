@@ -116,6 +116,7 @@ class TeamAccessList extends React.Component<Props, State> {
                                             onSelect={(u: TeamEntry) => this.handleAddTeam(u)}
                                             orgName={orgName}
                                             name="teams"
+                                            data-testid="team-access-add-dropdown"
                                         />
                                     </Form.Field>
                                 </Form>
@@ -132,6 +133,7 @@ class TeamAccessList extends React.Component<Props, State> {
                                         disabled={!dirty}
                                         loading={submitting}
                                         onClick={(ev) => this.handleSave(ev)}
+                                        data-testid="team-access-save-btn"
                                     />
                                     <Button
                                         basic={true}
@@ -140,6 +142,7 @@ class TeamAccessList extends React.Component<Props, State> {
                                         content="Cancel"
                                         disabled={submitting}
                                         onClick={() => this.handleCancelEdit()}
+                                        data-testid="team-access-cancel-btn"
                                     />
                                 </>
                             )}
@@ -149,15 +152,16 @@ class TeamAccessList extends React.Component<Props, State> {
                                     icon="edit"
                                     content="Edit"
                                     onClick={() => this.handleEditMode()}
+                                    data-testid="team-access-edit-btn"
                                 />
                             )}
                         </Container>
                     </Menu.Item>
                 </Menu>
 
-                {data.length === 0 && <h3>No access rules defined.</h3>}
+                {data.length === 0 && <h3 data-testid="team-access-empty-message">No access rules defined.</h3>}
                 {data.length > 0 && (
-                    <Table>
+                    <Table data-testid="team-access-table">
                         <Table.Header>
                             <Table.Row>
                                 <Table.HeaderCell>Team Name</Table.HeaderCell>
@@ -167,9 +171,14 @@ class TeamAccessList extends React.Component<Props, State> {
                         </Table.Header>
                         <Table.Body>
                             {data.map((e, idx) => (
-                                <Table.Row key={idx} negative={e.deleted} positive={e.added}>
-                                    <Table.Cell>{e.teamName}</Table.Cell>
-                                    <Table.Cell>
+                                <Table.Row
+                                    key={idx}
+                                    negative={e.deleted}
+                                    positive={e.added}
+                                    data-testid={`team-access-row-${e.teamName}`}
+                                >
+                                    <Table.Cell data-testid={`team-name-${e.teamName}`}>{e.teamName}</Table.Cell>
+                                    <Table.Cell data-testid={`team-access-level-${e.teamName}`}>
                                         {editMode ? (
                                             <TeamAccessDropdown
                                                 value={e.level}
@@ -177,6 +186,7 @@ class TeamAccessList extends React.Component<Props, State> {
                                                 onRoleChange={(value) =>
                                                     this.handleRoleChange(idx, value)
                                                 }
+                                                data-testid={`team-access-dropdown-${e.teamName}`}
                                             />
                                         ) : (
                                             e.level
@@ -190,6 +200,7 @@ class TeamAccessList extends React.Component<Props, State> {
                                                 icon={e.deleted ? 'undo' : 'delete'}
                                                 disabled={submitting}
                                                 onClick={() => this.handleDelete(idx)}
+                                                data-testid={`team-access-delete-btn-${e.teamName}`}
                                             />
                                         </Table.Cell>
                                     )}

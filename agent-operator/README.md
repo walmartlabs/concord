@@ -49,7 +49,7 @@ present in your minikube instance):
 5. Create the custom resource:
   ```
   $ minikube kubectl -- create -f deploy/crds/crd.yml -n default
-  $ minikube kubectl -- create -f deploy/crds/cr.yml -n default
+  $ minikube kubectl -- create -f deploy/crds/example.agentpool.yml -n default
   ```
 6. Start the operator:
   ```
@@ -103,7 +103,7 @@ minikube kubectl -- logs -f <pod_name> -c <container_name> -n default
   $ minikube kubectl -- create -f deploy/operator.yml
   ```
 4. Check the operator's pod logs;
-5. Deploy one or more CRs using `deploy/crds/cr.yml` as a template.
+5. Deploy one or more CRs using `deploy/crds/example.agentpool.yml` as a template.
 
 ## How To Release New Versions
 

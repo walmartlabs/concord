@@ -1,3 +1,7 @@
+configuration:
+  dependencies:
+    - mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:PROJECT_VERSION
+
 flows:
   default:
     - call: runAnsible

@@ -28,9 +28,7 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
-@Named
 public class FailProcessor implements ExceptionProcessor {
 
     private final ProcessQueueDao queueDao;

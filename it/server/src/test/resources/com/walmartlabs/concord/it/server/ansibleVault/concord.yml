@@ -1,3 +1,8 @@
+configuration:
+  dependencies:
+    - mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:PROJECT_VERSION
+  entryPoint: main
+
 flows:
   main:
   - task: ansible
@@ -10,6 +15,3 @@ flows:
           vars:
             ansible_connection: "local"
       vaultPasswordFile: get_password.py
-
-variables:
-  entryPoint: main

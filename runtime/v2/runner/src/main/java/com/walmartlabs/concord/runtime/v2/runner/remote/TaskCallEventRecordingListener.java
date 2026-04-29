@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,9 +23,10 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
 import com.walmartlabs.concord.client2.ProcessEventRequest;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.common.ObjectTruncater;
+import com.walmartlabs.concord.runtime.common.SensitiveDataMasker;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.EventConfiguration;
-import com.walmartlabs.concord.runtime.v2.model.Location;
+import com.walmartlabs.concord.runtime.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.EventReportingService;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
@@ -44,12 +45,15 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
     private final EventConfiguration eventConfiguration;
     private final EventReportingService eventReportingService;
+    private final SensitiveDataHolder sensitiveDataHolder;
 
     @Inject
     public TaskCallEventRecordingListener(ProcessConfiguration processConfiguration,
-                                          EventReportingService eventReportingService) {
+                                          EventReportingService eventReportingService,
+                                          SensitiveDataHolder sensitiveDataHolder) {
         this.eventConfiguration = processConfiguration.events();
         this.eventReportingService = eventReportingService;
+        this.sensitiveDataHolder = sensitiveDataHolder;
     }
 
     @Override
@@ -64,7 +68,9 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
         List<Object> inVars = event.input();
         if (inVars != null && eventConfiguration.recordTaskInVars()) {
-            Map<String, Object> vars = maskVars(convertInput(hideSensitiveData(inVars, event.inputAnnotations())), eventConfiguration.inVarsBlacklist());
+            Map<String, Object> input = convertInput(processSensitiveDataAnnotations(inVars, event.inputAnnotations()));
+            input = processSensitiveData(input);
+            Map<String, Object> vars = maskVars(input, eventConfiguration.inVarsBlacklist());
             if (eventConfiguration.truncateInVars()) {
                 vars = ObjectTruncater.truncateMap(vars, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
             }
@@ -75,7 +81,9 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
         Object outVars = event.result();
         if (outVars != null && eventConfiguration.recordTaskOutVars()) {
-            Map<String, Object> vars = maskVars(asMapOrNull(outVars), eventConfiguration.outVarsBlacklist());
+            Map<String, Object> output = asMapOrNull(outVars);
+            output = processSensitiveData(output);
+            Map<String, Object> vars = maskVars(output, eventConfiguration.outVarsBlacklist());
             if (eventConfiguration.truncateOutVars()) {
                 vars = ObjectTruncater.truncateMap(vars, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
             }
@@ -86,7 +94,9 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
         Object metaVars = event.meta();
         if (metaVars != null && eventConfiguration.recordTaskMeta()) {
-            Map<String, Object> meta = maskVars(asMapOrNull(metaVars), eventConfiguration.metaBlacklist());
+            Map<String, Object> rawMeta = asMapOrNull(metaVars);
+            Map<String, Object> meta = processSensitiveData(rawMeta);
+            meta = maskVars(meta, eventConfiguration.metaBlacklist());
             if (eventConfiguration.truncateMeta()) {
                 meta = ObjectTruncater.truncateMap(meta, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
             }
@@ -99,6 +109,10 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
             m.put("duration", event.duration());
         }
         send(m);
+    }
+
+    private Map<String, Object> processSensitiveData(Map<String, Object> input) {
+        return SensitiveDataMasker.mask(input, sensitiveDataHolder.get());
     }
 
     private static Map<String, Object> event(TaskCallEvent event) {
@@ -116,6 +130,10 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
         String taskName = event.taskName();
         m.put("description", "Task: " + taskName);
         m.put("name", taskName);
+
+        if (event.methodName() != null && !"execute".equals(event.methodName())) {
+            m.put("method", event.methodName());
+        }
 
         if (event.threadId().id() != 0) {
             m.put("threadId", event.threadId().id());
@@ -213,7 +231,7 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
         return result;
     }
 
-    private static List<Object> hideSensitiveData(List<Object> input, List<List<Annotation>> annotations) {
+    private static List<Object> processSensitiveDataAnnotations(List<Object> input, List<List<Annotation>> annotations) {
         if (annotations.isEmpty()) {
             return input;
         }

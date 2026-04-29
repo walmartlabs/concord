@@ -67,11 +67,15 @@ public class SlackClient implements AutoCloseable {
     private static final String CREATE_CHANNEL_CMD = "channels.create";
     private static final String CREATE_GROUP_CMD = "groups.create";
     private static final String ARCHIVE_CHANNEL_CMD = "channels.archive";
+    private static final String ARCHIVE_CONVERSATION_CMD = "conversations.archive";
     private static final String ARCHIVE_GROUP_CMD = "groups.archive";
+    private static final String AS_USER = "as_user";
+    private static final String CHANNEL = "channel";
 
     private static final int TOO_MANY_REQUESTS_ERROR = 429;
     private static final int DEFAULT_RETRY_AFTER = 10;
 
+    private final SlackConfiguration slackCfg;
     private final int retryCount;
     private final PoolingHttpClientConnectionManager connManager;
     private final CloseableHttpClient client;
@@ -82,6 +86,7 @@ public class SlackClient implements AutoCloseable {
         this.retryCount = cfg.getRetryCount();
         this.connManager = createConnManager();
         this.client = createClient(cfg, connManager);
+        this.slackCfg = cfg;
     }
 
     @Override
@@ -92,7 +97,7 @@ public class SlackClient implements AutoCloseable {
 
     public Response addReaction(String channelId, String ts, String reaction) throws IOException {
         Map<String, Object> params = new HashMap<>();
-        params.put("channel", channelId);
+        params.put(CHANNEL, channelId);
         params.put("timestamp", ts);
         params.put("name", reaction);
 
@@ -107,10 +112,13 @@ public class SlackClient implements AutoCloseable {
         return exec(CHAT_UPDATE_MESSAGE_CMD, json);
     }
 
-    public Response message(String channelId, String ts, boolean replyBroadcast, String text, String iconEmoji, String username, Collection<Object> attachments) throws IOException {
+    public Response message(String channelId, String ts, boolean replyBroadcast, String text, String iconEmoji, String username, Collection<Object> attachments, Collection<Object> blocks) throws IOException {
         Map<String, Object> params = new HashMap<>();
-        params.put("channel", channelId);
-        params.put("as_user", true);
+        params.put(CHANNEL, channelId);
+
+        if (slackCfg.isLegacy()) {
+            params.put(AS_USER, true);
+        }
 
         params.put("text", text);
 
@@ -121,16 +129,24 @@ public class SlackClient implements AutoCloseable {
 
         if (iconEmoji != null) {
             params.put("icon_emoji", iconEmoji);
-            params.put("as_user", false);
+            if (slackCfg.isLegacy()) {
+                params.put(AS_USER, false);
+            }
         }
 
         if (username != null) {
             params.put("username", username);
-            params.put("as_user", false);
+            if (slackCfg.isLegacy()) {
+                params.put(AS_USER, false);
+            }
         }
 
         if (attachments != null) {
             params.put("attachments", attachments);
+        }
+
+        if (blocks != null && !blocks.isEmpty()) {
+            params.put("blocks", blocks);
         }
 
         return exec(CHAT_POST_MESSAGE_CMD, params);
@@ -145,11 +161,15 @@ public class SlackClient implements AutoCloseable {
     }
 
     public Response archiveChannel(String channelId) throws IOException {
-        return exec(ARCHIVE_CHANNEL_CMD, Collections.singletonMap("channel", channelId));
+        return exec(ARCHIVE_CHANNEL_CMD, Collections.singletonMap(CHANNEL, channelId));
+    }
+
+    public Response archiveConversation(String id) throws IOException {
+        return exec(ARCHIVE_CONVERSATION_CMD, Map.of(CHANNEL, id));
     }
 
     public Response archiveGroup(String channelId) throws IOException {
-        return exec(ARCHIVE_GROUP_CMD, Collections.singletonMap("channel", channelId));
+        return exec(ARCHIVE_GROUP_CMD, Collections.singletonMap(CHANNEL, channelId));
     }
 
     private Response exec(String command, Map<String, Object> params) throws IOException {
@@ -336,7 +356,7 @@ public class SlackClient implements AutoCloseable {
 
         @Override
         public X509Certificate[] getAcceptedIssuers() {
-            return null;
+            return new X509Certificate[0];
         }
     }
 }

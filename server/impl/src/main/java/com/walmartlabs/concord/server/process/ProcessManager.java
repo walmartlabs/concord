@@ -52,7 +52,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.core.Response.Status;
 import java.io.*;
 import java.util.*;
@@ -61,7 +60,6 @@ import java.util.stream.Collectors;
 import static com.walmartlabs.concord.server.agent.AgentManager.KeyAndAgent;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 
-@Named
 public class ProcessManager {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessManager.class);
@@ -150,7 +148,7 @@ public class ProcessManager {
             throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
         }
 
-        ProcessEntry e = queueDao.get(rootProcessKey);
+        ProcessEntry e = queueManager.get(rootProcessKey);
         if (e == null) {
             throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
         }
@@ -186,7 +184,7 @@ public class ProcessManager {
     }
 
     public void disable(ProcessKey processKey, boolean disabled) {
-        ProcessEntry e = queueDao.get(processKey);
+        ProcessEntry e = queueManager.get(processKey);
         if (e == null) {
             throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
         }
@@ -281,7 +279,7 @@ public class ProcessManager {
     }
 
     public void restoreFromCheckpoint(ProcessKey processKey, UUID checkpointId) {
-        ProcessEntry entry = queueDao.get(processKey);
+        ProcessEntry entry = queueManager.get(processKey);
 
         checkpointManager.assertProcessAccess(entry);
 
@@ -307,7 +305,7 @@ public class ProcessManager {
         try {
             payload = payloadManager.createResumePayload(processKey, checkpointInfo.eventName(), null);
         } catch (IOException e) {
-            log.error("restore ['{}', '{}'] -> error creating a payload: {}", processKey, checkpointInfo.name(), e);
+            log.error("restore ['{}', '{}'] -> error creating a payload", processKey, checkpointInfo.name(), e);
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
@@ -401,7 +399,7 @@ public class ProcessManager {
             throw e;
         } catch (Exception e) {
             log.error("start ['{}'] -> error starting the process", processKey, e);
-            throw new ProcessException(processKey, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
+            throw new ProcessException(processKey, "Error starting the process: " + e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
         }
 
         UUID instanceId = processKey.getInstanceId();

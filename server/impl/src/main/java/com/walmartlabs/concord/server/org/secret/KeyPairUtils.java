@@ -22,13 +22,14 @@ package com.walmartlabs.concord.server.org.secret;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.secret.KeyPair;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 public final class KeyPairUtils {
@@ -37,15 +38,18 @@ public final class KeyPairUtils {
     private static final String DEFAULT_KEY_COMMENT = "concord-server";
 
     private static final JSch jsch = new JSch();
+    private static final Lock mutex = new ReentrantLock();
 
     public static KeyPair create(int keySize) {
         com.jcraft.jsch.KeyPair k;
-        synchronized (jsch) {
-            try {
-                k = com.jcraft.jsch.KeyPair.genKeyPair(jsch, DEFAULT_KEY_TYPE, keySize);
-            } catch (JSchException e) {
-                throw new SecurityException(e);
-            }
+
+        mutex.lock();
+        try {
+            k = com.jcraft.jsch.KeyPair.genKeyPair(jsch, DEFAULT_KEY_TYPE, keySize);
+        } catch (JSchException e) {
+            throw new SecurityException(e);
+        } finally {
+            mutex.unlock();
         }
 
         byte[] publicKey = array(out -> k.writePublicKey(out, DEFAULT_KEY_COMMENT));
@@ -55,8 +59,8 @@ public final class KeyPairUtils {
     }
 
     public static KeyPair create(InputStream publicIn, InputStream privateIn) throws IOException {
-        byte[] publicKey = IOUtils.toByteArray(publicIn);
-        byte[] privateKey = IOUtils.toByteArray(privateIn);
+        byte[] publicKey = publicIn.readAllBytes();
+        byte[] privateKey = privateIn.readAllBytes();
         return new KeyPair(publicKey, privateKey);
     }
 

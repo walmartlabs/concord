@@ -19,12 +19,11 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
+import { useHistory } from '@/router';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import { isTeamExists } from '../../../api/service/console';
-import { actions, State } from '../../../state/data/teams';
+import { rename as apiRename } from '../../../api/org/team';
 import { teamAlreadyExistsError } from '../../../validation';
 import { EntityRenameForm, RequestErrorMessage } from '../../molecules';
 
@@ -34,52 +33,45 @@ interface ExternalProps {
     teamName: ConcordKey;
 }
 
-interface StateProps {
-    renaming: boolean;
-    error: RequestError;
-}
+const TeamRenameActivity = ({ orgName, teamId, teamName }: ExternalProps) => {
+    const history = useHistory();
+    const [error, setError] = React.useState<RequestError>();
+    const [renaming, setRenaming] = React.useState(false);
 
-interface DispatchProps {
-    reset: () => void;
-    rename: (orgName: ConcordKey, teamId: ConcordId, teamName: ConcordKey) => void;
-}
+    const rename = React.useCallback(
+        async (newTeamName: ConcordKey) => {
+            setRenaming(true);
+            setError(undefined);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+            try {
+                await apiRename(orgName, teamId, newTeamName);
+                history.push(`/org/${orgName}/team/${newTeamName}`);
+            } catch (e) {
+                setError(e);
+            } finally {
+                setRenaming(false);
+            }
+        },
+        [history, orgName, teamId]
+    );
 
-class TeamRenameActivity extends React.PureComponent<Props> {
-    componentDidMount() {
-        this.props.reset();
-    }
+    return (
+        <>
+            {error && <RequestErrorMessage error={error} />}
+            <EntityRenameForm
+                originalName={teamName}
+                submitting={renaming}
+                onSubmit={(values) => rename(values.name)}
+                inputPlaceholder="Team name"
+                confirmationHeader="Rename the team?"
+                confirmationContent="Are you sure you want to rename the team?"
+                isExists={(name) => isTeamExists(orgName, name)}
+                alreadyExistsTemplate={teamAlreadyExistsError}
+                inputTestId="team-rename-input"
+                buttonTestId="team-rename-button"
+            />
+        </>
+    );
+};
 
-    render() {
-        const { error, renaming, orgName, teamId, teamName, rename } = this.props;
-
-        return (
-            <>
-                {error && <RequestErrorMessage error={error} />}
-                <EntityRenameForm
-                    originalName={teamName}
-                    submitting={renaming}
-                    onSubmit={(values) => rename(orgName, teamId, values.name)}
-                    inputPlaceholder="Team name"
-                    confirmationHeader="Rename the team?"
-                    confirmationContent="Are you sure you want to rename the team?"
-                    isExists={(name) => isTeamExists(orgName, name)}
-                    alreadyExistsTemplate={teamAlreadyExistsError}
-                />
-            </>
-        );
-    }
-}
-
-const mapStateToProps = ({ teams }: { teams: State }): StateProps => ({
-    renaming: teams.rename.running,
-    error: teams.rename.error
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    reset: () => dispatch(actions.reset()),
-    rename: (orgName, teamId, teamName) => dispatch(actions.renameTeam(orgName, teamId, teamName))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(TeamRenameActivity);
+export default TeamRenameActivity;

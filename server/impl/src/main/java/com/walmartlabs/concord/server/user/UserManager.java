@@ -33,13 +33,11 @@ import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.core.Response;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.user.UserInfoProvider.UserInfo;
 
-@Named
 public class UserManager {
 
     private final UserDao userDao;
@@ -108,6 +106,22 @@ public class UserManager {
 
     public Optional<UUID> getId(String username, String userDomain, UserType type) {
         return Optional.ofNullable(userDao.getId(username, userDomain, type));
+    }
+
+    public Optional<UserEntry> getUserFromExternalMapping(String externalId) {
+        if (externalId == null) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(userDao.getUserFromExternalMapping(externalId));
+    }
+
+    public void createExternalUserMapping(UUID concordUserId, String externalId) {
+        if (externalId == null) {
+            return;
+        }
+
+        userDao.createExternalUserMapping(concordUserId, externalId);
     }
 
     public Optional<UserEntry> update(UUID userId, String displayName, String email, UserType userType, boolean isDisabled, Set<String> roles) {

@@ -37,7 +37,8 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 
 import javax.inject.Inject;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ApiKeyRealm extends AuthorizingRealm {
 
@@ -62,32 +63,39 @@ public class ApiKeyRealm extends AuthorizingRealm {
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
         ApiKey t = (ApiKey) token;
 
-        UserEntry u = userManager.get(t.getUserId()).orElse(null);
-        if (u == null) {
-            return null;
-        }
+        UserEntry u = null;
+        if (t.getUserId() != null) {
+            u = userManager.get(t.getUserId()).orElse(null);
+            if (u == null) {
+                return null;
+            }
 
-        if (u.isDisabled()) {
-            throw new AuthenticationException("User account '" + u.getName() + "' is disabled");
+            if (u.isDisabled()) {
+                throw new AuthenticationException("User account '" + u.getName() + "' is disabled");
+            }
         }
 
         auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
-                .userId(u.getId())
+                .userId(u != null ? u.getId() : null)
                 .field("realm", REALM_NAME)
                 .field("apiKeyId", t.getKeyId())
                 .log();
 
-        UserPrincipal p = new UserPrincipal(REALM_NAME, u);
-        return new SimpleAccount(Arrays.asList(p, t), t.getKey(), getName());
+        List<Object> principals = new ArrayList<>();
+        if (u != null) {
+            principals.add(new UserPrincipal(REALM_NAME, u));
+        }
+        principals.add(t);
+
+        return new SimpleAccount(principals, t.getKey(), getName());
     }
 
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        UserPrincipal p = principals.oneByType(UserPrincipal.class);
-        if (!REALM_NAME.equals(p.getRealm())) {
+        ApiKey principal = principals.oneByType(ApiKey.class);
+        if (principal == null) {
             return null;
         }
-
         return SecurityUtils.toAuthorizationInfo(principals);
     }
 }

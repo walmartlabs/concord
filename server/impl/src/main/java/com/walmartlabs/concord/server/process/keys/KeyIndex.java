@@ -22,6 +22,8 @@ package com.walmartlabs.concord.server.process.keys;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiFunction;
 
 /**
@@ -31,13 +33,15 @@ public final class KeyIndex<K extends Key<?>> {
 
     private final Map<String, K> keys = new HashMap<>();
     private final BiFunction<String, Class<?>, K> keyMaker;
+    private final Lock mutex = new ReentrantLock();
 
     public KeyIndex(BiFunction<String, Class<?>, K> keyMaker) {
         this.keyMaker = keyMaker;
     }
 
     public K register(String name, Class<?> type) {
-        synchronized (keys) {
+        mutex.lock();
+        try {
             if (keys.containsKey(name)) {
                 throw new IllegalStateException("Key '" + name + "' is already registered. " +
                         "Check for duplicate declarations in the code");
@@ -46,6 +50,8 @@ public final class KeyIndex<K extends Key<?>> {
             K k = keyMaker.apply(name, type);
             keys.put(name, k);
             return k;
+        } finally {
+            mutex.unlock();
         }
     }
 }

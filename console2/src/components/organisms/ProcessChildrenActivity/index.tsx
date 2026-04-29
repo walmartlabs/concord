@@ -19,14 +19,13 @@
  */
 
 import * as React from 'react';
-import { ConcordId, queryParams } from '../../../api/common';
-import { Pagination } from '../../../state/data/processes';
+import { ConcordId, ConcordKey, queryParams } from '../../../api/common';
 import {
     list as apiProcessList,
     isFinal,
     ProcessListQuery,
     PaginatedProcessEntries,
-    ProcessStatus
+    ProcessStatus,
 } from '../../../api/process';
 import ProcessListWithSearch from '../../molecules/ProcessListWithSearch';
 import {
@@ -34,27 +33,39 @@ import {
     INITIATOR_COLUMN,
     INSTANCE_ID_COLUMN,
     REPO_COLUMN,
-    STATUS_COLUMN
+    STATUS_COLUMN,
 } from '../../molecules/ProcessList';
-import { useHistory, useLocation } from 'react-router';
-import { filtersToQuery, parseSearchFilter, ProcessSearchFilter } from '../ProcessListActivity';
+import { useLocation } from 'react-router';
+import { useHistory } from '@/router';
+import {
+    addBuiltInColumns,
+    filtersToQuery,
+    parseSearchFilter,
+    ProcessSearchFilter,
+} from '../ProcessListActivity';
 import { ProcessFilters } from '../../../api/process';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePolling } from '../../../api/usePolling';
+import { get as apiGetProject, ProjectEntry } from '../../../api/org/project';
+import { useApi } from '../../../hooks/useApi';
+import { LoadingDispatch } from '../../../App';
+import { Pagination } from '../../molecules/PaginationToolBar/usePagination';
 
 const COLUMNS = [
     STATUS_COLUMN,
     INSTANCE_ID_COLUMN,
     REPO_COLUMN,
     INITIATOR_COLUMN,
-    CREATED_AT_COLUMN
+    CREATED_AT_COLUMN,
 ];
 
 interface ExternalProps {
     instanceId: ConcordId;
     loadingHandler: (inc: number) => void;
     processStatus?: ProcessStatus;
+    processOrgName?: ConcordKey;
+    processProjectName?: ConcordKey;
     forceRefresh: boolean;
     dataFetchInterval: number;
 }
@@ -64,14 +75,35 @@ const ProcessChildrenActivity = ({
     loadingHandler,
     processStatus,
     forceRefresh,
-    dataFetchInterval
+    dataFetchInterval,
+    processOrgName,
+    processProjectName,
 }: ExternalProps) => {
+    const dispatch = React.useContext(LoadingDispatch);
+
     const isInitialMount = useRef(true);
     const location = useLocation();
     const history = useHistory();
     const [data, setData] = useState<PaginatedProcessEntries>();
     const [searchFilter, setSearchFilter] = useState<ProcessSearchFilter>(
         parseSearchFilter(location.search)
+    );
+
+    const fetchProjectData = useCallback(() => {
+        if (!processOrgName || !processProjectName) {
+            return Promise.resolve(undefined);
+        }
+
+        return apiGetProject(processOrgName, processProjectName);
+    }, [processOrgName, processProjectName]);
+
+    const { data: project, error: projectError } = useApi<ProjectEntry | undefined>(
+        fetchProjectData,
+        {
+            fetchOnMount: true,
+            forceRequest: forceRefresh,
+            dispatch: dispatch,
+        }
     );
 
     useEffect(() => {
@@ -85,7 +117,7 @@ const ProcessChildrenActivity = ({
     const fetchData = useCallback(async () => {
         const query = {
             parentInstanceId: instanceId,
-            ...searchFilter.pagination
+            ...searchFilter.pagination,
         } as ProcessListQuery;
 
         const processEntries = await apiProcessList(filtersToQuery(query, searchFilter.filters));
@@ -117,15 +149,18 @@ const ProcessChildrenActivity = ({
         [history]
     );
 
+    const columns = addBuiltInColumns(project?.meta?.ui?.childrenProcessList) ?? COLUMNS;
+
     return (
         <>
             {error && <RequestErrorActivity error={error} />}
+            {projectError && <RequestErrorActivity error={projectError} />}
 
             <ProcessListWithSearch
                 processFilters={searchFilter.filters}
                 paginationFilter={searchFilter.pagination}
                 processes={data?.items}
-                columns={COLUMNS}
+                columns={columns}
                 loading={false}
                 refresh={onRefresh}
                 next={data?.next}

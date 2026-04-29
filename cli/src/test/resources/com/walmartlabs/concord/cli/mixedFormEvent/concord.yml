@@ -1,0 +1,17 @@
+flows:
+  default:
+    - log: "before mixed suspend"
+    - parallel:
+        - block:
+            - form: approvalForm
+        - block:
+            - suspend: ev_timeout
+      out:
+        - approvalForm
+    - log: "after mixed suspend: ${approvalForm.decision}"
+
+forms:
+  approvalForm:
+    - decision:
+        label: Decision
+        type: string

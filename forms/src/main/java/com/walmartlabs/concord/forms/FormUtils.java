@@ -20,7 +20,7 @@ package com.walmartlabs.concord.forms;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.PathUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -188,11 +188,14 @@ public final class FormUtils {
     }
 
     public static Map<String, Object> convert(FormValidatorLocale locale, Form form, Map<String, Object> m) throws ValidationException {
+        return convert(locale, form, m, new HashMap<>());
+    }
+
+    public static Map<String, Object> convert(FormValidatorLocale locale, Form form, Map<String, Object> m, Map<String, String> tmpFiles) throws ValidationException {
         if (m == null) {
             return Collections.emptyMap();
         }
 
-        Map<String, String> tmpFiles = new HashMap<>();
         Map<String, Object> m2 = new HashMap<>();
         m2.put(Constants.FORM_FILES, tmpFiles);
 
@@ -273,7 +276,7 @@ public final class FormUtils {
                 }
                 case FormFields.FileField.TYPE: {
                     try {
-                        Path tmp = IOUtils.createTempFile(f.name(), ".tmp");
+                        Path tmp = PathUtils.createTempFile(f.name(), ".tmp");
                         Files.write(tmp, s.getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
                         return tmp.toString();
                     } catch (IOException e) {
@@ -310,7 +313,7 @@ public final class FormUtils {
         } else if (v instanceof InputStream) {
             if (f.type().equals(FormFields.FileField.TYPE)) {
                 try (InputStream is = (InputStream) v) {
-                    Path tmp = IOUtils.createTempFile(f.name(), ".tmp");
+                    Path tmp = PathUtils.createTempFile(f.name(), ".tmp");
                     Files.copy(is, tmp, REPLACE_EXISTING);
                     return tmp.toString();
                 } catch (IOException e) {

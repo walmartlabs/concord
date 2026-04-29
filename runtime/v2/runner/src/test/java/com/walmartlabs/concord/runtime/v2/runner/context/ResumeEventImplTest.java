@@ -21,7 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.util.Map;

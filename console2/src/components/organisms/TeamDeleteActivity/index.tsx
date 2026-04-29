@@ -19,11 +19,10 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
+import { useHistory } from '@/router';
 
 import { ConcordKey, RequestError } from '../../../api/common';
-import { actions, State } from '../../../state/data/teams';
+import { deleteTeam as apiDeleteTeam } from '../../../api/org/team';
 import { ButtonWithConfirmation, RequestErrorMessage } from '../../molecules';
 
 interface ExternalProps {
@@ -31,51 +30,40 @@ interface ExternalProps {
     teamName: ConcordKey;
 }
 
-interface StateProps {
-    deleting: boolean;
-    error: RequestError;
-}
+const TeamDeleteActivity = ({ orgName, teamName }: ExternalProps) => {
+    const history = useHistory();
+    const [error, setError] = React.useState<RequestError>();
+    const [deleting, setDeleting] = React.useState(false);
 
-interface DispatchProps {
-    reset: () => void;
-    deleteTeam: (orgName: ConcordKey, teamName: ConcordKey) => void;
-}
+    const deleteTeam = React.useCallback(async () => {
+        setDeleting(true);
+        setError(undefined);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+        try {
+            await apiDeleteTeam(orgName, teamName);
+            history.push(`/org/${orgName}/team/`);
+        } catch (e) {
+            setError(e);
+        } finally {
+            setDeleting(false);
+        }
+    }, [history, orgName, teamName]);
 
-class TeamDeleteActivity extends React.PureComponent<Props> {
-    componentDidMount() {
-        this.props.reset();
-    }
+    return (
+        <>
+            {error && <RequestErrorMessage error={error} />}
+            <ButtonWithConfirmation
+                primary={true}
+                negative={true}
+                content="Delete"
+                loading={deleting}
+                confirmationHeader="Delete the team?"
+                confirmationContent="Are you sure you want to delete the team?"
+                onConfirm={deleteTeam}
+                data-testid="team-delete-button"
+            />
+        </>
+    );
+};
 
-    render() {
-        const { error, deleting, orgName, teamName, deleteTeam } = this.props;
-
-        return (
-            <>
-                {error && <RequestErrorMessage error={error} />}
-                <ButtonWithConfirmation
-                    primary={true}
-                    negative={true}
-                    content="Delete"
-                    loading={deleting}
-                    confirmationHeader="Delete the team?"
-                    confirmationContent="Are you sure you want to delete the team?"
-                    onConfirm={() => deleteTeam(orgName, teamName)}
-                />
-            </>
-        );
-    }
-}
-
-const mapStateToProps = ({ teams }: { teams: State }): StateProps => ({
-    deleting: teams.deleteTeam.running,
-    error: teams.deleteTeam.error
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    reset: () => dispatch(actions.reset()),
-    deleteTeam: (orgName, teamName) => dispatch(actions.deleteTeam(orgName, teamName))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(TeamDeleteActivity);
+export default TeamDeleteActivity;

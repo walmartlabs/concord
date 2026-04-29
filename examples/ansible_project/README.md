@@ -143,9 +143,10 @@ http://localhost:8001/api/v1/process
 ### 7. Check the logs (optional)
 
 Use the `instanceId` value returned by the server in the previous step.
+Open the UI to see the log:
 
 ```
-curl -v http://localhost:8001/logs/33c8f91e-db14-11e6-8d94-a3efec7ccd7b.log
+http://localhost:8001/#/process/33c8f91e-db14-11e6-8d94-a3efec7ccd7b.log
 ```
 
 ### 8. Get Ansible's statistics (optional)

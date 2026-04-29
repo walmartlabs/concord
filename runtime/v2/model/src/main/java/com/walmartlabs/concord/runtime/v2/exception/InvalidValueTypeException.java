@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.exception;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.model.Location;
+import com.walmartlabs.concord.runtime.model.Location;
 import com.walmartlabs.concord.runtime.v2.parser.YamlValueType;
 
 import java.util.Arrays;

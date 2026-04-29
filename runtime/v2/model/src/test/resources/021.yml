@@ -1,0 +1,15 @@
+flows:
+  main:
+    - log: "hello: ${v}"
+
+triggers:
+  - manual:
+      name: "test"
+      entryPoint: "main"
+      arguments:
+        k: "v"
+      activeProfiles:
+        - "profile-1"
+      exclusive:
+        mode: "cancel"
+        group: "manual-group"
