@@ -128,10 +128,18 @@ See the [examples](examples) directory.
   $ git push origin RELEASE_TAG
   $ git push origin master
   ```
-- build and push the Docker images:
+- ensure the published Docker base images are current. They are rebuilt weekly
+  by `docker-base-images.yml` as `latest` plus an immutable weekly tag, but they
+  can also be refreshed manually:
+  ```
+  $ gh workflow run docker-base-images.yml --ref master -f ref=master -f docker_tag=latest -f docker_namespace=walmartlabs
+  ```
+- build and push the Docker application images. The workflow resolves the
+  published `concord-base` and `concord-ansible` images from `base_docker_tag`
+  to digests before building:
   ```
   $ git checkout RELEASE_TAG
-  $ gh workflow run docker-multiarch.yml --ref master -f ref=RELEASE_TAG -f docker_tag=RELEASE_TAG -f docker_namespace=walmartlabs
+  $ gh workflow run docker-multiarch.yml --ref master -f ref=RELEASE_TAG -f docker_tag=RELEASE_TAG -f docker_namespace=walmartlabs -f base_docker_tag=latest
   ```
 - sync to [Sonatype](https://oss.sonatype.org/);
 - check the Central repository if the sync is complete:
@@ -140,7 +148,7 @@ See the [examples](examples) directory.
   ```
 - once the sync is complete, push the `latest` Docker images:
   ```
-  $ gh workflow run docker-multiarch.yml --ref master -f ref=RELEASE_TAG -f docker_tag=latest -f docker_namespace=walmartlabs
+  $ gh workflow run docker-multiarch.yml --ref master -f ref=RELEASE_TAG -f docker_tag=latest -f docker_namespace=walmartlabs -f base_docker_tag=latest
   ```
 
 ## Development Notes

@@ -1,0 +1,175 @@
+name: docker-base-images
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to build
+        required: true
+        default: master
+        type: string
+      docker_tag:
+        description: Docker tag to apply to the published base images
+        required: true
+        default: latest
+        type: string
+      extra_docker_tag:
+        description: Optional additional Docker tag to apply to the published base images
+        required: false
+        type: string
+      docker_namespace:
+        description: Docker Hub namespace to publish into
+        required: true
+        default: walmartlabs
+        type: string
+  schedule:
+    - cron: '17 7 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-base-images-${{ github.event.inputs.docker_tag || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      IMAGE_PLATFORMS: linux/amd64,linux/arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ref || 'master' }}
+
+      - name: Resolve build target
+        run: |
+          validate_tag() {
+            local tag="$1"
+            local name="$2"
+
+            if ! [[ "${tag}" =~ ^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$ ]]; then
+              echo "${name} '${tag}' is not a valid Docker tag." >&2
+              exit 1
+            fi
+          }
+
+          if [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]; then
+            build_ref='${{ github.event.inputs.ref }}'
+            build_tag='${{ github.event.inputs.docker_tag }}'
+            extra_tag='${{ github.event.inputs.extra_docker_tag }}'
+            docker_namespace='${{ github.event.inputs.docker_namespace }}'
+          else
+            build_ref='master'
+            build_tag="weekly-$(date -u +%Y%m%d)-$(git rev-parse --short=12 HEAD)"
+            extra_tag='latest'
+            docker_namespace='walmartlabs'
+          fi
+
+          validate_tag "${build_tag}" "Docker tag"
+          if [[ -n "${extra_tag}" ]]; then
+            validate_tag "${extra_tag}" "Extra Docker tag"
+          fi
+
+          if [[ -z "${docker_namespace}" ]]; then
+            echo "Docker namespace must not be empty." >&2
+            exit 1
+          fi
+
+          if [[ "${docker_namespace}" == */* ]]; then
+            echo "Docker base image publishing expects a Docker Hub namespace only, e.g. 'walmartlabs'." >&2
+            exit 1
+          fi
+
+          echo "BUILD_REF=${build_ref}" >> "$GITHUB_ENV"
+          echo "BUILD_TAG=${build_tag}" >> "$GITHUB_ENV"
+          echo "EXTRA_DOCKER_TAG=${extra_tag}" >> "$GITHUB_ENV"
+          echo "DOCKER_NAMESPACE=${docker_namespace}" >> "$GITHUB_ENV"
+          echo "Using BUILD_REF=${build_ref}"
+          echo "Using BUILD_TAG=${build_tag}"
+          echo "Using EXTRA_DOCKER_TAG=${extra_tag}"
+          echo "Using DOCKER_NAMESPACE=${docker_namespace}"
+          git rev-parse HEAD
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+        with:
+          driver: docker-container
+          driver-opts: |
+            network=host
+
+      - name: Login to DockerHub
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        with:
+          username: ${{ secrets.OSS_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.OSS_DOCKERHUB_PASSWORD }}
+
+      - name: Build Docker base images
+        working-directory: docker-images
+        run: |
+          platform_args=()
+          IFS=',' read -ra platforms <<< "${IMAGE_PLATFORMS}"
+          for platform in "${platforms[@]}"; do
+            platform="${platform//[[:space:]]/}"
+            if [[ -n "${platform}" ]]; then
+              platform_args+=(--set "*.platform=${platform}")
+            fi
+          done
+
+          docker buildx bake \
+            --push \
+            "${platform_args[@]}" \
+            --var "DOCKER_NAMESPACE=${DOCKER_NAMESPACE}" \
+            --var "DOCKER_TAG=${BUILD_TAG}" \
+            --var "JDK_VERSION=17" \
+            base-images
+
+      - name: Tag Docker base images
+        if: env.EXTRA_DOCKER_TAG != '' && env.EXTRA_DOCKER_TAG != env.BUILD_TAG
+        run: |
+          images=(
+            concord-base
+            concord-ansible
+          )
+
+          for image in "${images[@]}"; do
+            source_ref="${DOCKER_NAMESPACE}/${image}:${BUILD_TAG}"
+            target_ref="${DOCKER_NAMESPACE}/${image}:${EXTRA_DOCKER_TAG}"
+
+            echo "Tagging ${source_ref} as ${target_ref}"
+            docker buildx imagetools create \
+              -t "${target_ref}" \
+              "${source_ref}"
+          done
+
+      - name: Verify multi-arch manifests
+        run: |
+          images=(
+            concord-base
+            concord-ansible
+          )
+
+          tags=("${BUILD_TAG}")
+          if [[ -n "${EXTRA_DOCKER_TAG}" ]] && [[ "${EXTRA_DOCKER_TAG}" != "${BUILD_TAG}" ]]; then
+            tags+=("${EXTRA_DOCKER_TAG}")
+          fi
+
+          for tag in "${tags[@]}"; do
+            for image in "${images[@]}"; do
+              ref="${DOCKER_NAMESPACE}/${image}:${tag}"
+              echo "Inspecting ${ref}"
+              output=$(docker buildx imagetools inspect "${ref}")
+              printf '%s\n' "${output}"
+
+              printf '%s\n' "${output}" | grep -q 'linux/amd64'
+              printf '%s\n' "${output}" | grep -q 'linux/arm64'
+            done
+          done
