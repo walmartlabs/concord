@@ -10,12 +10,35 @@ variable "JDK_VERSION" {
   default = "17"
 }
 
+variable "CONCORD_BASE_IMAGE" {
+  default = "walmartlabs/concord-base:latest"
+}
+
+variable "CONCORD_ANSIBLE_IMAGE" {
+  default = "walmartlabs/concord-ansible:latest"
+}
+
 group "default" {
   targets = [
     "concord-base",
     "concord-ansible",
     "concord-agent",
     "concord-server",
+    "concord-agent-operator",
+  ]
+}
+
+group "base-images" {
+  targets = [
+    "concord-base",
+    "concord-ansible",
+  ]
+}
+
+group "app-images" {
+  targets = [
+    "concord-agent-from-registry",
+    "concord-server-from-registry",
     "concord-agent-operator",
   ]
 }
@@ -64,6 +87,18 @@ target "concord-agent" {
   }
 }
 
+target "concord-agent-from-registry" {
+  inherits = ["_common"]
+  context = "./agent"
+  dockerfile = "oss/debian/Dockerfile"
+  tags = ["${DOCKER_NAMESPACE}/concord-agent:${DOCKER_TAG}"]
+  args = {
+    concord_ansible_image = CONCORD_ANSIBLE_IMAGE
+    concord_version = DOCKER_TAG
+    docker_namespace = DOCKER_NAMESPACE
+  }
+}
+
 target "concord-server" {
   inherits = ["_common"]
   context = "./server"
@@ -76,6 +111,18 @@ target "concord-server" {
   }
   contexts = {
     "concord-base" = "target:concord-base"
+  }
+}
+
+target "concord-server-from-registry" {
+  inherits = ["_common"]
+  context = "./server"
+  dockerfile = "oss/Dockerfile"
+  tags = ["${DOCKER_NAMESPACE}/concord-server:${DOCKER_TAG}"]
+  args = {
+    concord_base_image = CONCORD_BASE_IMAGE
+    concord_version = DOCKER_TAG
+    docker_namespace = DOCKER_NAMESPACE
   }
 }
 

@@ -16,6 +16,11 @@ on:
         required: true
         default: walmartlabs
         type: string
+      base_docker_tag:
+        description: Docker tag of the published concord-base and concord-ansible images to use
+        required: true
+        default: latest
+        type: string
   pull_request:
     branches: [ 'master' ]
 
@@ -70,7 +75,11 @@ jobs:
             build_ref='${{ github.event.inputs.ref }}'
             build_tag='${{ github.event.inputs.docker_tag }}'
             docker_namespace='${{ github.event.inputs.docker_namespace }}'
+            base_docker_tag='${{ github.event.inputs.base_docker_tag }}'
+            bake_group='app-images'
             maven_also_make=''
+            maven_projects='docker-images/agent,docker-images/server,docker-images/agent-operator'
+            verify_images='concord-agent concord-server concord-agent-operator'
 
             release_tag="${build_ref#refs/tags/}"
             if ! [[ "${release_tag}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -89,11 +98,20 @@ jobs:
             build_ref='${{ github.event.pull_request.head.sha }}'
             build_tag="pr-${{ github.event.pull_request.number }}-$(git rev-parse --short=12 HEAD)"
             docker_namespace="${LOCAL_REGISTRY}/walmartlabs"
+            base_docker_tag=''
+            bake_group='default'
             maven_also_make='-am'
+            maven_projects='docker-images/base,docker-images/ansible,docker-images/agent,docker-images/server,docker-images/agent-operator'
+            verify_images='concord-base concord-ansible concord-agent concord-server concord-agent-operator'
           fi
 
           if ! [[ "${build_tag}" =~ ^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$ ]]; then
             echo "Tag '${build_tag}' is not a valid Docker tag." >&2
+            exit 1
+          fi
+
+          if [[ -n "${base_docker_tag}" ]] && ! [[ "${base_docker_tag}" =~ ^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$ ]]; then
+            echo "Base image tag '${base_docker_tag}' is not a valid Docker tag." >&2
             exit 1
           fi
 
@@ -110,11 +128,18 @@ jobs:
           echo "BUILD_TAG=${build_tag}" >> "$GITHUB_ENV"
           echo "BUILD_REF=${build_ref}" >> "$GITHUB_ENV"
           echo "DOCKER_NAMESPACE=${docker_namespace}" >> "$GITHUB_ENV"
+          echo "BASE_DOCKER_TAG=${base_docker_tag}" >> "$GITHUB_ENV"
+          echo "BAKE_GROUP=${bake_group}" >> "$GITHUB_ENV"
           echo "MAVEN_ALSO_MAKE=${maven_also_make}" >> "$GITHUB_ENV"
+          echo "MAVEN_PROJECTS=${maven_projects}" >> "$GITHUB_ENV"
+          echo "VERIFY_IMAGES=${verify_images}" >> "$GITHUB_ENV"
           echo "Using BUILD_REF=${build_ref}"
           echo "Using BUILD_TAG=${build_tag}"
           echo "Using DOCKER_NAMESPACE=${docker_namespace}"
+          echo "Using BASE_DOCKER_TAG=${base_docker_tag}"
+          echo "Using BAKE_GROUP=${bake_group}"
           echo "Using MAVEN_ALSO_MAKE=${maven_also_make}"
+          echo "Using MAVEN_PROJECTS=${maven_projects}"
           git rev-parse HEAD
 
       - name: Restore Maven cache
@@ -168,6 +193,32 @@ jobs:
           username: ${{ secrets.OSS_DOCKERHUB_USERNAME }}
           password: ${{ secrets.OSS_DOCKERHUB_PASSWORD }}
 
+      - name: Resolve published base images
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          resolve_image() {
+            local ref="$1"
+            local name="$2"
+            local output
+            local digest
+
+            echo "Inspecting ${ref}"
+            output=$(docker buildx imagetools inspect "${ref}")
+            printf '%s\n' "${output}"
+
+            digest=$(printf '%s\n' "${output}" | awk '$1 == "Digest:" { print $2; exit }')
+            if [[ -z "${digest}" ]]; then
+              echo "Unable to resolve digest for ${ref}" >&2
+              exit 1
+            fi
+
+            echo "${name}=${ref%:*}@${digest}" >> "$GITHUB_ENV"
+            echo "Using ${name}=${ref%:*}@${digest}"
+          }
+
+          resolve_image "${DOCKER_NAMESPACE}/concord-base:${BASE_DOCKER_TAG}" CONCORD_BASE_IMAGE
+          resolve_image "${DOCKER_NAMESPACE}/concord-ansible:${BASE_DOCKER_TAG}" CONCORD_ANSIBLE_IMAGE
+
       - name: Prepare Docker image contexts
         run: |
           mkdir -p "${WORK}" "${MAVEN_REPO_LOCAL}"
@@ -183,7 +234,7 @@ jobs:
             -Djava.io.tmpdir="${WORK}" \
             -DskipTests \
             -Pgha \
-            -pl docker-images/base,docker-images/ansible,docker-images/agent,docker-images/server,docker-images/agent-operator \
+            -pl "${MAVEN_PROJECTS}" \
             "${maven_reactor_args[@]}"
 
       - name: Build Docker images
@@ -198,22 +249,27 @@ jobs:
             fi
           done
 
-          docker buildx bake \
-            --push \
-            "${platform_args[@]}" \
-            --var "DOCKER_NAMESPACE=${DOCKER_NAMESPACE}" \
-            --var "DOCKER_TAG=${BUILD_TAG}" \
+          bake_args=(
+            --push
+            "${platform_args[@]}"
+            --var "DOCKER_NAMESPACE=${DOCKER_NAMESPACE}"
+            --var "DOCKER_TAG=${BUILD_TAG}"
             --var "JDK_VERSION=17"
+          )
+
+          if [[ -n "${CONCORD_BASE_IMAGE:-}" ]]; then
+            bake_args+=(--var "CONCORD_BASE_IMAGE=${CONCORD_BASE_IMAGE}")
+          fi
+
+          if [[ -n "${CONCORD_ANSIBLE_IMAGE:-}" ]]; then
+            bake_args+=(--var "CONCORD_ANSIBLE_IMAGE=${CONCORD_ANSIBLE_IMAGE}")
+          fi
+
+          docker buildx bake "${bake_args[@]}" "${BAKE_GROUP}"
 
       - name: Verify multi-arch manifests
         run: |
-          images=(
-            concord-base
-            concord-ansible
-            concord-agent
-            concord-server
-            concord-agent-operator
-          )
+          read -ra images <<< "${VERIFY_IMAGES}"
 
           for image in "${images[@]}"; do
             ref="${DOCKER_NAMESPACE}/${image}:${BUILD_TAG}"
