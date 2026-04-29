@@ -19,10 +19,10 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
+import { useHistory } from '@/router';
+
 import { ConcordKey, RequestError } from '../../../api/common';
-import { actions, State } from '../../../state/data/secrets';
+import { deleteSecret as apiDeleteSecret } from '../../../api/org/secret';
 import { ButtonWithConfirmation, RequestErrorMessage } from '../../molecules';
 
 interface ExternalProps {
@@ -30,45 +30,39 @@ interface ExternalProps {
     secretName: ConcordKey;
 }
 
-interface StateProps {
-    deleting: boolean;
-    error: RequestError;
-}
+const SecretDeleteActivity = ({ orgName, secretName }: ExternalProps) => {
+    const history = useHistory();
+    const [error, setError] = React.useState<RequestError>();
+    const [deleting, setDeleting] = React.useState(false);
 
-interface DispatchProps {
-    deleteSecret: (orgName: ConcordKey, secretName: ConcordKey) => void;
-}
+    const deleteSecret = React.useCallback(async () => {
+        setDeleting(true);
+        setError(undefined);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+        try {
+            await apiDeleteSecret(orgName, secretName);
+            history.push(`/org/${orgName}/secret`);
+        } catch (e) {
+            setError(e);
+        } finally {
+            setDeleting(false);
+        }
+    }, [history, orgName, secretName]);
 
-class SecretDeleteActivity extends React.PureComponent<Props> {
-    render() {
-        const { error, deleting, orgName, secretName, deleteSecret } = this.props;
+    return (
+        <>
+            {error && <RequestErrorMessage error={error} />}
+            <ButtonWithConfirmation
+                primary={true}
+                negative={true}
+                content="Delete"
+                loading={deleting}
+                confirmationHeader="Delete the secret?"
+                confirmationContent="Are you sure you want to delete the secret?"
+                onConfirm={deleteSecret}
+            />
+        </>
+    );
+};
 
-        return (
-            <>
-                {error && <RequestErrorMessage error={error} />}
-                <ButtonWithConfirmation
-                    primary={true}
-                    negative={true}
-                    content="Delete"
-                    loading={deleting}
-                    confirmationHeader="Delete the secret?"
-                    confirmationContent="Are you sure you want to delete the secret?"
-                    onConfirm={() => deleteSecret(orgName, secretName)}
-                />
-            </>
-        );
-    }
-}
-
-const mapStateToProps = ({ secrets }: { secrets: State }): StateProps => ({
-    deleting: secrets.deleteSecret.running,
-    error: secrets.deleteSecret.error
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    deleteSecret: (orgName, secretName) => dispatch(actions.deleteSecret(orgName, secretName))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(SecretDeleteActivity);
+export default SecretDeleteActivity;

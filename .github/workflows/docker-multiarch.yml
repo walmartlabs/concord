@@ -27,7 +27,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check-labels:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+
+    steps:
+      - name: Check PR labels
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            labels=$(jq -r '.pull_request.labels | map(.name) | join(",")' "$GITHUB_EVENT_PATH")
+            if [[ "$labels" == *"[no ci]"* ]]; then
+              echo "skip=true" >> $GITHUB_OUTPUT
+            else
+              echo "skip=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
   build:
+    needs: check-labels
+    if: needs.check-labels.outputs.skip == 'false'
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     env:

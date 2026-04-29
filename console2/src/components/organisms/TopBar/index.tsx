@@ -19,14 +19,12 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { RouteComponentProps, withRouter } from 'react-router';
-import { push as pushHistory } from 'connected-react-router';
+import { useContext } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 
 import { CustomResources, LinkMeta } from '../../../../cfg';
 import { GlobalNavMenu, GlobalNavTab } from '../../molecules';
-import { logout, UserSession, UserSessionContext } from '../../../session';
+import { logout, UserSessionContext } from '../../../session';
 
 const pathToTab = (s: string): GlobalNavTab => {
     if (s.startsWith('/activity')) {
@@ -57,49 +55,48 @@ const getCustomResources = (): CustomResources => {
     return customResources || {};
 };
 
-interface DispatchProps {
+interface NavigationProps {
     openUrl: (url: string) => void;
     openAbout: () => void;
     openProfile: () => void;
     openCustomResource: (name: string) => void;
 }
 
-export type TopBarProps = DispatchProps & RouteComponentProps<{}>;
+const TopBar = () => {
+    const userSession = useContext(UserSessionContext);
+    const location = useLocation();
+    const navigate = useNavigate();
 
-class TopBar extends React.PureComponent<TopBarProps> {
-    getLogout(userSession: UserSession) {
+    const navigationProps: NavigationProps = {
+        openUrl: (url: string) => window.open(url, '_blank'),
+        openAbout: () => navigate('/about'),
+        openProfile: () => navigate('/profile'),
+        openCustomResource: (name: string) => navigate(`/custom/${name}`),
+    };
+
+    const logOut = async () => {
         const logoutUrl = window.concord?.logoutUrl;
         if (logoutUrl) {
-            return () => (window.location.href = logoutUrl);
+            window.location.href = logoutUrl;
+            return;
         }
 
-        return () => logout(userSession);
-    }
+        if (await logout(userSession)) {
+            navigate('/logout/done');
+        }
+    };
 
-    render() {
-        const activeTab = pathToTab(this.props.location.pathname);
-        return (
-            <UserSessionContext.Consumer>
-                {(value) => (
-                    <GlobalNavMenu
-                        activeTab={activeTab}
-                        extraSystemLinks={getExtraSystemLinks()}
-                        customResources={getCustomResources()}
-                        userDisplayName={value.userInfo?.displayName}
-                        {...this.props}
-                        logOut={this.getLogout(value)}
-                    />
-                )}
-            </UserSessionContext.Consumer>
-        );
-    }
-}
+    const activeTab = pathToTab(location.pathname);
+    return (
+        <GlobalNavMenu
+            activeTab={activeTab}
+            extraSystemLinks={getExtraSystemLinks()}
+            customResources={getCustomResources()}
+            userDisplayName={userSession.userInfo?.displayName}
+            {...navigationProps}
+            logOut={logOut}
+        />
+    );
+};
 
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    openUrl: (url: string) => window.open(url, '_blank'),
-    openAbout: () => dispatch(pushHistory('/about')),
-    openProfile: () => dispatch(pushHistory('/profile')),
-    openCustomResource: (name: string) => dispatch(pushHistory(`/custom/${name}`))
-});
-
-export default withRouter(connect(null, mapDispatchToProps)(TopBar));
+export default TopBar;

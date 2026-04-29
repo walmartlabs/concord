@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Dropdown, Image, Menu } from 'semantic-ui-react';
 import { CustomResources, LinkMeta } from '../../../../cfg';
 
@@ -48,7 +48,7 @@ class GlobalNavMenu extends React.PureComponent<Props> {
             openProfile,
             customResources,
             openCustomResource,
-            logOut
+            logOut,
         } = this.props;
 
         return (
@@ -70,11 +70,12 @@ class GlobalNavMenu extends React.PureComponent<Props> {
                 </Menu.Item>
                 <Menu.Item position="right" fitted="vertically">
                     <Menu inverted={true} size="small" secondary={true}>
-                        <Menu.Item as={Dropdown} text="System">
+                        <Menu.Item as={Dropdown} text="System" data-testid="topbar-system-menu">
                             <Dropdown.Menu>
                                 <Dropdown.Item
                                     icon="info"
                                     text="About"
+                                    data-testid="topbar-about"
                                     onClick={() => openAbout()}
                                 />
 
@@ -100,12 +101,17 @@ class GlobalNavMenu extends React.PureComponent<Props> {
                                 })}
                             </Dropdown.Menu>
                         </Menu.Item>
-                        <Menu.Item as={Dropdown} text={userDisplayName}>
+                        <Menu.Item
+                            as={Dropdown}
+                            text={userDisplayName}
+                            data-testid="topbar-user-menu"
+                        >
                             {/* TODO can't add an icon here */}
                             <Dropdown.Menu>
                                 <Dropdown.Item
                                     icon="setting"
                                     text="Profile"
+                                    data-testid="topbar-profile"
                                     onClick={() => openProfile()}
                                 />
                                 <Dropdown.Item

@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { useCallback, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Input, List, Menu, Radio } from 'semantic-ui-react';
 
 import { OrganizationVisibility, PaginatedOrganizationEntries } from '../../../api/org';

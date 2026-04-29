@@ -1,0 +1,30 @@
+flows:
+  default:
+    - form: validatedForm
+    - log: "validated form: name=${validatedForm.name}, age=${validatedForm.age}, choice=${validatedForm.choice}, note=${validatedForm.note}, readOnly=${validatedForm.readOnlyValue}"
+
+forms:
+  validatedForm:
+    - name:
+        label: Name
+        type: string
+    - age:
+        label: Age
+        type: int
+        min: 21
+        max: 65
+    - choice:
+        label: Choice
+        type: string
+        allow:
+          - "red"
+          - "blue"
+    - note:
+        label: Note
+        type: string
+        value: default-note
+    - readOnlyValue:
+        label: Read Only
+        type: string
+        value: locked
+        readOnly: true

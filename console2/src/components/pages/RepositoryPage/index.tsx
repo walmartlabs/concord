@@ -20,10 +20,11 @@
 
 import * as React from 'react';
 import { useCallback, useRef, useState } from 'react';
-import { Redirect, Route, RouteComponentProps, Switch } from 'react-router';
-import { Link } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router';
+import { Link } from 'react-router';
 import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
+import { RouteComponentProps, withRouter } from '@/router';
 import { MainToolbar } from '../../molecules';
 import { ConcordKey } from '../../../api/common';
 import { LoadingState } from '../../../App';
@@ -90,36 +91,42 @@ const RepositoryPage = (props: RouteComponentProps<RouteProps>) => {
                 </Menu.Item>
             </Menu>
 
-            <Switch>
-                <Route path={baseUrl} exact={true}>
-                    <Redirect to={`${baseUrl}/settings`} />
-                </Route>
-
-                <Route path={`${baseUrl}/settings`} exact={true}>
-                    <EditRepositoryActivity
-                        orgName={orgName}
-                        projectName={projectName}
-                        repoName={repoName}
-                        forceRefresh={refresh}
-                    />
-                </Route>
-                <Route path={`${baseUrl}/triggers`} exact={true}>
-                    <RepositoryTriggersActivity
-                        orgName={orgName}
-                        projectName={projectName}
-                        repoName={repoName}
-                    />
-                </Route>
-                <Route path={`${baseUrl}/events`} exact={true}>
-                    <RepositoryEventsActivity
-                        orgName={orgName}
-                        projectName={projectName}
-                        repoName={repoName}
-                        forceRefresh={refresh}
-                    />
-                </Route>
-                <Route component={NotFoundPage} />
-            </Switch>
+            <Routes>
+                <Route index={true} element={<Navigate to="settings" replace={true} />} />
+                <Route
+                    path="settings"
+                    element={
+                        <EditRepositoryActivity
+                            orgName={orgName}
+                            projectName={projectName}
+                            repoName={repoName}
+                            forceRefresh={refresh}
+                        />
+                    }
+                />
+                <Route
+                    path="triggers"
+                    element={
+                        <RepositoryTriggersActivity
+                            orgName={orgName}
+                            projectName={projectName}
+                            repoName={repoName}
+                        />
+                    }
+                />
+                <Route
+                    path="events"
+                    element={
+                        <RepositoryEventsActivity
+                            orgName={orgName}
+                            projectName={projectName}
+                            repoName={repoName}
+                            forceRefresh={refresh}
+                        />
+                    }
+                />
+                <Route path="*" element={<NotFoundPage />} />
+            </Routes>
         </div>
     );
 };
@@ -136,4 +143,4 @@ const renderBreadcrumbs = (orgName: ConcordKey, projectName: ConcordKey, repoNam
     );
 };
 
-export default RepositoryPage;
+export default withRouter(RepositoryPage);

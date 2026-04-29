@@ -19,59 +19,48 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
+import { useHistory } from '@/router';
 
 import { ConcordKey, RequestError } from '../../../api/common';
-import { NewTeamEntry } from '../../../api/org/team';
-import { actions, State } from '../../../state/data/teams';
+import { NewTeamEntry, createOrUpdate as apiCreateOrUpdate } from '../../../api/org/team';
 import { NewTeamForm, RequestErrorMessage } from '../../molecules';
 
 interface ExternalProps {
     orgName: ConcordKey;
 }
 
-interface StateProps {
-    error: RequestError;
-    submitting: boolean;
-}
+const NewTeamActivity = ({ orgName }: ExternalProps) => {
+    const history = useHistory();
+    const [error, setError] = React.useState<RequestError>();
+    const [submitting, setSubmitting] = React.useState(false);
 
-interface DispatchProps {
-    reset: () => void;
-    submit: (orgName: ConcordKey, entry: NewTeamEntry) => void;
-}
+    const submit = React.useCallback(
+        async (entry: NewTeamEntry) => {
+            setSubmitting(true);
+            setError(undefined);
 
-type Props = StateProps & ExternalProps & DispatchProps;
+            try {
+                await apiCreateOrUpdate(orgName, entry);
+                history.push(`/org/${orgName}/team/${entry.name}`);
+            } catch (e) {
+                setError(e);
+            } finally {
+                setSubmitting(false);
+            }
+        },
+        [history, orgName]
+    );
 
-class NewTeamActivity extends React.PureComponent<Props> {
-    componentDidMount() {
-        this.props.reset();
-    }
+    return (
+        <>
+            {error && <RequestErrorMessage error={error} />}
+            <NewTeamForm
+                orgName={orgName}
+                submitting={submitting}
+                onSubmit={(values) => submit(values)}
+            />
+        </>
+    );
+};
 
-    render() {
-        const { error, submitting, orgName, submit } = this.props;
-        return (
-            <>
-                {error && <RequestErrorMessage error={error} />}
-                <NewTeamForm
-                    orgName={orgName}
-                    submitting={submitting}
-                    onSubmit={(values) => submit(orgName, values)}
-                />
-            </>
-        );
-    }
-}
-
-const mapStateToProps = ({ teams }: { teams: State }): StateProps => ({
-    error: teams.create.error,
-    submitting: teams.create.running
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    reset: () => dispatch(actions.reset()),
-    submit: (orgName: ConcordKey, entry: NewTeamEntry) =>
-        dispatch(actions.createTeam(orgName, entry))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(NewTeamActivity);
+export default NewTeamActivity;

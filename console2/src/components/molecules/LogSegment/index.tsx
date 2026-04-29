@@ -27,7 +27,7 @@ import {
     intervalToDuration,
     parseISO as parseDate,
 } from 'date-fns';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router';
 
 import { SegmentStatus } from '../../../api/process/log';
 import { ConcordId } from '../../../api/common';

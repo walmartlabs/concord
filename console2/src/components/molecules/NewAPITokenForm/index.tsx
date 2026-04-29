@@ -49,9 +49,20 @@ class NewAPITokenForm extends React.Component<InjectedFormikProps<Props, FormVal
 
         return (
             <Form onSubmit={handleSubmit} loading={submitting}>
-                <FormikInput name="name" label="Name" placeholder="Token name" required={true} />
+                <FormikInput
+                    name="name"
+                    label="Name"
+                    placeholder="Token name"
+                    required={true}
+                    data-testid="api-token-form-name"
+                />
 
-                <Button primary={true} type="submit" disabled={!dirty || hasErrors}>
+                <Button
+                    primary={true}
+                    type="submit"
+                    disabled={!dirty || hasErrors}
+                    data-testid="api-token-form-submit"
+                >
                     Generate
                 </Button>
             </Form>
@@ -80,5 +91,5 @@ export default withFormik<Props, FormValues>({
         bag.props.onSubmit(values);
     },
     mapPropsToValues: (props) => props.initial,
-    validate: validator
+    validate: validator,
 })(NewAPITokenForm);

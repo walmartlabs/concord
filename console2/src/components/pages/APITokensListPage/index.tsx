@@ -37,6 +37,7 @@ class APITokensListPage extends React.Component {
                             positive={true}
                             labelPosition="left"
                             content="New token"
+                            data-testid="api-token-new-button"
                             location={`/profile/api-token/_new`}
                         />
                     </Menu.Item>
