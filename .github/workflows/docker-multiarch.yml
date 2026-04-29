@@ -16,6 +16,11 @@ on:
         required: true
         default: walmartlabs
         type: string
+      push_latest:
+        description: Also tag the published images as latest
+        required: false
+        default: false
+        type: boolean
   pull_request:
     branches: [ 'master' ]
 
@@ -70,6 +75,7 @@ jobs:
             build_ref='${{ github.event.inputs.ref }}'
             build_tag='${{ github.event.inputs.docker_tag }}'
             docker_namespace='${{ github.event.inputs.docker_namespace }}'
+            push_latest='${{ github.event.inputs.push_latest }}'
             maven_also_make=''
 
             release_tag="${build_ref#refs/tags/}"
@@ -89,6 +95,7 @@ jobs:
             build_ref='${{ github.event.pull_request.head.sha }}'
             build_tag="pr-${{ github.event.pull_request.number }}-$(git rev-parse --short=12 HEAD)"
             docker_namespace="${LOCAL_REGISTRY}/walmartlabs"
+            push_latest='false'
             maven_also_make='-am'
           fi
 
@@ -110,10 +117,12 @@ jobs:
           echo "BUILD_TAG=${build_tag}" >> "$GITHUB_ENV"
           echo "BUILD_REF=${build_ref}" >> "$GITHUB_ENV"
           echo "DOCKER_NAMESPACE=${docker_namespace}" >> "$GITHUB_ENV"
+          echo "PUSH_LATEST=${push_latest}" >> "$GITHUB_ENV"
           echo "MAVEN_ALSO_MAKE=${maven_also_make}" >> "$GITHUB_ENV"
           echo "Using BUILD_REF=${build_ref}"
           echo "Using BUILD_TAG=${build_tag}"
           echo "Using DOCKER_NAMESPACE=${docker_namespace}"
+          echo "Using PUSH_LATEST=${push_latest}"
           echo "Using MAVEN_ALSO_MAKE=${maven_also_make}"
           git rev-parse HEAD
 
@@ -205,6 +214,37 @@ jobs:
             --var "DOCKER_TAG=${BUILD_TAG}" \
             --var "JDK_VERSION=17"
 
+      - name: Tag Docker images as latest
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [[ "${PUSH_LATEST}" != "true" ]]; then
+            echo "Skipping latest tags because PUSH_LATEST=${PUSH_LATEST}."
+            exit 0
+          fi
+
+          if [[ "${BUILD_TAG}" == "latest" ]]; then
+            echo "Skipping latest tags because BUILD_TAG is already latest."
+            exit 0
+          fi
+
+          images=(
+            concord-base
+            concord-ansible
+            concord-agent
+            concord-server
+            concord-agent-operator
+          )
+
+          for image in "${images[@]}"; do
+            source_ref="${DOCKER_NAMESPACE}/${image}:${BUILD_TAG}"
+            target_ref="${DOCKER_NAMESPACE}/${image}:latest"
+
+            echo "Tagging ${source_ref} as ${target_ref}"
+            docker buildx imagetools create \
+              -t "${target_ref}" \
+              "${source_ref}"
+          done
+
       - name: Verify multi-arch manifests
         run: |
           images=(
@@ -215,14 +255,21 @@ jobs:
             concord-agent-operator
           )
 
-          for image in "${images[@]}"; do
-            ref="${DOCKER_NAMESPACE}/${image}:${BUILD_TAG}"
-            echo "Inspecting ${ref}"
-            output=$(docker buildx imagetools inspect "${ref}")
-            printf '%s\n' "${output}"
+          tags=("${BUILD_TAG}")
+          if [[ "${PUSH_LATEST}" == "true" ]] && [[ "${BUILD_TAG}" != "latest" ]]; then
+            tags+=("latest")
+          fi
 
-            printf '%s\n' "${output}" | grep -q 'linux/amd64'
-            printf '%s\n' "${output}" | grep -q 'linux/arm64'
+          for tag in "${tags[@]}"; do
+            for image in "${images[@]}"; do
+              ref="${DOCKER_NAMESPACE}/${image}:${tag}"
+              echo "Inspecting ${ref}"
+              output=$(docker buildx imagetools inspect "${ref}")
+              printf '%s\n' "${output}"
+
+              printf '%s\n' "${output}" | grep -q 'linux/amd64'
+              printf '%s\n' "${output}" | grep -q 'linux/arm64'
+            done
           done
 
       - name: Remove local Concord artifacts from Maven cache
