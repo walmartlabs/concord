@@ -23,7 +23,9 @@ task in/out parameters
 - project: update dependencies
 ([#1310](https://github.com/walmartlabs/concord/pull/1310));
 - concord-console2: migrate to react-router v7
-([#1307](https://github.com/walmartlabs/concord/pull/1307)).
+([#1307](https://github.com/walmartlabs/concord/pull/1307));
+- concord-server: assert permissions for process details
+([#1309](https://github.com/walmartlabs/concord/pull/1309)).
 
 
 
