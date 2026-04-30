@@ -1,0 +1,86 @@
+name: publish-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: Release version, e.g. 2.41.0
+        required: true
+        type: string
+      docker_namespace:
+        description: Docker Hub namespace to publish into
+        required: true
+        default: walmartlabs
+        type: string
+      auto_publish_central:
+        description: Automatically publish the validated Central deployment
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  actions: write
+  contents: write
+
+concurrency:
+  group: publish-release-${{ inputs.release_version }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Reject cross-actor reruns
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.actor }}" != "${{ github.triggering_actor }}" ]]; then
+            echo "github.actor (${{ github.actor }}) differs from" \
+              "github.triggering_actor (${{ github.triggering_actor }})." >&2
+            echo "Start a new publish workflow run instead of rerunning another" \
+              "publisher's run." >&2
+            exit 1
+          fi
+
+  publish:
+    needs: preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    environment:
+      name: release-${{ github.actor }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Configure Git
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.release_version }}
+          DOCKER_NAMESPACE: ${{ inputs.docker_namespace }}
+          AUTO_PUBLISH_CENTRAL: ${{ inputs.auto_publish_central }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+        run: bash .github/scripts/publish-release.sh

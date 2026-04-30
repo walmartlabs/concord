@@ -114,34 +114,7 @@ See the [examples](examples) directory.
 
 ## How To Release New Versions
 
-- perform a regular Maven release:
-  ```
-  $ ./mvnw release:prepare release:perform
-  ```
-- update and commit the CHANGELOG.md file
-  ```
-  $ git add CHANGELOG.md
-  $ git commit -m 'update changelog'
-  ```
-- push the new tag and the master branch:
-  ```
-  $ git push origin RELEASE_TAG
-  $ git push origin master
-  ```
-- build and push the Docker images:
-  ```
-  $ git checkout RELEASE_TAG
-  $ gh workflow run docker-multiarch.yml --ref master -f ref=RELEASE_TAG -f docker_tag=RELEASE_TAG -f docker_namespace=walmartlabs
-  ```
-- sync to [Sonatype](https://oss.sonatype.org/);
-- check the Central repository if the sync is complete:
-  ```
-  https://repo.maven.apache.org/maven2/com/walmartlabs/concord/parent/RELEASE_TAG
-  ```
-- once the sync is complete, push the `latest` Docker images:
-  ```
-  $ gh workflow run docker-multiarch.yml --ref master -f ref=RELEASE_TAG -f docker_tag=latest -f docker_namespace=walmartlabs
-  ```
+See [RELEASE.md](RELEASE.md).
 
 ## Development Notes
 
