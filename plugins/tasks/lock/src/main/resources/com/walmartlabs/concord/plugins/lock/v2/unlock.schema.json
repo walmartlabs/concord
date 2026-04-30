@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Unlock Task Schema",
+  "description": "Schema for the unlock task.",
+  "definitions": {
+    "scope": {
+      "type": "string",
+      "description": "Lock scope.",
+      "default": "PROJECT",
+      "enum": [
+        "ORG",
+        "org",
+        "PROJECT",
+        "project"
+      ]
+    }
+  },
+  "in": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Lock name."
+      },
+      "scope": {
+        "$ref": "#/definitions/scope"
+      }
+    },
+    "required": [
+      "name"
+    ],
+    "additionalProperties": true
+  },
+  "out": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "Whether the task completed successfully."
+      }
+    },
+    "required": [
+      "ok"
+    ],
+    "additionalProperties": true
+  }
+}
