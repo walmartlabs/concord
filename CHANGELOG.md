@@ -1,5 +1,21 @@
 # Change Log
 
+## [2.41.0] - TBD
+
+### Added
+
+- lock-tasks, log-tasks, sleep-tasks: add schemas
+([#1315](https://github.com/walmartlabs/concord/pull/1315)).
+
+### Changed
+
+- project: optionally push latest Docker tags
+([#1312](https://github.com/walmartlabs/concord/pull/1312));
+- project: update Maven wrapper version
+([#1314](https://github.com/walmartlabs/concord/pull/1314)).
+
+
+
 ## [2.40.0] - 2026-04-28
 
 ### Added
