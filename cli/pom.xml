@@ -183,8 +183,10 @@
                                     <manifestEntries>
                                         <Main-Class>${main.class}</Main-Class>
                                         <Add-Opens>java.base/java.lang java.base/java.util</Add-Opens>
+                                        <Multi-Release>true</Multi-Release>
                                     </manifestEntries>
                                 </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
                             <filters>
                                 <filter>

@@ -138,12 +138,17 @@ public class RunnerCommandBuilder {
 
         l.add("-Dconcord.exposeDockerDaemon=" + exposeDockerDaemon);
 
+        // disable warnings for unoptimized js compiler (EnableJVMCI jvm opt is still experimental)
+        // https://www.graalvm.org/latest/reference-manual/embed-languages/#enable-optimization-on-openjdk-and-oracle-jdk
+        l.add("-Dpolyglot.engine.WarnInterpreterOnly=false");
+
         // Java 9+ requires additional add-opens for compatibility
         if (majorJavaVersion >= 9) {
             l.add("--add-opens");
             l.add("java.base/java.lang=ALL-UNNAMED");
             l.add("--add-opens");
             l.add("java.base/java.util=ALL-UNNAMED");
+            l.add("--enable-native-access=ALL-UNNAMED");
         }
 
         // classpath
