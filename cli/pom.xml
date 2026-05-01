@@ -16,6 +16,7 @@
     <name>${project.groupId}:${project.artifactId}</name>
 
     <properties>
+        <logback.version>1.5.25</logback.version>
         <main.class>com.walmartlabs.concord.cli.Main</main.class>
     </properties>
 
@@ -160,6 +161,30 @@
         </testResources>
 
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <archive>
+                        <manifestSections>
+                            <!-- Logback's startup version check reads Package#getImplementationVersion from these packages. -->
+                            <manifestSection>
+                                <name>ch/qos/logback/classic/util/</name>
+                                <manifestEntries>
+                                    <Implementation-Version>${logback.version}</Implementation-Version>
+                                </manifestEntries>
+                            </manifestSection>
+                            <manifestSection>
+                                <name>ch/qos/logback/core/util/</name>
+                                <manifestEntries>
+                                    <Implementation-Version>${logback.version}</Implementation-Version>
+                                </manifestEntries>
+                            </manifestSection>
+                        </manifestSections>
+                    </archive>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
