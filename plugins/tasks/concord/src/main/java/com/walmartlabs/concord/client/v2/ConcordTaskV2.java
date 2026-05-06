@@ -62,6 +62,13 @@ public class ConcordTaskV2 implements ReentrantTask {
 
     @Override
     public TaskResult resume(ResumeEvent event) throws Exception {
+
+        // TODO REMOVE
+        log.info("resume event: {}", event);
+        log.info("resume event state: {}", event.state());
+        log.info("newVar: {}", context.variables().getString("newVar", "no new var"));
+
+
         return delegate().continueAfterSuspend(new ResumePayload(event.state()));
     }
 

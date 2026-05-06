@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
 import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.WaitConditionItem;
@@ -155,6 +156,12 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                 continue;
             }
 
+            Map<String, Object> resumeVars = resultForProcess.stream()
+                    .flatMap(r -> {
+                        var variables = r.resumeVariables();
+                        return variables == null ? Stream.empty() : variables.<String, Object>entrySet().stream();
+                    }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
             try {
                 boolean updated = processWaitManager.txResult(tx -> {
                     // TODO: better way
@@ -170,7 +177,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
                 if (updated && !resumeEvents.isEmpty()) {
                     log.info("processWaits ['{}', '{}', {}] -> resume", p.processKey(), resultWaits, p.version());
-                    resumeProcess(p.processKey(), resumeEvents);
+                    resumeProcess(p.processKey(), resumeEvents, Map.of("arguments", resumeVars));
                 }
             } catch (Exception e) {
                 log.info("processWaits ['{}'] -> error", p, e);
@@ -197,10 +204,10 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     }
 
     @WithTimer
-    void resumeProcess(ProcessKey key, Set<String> events) {
+    void resumeProcess(ProcessKey key, Set<String> events, Map<String, Object> req) {
         Payload payload;
         try {
-            payload = payloadManager.createResumePayload(key, events, null);
+            payload = payloadManager.createResumePayload(key, events, req);
         } catch (ProcessException e) {
             if (e.getStatus() == Response.Status.NOT_FOUND) {
                 log.info("resumeProcess ['{}'] -> can't resume: {}. killing process", key, e.getMessage());

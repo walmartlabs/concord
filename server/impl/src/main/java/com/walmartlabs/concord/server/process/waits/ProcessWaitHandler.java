@@ -26,6 +26,7 @@ import org.jooq.DSLContext;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Map;
 
 public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
 
@@ -75,22 +76,26 @@ public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
 
         @Value.Parameter
         @Nullable
+        Map<String, Object> resumeVariables();
+
+        @Value.Parameter
+        @Nullable
         Action action();
 
         static <T extends AbstractWaitCondition> Result<T> of(ProcessKey processKey, int waitConditionId, T waitCondition) {
-            return ImmutableResult.of(processKey, waitConditionId, waitCondition, null, null);
+            return ImmutableResult.of(processKey, waitConditionId, waitCondition, null, null, null);
         }
 
-        static <T extends AbstractWaitCondition> Result<T> resume(WaitConditionItem<?> wait, String resumeEvent) {
-            return ImmutableResult.of(wait.processKey(), wait.waitConditionId(), null, resumeEvent, null);
+        static <T extends AbstractWaitCondition> Result<T> resume(WaitConditionItem<?> wait, String resumeEvent, Map<String, Object> resumeVariables) {
+            return ImmutableResult.of(wait.processKey(), wait.waitConditionId(), null, resumeEvent, resumeVariables, null);
         }
 
         static <T extends AbstractWaitCondition> Result<T> resume(ProcessKey processKey, int waitConditionId, String resumeEvent) {
-            return ImmutableResult.of(processKey, waitConditionId, null, resumeEvent, null);
+            return ImmutableResult.of(processKey, waitConditionId, null, resumeEvent, null, null);
         }
 
         static <T extends AbstractWaitCondition> Result<T> action(WaitConditionItem<?> wait, Action action) {
-            return ImmutableResult.of(wait.processKey(), wait.waitConditionId(), null, null, action);
+            return ImmutableResult.of(wait.processKey(), wait.waitConditionId(), null, null, null, action);
         }
     }
 

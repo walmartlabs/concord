@@ -96,6 +96,7 @@ public class ConcordTaskCommon {
             }
             case CREATEAPIKEY -> createApiKey((CreateOrUpdateApiKeyParams) in);
             case CREATEORUPDATEAPIKEY -> createOrUpdateApiKey((CreateOrUpdateApiKeyParams) in);
+            case WAITFOREXTERNALEVENT -> suspendForExternalEvent((WaitForExternalEventParams) in);
         };
     }
 
@@ -108,6 +109,29 @@ public class ConcordTaskCommon {
 
             return api.listSubprocesses(instanceId, tags);
         });
+    }
+
+    TaskResult suspendForExternalEvent(WaitForExternalEventParams params) throws ApiException {
+        // TODO REMOVE this method
+
+        for (String eventId : params.resumeEvents()) {
+
+            log.info("Resume wiht curl -vn -X POST -H \"content-type: application/json\" -d '{\"newVar\": \"hello new var\"}' \"http://localhost:8001/api/v1/process/{}/external-wait/{}/clear\"", params.txId(), eventId);
+
+            Map<String, Object> condition = new HashMap<>();
+            condition.put("type", "EXTERNAL_EVENT");
+            condition.put("reason", "Waiting on external event: " + eventId);
+            condition.put("waiting", true);
+            condition.put("resumeEvent", eventId);
+
+            ClientUtils.withRetry(3, 1000, () -> withClient(client -> {
+                ProcessApi api = new ProcessApi(client);
+                api.setWaitCondition(currentProcessId, condition);
+                return null;
+            }));
+        }
+
+        return TaskResult.reentrantSuspend(params.resumeEvents().get(0), Collections.emptyMap());
     }
 
     public String suspendForCompletion(List<UUID> ids) throws Exception {

@@ -41,7 +41,7 @@ import static org.jooq.impl.DSL.field;
 
 public class ProcessWaitDao extends AbstractDao {
 
-    public static final TypeReference<List<AbstractWaitCondition>> WAIT_LIST = new TypeReference<List<AbstractWaitCondition>>() {
+    public static final TypeReference<List<? extends AbstractWaitCondition>> WAIT_LIST = new TypeReference<List<? extends AbstractWaitCondition>>() {
     };
 
     private static final TypeReference<List<Map<String, Object>>> LIST_OF_MAP = new TypeReference<List<Map<String, Object>>>() {
@@ -93,10 +93,10 @@ public class ProcessWaitDao extends AbstractDao {
     }
 
     public ProcessWaitEntry get(ProcessKey processKey) {
-        return txResult(tx -> tx.select(PROCESS_WAIT_CONDITIONS.IS_WAITING, PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS)
+        return txResult(tx -> tx.select(PROCESS_WAIT_CONDITIONS.IS_WAITING, PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS, PROCESS_WAIT_CONDITIONS.VERSION)
                 .from(PROCESS_WAIT_CONDITIONS)
                 .where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.eq(processKey.getInstanceId())
                         .and(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
-                .fetchOne(r -> ProcessWaitEntry.of(r.value1(), objectMapper.fromJSONB(r.value2(), LIST_OF_MAP))));
+                .fetchOne(r -> ProcessWaitEntry.of(r.value1(), objectMapper.fromJSONB(r.value2(), LIST_OF_MAP), r.value3())));
     }
 }

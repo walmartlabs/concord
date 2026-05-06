@@ -99,6 +99,7 @@ public class ProcessModule implements Module {
         newSetBinder(binder, ProcessWaitHandler.class).addBinding().to(WaitProcessFinishHandler.class);
         newSetBinder(binder, ProcessWaitHandler.class).addBinding().to(WaitProcessLockHandler.class);
         newSetBinder(binder, ProcessWaitHandler.class).addBinding().to(WaitProcessSleepHandler.class);
+        newSetBinder(binder, ProcessWaitHandler.class).addBinding().to(WaitProcessExternalEventHandler.class);
 
         newSetBinder(binder, ProcessLogListener.class);
 

@@ -52,6 +52,8 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.process.waits.AbstractWaitCondition;
+import com.walmartlabs.concord.server.process.waits.ImmutableProcessExternalEventCondition;
+import com.walmartlabs.concord.server.process.waits.ProcessExternalEventCondition;
 import com.walmartlabs.concord.server.process.waits.ProcessWaitManager;
 import com.walmartlabs.concord.server.sdk.*;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -90,6 +92,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
@@ -812,6 +815,7 @@ public class ProcessResource implements Resource {
                     schema = @Schema(type = "string", format = "binary")
             )
     )
+
     public void uploadAttachments(@PathParam("id") UUID instanceId, InputStream data) {
         ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
@@ -947,6 +951,68 @@ public class ProcessResource implements Resource {
             throw new ConcordApplicationException("Wait condition is required", Status.BAD_REQUEST);
         }
         processWaitManager.addWait(processKey, condition);
+        return Response.ok().build();
+    }
+
+    /**
+     * Clears an external event wait condition for a process.
+     */
+    @POST
+    @javax.ws.rs.Path("/{instanceId}/external-wait/{resumeEvent}/clear")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response clearExternalWait(@PathParam("instanceId") UUID instanceId,
+                                      @PathParam("resumeEvent") String resumeEvent,
+                                      Map<String, Object> variables) {
+        // Find the process and its wait conditions
+        ProcessKey pk = assertProcessKey(instanceId);
+        ProcessWaitEntry waitEntry = processWaitManager.getWait(pk);
+
+        if (waitEntry == null || waitEntry.waits() == null) {
+            return Response.status(Status.NOT_FOUND).entity("No wait conditions found").build();
+        }
+
+        AtomicBoolean updated = new AtomicBoolean(false);
+
+        List<AbstractWaitCondition> waits = Objects.requireNonNull(waitEntry.waits()).stream()
+                // TODO this effectively removes waits with type NONE...idk if that's a good idea
+//                .filter(e -> WaitType.valueOf(String.valueOf(e.get("type"))) != WaitType.NONE)
+                // TODO what happens if condition type is NONE?
+                .map(e -> objectMapper.convertValue(e, AbstractWaitCondition.class))
+//                .map(e -> {
+//                    var clazz = switch(WaitType.valueOf(String.valueOf(e.get("type")))) {
+//                        case NONE -> null;
+//                        case PROCESS_COMPLETION -> ProcessCompletionCondition.class;
+//                        case PROCESS_LOCK -> ProcessLockCondition.class;
+//                        case PROCESS_SLEEP -> ProcessSleepCondition.class;
+//                        case EXTERNAL_EVENT -> ProcessExternalEventCondition.class;
+//                    };
+//
+//                    return objectMapper.convertValue(e, clazz);
+//                })
+                .map(condition -> {
+                    if (condition instanceof ProcessExternalEventCondition extCond && extCond.resumeEvent().equals(resumeEvent) && extCond.waiting()) {
+                        updated.set(true);
+                        return ImmutableProcessExternalEventCondition.builder()
+                                .from(extCond)
+                                .waiting(false)
+                                .variables(variables)
+                                .build();
+                    } else {
+                        return condition;
+                    }
+                })
+                .toList();
+
+        if (!updated.get()) {
+            return Response.status(Status.NOT_FOUND).entity("No matching external event wait condition found or already cleared").build();
+        }
+
+        // Persist the updated wait conditions
+        processWaitManager.tx(tx -> {
+            processWaitManager.setWait(tx, pk, waits, true, waitEntry.version());
+        });
+
         return Response.ok().build();
     }
 
