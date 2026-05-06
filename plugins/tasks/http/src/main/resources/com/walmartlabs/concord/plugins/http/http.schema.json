@@ -1,0 +1,459 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HTTP Task Schema",
+  "description": "Schema for the http task.",
+  "definitions": {
+    "method": {
+      "type": "string",
+      "description": "HTTP request method.",
+      "default": "GET",
+      "enum": [
+        "DELETE",
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH"
+      ]
+    },
+    "methodWithBody": {
+      "type": "string",
+      "enum": [
+        "POST",
+        "PUT",
+        "PATCH"
+      ]
+    },
+    "requestType": {
+      "type": "string",
+      "description": "Request body encoding.",
+      "enum": [
+        "json",
+        "file",
+        "string",
+        "form",
+        "formData"
+      ]
+    },
+    "requestTypeFile": {
+      "type": "string",
+      "enum": [
+        "file"
+      ]
+    },
+    "requestTypeString": {
+      "type": "string",
+      "enum": [
+        "string"
+      ]
+    },
+    "requestTypeForm": {
+      "type": "string",
+      "enum": [
+        "form"
+      ]
+    },
+    "requestTypeFormData": {
+      "type": "string",
+      "enum": [
+        "formData"
+      ]
+    },
+    "responseType": {
+      "type": "string",
+      "description": "Response content handling.",
+      "default": "string",
+      "enum": [
+        "json",
+        "file",
+        "string",
+        "any"
+      ]
+    },
+    "scalar": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "queryValue": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/scalar"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/scalar"
+          }
+        }
+      ]
+    },
+    "query": {
+      "type": "object",
+      "description": "Query parameters appended to the URL. Array values produce repeated parameters.",
+      "additionalProperties": {
+        "$ref": "#/definitions/queryValue"
+      }
+    },
+    "headers": {
+      "type": "object",
+      "description": "Request headers.",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "basicAuth": {
+      "type": "object",
+      "description": "Basic authentication parameters. Use either a base64 token or username/password.",
+      "properties": {
+        "token": {
+          "type": "string",
+          "description": "Base64-encoded username/password token."
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "token"
+          ]
+        },
+        {
+          "required": [
+            "username",
+            "password"
+          ]
+        }
+      ],
+      "additionalProperties": true
+    },
+    "auth": {
+      "type": "object",
+      "properties": {
+        "basic": {
+          "$ref": "#/definitions/basicAuth"
+        }
+      },
+      "required": [
+        "basic"
+      ],
+      "additionalProperties": true
+    },
+    "proxyAuth": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "type": "string",
+          "description": "Proxy username."
+        },
+        "password": {
+          "type": "string",
+          "description": "Proxy password."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "user"
+            ]
+          },
+          "then": {
+            "required": [
+              "password"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "password"
+            ]
+          },
+          "then": {
+            "required": [
+              "user"
+            ]
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+    "formDataField": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Text value, or @path for file upload."
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Content type for the field."
+            },
+            "data": {
+              "type": "string",
+              "description": "Field data, or @path when type is application/octet-stream."
+            }
+          },
+          "required": [
+            "type",
+            "data"
+          ],
+          "additionalProperties": true
+        }
+      ]
+    },
+    "formDataBody": {
+      "type": "object",
+      "description": "Multipart form-data fields.",
+      "additionalProperties": {
+        "$ref": "#/definitions/formDataField"
+      }
+    },
+    "formBody": {
+      "type": "object",
+      "description": "URL-encoded form fields. Array values produce repeated fields.",
+      "additionalProperties": {
+        "$ref": "#/definitions/queryValue"
+      }
+    },
+    "responseContent": {
+      "description": "Response content. String responses are strings, JSON responses are parsed values, and file responses are relative file paths."
+    }
+  },
+  "in": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "Request URL."
+      },
+      "method": {
+        "$ref": "#/definitions/method"
+      },
+      "request": {
+        "$ref": "#/definitions/requestType"
+      },
+      "response": {
+        "$ref": "#/definitions/responseType"
+      },
+      "body": {
+        "description": "Request body. Required for POST, PUT and PATCH."
+      },
+      "query": {
+        "$ref": "#/definitions/query"
+      },
+      "headers": {
+        "$ref": "#/definitions/headers"
+      },
+      "auth": {
+        "$ref": "#/definitions/auth"
+      },
+      "connectTimeout": {
+        "type": "integer",
+        "default": 0,
+        "description": "Connection timeout in milliseconds. Zero means infinite timeout."
+      },
+      "socketTimeout": {
+        "type": "integer",
+        "default": 0,
+        "description": "Socket timeout in milliseconds. Zero means infinite timeout."
+      },
+      "requestTimeout": {
+        "type": "integer",
+        "default": 0,
+        "description": "Overall request timeout in milliseconds. Zero means infinite timeout."
+      },
+      "ignoreErrors": {
+        "type": "boolean",
+        "default": false,
+        "description": "Return failed responses instead of throwing request exceptions."
+      },
+      "proxy": {
+        "type": "string",
+        "description": "Proxy host definition accepted by Apache HttpHost, for example host:port."
+      },
+      "proxyAuth": {
+        "$ref": "#/definitions/proxyAuth"
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "Log request and response details."
+      },
+      "followRedirects": {
+        "type": "boolean",
+        "default": true,
+        "description": "Follow HTTP redirects."
+      },
+      "keystorePath": {
+        "type": "string",
+        "description": "Path to a PKCS12 client keystore, relative to the work directory."
+      },
+      "keystorePassword": {
+        "type": "string",
+        "description": "Client keystore password."
+      },
+      "strictSsl": {
+        "type": "boolean",
+        "default": false,
+        "description": "Use strict SSL certificate and hostname verification."
+      },
+      "truststorePath": {
+        "type": "string",
+        "description": "Path to a truststore, relative to the work directory."
+      },
+      "truststorePassword": {
+        "type": "string",
+        "description": "Truststore password."
+      }
+    },
+    "required": [
+      "url"
+    ],
+    "allOf": [
+      {
+        "if": {
+          "properties": {
+            "method": {
+              "$ref": "#/definitions/methodWithBody"
+            }
+          },
+          "required": [
+            "method"
+          ]
+        },
+        "then": {
+          "required": [
+            "request",
+            "body"
+          ]
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "request": {
+              "$ref": "#/definitions/requestTypeFile"
+            }
+          },
+          "required": [
+            "request"
+          ]
+        },
+        "then": {
+          "properties": {
+            "body": {
+              "type": "string",
+              "description": "Path to the request body file."
+            }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "request": {
+              "$ref": "#/definitions/requestTypeString"
+            }
+          },
+          "required": [
+            "request"
+          ]
+        },
+        "then": {
+          "properties": {
+            "body": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "request": {
+              "$ref": "#/definitions/requestTypeForm"
+            }
+          },
+          "required": [
+            "request"
+          ]
+        },
+        "then": {
+          "properties": {
+            "body": {
+              "$ref": "#/definitions/formBody"
+            }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "request": {
+              "$ref": "#/definitions/requestTypeFormData"
+            }
+          },
+          "required": [
+            "request"
+          ]
+        },
+        "then": {
+          "properties": {
+            "body": {
+              "$ref": "#/definitions/formDataBody"
+            }
+          }
+        }
+      }
+    ],
+    "additionalProperties": true
+  },
+  "out": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "Whether the response status code is 2xx."
+      },
+      "error": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Error string for failed responses when ignoreErrors is true."
+      },
+      "statusCode": {
+        "type": "integer",
+        "description": "HTTP response status code."
+      },
+      "content": {
+        "$ref": "#/definitions/responseContent"
+      },
+      "headers": {
+        "$ref": "#/definitions/headers"
+      }
+    },
+    "required": [
+      "ok"
+    ],
+    "additionalProperties": true
+  }
+}
