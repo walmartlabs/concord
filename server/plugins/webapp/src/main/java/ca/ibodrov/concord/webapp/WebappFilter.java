@@ -52,6 +52,8 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 @Priority(Integer.MAX_VALUE - 1000)
 public class WebappFilter extends HttpFilter {
 
+    private static final String CACHE_CONTROL_IMMUTABLE = "public, max-age=2592000, immutable";
+
     private final WebappCollection webapps;
     private final ExcludedPrefixes excludedPrefixes;
 
@@ -73,14 +75,53 @@ public class WebappFilter extends HttpFilter {
 
         var webapp = webapps.stream().filter(w -> uri.startsWith(w.path())).findFirst();
         if (webapp.isPresent()) {
-            doGet(webapp.get(), req, resp);
+            doWebappRequest(webapp.get(), req, resp);
         } else {
             chain.doFilter(req, resp);
         }
     }
 
-    private void doGet(Webapp webapp, HttpServletRequest req, HttpServletResponse resp) {
-        var path = req.getRequestURI();
+    private void doWebappRequest(Webapp webapp, HttpServletRequest req, HttpServletResponse resp) {
+        var method = req.getMethod();
+        var isGet = "GET".equals(method);
+        var isHead = "HEAD".equals(method);
+        if (!isGet && !isHead) {
+            resp.setHeader("Allow", "GET, HEAD");
+            resp.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+            return;
+        }
+
+        var resolvedResource = resolveResource(webapp, req.getRequestURI());
+        var resource = resolvedResource.resource();
+
+        resp.setHeader("Content-Type", resource.contentType());
+        if (resolvedResource.immutableCacheControl() && !resp.containsHeader("Cache-Control")) {
+            resp.setHeader("Cache-Control", CACHE_CONTROL_IMMUTABLE);
+        }
+        resp.setHeader("ETag", resource.eTag());
+
+        if (matchesIfNoneMatch(req.getHeader("If-None-Match"), resource.eTag())) {
+            resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+            return;
+        }
+
+        var content = webapp.getContent(resource);
+        resp.setStatus(HttpServletResponse.SC_OK);
+        resp.setContentLength(content.length);
+
+        if (isHead) {
+            return;
+        }
+
+        try {
+            resp.getOutputStream().write(content);
+        } catch (IOException e) {
+            throw new WebApplicationException(INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private static ResolvedResource resolveResource(Webapp webapp, String requestUri) {
+        var path = requestUri;
 
         if (!path.startsWith(webapp.path())) {
             throw new RuntimeException("Unexpected path: " + path);
@@ -96,24 +137,82 @@ public class WebappFilter extends HttpFilter {
             path = "index.html";
         }
 
-        var resource = Optional.ofNullable(webapp.resources().get(path))
-                .orElseGet(() -> webapp.resources().get(webapp.indexHtmlRelativePath()));
-
-        resp.setHeader("Content-Type", resource.contentType());
-        resp.setHeader("ETag", resource.eTag());
-
-        var ifNoneMatch = req.getHeader("If-None-Match");
-        if (resource.eTag().equals(ifNoneMatch)) {
-            resp.setStatus(304);
-            return;
+        var resource = webapp.resources().get(path);
+        if (resource != null) {
+            return new ResolvedResource(resource, !path.equals(webapp.indexHtmlRelativePath()));
         }
 
-        var content = webapp.getContent(resource);
-        try {
-            resp.setStatus(200);
-            resp.getOutputStream().write(content);
-        } catch (IOException e) {
-            throw new WebApplicationException(INTERNAL_SERVER_ERROR);
+        return new ResolvedResource(webapp.resources().get(webapp.indexHtmlRelativePath()), false);
+    }
+
+    private record ResolvedResource(StaticResource resource, boolean immutableCacheControl) {
+    }
+
+    private static boolean matchesIfNoneMatch(String ifNoneMatch, String eTag) {
+        if (ifNoneMatch == null) {
+            return false;
+        }
+
+        return splitEntityTags(ifNoneMatch).stream()
+                .anyMatch(candidate -> "*".equals(candidate) || weakCompareEntityTags(candidate, eTag));
+    }
+
+    private static boolean weakCompareEntityTags(String a, String b) {
+        var aTag = toStrongEntityTag(a);
+        var bTag = toStrongEntityTag(b);
+        return aTag.isPresent() && aTag.equals(bTag);
+    }
+
+    private static Optional<String> toStrongEntityTag(String eTag) {
+        var result = eTag.trim();
+        if (result.length() > 2 && (result.charAt(0) == 'W' || result.charAt(0) == 'w') && result.charAt(1) == '/') {
+            result = result.substring(2).trim();
+        }
+
+        if (result.length() < 2 || result.charAt(0) != '"' || result.charAt(result.length() - 1) != '"') {
+            return Optional.empty();
+        }
+
+        return Optional.of(result);
+    }
+
+    private static List<String> splitEntityTags(String header) {
+        var result = new ArrayList<String>();
+        var quoted = false;
+        var escaped = false;
+        var start = 0;
+
+        for (var i = 0; i < header.length(); i++) {
+            var c = header.charAt(i);
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+
+            if (quoted && c == '\\') {
+                escaped = true;
+                continue;
+            }
+
+            if (c == '"') {
+                quoted = !quoted;
+                continue;
+            }
+
+            if (c == ',' && !quoted) {
+                addEntityTag(result, header.substring(start, i));
+                start = i + 1;
+            }
+        }
+
+        addEntityTag(result, header.substring(start));
+        return result;
+    }
+
+    private static void addEntityTag(List<String> result, String value) {
+        var item = value.trim();
+        if (!item.isEmpty()) {
+            result.add(item);
         }
     }
 
@@ -228,7 +327,7 @@ public class WebappFilter extends HttpFilter {
                     }
 
                     var path = items[0];
-                    var eTag = items[1];
+                    var eTag = toEntityTag(items[1]);
                     var contentType = getContentType(path)
                             .orElseThrow(() -> new RuntimeException("Can't determine Content-Type for " + path));
 
@@ -240,6 +339,14 @@ public class WebappFilter extends HttpFilter {
         }
 
         return resources.build();
+    }
+
+    private static String toEntityTag(String value) {
+        var result = value.trim();
+        if (result.isEmpty() || result.indexOf('"') >= 0) {
+            throw new RuntimeException("Invalid ETag value: " + value);
+        }
+        return "\"" + result + "\"";
     }
 
     private static String assertString(URL source, Properties props, String key) {
