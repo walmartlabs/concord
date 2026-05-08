@@ -1,0 +1,14 @@
+flows:
+  default:
+    - parallel:
+        - call: flowA
+        - call: flowB
+
+  flowA:
+    - call: innerFlow
+
+  flowB:
+    - call: innerFlow
+
+  innerFlow:
+    - throw: boom

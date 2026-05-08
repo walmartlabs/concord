@@ -211,10 +211,10 @@ public class MainTest  {
         }
 
         String expected = ".*Call stack:\n" +
-                "\\(concord.yml\\) @ line: 21, col: 7, thread: .*, flow: flowC\n" +
-                "\\(concord.yml\\) @ line: 11, col: 11, thread: 2, flow: flowB\n" +
-                "\\(concord.yml\\) @ line: 6, col: 7, thread: 0, flow: flowA\n" +
-                "\\(concord.yml\\) @ line: 3, col: 7, thread: 0, flow: flow0.*";
+                "\\s+\\(concord.yml\\) @ line: 21, col: 7, thread: .*, flow: flowC\n" +
+                "\\s+\\(concord.yml\\) @ line: 11, col: 11, thread: 2, flow: flowB\n" +
+                "\\s+\\(concord.yml\\) @ line: 6, col: 7, thread: 0, flow: flowA\n" +
+                "\\s+\\(concord.yml\\) @ line: 3, col: 7, thread: 0, flow: flow0.*";
         Pattern expectedPattern = Pattern.compile(expected, Pattern.MULTILINE|Pattern.DOTALL|Pattern.UNIX_LINES);
 
         String logString = new String(runtime.lastLog());
