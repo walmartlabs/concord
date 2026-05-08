@@ -12,7 +12,9 @@
 - project: optionally push latest Docker tags
 ([#1312](https://github.com/walmartlabs/concord/pull/1312));
 - project: update Maven wrapper version
-([#1314](https://github.com/walmartlabs/concord/pull/1314)).
+([#1314](https://github.com/walmartlabs/concord/pull/1314));
+- concord-console2: update postcss version
+([#1317](https://github.com/walmartlabs/concord/pull/1317)).
 
 
 
