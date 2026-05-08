@@ -140,9 +140,15 @@ public class MainTest  {
             // ignore
         }
 
-        assertLog(runtime.lastLog(), ".*" + Pattern.quote("(concord.yml) @ line: 10, col: 7, thread: 1, flow: flowB") + ".*");
-        assertLog(runtime.lastLog(), ".*" + Pattern.quote("(concord.yml) @ line: 4, col: 11, thread: 1, flow: flowA") + ".*");
-        assertLog(runtime.lastLog(), ".*" + Pattern.quote("(concord.yml) @ line: 5, col: 11, thread: 2, flow: flowB") + ".*");
+        String logString = new String(runtime.lastLog());
+        String expected1 = "  Call stack:\n" +
+                "    (concord.yml) @ line: 10, col: 7, thread: 1, flow: flowB\n" +
+                "    (concord.yml) @ line: 4, col: 11, thread: 1, flow: flowA";
+        String expected2 = "  Call stack:\n" +
+                "    (concord.yml) @ line: 5, col: 11, thread: 2, flow: flowB";
+
+        assertTrue(logString.contains(expected1), "expected log contains: " + expected1 + ", actual: " + logString);
+        assertTrue(logString.contains(expected2), "expected log contains: " + expected2 + ", actual: " + logString);
     }
 
     @Test
@@ -160,9 +166,9 @@ public class MainTest  {
         }
         assertLog(runtime.lastLog(), ".*" + Pattern.quote("in flowA") + ".*");
 
-        String expected = "Call stack:\n" +
-                "(concord.yml) @ line: 13, col: 7, thread: 2, flow: flowB\n" +
-                "(concord.yml) @ line: 3, col: 7, thread: 2, flow: flowA";
+        String expected = "  Call stack:\n" +
+                "    (concord.yml) @ line: 13, col: 7, thread: 2, flow: flowB\n" +
+                "    (concord.yml) @ line: 3, col: 7, thread: 2, flow: flowA";
 
         String logString = new String(runtime.lastLog());
         assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);

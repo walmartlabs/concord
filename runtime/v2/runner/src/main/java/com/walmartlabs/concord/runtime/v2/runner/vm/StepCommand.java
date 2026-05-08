@@ -107,7 +107,7 @@ public abstract class StepCommand<T extends Step> implements Command {
             log.error("{}", e.getMessage());
         }
 
-        if (isCallStackReportedByParent(state, threadId, e)) {
+        if (shouldSkipCallStackLog(state, threadId, e)) {
             return;
         }
 
@@ -117,22 +117,21 @@ public abstract class StepCommand<T extends Step> implements Command {
         }
     }
 
-    private static boolean isCallStackReportedByParent(State state, ThreadId threadId, Exception e) {
+    private static boolean shouldSkipCallStackLog(State state, ThreadId threadId, Exception e) {
         if (e instanceof ParallelExecutionException) {
             return true;
         }
 
-        // Unhandled forked thread errors are collected by JoinCommand and reported as
-        // ParallelExecutionException, which includes the child's ThreadError call stack.
-        // Keep local call stack logging for errors that can be handled in the same thread.
         if (threadId.equals(state.getRootThreadId())) {
             return false;
         }
 
-        // Filter out duplicate call stack logs for unhandled forked thread errors.
-        // The stack trace is captured in ThreadError and printed by the parent
-        // ParallelExecutionException after JoinCommand observes the failed child.
-        return !hasExceptionHandler(state, threadId);
+        if (hasExceptionHandler(state, threadId)) {
+            return false;
+        }
+
+        // Unhandled forked thread errors are reported by JoinCommand's aggregate exception.
+        return true;
     }
 
     private static boolean hasExceptionHandler(State state, ThreadId threadId) {
