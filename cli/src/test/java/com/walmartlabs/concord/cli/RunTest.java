@@ -109,6 +109,14 @@ class RunTest extends AbstractTest {
         assertLog(".*projectInfo: \\{orgName=test-org}.*");
     }
 
+    @Test
+    void testParallelErrorCallStack() throws Exception {
+        int exitCode = run("parallelErrorCallStack", Collections.emptyList());
+        assertExitCode(-1, exitCode);
+        assertOutContainsRegex("(?s).*Parallel execution errors:.*\\[\\d+\\].*Error: boom.*Call stack:.*flow: innerFlow.*flow: flowA.*");
+        assertOutContainsRegex("(?s).*Parallel execution errors:.*\\[\\d+\\].*Error: boom.*Call stack:.*flow: innerFlow.*flow: flowB.*");
+    }
+
     private void assertExitCode(int expected, int current) {
         assertEquals(expected, current, () -> "out:\n" + stdOut() + "\n\n" + "err:\n" + stdErr());
     }

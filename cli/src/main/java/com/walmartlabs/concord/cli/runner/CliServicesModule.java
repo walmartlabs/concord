@@ -94,6 +94,7 @@ public class CliServicesModule extends AbstractModule {
         bind(com.walmartlabs.concord.runtime.v2.sdk.DependencyManager.class).to(DefaultDependencyManager.class).in(Singleton.class);
 
         Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
+        executionListeners.addBinding().to(StackTraceCollector.class);
         if (verbosity.logFlowSteps()) {
             executionListeners.addBinding().to(FlowStepLogger.class);
         }
