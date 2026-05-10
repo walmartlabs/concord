@@ -7,7 +7,7 @@ variable "DOCKER_TAG" {
 }
 
 variable "JDK_VERSION" {
-  default = "17"
+  default = "25"
 }
 
 group "default" {

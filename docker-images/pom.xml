@@ -92,13 +92,7 @@
             </properties>
         </profile>
         <profile>
-            <id>jdk17-aarch64</id>
-            <properties>
-                <image.platforms>linux/arm64</image.platforms>
-            </properties>
-        </profile>
-        <profile>
-            <id>jdk21-aarch64</id>
+            <id>jdk25-aarch64</id>
             <properties>
                 <image.platforms>linux/arm64</image.platforms>
             </properties>
