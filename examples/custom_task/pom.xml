@@ -5,7 +5,7 @@
 
     <groupId>com.walmartlabs.concord.examples</groupId>
     <artifactId>custom-task</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -14,9 +14,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <concord.version>2.24.0</concord.version>
+        <concord.version>2.40.0</concord.version>
         <junit.version>4.13.2</junit.version>
-        <okhttp.version>4.9.2</okhttp.version>
+        <okhttp.version>4.12.0</okhttp.version>
     </properties>
 
     <dependencyManagement>
