@@ -111,6 +111,23 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <groupId>org.eclipse.sisu</groupId>
+                <artifactId>sisu-maven-plugin</artifactId>
+                <executions>
+                    <!-- concord-maven-plugin indexes main classes; Sisu is needed here for test fixtures only. -->
+                    <execution>
+                        <id>index</id>
+                        <phase>none</phase>
+                    </execution>
+                    <execution>
+                        <id>test-index</id>
+                        <goals>
+                            <goal>test-index</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>

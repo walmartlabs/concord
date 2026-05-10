@@ -41,13 +41,15 @@ jobs:
 
     strategy:
       matrix:
-        profile: [ 'jdk17', 'jdk17-aarch64' ]
         include:
-          - jdk_version: '17'
-          - profile: 'jdk17'
+          - jdk_version: '25'
             runs_on: ubuntu-24.04
-          - profile: 'jdk17-aarch64'
+            cache_key: 'jdk25'
+            extra_profiles: ''
+          - jdk_version: '25'
             runs_on: ubuntu-24.04-arm
+            cache_key: 'jdk25-aarch64'
+            extra_profiles: ' -Pjdk25-aarch64'
       fail-fast: false
 
     runs-on: ${{ matrix.runs_on }}
@@ -79,9 +81,9 @@ jobs:
         uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: ${{ env.MAVEN_REPO_LOCAL }}
-          key: ${{ runner.os }}-maven-${{ matrix.profile }}-${{ hashFiles('**/pom.xml', '.github/settings.xml') }}
+          key: ${{ runner.os }}-maven-${{ matrix.cache_key }}-${{ hashFiles('**/pom.xml', '.github/settings.xml') }}
           restore-keys: |
-            ${{ runner.os }}-maven-${{ matrix.profile }}-
+            ${{ runner.os }}-maven-${{ matrix.cache_key }}-
             ${{ runner.os }}-maven-
 
       - name: Build and test with Maven
@@ -93,7 +95,7 @@ jobs:
           ./mvnw -s .github/settings.xml -B clean install \
             -Dmaven.repo.local="${MAVEN_REPO_LOCAL}" \
             -Djava.io.tmpdir="${WORK}" \
-            -Pgha -Pdocker -Pit -P${{ matrix.profile }}
+            -Pgha -Pdocker -Pit${{ matrix.extra_profiles }}
 
       - name: Remove local Concord artifacts from Maven cache
         if: success()

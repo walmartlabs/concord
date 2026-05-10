@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Node 24 LTS, available in `$PATH`;
-- Java 17, available in `$PATH`. Necessary only to build the package.
+- Java 25, available in `$PATH`. Necessary only to build the package.
 
 ## Dependencies
 

@@ -1,4 +1,4 @@
-ARG from_image=gcr.io/distroless/java17
+ARG from_image=gcr.io/distroless/java25-debian13
 FROM $from_image
 
 COPY target/operator.jar /operator.jar

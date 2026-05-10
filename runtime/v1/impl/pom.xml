@@ -256,6 +256,9 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/services/com.oracle.truffle.api.TruffleLanguage$Provider</resource>
                                 </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/services/com.oracle.truffle.api.provider.TruffleLanguageProvider</resource>
+                                </transformer>
                                 <transformer implementation="com.walmartlabs.concord.build.shade.LogbackManifestResourceTransformer">
                                     <mainClass>com.walmartlabs.concord.runner.Main</mainClass>
                                     <manifestEntries>
