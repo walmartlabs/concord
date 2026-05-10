@@ -38,7 +38,12 @@ import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.immutables.value.Value;
-import org.jooq.*;
+import org.jooq.Configuration;
+import org.jooq.Field;
+import org.jooq.Record1;
+import org.jooq.Record11;
+import org.jooq.Record4;
+import org.jooq.SelectConditionStep;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
