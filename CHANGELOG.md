@@ -16,7 +16,10 @@
 - concord-console2: update postcss version
 ([#1317](https://github.com/walmartlabs/concord/pull/1317));
 - runtime-v2, cli: improve parallel execution error diagnostics
-([#1323](https://github.com/walmartlabs/concord/pull/1323)).
+([#1323](https://github.com/walmartlabs/concord/pull/1323));
+- project: update dependencies
+([#1324](https://github.com/walmartlabs/concord/pull/1324)).
+
 
 
 ## [2.40.0] - 2026-04-28
