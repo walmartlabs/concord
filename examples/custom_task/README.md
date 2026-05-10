@@ -5,8 +5,8 @@ An example Maven project which shows how to create a custom Concord task and use
 ## Usage
 
 Run `test.sh` to test local changes:
-```yaml
-$ ./test.sh concord.example.com
+```shell
+./test.sh localhost:8001
 ```
 
 The script builds the task's JAR, collects all runtime dependencies and creates a

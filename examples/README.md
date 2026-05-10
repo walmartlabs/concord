@@ -5,7 +5,7 @@
 Generally, examples can be executed using
 [Concord Command-Line Interface](./../cli). Examples that use Concord Forms
 require a running concord-server. Some examples may require external
-dependencies such as Ansible, JIRA and others to be installed:
+dependencies such as Ansible, Jira and others to be installed:
 
 ```
 $ cd ansible
@@ -20,13 +20,13 @@ Starting...
 * [ansible](ansible) - running an Ansible playbook from a workflow process;
 * [datetime](datetime) - how to work with dates and date/time formats;
 * [forms](forms) - using basic forms;
-* [git](git) - how to clone a GIT repository;
+* [git](git) - how to clone a Git repository;
 * [hello_initiator](hello_initiator) - a simple example that shows how to use automatically provided variables such as `${initiator}`;
 * [hello_world2](hello_world2) - how to send external parameters;
 * [hello_world](hello_world) - a simple example demonstrating how to pass a variable to a process;
-* [http](http) - a simple example demonstrating how to call restful endpoints
+* [http](http) - a simple example demonstrating how to call RESTful endpoints;
 * [in_variables](in_variables) - how to use IN-variables when calling a flow;
-* [jira](jira) - how to create an issue in JIRA;
+* [jira](jira) - how to create an issue in Jira;
 * [ldap](ldap) - how to query an AD/LDAP server;
 * [loglevel](loglevel) - how to use different logging levels;
 * [long_running](long_running) - a simple example of a long-running process using `sleep` task;
@@ -48,8 +48,8 @@ Starting...
 * [ansible_form_as_inventory](ansible_form_as_inventory) - using forms to specify an Ansible inventory;
 * [ansible_kerberos](ansible_kerberos) - how to use Kerberos with Ansible;
 * [ansible_limit](ansible_limit) - how to use Ansible's limit/retry files;
-* [ansible_project](ansible_project) - an example of creating an running an Ansible project;
-* [ansible_remote](ansible_remote) - running an Ansible playbook an a remote host;
+* [ansible_project](ansible_project) - an example of creating and running an Ansible project;
+* [ansible_remote](ansible_remote) - running an Ansible playbook on a remote host;
 * [ansible_retry](ansible_retry) - how to automatically retry Ansible deployment for failed hosts;
 * [ansible_stats](ansible_stats) - shows how to get Ansible deployment stats back from a playbook run;
 * [ansible_template](ansible_template) - running an Ansible playbook using the Ansible template;
@@ -66,7 +66,7 @@ Starting...
 * [groovy](groovy) - running a Groovy script from a flow;
 * [groovy_grape](groovy_grape) - how to use Groovy's `@Grab` in scripts;
 * [groovy_rest](groovy_rest) - calling a REST endpoint from a flow using Groovy;
-* [imports](imports) - how to use external GIT/http/mvn resources as project files;
+* [imports](imports) - how to use external Git, HTTP, and Maven resources as project files;
 * [juel_java_streams](juel_java_streams) - using expressions, Groovy and Java Streams;
 * [noderoster](noderoster) - how to use the Node Roster task;
 * [process_card_htmx](process_card_htmx) - how to use "process cards" and [HTMX](https://htmx.org/) to implement custom forms to start processes;
@@ -75,7 +75,7 @@ Starting...
 * [python_script](python_script) - running a Python script from a flow;
 * [ruby](ruby) - running a Ruby snippet from a flow;
 * [script_url](script_url) - running an external script file;
-* [smtp_html](smtp_html) - how to send a HTML email.
+* [smtp_html](smtp_html) - how to send an HTML email.
 
 
 ## Advanced
@@ -94,8 +94,12 @@ Starting...
 * [inventory_lookup](inventory_lookup) - using the inventory lookup plugin for Ansible;
 * [process_meta](process_meta) - exporting process variables as process metadata;
 * [secret_files](secret_files) - how to store and export secrets as files;
-* [secrets](secrets) - working with Concord's Secrets storage.
-* [secrets_lookup](secret_lookup) - using the secret lookup plugin for Ansible;
+* [secrets](secrets) - working with Concord's Secrets storage;
+* [secret_lookup](secret_lookup) - using the secret lookup plugin for Ansible;
+
+## Runtime V2
+
+* [runtime-v2](runtime-v2) - examples using the runtime-v2 DSL and task SDK;
 
 ## Expert
 
@@ -106,6 +110,6 @@ Starting...
 * [generic_triggers](generic_triggers) - how to use custom trigger events;
 * [logback_config](logback_config) - overriding logging configuration;
 * [process_from_a_process2](process_from_a_process2) - using output variables, starting a new subprocess from a project;
-* [process_from_a_process3](process_from_a_process3) - starting a new subprocess using a directory as the payload.
+* [process_from_a_process3](process_from_a_process3) - starting a new subprocess using a directory as the payload;
 * [process_from_a_process](process_from_a_process) - starting a new subprocess from a flow using a payload archive;
-- [mocking](mocking) - how to use Groovy to replace "real" tasks with "mock" versions for testing;
+* [mocking](mocking) - how to use Groovy to replace "real" tasks with "mock" versions for testing;

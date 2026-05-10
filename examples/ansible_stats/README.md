@@ -5,7 +5,7 @@ Example of running an Ansible playbook without creating a project.
 ## Running
 
 ```
-cd examples/ansible
+cd examples/ansible_stats
 ./run.sh localhost:8001
 ```
 

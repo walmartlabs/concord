@@ -1,8 +1,8 @@
 # Process Cards
 
-"Process Cards" are a little tiles on the Activity page of the Concord UI.
+"Process Cards" are little tiles on the Activity page of the Concord UI.
 They can be used to start a predefined process with no parameters or to show a "form".
-The form is a static HTML page that will be displayed when user clicks on the card.
+The form is a static HTML page that will be displayed when the user clicks on the card.
 The page can contain any HTML, CSS, and JavaScript code.
 
 This particular example demonstrates how to use [HTMX](https://htmx.org/) to
@@ -30,5 +30,5 @@ Steps:
   ![Form](images/form.png)
 
 The uploaded [index.html](index.html) file contains a simple form with a single input field.
-When the form is submitted, the `htmx:post` attribute triggers a POST request to the
+When the form is submitted, the `hx-post` attribute triggers a POST request to the
 `/api/v1/process` endpoint with the form data.
