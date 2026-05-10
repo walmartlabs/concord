@@ -101,6 +101,57 @@ public class JoinCommandTest {
     }
 
     @Test
+    public void testParallelExecutionExceptionShouldIncludeThreadCallStack() {
+        Frame rootFrame = Frame.builder().root().build();
+        InMemoryState state = new InMemoryState(rootFrame);
+
+        ThreadId parentThread = state.getRootThreadId();
+        ThreadId child = state.nextThreadId();
+
+        state.setStatus(child, ThreadStatus.FAILED);
+        state.pushStackTraceItem(child, new StackTraceItem(null, child, "concord.yml", "myFlow", 5, 11));
+        state.pushStackTraceItem(child, new StackTraceItem(null, child, "concord.yml", "innerFlow", 12, 7));
+        state.setThreadError(child, new RuntimeException("boom"));
+
+        JoinCommand<Step> joinCommand = new JoinCommand<>(List.of(child), null);
+
+        ParallelExecutionException exception = assertThrows(
+                ParallelExecutionException.class,
+                () -> joinCommand.execute(null, state, parentThread));
+
+        assertTrue(exception.getMessage().contains("[1] thread: 1\n" +
+                "  Error: java.lang.RuntimeException: boom\n" +
+                "  Call stack:\n" +
+                "    (concord.yml) @ line: 12, col: 7, thread: 1, flow: innerFlow\n" +
+                "    (concord.yml) @ line: 5, col: 11, thread: 1, flow: myFlow"));
+    }
+
+    @Test
+    public void testParallelExecutionExceptionShouldTrimTrailingLineSeparators() {
+        Frame rootFrame = Frame.builder().root().build();
+        InMemoryState state = new InMemoryState(rootFrame);
+
+        ThreadId parentThread = state.getRootThreadId();
+        ThreadId child = state.nextThreadId();
+
+        state.setStatus(child, ThreadStatus.FAILED);
+        state.pushStackTraceItem(child, new StackTraceItem(null, child, "concord.yml", "myFlow", 5, 11));
+        state.setThreadError(child, new RuntimeException("boom\n"));
+
+        JoinCommand<Step> joinCommand = new JoinCommand<>(List.of(child), null);
+
+        ParallelExecutionException exception = assertThrows(
+                ParallelExecutionException.class,
+                () -> joinCommand.execute(null, state, parentThread));
+
+        assertTrue(exception.getMessage().contains("  Error: java.lang.RuntimeException: boom\n" +
+                "  Call stack:"));
+        assertFalse(exception.getMessage().contains("  Error: java.lang.RuntimeException: boom\n" +
+                "  \n" +
+                "  Call stack:"));
+    }
+
+    @Test
     public void testFailedThreadWithNoErrorShouldBeFilteredOut() {
         Frame rootFrame = Frame.builder().root().build();
         InMemoryState state = new InMemoryState(rootFrame);
@@ -216,4 +267,5 @@ public class JoinCommandTest {
         assertSame(foreignError, state.getThreadError(foreignThread).exception(),
                 "Foreign thread's error should be untouched");
     }
+
 }
