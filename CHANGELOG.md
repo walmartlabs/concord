@@ -18,7 +18,9 @@
 - runtime-v2, cli: improve parallel execution error diagnostics
 ([#1323](https://github.com/walmartlabs/concord/pull/1323));
 - project: update dependencies
-([#1324](https://github.com/walmartlabs/concord/pull/1324)).
+([#1324](https://github.com/walmartlabs/concord/pull/1324));
+- examples: tidy up
+([#1325](https://github.com/walmartlabs/concord/pull/1325)).
 
 
 
