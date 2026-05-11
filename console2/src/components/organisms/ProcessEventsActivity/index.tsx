@@ -26,7 +26,6 @@ import {
     ProcessElementEvent,
     ProcessEventEntry
 } from '../../../api/process/event';
-import { AnsibleEvent } from '../../../api/process/ansible';
 import { ProcessElementList } from '../../molecules';
 import { useCallback, useRef } from 'react';
 import { useState } from 'react';
@@ -43,6 +42,10 @@ interface ExternalProps {
     dataFetchInterval: number;
 }
 
+type PrePostEventData = {
+    phase?: 'pre' | 'post';
+    correlationId?: string;
+};
 
 const ProcessEventsActivity = (props: ExternalProps) => {
     const { instanceId, processStatus, loadingHandler, forceRefresh, definitionLinkBase, dataFetchInterval } = props;
@@ -100,9 +103,7 @@ const reduceEvents = (
         return prevEvents;
     }
 
-    return combinePrePostEvents(prevEvents.concat(sortEvents(newEvents))) as ProcessEventEntry<
-        ProcessElementEvent
-    >[];
+    return combinePrePostEvents(prevEvents.concat(sortEvents(newEvents)));
 };
 
 const sortEvents = (
@@ -113,20 +114,20 @@ const sortEvents = (
     );
 };
 
-export const combinePrePostEvents = (
-    events: Array<ProcessEventEntry<AnsibleEvent | ProcessElementEvent>>
-): Array<ProcessEventEntry<AnsibleEvent | ProcessElementEvent>> => {
+export const combinePrePostEvents = <T extends PrePostEventData>(
+    events: Array<ProcessEventEntry<T>>
+): Array<ProcessEventEntry<T>> => {
     function findEvent(
         phase: string,
         correlationId: string
-    ): ProcessEventEntry<AnsibleEvent | ProcessElementEvent> | undefined {
+    ): ProcessEventEntry<T> | undefined {
         return events.find(
             (value) => value.data.phase === phase && value.data.correlationId === correlationId
         );
     }
 
-    const processed = {};
-    const result = new Array<ProcessEventEntry<AnsibleEvent | ProcessElementEvent>>();
+    const processed: Record<string, boolean> = {};
+    const result = new Array<ProcessEventEntry<T>>();
     events.forEach((event) => {
         const data = event.data;
         if (!data.correlationId) {

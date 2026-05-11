@@ -1,8 +1,9 @@
 ARG docker_namespace=walmartlabs
-ARG container_version=latest
+ARG concord_version=latest
+ARG concord_base_image=${docker_namespace}/concord-base:${concord_version}
 ARG DEBIAN_FRONTEND=noninteractive
 
-FROM ${docker_namespace}/concord-base:${container_version}
+FROM ${concord_base_image}
 LABEL maintainer="amith.k.b@walmartlabs.com"
 
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt

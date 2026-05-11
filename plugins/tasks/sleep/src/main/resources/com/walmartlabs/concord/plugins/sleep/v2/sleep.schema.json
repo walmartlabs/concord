@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Sleep Task Schema",
+  "description": "Schema for the sleep task.",
+  "definitions": {
+    "duration": {
+      "type": "number",
+      "description": "Sleep duration in seconds."
+    },
+    "until": {
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "number",
+          "description": "Timestamp value produced by expression-evaluated date values."
+        }
+      ],
+      "description": "Date and time to sleep until."
+    },
+    "suspend": {
+      "type": "boolean",
+      "default": false,
+      "description": "Suspend the process instead of blocking the runner thread."
+    }
+  },
+  "in": {
+    "type": "object",
+    "properties": {
+      "duration": {
+        "$ref": "#/definitions/duration"
+      },
+      "until": {
+        "$ref": "#/definitions/until"
+      },
+      "suspend": {
+        "$ref": "#/definitions/suspend"
+      }
+    },
+    "oneOf": [
+      {
+        "required": ["duration"]
+      },
+      {
+        "required": ["until"]
+      }
+    ],
+    "additionalProperties": true
+  },
+  "out": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "Whether the task completed successfully."
+      }
+    },
+    "required": ["ok"],
+    "additionalProperties": true
+  }
+}

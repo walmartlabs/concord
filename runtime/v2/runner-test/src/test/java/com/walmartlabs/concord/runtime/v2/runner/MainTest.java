@@ -25,6 +25,7 @@ import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.ReentrantTaskExample;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskSchemaValidationException;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -139,9 +140,15 @@ public class MainTest  {
             // ignore
         }
 
-        assertLog(runtime.lastLog(), ".*" + Pattern.quote("(concord.yml) @ line: 10, col: 7, thread: 1, flow: flowB") + ".*");
-        assertLog(runtime.lastLog(), ".*" + Pattern.quote("(concord.yml) @ line: 4, col: 11, thread: 1, flow: flowA") + ".*");
-        assertLog(runtime.lastLog(), ".*" + Pattern.quote("(concord.yml) @ line: 5, col: 11, thread: 2, flow: flowB") + ".*");
+        String logString = new String(runtime.lastLog());
+        String expected1 = "  Call stack:\n" +
+                "    (concord.yml) @ line: 10, col: 7, thread: 1, flow: flowB\n" +
+                "    (concord.yml) @ line: 4, col: 11, thread: 1, flow: flowA";
+        String expected2 = "  Call stack:\n" +
+                "    (concord.yml) @ line: 5, col: 11, thread: 2, flow: flowB";
+
+        assertTrue(logString.contains(expected1), "expected log contains: " + expected1 + ", actual: " + logString);
+        assertTrue(logString.contains(expected2), "expected log contains: " + expected2 + ", actual: " + logString);
     }
 
     @Test
@@ -159,9 +166,9 @@ public class MainTest  {
         }
         assertLog(runtime.lastLog(), ".*" + Pattern.quote("in flowA") + ".*");
 
-        String expected = "Call stack:\n" +
-                "(concord.yml) @ line: 13, col: 7, thread: 2, flow: flowB\n" +
-                "(concord.yml) @ line: 3, col: 7, thread: 2, flow: flowA";
+        String expected = "  Call stack:\n" +
+                "    (concord.yml) @ line: 13, col: 7, thread: 2, flow: flowB\n" +
+                "    (concord.yml) @ line: 3, col: 7, thread: 2, flow: flowA";
 
         String logString = new String(runtime.lastLog());
         assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
@@ -210,10 +217,10 @@ public class MainTest  {
         }
 
         String expected = ".*Call stack:\n" +
-                "\\(concord.yml\\) @ line: 21, col: 7, thread: .*, flow: flowC\n" +
-                "\\(concord.yml\\) @ line: 11, col: 11, thread: 2, flow: flowB\n" +
-                "\\(concord.yml\\) @ line: 6, col: 7, thread: 0, flow: flowA\n" +
-                "\\(concord.yml\\) @ line: 3, col: 7, thread: 0, flow: flow0.*";
+                "\\s+\\(concord.yml\\) @ line: 21, col: 7, thread: .*, flow: flowC\n" +
+                "\\s+\\(concord.yml\\) @ line: 11, col: 11, thread: 2, flow: flowB\n" +
+                "\\s+\\(concord.yml\\) @ line: 6, col: 7, thread: 0, flow: flowA\n" +
+                "\\s+\\(concord.yml\\) @ line: 3, col: 7, thread: 0, flow: flow0.*";
         Pattern expectedPattern = Pattern.compile(expected, Pattern.MULTILINE|Pattern.DOTALL|Pattern.UNIX_LINES);
 
         String logString = new String(runtime.lastLog());
@@ -999,6 +1006,24 @@ public class MainTest  {
         log = resume(ReentrantTaskExample.EVENT_NAME, ProcessConfiguration.builder().build());
         assertLog(log, ".*error handled: java.lang.RuntimeException: Error on resume.*");
         assertLog(log, ".*process finished.*");
+    }
+
+    @Test
+    public void testReentrantOutputValidation() throws Exception {
+        deploy("reentrantTaskSchemaValidation");
+        save(ProcessConfiguration.builder()
+                .putArguments("actionName", "boo")
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*execute .*action=boo.*");
+
+        TaskSchemaValidationException e = assertThrows(TaskSchemaValidationException.class,
+                () -> resume(ReentrantTaskExample.EVENT_NAME, ProcessConfiguration.builder().build()));
+        assertEquals("reentrantTask", e.getTaskName());
+        assertEquals("out", e.getSection());
+        assertEquals("reentrantTask.schema.json", e.getSchemaResource());
+        assertLog(runtime.lastLog(), ".*Task 'reentrantTask' out validation failed.*");
     }
 
     @Test

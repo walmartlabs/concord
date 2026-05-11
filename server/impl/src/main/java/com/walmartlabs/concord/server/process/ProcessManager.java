@@ -148,7 +148,7 @@ public class ProcessManager {
             throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
         }
 
-        ProcessEntry e = queueDao.get(rootProcessKey);
+        ProcessEntry e = queueManager.get(rootProcessKey);
         if (e == null) {
             throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
         }
@@ -184,7 +184,7 @@ public class ProcessManager {
     }
 
     public void disable(ProcessKey processKey, boolean disabled) {
-        ProcessEntry e = queueDao.get(processKey);
+        ProcessEntry e = queueManager.get(processKey);
         if (e == null) {
             throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
         }
@@ -279,7 +279,7 @@ public class ProcessManager {
     }
 
     public void restoreFromCheckpoint(ProcessKey processKey, UUID checkpointId) {
-        ProcessEntry entry = queueDao.get(processKey);
+        ProcessEntry entry = queueManager.get(processKey);
 
         checkpointManager.assertProcessAccess(entry);
 
@@ -305,7 +305,7 @@ public class ProcessManager {
         try {
             payload = payloadManager.createResumePayload(processKey, checkpointInfo.eventName(), null);
         } catch (IOException e) {
-            log.error("restore ['{}', '{}'] -> error creating a payload: {}", processKey, checkpointInfo.name(), e);
+            log.error("restore ['{}', '{}'] -> error creating a payload", processKey, checkpointInfo.name(), e);
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 

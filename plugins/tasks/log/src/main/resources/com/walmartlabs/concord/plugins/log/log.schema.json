@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Log Task Schema",
+  "description": "Schema for the log task.",
+  "definitions": {
+    "format": {
+      "type": "string",
+      "description": "Message format.",
+      "enum": [
+        "yaml",
+        "YAML"
+      ]
+    },
+    "level": {
+      "type": "string",
+      "description": "Log level.",
+      "default": "INFO",
+      "enum": [
+        "DEBUG",
+        "debug",
+        "INFO",
+        "info",
+        "WARN",
+        "warn",
+        "ERROR",
+        "error"
+      ]
+    }
+  },
+  "in": {
+    "type": "object",
+    "properties": {
+      "msg": {
+        "description": "Message to write to the process log."
+      },
+      "format": {
+        "$ref": "#/definitions/format"
+      },
+      "level": {
+        "$ref": "#/definitions/level"
+      }
+    },
+    "required": [
+      "msg"
+    ],
+    "additionalProperties": true
+  },
+  "out": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "Whether the task completed successfully."
+      }
+    },
+    "required": [
+      "ok"
+    ],
+    "additionalProperties": true
+  }
+}

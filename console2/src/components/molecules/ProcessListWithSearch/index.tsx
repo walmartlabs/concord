@@ -23,7 +23,7 @@ import { Button, Icon, Label, Popup, Table } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
 import { ProcessEntry } from '../../../api/process';
-import { Pagination } from '../../../state/data/processes';
+import { Pagination } from '../PaginationToolBar/usePagination';
 import { ProcessList, BulkProcessActionDropdown, PaginationToolBar } from '../../molecules';
 import { ColumnDefinition } from '../../../api/org';
 

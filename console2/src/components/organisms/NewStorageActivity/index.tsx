@@ -27,7 +27,7 @@ import { useCallback, useState } from 'react';
 import { StorageVisibility, createOrUpdate as apiCreate } from '../../../api/org/jsonstore';
 import { useApi } from '../../../hooks/useApi';
 import { NewStorageFormValues } from '../../molecules/NewStorageForm';
-import { Redirect } from 'react-router';
+import { Navigate } from 'react-router';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -35,7 +35,7 @@ interface ExternalProps {
 
 const INIT_VALUES = {
     name: '',
-    visibility: StorageVisibility.PRIVATE
+    visibility: StorageVisibility.PRIVATE,
 };
 
 const NewStoreActivity = ({ orgName }: ExternalProps) => {
@@ -46,7 +46,7 @@ const NewStoreActivity = ({ orgName }: ExternalProps) => {
     }, [orgName, values]);
 
     const { error, isLoading, data } = useApi<GenericOperationResult>(postData, {
-        fetchOnMount: false
+        fetchOnMount: false,
     });
 
     const handleSubmit = useCallback((values: NewStorageFormValues) => {
@@ -54,7 +54,7 @@ const NewStoreActivity = ({ orgName }: ExternalProps) => {
     }, []);
 
     if (data) {
-        return <Redirect to={`/org/${orgName}/jsonstore/${values.name}`} />;
+        return <Navigate to={`/org/${orgName}/jsonstore/${values.name}`} />;
     }
 
     return (

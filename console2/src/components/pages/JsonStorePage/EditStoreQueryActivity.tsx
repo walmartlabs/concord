@@ -26,10 +26,10 @@ import {
     createOrUpdateStorageQuery as apiCreate,
     executeQuery as apiExecuteQuery,
     getStorageQuery as apiGetQuery,
-    StorageQueryEntry
+    StorageQueryEntry,
 } from '../../../api/org/jsonstore';
 import { useApi } from '../../../hooks/useApi';
-import { Redirect } from 'react-router';
+import { Navigate } from 'react-router';
 import { RequestErrorActivity } from '../../organisms';
 import EditStoreQueryForm from './EditStoreQueryForm';
 import ExecuteQueryResult from './ExecuteQueryResult';
@@ -61,9 +61,11 @@ const EditStoreQueryActivity = (props: ExternalProps) => {
         return apiExecuteQuery(orgName, storeName, queryForExecute);
     }, [orgName, storeName, queryForExecute]);
 
-    const { fetch: loadQueryFetch, clearState: loadQueryClear, data: loadQueryData } = useApi<
-        StorageQueryEntry
-    >(loadQuery, { fetchOnMount: true });
+    const {
+        fetch: loadQueryFetch,
+        clearState: loadQueryClear,
+        data: loadQueryData,
+    } = useApi<StorageQueryEntry>(loadQuery, { fetchOnMount: true });
     useEffect(() => {
         loadQueryClear();
         loadQueryFetch();
@@ -72,7 +74,7 @@ const EditStoreQueryActivity = (props: ExternalProps) => {
     const { error, isLoading, data, fetch } = useApi<GenericOperationResult>(postData, {
         fetchOnMount: false,
         requestByFetch: true,
-        dispatch
+        dispatch,
     });
 
     const {
@@ -80,11 +82,11 @@ const EditStoreQueryActivity = (props: ExternalProps) => {
         isLoading: isExecLoading,
         data: execData,
         fetch: execFetch,
-        clearState: execClearState
+        clearState: execClearState,
     } = useApi<Object>(execQuery, {
         fetchOnMount: false,
         requestByFetch: true,
-        dispatch
+        dispatch,
     });
 
     const handleSubmit = useCallback(
@@ -104,7 +106,7 @@ const EditStoreQueryActivity = (props: ExternalProps) => {
     );
 
     if (data) {
-        return <Redirect to={`/org/${orgName}/jsonstore/${storeName}/query`} />;
+        return <Navigate to={`/org/${orgName}/jsonstore/${storeName}/query`} />;
     }
 
     return (

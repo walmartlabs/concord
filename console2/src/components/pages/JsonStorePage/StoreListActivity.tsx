@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { useCallback, useContext, useState } from 'react';
 import { Input, List, Menu } from 'semantic-ui-react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 import { ConcordKey } from '../../../api/common';
 import { CreateNewEntityButton, PaginationToolBar } from '../../molecules';

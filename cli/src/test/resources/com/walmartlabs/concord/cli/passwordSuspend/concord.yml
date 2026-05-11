@@ -1,0 +1,10 @@
+flows:
+  default:
+    - form: secureForm
+    - suspend: ev1
+    - log: "after resume: ${secureForm.age}"
+
+forms:
+  secureForm:
+    - password: { label: "Password", type: "string", inputType: "password" }
+    - age: { label: "Age", type: "int", min: 21 }

@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Full Test Schema",
+  "definitions": {
+    "message": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "count": {
+      "type": "integer"
+    }
+  },
+  "in": {
+    "type": "object",
+    "properties": {
+      "message": {
+        "$ref": "#/definitions/message"
+      }
+    },
+    "required": ["message"]
+  },
+  "out": {
+    "type": "object",
+    "properties": {
+      "count": {
+        "$ref": "#/$defs/count"
+      }
+    },
+    "required": ["count"]
+  }
+}

@@ -1,0 +1,11 @@
+configuration:
+  runtime: "concord-v2"
+  validation:
+    taskCalls:
+      in: fail
+      out: fail
+
+flows:
+  default:
+    # Log task has no schema - should work normally even with validation enabled
+    - log: "hello from log task"

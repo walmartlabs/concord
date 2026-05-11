@@ -17,19 +17,21 @@
  * limitations under the License.
  * =====
  */
-import React  from 'react';
+import React, { useCallback, useState } from 'react';
 import { Button, Popup, Grid } from 'semantic-ui-react';
 
 import ClassIcon from '../../../atoms/ClassIcon';
 import Truncate from '../../../atoms/Truncate';
 
-import RestoreProcess from './RestoreProcess';
 import { CheckpointName } from '../shared/Labels';
 import { CustomCheckpoint } from '../shared/types';
 import { ProcessEntry, isFinal } from '../../../../api/process';
 import { format as formatDate } from 'date-fns';
 import {useCheckpointContext} from "../Container";
 import {useLogContext} from "../../../molecules/ProcessLogContainer/LogContainer";
+import { restoreProcess as apiRestoreProcess } from '../../../../api/process/checkpoint';
+import { RequestError } from '../../../../api/common';
+import { RequestErrorMessage } from '../../../molecules';
 
 const CheckpointPopup: React.SFC<{
     checkpoint: CustomCheckpoint;
@@ -38,6 +40,29 @@ const CheckpointPopup: React.SFC<{
 }> = ({ checkpoint, process, render }) => {
     const { currentPage, limitPerPage, loadData, orgId, projectId } = useCheckpointContext();
     useLogContext();
+    const [restoring, setRestoring] = useState(false);
+    const [error, setError] = useState<RequestError>();
+
+    const restoreProcess = useCallback(async () => {
+        setRestoring(true);
+        setError(undefined);
+
+        try {
+            await apiRestoreProcess(process.instanceId, checkpoint.id);
+            setTimeout(() => {
+                loadData({
+                    orgId,
+                    projectId,
+                    limit: limitPerPage,
+                    offset: (currentPage - 1) * limitPerPage
+                });
+            }, 200);
+        } catch (e) {
+            setError(e);
+        } finally {
+            setRestoring(false);
+        }
+    }, [checkpoint.id, currentPage, limitPerPage, loadData, orgId, process.instanceId, projectId]);
 
     return (
         <Popup
@@ -80,35 +105,21 @@ const CheckpointPopup: React.SFC<{
                         </Grid.Row>
                     </Grid>
                     <hr />
-                    <RestoreProcess>
-                        {({ restoreProcess }: any) => (
-                            <Button
-                                primary={true}
-                                disabled={!isFinal(process.status) || process.disabled}
-                                loading={process.status === 'ENQUEUED'}
-                                onClick={() => {
-                                    restoreProcess(process.instanceId, checkpoint.id);
-                                    // // TODO: ಠ_ಠ ... hack, needs to be better.
-                                    setTimeout(() => {
-                                        loadData({
-                                            orgId,
-                                            projectId,
-                                            limit: limitPerPage,
-                                            offset: (currentPage - 1) * limitPerPage
-                                        });
-                                    }, 200);
-                                }}>
-                                <ClassIcon
-                                    classes="icon redo white"
-                                    style={{
-                                        fontSize: '0.7rem',
-                                        fontWeight: 'bold'
-                                    }}
-                                />
-                                Restore this Checkpoint
-                            </Button>
-                        )}
-                    </RestoreProcess>
+                    {error && <RequestErrorMessage error={error} />}
+                    <Button
+                        primary={true}
+                        disabled={!isFinal(process.status) || process.disabled}
+                        loading={restoring}
+                        onClick={restoreProcess}>
+                        <ClassIcon
+                            classes="icon redo white"
+                            style={{
+                                fontSize: '0.7rem',
+                                fontWeight: 'bold'
+                            }}
+                        />
+                        Restore this Checkpoint
+                    </Button>
                 </>
             }
         />

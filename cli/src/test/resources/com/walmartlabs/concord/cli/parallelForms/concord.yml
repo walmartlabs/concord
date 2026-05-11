@@ -1,0 +1,21 @@
+flows:
+  default:
+    - log: "parallel forms: before"
+    - parallel:
+        - block:
+            - form: form1
+            - log: "parallel forms: form1=${form1.value}"
+        - block:
+            - form: form2
+            - log: "parallel forms: form2=${form2.value}"
+      out:
+        - form1
+        - form2
+    - log: "parallel forms: done one=${form1.value} two=${form2.value}"
+
+forms:
+  form1:
+    - value: { label: "Form One", type: "string" }
+
+  form2:
+    - value: { label: "Form Two", type: "string" }

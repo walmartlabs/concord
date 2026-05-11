@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SchemaTest Task Schema",
+  "description": "Schema for the schemaTest task used in integration tests",
+  "in": {
+    "type": "object",
+    "properties": {
+      "message": {
+        "type": "string",
+        "minLength": 1,
+        "description": "The message to echo back"
+      },
+      "count": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "A count value"
+      }
+    },
+    "required": ["message"],
+    "additionalProperties": true
+  },
+  "out": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "Whether the task succeeded"
+      },
+      "echo": {
+        "type": "string",
+        "description": "The echoed message"
+      },
+      "count": {
+        "type": "integer",
+        "description": "The count value"
+      }
+    },
+    "required": ["ok", "echo"]
+  }
+}

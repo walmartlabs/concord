@@ -1,0 +1,14 @@
+flows:
+  default:
+    - log: "before form"
+    - form: myForm
+    - log: "after form: ${myForm.name}, ${myForm.age}"
+
+forms:
+  myForm:
+    - name:
+        label: Name
+        type: string
+    - age:
+        label: Age
+        type: int

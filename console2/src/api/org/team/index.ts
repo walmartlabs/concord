@@ -24,7 +24,9 @@ import {
     fetchJson,
     GenericOperationResult,
     OperationResult,
-    queryParams
+    queryParams,
+    RequestError,
+    retryRequest
 } from '../../common';
 import { UserType } from '../../user';
 
@@ -47,11 +49,22 @@ export interface CreateTeamResponse {
     id: ConcordId;
 }
 
+const shouldRetryTeamRequest = (error: RequestError) => {
+    if (!error || (error.status !== 400 && error.status !== 404)) {
+        return false;
+    }
+
+    return /(?:Organization|Team) not found:/i.test(error.details || '');
+};
+
 export const get = (orgName: ConcordKey, teamName: ConcordKey): Promise<TeamEntry> =>
-    fetchJson(`/api/v1/org/${orgName}/team/${teamName}`);
+    retryRequest(
+        () => fetchJson(`/api/v1/org/${orgName}/team/${teamName}`),
+        shouldRetryTeamRequest
+    );
 
 export const list = (orgName: ConcordKey): Promise<TeamEntry[]> =>
-    fetchJson(`/api/v1/org/${orgName}/team`);
+    retryRequest(() => fetchJson(`/api/v1/org/${orgName}/team`), shouldRetryTeamRequest);
 
 export const createOrUpdate = (
     orgName: ConcordKey,
@@ -65,7 +78,7 @@ export const createOrUpdate = (
         body: JSON.stringify(entry)
     };
 
-    return fetchJson(`/api/v1/org/${orgName}/team`, opts);
+    return retryRequest(() => fetchJson(`/api/v1/org/${orgName}/team`, opts), shouldRetryTeamRequest);
 };
 
 // TODO should we just use createOrUpdate instead?
@@ -85,14 +98,17 @@ export const rename = (
         })
     };
 
-    return fetchJson(`/api/v1/org/${orgName}/team`, opts);
+    return retryRequest(() => fetchJson(`/api/v1/org/${orgName}/team`, opts), shouldRetryTeamRequest);
 };
 
 export const deleteTeam = (
     orgName: ConcordKey,
     teamName: ConcordKey
 ): Promise<GenericOperationResult> =>
-    fetchJson(`/api/v1/org/${orgName}/team/${teamName}`, { method: 'DELETE' });
+    retryRequest(
+        () => fetchJson(`/api/v1/org/${orgName}/team/${teamName}`, { method: 'DELETE' }),
+        shouldRetryTeamRequest
+    );
 
 export enum TeamRole {
     OWNER = 'OWNER',
@@ -136,12 +152,19 @@ export interface NewTeamLdapGroupEntry {
 }
 
 export const listUsers = (orgName: ConcordKey, teamName: ConcordKey): Promise<TeamUserEntry[]> =>
-    fetchJson(`/api/v1/org/${orgName}/team/${teamName}/users`);
+    retryRequest(
+        () => fetchJson(`/api/v1/org/${orgName}/team/${teamName}/users`),
+        shouldRetryTeamRequest
+    );
 
 export const listLdapGroups = (
     orgName: ConcordKey,
     teamName: ConcordKey
-): Promise<TeamLdapGroupEntry[]> => fetchJson(`/api/v1/org/${orgName}/team/${teamName}/ldapGroups`);
+): Promise<TeamLdapGroupEntry[]> =>
+    retryRequest(
+        () => fetchJson(`/api/v1/org/${orgName}/team/${teamName}/ldapGroups`),
+        shouldRetryTeamRequest
+    );
 
 export const addUsers = (
     orgName: ConcordKey,
@@ -157,9 +180,13 @@ export const addUsers = (
         body: JSON.stringify(users)
     };
 
-    return fetchJson(
-        `/api/v1/org/${orgName}/team/${teamName}/users?${queryParams({ replace })}`,
-        opts
+    return retryRequest(
+        () =>
+            fetchJson(
+                `/api/v1/org/${orgName}/team/${teamName}/users?${queryParams({ replace })}`,
+                opts
+            ),
+        shouldRetryTeamRequest
     );
 };
 
@@ -177,8 +204,12 @@ export const addLdapGroups = (
         body: JSON.stringify(groups)
     };
 
-    return fetchJson(
-        `/api/v1/org/${orgName}/team/${teamName}/ldapGroups?${queryParams({ replace })}`,
-        opts
+    return retryRequest(
+        () =>
+            fetchJson(
+                `/api/v1/org/${orgName}/team/${teamName}/ldapGroups?${queryParams({ replace })}`,
+                opts
+            ),
+        shouldRetryTeamRequest
     );
 };

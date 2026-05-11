@@ -28,7 +28,7 @@ import {
 } from '../../../api/process';
 import { Accordion, Icon, Table } from 'semantic-ui-react';
 import { ConcordId } from '../../../api/common';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { LocalTimestamp } from '../index';
 
 interface ExternalProps {

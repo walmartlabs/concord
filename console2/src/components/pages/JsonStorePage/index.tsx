@@ -20,10 +20,11 @@
 
 import * as React from 'react';
 import { useCallback, useState } from 'react';
-import { Redirect, Route, RouteComponentProps, Switch } from 'react-router';
-import { Link } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router';
+import { Link } from 'react-router';
 import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
+import { RouteComponentProps, withRouter } from '@/router';
 import { ConcordId } from '../../../api/common';
 import { NotFoundPage } from '../index';
 import StoreSettings from './StoreSettings';
@@ -102,43 +103,62 @@ const StoragePage = (props: RouteComponentProps<RouteProps>) => {
                 </Menu.Item>
             </Menu>
 
-            <Switch>
-                <Route path={baseUrl} exact={true}>
-                    <Redirect to={`${baseUrl}/data`} />
-                </Route>
-
-                <Route path={`${baseUrl}/data`} exact={true}>
-                    <StoreDataList orgName={orgName} storeName={storeName} forceRefresh={refresh} />
-                </Route>
-                <Route path={`${baseUrl}/query`} exact={true}>
-                    <StoreQueryList
-                        orgName={orgName}
-                        storeName={storeName}
-                        forceRefresh={refresh}
-                    />
-                </Route>
-                <Route path={`${baseUrl}/access`} exact={true}>
-                    <StoreTeamAccessActivity
-                        orgName={orgName}
-                        storeName={storeName}
-                        forceRefresh={refresh}
-                    />
-                </Route>
-                <Route path={`${baseUrl}/settings`} exact={true}>
-                    <StoreSettings orgName={orgName} storeName={storeName} forceRefresh={refresh} />
-                </Route>
-                <Route path={`${baseUrl}/audit`} exact={true}>
-                    <AuditLogActivity
-                        forceRefresh={refresh}
-                        showRefreshButton={false}
-                        filter={{ details: { orgName: orgName, jsonStoreName: storeName } }}
-                    />
-                </Route>
-
-                <Route component={NotFoundPage} />
-            </Switch>
+            <Routes>
+                <Route index={true} element={<Navigate to="data" replace={true} />} />
+                <Route
+                    path="data"
+                    element={
+                        <StoreDataList
+                            orgName={orgName}
+                            storeName={storeName}
+                            forceRefresh={refresh}
+                        />
+                    }
+                />
+                <Route
+                    path="query"
+                    element={
+                        <StoreQueryList
+                            orgName={orgName}
+                            storeName={storeName}
+                            forceRefresh={refresh}
+                        />
+                    }
+                />
+                <Route
+                    path="access"
+                    element={
+                        <StoreTeamAccessActivity
+                            orgName={orgName}
+                            storeName={storeName}
+                            forceRefresh={refresh}
+                        />
+                    }
+                />
+                <Route
+                    path="settings"
+                    element={
+                        <StoreSettings
+                            orgName={orgName}
+                            storeName={storeName}
+                            forceRefresh={refresh}
+                        />
+                    }
+                />
+                <Route
+                    path="audit"
+                    element={
+                        <AuditLogActivity
+                            forceRefresh={refresh}
+                            showRefreshButton={false}
+                            filter={{ details: { orgName: orgName, jsonStoreName: storeName } }}
+                        />
+                    }
+                />
+                <Route path="*" element={<NotFoundPage />} />
+            </Routes>
         </>
     );
 };
 
-export default StoragePage;
+export default withRouter(StoragePage);

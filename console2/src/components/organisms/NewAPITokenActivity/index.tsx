@@ -19,18 +19,17 @@
  */
 
 import * as React from 'react';
-import { useContext, useState } from 'react';
+import { useState } from 'react';
+import { useHistory } from '@/router';
 import { Button, Icon, Message } from 'semantic-ui-react';
-import { push as pushHistory } from 'connected-react-router';
 
 import { RequestError } from '../../../api/common';
 import { NewAPITokenForm, RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
 import {
     create as apiCreate,
     CreateApiKeyResult,
-    NewTokenEntry
+    NewTokenEntry,
 } from '../../../api/profile/api_token';
-import { ReduxStore } from '../../../App';
 
 const renderResponse = (response: CreateApiKeyResult, done: () => void, error?: RequestError) => {
     if (error) {
@@ -57,12 +56,18 @@ const renderResponse = (response: CreateApiKeyResult, done: () => void, error?: 
                 </Message.Content>
             </Message>
 
-            <Button primary={true} content={'Done'} onClick={() => done()} />
+            <Button
+                primary={true}
+                content={'Done'}
+                data-testid="api-token-created-done"
+                onClick={() => done()}
+            />
         </>
     );
 };
 
 export default () => {
+    const history = useHistory();
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<RequestError>();
     const [response, setResponse] = useState<CreateApiKeyResult>();
@@ -79,14 +84,8 @@ export default () => {
         }
     };
 
-    const store = useContext(ReduxStore);
-
     if (!error && response) {
-        return renderResponse(
-            response,
-            () => store.dispatch(pushHistory(`/profile/api-token`)),
-            error
-        );
+        return renderResponse(response, () => history.push('/profile/api-token'), error);
     }
 
     return (

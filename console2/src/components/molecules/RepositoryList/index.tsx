@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Icon, Table, Popup } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';

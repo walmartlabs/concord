@@ -27,10 +27,29 @@ import static org.fusesource.jansi.Ansi.ansi;
 public final class Confirmation {
 
     public static boolean confirm(String message) throws IOException {
+        return confirm(message, false);
+    }
+
+    public static boolean confirm(String message, boolean defaultValue) throws IOException {
         System.out.println(ansi().fgBrightYellow().bold().a(message).reset());
-        int response = System.in.read();
-        // y == 121, Y == 89
-        return response == 121 || response == 89;
+
+        var response = new StringBuilder();
+        while (true) {
+            int ch = System.in.read();
+            if (ch == -1 || ch == '\n') {
+                break;
+            }
+            if (ch != '\r') {
+                response.append((char) ch);
+            }
+        }
+
+        var value = response.toString().trim().toLowerCase();
+        if (value.isEmpty()) {
+            return defaultValue;
+        }
+
+        return "y".equals(value) || "yes".equals(value);
     }
 
     private Confirmation() {

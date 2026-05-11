@@ -1,0 +1,14 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+    - "mvn://com.walmartlabs.concord.it.tasks:schema-test:PROJECT_VERSION"
+  validation:
+    taskCalls:
+      in: warn
+
+flows:
+  default:
+    - task: invalidSchema
+      in:
+        message: "hello"
+    - log: "Done"

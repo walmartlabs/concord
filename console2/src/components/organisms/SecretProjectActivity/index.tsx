@@ -18,43 +18,43 @@
  * =====
  */
 
+import * as React from 'react';
+import { Confirm, Form, Icon, Label } from 'semantic-ui-react';
 import { useCallback, useState } from 'react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
-import { updateSecretProject as apiUpdateSecretProject } from '../../../api/org/secret';
-import { ProjectSearch, RequestErrorActivity } from '../index';
-import { Confirm, Form, Icon, Label } from 'semantic-ui-react';
 import { ProjectEntry } from '../../../api/org/project';
-import { useDispatch } from 'react-redux';
-import { actions } from '../../../state/data/secrets';
+import { updateSecretProject as apiUpdateSecretProject } from '../../../api/org/secret';
+import { RequestErrorActivity, ProjectSearch } from '../index';
 
 interface ExternalProps {
     orgName: ConcordKey;
     projects: ProjectEntry[];
     secretName: ConcordKey;
+    onUpdated?: () => void;
 }
 
-type Props = ExternalProps;
-
-export default ({ orgName, projects, secretName }: Props) => {
+const SecretProjectActivity = ({ orgName, projects, secretName, onUpdated }: ExternalProps) => {
     const [dirty, setDirty] = useState<boolean>(false);
     const [showConfirm, setShowConfirm] = useState<boolean>(false);
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState<RequestError>();
-    const [existingProjects, setExistingProjects] = useState<Array<ProjectEntry>>(
-        projects.slice(0)
-    );
+    const [existingProjects, setExistingProjects] = useState<Array<ProjectEntry>>(projects.slice(0));
     const [newProjects, setNewProjects] = useState<Array<ProjectEntry>>(projects.slice(0));
-    const dispatch = useDispatch();
-
-    const reloadSecret = useCallback(async () => {
-        dispatch(actions.getSecret(orgName, secretName));
-    },[dispatch, orgName, secretName]);
-
     const [editMode, setEditMode] = useState<boolean>(false);
+
+    React.useEffect(() => {
+        if (!editMode) {
+            setExistingProjects(projects.slice(0));
+            setNewProjects(projects.slice(0));
+        }
+    }, [editMode, projects]);
+
     const update = useCallback(async () => {
+        setUpdating(true);
+        setError(undefined);
+
         try {
-            setUpdating(true);
             await apiUpdateSecretProject(
                 orgName,
                 secretName,
@@ -62,24 +62,30 @@ export default ({ orgName, projects, secretName }: Props) => {
             );
         } catch (e) {
             setError(e);
+            throw e;
         } finally {
             setUpdating(false);
         }
     }, [orgName, secretName, newProjects]);
 
     const onConfirmHandler = useCallback(async () => {
-        await update();
-        reloadSecret();
-        setShowConfirm(false);
-        setDirty(false);
-        setEditMode(false);
-        setExistingProjects(newProjects);
-        
-    }, [update, reloadSecret, newProjects]);
+        try {
+            await update();
+            onUpdated && onUpdated();
+            setShowConfirm(false);
+            setDirty(false);
+            setEditMode(false);
+            setExistingProjects(newProjects);
+        } catch (e) {
+            // keep the dialog open so the user can retry or adjust the selection
+        }
+    }, [newProjects, onUpdated, update]);
 
     const onCancelHandler = useCallback(() => {
         setShowConfirm(false);
         setNewProjects(existingProjects);
+        setDirty(false);
+        setError(undefined);
     }, [existingProjects]);
 
     return (
@@ -95,12 +101,9 @@ export default ({ orgName, projects, secretName }: Props) => {
                                 placeholder="Search for projects"
                                 fluid={true}
                                 onSelect={(project) => {
-                                    if (
-                                        !newProjects
-                                            .map((project) => project.id)
-                                            .includes(project.id)
-                                    ) {
+                                    if (!newProjects.map((item) => item.id).includes(project.id)) {
                                         setNewProjects(newProjects.concat(project));
+                                        setDirty(true);
                                     }
                                 }}
                                 projectsToNotShow={newProjects}
@@ -121,25 +124,27 @@ export default ({ orgName, projects, secretName }: Props) => {
                                               onClick={() => {
                                                   if (
                                                       newProjects
-                                                          .map((project) => project.id)
+                                                          .map((item) => item.id)
                                                           .includes(project.id)
                                                   ) {
-                                                      newProjects.splice(
-                                                          newProjects
-                                                              .map((p) => p.id)
+                                                      const nextProjects = newProjects.slice(0);
+                                                      nextProjects.splice(
+                                                          nextProjects
+                                                              .map((item) => item.id)
                                                               .indexOf(project.id),
                                                           1
                                                       );
-                                                      setNewProjects(newProjects.slice(0));
+                                                      setNewProjects(nextProjects);
+                                                      setDirty(true);
                                                   }
                                               }}
-                                          ></Icon>
+                                          />
                                       ) : null}
                                   </Label>
                               ))
                             : !editMode
-                            ? 'No restriction on projects.'
-                            : null}
+                              ? 'No restriction on projects.'
+                              : null}
                     </Form.Field>
                 </Form.Group>
                 <Form.Group>
@@ -148,7 +153,15 @@ export default ({ orgName, projects, secretName }: Props) => {
                         negative={editMode}
                         content={editMode ? 'Update' : 'Edit'}
                         disabled={!editMode && dirty}
-                        onClick={() => (editMode ? setShowConfirm(true) : setEditMode(true))}
+                        onClick={() => {
+                            if (editMode) {
+                                setShowConfirm(true);
+                                return;
+                            }
+
+                            setError(undefined);
+                            setEditMode(true);
+                        }}
                     />
                     {editMode ? (
                         <Form.Button
@@ -157,6 +170,8 @@ export default ({ orgName, projects, secretName }: Props) => {
                             onClick={() => {
                                 setEditMode(false);
                                 setNewProjects(existingProjects);
+                                setDirty(false);
+                                setError(undefined);
                             }}
                         />
                     ) : null}
@@ -173,3 +188,5 @@ export default ({ orgName, projects, secretName }: Props) => {
         </>
     );
 };
+
+export default SecretProjectActivity;

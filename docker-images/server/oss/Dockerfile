@@ -1,7 +1,8 @@
 ARG docker_namespace=walmartlabs
 ARG concord_version=latest
+ARG concord_base_image=$docker_namespace/concord-base:$concord_version
 
-FROM $docker_namespace/concord-base:$concord_version
+FROM $concord_base_image
 LABEL maintainer="ibodrov@gmail.com"
 
 EXPOSE 8001

@@ -20,27 +20,24 @@
 
 import copyToClipboard from 'copy-to-clipboard';
 import * as React from 'react';
-import {Button, Message, TextArea} from 'semantic-ui-react';
+import { Button, Message, TextArea } from 'semantic-ui-react';
 
-import {ConcordKey} from '../../../api/common';
+import { ConcordKey } from '../../../api/common';
 import {
+    CreateSecretResponse,
     SecretStoreType,
     SecretTypeExt,
-    SecretVisibility
+    SecretVisibility,
+    create as apiCreate,
 } from '../../../api/org/secret';
-import {CreateSecretResponse} from '../../../state/data/secrets';
-import {
-    NewSecretFormValues
-} from '../../molecules';
+import { useApi } from '../../../hooks/useApi';
+import NewSecretForm, { NewSecretFormValues } from '../../molecules/NewSecretForm';
 
 import './styles.css';
-import {RequestErrorActivity} from '../index';
-import NewSecretForm from '../../molecules/NewSecretForm';
-import {LoadingDispatch} from "../../../App";
-import {useCallback, useState} from "react";
-import {create as apiCreate} from "../../../api/org/secret";
-import {useApi} from "../../../hooks/useApi";
-import {useHistory} from "react-router";
+import { LoadingDispatch } from '../../../App';
+import { useCallback, useState } from 'react';
+import { RequestErrorActivity } from '../index';
+import { useHistory } from '@/router';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -50,37 +47,32 @@ const INIT_VALUES: NewSecretFormValues = {
     name: '',
     visibility: SecretVisibility.PRIVATE,
     type: SecretTypeExt.NEW_KEY_PAIR,
-    storeType: SecretStoreType.CONCORD
-}
+    storeType: SecretStoreType.CONCORD,
+};
 
-const NewSecretActivity = (props: ExternalProps) => {
+const NewSecretActivity = ({ orgName }: ExternalProps) => {
     const history = useHistory();
-
-    const {orgName} = props;
-
     const dispatch = React.useContext(LoadingDispatch);
     const [values, setValues] = useState(INIT_VALUES);
 
-    const postQuery = useCallback(() => {
-        return apiCreate(orgName, values);
-    }, [orgName, values]);
+    const postQuery = useCallback(() => apiCreate(orgName, values), [orgName, values]);
 
-    const {error, isLoading, data, fetch} = useApi<CreateSecretResponse>(postQuery, {
+    const { error, isLoading, data, fetch } = useApi<CreateSecretResponse>(postQuery, {
         fetchOnMount: false,
         requestByFetch: true,
-        dispatch: dispatch
+        dispatch,
     });
 
     const handleSubmit = useCallback(
-        (values: NewSecretFormValues) => {
-            setValues(values);
+        (submittedValues: NewSecretFormValues) => {
+            setValues(submittedValues);
             fetch();
         },
         [fetch]
     );
 
     if (data) {
-        const {publicKey, password} = data;
+        const { publicKey, password } = data;
 
         return (
             <>
@@ -96,7 +88,7 @@ const NewSecretActivity = (props: ExternalProps) => {
                                 basic={true}
                                 onClick={() => (copyToClipboard as any)(publicKey)}
                             />
-                            <TextArea className="secretData" value={publicKey} rows={5}/>
+                            <TextArea className="secretData" value={publicKey} rows={5} />
                         </div>
                     )}
 
@@ -109,19 +101,23 @@ const NewSecretActivity = (props: ExternalProps) => {
                                 basic={true}
                                 onClick={() => (copyToClipboard as any)(password)}
                             />
-                            <TextArea className="secretData" value={password} rows={2}/>
+                            <TextArea className="secretData" value={password} rows={2} />
                         </div>
                     )}
                 </Message>
 
-                <Button primary={true} content={'Done'}
-                        onClick={() => history.push(`/org/${orgName}/secret/${values.name}`)}/>
-            </>);
+                <Button
+                    primary={true}
+                    content="Done"
+                    onClick={() => history.push(`/org/${orgName}/secret/${values.name}`)}
+                />
+            </>
+        );
     }
 
     return (
         <>
-            {error && <RequestErrorActivity error={error}/>}
+            {error && <RequestErrorActivity error={error} />}
 
             <NewSecretForm
                 orgName={orgName}
@@ -131,7 +127,6 @@ const NewSecretActivity = (props: ExternalProps) => {
             />
         </>
     );
-
 };
 
 export default NewSecretActivity;

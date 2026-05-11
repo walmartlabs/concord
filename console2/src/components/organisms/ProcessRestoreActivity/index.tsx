@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2026 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,14 @@
  * limitations under the License.
  * =====
  */
+import { useCallback, useState } from 'react';
 
-import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
 import { ConcordKey, RequestError } from '../../../api/common';
-import { actions, State } from '../../../state/data/processes';
-import { ButtonWithConfirmation, RequestErrorMessage } from '../../molecules';
 import { isFinal, ProcessStatus } from '../../../api/process';
+import { restoreProcess as apiRestoreProcess } from '../../../api/process/checkpoint';
+import { ButtonWithConfirmation, RequestErrorMessage } from '../../molecules';
 
-interface ExternalProps {
+interface Props {
     instanceId: ConcordKey;
     processStatus: ProcessStatus;
     checkpointId: ConcordKey;
@@ -34,60 +32,48 @@ interface ExternalProps {
     renderOverride?: React.ReactNode;
 }
 
-interface StateProps {
-    restoring: boolean;
-    error: RequestError;
-}
+export const isFinalStatus = (status: ProcessStatus): boolean => isFinal(status);
 
-interface DispatchProps {
-    restoreProcess: (instanceId: ConcordKey, checkpointId: ConcordKey) => void;
-}
+const ProcessRestoreActivity = ({
+    instanceId,
+    processStatus,
+    checkpointId,
+    checkpoint,
+    renderOverride
+}: Props) => {
+    const [restoring, setRestoring] = useState(false);
+    const [error, setError] = useState<RequestError>();
 
-type Props = ExternalProps & StateProps & DispatchProps;
+    const restoreProcess = useCallback(async () => {
+        setRestoring(true);
+        setError(undefined);
 
-export const isFinalStatus = (s: ProcessStatus): boolean => isFinal(s);
+        try {
+            await apiRestoreProcess(instanceId, checkpointId);
+        } catch (e) {
+            setError(e);
+        } finally {
+            setRestoring(false);
+        }
+    }, [checkpointId, instanceId]);
 
-class ProcessRestoreActivity extends React.PureComponent<Props> {
-    render() {
-        const {
-            error,
-            restoreProcess,
-            restoring,
-            instanceId,
-            checkpointId,
-            checkpoint,
-            processStatus,
-            renderOverride
-        } = this.props;
+    return (
+        <>
+            {error && <RequestErrorMessage error={error} />}
 
-        return (
-            <>
-                {error && <RequestErrorMessage error={error} />}
+            <ButtonWithConfirmation
+                renderOverride={renderOverride}
+                size={'mini'}
+                floated={'right'}
+                disabled={!isFinalStatus(processStatus)}
+                content="restore"
+                loading={restoring}
+                confirmationHeader="Restore the process?"
+                confirmationContent={`Are you sure you want to restore process at ${checkpoint} checkpoint?`}
+                onConfirm={restoreProcess}
+            />
+        </>
+    );
+};
 
-                <ButtonWithConfirmation
-                    renderOverride={renderOverride}
-                    size={'mini'}
-                    floated={'right'}
-                    disabled={!isFinalStatus(processStatus)}
-                    content="restore"
-                    loading={restoring}
-                    confirmationHeader="Restore the process?"
-                    confirmationContent={`Are you sure you want to restore process at ${checkpoint} checkpoint?`}
-                    onConfirm={() => restoreProcess(instanceId, checkpointId)}
-                />
-            </>
-        );
-    }
-}
-
-const mapStateToProps = ({ processes }: { processes: State }): StateProps => ({
-    restoring: processes.restoreProcess.running,
-    error: processes.restoreProcess.error
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    restoreProcess: (instanceId, checkpointId) =>
-        dispatch(actions.restoreProcess(instanceId, checkpointId))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(ProcessRestoreActivity);
+export default ProcessRestoreActivity;

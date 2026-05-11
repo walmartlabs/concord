@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2026 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,51 +17,24 @@
  * limitations under the License.
  * =====
  */
-
-import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
 import { Loader } from 'semantic-ui-react';
 
-import { ConcordId, RequestError } from '../../../api/common';
-import { actions, State } from '../../../state/data/forms';
+import { ConcordId } from '../../../api/common';
 import { RequestErrorMessage } from '../../molecules';
+import { useProcessWizard } from './useProcessWizard';
 
-interface ExternalProps {
+interface Props {
     processInstanceId: ConcordId;
 }
 
-interface StateProps {
-    error?: RequestError;
-}
+const ProcessWizard = ({ processInstanceId }: Props) => {
+    const error = useProcessWizard(processInstanceId);
 
-interface DispatchProps {
-    start: (processInstanceId: ConcordId) => void;
-}
-
-type Props = ExternalProps & StateProps & DispatchProps;
-
-class ProcessWizard extends React.PureComponent<Props> {
-    componentDidMount() {
-        const { start, processInstanceId } = this.props;
-        start(processInstanceId);
+    if (error) {
+        return <RequestErrorMessage error={error} />;
     }
 
-    render() {
-        const { error } = this.props;
-        if (error) {
-            return <RequestErrorMessage error={error} />;
-        }
-        return <Loader active={true} />;
-    }
-}
+    return <Loader active={true} />;
+};
 
-const mapStateToProps = ({ forms }: { forms: State }): StateProps => ({
-    error: forms.wizard.error
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    start: (processInstanceId: ConcordId) => dispatch(actions.startWizard(processInstanceId))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(ProcessWizard);
+export default ProcessWizard;
