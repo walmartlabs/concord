@@ -19,3 +19,6 @@ flows:
     - task: sleep
       in:
         duration: 120
+
+  onlyLog:
+    - log: "Hello, world!"

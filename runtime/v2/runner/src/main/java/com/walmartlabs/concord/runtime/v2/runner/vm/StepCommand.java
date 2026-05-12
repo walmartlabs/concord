@@ -107,10 +107,36 @@ public abstract class StepCommand<T extends Step> implements Command {
             log.error("{}", e.getMessage());
         }
 
+        if (shouldSkipCallStackLog(state, threadId, e)) {
+            return;
+        }
+
         List<StackTraceItem> stackTrace = state.getStackTrace(threadId);
         if (!stackTrace.isEmpty()) {
             log.error("Call stack:\n{}", stackTrace.stream().map(StackTraceItem::toString).collect(Collectors.joining("\n")));
         }
+    }
+
+    private static boolean shouldSkipCallStackLog(State state, ThreadId threadId, Exception e) {
+        if (e instanceof ParallelExecutionException) {
+            return true;
+        }
+
+        if (threadId.equals(state.getRootThreadId())) {
+            return false;
+        }
+
+        if (hasExceptionHandler(state, threadId)) {
+            return false;
+        }
+
+        // Unhandled forked thread errors are reported by JoinCommand's aggregate exception.
+        return true;
+    }
+
+    private static boolean hasExceptionHandler(State state, ThreadId threadId) {
+        return state.getFrames(threadId).stream()
+                .anyMatch(f -> f.getExceptionHandler() != null);
     }
 
     protected abstract void execute(Runtime runtime, State state, ThreadId threadId);

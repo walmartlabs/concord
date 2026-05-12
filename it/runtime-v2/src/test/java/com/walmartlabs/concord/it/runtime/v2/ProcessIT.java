@@ -708,6 +708,38 @@ public class ProcessIT extends AbstractTest {
     }
 
     /**
+     * Demonstrates what happens if executes quickly with a small total number of
+     * events. Won't run long enough to hit the batching timer. Depends on the
+     * Execution listener to invoke the final flush on afterProcessEnds.
+     */
+    @Test
+    public void testEventBatchingSmallTotal() throws Exception {
+        Payload payload = new Payload()
+                .activeProfiles("longFlush")
+                .entryPoint("onlyLog")
+                .archive(resource("eventBatchingTimer"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+
+        // let it run to completion
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        // all events should be fully-reported at this point
+
+        // ---
+        List<ProcessEventEntry> events = getProcessElementEvents(proc);
+
+        // ---
+        assertNotNull(events);
+        assertFalse(events.isEmpty());
+        assertEquals(1, events.size());
+
+        ProcessEventEntry sleepEvent = events.get(0);
+
+        assertEquals("log", sleepEvent.getData().get("name"));
+    }
+
+    /**
      * Executes a flow that will over-fill process event queue if not properly synchronized
      */
     @Test

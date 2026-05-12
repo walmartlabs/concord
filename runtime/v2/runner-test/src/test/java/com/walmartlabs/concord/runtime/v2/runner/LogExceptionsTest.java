@@ -159,7 +159,9 @@ public class LogExceptionsTest {
 
         // error
         assertLog(runtime.lastLog(), ".*" + quote("(concord.yaml): Error @ line: 4, col: 11. boom!") + ".*");
-        assertMultiLineLog(runtime.lastLog(), ".*" + quote("(concord.yaml): Error @ line: 3, col: 7. Parallel execution errors: ") + "\n" + quote("(concord.yaml): Error @ line: 4, col: 11, thread: 1: boom!"));
+        assertMultiLineLog(runtime.lastLog(), ".*" + quote("(concord.yaml): Error @ line: 3, col: 7. Parallel execution errors: ") + "\n" +
+                quote("[1] (concord.yaml): Error @ line: 4, col: 11, thread: 1") + "\n" +
+                quote("  Error: boom!"));
 
         assertLogExactMatch(runtime.lastLog(), 1, ".*" + quote("Parallel execution errors") + ".*");
 
