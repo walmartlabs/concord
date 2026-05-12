@@ -57,6 +57,7 @@ public class ExclusiveProcessIT extends AbstractServerIT {
         input.put("arguments.time", "60000");
 
         StartProcessResponse spr1 = start(input);
+        waitForStatus(getApiClient(), spr1.getInstanceId(), StatusEnum.RUNNING);
 
         input.put("arguments.time", "1");
         StartProcessResponse spr2 = start(input);

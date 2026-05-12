@@ -18,7 +18,7 @@
  * =====
  */
 
-import * as copyToClipboard from 'copy-to-clipboard';
+import copyToClipboard from 'copy-to-clipboard';
 import * as React from 'react';
 import { Form, Icon, Input, Message } from 'semantic-ui-react';
 

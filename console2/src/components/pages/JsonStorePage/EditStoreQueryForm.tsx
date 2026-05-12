@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Button, Form, Label } from 'semantic-ui-react';
-import { ValidateResult } from 'react-hook-form/dist/types';
+import type { ValidateResult } from 'react-hook-form';
 
 import { storageQuery } from '../../../validation';
 import { useCallback, useRef, useState } from 'react';

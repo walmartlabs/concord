@@ -20,6 +20,7 @@ flows:
 
     - if: ${item == "four"}
       then:
+        - expr: ${sleep.ms(1000)}
         - checkpoint: "${item}"
 
     - if: ${item == "two"}

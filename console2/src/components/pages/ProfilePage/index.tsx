@@ -19,76 +19,59 @@
  */
 
 import * as React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router';
 import { Breadcrumb, Grid, Menu } from 'semantic-ui-react';
 
 import { BreadcrumbSegment } from '../../molecules';
-import { Redirect, Route, RouteComponentProps, Switch, withRouter } from 'react-router';
 import { NotFoundPage } from '../index';
 import { APITokensListPage, NewAPITokenPage, UserInfoPage } from '../../../components/pages';
 
-interface RouteProps {
-    orgName: string;
-}
-
-type TabLink = 'user-info' |'token' | null;
+type TabLink = 'user-info' | 'token' | null;
 
 const pathToTab = (s: string): TabLink => {
     if (s.includes('/api-token')) {
         return 'token';
     } else if (s.includes('/user-info')) {
-        return 'user-info'
+        return 'user-info';
     }
 
     return null;
 };
 
-class ProfilePage extends React.PureComponent<RouteComponentProps<RouteProps>> {
-    render() {
-        const { url } = this.props.match;
+const ProfilePage = () => {
+    const location = useLocation();
+    const activeTab = pathToTab(location.pathname);
 
-        const activeTab = pathToTab(this.props.location.pathname);
+    return (
+        <>
+            <BreadcrumbSegment>
+                <Breadcrumb.Section active={true}>Profile Options</Breadcrumb.Section>
+            </BreadcrumbSegment>
 
-        return (
-            <>
-                <BreadcrumbSegment>
-                    <Breadcrumb.Section active={true}>Profile Options</Breadcrumb.Section>
-                </BreadcrumbSegment>
+            <Grid centered={true}>
+                <Grid.Column width={3}>
+                    <Menu tabular={true} vertical={true} fluid={true}>
+                        <Menu.Item active={activeTab === 'user-info'}>
+                            <Link to="/profile/user-info">User</Link>
+                        </Menu.Item>
+                        <Menu.Item active={activeTab === 'token'}>
+                            <Link to="/profile/api-token">API Tokens</Link>
+                        </Menu.Item>
+                    </Menu>
+                </Grid.Column>
 
-                <Grid centered={true}>
-                    <Grid.Column width={3}>
-                        <Menu tabular={true} vertical={true} fluid={true}>
-                            <Menu.Item active={activeTab === 'user-info'}>
-                                <Link to={`${url}/user-info`}>User</Link>
-                            </Menu.Item>
-                            <Menu.Item active={activeTab === 'token'}>
-                                <Link to={`${url}/api-token`}>API Tokens</Link>
-                            </Menu.Item>
-                        </Menu>
-                    </Grid.Column>
+                <Grid.Column width={13}>
+                    <Routes>
+                        <Route index={true} element={<Navigate to="api-token" replace={true} />} />
+                        <Route path="api-token/_new" element={<NewAPITokenPage />} />
+                        <Route path="api-token" element={<APITokensListPage />} />
+                        <Route path="user-info" element={<UserInfoPage />} />
+                        <Route path="*" element={<NotFoundPage />} />
+                    </Routes>
+                </Grid.Column>
+            </Grid>
+        </>
+    );
+};
 
-                    <Grid.Column width={13}>
-                        <Switch>
-                            <Route path={url} exact={true}>
-                                <Redirect to={`${url}/api-token`} />
-                            </Route>
-                            <Route path={`${url}/api-token/_new`}>
-                                <NewAPITokenPage />
-                            </Route>
-                            <Route path={`${url}/api-token`}>
-                                <APITokensListPage />
-                            </Route>
-                            <Route path={`${url}/user-info`}>
-                                <UserInfoPage />
-                            </Route>
-
-                            <Route component={NotFoundPage} />
-                        </Switch>
-                    </Grid.Column>
-                </Grid>
-            </>
-        );
-    }
-}
-
-export default withRouter(ProfilePage);
+export default ProfilePage;

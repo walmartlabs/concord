@@ -21,7 +21,6 @@
 import * as React from 'react';
 import { memo, useCallback, useState } from 'react';
 import { Button, DropdownItemProps, Form, Menu, Popup, Table } from 'semantic-ui-react';
-import ReactJson from 'react-json-view';
 import { DateTimeInput } from 'semantic-ui-calendar-react';
 import { addHours, format as formatDate, parse as parseDate } from 'date-fns';
 
@@ -37,7 +36,7 @@ import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
 import { LoadingDispatch } from '../../../App';
 import { useApi } from '../../../hooks/useApi';
 import { FindUserField2, RequestErrorActivity } from '../../organisms';
-import { RefreshButton } from '../../atoms';
+import { ReactJson, RefreshButton } from '../../atoms';
 
 // date-fns format used to parse date-time strings set by the UI component
 export const SRC_DATE_TIME_FORMAT = 'yyyy-MM-dd HH:mm';

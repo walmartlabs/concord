@@ -83,6 +83,10 @@ export interface FormSubmitErrors {
     [name: string]: string;
 }
 
+export interface FormDataType {
+    [name: string]: any;
+}
+
 export interface FormSubmitResponse {
     ok: boolean;
     processInstanceId: ConcordId;

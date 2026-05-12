@@ -67,8 +67,6 @@ public class ProcessQueueDao extends AbstractDao {
 
     public static final String ENQUEUED_NOW_METRIC = "ENQUEUED_NOW";
 
-    private static final Set<ProcessDataInclude> DEFAULT_INCLUDES = Collections.singleton(ProcessDataInclude.CHILDREN_IDS);
-
     private static final TypeReference<List<ProcessCheckpointEntry>> LIST_OF_CHECKPOINTS = new TypeReference<List<ProcessCheckpointEntry>>() {
     };
     private static final TypeReference<List<CheckpointRestoreHistoryEntry>> LIST_OF_CHECKPOINTS_HISTORY = new TypeReference<List<CheckpointRestoreHistoryEntry>>() {
@@ -380,10 +378,6 @@ public class ProcessQueueDao extends AbstractDao {
 
             return i == 1;
         });
-    }
-
-    public ProcessEntry get(ProcessKey processKey) {
-        return get(processKey, DEFAULT_INCLUDES);
     }
 
     public ProcessEntry get(ProcessKey processKey, Set<ProcessDataInclude> includes) {

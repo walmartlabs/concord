@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Icon, SemanticCOLORS, SemanticICONS } from 'semantic-ui-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 
 import {LogSegmentEntry, SegmentStatus} from '../../../api/process/log';
 import { ConcordId } from '../../../api/common';

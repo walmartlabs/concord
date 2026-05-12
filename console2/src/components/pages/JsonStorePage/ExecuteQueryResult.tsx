@@ -19,9 +19,10 @@
  */
 
 import { Button, Form, Modal, TextArea } from 'semantic-ui-react';
-import ReactJson from 'react-json-view';
 import * as React from 'react';
 import { useCallback, useState } from 'react';
+
+import { ReactJson } from '../../atoms';
 
 import './styles.css';
 

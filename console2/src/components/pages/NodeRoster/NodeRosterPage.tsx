@@ -23,8 +23,9 @@ import { useCallback, useRef, useState } from 'react';
 import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
 import { LoadingState } from '../../../App';
-import { Link } from 'react-router-dom';
-import { Redirect, Route, RouteComponentProps, Switch } from 'react-router';
+import { Link } from 'react-router';
+import { Navigate, Route, Routes } from 'react-router';
+import { RouteComponentProps, withRouter } from '@/router';
 import { NotFoundPage } from '../index';
 import NodeRosterHostsList from './NodeRosterHostsList';
 import NodeRosterArtifactsList from './NodeRosterArtifactsList';
@@ -73,22 +74,17 @@ const NodeRosterPage = (props: RouteComponentProps) => {
                 </Menu.Item>
             </Menu>
 
-            <Switch>
-                <Route path={baseUrl} exact={true}>
-                    <Redirect to={`${baseUrl}/hosts`} />
-                </Route>
-
-                <Route path={`${baseUrl}/hosts`} exact={true}>
-                    <NodeRosterHostsList forceRefresh={refresh} />
-                </Route>
-                <Route path={`${baseUrl}/artifacts`} exact={true}>
-                    <NodeRosterArtifactsList forceRefresh={refresh} />
-                </Route>
-
-                <Route component={NotFoundPage} />
-            </Switch>
+            <Routes>
+                <Route index={true} element={<Navigate to="hosts" replace={true} />} />
+                <Route path="hosts" element={<NodeRosterHostsList forceRefresh={refresh} />} />
+                <Route
+                    path="artifacts"
+                    element={<NodeRosterArtifactsList forceRefresh={refresh} />}
+                />
+                <Route path="*" element={<NotFoundPage />} />
+            </Routes>
         </div>
     );
 };
 
-export default NodeRosterPage;
+export default withRouter(NodeRosterPage);

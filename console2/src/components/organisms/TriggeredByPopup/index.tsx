@@ -19,13 +19,13 @@
  */
 import * as React from 'react';
 import { useCallback, useState } from 'react';
-import ReactJson from 'react-json-view';
 import { Button, Divider, Header, Modal, Popup, Table } from 'semantic-ui-react';
 import { add, format, parseISO, sub } from 'date-fns';
 
 import { ProcessEntry } from '../../../api/process';
 import { AuditLogEntry, AuditObject, list as apiList } from '../../../api/audit';
 import { RequestError } from '../../../api/common';
+import { ReactJson } from '../../atoms';
 import { WithCopyToClipboard } from '../../molecules';
 import { RequestErrorActivity } from '../index';
 

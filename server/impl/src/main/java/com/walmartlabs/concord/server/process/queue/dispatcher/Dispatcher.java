@@ -299,7 +299,8 @@ public class Dispatcher extends PeriodicTask {
                     item.commitId(),
                     item.commitBranch(),
                     secret != null ? secret.secretName : null,
-                    imports);
+                    imports,
+                    item.requirements());
 
             MessageChannel channel = match.request.channel;
             if (!channelManager.sendMessage(channel.getChannelId(), resp)) {

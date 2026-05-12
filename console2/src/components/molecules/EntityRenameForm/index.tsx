@@ -86,14 +86,13 @@ class EntityRenameForm extends React.Component<InjectedFormikProps<Props, FormVa
         return (
             <Form onSubmit={handleSubmit} loading={submitting}>
                 <Form.Group widths={3}>
-                    <div data-testid={inputTestId}>
-                        <FormikInput
-                            fluid={true}
-                            name="name"
-                            placeholder={inputPlaceholder}
-                            disabled={disabled}
-                        />
-                    </div>
+                    <FormikInput
+                        fluid={true}
+                        name="name"
+                        placeholder={inputPlaceholder}
+                        disabled={disabled}
+                        data-testid={inputTestId}
+                    />
 
                     <Form.Button
                         primary={true}

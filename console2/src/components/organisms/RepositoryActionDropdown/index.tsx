@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { Button, Dropdown, Icon, Table } from 'semantic-ui-react';
+import { Dropdown, Icon, Table } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import {
@@ -130,7 +130,8 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
                                     <Dropdown.Item
                                         onClick={onClick}
                                         disabled={repoDisabled}
-                                        key={'run'}>
+                                        key={'run'}
+                                        data-testid={`repository-run-button-${repoName}`}>
                                         <Icon name="play" color="blue" />
                                         <span className="text">Run</span>
                                     </Dropdown.Item>
@@ -162,20 +163,21 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
                         allowEntryPoint={true}
                         allowProfile={true}
                         trigger={(onClick: any) => (
-                            <Button
+                            <button
+                                type="button"
                                 onClick={onClick}
+                                className="ui medium compact button"
                                 style={{
                                     backgroundColor: 'rgba(255, 255, 255, 0)',
                                     paddingLeft: '25%'
                                 }}
-                                size="medium"
-                                icon={true}
                                 disabled={repoDisabled}
-                                compact={true}>
+                                data-testid={`repository-run-button-${repoName}`}
+                            >
                                 <div data-toggle="tooltip" data-placement="bottom" title="Run">
                                     <Icon name="play" color="blue" />
                                 </div>
-                            </Button>
+                            </button>
                         )}
                     />
                 )}

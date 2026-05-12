@@ -247,12 +247,13 @@ public class RunAsIT extends AbstractServerIT {
         Map<String, Object> data = Collections.singletonMap("msg", "Hello!");
         formsApi.submitForm(pe.getInstanceId(), formName, data);
 
-        // wait for the process to finish
+        // User B can submit the runAs form, but the process has no project and is still owned by user A.
+        setApiKey(apiKeyA.getKey());
 
+        // wait for the process to finish
         pe = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // check the logs
-
         resetApiKey();
 
         ab = getLog(pe.getInstanceId());

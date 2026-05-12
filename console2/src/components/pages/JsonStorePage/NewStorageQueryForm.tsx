@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Button, Form, Input, Label } from 'semantic-ui-react';
-import { ValidateResult } from 'react-hook-form/dist/types';
+import type { ValidateResult } from 'react-hook-form';
 
 import { ConcordKey } from '../../../api/common';
 import { isStorageQueryExists } from '../../../api/service/console';

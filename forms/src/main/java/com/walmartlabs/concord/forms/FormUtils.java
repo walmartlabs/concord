@@ -188,11 +188,14 @@ public final class FormUtils {
     }
 
     public static Map<String, Object> convert(FormValidatorLocale locale, Form form, Map<String, Object> m) throws ValidationException {
+        return convert(locale, form, m, new HashMap<>());
+    }
+
+    public static Map<String, Object> convert(FormValidatorLocale locale, Form form, Map<String, Object> m, Map<String, String> tmpFiles) throws ValidationException {
         if (m == null) {
             return Collections.emptyMap();
         }
 
-        Map<String, String> tmpFiles = new HashMap<>();
         Map<String, Object> m2 = new HashMap<>();
         m2.put(Constants.FORM_FILES, tmpFiles);
 

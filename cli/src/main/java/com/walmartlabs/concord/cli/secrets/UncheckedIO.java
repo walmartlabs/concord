@@ -20,6 +20,7 @@ package com.walmartlabs.concord.cli.secrets;
  * =====
  */
 
+import com.walmartlabs.concord.cli.CliPaths;
 import com.walmartlabs.concord.sdk.Constants;
 
 import java.io.IOException;
@@ -31,7 +32,7 @@ import java.nio.file.Path;
 public final class UncheckedIO {
 
     public static Path assertTmpDir(Path workDir) {
-        var dir = workDir.resolve("target").resolve(Constants.Files.CONCORD_TMP_DIR_NAME);
+        var dir = CliPaths.defaultTargetDir(workDir).resolve(Constants.Files.CONCORD_TMP_DIR_NAME);
         if (Files.notExists(dir)) {
             try {
                 Files.createDirectories(dir);

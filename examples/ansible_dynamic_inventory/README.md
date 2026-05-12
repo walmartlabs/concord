@@ -5,7 +5,7 @@ Example of running an Ansible playbook without creating a project.
 ## Running
 
 ```
-cd examples/ansible
+cd examples/ansible_dynamic_inventory
 ./run.sh localhost:8001
 ```
 
@@ -15,7 +15,7 @@ or
 
 ```
 rm -rf target && mkdir target
-cp -R playbook concord.yml target/
+cp -R playbook concord.yml my_inventory.sh target/
 ```
 
 2. Archive the payload:

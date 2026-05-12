@@ -20,12 +20,12 @@
 
 import * as React from 'react';
 import { useCallback } from 'react';
-import ReactJson from 'react-json-view';
 
 import { ConcordKey } from '../../../api/common';
 import { getLatestHostFacts as apiGet } from '../../../api/noderoster';
 import { useApi } from '../../../hooks/useApi';
 import RequestErrorActivity from '../../organisms/RequestErrorActivity';
+import { ReactJson } from '../../atoms';
 import { LoadingDispatch } from '../../../App';
 
 export interface ExternalProps {

@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Breadcrumb } from 'semantic-ui-react';
 import { NewTeamActivity } from '../../organisms';
 import { OrgActivityPage } from '../../templates';

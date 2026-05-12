@@ -24,6 +24,7 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -191,7 +192,7 @@ public class GithubEventResource implements Resource {
         List<GithubTriggerProcessor.Result> results = new ArrayList<>();
         processor.process(eventName, payload, uriInfo, results);
 
-        Supplier<UserEntry> initiatorSupplier = memo(new GithubEventInitiatorSupplier(userManager, ldapManager, payload));
+        Supplier<UserEntry> initiatorSupplier = memo(new GithubEventInitiatorSupplier(githubCfg, userManager, ldapManager, payload, ghUserEmailCache));
 
         int startedProcesses = 0;
         for (GithubTriggerProcessor.Result r : results) {
@@ -274,16 +275,26 @@ public class GithubEventResource implements Resource {
         }
     }
 
-    private class GithubEventInitiatorSupplier implements Supplier<UserEntry> {
+    @VisibleForTesting
+    static class GithubEventInitiatorSupplier implements Supplier<UserEntry> {
 
+        private final GithubConfiguration githubCfg;
         private final UserManager userManager;
         private final LdapManager ldapManager;
+        private final LoadingCache<EmailCacheKey, Optional<String>> ghUserEmailCache;
         private final Payload payload;
         private final Supplier<UserEntry> fallback;
 
-        public GithubEventInitiatorSupplier(UserManager userManager, LdapManager ldapManager, Payload payload) {
+        public GithubEventInitiatorSupplier(GithubConfiguration githubCfg,
+                                            UserManager userManager,
+                                            LdapManager ldapManager,
+                                            Payload payload,
+                                            LoadingCache<EmailCacheKey, Optional<String>> ghUserEmailCache) {
+
+            this.githubCfg = githubCfg;
             this.userManager = userManager;
             this.ldapManager = ldapManager;
+            this.ghUserEmailCache = ghUserEmailCache;
             this.payload = payload;
             this.fallback = () -> {
                 String initiator = payload.getSender();
@@ -291,8 +302,14 @@ public class GithubEventResource implements Resource {
                     throw new ConcordApplicationException("Can't determine initiator: " + payload);
                 }
 
-                return userManager.getOrCreate(initiator, null, UserType.LDAP)
+                UserEntry userEntry = userManager.getOrCreate(initiator, null, UserType.LDAP)
                         .orElseThrow(() -> new ConcordApplicationException("User not found: " + initiator));
+
+                // add to DB mapping cache (if enabled) so that next time we can
+                // find the user without LDAP lookup
+                addUserDbMapping(userEntry);
+
+                return userEntry;
             };
         }
 
@@ -443,7 +460,8 @@ public class GithubEventResource implements Resource {
     private record GitHubUser(String email) {
     }
 
-    private record EmailCacheKey(@Nonnull URI repoUrl, @Nonnull URI userUrl) {
+    @VisibleForTesting
+    record EmailCacheKey(@Nonnull URI repoUrl, @Nonnull URI userUrl) {
 
         @Override
         public boolean equals(Object o) {

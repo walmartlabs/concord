@@ -19,13 +19,13 @@
  */
 
 import * as React from 'react';
-import { Redirect } from 'react-router';
+import { Navigate } from 'react-router';
 
 import { RequestError } from '../../../api/common';
 import { RequestErrorMessage } from '../../molecules';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { Dimmer, Loader } from 'semantic-ui-react';
-import {setQueryParam} from "../../../utils";
+import { setQueryParam } from '../../../utils';
 
 interface Props {
     error: RequestError;
@@ -40,7 +40,7 @@ export default ({ error }: Props) => {
             const requested = new URL(window.location.href).hash;
             // delay the redirect to avoid layout issues
             setTimeout(() => {
-                window.location.href = setQueryParam(loginUrl, 'from', '/' + requested)
+                window.location.href = setQueryParam(loginUrl, 'from', '/' + requested);
             }, 1000);
 
             return (
@@ -50,12 +50,11 @@ export default ({ error }: Props) => {
             );
         } else {
             return (
-                <Redirect
-                    to={{
-                        pathname: '/login',
-                        state: {
-                            from: location
-                        }
+                <Navigate
+                    to="/login"
+                    replace={true}
+                    state={{
+                        from: location,
                     }}
                 />
             );

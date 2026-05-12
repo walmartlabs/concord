@@ -19,7 +19,7 @@
  */
 import { formatDistanceToNow, parseISO as parseDate } from 'date-fns';
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Divider, Icon } from 'semantic-ui-react';
 import { ProjectEntry, ProjectEntryMeta } from '../../../../api/org/project';
 

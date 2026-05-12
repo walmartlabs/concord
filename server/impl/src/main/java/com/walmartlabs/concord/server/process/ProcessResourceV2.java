@@ -30,7 +30,6 @@ import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.queue.*;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter.MetadataFilter;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
@@ -47,8 +46,6 @@ import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -64,32 +61,30 @@ import static com.walmartlabs.concord.server.Utils.unwrap;
 @Tag(name = "ProcessV2")
 public class ProcessResourceV2 implements Resource {
 
-    private static final Logger log = LoggerFactory.getLogger(ProcessResourceV2.class);
-
     private final ProcessQueueDao queueDao;
-    private final ProcessQueueManager processQueueManager;
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
     private final UserDao userDao;
     private final OrganizationManager orgManager;
     private final ProjectAccessManager projectAccessManager;
+    private final ProcessAccessManager processAccessManager;
 
     @Inject
     public ProcessResourceV2(ProcessQueueDao queueDao,
-                             ProcessQueueManager processQueueManager,
                              ProjectDao projectDao,
                              RepositoryDao repositoryDao,
                              UserDao userDao,
                              OrganizationManager orgManager,
-                             ProjectAccessManager projectAccessManager) {
+                             ProjectAccessManager projectAccessManager,
+                             ProcessAccessManager processAccessManager) {
 
         this.queueDao = queueDao;
-        this.processQueueManager = processQueueManager;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
         this.userDao = userDao;
         this.orgManager = orgManager;
         this.projectAccessManager = projectAccessManager;
+        this.processAccessManager = processAccessManager;
     }
 
     /**
@@ -103,19 +98,7 @@ public class ProcessResourceV2 implements Resource {
     public ProcessEntry get(@PathParam("id") UUID instanceId,
                             @QueryParam("include") Set<ProcessDataInclude> includes) {
 
-        PartialProcessKey processKey = PartialProcessKey.from(instanceId);
-
-        ProcessEntry e = processQueueManager.get(processKey, includes);
-        if (e == null) {
-            log.warn("get ['{}'] -> not found", instanceId);
-            throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
-        }
-
-        if (e.projectId() != null) {
-            projectAccessManager.assertAccess(e.orgId(), e.projectId(), null, ResourceAccessLevel.READER, false);
-        }
-
-        return e;
+        return processAccessManager.assertAccess(instanceId, includes);
     }
 
     /**

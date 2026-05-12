@@ -19,14 +19,12 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { Link, Redirect, Route, Switch } from 'react-router-dom';
+import { Link, Navigate, Route, Routes } from 'react-router';
 import { Divider, Header, Icon, Loader, Menu, Segment } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
-import { TeamEntry } from '../../../api/org/team';
-import { actions, selectors, State } from '../../../state/data/teams';
+import { TeamEntry, get as apiGetTeam } from '../../../api/org/team';
+import { useApi } from '../../../hooks/useApi';
 import { RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
 import { NotFoundPage } from '../../pages';
 import {
@@ -34,7 +32,7 @@ import {
     TeamDeleteActivity,
     TeamMemberList2,
     TeamLdapGroupList2,
-    TeamRenameActivity
+    TeamRenameActivity,
 } from '../../organisms';
 
 export type TabLink = 'members' | 'ldapGroups' | 'settings' | 'audit' | null;
@@ -45,130 +43,80 @@ interface ExternalProps {
     activeTab: TabLink;
 }
 
-interface StateProps {
-    data?: TeamEntry;
-    error: RequestError;
-    loading: boolean;
-}
+const TeamActivity = ({ orgName, teamName, activeTab }: ExternalProps) => {
+    const fetchData = React.useCallback(() => apiGetTeam(orgName, teamName), [orgName, teamName]);
+    const { data, error, isLoading } = useApi<TeamEntry>(fetchData, {
+        fetchOnMount: true,
+    });
 
-interface DispatchProps {
-    load: (orgName: ConcordKey, teamName: ConcordKey) => void;
-}
+    const renderSetting = (team: TeamEntry) => (
+        <>
+            <Header as="h5" disabled={true} data-testid="team-settings-id">
+                <WithCopyToClipboard value={team.id}>ID: {team.id}</WithCopyToClipboard>
+            </Header>
 
-type Props = ExternalProps & StateProps & DispatchProps;
+            <Divider horizontal={true} content="Danger Zone" />
 
-class TeamActivity extends React.PureComponent<Props> {
-    static renderSetting(t: TeamEntry) {
-        return (
-            <>
-                <Header as="h5" disabled={true} data-testid="team-settings-id">
-                    <WithCopyToClipboard value={t.id}>ID: {t.id}</WithCopyToClipboard>
-                </Header>
+            <Segment color="red">
+                <Header as="h4">Team name</Header>
+                <TeamRenameActivity orgName={team.orgName} teamId={team.id} teamName={team.name} />
 
-                <Divider horizontal={true} content="Danger Zone" />
+                <Header as="h4">Delete team</Header>
+                <TeamDeleteActivity orgName={team.orgName} teamName={team.name} />
+            </Segment>
+        </>
+    );
 
-                <Segment color="red">
-                    <Header as="h4">Team name</Header>
-                    <TeamRenameActivity orgName={t.orgName} teamId={t.id} teamName={t.name} />
-
-                    <Header as="h4">Delete team</Header>
-                    <TeamDeleteActivity orgName={t.orgName} teamName={t.name} />
-                </Segment>
-            </>
-        );
+    if (error) {
+        return <RequestErrorMessage error={error as RequestError} />;
     }
 
-    componentDidMount() {
-        this.init();
+    if (isLoading || !data) {
+        return <Loader active={true} />;
     }
 
-    componentDidUpdate(prevProps: Props) {
-        const { orgName: newOrgName, teamName: newTeamName } = this.props;
-        const { orgName: oldOrgName, teamName: oldTeamName } = prevProps;
+    const baseUrl = `/org/${orgName}/team/${teamName}`;
 
-        if (oldOrgName !== newOrgName || oldTeamName !== newTeamName) {
-            this.init();
-        }
-    }
+    return (
+        <>
+            <Menu tabular={true}>
+                <Menu.Item active={activeTab === 'members'} data-testid="team-tab-members">
+                    <Icon name="users" />
+                    <Link to={`/org/${orgName}/team/${teamName}/members`}>Members</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'ldapGroups'} data-testid="team-tab-ldapGroups">
+                    <Icon name="users" />
+                    <Link to={`/org/${orgName}/team/${teamName}/ldapGroups`}>LDAP Groups</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'settings'} data-testid="team-tab-settings">
+                    <Icon name="setting" />
+                    <Link to={`/org/${orgName}/team/${teamName}/settings`}>Settings</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'audit'} data-testid="team-tab-audit">
+                    <Icon name="history" />
+                    <Link to={`/org/${orgName}/team/${teamName}/audit`}>Audit Log</Link>
+                </Menu.Item>
+            </Menu>
 
-    init() {
-        const { orgName, teamName, load } = this.props;
-        load(orgName, teamName);
-    }
+            <Routes>
+                <Route index={true} element={<Navigate to="members" replace={true} />} />
+                <Route
+                    path="members"
+                    element={<TeamMemberList2 orgName={orgName} teamName={teamName} />}
+                />
+                <Route
+                    path="ldapGroups"
+                    element={<TeamLdapGroupList2 orgName={orgName} teamName={teamName} />}
+                />
+                <Route path="settings" element={renderSetting(data)} />
+                <Route
+                    path="audit"
+                    element={<AuditLogActivity filter={{ details: { orgName, teamName } }} />}
+                />
+                <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+        </>
+    );
+};
 
-    render() {
-        const { loading, error, data } = this.props;
-
-        if (error) {
-            return <RequestErrorMessage error={error} />;
-        }
-
-        if (loading || !data) {
-            return <Loader active={true} />;
-        }
-
-        const { orgName, teamName, activeTab } = this.props;
-        const baseUrl = `/org/${orgName}/team/${teamName}`;
-
-        return (
-            <>
-                <Menu tabular={true}>
-                    <Menu.Item active={activeTab === 'members'} data-testid="team-tab-members">
-                        <Icon name="users" />
-                        <Link to={`/org/${orgName}/team/${teamName}/members`}>Members</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'ldapGroups'} data-testid="team-tab-ldapGroups">
-                        <Icon name="users" />
-                        <Link to={`/org/${orgName}/team/${teamName}/ldapGroups`}>LDAP Groups</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'settings'} data-testid="team-tab-settings">
-                        <Icon name="setting" />
-                        <Link to={`/org/${orgName}/team/${teamName}/settings`}>Settings</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'audit'} data-testid="team-tab-audit">
-                        <Icon name="history" />
-                        <Link to={`/org/${orgName}/team/${teamName}/audit`}>Audit Log</Link>
-                    </Menu.Item>
-                </Menu>
-
-                <Switch>
-                    <Route path={baseUrl} exact={true}>
-                        <Redirect to={`${baseUrl}/members`} />
-                    </Route>
-
-                    <Route path={`${baseUrl}/members`} exact={true}>
-                        <TeamMemberList2 orgName={orgName} teamName={teamName} />
-                    </Route>
-                    <Route path={`${baseUrl}/ldapGroups`} exact={true}>
-                        <TeamLdapGroupList2 orgName={orgName} teamName={teamName} />
-                    </Route>
-                    <Route path={`${baseUrl}/settings`} exact={true}>
-                        {TeamActivity.renderSetting(data)}
-                    </Route>
-                    <Route path={`${baseUrl}/audit`} exact={true}>
-                        <AuditLogActivity
-                            filter={{ details: { orgName: orgName, teamName: teamName } }}
-                        />
-                    </Route>
-
-                    <Route component={NotFoundPage} />
-                </Switch>
-            </>
-        );
-    }
-}
-
-const mapStateToProps = (
-    { teams }: { teams: State },
-    { orgName, teamName }: ExternalProps
-): StateProps => ({
-    data: selectors.teamByName(teams, orgName, teamName),
-    loading: teams.get.running,
-    error: teams.get.error
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    load: (orgName, teamName) => dispatch(actions.getTeam(orgName, teamName))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(TeamActivity);
+export default TeamActivity;

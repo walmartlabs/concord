@@ -20,6 +20,7 @@ package com.walmartlabs.concord.dependencymanager;
  * =====
  */
 
+import com.google.common.annotations.VisibleForTesting;
 import com.walmartlabs.concord.common.ExceptionUtils;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -95,7 +96,7 @@ public class DependencyManager {
         if (!Files.exists(cacheDir)) {
             Files.createDirectories(cacheDir);
         }
-        this.localCacheDir = Paths.get(System.getProperty("user.home")).resolve(".m2/repository");
+        this.localCacheDir = resolveLocalCacheDir();
 
         log.info("init -> using repositories: {}", cfg.repositories());
         this.repositories = toRemote(cfg.repositories());
@@ -104,6 +105,19 @@ public class DependencyManager {
         this.defaultExclusions = cfg.exclusions();
         this.explicitlyResolveV1Client = cfg.explicitlyResolveV1Client();
         this.offlineMode = cfg.offlineMode();
+    }
+
+    @VisibleForTesting
+    static Path resolveLocalCacheDir() {
+        String localRepo = System.getProperty("maven.repo.local");
+        if (localRepo != null && !localRepo.isBlank()) {
+            return Paths.get(localRepo).toAbsolutePath().normalize();
+        }
+
+        return Paths.get(System.getProperty("user.home"))
+                .resolve(".m2/repository")
+                .toAbsolutePath()
+                .normalize();
     }
 
     public Collection<DependencyEntity> resolve(Collection<URI> items) throws IOException {

@@ -20,12 +20,16 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
+import com.walmartlabs.concord.policyengine.PolicyEngine;
+import com.walmartlabs.concord.policyengine.EffectiveYamlPolicy;
 import com.walmartlabs.concord.runtime.model.Options;
 import com.walmartlabs.concord.runtime.model.ProcessDefinition;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,14 +47,25 @@ public class EffectiveProcessDefinitionProcessor implements PayloadProcessor {
     private static final String EFFECTIVE_YAML_PATH = ".concord/effective.concord.yml";
 
     private final ProcessStateManager stateManager;
+    private final ProcessLogManager logManager;
 
     @Inject
-    public EffectiveProcessDefinitionProcessor(ProcessStateManager stateManager) {
+    public EffectiveProcessDefinitionProcessor(ProcessStateManager stateManager, ProcessLogManager logManager) {
         this.stateManager = stateManager;
+        this.logManager = logManager;
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
+        EffectiveYamlPolicy policy = getPolicy(payload);
+
+        boolean renderEffectiveYaml = policy == null || policy.renderEffectiveYaml();
+        boolean logWarning = policy == null || policy.logWarning();
+
+        if (!renderEffectiveYaml) {
+            return chain.process(payload);
+        }
+
         ProcessDefinition pd = payload.getHeader(Payload.PROJECT_DEFINITION);
         if (pd == null) {
             return chain.process(payload);
@@ -68,7 +83,13 @@ public class EffectiveProcessDefinitionProcessor implements PayloadProcessor {
             pd.serialize(opts, out);
 
             byte[] bytes = out.toByteArray();
-            if (bytes.length == 0) {
+            boolean isTooLarge = policy == null ? false : policy.isTooLarge(bytes.length);
+
+            if (bytes.length == 0 || isTooLarge) {
+                if (isTooLarge && logWarning) {
+                    logManager.warn(payload.getProcessKey(), "Effective concord.yml is too large to persist ({} bytes), skipping...", bytes.length);
+                }
+
                 return chain.process(payload);
             }
 
@@ -81,6 +102,11 @@ public class EffectiveProcessDefinitionProcessor implements PayloadProcessor {
             throw new ProcessException(payload.getProcessKey(), "Error while processing effective concord.yml: " + e.getMessage(), e);
         }
         return chain.process(payload);
+    }
+
+    private static EffectiveYamlPolicy getPolicy(Payload payload) {
+        PolicyEngine policy = payload.getHeader(Payload.POLICY);
+        return policy == null ? null : policy.getEffectiveYamlPolicy();
     }
 
     private Map<String, Object> sanitizeConfiguration(Map<String, Object> cfg) {

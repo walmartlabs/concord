@@ -25,33 +25,30 @@ import { ConcordId } from '../../../api/common';
 import { isFinal, ProcessStatus } from '../../../api/process';
 
 import './styles.css';
-import {listLogSegments as apiListLogSegments, LogSegmentEntry, SegmentStatus} from '../../../api/process/log';
+import {
+    listLogSegments as apiListLogSegments,
+    LogSegmentEntry,
+    SegmentStatus,
+} from '../../../api/process/log';
 import { usePolling } from '../../../api/usePolling';
 import { RequestErrorActivity } from '../../organisms';
 import LogSegmentActivity from './LogSegmentActivity';
 import { FormWizardAction, ProcessToolbar } from '../../molecules';
-import {
-    Button,
-    Divider,
-    Dropdown,
-    DropdownProps,
-    Popup,
-    Radio,
-} from 'semantic-ui-react';
+import { Button, Divider, Dropdown, DropdownProps, Popup, Radio } from 'semantic-ui-react';
 import { LogProcessorOptions } from '../../../state/data/processes/logs/processors';
-import { Route } from 'react-router';
+import { useNavigate } from 'react-router';
 import { FormListEntry, list as apiListForms } from '../../../api/process/form';
 
 const DEFAULT_SEGMENT_OPTS: LogProcessorOptions = {
     useLocalTime: true,
     showDate: false,
-    separateTasks: true
+    separateTasks: true,
 };
 
 const DEFAULT_OPTS: LogOptions = {
     expandAllSegments: false,
     showSystemSegment: true,
-    segmentOptions: DEFAULT_SEGMENT_OPTS
+    segmentOptions: DEFAULT_SEGMENT_OPTS,
 };
 
 const LOG_SEGMENT_STATUS_OPTS = [
@@ -64,27 +61,27 @@ const LOG_SEGMENT_STATUS_OPTS = [
         key: SegmentStatus.OK,
         text: SegmentStatus.OK,
         value: SegmentStatus.OK,
-        icon: {name: 'circle', color: 'green'},
+        icon: { name: 'circle', color: 'green' },
     },
     {
         key: SegmentStatus.FAILED,
         text: SegmentStatus.FAILED,
         value: SegmentStatus.FAILED,
-        icon: {name: 'close', color: 'red'},
+        icon: { name: 'close', color: 'red' },
     },
     {
         key: SegmentStatus.RUNNING,
         text: SegmentStatus.RUNNING,
         value: SegmentStatus.RUNNING,
-        icon: {name: 'spinner', color: 'teal'},
+        icon: { name: 'spinner', color: 'teal' },
     },
     {
         key: SegmentStatus.SUSPENDED,
         text: SegmentStatus.SUSPENDED,
         value: SegmentStatus.SUSPENDED,
-        icon: {name: 'hourglass half', color: 'blue'},
+        icon: { name: 'hourglass half', color: 'blue' },
     },
-]
+];
 
 interface LogOptions {
     expandAllSegments: boolean;
@@ -105,17 +102,23 @@ const ProcessLogActivityV2 = ({
     processStatus,
     loadingHandler,
     forceRefresh,
-    dataFetchInterval
+    dataFetchInterval,
 }: ExternalProps) => {
+    const navigate = useNavigate();
     const [segments, setSegments] = useState<LogSegmentEntry[]>([]);
     const [logOpts, setLogOptions] = useState<LogOptions>(getStoredOpts());
     const [forms, setForms] = useState<FormListEntry[]>([]);
 
-    const [logSegmentStatusFilter, setLogSegmentStatusFilter] = useState<string>(LOG_SEGMENT_STATUS_OPTS[0].value);
+    const [logSegmentStatusFilter, setLogSegmentStatusFilter] = useState<string>(
+        LOG_SEGMENT_STATUS_OPTS[0].value
+    );
 
-    const handleLogSegmentStatusFilterChange = useCallback((e: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
-        setLogSegmentStatusFilter(data.value as string);
-    }, []);
+    const handleLogSegmentStatusFilterChange = useCallback(
+        (e: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
+            setLogSegmentStatusFilter(data.value as string);
+        },
+        []
+    );
 
     const segmentOptsHandler = useCallback((o: LogProcessorOptions) => {
         setLogOptions((prev) => {
@@ -165,31 +168,25 @@ const ProcessLogActivityV2 = ({
         <>
             <ProcessToolbar>
                 <Dropdown
-                    icon='filter'
+                    icon="filter"
                     labeled={true}
                     button={true}
                     basic={true}
-                    className='icon'
-                    style={{marginRight: 20, width: 160 }}
+                    className="icon"
+                    style={{ marginRight: 20, width: 160 }}
                     options={LOG_SEGMENT_STATUS_OPTS}
                     onChange={handleLogSegmentStatusFilterChange}
                     value={logSegmentStatusFilter}
                 />
 
-                <div style={{flexGrow: 1}}/>
+                <div style={{ flexGrow: 1 }} />
 
                 {forms.length > 0 && processStatus === ProcessStatus.SUSPENDED && (
                     <div style={{ marginRight: 20 }}>
-                        <Route
-                            render={({ history }) => (
-                                <FormWizardAction
-                                    onOpenWizard={() =>
-                                        history.push(
-                                            `/process/${instanceId}/wizard?fullScreen=true`
-                                        )
-                                    }
-                                />
-                            )}
+                        <FormWizardAction
+                            onOpenWizard={() =>
+                                navigate(`/process/${instanceId}/wizard?fullScreen=true`)
+                            }
                         />
                     </div>
                 )}
@@ -198,7 +195,8 @@ const ProcessLogActivityV2 = ({
                     size="huge"
                     position="bottom left"
                     trigger={<Button basic={true} icon="setting" style={{ marginRight: 20 }} />}
-                    on="click">
+                    on="click"
+                >
                     <div>
                         <Radio
                             label="Expand all segments"
@@ -207,7 +205,7 @@ const ProcessLogActivityV2 = ({
                             onChange={(ev, data) =>
                                 logOptsHandler({
                                     ...logOpts,
-                                    expandAllSegments: data.checked as boolean
+                                    expandAllSegments: data.checked as boolean,
                                 })
                             }
                         />
@@ -221,7 +219,7 @@ const ProcessLogActivityV2 = ({
                             onChange={(ev, data) =>
                                 logOptsHandler({
                                     ...logOpts,
-                                    showSystemSegment: data.checked as boolean
+                                    showSystemSegment: data.checked as boolean,
                                 })
                             }
                         />
@@ -237,7 +235,7 @@ const ProcessLogActivityV2 = ({
                             onChange={(ev, data) =>
                                 segmentOptsHandler({
                                     ...logOpts.segmentOptions,
-                                    useLocalTime: data.checked as boolean
+                                    useLocalTime: data.checked as boolean,
                                 })
                             }
                         />
@@ -251,7 +249,7 @@ const ProcessLogActivityV2 = ({
                             onChange={(ev, data) =>
                                 segmentOptsHandler({
                                     ...logOpts.segmentOptions,
-                                    showDate: data.checked as boolean
+                                    showDate: data.checked as boolean,
                                 })
                             }
                         />
@@ -261,7 +259,8 @@ const ProcessLogActivityV2 = ({
                 <Button.Group>
                     <Button
                         disabled={!instanceId}
-                        onClick={() => window.open(`/api/v1/process/${instanceId}/log`, '_blank')}>
+                        onClick={() => window.open(`/api/v1/process/${instanceId}/log`, '_blank')}
+                    >
                         Raw
                     </Button>
                 </Button.Group>
@@ -273,7 +272,10 @@ const ProcessLogActivityV2 = ({
                         logOpts.showSystemSegment || (!logOpts.showSystemSegment && value.id !== 0)
                 )
                 .filter(
-                    (value) => logSegmentStatusFilter === 'ALL' || value.status === undefined || logSegmentStatusFilter === value.status
+                    (value) =>
+                        logSegmentStatusFilter === 'ALL' ||
+                        value.status === undefined ||
+                        logSegmentStatusFilter === value.status
                 )
                 .map((s) => {
                     return (

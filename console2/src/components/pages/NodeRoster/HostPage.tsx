@@ -19,10 +19,11 @@
  */
 
 import * as React from 'react';
-import { Redirect, Route, RouteComponentProps, Switch } from 'react-router';
-import { Link } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router';
+import { Link } from 'react-router';
 import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
+import { RouteComponentProps, withRouter } from '@/router';
 import { ConcordId } from '../../../api/common';
 import { MainToolbar } from '../../molecules';
 import { useRef } from 'react';
@@ -72,7 +73,7 @@ const HostPage = (props: RouteComponentProps<RouteProps>) => {
     const { data, error } = useApi<HostEntry>(fetchData, {
         fetchOnMount: true,
         forceRequest: refresh,
-        dispatch: dispatch
+        dispatch: dispatch,
     });
 
     const refreshHandler = useCallback(() => {
@@ -110,23 +111,22 @@ const HostPage = (props: RouteComponentProps<RouteProps>) => {
             )}
 
             {!error && (
-                <Switch>
-                    <Route path={baseUrl} exact={true}>
-                        <Redirect to={`${baseUrl}/facts`} />
-                    </Route>
-
-                    <Route path={`${baseUrl}/facts`} exact={true}>
-                        <HostFacts hostId={id} forceRefresh={refresh} />
-                    </Route>
-                    <Route path={`${baseUrl}/artifacts`} exact={true}>
-                        <HostArtifacts hostId={id} forceRefresh={refresh} />
-                    </Route>
-                    <Route path={`${baseUrl}/processes`} exact={true}>
-                        <HostProcesses hostId={id} forceRefresh={refresh} />
-                    </Route>
-
-                    <Route component={NotFoundPage} />
-                </Switch>
+                <Routes>
+                    <Route index={true} element={<Navigate to="facts" replace={true} />} />
+                    <Route
+                        path="facts"
+                        element={<HostFacts hostId={id} forceRefresh={refresh} />}
+                    />
+                    <Route
+                        path="artifacts"
+                        element={<HostArtifacts hostId={id} forceRefresh={refresh} />}
+                    />
+                    <Route
+                        path="processes"
+                        element={<HostProcesses hostId={id} forceRefresh={refresh} />}
+                    />
+                    <Route path="*" element={<NotFoundPage />} />
+                </Routes>
             )}
         </div>
     );
@@ -146,4 +146,4 @@ const renderBreadcrumbs = (hostName?: string) => {
     );
 };
 
-export default HostPage;
+export default withRouter(HostPage);

@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins.basic:noderoster-tasks:1.76.1"
+  - "mvn://com.walmartlabs.concord.plugins.basic:noderoster-tasks:2.40.0"
 
 flows:
   default:
