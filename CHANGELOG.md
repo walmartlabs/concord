@@ -17,6 +17,8 @@
 ([#1317](https://github.com/walmartlabs/concord/pull/1317));
 - agent-operator: avoid full pod patch for labels
 ([#1318](https://github.com/walmartlabs/concord/pull/1318));
+- webapp-plugin: fix caching policy
+([#1320](https://github.com/walmartlabs/concord/pull/1320));
 - runtime-v2, cli: improve parallel execution error diagnostics
 ([#1323](https://github.com/walmartlabs/concord/pull/1323));
 - project: update dependencies
