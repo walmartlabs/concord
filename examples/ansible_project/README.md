@@ -24,12 +24,12 @@ The `hello.yml` playbook consists of a simple debug task:
 ```
 
 Commit and push the repository to a remote server (e.g. GitHub). If you are using SSH, a
-new SSH key pair will created on the step 2 - you will need access to the repository
+new SSH key pair will be created in step 1 - you will need access to the repository
 settings to add a new public key.
 
 ## Concord project
 
-Before we create our own user, all requests are perfomed using the default admin API key.
+Before we create our own user, all requests are performed using the default admin API key.
 This example assumes that the `ansible` template is already uploaded to the server.
 
 ### 1. Create a new repository key
@@ -50,7 +50,7 @@ curl -v \
 http://localhost:8001/api/v1/org/Default/project
 ```
 
-The `secret` parameters is the name of the key created on the step 2.
+The `secret` parameter is the name of the key created in step 1.
 
 ```json
 {
@@ -59,7 +59,7 @@ The `secret` parameters is the name of the key created on the step 2.
 ```
 
 
-### 4. Add a new user (optional)
+### 3. Add a new user (optional)
 
 ```
 curl -v \
@@ -76,7 +76,7 @@ http://localhost:8001/api/v1/user
 }
 ```
 
-### 5. Create an API key (optional)
+### 4. Create an API key (optional)
 
 Use the `username` value of the user created in the previous step.
 
@@ -97,7 +97,7 @@ http://localhost:8001/api/v1/apikey
 
 The `key` value can be used for further access to the API, e.g. to start a process.
 
-### 6. Start a process
+### 5. Start a process
 
 Create the `inventory.ini` file:
 
@@ -140,18 +140,18 @@ http://localhost:8001/api/v1/process
 }
 ```
 
-### 7. Check the logs (optional)
+### 6. Check the logs (optional)
 
 Use the `instanceId` value returned by the server in the previous step.
 Open the UI to see the log:
 
 ```
-http://localhost:8001/#/process/33c8f91e-db14-11e6-8d94-a3efec7ccd7b.log
+http://localhost:8001/#/process/33c8f91e-db14-11e6-8d94-a3efec7ccd7b/log
 ```
 
-### 8. Get Ansible's statistics (optional)
+### 7. Get Ansible's statistics (optional)
 
-You can download Ansible play's statistics with this request:
+You can download Ansible play statistics with this request:
 
 ```
 curl -v \
@@ -163,12 +163,12 @@ Example of response:
 
 ```json
 {
-  "failures": [], 
-  "skipped": [], 
-  "changed": [], 
+  "failures": [],
+  "skipped": [],
+  "changed": [],
   "ok": [
     "127.0.0.1"
-  ], 
+  ],
   "unreachable": []
 }
 ```

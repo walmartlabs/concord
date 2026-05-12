@@ -10,7 +10,7 @@ send a JSON request with the event's body:
 curl -v -u username -H 'Content-Type: application/json' \
 -d '{"myVar": "abc", "otherStuff": [1, 2, 3]}' \
 http://localhost:8001/api/v1/events/mySystem
-``` 
+```
 
 The process log should contain a record similar to this:
 ```
