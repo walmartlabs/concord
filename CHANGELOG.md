@@ -15,6 +15,8 @@
 ([#1314](https://github.com/walmartlabs/concord/pull/1314));
 - concord-console2: update postcss version
 ([#1317](https://github.com/walmartlabs/concord/pull/1317));
+- agent-operator: avoid full pod patch for labels
+([#1318](https://github.com/walmartlabs/concord/pull/1318));
 - runtime-v2, cli: improve parallel execution error diagnostics
 ([#1323](https://github.com/walmartlabs/concord/pull/1323));
 - project: update dependencies
