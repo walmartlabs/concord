@@ -79,16 +79,19 @@ const LogSegment = ({
 }: Props) => {
     const scrollAnchorRef = useRef<HTMLDivElement>(null);
     const location = useLocation();
-    const [isOpen, setOpen] = useState<boolean>(forceOpen);
+    const isLinkedSegment = getLinkedSegmentId(location.hash) === segmentId;
+    const [isOpen, setOpen] = useState<boolean>(forceOpen || isLinkedSegment);
     const [isLoadAll, setLoadAll] = useState<boolean>(false);
     const [isAutoScroll, setAutoScroll] = useState<boolean>(false);
+    const prevForceOpen = useRef<boolean>(forceOpen);
+    const linkedSegmentDataScrolled = useRef<boolean>(false);
 
     const baseUrl = `/process/${instanceId}/log`;
 
     const myRef = useRef<null | HTMLDivElement>(null);
 
     useEffect(() => {
-        if (myRef.current && location.hash.includes(`#segmentId=${segmentId}`)) {
+        if (myRef.current && isLinkedSegment) {
             myRef.current.scrollIntoView({
                 behavior: 'smooth',
                 block: 'end',
@@ -96,7 +99,25 @@ const LogSegment = ({
             });
             setOpen(true);
         }
-    }, [myRef, segmentId, location]);
+    }, [myRef, isLinkedSegment]);
+
+    useEffect(() => {
+        if (!isLinkedSegment) {
+            linkedSegmentDataScrolled.current = false;
+            return;
+        }
+
+        if (!myRef.current || !isOpen || data.length === 0 || linkedSegmentDataScrolled.current) {
+            return;
+        }
+
+        linkedSegmentDataScrolled.current = true;
+        myRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+            inline: 'nearest',
+        });
+    }, [data.length, isLinkedSegment, isOpen]);
 
     const loadAllClickHandler = useCallback((ev: React.MouseEvent<any>) => {
         ev.preventDefault();
@@ -121,8 +142,16 @@ const LogSegment = ({
     }, []);
 
     useEffect(() => {
-        setOpen(forceOpen);
-    }, [forceOpen]);
+        if (prevForceOpen.current === forceOpen) {
+            return;
+        }
+
+        prevForceOpen.current = forceOpen;
+
+        if (forceOpen || !isLinkedSegment) {
+            setOpen(forceOpen);
+        }
+    }, [forceOpen, isLinkedSegment]);
 
     useEffect(() => {
         if (isOpen) {
@@ -271,6 +300,19 @@ const LogSegment = ({
             )}
         </div>
     );
+};
+
+const getLinkedSegmentId = (hash: string): number | undefined => {
+    const segmentHash = hash.substring(hash.lastIndexOf('#') + 1);
+    const segmentId = new URLSearchParams(segmentHash).get('segmentId');
+
+    if (!segmentId) {
+        return undefined;
+    }
+
+    const parsed = Number(segmentId);
+
+    return Number.isFinite(parsed) ? parsed : undefined;
 };
 
 interface StatusIconProps {
