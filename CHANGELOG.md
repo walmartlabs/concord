@@ -26,7 +26,9 @@
 - examples: tidy up
 ([#1325](https://github.com/walmartlabs/concord/pull/1325));
 - console2: fix log segment expansion by log#segmentId URL
-([#1327](https://github.com/walmartlabs/concord/pull/1327)).
+([#1327](https://github.com/walmartlabs/concord/pull/1327));
+- project: graalvm version bump
+([#1328](https://github.com/walmartlabs/concord/pull/1328)).
 
 
 
