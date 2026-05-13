@@ -89,6 +89,14 @@
             <plugin>
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>sisu-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>test-index</id>
+                        <goals>
+                            <goal>test-index</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
