@@ -24,7 +24,9 @@
 - project: update dependencies
 ([#1324](https://github.com/walmartlabs/concord/pull/1324));
 - examples: tidy up
-([#1325](https://github.com/walmartlabs/concord/pull/1325)).
+([#1325](https://github.com/walmartlabs/concord/pull/1325));
+- console2: fix log segment expansion by log#segmentId URL
+([#1327](https://github.com/walmartlabs/concord/pull/1327)).
 
 
 
