@@ -95,22 +95,22 @@ public class LogSegmentsTest {
             // ignore
         }
 
-        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
+        assertSegmentMultilineLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 1);
 
-        assertSegmentLog(runtime.lastLog(), 2, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
+        assertSegmentMultilineLog(runtime.lastLog(), 2, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 2);
 
-        assertSegmentLog(runtime.lastLog(), 3, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
+        assertSegmentMultilineLog(runtime.lastLog(), 3, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 3);
 
-        assertSegmentLog(runtime.lastLog(), 4, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
+        assertSegmentMultilineLog(runtime.lastLog(), 4, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 4);
 
-        assertSegmentLog(runtime.lastLog(), 5, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
+        assertSegmentMultilineLog(runtime.lastLog(), 5, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 5);
 
-        assertSegmentLog(runtime.lastLog(), 6, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
+        assertSegmentMultilineLog(runtime.lastLog(), 6, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
         assertSegmentStatusError(runtime.lastLog(), 6);
     }
 
