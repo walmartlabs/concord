@@ -5,7 +5,7 @@ Example of running an Ansible playbook with retry (--limit <playbook>.retry).
 ## Running
 
 ```
-cd examples/ansible
+cd examples/ansible_retry
 ./run.sh localhost:8001
 # or
 ./run.sh localhost:8001 retryAfterSuspend
@@ -31,5 +31,5 @@ cd target && zip -r payload.zip ./*
 3. Send the payload to the server:
 
 ```
-curl -v -H "Content-Type: application/octet-stream" --data-binary @payload.zip http://localhost:8001/api/v1/process
+curl -v -u username -F archive=@payload.zip http://localhost:8001/api/v1/process
 ```

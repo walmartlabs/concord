@@ -4,7 +4,7 @@ Example of running an Ansible playbook on a remote host without creating a proje
 
 ## Running
 
-1. Upload the remote ssh key to the server:
+1. Upload the remote SSH key to the server:
 ```
 curl -H "Authorization: API_TOKEN" \
 -F private=@/path/to/id_rsa \
@@ -13,18 +13,18 @@ curl -H "Authorization: API_TOKEN" \
 'http://localhost:8001/api/v1/org/Default/secret/keypair?name=mySecret'
 ```
 
-The `name` should be unique. Remember `storePassword`
+The `name` should be unique. Remember the `storePassword` value.
 
 2. Start the process:
 
 ```
-cd examples/ansible
+cd examples/ansible_remote
 ./run.sh localhost:8001
 ```
 
 3. Open the Console and find the process in the queue.
 
-4. Open the process status page and click `Wizard` button.
+4. Open the process status page and click the `Wizard` button.
 
 5. Enter the name and the password of the secret created in the step 1. Click `Submit`.
 

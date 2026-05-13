@@ -1,11 +1,11 @@
 # Docker
 
-Example of running an Ansible playbook from docker's container.
+Example of running an Ansible playbook from a Docker container.
 
 ## Running
 
 ```
-cd docs/examples/ansible
+cd examples/docker
 ./run.sh localhost:8001
 ```
 
