@@ -87,8 +87,16 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.eclipse.sisu</groupId>
-                <artifactId>sisu-maven-plugin</artifactId>
+                <groupId>dev.ybrig.concord</groupId>
+                <artifactId>concord-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>test-sisu-index</id>
+                        <goals>
+                            <goal>test-sisu-index</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
