@@ -12,4 +12,92 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="1104100" author="ybrigo@gmail.com">
+        <addColumn tableName="PROCESS_LOG_SEGMENTS">
+            <column name="PARENT_SEGMENT_ID" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="1104200" author="ybrigo@gmail.com">
+        <addColumn tableName="PROCESS_LOG_SEGMENTS">
+            <column name="META" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="1104300" author="ybrigo@gmail.com">
+        <createIndex tableName="PROCESS_LOG_SEGMENTS" indexName="IDX_PROC_LOG_SEG_PAR_SEG_ID">
+            <column name="PARENT_SEGMENT_ID"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="1104301" author="ybrigo@gmail.com">
+        <createProcedure dbms="postgresql">
+            CREATE OR REPLACE FUNCTION named_process_log_segments(p_instance_id uuid, p_created_at timestamp with time zone, p_parent_segment_id bigint)
+                RETURNS TABLE
+                        (
+                            instance_id            process_log_segments.instance_id%TYPE,
+                            instance_created_at    process_log_segments.instance_created_at%TYPE,
+                            segment_id             process_log_segments.segment_id%TYPE,
+                            segment_name           process_log_segments.segment_name%TYPE,
+                            correlation_id         process_log_segments.correlation_id%TYPE,
+                            segment_ts             process_log_segments.segment_ts%TYPE,
+                            segment_status         process_log_segments.segment_status%TYPE,
+                            status_updated_at      process_log_segments.status_updated_at%TYPE,
+                            segment_errors         process_log_segments.segment_errors%TYPE,
+                            segment_warn           process_log_segments.segment_warn%TYPE,
+                            meta                   process_log_segments.meta%TYPE
+                        )
+            AS
+            $$
+            BEGIN
+                RETURN QUERY
+                WITH RECURSIVE child_segments AS (
+                    SELECT pls.instance_id, pls.instance_created_at,
+                           pls.segment_id, pls.parent_segment_id, pls.segment_name, pls.correlation_id,
+                           pls.segment_ts, pls.segment_status, pls.status_updated_at,
+                           pls.segment_errors, pls.segment_warn, pls.meta,
+                           pls.meta->>'generated' as generated,
+                           CASE
+                               WHEN pls.meta->>'generated' is null THEN ARRAY[pls.segment_id]::bigint[]
+                               else ARRAY[]::bigint[]
+                           END as path
+                    FROM process_log_segments pls
+                    WHERE
+                        ((p_parent_segment_id is null and parent_segment_id is null) or (parent_segment_id = p_parent_segment_id) )
+                        and pls.instance_id = p_instance_id
+                        and pls.instance_created_at = p_created_at
+
+                    UNION ALL
+
+                    SELECT t.instance_id, t.instance_created_at, t.segment_id, t.parent_segment_id, t.segment_name,
+                           t.correlation_id,
+                           t.segment_ts, t.segment_status, t.status_updated_at,
+                           t.segment_errors, t.segment_warn, t.meta,
+                           t.meta->>'generated' as generated,
+                           CASE
+                               WHEN t.meta->>'generated' is null THEN cs.path || t.segment_id
+                               else cs.path
+                           END as path
+                    FROM process_log_segments t
+                             INNER JOIN child_segments cs ON t.parent_segment_id = cs.segment_id
+                    where
+                        t.instance_id = p_instance_id
+                        and t.instance_created_at = p_created_at
+                )
+                SELECT cs.instance_id, cs.instance_created_at,
+                       cs.segment_id, cs.segment_name, cs.correlation_id,
+                       cs.segment_ts, cs.segment_status, cs.status_updated_at,
+                       cs.segment_errors, cs.segment_warn, cs.meta
+                FROM child_segments cs
+                WHERE
+                    generated is null
+                    and array_length(path, 1) = 1;
+            END;
+            $$ LANGUAGE plpgsql;
+        </createProcedure>
+    </changeSet>
 </databaseChangeLog>

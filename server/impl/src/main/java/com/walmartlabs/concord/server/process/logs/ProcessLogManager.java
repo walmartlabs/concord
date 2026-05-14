@@ -33,6 +33,7 @@ import org.jooq.DSLContext;
 import javax.inject.Inject;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.common.LogUtils.LogLevel;
@@ -78,19 +79,19 @@ public class ProcessLogManager {
         return log(processKey, SYSTEM_SEGMENT_ID, msg);
     }
 
-    public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset) {
-        return logsDao.listSegments(processKey, limit, offset);
+    public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset, Long parentId, boolean rootSegments, boolean collectErrors, boolean onlyNamedSegments) {
+        return logsDao.listSegments(processKey, limit, offset, parentId, rootSegments, collectErrors, onlyNamedSegments);
     }
 
     public void createSystemSegment(DSLContext tx, ProcessKey processKey) {
-        logsDao.createSegment(tx, SYSTEM_SEGMENT_ID, processKey, null, SYSTEM_SEGMENT_NAME, null);
+        logsDao.createSegment(tx, SYSTEM_SEGMENT_ID, processKey, null, SYSTEM_SEGMENT_NAME, null, null, null);
     }
 
-    public long createSegment(ProcessKey processKey, UUID correlationId, String name, OffsetDateTime createdAt) {
+    public long createSegment(ProcessKey processKey, UUID correlationId, String name, OffsetDateTime createdAt, Long parentId, Map<String, Object> meta) {
         if (SYSTEM_SEGMENT_NAME.equals(name)) {
             return SYSTEM_SEGMENT_ID;
         }
-        return logsDao.createSegment(processKey, correlationId, name, createdAt, LogSegment.Status.RUNNING.name());
+        return logsDao.createSegment(processKey, correlationId, name, createdAt, LogSegment.Status.RUNNING.name(), parentId, meta);
     }
 
     public void updateSegment(ProcessKey processKey, long segmentId, LogSegment.Status status, Integer warnings, Integer errors) {

@@ -50,11 +50,11 @@ public class SegmentedLogger implements RunnerLogger {
     }
 
     @Override
-    public Long createSegment(String segmentName, UUID correlationId) {
+    public Long createSegment(String segmentName, UUID correlationId, Long parentSegmentId, Map<String, Object> meta) {
         if (SYSTEM_SEGMENT_NAME.equals(segmentName)) {
             return SYSTEM_SEGMENT_ID;
         }
-        return loggingClient.createSegment(correlationId, segmentName);
+        return loggingClient.createSegment(correlationId, segmentName, parentSegmentId, meta);
     }
 
     @Override

@@ -468,7 +468,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
         private final Map<Long, String> segmentNames = new ConcurrentHashMap<>();
 
         @Override
-        public long createSegment(UUID correlationId, String name) {
+        public long createSegment(UUID correlationId, String name, Long parentId, Map<String, Object> meta) {
             long segmentId = id.getAndIncrement();
             segmentNames.put(segmentId, name);
             return segmentId;

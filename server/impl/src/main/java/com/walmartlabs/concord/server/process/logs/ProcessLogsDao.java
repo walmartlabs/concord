@@ -23,6 +23,10 @@ package com.walmartlabs.concord.server.process.logs;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgIntRange;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.jooq.tables.NamedProcessLogSegments;
+import com.walmartlabs.concord.server.jooq.tables.ProcessLogSegments;
+import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogDataRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogSegmentsRecord;
 import com.walmartlabs.concord.server.process.LogSegment;
@@ -32,21 +36,28 @@ import org.jooq.*;
 
 import javax.inject.Inject;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.db.PgUtils.jsonbText;
 import static com.walmartlabs.concord.db.PgUtils.upperRange;
 import static com.walmartlabs.concord.server.jooq.Routines.*;
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_DATA;
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_SEGMENTS;
+import static com.walmartlabs.concord.server.jooq.Tables.*;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.*;
 
 public class ProcessLogsDao extends AbstractDao {
 
+    private final ConcordObjectMapper objectMapper;
+
     @Inject
-    public ProcessLogsDao(@MainDB Configuration cfg) {
+    public ProcessLogsDao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
         super(cfg);
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -77,28 +88,32 @@ public class ProcessLogsDao extends AbstractDao {
         return PgIntRange.parse(r.getLogRange().toString());
     }
 
-    public long createSegment(ProcessKey processKey, UUID correlationId, String name, OffsetDateTime createdAt, String status) {
+    public long createSegment(ProcessKey processKey, UUID correlationId, String name, OffsetDateTime createdAt, String status, Long parentId, Map<String, Object> meta) {
         return txResult(tx -> tx.insertInto(PROCESS_LOG_SEGMENTS)
                 .columns(PROCESS_LOG_SEGMENTS.INSTANCE_ID,
                         PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT,
                         PROCESS_LOG_SEGMENTS.CORRELATION_ID,
                         PROCESS_LOG_SEGMENTS.SEGMENT_NAME,
                         PROCESS_LOG_SEGMENTS.SEGMENT_TS,
-                        PROCESS_LOG_SEGMENTS.SEGMENT_STATUS)
+                        PROCESS_LOG_SEGMENTS.SEGMENT_STATUS,
+                        PROCESS_LOG_SEGMENTS.PARENT_SEGMENT_ID,
+                        PROCESS_LOG_SEGMENTS.META)
                 .values(value(processKey.getInstanceId()),
                         value(processKey.getCreatedAt()),
                         value(correlationId), value(name),
                         createdAt != null ? value(createdAt) : currentOffsetDateTime(),
-                        value(status))
+                        value(status),
+                        value(parentId),
+                        value(objectMapper.toJSONB(meta)))
                 .returning(PROCESS_LOG_SEGMENTS.SEGMENT_ID)
                 .fetchOne()
                 .getSegmentId());
     }
 
-    public void createSegment(DSLContext tx, long segmentId, ProcessKey processKey, UUID correlationId, String name, String status) {
+    public void createSegment(DSLContext tx, long segmentId, ProcessKey processKey, UUID correlationId, String name, String status, Long parentId, Map<String, Object> meta) {
         tx.insertInto(PROCESS_LOG_SEGMENTS)
-                .columns(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.INSTANCE_ID, PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENTS.CORRELATION_ID, PROCESS_LOG_SEGMENTS.SEGMENT_NAME, PROCESS_LOG_SEGMENTS.SEGMENT_TS, PROCESS_LOG_SEGMENTS.SEGMENT_STATUS)
-                .values(value(segmentId), value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), currentOffsetDateTime(), value(status))
+                .columns(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.INSTANCE_ID, PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENTS.CORRELATION_ID, PROCESS_LOG_SEGMENTS.SEGMENT_NAME, PROCESS_LOG_SEGMENTS.SEGMENT_TS, PROCESS_LOG_SEGMENTS.SEGMENT_STATUS, PROCESS_LOG_SEGMENTS.PARENT_SEGMENT_ID, PROCESS_LOG_SEGMENTS.META)
+                .values(value(segmentId), value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), currentOffsetDateTime(), value(status), value(parentId), value(objectMapper.toJSONB(meta)))
                 .execute();
     }
 
@@ -129,30 +144,87 @@ public class ProcessLogsDao extends AbstractDao {
         q.execute();
     }
 
-    public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset) {
+    public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset,
+                                         Long parentId, boolean rootSegments, boolean collectErrors,
+                                         boolean onlyNamedSegments) {
         UUID instanceId = processKey.getInstanceId();
         OffsetDateTime createdAt = processKey.getCreatedAt();
 
-        SelectSeekStep2<Record8<Long, UUID, String, OffsetDateTime, String, OffsetDateTime, Integer, Integer>, OffsetDateTime, Long> q = dsl()
-                .select(PROCESS_LOG_SEGMENTS.SEGMENT_ID,
-                        PROCESS_LOG_SEGMENTS.CORRELATION_ID,
-                        PROCESS_LOG_SEGMENTS.SEGMENT_NAME,
-                        PROCESS_LOG_SEGMENTS.SEGMENT_TS,
-                        PROCESS_LOG_SEGMENTS.SEGMENT_STATUS,
-                        PROCESS_LOG_SEGMENTS.STATUS_UPDATED_AT,
-                        PROCESS_LOG_SEGMENTS.SEGMENT_WARN,
-                        PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS)
-                .from(PROCESS_LOG_SEGMENTS)
-                .where(PROCESS_LOG_SEGMENTS.INSTANCE_ID.eq(instanceId)
-                        .and(PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT.eq(createdAt)))
-                .orderBy(PROCESS_LOG_SEGMENTS.SEGMENT_TS, PROCESS_LOG_SEGMENTS.SEGMENT_ID);
+        ProcessLogSegments pls = PROCESS_LOG_SEGMENTS.as("pls");
+
+        Field<BigDecimal> errorsSumField = field(value(BigDecimal.ZERO));
+        if (collectErrors) {
+            ProcessLogSegments t = PROCESS_LOG_SEGMENTS.as("t");
+
+            errorsSumField = dsl().withRecursive("parents").as(
+                            select(PROCESS_LOG_SEGMENTS.INSTANCE_ID, PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.PARENT_SEGMENT_ID, PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS)
+                                    .from(PROCESS_LOG_SEGMENTS)
+                                    .where(PROCESS_LOG_SEGMENTS.INSTANCE_ID.eq(pls.INSTANCE_ID)
+                                            .and(PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT.eq(pls.INSTANCE_CREATED_AT))
+                                            .and(PROCESS_LOG_SEGMENTS.SEGMENT_ID.eq(pls.SEGMENT_ID)))
+                                    .unionAll(
+                                            select(t.INSTANCE_ID, t.INSTANCE_CREATED_AT, t.SEGMENT_ID, t.PARENT_SEGMENT_ID, t.SEGMENT_ERRORS)
+                                                    .from(t)
+                                                    .innerJoin(name("parents"))
+                                                    .on(t.PARENT_SEGMENT_ID.eq(field(name("parents", "SEGMENT_ID"), Long.class)))
+                                                    .and(t.INSTANCE_ID.eq(pls.INSTANCE_ID))
+                                                    .and(t.INSTANCE_CREATED_AT.eq(pls.INSTANCE_CREATED_AT))
+                                    ))
+                    .select(sum(field("parents.SEGMENT_ERRORS", Integer.class)))
+                    .from(name("parents")).asField();
+        }
+
+        SelectConditionStep<Record10<Long, UUID, String, OffsetDateTime, String, OffsetDateTime, Integer, Integer, JSONB, BigDecimal>> q = null;
+
+        if (onlyNamedSegments) {
+            NamedProcessLogSegments npls = NAMED_PROCESS_LOG_SEGMENTS.as("pls");
+            q = dsl()
+                    .select(npls.SEGMENT_ID,
+                            npls.CORRELATION_ID,
+                            npls.SEGMENT_NAME,
+                            npls.SEGMENT_TS,
+                            npls.SEGMENT_STATUS,
+                            npls.STATUS_UPDATED_AT,
+                            npls.SEGMENT_WARN,
+                            npls.SEGMENT_ERRORS,
+                            npls.META,
+                            errorsSumField.as("totalErrors"))
+                    .from(namedProcessLogSegments(instanceId, createdAt, parentId).as("pls"))
+                    .where(npls.SEGMENT_ID.eq(npls.SEGMENT_ID));
+
+        } else {
+            q = dsl()
+                    .select(pls.SEGMENT_ID,
+                            pls.CORRELATION_ID,
+                            pls.SEGMENT_NAME,
+                            pls.SEGMENT_TS,
+                            pls.SEGMENT_STATUS,
+                            pls.STATUS_UPDATED_AT,
+                            pls.SEGMENT_WARN,
+                            pls.SEGMENT_ERRORS,
+                            pls.META,
+                            errorsSumField.as("totalErrors"))
+                    .from(pls)
+                    .where(pls.INSTANCE_ID.eq(instanceId)
+                            .and(pls.INSTANCE_CREATED_AT.eq(createdAt)));
+
+            if (parentId != null) {
+                q.and(and(pls.PARENT_SEGMENT_ID.eq(parentId)));
+            }
+
+            if (rootSegments) {
+                q.and(and(pls.PARENT_SEGMENT_ID.isNull()));
+            }
+        }
+
+        q.orderBy(pls.SEGMENT_TS, pls.SEGMENT_ID);
 
         if (limit >= 0) {
             q.limit(limit);
         }
 
         return q.offset(offset)
-                .fetch(ProcessLogsDao::toSegment);
+                .fetch(this::toSegment);
     }
 
     public ProcessLog segmentData(ProcessKey processKey, long segmentId, Integer start, Integer end) {
@@ -281,8 +353,13 @@ public class ProcessLogsDao extends AbstractDao {
         return new ProcessLogChunk((Integer) r.value1(), r.value2());
     }
 
-    private static LogSegment toSegment(Record8<Long, UUID, String, OffsetDateTime, String, OffsetDateTime, Integer, Integer> r) {
+    private LogSegment toSegment(Record10<Long, UUID, String, OffsetDateTime, String, OffsetDateTime, Integer, Integer, JSONB, BigDecimal> r) {
         String status = r.get(PROCESS_LOG_SEGMENTS.SEGMENT_STATUS);
+        Map<String, Object> meta = objectMapper.fromJSONB(r.get(PROCESS_LOG_SEGMENTS.META));
+        if (meta == null) {
+            meta = Collections.emptyMap();
+        }
+        BigDecimal totalErrors = r.get("totalErrors", BigDecimal.class);
         return LogSegment.builder()
                 .id(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_ID))
                 .correlationId(r.get(PROCESS_LOG_SEGMENTS.CORRELATION_ID))
@@ -292,6 +369,8 @@ public class ProcessLogsDao extends AbstractDao {
                 .statusUpdatedAt(r.get(PROCESS_LOG_SEGMENTS.STATUS_UPDATED_AT))
                 .warnings(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_WARN))
                 .errors(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS))
+                .childHasErrors(totalErrors != null && totalErrors.longValue() > 0)
+                .meta(meta)
                 .build();
     }
 
