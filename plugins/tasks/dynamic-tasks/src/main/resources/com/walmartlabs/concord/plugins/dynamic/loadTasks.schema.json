@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Load Tasks Task Schema",
+  "description": "Schema for the loadTasks task.",
+  "in": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "Path to a directory with task JARs to load."
+      }
+    },
+    "required": [
+      "path"
+    ],
+    "additionalProperties": true
+  },
+  "out": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "Whether the task completed successfully."
+      }
+    },
+    "required": [
+      "ok"
+    ],
+    "additionalProperties": true
+  }
+}

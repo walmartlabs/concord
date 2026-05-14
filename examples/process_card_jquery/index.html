@@ -30,13 +30,13 @@
         </div>
 
         <div class="field required">
-            <label for="field2">field1</label>
-            <input id="field2" type="text" name="arguments.field1" placeholder="field2">
+            <label for="field2">field2</label>
+            <input id="field2" type="text" name="arguments.field2" placeholder="field2">
             <div class="ui pointing red basic label field2-error" style="display: none;">Please enter value</div>
         </div>
 
         <div class="field required">
-            <label for="field3">field1</label>
+            <label for="field3">field3</label>
             <input id="field3" type="text" name="arguments.field3" placeholder="field3">
             <div class="ui pointing red basic label field3-error" style="display: none;">Please enter value</div>
         </div>
@@ -114,7 +114,7 @@
                 }
             },
             error: function(error) {
-                console.log(error)
+                console.log(error);
 
                 showError('Error starting process', '[' + error.status + ']: ' + error.responseText);
 
@@ -136,9 +136,9 @@
     const formLoading = (loading) => {
         const myForm = $('#myForm');
         if (loading) {
-            myForm.addClass('loading')
+            myForm.addClass('loading');
         } else {
-            myForm.removeClass('loading')
+            myForm.removeClass('loading');
         }
     };
 

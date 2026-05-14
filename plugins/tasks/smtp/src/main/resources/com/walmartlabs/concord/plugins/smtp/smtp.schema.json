@@ -1,0 +1,190 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SMTP Task Schema",
+  "description": "Schema for the smtp task.",
+  "definitions": {
+    "addressList": {
+      "description": "One or more email addresses. String values may contain comma-separated addresses.",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "attachment": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Path to an attachment file."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to an attachment file."
+            },
+            "name": {
+              "type": "string",
+              "description": "Attachment name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Attachment description."
+            },
+            "disposition": {
+              "type": "string",
+              "description": "Attachment disposition.",
+              "enum": [
+                "attachment",
+                "inline"
+              ]
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "additionalProperties": true
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "mailParams": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "Sender email address."
+        },
+        "to": {
+          "$ref": "#/definitions/addressList"
+        },
+        "cc": {
+          "$ref": "#/definitions/addressList"
+        },
+        "bcc": {
+          "$ref": "#/definitions/addressList"
+        },
+        "replyTo": {
+          "$ref": "#/definitions/addressList"
+        },
+        "subject": {
+          "type": "string",
+          "description": "Email subject."
+        },
+        "message": {
+          "type": "string",
+          "description": "Email message body."
+        },
+        "template": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Path to a Mustache template file."
+            },
+            {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Path to a Mustache template file."
+                },
+                "params": {
+                  "type": "object",
+                  "description": "Template parameters.",
+                  "additionalProperties": true
+                }
+              },
+              "additionalProperties": true
+            }
+          ]
+        },
+        "attachments": {
+          "type": "array",
+          "description": "Files to attach to the email.",
+          "items": {
+            "$ref": "#/definitions/attachment"
+          }
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ],
+      "anyOf": [
+        {
+          "required": [
+            "message"
+          ]
+        },
+        {
+          "required": [
+            "template"
+          ]
+        }
+      ],
+      "additionalProperties": true
+    },
+    "smtpParams": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": "SMTP server host."
+        },
+        "port": {
+          "type": "integer",
+          "description": "SMTP server port."
+        }
+      },
+      "required": [
+        "host",
+        "port"
+      ],
+      "additionalProperties": true
+    }
+  },
+  "in": {
+    "type": "object",
+    "properties": {
+      "smtpParams": {
+        "$ref": "#/definitions/smtpParams"
+      },
+      "smtp": {
+        "$ref": "#/definitions/smtpParams"
+      },
+      "mailParams": {
+        "$ref": "#/definitions/mailParams"
+      },
+      "mail": {
+        "$ref": "#/definitions/mailParams"
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "Enable debug logging for SMTP sends."
+      }
+    },
+    "additionalProperties": true
+  },
+  "out": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "Whether the task completed successfully."
+      }
+    },
+    "required": [
+      "ok"
+    ],
+    "additionalProperties": true
+  }
+}

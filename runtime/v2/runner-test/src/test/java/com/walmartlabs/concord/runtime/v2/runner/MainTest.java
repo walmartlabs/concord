@@ -140,9 +140,15 @@ public class MainTest  {
             // ignore
         }
 
-        assertLog(runtime.lastLog(), ".*" + Pattern.quote("(concord.yml) @ line: 10, col: 7, thread: 1, flow: flowB") + ".*");
-        assertLog(runtime.lastLog(), ".*" + Pattern.quote("(concord.yml) @ line: 4, col: 11, thread: 1, flow: flowA") + ".*");
-        assertLog(runtime.lastLog(), ".*" + Pattern.quote("(concord.yml) @ line: 5, col: 11, thread: 2, flow: flowB") + ".*");
+        String logString = new String(runtime.lastLog());
+        String expected1 = "  Call stack:\n" +
+                "    (concord.yml) @ line: 10, col: 7, thread: 1, flow: flowB\n" +
+                "    (concord.yml) @ line: 4, col: 11, thread: 1, flow: flowA";
+        String expected2 = "  Call stack:\n" +
+                "    (concord.yml) @ line: 5, col: 11, thread: 2, flow: flowB";
+
+        assertTrue(logString.contains(expected1), "expected log contains: " + expected1 + ", actual: " + logString);
+        assertTrue(logString.contains(expected2), "expected log contains: " + expected2 + ", actual: " + logString);
     }
 
     @Test
@@ -160,9 +166,9 @@ public class MainTest  {
         }
         assertLog(runtime.lastLog(), ".*" + Pattern.quote("in flowA") + ".*");
 
-        String expected = "Call stack:\n" +
-                "(concord.yml) @ line: 13, col: 7, thread: 2, flow: flowB\n" +
-                "(concord.yml) @ line: 3, col: 7, thread: 2, flow: flowA";
+        String expected = "  Call stack:\n" +
+                "    (concord.yml) @ line: 13, col: 7, thread: 2, flow: flowB\n" +
+                "    (concord.yml) @ line: 3, col: 7, thread: 2, flow: flowA";
 
         String logString = new String(runtime.lastLog());
         assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
@@ -211,10 +217,10 @@ public class MainTest  {
         }
 
         String expected = ".*Call stack:\n" +
-                "\\(concord.yml\\) @ line: 21, col: 7, thread: .*, flow: flowC\n" +
-                "\\(concord.yml\\) @ line: 11, col: 11, thread: 2, flow: flowB\n" +
-                "\\(concord.yml\\) @ line: 6, col: 7, thread: 0, flow: flowA\n" +
-                "\\(concord.yml\\) @ line: 3, col: 7, thread: 0, flow: flow0.*";
+                "\\s+\\(concord.yml\\) @ line: 21, col: 7, thread: .*, flow: flowC\n" +
+                "\\s+\\(concord.yml\\) @ line: 11, col: 11, thread: 2, flow: flowB\n" +
+                "\\s+\\(concord.yml\\) @ line: 6, col: 7, thread: 0, flow: flowA\n" +
+                "\\s+\\(concord.yml\\) @ line: 3, col: 7, thread: 0, flow: flow0.*";
         Pattern expectedPattern = Pattern.compile(expected, Pattern.MULTILINE|Pattern.DOTALL|Pattern.UNIX_LINES);
 
         String logString = new String(runtime.lastLog());
@@ -669,6 +675,20 @@ public class MainTest  {
         byte[] log = run();
         assertLog(log, ".*result: \\[10, 20, 30\\].*");
         assertLog(log, ".*threadIds: \\[1, 2, 3].*");
+    }
+
+    @Test
+    public void testParallelLoopStartsNextItemWhenSlotIsFree() throws Exception {
+        deploy("parallelLoopWorkerPool");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        String logString = new String(log);
+
+        assertTrue(logString.indexOf("end two") < logString.indexOf("start three"), logString);
+        assertTrue(logString.indexOf("start three") < logString.indexOf("end one"), logString);
     }
 
     @Test

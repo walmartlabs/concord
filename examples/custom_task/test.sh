@@ -16,7 +16,7 @@ cp ${CONCORD_YAML:-test.yml} target/test/concord.yml
 
 # copy the task's JAR...
 mkdir -p target/test/lib/
-cp target/custom-task-*-SNAPSHOT.jar target/test/lib/
+cp target/custom-task-*.jar target/test/lib/
 
 # ...and dependencies
 mvn dependency:copy-dependencies -DoutputDirectory=/tmp/deps -Dmdep.useSubDirectoryPerScope

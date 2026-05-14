@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Throw Task Schema",
+  "description": "Schema for the throw task.",
+  "in": {
+    "type": "object",
+    "properties": {
+      "exception": {
+        "description": "Exception, message, or serializable payload to throw."
+      },
+      "payload": {
+        "type": "object",
+        "description": "Additional payload attached when throwing a string exception.",
+        "additionalProperties": true
+      }
+    },
+    "required": [
+      "exception"
+    ],
+    "additionalProperties": true
+  }
+}

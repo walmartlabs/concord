@@ -1,0 +1,18 @@
+flows:
+  default:
+    - call: inner
+      loop:
+        mode: parallel
+        parallelism: 2
+        items:
+          - name: one
+            delay: 1000
+          - name: two
+            delay: 50
+          - name: three
+            delay: 10
+
+  inner:
+    - log: "start ${item.name}"
+    - expr: "${sleep.ms(item.delay)}"
+    - log: "end ${item.name}"

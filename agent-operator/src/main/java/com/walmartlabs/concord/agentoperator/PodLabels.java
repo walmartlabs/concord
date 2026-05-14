@@ -23,6 +23,8 @@ package com.walmartlabs.concord.agentoperator;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.dsl.base.PatchContext;
+import io.fabric8.kubernetes.client.dsl.base.PatchType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +33,7 @@ import java.util.Map;
 public final class PodLabels {
 
     private static final Logger log = LoggerFactory.getLogger(PodLabels.class);
+    private static final PatchContext LABEL_PATCH_CONTEXT = PatchContext.of(PatchType.JSON_MERGE);
 
     public static void applyTag(KubernetesClient client, String podName, String tagName, String tagValue) {
         Pod pod = client.pods().withName(podName).get();
@@ -40,13 +43,12 @@ public final class PodLabels {
         }
 
         Map<String, String> labels = pod.getMetadata().getLabels();
-        if (labels.containsKey(tagName)) {
+        if (labels != null && labels.containsKey(tagName)) {
             return;
         }
 
         try {
-            labels.put(tagName, tagValue);
-            client.pods().withName(podName).patch(pod);
+            client.pods().withName(podName).patch(LABEL_PATCH_CONTEXT, buildLabelPatch(client, tagName, tagValue));
             log.info("['{}']: apply tag ['{}': '{}'] -> done", podName, tagName, tagValue);
         } catch (KubernetesClientException e) {
             if (e.getCode() == 404) {
@@ -55,6 +57,12 @@ public final class PodLabels {
                 log.warn("['{}']: apply tag ['{}': '{}'] -> error", podName, tagName, tagValue, e);
             }
         }
+    }
+
+    private static String buildLabelPatch(KubernetesClient client, String tagName, String tagValue) {
+        return client.getKubernetesSerialization().asJson(Map.of(
+                "metadata", Map.of(
+                        "labels", Map.of(tagName, tagValue))));
     }
 
     private PodLabels() {
