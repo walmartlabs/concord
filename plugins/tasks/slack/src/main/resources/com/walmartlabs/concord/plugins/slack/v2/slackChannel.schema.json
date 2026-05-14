@@ -1,0 +1,184 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Slack Channel Task Schema",
+  "description": "Schema for the slackChannel task.",
+  "definitions": {
+    "createAction": {
+      "type": "string",
+      "enum": [
+        "create"
+      ]
+    },
+    "createGroupAction": {
+      "type": "string",
+      "enum": [
+        "createGroup"
+      ]
+    },
+    "archiveAction": {
+      "type": "string",
+      "enum": [
+        "archive"
+      ]
+    },
+    "archiveGroupAction": {
+      "type": "string",
+      "enum": [
+        "archiveGroup"
+      ]
+    },
+    "action": {
+      "type": "string",
+      "description": "Slack channel operation.",
+      "enum": [
+        "create",
+        "createGroup",
+        "archive",
+        "archiveGroup"
+      ]
+    }
+  },
+  "in": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "$ref": "#/definitions/action"
+      },
+      "apiToken": {
+        "type": "string",
+        "description": "Slack API token."
+      },
+      "authToken": {
+        "type": "string",
+        "description": "Deprecated alias for apiToken."
+      },
+      "isLegacy": {
+        "type": "boolean",
+        "default": false,
+        "description": "Use legacy Slack API behavior."
+      },
+      "connectTimeout": {
+        "type": "integer",
+        "default": 30000,
+        "description": "Connection timeout in milliseconds."
+      },
+      "soTimeout": {
+        "type": "integer",
+        "default": 30000,
+        "description": "Socket timeout in milliseconds."
+      },
+      "retryCount": {
+        "type": "integer",
+        "default": 3,
+        "description": "Number of Slack API retry attempts."
+      },
+      "proxyAddress": {
+        "type": "string",
+        "description": "HTTP proxy hostname or address."
+      },
+      "proxyPort": {
+        "type": "integer",
+        "description": "HTTP proxy port."
+      },
+      "channelName": {
+        "type": "string",
+        "description": "Slack channel or group name to create."
+      },
+      "channelId": {
+        "type": "string",
+        "description": "Slack channel or group ID to archive."
+      }
+    },
+    "required": [
+      "action"
+    ],
+    "allOf": [
+      {
+        "if": {
+          "properties": {
+            "action": {
+              "$ref": "#/definitions/createAction"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "then": {
+          "required": [
+            "channelName"
+          ]
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "action": {
+              "$ref": "#/definitions/createGroupAction"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "then": {
+          "required": [
+            "channelName"
+          ]
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "action": {
+              "$ref": "#/definitions/archiveAction"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "then": {
+          "required": [
+            "channelId"
+          ]
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "action": {
+              "$ref": "#/definitions/archiveGroupAction"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "then": {
+          "required": [
+            "channelId"
+          ]
+        }
+      }
+    ],
+    "additionalProperties": true
+  },
+  "out": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "Whether the task completed successfully."
+      },
+      "slackChannelId": {
+        "type": "string",
+        "description": "Created Slack channel or group ID."
+      }
+    },
+    "required": [
+      "ok"
+    ],
+    "additionalProperties": true
+  }
+}
