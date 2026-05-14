@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Docker Task Schema",
+  "description": "Schema for the docker task.",
+  "definitions": {
+    "env": {
+      "type": "object",
+      "description": "Environment variables passed to the Docker container. Values are converted to strings by the task.",
+      "additionalProperties": true
+    },
+    "hosts": {
+      "type": "array",
+      "description": "Extra /etc/hosts entries passed as Docker --add-host options.",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "in": {
+    "type": "object",
+    "properties": {
+      "image": {
+        "type": "string",
+        "description": "Docker image to run."
+      },
+      "cmd": {
+        "type": "string",
+        "description": "Shell command to run inside the container."
+      },
+      "env": {
+        "$ref": "#/definitions/env"
+      },
+      "envFile": {
+        "type": "string",
+        "description": "Path to a file with environment variables."
+      },
+      "hosts": {
+        "$ref": "#/definitions/hosts"
+      },
+      "forcePull": {
+        "type": "boolean",
+        "default": true,
+        "description": "Pull the image before running the container."
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "Enable debug logging for the Docker invocation."
+      },
+      "pullRetryCount": {
+        "type": "integer",
+        "default": 3,
+        "description": "Number of times to retry pulling the image."
+      },
+      "pullRetryInterval": {
+        "type": "integer",
+        "default": 10000,
+        "description": "Delay between image pull attempts in milliseconds."
+      },
+      "redirectErrorStream": {
+        "type": "boolean",
+        "default": false,
+        "description": "Redirect stderr into stdout."
+      },
+      "logOut": {
+        "type": "boolean",
+        "default": true,
+        "description": "Write stdout to the process log."
+      },
+      "logErr": {
+        "type": "boolean",
+        "default": true,
+        "description": "Write stderr to the process log."
+      },
+      "saveOut": {
+        "type": "boolean",
+        "default": false,
+        "description": "Capture stdout in the task output."
+      },
+      "saveErr": {
+        "type": "boolean",
+        "default": false,
+        "description": "Capture stderr in the task output."
+      }
+    },
+    "required": [
+      "image"
+    ],
+    "additionalProperties": true
+  },
+  "out": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "Whether the Docker command completed with a successful exit code."
+      },
+      "stdout": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Captured stdout, or null when stdout capture is disabled."
+      },
+      "stderr": {
+        "type": "string",
+        "description": "Captured stderr, or an empty string when stderr capture is disabled."
+      }
+    },
+    "required": [
+      "ok"
+    ],
+    "additionalProperties": true
+  }
+}
