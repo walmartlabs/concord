@@ -5,7 +5,9 @@
 ### Added
 
 - lock-tasks, log-tasks, sleep-tasks: add schemas
-([#1315](https://github.com/walmartlabs/concord/pull/1315)).
+([#1315](https://github.com/walmartlabs/concord/pull/1315));
+- tasks: add schemas to more tasks
+([#1321](https://github.com/walmartlabs/concord/pull/1321)).
 
 ### Changed
 
@@ -29,6 +31,8 @@
 ([#1327](https://github.com/walmartlabs/concord/pull/1327));
 - project: graalvm version bump
 ([#1328](https://github.com/walmartlabs/concord/pull/1328));
+- project: versions bump
+([#1329](https://github.com/walmartlabs/concord/pull/1329));
 - runtime-v2: improve parallel loop scheduling
 ([#1330](https://github.com/walmartlabs/concord/pull/1330)).
 
