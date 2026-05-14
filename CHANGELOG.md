@@ -1,5 +1,45 @@
 # Change Log
 
+## [2.41.0] - TBD
+
+### Added
+
+- lock-tasks, log-tasks, sleep-tasks: add schemas
+([#1315](https://github.com/walmartlabs/concord/pull/1315));
+- tasks: add schemas to more tasks
+([#1321](https://github.com/walmartlabs/concord/pull/1321)).
+
+### Changed
+
+- project: optionally push latest Docker tags
+([#1312](https://github.com/walmartlabs/concord/pull/1312));
+- project: update Maven wrapper version
+([#1314](https://github.com/walmartlabs/concord/pull/1314));
+- concord-console2: update postcss version
+([#1317](https://github.com/walmartlabs/concord/pull/1317));
+- agent-operator: avoid full pod patch for labels
+([#1318](https://github.com/walmartlabs/concord/pull/1318));
+- webapp-plugin: fix caching policy
+([#1320](https://github.com/walmartlabs/concord/pull/1320));
+- runtime-v2: fix singleton injection of EventReportingService
+([#1322](https://github.com/walmartlabs/concord/pull/1322));
+- runtime-v2, cli: improve parallel execution error diagnostics
+([#1323](https://github.com/walmartlabs/concord/pull/1323));
+- project: update dependencies
+([#1324](https://github.com/walmartlabs/concord/pull/1324));
+- examples: tidy up
+([#1325](https://github.com/walmartlabs/concord/pull/1325));
+- console2: fix log segment expansion by log#segmentId URL
+([#1327](https://github.com/walmartlabs/concord/pull/1327));
+- project: graalvm version bump
+([#1328](https://github.com/walmartlabs/concord/pull/1328));
+- project: versions bump
+([#1329](https://github.com/walmartlabs/concord/pull/1329));
+- runtime-v2: improve parallel loop scheduling
+([#1330](https://github.com/walmartlabs/concord/pull/1330)).
+
+
+
 ## [2.40.0] - 2026-04-28
 
 ### Added
