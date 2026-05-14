@@ -34,7 +34,6 @@ import com.walmartlabs.concord.svm.*;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public abstract class LoopWrapper implements Command {
 
@@ -178,55 +177,10 @@ public abstract class LoopWrapper implements Command {
 
             Map<String, List<Serializable>> outVarsAccumulator = new ConcurrentHashMap<>();
             state.pushFrame(threadId, Frame.builder()
-                    .commands(new SetVariablesCommand(outVarsAccumulator, targetFrame))
+                    .commands(new SetVariablesCommand(outVarsAccumulator, targetFrame),
+                            new ParallelLoopCommand(cmd, getStep(), items, toBatchSize(runtime, ctx, parallelism), outVariables, outVarsAccumulator))
                     .nonRoot()
                     .build());
-
-            int batchSize = toBatchSize(runtime, ctx, parallelism);
-
-            List<ArrayList<Serializable>> batches = batches(items, batchSize);
-            int itemIndexStart = 0;
-            for (ArrayList<Serializable> batch : batches) {
-                evalBatch(itemIndexStart, state, threadId, batch, outVarsAccumulator, outVariables);
-                itemIndexStart += batch.size();
-            }
-        }
-
-        private void evalBatch(int itemIndexStart, State state, ThreadId threadId, ArrayList<Serializable> items, Map<String, List<Serializable>> outVarsAccumulator, Collection<String> outVariables) {
-            Frame frame = state.peekFrame(threadId);
-
-            List<Map.Entry<ThreadId, Serializable>> forks = items.stream()
-                    .map(e -> new AbstractMap.SimpleEntry<>(state.nextThreadId(), e))
-                    .collect(Collectors.toList());
-
-            for (int i = 0; i < forks.size(); i++) {
-                Map.Entry<ThreadId, Serializable> f = forks.get(i);
-                Frame cmdFrame = Frame.builder()
-                        .nonRoot()
-                        .build();
-
-                cmdFrame.setLocal(CURRENT_ITEMS, items);
-                cmdFrame.setLocal(CURRENT_INDEX, itemIndexStart + i);
-                cmdFrame.setLocal(CURRENT_ITEM, f.getValue());
-
-                // fork will create rootFrame for forked commands
-                Command itemCmd = new ForkCommand(f.getKey(),
-                        new CollectVariablesCommand(outVariables, null, outVarsAccumulator),
-                        cmd);
-                cmdFrame.push(itemCmd);
-
-                state.pushFrame(threadId, cmdFrame);
-            }
-
-            frame.push(new JoinCommand<>(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet()), getStep()));
-        }
-
-        private static List<ArrayList<Serializable>> batches(ArrayList<Serializable> items, int batchSize) {
-            List<ArrayList<Serializable>> result = new ArrayList<>();
-            for (int i = 0; i < items.size(); i += batchSize) {
-                result.add(new ArrayList<>(items.subList(i, Math.min(items.size(), i + batchSize))));
-            }
-            return result;
         }
 
         private static int toBatchSize(Runtime runtime, Context ctx, Parallelism parallelism) {
@@ -243,6 +197,144 @@ public abstract class LoopWrapper implements Command {
                 return parallelism.getValue();
             }
             return result.intValue();
+        }
+    }
+
+    static class ParallelLoopCommand extends StepCommand<Step> {
+
+        private static final long serialVersionUID = 1L;
+        private static final long BUSY_WAIT_SLEEP = 100;
+
+        private final Command cmd;
+        private final ArrayList<Serializable> items;
+        private final int parallelism;
+        private final Collection<String> outVariables;
+        private final Map<String, List<Serializable>> outVarsAccumulator;
+        private final Set<ThreadId> active = new LinkedHashSet<>();
+        private final Set<ThreadId> failed = new LinkedHashSet<>();
+
+        private int nextItemIndex;
+
+        private ParallelLoopCommand(Command cmd,
+                                    Step step,
+                                    ArrayList<Serializable> items,
+                                    int parallelism,
+                                    Collection<String> outVariables,
+                                    Map<String, List<Serializable>> outVarsAccumulator) {
+            super(step);
+            this.cmd = cmd;
+            this.items = items;
+            this.parallelism = parallelism;
+            if (parallelism <= 0) {
+                throw new IllegalArgumentException("Loop parallelism must be greater than zero: " + parallelism);
+            }
+            this.outVariables = outVariables;
+            this.outVarsAccumulator = outVarsAccumulator;
+        }
+
+        @Override
+        protected void execute(Runtime runtime, State state, ThreadId threadId) {
+            Frame frame = state.peekFrame(threadId);
+
+            while (true) {
+                Map<ThreadId, ThreadStatus> statuses = state.threadStatus();
+                boolean hasRunning = updateActiveThreads(statuses);
+                if (!failed.isEmpty()) {
+                    if (hasRunning) {
+                        sleep();
+                        continue;
+                    }
+
+                    throw new ParallelExecutionException(failed.stream()
+                            .map(state::clearThreadError)
+                            .filter(Objects::nonNull)
+                            .toList());
+                }
+
+                boolean scheduled = false;
+                while (active.size() < parallelism && nextItemIndex < items.size()) {
+                    scheduleFork(state, threadId, nextItemIndex++);
+                    scheduled = true;
+                }
+                if (scheduled) {
+                    return;
+                }
+
+                if (active.isEmpty() && nextItemIndex >= items.size()) {
+                    frame.pop();
+                    return;
+                }
+
+                statuses = state.threadStatus();
+                if (allActiveThreadsSuspended(statuses)) {
+                    state.setStatus(threadId, ThreadStatus.SUSPENDED);
+                    return;
+                }
+
+                sleep();
+            }
+        }
+
+        private boolean updateActiveThreads(Map<ThreadId, ThreadStatus> statuses) {
+            boolean hasRunning = false;
+            Iterator<ThreadId> i = active.iterator();
+            while (i.hasNext()) {
+                ThreadId id = i.next();
+                ThreadStatus status = statuses.getOrDefault(id, ThreadStatus.DONE);
+                hasRunning |= switch (status) {
+                    case DONE -> {
+                        i.remove();
+                        yield false;
+                    }
+                    case FAILED -> {
+                        failed.add(id);
+                        i.remove();
+                        yield false;
+                    }
+                    case READY, UNWINDING -> true;
+                    case SUSPENDED -> false;
+                };
+            }
+
+            return hasRunning;
+        }
+
+        private void scheduleFork(State state, ThreadId threadId, int index) {
+            ThreadId childThreadId = state.nextThreadId();
+
+            Frame cmdFrame = Frame.builder()
+                    .nonRoot()
+                    .build();
+            cmdFrame.setLocal(CURRENT_ITEMS, items);
+            cmdFrame.setLocal(CURRENT_INDEX, index);
+            cmdFrame.setLocal(CURRENT_ITEM, items.get(index));
+            cmdFrame.push(new ForkCommand(childThreadId, new CollectVariablesCommand(outVariables, null, outVarsAccumulator), cmd));
+
+            active.add(childThreadId);
+            state.pushFrame(threadId, cmdFrame);
+        }
+
+        private boolean allActiveThreadsSuspended(Map<ThreadId, ThreadStatus> statuses) {
+            if (active.isEmpty()) {
+                return false;
+            }
+
+            for (ThreadId id : active) {
+                if (statuses.get(id) != ThreadStatus.SUSPENDED) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static void sleep() {
+            try {
+                Thread.sleep(BUSY_WAIT_SLEEP);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Parallel loop interrupted", e);
+            }
         }
     }
 
