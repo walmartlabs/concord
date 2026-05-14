@@ -367,18 +367,10 @@
                 <plugin>
                     <groupId>dev.ybrig.concord</groupId>
                     <artifactId>concord-maven-plugin</artifactId>
-                    <version>0.0.37</version>
+                    <version>0.0.38</version>
                     <configuration>
                         <concordVersion>${project.version}</concordVersion>
                     </configuration>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>sisu-index</goal>
-                                <goal>verify</goal>
-                            </goals>
-                        </execution>
-                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
