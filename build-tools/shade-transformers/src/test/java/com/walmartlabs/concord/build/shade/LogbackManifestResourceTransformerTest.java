@@ -29,8 +29,10 @@ import java.util.List;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.zip.ZipInputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 class LogbackManifestResourceTransformerTest {
 
@@ -66,6 +68,77 @@ class LogbackManifestResourceTransformerTest {
         assertEquals("4.5.6", result.getAttributes("ch/qos/logback/core/util/").getValue("Implementation-Version"));
     }
 
+    @Test
+    void addsLogbackPackageVersionsFromBundleSymbolicNamesWithDirectives() throws Exception {
+        var transformer = new LogbackManifestResourceTransformer();
+
+        transformer.processResource("META-INF/MANIFEST.MF", manifest("""
+                Manifest-Version: 1.0
+                Bundle-SymbolicName: ch.qos.logback.classic;singleton:=true
+                Implementation-Version: 1.2.3
+
+                """), List.of(), 1);
+        transformer.processResource("META-INF/MANIFEST.MF", manifest("""
+                Manifest-Version: 1.0
+                Bundle-SymbolicName: ch.qos.logback.core; singleton:=true
+                Implementation-Version: 4.5.6
+
+                """), List.of(), 2);
+
+        var result = resultManifest(transformer);
+
+        assertEquals("1.2.3", result.getAttributes("ch/qos/logback/classic/util/").getValue("Implementation-Version"));
+        assertEquals("4.5.6", result.getAttributes("ch/qos/logback/core/util/").getValue("Implementation-Version"));
+    }
+
+    @Test
+    void preservesExistingLogbackPackageAttributes() throws Exception {
+        var transformer = new LogbackManifestResourceTransformer();
+
+        transformer.processResource("META-INF/MANIFEST.MF", manifest("""
+                Manifest-Version: 1.0
+
+                Name: ch/qos/logback/classic/util/
+                Specification-Version: 1.0
+
+                """), List.of(), 1);
+        transformer.processResource("META-INF/MANIFEST.MF", manifest("""
+                Manifest-Version: 1.0
+                Bundle-SymbolicName: ch.qos.logback.classic
+                Implementation-Version: 1.2.3
+
+                """), List.of(), 2);
+
+        var result = resultManifest(transformer);
+        var attributes = result.getAttributes("ch/qos/logback/classic/util/");
+
+        assertEquals("1.0", attributes.getValue("Specification-Version"));
+        assertEquals("1.2.3", attributes.getValue("Implementation-Version"));
+    }
+
+    @Test
+    void writesManifestWhenNoInputManifestWasProcessed() throws Exception {
+        var transformer = new LogbackManifestResourceTransformer();
+        transformer.setMainClass("com.example.Main");
+
+        var result = resultManifest(transformer);
+
+        assertEquals("1.0", result.getMainAttributes().getValue("Manifest-Version"));
+        assertEquals("com.example.Main", result.getMainAttributes().getValue("Main-Class"));
+    }
+
+    @Test
+    void legacyProcessResourceOverloadDoesNotForceEpochTimestamp() throws Exception {
+        var transformer = new LogbackManifestResourceTransformer();
+
+        transformer.processResource("META-INF/MANIFEST.MF", manifest("""
+                Manifest-Version: 1.0
+
+                """), List.of());
+
+        assertNotEquals(0, resultManifestEntryTime(transformer));
+    }
+
     private static ByteArrayInputStream manifest(String content) {
         return new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
     }
@@ -78,6 +151,17 @@ class LogbackManifestResourceTransformerTest {
 
         try (var jar = new JarInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {
             return jar.getManifest();
+        }
+    }
+
+    private static long resultManifestEntryTime(LogbackManifestResourceTransformer transformer) throws Exception {
+        var bytes = new ByteArrayOutputStream();
+        try (var jar = new JarOutputStream(bytes)) {
+            transformer.modifyOutputStream(jar);
+        }
+
+        try (var zip = new ZipInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {
+            return zip.getNextEntry().getTime();
         }
     }
 }

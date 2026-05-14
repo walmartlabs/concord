@@ -69,7 +69,7 @@ public class LogbackManifestResourceTransformer implements ReproducibleResourceT
 
     @Override
     public void processResource(String resource, InputStream inputStream, List<Relocator> relocators) throws IOException {
-        processResource(resource, inputStream, relocators, 0);
+        processResource(resource, inputStream, relocators, Long.MIN_VALUE);
     }
 
     @Override
@@ -82,7 +82,7 @@ public class LogbackManifestResourceTransformer implements ReproducibleResourceT
         }
 
         var attributes = current.getMainAttributes();
-        var bundleName = attributes.getValue("Bundle-SymbolicName");
+        var bundleName = normalizeBundleSymbolicName(attributes.getValue("Bundle-SymbolicName"));
         var implementationVersion = attributes.getValue("Implementation-Version");
 
         if (LOGBACK_CLASSIC.equals(bundleName)) {
@@ -126,7 +126,9 @@ public class LogbackManifestResourceTransformer implements ReproducibleResourceT
         addLogbackPackageVersion("ch/qos/logback/core/util/", logbackCoreVersion);
 
         var jarEntry = new JarEntry(MANIFEST);
-        jarEntry.setTime(time);
+        if (time != Long.MIN_VALUE) {
+            jarEntry.setTime(time);
+        }
         jarOutputStream.putNextEntry(jarEntry);
         manifest.write(jarOutputStream);
     }
@@ -136,8 +138,15 @@ public class LogbackManifestResourceTransformer implements ReproducibleResourceT
             return;
         }
 
-        var attributes = new Attributes();
+        var attributes = manifest.getEntries().computeIfAbsent(packageName, ignored -> new Attributes());
         attributes.putValue("Implementation-Version", version);
-        manifest.getEntries().put(packageName, attributes);
+    }
+
+    private static String normalizeBundleSymbolicName(String bundleName) {
+        if (bundleName == null) {
+            return null;
+        }
+
+        return bundleName.split(";", 2)[0].trim();
     }
 }
