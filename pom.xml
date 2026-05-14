@@ -43,6 +43,7 @@
         <module>forms</module>
         <module>server</module>
         <module>client2</module>
+        <module>build-tools/shade-transformers</module>
         <module>runtime/model</module>
         <module>runtime/common</module>
         <module>runtime/loader</module>
