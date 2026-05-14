@@ -76,7 +76,7 @@
         <javax.mail.version>1.6.2</javax.mail.version>
         <javax.validation.version>2.0.1.Final</javax.validation.version>
         <javax.ws.rs.version>2.0.1.Final</javax.ws.rs.version>
-        <javers.version>6.6.2</javers.version>
+        <javers.version>7.11.0</javers.version>
         <jboss.logging>3.4.2.Final</jboss.logging>
         <jcl-over-slf4j.version>1.7.36</jcl-over-slf4j.version>
         <jetbrain.annotations.version>23.0.0</jetbrain.annotations.version>
