@@ -21,6 +21,8 @@
 ([#1318](https://github.com/walmartlabs/concord/pull/1318));
 - webapp-plugin: fix caching policy
 ([#1320](https://github.com/walmartlabs/concord/pull/1320));
+- runtime-v2: fix singleton injection of EventReportingService
+([#1322](https://github.com/walmartlabs/concord/pull/1322));
 - runtime-v2, cli: improve parallel execution error diagnostics
 ([#1323](https://github.com/walmartlabs/concord/pull/1323));
 - project: update dependencies
