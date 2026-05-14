@@ -52,7 +52,7 @@
         <commons.validator.version>1.10.0</commons.validator.version>
         <config.version>1.4.2</config.version>
         <cronutils.version>9.2.0</cronutils.version>
-        <errorproneannotations.version>2.28.0</errorproneannotations.version>
+        <errorproneannotations.version>2.41.0</errorproneannotations.version>
         <glassfish.el.version>3.0.1-b12</glassfish.el.version>
         <graalvm.version>23.0.12</graalvm.version>
         <greenmail.version>1.6.5</greenmail.version>
