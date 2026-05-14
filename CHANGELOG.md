@@ -28,7 +28,9 @@
 - console2: fix log segment expansion by log#segmentId URL
 ([#1327](https://github.com/walmartlabs/concord/pull/1327));
 - project: graalvm version bump
-([#1328](https://github.com/walmartlabs/concord/pull/1328)).
+([#1328](https://github.com/walmartlabs/concord/pull/1328));
+- runtime-v2: improve parallel loop scheduling
+([#1330](https://github.com/walmartlabs/concord/pull/1330)).
 
 
 
