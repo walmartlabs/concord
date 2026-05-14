@@ -54,7 +54,7 @@
         <cronutils.version>9.2.0</cronutils.version>
         <errorproneannotations.version>2.28.0</errorproneannotations.version>
         <glassfish.el.version>3.0.1-b12</glassfish.el.version>
-        <graalvm.version>22.0.0.2</graalvm.version>
+        <graalvm.version>23.0.12</graalvm.version>
         <greenmail.version>1.6.5</greenmail.version>
         <groovy.version>5.0.4</groovy.version>
         <guava.version>33.3.1-jre</guava.version>
@@ -97,11 +97,11 @@
         <logback.version>1.5.25</logback.version>
         <maven.annotation.version>3.5</maven.annotation.version>
         <maven.api.version>3.0.5</maven.api.version>
-        <maven.artifact.version>3.8.4</maven.artifact.version>
+        <maven.artifact.version>3.9.15</maven.artifact.version>
         <maven.prj.version>2.2.1</maven.prj.version>
-        <maven.resolver.provider.version>3.8.4</maven.resolver.provider.version>
-        <maven.model.builder.version>3.8.4</maven.model.builder.version>
-        <maven.resolver.version>1.9.20</maven.resolver.version>
+        <maven.resolver.provider.version>3.9.15</maven.resolver.provider.version>
+        <maven.model.builder.version>3.9.15</maven.model.builder.version>
+        <maven.resolver.version>1.9.27</maven.resolver.version>
         <maven.resolver.version.concord>0.0.4</maven.resolver.version.concord>
         <metrics.version>4.2.25</metrics.version>
         <mockito.version>4.9.0</mockito.version>
@@ -118,7 +118,7 @@
         <servlet.version>4.0.1</servlet.version>
         <shiro.version>2.1.0</shiro.version>
         <siesta.version>2.3.2</siesta.version>
-        <sisu.version>0.9.0.M2</sisu.version>
+        <sisu.version>1.0.0</sisu.version>
         <slf4j.version>2.0.17</slf4j.version>
         <snakeyaml.version>2.5</snakeyaml.version>
         <sshd.version>2.15.0</sshd.version>
