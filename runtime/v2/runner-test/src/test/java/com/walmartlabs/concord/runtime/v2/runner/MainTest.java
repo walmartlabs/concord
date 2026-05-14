@@ -678,6 +678,20 @@ public class MainTest  {
     }
 
     @Test
+    public void testParallelLoopStartsNextItemWhenSlotIsFree() throws Exception {
+        deploy("parallelLoopWorkerPool");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        String logString = new String(log);
+
+        assertTrue(logString.indexOf("end two") < logString.indexOf("start three"), logString);
+        assertTrue(logString.indexOf("start three") < logString.indexOf("end one"), logString);
+    }
+
+    @Test
     public void testParallelWithError() throws Exception {
         deploy("parallelWithError");
 
