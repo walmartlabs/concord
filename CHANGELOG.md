@@ -1,5 +1,16 @@
 # Change Log
 
+## [2.42.0] - TBD
+
+### Added
+
+
+### Changed
+
+- runtime-v2: preserve logback versions in shaded runner
+([#1331](https://github.com/walmartlabs/concord/pull/1331)).
+
+
 ## [2.41.0] - 2026-05-14
 
 ### Added
