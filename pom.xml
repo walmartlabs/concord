@@ -43,6 +43,7 @@
         <module>forms</module>
         <module>server</module>
         <module>client2</module>
+        <module>build-tools/shade-transformers</module>
         <module>runtime/model</module>
         <module>runtime/common</module>
         <module>runtime/loader</module>
@@ -72,6 +73,7 @@
         <jooq.version>3.19.33</jooq.version>
         <junit.version>5.9.1</junit.version>
         <liquibase.version>4.29.2</liquibase.version>
+        <maven.shade.plugin.version>3.6.0</maven.shade.plugin.version>
         <node.version>24.14.0</node.version>
         <frontend.plugin.version>1.15.1</frontend.plugin.version>
 
@@ -385,7 +387,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>3.6.0</version>
+                    <version>${maven.shade.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
