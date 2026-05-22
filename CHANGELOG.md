@@ -7,6 +7,8 @@
 
 ### Changed
 
+- project: update graal engine to 25.0.2
+([#1279](https://github.com/walmartlabs/concord/pull/1279));
 - runtime-v2: preserve logback versions in shaded runner
 ([#1331](https://github.com/walmartlabs/concord/pull/1331)).
 
