@@ -121,8 +121,13 @@
         </dependency>
 
         <dependency>
-            <groupId>org.graalvm.js</groupId>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>polyglot</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.polyglot</groupId>
             <artifactId>js</artifactId>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.graalvm.js</groupId>
@@ -305,7 +310,11 @@
                                 </transformer>
                                 <transformer implementation="com.walmartlabs.concord.build.shade.LogbackManifestResourceTransformer">
                                     <mainClass>com.walmartlabs.concord.runtime.v2.runner.Main</mainClass>
+                                    <manifestEntries>
+                                        <Multi-Release>true</Multi-Release>
+                                    </manifestEntries>
                                 </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
                             <filters>
                                 <filter>
