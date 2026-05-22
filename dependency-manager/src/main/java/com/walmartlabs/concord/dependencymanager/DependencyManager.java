@@ -335,6 +335,9 @@ public class DependencyManager {
 
     private DefaultRepositorySystemSession newRepositorySystemSession(RepositorySystem system, ProgressNotifier progressNotifier, boolean updatePolicy) {
         DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
+        Map<String, String> systemProperties = systemProperties();
+        session.setSystemProperties(systemProperties);
+        session.setConfigProperties(systemProperties);
         session.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
         session.setIgnoreArtifactDescriptorRepositories(strictRepositories);
         if (explicitlyResolveV1Client) {
@@ -362,6 +365,13 @@ public class DependencyManager {
         }
 
         return session;
+    }
+
+    private static Map<String, String> systemProperties() {
+        Properties properties = System.getProperties();
+        Map<String, String> result = new HashMap<>(properties.size());
+        properties.stringPropertyNames().forEach(k -> result.put(k, properties.getProperty(k)));
+        return result;
     }
 
     private static DependencyEntity toDependency(Artifact artifact) {
