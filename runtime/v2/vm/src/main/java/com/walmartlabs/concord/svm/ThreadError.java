@@ -22,11 +22,23 @@ package com.walmartlabs.concord.svm;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
 
-public record ThreadError(ThreadId threadId, Command cmd, Exception exception) implements Serializable {
+public record ThreadError(ThreadId threadId,
+                          Command cmd,
+                          Exception exception,
+                          List<StackTraceItem> callStack) implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
+
+    public ThreadError {
+        callStack = callStack != null ? List.copyOf(callStack) : List.of();
+    }
+
+    public ThreadError(ThreadId threadId, Command cmd, Exception exception) {
+        this(threadId, cmd, exception, List.of());
+    }
 
     public StackTraceElement[] getStackTrace() {
         return exception.getStackTrace();

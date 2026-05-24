@@ -42,7 +42,7 @@ import java.util.*;
 public class DefaultScriptEvaluator implements ScriptEvaluator {
 
     // https://www.graalvm.org/latest/reference-manual/js/JavaScriptCompatibility/#ecmascript-language-compliance
-    static Integer[] GRAAL_ES_VERSIONS = new Integer[]{
+    static final Integer[] GRAAL_ES_VERSIONS = new Integer[]{
             3,
             5,
             6,
@@ -55,7 +55,12 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
             2020,
             2021,
             2022,
+            2024
     };
+
+    private static final String DEFAULT_ES_VERSION = "6";
+
+    private static final String CTX_OPT_JS_ES_VERSION = "js.ecmascript-version";
 
 
     private static final Logger log = LoggerFactory.getLogger(DefaultScriptEvaluator.class);
@@ -133,6 +138,9 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
                 .targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build();
         org.graalvm.polyglot.Context.Builder ctx = org.graalvm.polyglot.Context.newBuilder("js")
                 .allowHostAccess(access);
+
+        ctx.option(CTX_OPT_JS_ES_VERSION, DEFAULT_ES_VERSION);
+
         for (Map.Entry<String, Object> entry : variables.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
@@ -143,7 +151,7 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
                 if (esVersion.isEmpty()) {
                     throw new UserDefinedException("unsupported esVersion: " + value.toString());
                 }
-                ctx.option("js.ecmascript-version", esVersion.get().toString());
+                ctx.option(CTX_OPT_JS_ES_VERSION, esVersion.get().toString());
             }
         }
         return ctx;

@@ -1,0 +1,248 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Slack Task Schema",
+  "description": "Schema for the slack task.",
+  "definitions": {
+    "sendMessageAction": {
+      "type": "string",
+      "enum": [
+        "sendMessage"
+      ]
+    },
+    "updateMessageAction": {
+      "type": "string",
+      "enum": [
+        "updateMessage"
+      ]
+    },
+    "addReactionAction": {
+      "type": "string",
+      "enum": [
+        "addReaction"
+      ]
+    },
+    "action": {
+      "type": "string",
+      "description": "Slack operation. Defaults to sendMessage.",
+      "default": "sendMessage",
+      "enum": [
+        "sendMessage",
+        "updateMessage",
+        "addReaction"
+      ]
+    },
+    "slackObjectList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  },
+  "in": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "$ref": "#/definitions/action"
+      },
+      "apiToken": {
+        "type": "string",
+        "description": "Slack API token."
+      },
+      "authToken": {
+        "type": "string",
+        "description": "Deprecated alias for apiToken."
+      },
+      "isLegacy": {
+        "type": "boolean",
+        "default": false,
+        "description": "Use legacy Slack API behavior."
+      },
+      "connectTimeout": {
+        "type": "integer",
+        "default": 30000,
+        "description": "Connection timeout in milliseconds."
+      },
+      "soTimeout": {
+        "type": "integer",
+        "default": 30000,
+        "description": "Socket timeout in milliseconds."
+      },
+      "retryCount": {
+        "type": "integer",
+        "default": 3,
+        "description": "Number of Slack API retry attempts."
+      },
+      "proxyAddress": {
+        "type": "string",
+        "description": "HTTP proxy hostname or address."
+      },
+      "proxyPort": {
+        "type": "integer",
+        "description": "HTTP proxy port."
+      },
+      "channelId": {
+        "type": "string",
+        "description": "Slack channel ID."
+      },
+      "text": {
+        "type": "string",
+        "description": "Message text."
+      },
+      "json": {
+        "type": "string",
+        "description": "Raw Slack API JSON payload for chat.postMessage or chat.update."
+      },
+      "ts": {
+        "type": "string",
+        "description": "Message timestamp. Used as thread timestamp for messages and target timestamp for reactions."
+      },
+      "replyBroadcast": {
+        "type": "boolean",
+        "default": false,
+        "description": "Broadcast a thread reply to the channel."
+      },
+      "iconEmoji": {
+        "type": "string",
+        "description": "Bot icon emoji."
+      },
+      "username": {
+        "type": "string",
+        "description": "Bot display name."
+      },
+      "attachments": {
+        "allOf": [
+          {
+            "$ref": "#/definitions/slackObjectList"
+          }
+        ],
+        "description": "Slack message attachments."
+      },
+      "blocks": {
+        "allOf": [
+          {
+            "$ref": "#/definitions/slackObjectList"
+          }
+        ],
+        "description": "Slack Block Kit blocks."
+      },
+      "reaction": {
+        "type": "string",
+        "description": "Reaction name to add to a message."
+      },
+      "ignoreErrors": {
+        "type": "boolean",
+        "default": false,
+        "description": "Return an error result instead of throwing on Slack call errors."
+      }
+    },
+    "allOf": [
+      {
+        "if": {
+          "properties": {
+            "action": {
+              "$ref": "#/definitions/sendMessageAction"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "then": {
+          "anyOf": [
+            {
+              "required": [
+                "json"
+              ]
+            },
+            {
+              "required": [
+                "channelId"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "action": {
+              "$ref": "#/definitions/updateMessageAction"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "then": {
+          "anyOf": [
+            {
+              "required": [
+                "json"
+              ]
+            },
+            {
+              "required": [
+                "channelId"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "action": {
+              "$ref": "#/definitions/addReactionAction"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "then": {
+          "required": [
+            "channelId",
+            "ts",
+            "reaction"
+          ]
+        }
+      }
+    ],
+    "additionalProperties": true
+  },
+  "out": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "Whether Slack accepted the request."
+      },
+      "error": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Slack error string, or null when the request succeeded."
+      },
+      "id": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Slack channel ID returned by the API."
+      },
+      "ts": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Slack message timestamp returned by the API."
+      }
+    },
+    "required": [
+      "ok"
+    ],
+    "additionalProperties": true
+  }
+}

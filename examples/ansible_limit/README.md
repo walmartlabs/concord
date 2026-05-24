@@ -5,7 +5,7 @@ Example of running an Ansible playbook with --limit option.
 ## Running
 
 ```
-cd examples/ansible
+cd examples/ansible_limit
 ./run.sh localhost:8001
 ```
 

@@ -26,7 +26,6 @@ import com.walmartlabs.concord.svm.ThreadError;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Serial;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -54,9 +53,17 @@ public class ParallelExecutionException extends RuntimeException {
     }
 
     private static String toMessage(Collection<ThreadError> causes) {
-        return causes.stream()
-                .map(ParallelExecutionException::stacktraceToString)
-                .collect(Collectors.joining("\n"));
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        for (ThreadError item : causes) {
+            if (i > 0) {
+                sb.append("\n\n");
+            }
+            sb.append("[").append(i + 1).append("] ");
+            sb.append(stacktraceToString(item));
+            i++;
+        }
+        return sb.toString();
     }
 
     @Override
@@ -70,23 +77,32 @@ public class ParallelExecutionException extends RuntimeException {
     }
 
     private static String stacktraceToString(ThreadError e) {
-        StringWriter sw = new StringWriter();
-        sw.append(toString(e));
+        StringBuilder sb = new StringBuilder();
+        sb.append(toErrorHeader(e));
+        sb.append("\n  Error: ");
+        sb.append(indentContinuationLines(e.exception().toString(), "  "));
+
+        if (!e.callStack().isEmpty()) {
+            sb.append("\n  Call stack:\n");
+            sb.append(e.callStack().stream()
+                    .map(item -> "    " + item)
+                    .collect(Collectors.joining("\n")));
+        }
 
         StackTraceElement[] elements = e.getStackTrace();
         if (elements.length > 0) {
-            sw.append("\n");
+            sb.append("\n  Java stack trace:\n");
         }
 
         int maxElements = Math.min(elements.length, MAX_STACK_TRACE_ELEMENTS);
         for (int i = 0; i < maxElements; i++) {
             StackTraceElement element = elements[i];
-            sw.append("\tat ").append(element.toString()).append("\n");
+            sb.append("    at ").append(element.toString()).append("\n");
         }
         if (maxElements != elements.length) {
-            sw.append("\t...").append(String.valueOf(elements.length - maxElements)).append(" more\n");
+            sb.append("    ...").append(elements.length - maxElements).append(" more\n");
         }
-        return sw.toString();
+        return sb.toString();
     }
 
     @Override
@@ -99,11 +115,27 @@ public class ParallelExecutionException extends RuntimeException {
         return new StackTraceElement[0];
     }
 
-    private static String toString(ThreadError threadError) {
+    private static String toErrorHeader(ThreadError threadError) {
         String prefix = "";
         if (threadError.cmd() instanceof StepCommand<?> sc) {
             prefix = Location.toErrorPrefix(sc.getStep().getLocation()) + ", ";
         }
-        return prefix + "thread: " + threadError.threadId().id() + ": " + threadError.exception();
+        return prefix + "thread: " + threadError.threadId().id();
+    }
+
+    private static String indentContinuationLines(String s, String indent) {
+        return trimTrailingLineSeparators(s).lines().collect(Collectors.joining("\n" + indent));
+    }
+
+    private static String trimTrailingLineSeparators(String s) {
+        int end = s.length();
+        while (end > 0) {
+            char c = s.charAt(end - 1);
+            if (c != '\n' && c != '\r') {
+                break;
+            }
+            end--;
+        }
+        return end == s.length() ? s : s.substring(0, end);
     }
 }

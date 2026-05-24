@@ -1,6 +1,6 @@
 # Concord Inventory Example
 
-**Deprecated** use [the JSON store API](https://concord.walmartlabs.com/docs/getting-started/json-store.html).
+**Deprecated**, use [the JSON store API](https://concord.walmartlabs.com/docs/getting-started/json-store.html).
 
 ## Usage
 
