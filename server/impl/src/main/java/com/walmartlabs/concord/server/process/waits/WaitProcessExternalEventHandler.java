@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.waits;
  */
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class WaitProcessExternalEventHandler implements ProcessWaitHandler<ProcessExternalEventCondition> {
 
@@ -31,17 +32,40 @@ public class WaitProcessExternalEventHandler implements ProcessWaitHandler<Proce
 
     @Override
     public List<Result<ProcessExternalEventCondition>> processBatch(List<WaitConditionItem<ProcessExternalEventCondition>> waits) {
-        // For each wait, if waiting == false, resume the process and pass variables
-        return waits.stream().map(wait -> {
-            ProcessExternalEventCondition cond = wait.waitCondition();
-            if (!cond.waiting()) {
-                // Resume process, pass eventKey as resumeEvent
-                return Result.<ProcessExternalEventCondition>resume(wait, cond.resumeEvent(), cond.variables());
-            }
 
-            // Still waiting
-            return Result.of(wait.processKey(), wait.waitConditionId(), cond);
-        }).toList();
+        var byResumeEvent = waits.stream().collect(Collectors.groupingBy(wait -> wait.waitCondition().resumeEvent()));
+
+        // TODO break this into multiple methods to make it readable
+        return byResumeEvent.entrySet().stream()
+                .flatMap(e -> {
+                    var waitsForEvent = e.getValue();
+
+                    var allWaitsComplete = waitsForEvent.stream().noneMatch(wait -> wait.waitCondition().waiting());
+                    if (allWaitsComplete) {
+                        return waitsForEvent.stream().map(wait ->
+                                Result.<ProcessExternalEventCondition>resume(wait, wait.waitCondition().resumeEvent(), wait.waitCondition().variables())
+                        );
+                    } else {
+                        // still waiting on wat least one condition to be cleared for the resume event
+                        return waitsForEvent.stream().map(wait ->
+                                Result.of(wait.processKey(), wait.waitConditionId(), wait.waitCondition())
+                        );
+                    }
+                })
+                .toList();
+
+
+//        // For each wait, if waiting == false, resume the process and pass variables
+//        return waits.stream().map(wait -> {
+//            ProcessExternalEventCondition cond = wait.waitCondition();
+//            if (!cond.waiting()) {
+//                // Resume process, pass eventKey as resumeEvent
+//                return Result.<ProcessExternalEventCondition>resume(wait, cond.resumeEvent(), cond.variables());
+//            }
+//
+//            // Still waiting
+//            return Result.of(wait.processKey(), wait.waitConditionId(), cond);
+//        }).toList();
     }
 }
 

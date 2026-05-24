@@ -87,6 +87,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -94,6 +95,7 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
@@ -958,12 +960,12 @@ public class ProcessResource implements Resource {
      * Clears an external event wait condition for a process.
      */
     @POST
-    @javax.ws.rs.Path("/{instanceId}/external-wait/{resumeEvent}/clear")
+    @javax.ws.rs.Path("/{instanceId}/external-wait/{externalEvent}/clear")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response clearExternalWait(@PathParam("instanceId") UUID instanceId,
-                                      @PathParam("resumeEvent") String resumeEvent,
-                                      Map<String, Object> variables) {
+                                      @PathParam("externalEvent") String externalEvent,
+                                      Map<String, Serializable> variables) {
         // Find the process and its wait conditions
         ProcessKey pk = assertProcessKey(instanceId);
         ProcessWaitEntry waitEntry = processWaitManager.getWait(pk);
@@ -991,7 +993,10 @@ public class ProcessResource implements Resource {
 //                    return objectMapper.convertValue(e, clazz);
 //                })
                 .map(condition -> {
-                    if (condition instanceof ProcessExternalEventCondition extCond && extCond.resumeEvent().equals(resumeEvent) && extCond.waiting()) {
+                    if (condition instanceof ProcessExternalEventCondition extCond
+                            && extCond.externalEvent().equals(externalEvent)
+                            && extCond.waiting()) {
+
                         updated.set(true);
                         return ImmutableProcessExternalEventCondition.builder()
                                 .from(extCond)
@@ -1005,7 +1010,9 @@ public class ProcessResource implements Resource {
                 .toList();
 
         if (!updated.get()) {
-            return Response.status(Status.NOT_FOUND).entity("No matching external event wait condition found or already cleared").build();
+            return Response.status(Status.NOT_FOUND)
+                    .entity("No matching external event wait condition found or already cleared")
+                    .build();
         }
 
         // Persist the updated wait conditions

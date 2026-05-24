@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Map;
 
@@ -33,10 +34,18 @@ import java.util.Map;
 @JsonDeserialize(as = ImmutableProcessExternalEventCondition.class)
 public abstract class ProcessExternalEventCondition extends AbstractWaitCondition implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
      * Unique key for the external event.
+     */
+    public abstract String externalEvent();
+
+    /**
+     * Event key for resuming the process. Must be unique to the process' but
+     * can be repeated across multiple external event waits to force resuming
+     * when all external event waits for the same resume event are cleared.
      */
     public abstract String resumeEvent();
 
@@ -49,7 +58,7 @@ public abstract class ProcessExternalEventCondition extends AbstractWaitConditio
      * Optional payload of variables to set when the event is cleared.
      */
     @Nullable
-    public abstract Map<String, Object> variables();
+    public abstract Map<String, Serializable> variables();
 
     @Override
     public WaitType type() {

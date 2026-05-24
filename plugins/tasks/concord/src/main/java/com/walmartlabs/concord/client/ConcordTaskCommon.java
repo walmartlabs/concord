@@ -21,6 +21,8 @@ package com.walmartlabs.concord.client;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.ZipUtils;
@@ -30,6 +32,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.LogTags;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.immutables.value.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,15 +117,25 @@ public class ConcordTaskCommon {
     TaskResult suspendForExternalEvent(WaitForExternalEventParams params) throws ApiException {
         // TODO REMOVE this method
 
-        for (String eventId : params.resumeEvents()) {
+        String resumeEvent = "resume_" + UUID.randomUUID();
 
-            log.info("Resume wiht curl -vn -X POST -H \"content-type: application/json\" -d '{\"newVar\": \"hello new var\"}' \"http://localhost:8001/api/v1/process/{}/external-wait/{}/clear\"", params.txId(), eventId);
+        StringBuilder resumeExamples = new StringBuilder();
+
+        for (String externalEvent : params.externalEvents()) {
+            resumeExamples.append(String.format("""
+                            curl -n -X POST \\
+                            -H "content-type: application/json" \\
+                            -d '{ "varsFor%s": { "newVar": "hello new var" } }' \\
+                            "http://localhost:8001/api/v1/process/%s/external-wait/%s/clear"
+                            """,
+                    externalEvent, params.txId(), externalEvent));
 
             Map<String, Object> condition = new HashMap<>();
             condition.put("type", "EXTERNAL_EVENT");
-            condition.put("reason", "Waiting on external event: " + eventId);
+            condition.put("reason", "Waiting on external event: " + externalEvent);
             condition.put("waiting", true);
-            condition.put("resumeEvent", eventId);
+            condition.put("externalEvent", externalEvent);
+            condition.put("resumeEvent", resumeEvent);
 
             ClientUtils.withRetry(3, 1000, () -> withClient(client -> {
                 ProcessApi api = new ProcessApi(client);
@@ -131,7 +144,25 @@ public class ConcordTaskCommon {
             }));
         }
 
-        return TaskResult.reentrantSuspend(params.resumeEvents().get(0), Collections.emptyMap());
+        log.info("Serializing state...");
+        log.info("Resume with:\n{}", resumeExamples);
+
+        ExternalResumeState state = ImmutableExternalResumeState.builder()
+                .externalEvents(params.externalEvents())
+                .resumeEvent(resumeEvent)
+                .build();
+
+        return TaskResult.reentrantSuspend(resumeEvent,
+               new ObjectMapper().convertValue(state, Map.class));
+    }
+
+    @Value.Immutable
+    @Value.Style(jdkOnly = true)
+    @JsonSerialize(as = ImmutableExternalResumeState.class)
+    @JsonDeserialize(as = ImmutableExternalResumeState.class)
+    public interface ExternalResumeState {
+        List<String> externalEvents();
+        String resumeEvent();
     }
 
     public String suspendForCompletion(List<UUID> ids) throws Exception {

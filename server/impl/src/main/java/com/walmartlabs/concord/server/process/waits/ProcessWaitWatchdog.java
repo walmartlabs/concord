@@ -159,8 +159,9 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             Map<String, Object> resumeVars = resultForProcess.stream()
                     .flatMap(r -> {
                         var variables = r.resumeVariables();
-                        return variables == null ? Stream.empty() : variables.<String, Object>entrySet().stream();
-                    }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        return variables == null ? Stream.empty() : variables.entrySet().stream();
+                    })
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (orig, dup) -> orig));
 
             try {
                 boolean updated = processWaitManager.txResult(tx -> {
@@ -192,7 +193,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             log.warn("processBatch ['{}'] -> handler not found", type);
             return waitConditions.stream()
                     .map(w -> Result.of(w.processKey(), w.waitConditionId(), null))
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         try {
@@ -224,7 +225,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     }
 
     private static Map<WaitType, List<WaitConditionItem<AbstractWaitCondition>>> toBatches(List<WaitingProcess> processes) {
-        Map<WaitType, List<WaitConditionItem<AbstractWaitCondition>>> result = new HashMap<>();
+        Map<WaitType, List<WaitConditionItem<AbstractWaitCondition>>> result = new EnumMap<>(WaitType.class);
 
         for (WaitingProcess p : processes) {
             boolean hasExclusive = p.waits().stream().anyMatch(AbstractWaitCondition::exclusive);
@@ -249,7 +250,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         }
         return result.stream()
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Value.Immutable

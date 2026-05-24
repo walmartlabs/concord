@@ -328,8 +328,8 @@ public class ConcordTaskParams {
             super(variables);
         }
 
-        List<String> resumeEvents() {
-            return variables.getList("resumeEvents", List.of());
+        List<String> externalEvents() {
+            return variables.getList("externalEvents", List.of());
         }
 
         UUID txId() {

@@ -25,6 +25,7 @@ import org.immutables.value.Value;
 import org.jooq.DSLContext;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -86,7 +87,7 @@ public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
             return ImmutableResult.of(processKey, waitConditionId, waitCondition, null, null, null);
         }
 
-        static <T extends AbstractWaitCondition> Result<T> resume(WaitConditionItem<?> wait, String resumeEvent, Map<String, Object> resumeVariables) {
+        static <T extends AbstractWaitCondition> Result<T> resume(WaitConditionItem<?> wait, String resumeEvent, Map<String, Serializable> resumeVariables) {
             return ImmutableResult.of(wait.processKey(), wait.waitConditionId(), null, resumeEvent, resumeVariables, null);
         }
 

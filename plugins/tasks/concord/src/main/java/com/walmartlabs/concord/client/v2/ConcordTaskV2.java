@@ -20,7 +20,9 @@ package com.walmartlabs.concord.client.v2;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client.ConcordTaskCommon.ExternalResumeState;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.LogTags;
@@ -30,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -66,7 +69,17 @@ public class ConcordTaskV2 implements ReentrantTask {
         // TODO REMOVE
         log.info("resume event: {}", event);
         log.info("resume event state: {}", event.state());
+
         log.info("newVar: {}", context.variables().getString("newVar", "no new var"));
+
+        ExternalResumeState state = new ObjectMapper()
+                .convertValue(event.state(), ExternalResumeState.class);
+
+        state.externalEvents().forEach(eventName -> {
+            var expectedVar = "varsFor" + eventName;
+            var value = context.variables().get(expectedVar);
+            log.info("new var '{}': {}", expectedVar, value);
+        });
 
 
         return delegate().continueAfterSuspend(new ResumePayload(event.state()));
@@ -75,13 +88,13 @@ public class ConcordTaskV2 implements ReentrantTask {
     public List<String> listSubprocesses(String instanceId, String... tags) throws Exception {
         return delegate().listSubProcesses(ListSubProcesses.of(UUID.fromString(instanceId), tags)).stream()
                 .map(e -> e.getInstanceId().toString())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<String> listSubprocesses(Map<String, Object> cfg) throws Exception {
         return delegate().listSubProcesses(new ListSubProcesses(new MapBackedVariables(cfg))).stream()
                 .map(e -> e.getInstanceId().toString())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public void suspendForCompletion(List<String> ids) throws Exception {
