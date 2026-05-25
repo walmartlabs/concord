@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +60,7 @@ public class WaitProcessExternalEventHandler implements ProcessWaitHandler<Proce
         return byResumeEvent.values().stream()
                 .flatMap(waitsForEvent -> {
                     var isAnyWaiting = waitsForEvent.stream()
-                            .anyMatch(wait -> wait.waitCondition().waiting());
+                            .anyMatch(WaitProcessExternalEventHandler::isActive);
 
                     return isAnyWaiting
                             // still waiting on at least one condition to be cleared for the resume event
@@ -68,6 +69,24 @@ public class WaitProcessExternalEventHandler implements ProcessWaitHandler<Proce
                             : streamBatchReadyForResume(waitsForEvent);
                 })
                 .toList();
+    }
+
+    private static boolean isActive(WaitConditionItem<ProcessExternalEventCondition> wait) {
+        var condition = wait.waitCondition();
+        return !(!condition.waiting() || isExpired(condition));
+    }
+
+    private static boolean isExpired(ProcessExternalEventCondition condition) {
+        var expiresAt = condition.expiresAt();
+
+        if (expiresAt == null) {
+            // This *shouldn't* be possible with proper input sanitation, but if
+            // there is no expiration time, we will consider the condition expired
+            // to avoid waiting indefinitely.
+            return true;
+        }
+
+        return OffsetDateTime.now().isAfter(condition.expiresAt());
     }
 
     private Stream<Result<ProcessExternalEventCondition>> streamBatchNotReady(
@@ -102,7 +121,9 @@ public class WaitProcessExternalEventHandler implements ProcessWaitHandler<Proce
             return Map.of();
         }
 
-        return buildNestedMap(splits, 0, (Serializable) condition.variables());
+        var variables = isExpired(condition) ? Map.of("isExpired", true) : condition.variables();
+
+        return buildNestedMap(splits, 0, (Serializable) variables);
     }
 
     /**

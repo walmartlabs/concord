@@ -27,6 +27,7 @@ import org.immutables.value.Value;
 import javax.annotation.Nullable;
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 @Value.Immutable
@@ -66,6 +67,9 @@ public abstract class ProcessExternalEventCondition extends AbstractWaitConditio
      */
     @Nullable
     public abstract String saveAs();
+
+    @Nullable
+    public abstract OffsetDateTime expiresAt();
 
     @Override
     public WaitType type() {

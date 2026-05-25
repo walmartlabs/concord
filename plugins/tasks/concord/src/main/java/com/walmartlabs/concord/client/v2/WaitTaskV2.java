@@ -21,6 +21,7 @@ package com.walmartlabs.concord.client.v2;
  */
 
 import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ApiException;
 import com.walmartlabs.concord.client2.ClientUtils;
 import com.walmartlabs.concord.client2.ProcessApi;
 import com.walmartlabs.concord.common.ObjectMapperProvider;
@@ -35,13 +36,16 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Named("waitForExternalEvent")
 public class WaitTaskV2 implements ReentrantTask {
@@ -87,7 +91,7 @@ public class WaitTaskV2 implements ReentrantTask {
                             curl -n -X POST \\
                             -H "content-type: application/json" \\
                             -d '{ "newVar": "hello new var for %s" }' \\
-                            "%s/api/v1/process/%s/external-wait/%s/clear"
+                            "%s/api/v1/process/%s/wait/external/%s/clear"
                             """,
                     externalEvent.eventId(), apiClient.getBaseUrl(), txId, externalEvent.eventId()));
 
@@ -98,6 +102,7 @@ public class WaitTaskV2 implements ReentrantTask {
             condition.put("externalEvent", externalEvent.eventId());
             condition.put("saveAs", resumeEvent + "." + externalEvent.saveAs());
             condition.put("resumeEvent", resumeEvent);
+            condition.put("expiresAt", externalEvent.expiresAt().map(Objects::toString).orElse(null));
 
             ClientUtils.withRetry(3, 1000, () -> {
                 ProcessApi api = new ProcessApi(apiClient);
@@ -125,21 +130,16 @@ public class WaitTaskV2 implements ReentrantTask {
         eventConfigs.stream()
                 .map(EventConfig::saveAs)
                 .filter(eventId -> !allVars.add(eventId))
-                .forEach(duplicateVarName -> log.warn("Duplicate resume variable '{}' supplied. This may result in overwritten results.", duplicateVarName));
+                .forEach(duplicateVarName ->
+                        log.warn("Duplicate resume variable '{}' supplied. This may result in overwritten results.", duplicateVarName));
     }
 
     @Override
-    public TaskResult resume(ResumeEvent event) throws Exception {
+    public TaskResult resume(ResumeEvent event) {
         var mapper = objectMapperProvider.get();
         var resumeState = mapper.convertValue(event.state(), ExternalResumeState.class);
 
-        var data = new HashMap<String, Object>();
-
-        log.info("all vars: {}", mapper.writeValueAsString(context.variables().toMap()));
-
-
-        var resumeVars = context.variables().getMap(event.eventName(), Map.of());
-
+        var resumeVars = context.variables().getMap(event.eventName(), Map.<String, Object>of());
 
         // TODO Remove this debug logging
         resumeState.externalEvents().forEach(eventConfig -> {
@@ -148,18 +148,43 @@ public class WaitTaskV2 implements ReentrantTask {
             log.info("new var '{}': {}", expectedVar, value);
         });
 
-
-        // Move the vars from the global context to the task's output.
-        for (var eventConfig : resumeState.externalEvents()) {
-            data.put(eventConfig.saveAs(), resumeVars.getOrDefault(eventConfig.saveAs(), null));
-        }
-
+        // Move the vars from the global context to the task's result data
+        // and check for any explicit failures (e.g. wait ended due to expiration)
+        var hasExpiredEvent = new AtomicBoolean(false);
+        var resultData = extractEventVars(resumeState, resumeVars, hasExpiredEvent);
         context.variables().set(event.eventName(), null); // clean up global context vars.
 
-        return TaskResult.success().values(data);
+
+        var result = hasExpiredEvent.get()
+                ? TaskResult.fail("One or more external event wait conditions expired.")
+                : TaskResult.success();
+
+        return result.values(resultData);
     }
 
-    record EventConfig(String eventId, String saveAs) {
+    private Map<String, Object> extractEventVars(
+            ExternalResumeState resumeState,
+            Map<String, Object> resumeVars,
+            AtomicBoolean hasExpiredEvent
+    ) {
+
+        var resultData = new HashMap<String, Object>();
+
+        for (var eventConfig : resumeState.externalEvents()) {
+            var eventResumeVars = resumeVars.getOrDefault(eventConfig.saveAs(), null);
+
+            if (eventResumeVars instanceof Map<?, ?> vars && Boolean.TRUE.equals(vars.get("isExpired"))) {
+                hasExpiredEvent.set(true);
+                log.error("External event wait condition for '{}' expired. No results will exist.", eventConfig.eventId());
+            }
+
+            resultData.put(eventConfig.saveAs(), eventResumeVars);
+        }
+
+        return resultData;
+    }
+
+    record EventConfig(String eventId, String saveAs, Optional<OffsetDateTime> expiresAt) {
     }
 
     record ExternalResumeState(List<EventConfig> externalEvents) {

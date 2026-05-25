@@ -52,7 +52,7 @@ public class WaitConditionsIT extends AbstractTest {
         var proc = concord.processes().start(payload);
         expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
 
-        processApi.clearExternalWait(proc.instanceId(), "external_event", Map.of("externalResultOk", true));
+        processApi.clearExternalWaitCondition(proc.instanceId(), "external_event", Map.of("externalResultOk", true));
 
 
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
@@ -68,8 +68,8 @@ public class WaitConditionsIT extends AbstractTest {
         var proc = concord.processes().start(payload);
         expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
 
-        processApi.clearExternalWait(proc.instanceId(), "external_event_1", Map.of("externalResultOk", true));
-        processApi.clearExternalWait(proc.instanceId(), "external_event_2", Map.of("aDifferentResultKey", Map.of("nested", true)));
+        processApi.clearExternalWaitCondition(proc.instanceId(), "external_event_1", Map.of("externalResultOk", true));
+        processApi.clearExternalWaitCondition(proc.instanceId(), "external_event_2", Map.of("aDifferentResultKey", Map.of("nested", true)));
 
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
         proc.assertLog(".*external result 1: true.*");
@@ -85,10 +85,10 @@ public class WaitConditionsIT extends AbstractTest {
         var proc = concord.processes().start(payload);
         expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
 
-        processApi.clearExternalWait(proc.instanceId(), "external_event_A_1", Map.of("externalResultOk", "result for A_1"));
-        processApi.clearExternalWait(proc.instanceId(), "external_event_A_2", Map.of("aDifferentResultKey", "result for A_2"));
-        processApi.clearExternalWait(proc.instanceId(), "external_event_B_1", Map.of("externalResultOk", "result for B_1"));
-        processApi.clearExternalWait(proc.instanceId(), "external_event_B_2", Map.of("aDifferentResultKey", "result for B_2"));
+        processApi.clearExternalWaitCondition(proc.instanceId(), "external_event_A_1", Map.of("externalResultOk", "result for A_1"));
+        processApi.clearExternalWaitCondition(proc.instanceId(), "external_event_A_2", Map.of("aDifferentResultKey", "result for A_2"));
+        processApi.clearExternalWaitCondition(proc.instanceId(), "external_event_B_1", Map.of("externalResultOk", "result for B_1"));
+        processApi.clearExternalWaitCondition(proc.instanceId(), "external_event_B_2", Map.of("aDifferentResultKey", "result for B_2"));
 
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
         proc.assertLog(".*external result A_1: result for A_1.*");
@@ -96,4 +96,58 @@ public class WaitConditionsIT extends AbstractTest {
         proc.assertLog(".*external result B_1: result for B_1.*");
         proc.assertLog(".*external result B_2: result for B_2.*");
     }
+
+    @Test
+    void expiration() throws Exception {
+        var payload = new Payload()
+                .entryPoint("expire")
+                .archive(resource("waitConditions"));
+
+        var proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
+
+        // watchdog should notice expired condition and move forward
+
+        expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
+        proc.assertLog(".*External event wait condition for 'external_event' expired.*");
+    }
+
+    @Test
+    void oneSuccessOneExpired() throws Exception {
+        var payload = new Payload()
+                .entryPoint("oneSuccessOneExpired")
+                .arg("doIgnoreErrors", "${false}")
+                .archive(resource("waitConditions"));
+
+        var proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
+
+        processApi.clearExternalWaitCondition(proc.instanceId(), "external_event_1", Map.of("externalResultOk", true));
+
+        expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
+        proc.assertLog(".*One or more external event wait conditions expired.*");
+    }
+
+    @Test
+    void f() throws Exception {
+        var payload = new Payload()
+                .entryPoint("oneSuccessOneExpiredIgnoreErrors")
+                .arg("doIgnoreErrors", "${true}")
+                .archive(resource("waitConditions"));
+
+        var proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
+
+        processApi.clearExternalWaitCondition(proc.instanceId(), "external_event_1", Map.of("externalResultOk", true));
+
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+        // still get the error message
+        proc.assertLog(".*One or more external event wait conditions expired.*");
+        // as well as the result data
+        proc.assertLog(".*external result 1 isExpired: null.*");
+        proc.assertLog(".*external result 2 isExpired: true.*");
+        proc.assertLog(".*external result 1: true.*");
+        proc.assertLog(".*external result 2: null.*");
+    }
+
 }

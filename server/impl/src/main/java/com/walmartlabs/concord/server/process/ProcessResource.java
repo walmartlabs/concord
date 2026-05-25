@@ -92,6 +92,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -947,26 +948,68 @@ public class ProcessResource implements Resource {
     @Operation(description = "Set the process' wait condition")
     public Response setWaitCondition(@PathParam("id") UUID instanceId, Map<String, Object> waitCondition) {
         ProcessKey processKey = assertProcessKey(instanceId);
-        AbstractWaitCondition condition = objectMapper.convertValue(waitCondition, AbstractWaitCondition.class);
-        if (condition == null) {
-            throw new ConcordApplicationException("Wait condition is required", Status.BAD_REQUEST);
+        AbstractWaitCondition condition = assertWaitCondition(waitCondition);
+
+        if (condition instanceof ProcessExternalEventCondition extCond) {
+            // do some extra sanitizing
+            condition = assertExternalWaitCondition(extCond);
         }
+
         processWaitManager.addWait(processKey, condition);
         return Response.ok().build();
+    }
+
+    private AbstractWaitCondition assertWaitCondition(Map<String, Object> waitCondition) {
+        try {
+            AbstractWaitCondition condition = objectMapper.convertValue(waitCondition, AbstractWaitCondition.class);
+            if (condition == null) {
+                throw new ConcordApplicationException("Wait condition is required", Status.BAD_REQUEST);
+            }
+            return condition;
+        } catch (IllegalArgumentException e) {
+            throw new ConcordApplicationException("Unable to construct WaitCondition from given payload.", Status.BAD_REQUEST);
+        }
+    }
+
+    private ProcessExternalEventCondition assertExternalWaitCondition(ProcessExternalEventCondition condition) {
+        if (condition.expiresAt() == null) {
+            condition = ProcessExternalEventCondition.builder()
+                    .from(condition)
+                    // TODO make default configurable by server config or policy?
+                    .expiresAt(OffsetDateTime.now().plusHours(2))
+                    .build();
+        }
+
+        // not in past
+        if (OffsetDateTime.now().isAfter(condition.expiresAt())) {
+            throw new ConcordApplicationException("Expiration time must be in the future for external event wait condition", Status.BAD_REQUEST);
+        }
+
+        // not too far in the future
+        if (OffsetDateTime.now().plusDays(2).isBefore(condition.expiresAt())) {
+            throw new ConcordApplicationException("Expiration time is too far in the future for external event wait condition", Status.BAD_REQUEST);
+        }
+
+        if (condition.externalEvent() == null || condition.externalEvent().isBlank()) {
+            throw new ConcordApplicationException("External event name is required for external event wait condition", Status.BAD_REQUEST);
+        }
+
+        return condition;
     }
 
     /**
      * Clears an external event wait condition for a process.
      */
     @POST
-    @javax.ws.rs.Path("/{id}/external-wait/{eventId}/clear")
+    @javax.ws.rs.Path("/{id}/wait/external/{eventId}/clear")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Resolves a process' wait condition for an external event")
-    public Response clearExternalWait(@PathParam("id") UUID instanceId,
+    public Response clearExternalWaitCondition(@PathParam("id") UUID instanceId,
                                       @PathParam("eventId") String externalEvent,
                                       Map<String, Serializable> variables) {
-        // Find the process and its wait conditions
+
+        // Find the process and its wait condition(s)
         ProcessKey pk = assertProcessKey(instanceId);
         ProcessWaitEntry waitEntry = processWaitManager.getWait(pk);
 
@@ -977,21 +1020,7 @@ public class ProcessResource implements Resource {
         AtomicBoolean updated = new AtomicBoolean(false);
 
         List<AbstractWaitCondition> waits = Objects.requireNonNull(waitEntry.waits()).stream()
-                // TODO this effectively removes waits with type NONE...idk if that's a good idea
-//                .filter(e -> WaitType.valueOf(String.valueOf(e.get("type"))) != WaitType.NONE)
-                // TODO what happens if condition type is NONE?
-                .map(e -> objectMapper.convertValue(e, AbstractWaitCondition.class))
-//                .map(e -> {
-//                    var clazz = switch(WaitType.valueOf(String.valueOf(e.get("type")))) {
-//                        case NONE -> null;
-//                        case PROCESS_COMPLETION -> ProcessCompletionCondition.class;
-//                        case PROCESS_LOCK -> ProcessLockCondition.class;
-//                        case PROCESS_SLEEP -> ProcessSleepCondition.class;
-//                        case EXTERNAL_EVENT -> ProcessExternalEventCondition.class;
-//                    };
-//
-//                    return objectMapper.convertValue(e, clazz);
-//                })
+                .map(this::assertWaitCondition)
                 .map(condition -> {
                     if (condition instanceof ProcessExternalEventCondition extCond
                             && extCond.externalEvent().equals(externalEvent)
