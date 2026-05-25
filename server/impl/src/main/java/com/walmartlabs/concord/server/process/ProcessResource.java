@@ -95,7 +95,6 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
@@ -960,11 +959,12 @@ public class ProcessResource implements Resource {
      * Clears an external event wait condition for a process.
      */
     @POST
-    @javax.ws.rs.Path("/{instanceId}/external-wait/{externalEvent}/clear")
+    @javax.ws.rs.Path("/{id}/external-wait/{eventId}/clear")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response clearExternalWait(@PathParam("instanceId") UUID instanceId,
-                                      @PathParam("externalEvent") String externalEvent,
+    @Operation(description = "Resolves a process' wait condition for an external event")
+    public Response clearExternalWait(@PathParam("id") UUID instanceId,
+                                      @PathParam("eventId") String externalEvent,
                                       Map<String, Serializable> variables) {
         // Find the process and its wait conditions
         ProcessKey pk = assertProcessKey(instanceId);
