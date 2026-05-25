@@ -129,7 +129,7 @@ public class WaitConditionsIT extends AbstractTest {
     }
 
     @Test
-    void f() throws Exception {
+    void oneSuccessOneExpiredIgnoreErrors() throws Exception {
         var payload = new Payload()
                 .entryPoint("oneSuccessOneExpiredIgnoreErrors")
                 .arg("doIgnoreErrors", "${true}")
