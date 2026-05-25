@@ -60,6 +60,13 @@ public abstract class ProcessExternalEventCondition extends AbstractWaitConditio
     @Nullable
     public abstract Map<String, Serializable> variables();
 
+    /**
+     * Variable name to save externally-provided resume payload variables. Periods
+     * {@code .} are used as a delimiter to save the variables in a nested Map/object.
+     */
+    @Nullable
+    public abstract String saveAs();
+
     @Override
     public WaitType type() {
         return WaitType.EXTERNAL_EVENT;
@@ -74,4 +81,3 @@ public abstract class ProcessExternalEventCondition extends AbstractWaitConditio
         return ImmutableProcessExternalEventCondition.builder();
     }
 }
-

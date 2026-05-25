@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.waits;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
@@ -157,11 +158,9 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             }
 
             Map<String, Object> resumeVars = resultForProcess.stream()
-                    .flatMap(r -> {
-                        var variables = r.resumeVariables();
-                        return variables == null ? Stream.empty() : variables.entrySet().stream();
-                    })
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (orig, dup) -> orig));
+                    .map(Result::resumeVariables)
+                    .filter(Objects::nonNull)
+                    .reduce(Map.of(), ConfigurationUtils::deepMerge);
 
             try {
                 boolean updated = processWaitManager.txResult(tx -> {

@@ -21,8 +21,6 @@ package com.walmartlabs.concord.client;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.ZipUtils;
@@ -32,7 +30,6 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.LogTags;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.immutables.value.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,7 +96,6 @@ public class ConcordTaskCommon {
             }
             case CREATEAPIKEY -> createApiKey((CreateOrUpdateApiKeyParams) in);
             case CREATEORUPDATEAPIKEY -> createOrUpdateApiKey((CreateOrUpdateApiKeyParams) in);
-            case WAITFOREXTERNALEVENT -> suspendForExternalEvent((WaitForExternalEventParams) in);
         };
     }
 
@@ -112,57 +108,6 @@ public class ConcordTaskCommon {
 
             return api.listSubprocesses(instanceId, tags);
         });
-    }
-
-    TaskResult suspendForExternalEvent(WaitForExternalEventParams params) throws ApiException {
-        // TODO REMOVE this method
-
-        String resumeEvent = "resume_" + UUID.randomUUID();
-
-        StringBuilder resumeExamples = new StringBuilder();
-
-        for (String externalEvent : params.externalEvents()) {
-            resumeExamples.append(String.format("""
-                            curl -n -X POST \\
-                            -H "content-type: application/json" \\
-                            -d '{ "varsFor%s": { "newVar": "hello new var" } }' \\
-                            "http://localhost:8001/api/v1/process/%s/external-wait/%s/clear"
-                            """,
-                    externalEvent, params.txId(), externalEvent));
-
-            Map<String, Object> condition = new HashMap<>();
-            condition.put("type", "EXTERNAL_EVENT");
-            condition.put("reason", "Waiting on external event: " + externalEvent);
-            condition.put("waiting", true);
-            condition.put("externalEvent", externalEvent);
-            condition.put("resumeEvent", resumeEvent);
-
-            ClientUtils.withRetry(3, 1000, () -> withClient(client -> {
-                ProcessApi api = new ProcessApi(client);
-                api.setWaitCondition(currentProcessId, condition);
-                return null;
-            }));
-        }
-
-        log.info("Serializing state...");
-        log.info("Resume with:\n{}", resumeExamples);
-
-        ExternalResumeState state = ImmutableExternalResumeState.builder()
-                .externalEvents(params.externalEvents())
-                .resumeEvent(resumeEvent)
-                .build();
-
-        return TaskResult.reentrantSuspend(resumeEvent,
-               new ObjectMapper().convertValue(state, Map.class));
-    }
-
-    @Value.Immutable
-    @Value.Style(jdkOnly = true)
-    @JsonSerialize(as = ImmutableExternalResumeState.class)
-    @JsonDeserialize(as = ImmutableExternalResumeState.class)
-    public interface ExternalResumeState {
-        List<String> externalEvents();
-        String resumeEvent();
     }
 
     public String suspendForCompletion(List<UUID> ids) throws Exception {

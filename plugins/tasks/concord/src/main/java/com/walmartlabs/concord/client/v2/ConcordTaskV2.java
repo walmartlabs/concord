@@ -20,9 +20,7 @@ package com.walmartlabs.concord.client.v2;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client.*;
-import com.walmartlabs.concord.client.ConcordTaskCommon.ExternalResumeState;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.LogTags;
@@ -32,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -65,23 +62,6 @@ public class ConcordTaskV2 implements ReentrantTask {
 
     @Override
     public TaskResult resume(ResumeEvent event) throws Exception {
-
-        // TODO REMOVE
-        log.info("resume event: {}", event);
-        log.info("resume event state: {}", event.state());
-
-        log.info("newVar: {}", context.variables().getString("newVar", "no new var"));
-
-        ExternalResumeState state = new ObjectMapper()
-                .convertValue(event.state(), ExternalResumeState.class);
-
-        state.externalEvents().forEach(eventName -> {
-            var expectedVar = "varsFor" + eventName;
-            var value = context.variables().get(expectedVar);
-            log.info("new var '{}': {}", expectedVar, value);
-        });
-
-
         return delegate().continueAfterSuspend(new ResumePayload(event.state()));
     }
 

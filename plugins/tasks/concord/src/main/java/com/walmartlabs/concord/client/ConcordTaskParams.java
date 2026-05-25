@@ -43,7 +43,6 @@ public class ConcordTaskParams {
             case FORK -> new ForkParams(variables);
             case KILL -> new KillParams(variables);
             case CREATEAPIKEY, CREATEORUPDATEAPIKEY -> new CreateOrUpdateApiKeyParams(variables);
-            case WAITFOREXTERNALEVENT -> new WaitForExternalEventParams(variables);
         };
     }
 
@@ -322,21 +321,6 @@ public class ConcordTaskParams {
         }
     }
 
-    static class WaitForExternalEventParams extends ConcordTaskParams {
-        // TODO REMOVE THIS
-        public WaitForExternalEventParams(Variables variables) {
-            super(variables);
-        }
-
-        List<String> externalEvents() {
-            return variables.getList("externalEvents", List.of());
-        }
-
-        UUID txId() {
-            return variables.assertUUID("txId");
-        }
-    }
-
     static class ForkStartParams extends StartParams {
 
         private static final String INSTANCES_KEY = "instances";
@@ -553,7 +537,6 @@ public class ConcordTaskParams {
         KILL,
         CREATEAPIKEY,
         CREATEORUPDATEAPIKEY,
-        WAITFOREXTERNALEVENT,
     }
 
     private static class DelegateVariables implements Variables {

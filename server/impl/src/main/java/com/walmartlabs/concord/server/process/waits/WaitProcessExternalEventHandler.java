@@ -20,10 +20,26 @@ package com.walmartlabs.concord.server.process.waits;
  * =====
  */
 
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
+
+import javax.inject.Inject;
+import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.groupingBy;
 
 public class WaitProcessExternalEventHandler implements ProcessWaitHandler<ProcessExternalEventCondition> {
+
+    private final ProcessLogManager logManager;
+
+    @Inject
+    public WaitProcessExternalEventHandler(ProcessLogManager logManager) {
+        this.logManager = logManager;
+    }
 
     @Override
     public WaitType getType() {
@@ -31,41 +47,79 @@ public class WaitProcessExternalEventHandler implements ProcessWaitHandler<Proce
     }
 
     @Override
-    public List<Result<ProcessExternalEventCondition>> processBatch(List<WaitConditionItem<ProcessExternalEventCondition>> waits) {
+    public List<Result<ProcessExternalEventCondition>> processBatch(
+            List<WaitConditionItem<ProcessExternalEventCondition>> waits
+    ) {
 
-        var byResumeEvent = waits.stream().collect(Collectors.groupingBy(wait -> wait.waitCondition().resumeEvent()));
+        // collect to grouping by process resume event. All waits for the same resume
+        // event must be completed before we can process them together and resume.
+        var byResumeEvent = waits.stream()
+                .collect(groupingBy(wait -> wait.waitCondition().resumeEvent()));
 
-        // TODO break this into multiple methods to make it readable
-        return byResumeEvent.entrySet().stream()
-                .flatMap(e -> {
-                    var waitsForEvent = e.getValue();
+        return byResumeEvent.values().stream()
+                .flatMap(waitsForEvent -> {
+                    var isAnyWaiting = waitsForEvent.stream()
+                            .anyMatch(wait -> wait.waitCondition().waiting());
 
-                    var allWaitsComplete = waitsForEvent.stream().noneMatch(wait -> wait.waitCondition().waiting());
-                    if (allWaitsComplete) {
-                        return waitsForEvent.stream().map(wait ->
-                                Result.<ProcessExternalEventCondition>resume(wait, wait.waitCondition().resumeEvent(), wait.waitCondition().variables())
-                        );
-                    } else {
-                        // still waiting on wat least one condition to be cleared for the resume event
-                        return waitsForEvent.stream().map(wait ->
-                                Result.of(wait.processKey(), wait.waitConditionId(), wait.waitCondition())
-                        );
-                    }
+                    return isAnyWaiting
+                            // still waiting on at least one condition to be cleared for the resume event
+                            ? streamBatchNotReady(waitsForEvent)
+                            // all wait conditions are satisfied, process may resume
+                            : streamBatchReadyForResume(waitsForEvent);
                 })
                 .toList();
-
-
-//        // For each wait, if waiting == false, resume the process and pass variables
-//        return waits.stream().map(wait -> {
-//            ProcessExternalEventCondition cond = wait.waitCondition();
-//            if (!cond.waiting()) {
-//                // Resume process, pass eventKey as resumeEvent
-//                return Result.<ProcessExternalEventCondition>resume(wait, cond.resumeEvent(), cond.variables());
-//            }
-//
-//            // Still waiting
-//            return Result.of(wait.processKey(), wait.waitConditionId(), cond);
-//        }).toList();
     }
-}
 
+    private Stream<Result<ProcessExternalEventCondition>> streamBatchNotReady(
+            List<WaitConditionItem<ProcessExternalEventCondition>> waitsForEvent
+    ) {
+        return waitsForEvent.stream()
+                .map(wait ->
+                        Result.of(wait.processKey(), wait.waitConditionId(), wait.waitCondition()));
+    }
+
+    private Stream<Result<ProcessExternalEventCondition>> streamBatchReadyForResume(
+            List<WaitConditionItem<ProcessExternalEventCondition>> waitsForEvent
+    ) {
+
+        return waitsForEvent.stream()
+                .map(wait -> {
+                    var resumeVars = saveVariablesAs(wait.processKey(), wait.waitCondition());
+                    return Result.resume(wait, wait.waitCondition().resumeEvent(), resumeVars);
+                }
+        );
+    }
+
+    private Map<String, Serializable> saveVariablesAs(ProcessKey processKey, ProcessExternalEventCondition condition) {
+        var saveAs = condition.saveAs();
+        if (saveAs == null) {
+            return Map.of();
+        }
+
+        var splits = saveAs.split("\\.");
+        if (splits.length > 10) { // that's suspiciously deep
+            logManager.warn(processKey, "External event condition 'saveAs' is too deep at {} levels. Resume variables will not be delivered.", splits.length);
+            return Map.of();
+        }
+
+        return buildNestedMap(splits, 0, (Serializable) condition.variables());
+    }
+
+    /**
+     * Recursively creates nested Maps from an array of keys
+     * @param keys array of keys representing the nested structure
+     * @param i current nested level in keys array
+     * @param value Final value of deepest key in the nested Map structure
+     */
+    private static Map<String, Serializable> buildNestedMap(String[] keys, int i, Serializable value) {
+        var map = new HashMap<String, Serializable>();
+        if (i == keys.length - 1) {
+            map.put(keys[i], value);
+        } else {
+            map.put(keys[i], (Serializable) buildNestedMap(keys, i + 1, value));
+        }
+
+        return map;
+    }
+
+}
