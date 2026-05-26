@@ -20,8 +20,8 @@ package com.walmartlabs.concord.client.v2;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client2.ApiClient;
-import com.walmartlabs.concord.client2.ApiException;
 import com.walmartlabs.concord.client2.ClientUtils;
 import com.walmartlabs.concord.client2.ProcessApi;
 import com.walmartlabs.concord.common.ObjectMapperProvider;
@@ -45,7 +45,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Named("waitForExternalEvent")
 public class WaitTaskV2 implements ReentrantTask {
@@ -69,7 +68,7 @@ public class WaitTaskV2 implements ReentrantTask {
     public TaskResult execute(Variables input) throws Exception {
         var mapper = objectMapperProvider.get();
 
-        List<EventConfig> externalEvents = mapper.convertValue(input.assertList("externalEvents"), mapper.getTypeFactory().constructCollectionType(List.class, EventConfig.class));
+        var externalEvents = parseEventConfigs(input, mapper);
 
         warnVariableOverwrite(externalEvents);
 
@@ -84,18 +83,9 @@ public class WaitTaskV2 implements ReentrantTask {
         log.info("Creating {} external wait conditions.", externalEventIds.size());
 
         var resumeEvent = "concord_wait_resume_" + UUID.randomUUID();
-        var resumeExamples = new StringBuilder();
 
         for (EventConfig externalEvent : externalEvents) {
-            resumeExamples.append(String.format("""
-                            curl -n -X POST \\
-                            -H "content-type: application/json" \\
-                            -d '{ "newVar": "hello new var for %s" }' \\
-                            "%s/api/v1/process/%s/wait/external/%s/clear"
-                            """,
-                    externalEvent.eventId(), apiClient.getBaseUrl(), txId, externalEvent.eventId()));
-
-            Map<String, Object> condition = new HashMap<>();
+            var condition = new HashMap<String, Object>();
             condition.put("type", "EXTERNAL_EVENT");
             condition.put("reason", "Waiting on external event: " + externalEvent.eventId());
             condition.put("waiting", true);
@@ -111,14 +101,20 @@ public class WaitTaskV2 implements ReentrantTask {
             });
         }
 
-        log.info("Resume with:\n{}", resumeExamples);
-
         // serialize necessary state data to handle resume
         var state = new ExternalResumeState(externalEvents);
         var mapOfSerializableType = mapper.getTypeFactory()
                 .constructMapType(Map.class, String.class, Serializable.class);
 
         return TaskResult.reentrantSuspend(resumeEvent, mapper.convertValue(state, mapOfSerializableType));
+    }
+
+    private static List<EventConfig> parseEventConfigs(Variables input, ObjectMapper mapper) {
+        var typeFactory = mapper.getTypeFactory();
+        var listOfEventConfigsType = typeFactory.constructCollectionType(List.class, EventConfig.class);
+        var rawConfigs = input.assertList("externalEvents");
+
+        return mapper.convertValue(rawConfigs, listOfEventConfigsType);
     }
 
     /**
@@ -129,6 +125,7 @@ public class WaitTaskV2 implements ReentrantTask {
 
         eventConfigs.stream()
                 .map(EventConfig::saveAs)
+                // set returns true if the value was not already present, so this filters to only duplicates
                 .filter(eventId -> !allVars.add(eventId))
                 .forEach(duplicateVarName ->
                         log.warn("Duplicate resume variable '{}' supplied. This may result in overwritten results.", duplicateVarName));
@@ -140,16 +137,6 @@ public class WaitTaskV2 implements ReentrantTask {
         var resumeState = mapper.convertValue(event.state(), ExternalResumeState.class);
 
         var resumeVars = context.variables().getMap(event.eventName(), Map.<String, Object>of());
-
-        // TODO Remove this debug logging
-        resumeState.externalEvents().forEach(eventConfig -> {
-            var expectedVar = eventConfig.saveAs();
-            if (expectedVar == null) {
-                return;
-            }
-            var value = resumeVars.get(expectedVar);
-            log.info("new var '{}': {}", expectedVar, value);
-        });
 
         // Move the vars from the global context to the task's result data
         // and check for any explicit failures (e.g. wait ended due to expiration)
@@ -166,23 +153,14 @@ public class WaitTaskV2 implements ReentrantTask {
 
         var resultData = new HashMap<String, Object>();
 
-
-        resumeState.externalEvents().stream().filter(event -> event.saveAs() != null).forEach(eventConfig -> {
-            var eventResumeVars = resumeVars.getOrDefault(eventConfig.saveAs(), null);
-            resultData.put(eventConfig.saveAs(), eventResumeVars);
-
-        });
-
-        for (var eventConfig : resumeState.externalEvents()) {
-            var saveAsVarName = eventConfig.saveAs();
-
-            if (saveAsVarName == null) { // nothing expected
-                continue;
-            }
-
-            var eventResumeVars = resumeVars.getOrDefault(eventConfig.saveAs(), null);
-            resultData.put(eventConfig.saveAs(), eventResumeVars);
-        }
+        // save variables only for event which specific a 'saveAs' var name
+        resumeState.externalEvents().stream()
+                .map(EventConfig::saveAs)
+                .filter(Objects::nonNull)
+                .forEach(saveAs -> {
+                    var eventResumeVars = resumeVars.getOrDefault(saveAs, null);
+                    resultData.put(saveAs, eventResumeVars);
+                });
 
         return resultData;
     }
