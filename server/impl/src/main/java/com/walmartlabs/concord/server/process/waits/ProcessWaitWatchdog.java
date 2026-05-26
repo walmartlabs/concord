@@ -160,7 +160,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             Map<String, Object> resumeVars = resultForProcess.stream()
                     .map(Result::resumeVariables)
                     .filter(Objects::nonNull)
-                    .reduce(Map.of(), ConfigurationUtils::deepMerge);
+                    .reduce(new LinkedHashMap<>(), ConfigurationUtils::deepMerge);
 
             try {
                 boolean updated = processWaitManager.txResult(tx -> {
