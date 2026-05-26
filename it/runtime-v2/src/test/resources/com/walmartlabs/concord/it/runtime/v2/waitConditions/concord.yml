@@ -1,0 +1,104 @@
+configuration:
+  runtime: concord-v2
+
+flows:
+  execute:
+    - task: waitForExternalEvent
+      in:
+        externalEvents: "${externalEvents}"
+      out: waitOut
+
+  executeIgnoreErrors:
+    - task: waitForExternalEvent
+      ignoreErrors: true
+      in:
+        externalEvents: "${externalEvents}"
+      out: waitOut
+
+  single:
+    - call: execute
+      in:
+        externalEvents:
+          - eventId: "external_event"
+            saveAs: "resumeResult"
+      out: waitOut
+
+    - log: "external result: ${waitOut.resumeResult.externalResultOk}"
+
+  multipleEventsSingleThread:
+    - call: execute
+      in:
+        externalEvents:
+          - eventId: "external_event_1"
+            saveAs: "resumeResult1"
+          - eventId: "external_event_2"
+            saveAs: "resumeResult2"
+      out: waitOut
+
+    - log: "external result 1: ${waitOut.resumeResult1.externalResultOk}"
+    - log: "external result 2: ${waitOut.resumeResult2.aDifferentResultKey}"
+
+  multipleEventsMultipleThreads:
+    - call: wait
+      in:
+        id: "${item}"
+      loop:
+        items: [ "A", "B" ]
+        mode: parallel
+
+  wait:
+    - call: execute
+      in:
+        externalEvents:
+          - eventId: "external_event_${id}_1"
+            saveAs: "resumeResult1"
+          - eventId: "external_event_${id}_2"
+            saveAs: "resumeResult2"
+      out: waitOut
+
+    - log: "external result ${id}_1: ${waitOut.resumeResult1.externalResultOk}"
+    - log: "external result ${id}_2: ${waitOut.resumeResult2.aDifferentResultKey}"
+
+  expire:
+    - call: execute
+      in:
+        externalEvents:
+          - eventId: "external_event"
+            saveAs: "resumeResult"
+            expiresAt: "${datetime.current().toInstant().plusSeconds(2)}"
+      out: waitOut
+
+    - log: "external result isExpired: ${waitOut.resumeResult.isExpired}"
+
+  oneSuccessOneExpired:
+    - call: execute
+      in:
+        externalEvents:
+          - eventId: "external_event_1"
+            saveAs: "resumeResult1"
+          - eventId: "external_event_2"
+            saveAs: "resumeResult2"
+#            expiresAt: "NOT_A_DATE"
+            expiresAt: "${datetime.current().toInstant().plusSeconds(2)}"
+      out: waitOut
+
+    - log: "external result 1 isExpired: ${waitOut.resumeResult1.getOrDefault('isExpired', 'null')}"  # null
+    - log: "external result 2 isExpired: ${waitOut.resumeResult2.getOrDefault('isExpired', 'null')}"  # true
+    - log: "external result 1: ${waitOut.resumeResult1.getOrDefault('externalResultOk', 'null')}"     # true
+    - log: "external result 2: ${waitOut.resumeResult2.getOrDefault('aDifferentResultKey', 'null')}"  # null
+
+  oneSuccessOneExpiredIgnoreErrors:
+    - call: executeIgnoreErrors
+      in:
+        externalEvents:
+          - eventId: "external_event_1"
+            saveAs: "resumeResult1"
+          - eventId: "external_event_2"
+            saveAs: "resumeResult2"
+            expiresAt: "${datetime.current().toInstant().plusSeconds(2)}"
+      out: waitOut
+
+    - log: "external result 1 isExpired: ${waitOut.resumeResult1.getOrDefault('isExpired', 'null')}"  # null
+    - log: "external result 2 isExpired: ${waitOut.resumeResult2.getOrDefault('isExpired', 'null')}"  # true
+    - log: "external result 1: ${waitOut.resumeResult1.getOrDefault('externalResultOk', 'null')}"     # true
+    - log: "external result 2: ${waitOut.resumeResult2.getOrDefault('aDifferentResultKey', 'null')}"  # null
