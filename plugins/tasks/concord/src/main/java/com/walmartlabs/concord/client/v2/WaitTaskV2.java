@@ -144,40 +144,43 @@ public class WaitTaskV2 implements ReentrantTask {
         // TODO Remove this debug logging
         resumeState.externalEvents().forEach(eventConfig -> {
             var expectedVar = eventConfig.saveAs();
+            if (expectedVar == null) {
+                return;
+            }
             var value = resumeVars.get(expectedVar);
             log.info("new var '{}': {}", expectedVar, value);
         });
 
         // Move the vars from the global context to the task's result data
         // and check for any explicit failures (e.g. wait ended due to expiration)
-        var hasExpiredEvent = new AtomicBoolean(false);
-        var resultData = extractEventVars(resumeState, resumeVars, hasExpiredEvent);
+        var resultData = extractEventVars(resumeState, resumeVars);
         context.variables().set(event.eventName(), null); // clean up global context vars.
 
-
-        var result = hasExpiredEvent.get()
-                ? TaskResult.fail("One or more external event wait conditions expired.")
-                : TaskResult.success();
-
-        return result.values(resultData);
+        return TaskResult.success().values(resultData);
     }
 
     private Map<String, Object> extractEventVars(
             ExternalResumeState resumeState,
-            Map<String, Object> resumeVars,
-            AtomicBoolean hasExpiredEvent
+            Map<String, Object> resumeVars
     ) {
 
         var resultData = new HashMap<String, Object>();
 
-        for (var eventConfig : resumeState.externalEvents()) {
-            var eventResumeVars = resumeVars.getOrDefault(eventConfig.saveAs(), null);
 
-            if (eventResumeVars instanceof Map<?, ?> vars && Boolean.TRUE.equals(vars.get("isExpired"))) {
-                hasExpiredEvent.set(true);
-                log.error("External event wait condition for '{}' expired. No results will exist.", eventConfig.eventId());
+        resumeState.externalEvents().stream().filter(event -> event.saveAs() != null).forEach(eventConfig -> {
+            var eventResumeVars = resumeVars.getOrDefault(eventConfig.saveAs(), null);
+            resultData.put(eventConfig.saveAs(), eventResumeVars);
+
+        });
+
+        for (var eventConfig : resumeState.externalEvents()) {
+            var saveAsVarName = eventConfig.saveAs();
+
+            if (saveAsVarName == null) { // nothing expected
+                continue;
             }
 
+            var eventResumeVars = resumeVars.getOrDefault(eventConfig.saveAs(), null);
             resultData.put(eventConfig.saveAs(), eventResumeVars);
         }
 

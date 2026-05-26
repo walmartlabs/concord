@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -121,9 +122,18 @@ public class WaitProcessExternalEventHandler implements ProcessWaitHandler<Proce
             return Map.of();
         }
 
-        var variables = isExpired(condition) ? Map.of("isExpired", true) : condition.variables();
+        var variables = extractVariablesFromCondition(condition);
+
+        if (isExpired(condition)) {
+            logManager.warn(processKey, "External event wait condition for '{}' expired. 'saveAs' resume variable may not exist.", condition.externalEvent());
+        }
 
         return buildNestedMap(splits, 0, (Serializable) variables);
+    }
+
+    private Map<String, Object> extractVariablesFromCondition(ProcessExternalEventCondition condition) {
+        var fromWait = condition.variables();
+        return new LinkedHashMap<>(fromWait != null ? fromWait : Map.of());
     }
 
     /**
