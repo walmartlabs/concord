@@ -87,7 +87,7 @@ public class WaitTaskV2 implements ReentrantTask {
         for (EventConfig externalEvent : externalEvents) {
             var condition = new HashMap<String, Object>();
             condition.put("type", "EXTERNAL_EVENT");
-            condition.put("reason", "Waiting on external event: " + externalEvent.eventId());
+            condition.put("reason", "Waiting for external event: " + externalEvent.eventId());
             condition.put("waiting", true);
             condition.put("externalEvent", externalEvent.eventId());
             condition.put("saveAs", resumeEvent + "." + externalEvent.saveAs());
