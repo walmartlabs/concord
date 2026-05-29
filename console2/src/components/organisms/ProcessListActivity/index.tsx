@@ -18,7 +18,6 @@
  * =====
  */
 
-import { parse as parseQueryString } from 'query-string';
 import * as React from 'react';
 import { useLocation } from 'react-router';
 import { useHistory } from '@/router';
@@ -49,7 +48,7 @@ import RequestErrorActivity from '../RequestErrorActivity';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApi } from '../../../hooks/useApi';
 import { LoadingDispatch } from '../../../App';
-import _ from 'lodash';
+import { deepEqual } from '../../../utils';
 
 // list of "built-in" columns, i.e. columns that can be referenced using "builtin" parameter
 // of the custom column configuration
@@ -87,6 +86,23 @@ export interface ProcessSearchFilter {
     filters?: ProcessFilters;
     pagination?: Pagination;
 }
+
+const parseQueryString = (s: string): Record<string, string | string[]> => {
+    const result: Record<string, string | string[]> = {};
+
+    new URLSearchParams(s).forEach((value, key) => {
+        const existing = result[key];
+        if (existing === undefined) {
+            result[key] = value;
+        } else if (Array.isArray(existing)) {
+            existing.push(value);
+        } else {
+            result[key] = [existing, value];
+        }
+    });
+
+    return result;
+};
 
 interface ExternalProps {
     orgName?: string;
@@ -158,7 +174,7 @@ const ProcessListActivity = ({
             isInitialMount.current = false;
         } else {
             const filter = parseSearchFilter(location.search);
-            setSearchFilter((prev) => (_.isEqual(filter, prev) ? prev : filter));
+            setSearchFilter((prev) => (deepEqual(filter, prev) ? prev : filter));
         }
     }, [location]);
 

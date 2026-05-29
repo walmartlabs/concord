@@ -19,7 +19,7 @@
  */
 
 import { useCallback, useRef, useEffect } from 'react';
-import { throttle } from 'lodash';
+import { throttle } from '../utils';
 
 /**
  * Creates a throttled version of the provided callback function.
@@ -35,10 +35,7 @@ export function useThrottle<T extends (...args: any[]) => any>(
     const throttledFnRef = useRef<ReturnType<typeof throttle>>();
 
     useEffect(() => {
-        throttledFnRef.current = throttle(callback, delay, {
-            leading: true,
-            trailing: true
-        });
+        throttledFnRef.current = throttle(callback, delay);
 
         return () => {
             throttledFnRef.current?.cancel();

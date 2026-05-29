@@ -17,35 +17,38 @@
  * limitations under the License.
  * =====
  */
-import styled from 'styled-components';
+import * as React from 'react';
 
-export const Row = styled.div`
-    /* display: grid;
-    grid-template-columns: fit-content(300px) 1fr; */
+import './layout.css';
 
-    /* // TODO: Determine a better way to handle long repoMetadata */
+const classNames = (...values: Array<string | undefined>) => values.filter(Boolean).join(' ');
 
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
+export const Row = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+    <div {...props} className={classNames('checkpoint-row', className)} />
+);
 
-    width: 100%;
-    margin: 24px 0px;
-    border-radius: 5px;
-    box-shadow: 0 1px 2px 0 rgba(34, 36, 38, 0.15);
-`;
-
-interface ColumnProps {
+export interface ColumnProps extends React.HTMLAttributes<HTMLDivElement> {
     flex?: number;
     background?: string;
     maxWidth?: number;
 }
 
-export const Column = styled('div')<ColumnProps>`
-    display: flex;
-    flex-direction: column;
-    flex-basis: 100%;
-    flex: ${(props: ColumnProps) => (props.flex ? props.flex : 1)};
-    background-color: ${(props: ColumnProps) => props.background};
-    ${(props: ColumnProps) => (props.maxWidth ? `max-width: ${props.maxWidth}px` : null)};
-`;
+export const Column = ({
+    className,
+    flex,
+    background,
+    maxWidth,
+    style,
+    ...props
+}: ColumnProps) => (
+    <div
+        {...props}
+        className={classNames('checkpoint-column', className)}
+        style={{
+            flex: flex ?? 1,
+            backgroundColor: background,
+            maxWidth,
+            ...style
+        }}
+    />
+);

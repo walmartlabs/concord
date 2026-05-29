@@ -18,14 +18,10 @@
  * =====
  */
 import * as React from 'react';
-import styled from 'styled-components';
 import { Highlighter } from '../../../components/molecules';
 import { escapeHtml } from '../../../utils';
 
-const TextPre = styled.pre`
-    white-space: pre-wrap;
-    word-break: break-word;
-`;
+import './styles.css';
 
 interface Props {
     blobUrl: string;
@@ -129,7 +125,7 @@ class FileFromBlob extends React.Component<Props, State> {
         if (blobUrl) {
             if (data) {
                 return (
-                    <TextPre>
+                    <pre className="log-file-from-blob-text">
                         {' '}
                         <Highlighter
                             value={data.join('\n')}
@@ -157,7 +153,7 @@ class FileFromBlob extends React.Component<Props, State> {
                                 { string: 'DOCKER:', style: 'color: #808080' }
                             ]}
                         />
-                    </TextPre>
+                    </pre>
                 );
             } else {
                 return null;

@@ -18,9 +18,9 @@
  * =====
  */
 
-import copyToClipboard from 'copy-to-clipboard';
 import * as React from 'react';
 import { Icon } from 'semantic-ui-react';
+import { copyToClipboard } from '../../../clipboard';
 
 import './styles.css';
 
@@ -37,7 +37,7 @@ export default ({ children, value }: Props) => {
             <Icon
                 className="copyToClipboardButton"
                 name="copy"
-                onClick={() => (copyToClipboard as any)(value)}
+                onClick={() => copyToClipboard(value)}
             />
         </>
     );

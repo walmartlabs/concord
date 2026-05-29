@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2026 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,8 @@
  * limitations under the License.
  * =====
  */
-import { deepMerge } from '../common';
 
-test('deepMerge works', () => {
-    const actual = deepMerge({ x: { y: 123 } }, { x: { z: 234 } });
-    const expected = { x: { y: 123, z: 234 } };
-    expect(actual).toEqual(expected);
-});
+.log-file-from-blob-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+}

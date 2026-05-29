@@ -43,7 +43,6 @@ import { usePolling } from '../../../api/usePolling';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { useStatusFavicon } from './favicon';
 import { gitUrlParse } from '../../molecules/GitHubLink';
-import { useIdleTimer } from 'react-idle-timer';
 
 export type TabLink =
     | 'status'
@@ -64,6 +63,18 @@ interface ExternalProps {
 const DATA_FETCH_INTERVAL_ACTIVE = 5_000;
 const DATA_FETCH_INTERVAL_IDLE = 60_000;
 const IDLE_TIMEOUT = 1_000 * 60 * 10;
+const ACTIVITY_EVENTS: Array<keyof WindowEventMap> = [
+    'mousemove',
+    'mousedown',
+    'keydown',
+    'wheel',
+    'touchstart',
+    'touchmove',
+    'scroll'
+];
+
+const getInitialDataFetchInterval = () =>
+    document.visibilityState === 'visible' ? DATA_FETCH_INTERVAL_ACTIVE : DATA_FETCH_INTERVAL_IDLE;
 
 const normalizePath = (p: string) => {
     let result = p;
@@ -112,11 +123,7 @@ const ProcessActivity = (props: ExternalProps) => {
     const [loading, setLoading] = useState<boolean>(false);
     const loadingCounter = useRef<number>(0);
     const [refresh, toggleRefresh] = useState<boolean>(false);
-    const [dataFetchInterval, setDataFetchInterval] = useState(
-        document.visibilityState === 'visible'
-            ? DATA_FETCH_INTERVAL_ACTIVE
-            : DATA_FETCH_INTERVAL_IDLE
-    );
+    const [dataFetchInterval, setDataFetchInterval] = useState(getInitialDataFetchInterval);
 
     const loadingHandler = useCallback((inc: number) => {
         loadingCounter.current += inc;
@@ -124,6 +131,7 @@ const ProcessActivity = (props: ExternalProps) => {
     }, []);
 
     const [process, setProcess] = useState<ProcessEntry>();
+    const processStatus = process?.status;
     const rootProcessRef = useRef<ProcessEntry | null>(null);
 
     const fetchData = useCallback(async () => {
@@ -151,19 +159,54 @@ const ProcessActivity = (props: ExternalProps) => {
         toggleRefresh((prevState) => !prevState);
     }, []);
 
-    useIdleTimer({
-        timeout: IDLE_TIMEOUT,
-        immediateEvents: ['visibilitychange'],
-        onActive: (event?: Event) => {
-            // this essentially prevents a data fetch on processes we already know are "final"
-            if (process !== undefined && !isFinal(process.status)) {
+    useEffect(() => {
+        let idleTimerId: number | undefined;
+        const canPollActively = processStatus !== undefined && !isFinal(processStatus);
+
+        const resetIdleTimer = () => {
+            if (idleTimerId !== undefined) {
+                window.clearTimeout(idleTimerId);
+            }
+
+            idleTimerId = window.setTimeout(() => {
+                setDataFetchInterval(DATA_FETCH_INTERVAL_IDLE);
+            }, IDLE_TIMEOUT);
+        };
+
+        const activatePolling = () => {
+            if (document.visibilityState !== 'visible') {
+                setDataFetchInterval(DATA_FETCH_INTERVAL_IDLE);
+                return;
+            }
+
+            if (canPollActively) {
                 setDataFetchInterval(DATA_FETCH_INTERVAL_ACTIVE);
             }
-        },
-        onIdle: () => {
-            setDataFetchInterval(DATA_FETCH_INTERVAL_IDLE);
-        },
-    });
+        };
+
+        const handleActivity = () => {
+            activatePolling();
+            resetIdleTimer();
+        };
+
+        ACTIVITY_EVENTS.forEach((event) => {
+            window.addEventListener(event, handleActivity, { passive: true });
+        });
+        document.addEventListener('visibilitychange', handleActivity);
+
+        handleActivity();
+
+        return () => {
+            if (idleTimerId !== undefined) {
+                window.clearTimeout(idleTimerId);
+            }
+
+            ACTIVITY_EVENTS.forEach((event) => {
+                window.removeEventListener(event, handleActivity);
+            });
+            document.removeEventListener('visibilitychange', handleActivity);
+        };
+    }, [processStatus]);
 
     const error = usePolling(fetchData, dataFetchInterval, loadingHandler, refresh);
 

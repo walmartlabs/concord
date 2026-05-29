@@ -18,12 +18,12 @@
  * =====
  */
 
-import copyToClipboard from 'copy-to-clipboard';
 import * as React from 'react';
 import { Form, Icon, Input, Message } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
 import { encrypt } from '../../../api/org/project';
+import { copyToClipboard } from '../../../clipboard';
 
 import './styles.css';
 
@@ -141,9 +141,7 @@ class EncryptValueActivity extends React.PureComponent<ExternalProps, State> {
                                             <Icon
                                                 name="copy"
                                                 link={true}
-                                                onClick={() =>
-                                                    (copyToClipboard as any)(result.data)
-                                                }
+                                                onClick={() => copyToClipboard(result.data)}
                                             />
                                         }
                                         fluid={true}

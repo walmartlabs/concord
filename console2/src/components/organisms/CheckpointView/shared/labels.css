@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2026 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,37 @@
  * limitations under the License.
  * =====
  */
-import React from 'react';
-import { render } from '@testing-library/react';
-import Message from './';
 
-test('Renders a message describing there are no checkpoints', () => {
-    const { container } = render(<Message />);
-    expect(container.innerHTML).toContain('No checkpoints');
-});
+.checkpoint-text {
+    font-family: lato;
+    color: #706f70;
+}
+
+.checkpoint-label {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.checkpoint-status-text {
+    font-size: 1rem;
+    display: inline;
+}
+
+.checkpoint-name {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.checkpoint-group-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.checkpoint-load-error {
+    color: grey;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin: auto;
+    padding: 1em;
+}
