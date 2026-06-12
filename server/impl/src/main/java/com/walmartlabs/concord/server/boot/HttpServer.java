@@ -50,10 +50,11 @@ import java.util.Set;
 
 public class HttpServer {
 
-    private static final Logger log = LoggerFactory.getLogger(HttpServlet.class);
+    private static final Logger log = LoggerFactory.getLogger(HttpServer.class);
 
     private final Server server;
     private final int port;
+    private final StatisticsHandler statisticsHandler;
 
     @Inject
     public HttpServer(ServerConfiguration cfg,
@@ -197,11 +198,15 @@ public class HttpServer {
             configurator.configure(contextHandlerCollection);
         });
 
-        StatisticsHandler statisticsHandler = new StatisticsHandler();
-        statisticsHandler.setHandler(contextHandlerCollection);
-        server.setHandler(statisticsHandler);
+        this.statisticsHandler = new StatisticsHandler();
+        this.statisticsHandler.setHandler(contextHandlerCollection);
+        server.setHandler(this.statisticsHandler);
 
         this.server = server;
+    }
+
+    public StatisticsHandler getStatisticsHandler() {
+        return statisticsHandler;
     }
 
     public void start() throws Exception {
