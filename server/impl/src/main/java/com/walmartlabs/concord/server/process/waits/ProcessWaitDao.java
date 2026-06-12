@@ -38,6 +38,7 @@ import static com.walmartlabs.concord.db.PgUtils.jsonbAppend;
 import static com.walmartlabs.concord.db.PgUtils.jsonbOrEmptyArray;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
 import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.function;
 
 public class ProcessWaitDao extends AbstractDao {
 
@@ -72,6 +73,29 @@ public class ProcessWaitDao extends AbstractDao {
                         jsonbAppend(jsonbOrEmptyArray(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS), objectMapper.toJSONB(wait)))
                 .where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.eq(processKey.getInstanceId())
                         .and(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
+                .execute();
+    }
+
+    /**
+     * Add a wait condition to the process. Fails (returns 0 rows updated) if adding the wait
+     * would exceed the maximum allowed number of wait conditions for the process.
+     *
+     * @param tx the database transaction context
+     * @param processKey the process key
+     * @param wait the wait condition to add
+     * @param maxWaits the maximum number of wait conditions allowed per process
+     * @return the number of rows updated (0 if the add failed due to max limit)
+     */
+    public int addWait(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait, int maxWaits) {
+        return tx.update(PROCESS_WAIT_CONDITIONS)
+                .set(PROCESS_WAIT_CONDITIONS.VERSION, PROCESS_WAIT_CONDITIONS.VERSION.plus(1))
+                .set(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS,
+                        jsonbAppend(jsonbOrEmptyArray(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS), objectMapper.toJSONB(wait)))
+                .where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                        // Fail the update if adding this wait would exceed the max limit
+                        .and(function("jsonb_array_length", Integer.class,
+                                jsonbOrEmptyArray(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS)).lt(maxWaits)))
                 .execute();
     }
 

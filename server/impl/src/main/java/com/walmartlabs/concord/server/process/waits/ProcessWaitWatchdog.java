@@ -31,12 +31,13 @@ import com.walmartlabs.concord.server.cfg.ProcessWaitWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessWaitConditions;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.immutables.value.Value;
 import org.jooq.Configuration;
 import org.jooq.JSONB;
-import org.jooq.Record5;
+import org.jooq.Record6;
 import org.jooq.SelectConditionStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,8 +48,8 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
 import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.WaitConditionItem;
 import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.Result;
@@ -141,6 +142,11 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             List<Result<AbstractWaitCondition>> resultForProcess = results.get(p.processKey().getInstanceId());
             if (resultForProcess == null) {
                 continue;
+            }
+
+            if (p.status() != ProcessStatus.SUSPENDED && p.status() != ProcessStatus.WAITING) {
+                log.warn("Skipping wait processing for process '{}', because it's in status '{}'", p.processKey().getInstanceId(), p.status());
+                continue; // invalid state, process may have created waits for across multiple threads
             }
 
             Set<String> resumeEvents = resultForProcess.stream()
@@ -263,6 +269,8 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
         long version();
 
+        ProcessStatus status();
+
         static ImmutableWaitingProcess.Builder builder() {
             return ImmutableWaitingProcess.builder();
         }
@@ -286,13 +294,15 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             return txResult(tx -> {
                 ProcessWaitConditions w = PROCESS_WAIT_CONDITIONS.as("w");
 
-                SelectConditionStep<Record5<UUID, OffsetDateTime, Long, JSONB, Long>> s = tx.select(
+                SelectConditionStep<Record6<UUID, OffsetDateTime, Long, JSONB, Long, String>> s = tx.select(
                                 w.INSTANCE_ID,
                                 w.INSTANCE_CREATED_AT,
                                 w.ID_SEQ,
                                 w.WAIT_CONDITIONS,
-                                w.VERSION)
+                                w.VERSION,
+                                PROCESS_QUEUE.CURRENT_STATUS)
                         .from(w)
+                        .innerJoin(PROCESS_QUEUE).on(PROCESS_QUEUE.INSTANCE_ID.eq(w.INSTANCE_ID))
                         .where(w.IS_WAITING.eq(true));
 
                 if (lastId != null) {
@@ -306,6 +316,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                                 .id(r.value3())
                                 .waits(objectMapper.fromJSONB(r.value4(), WAIT_LIST))
                                 .version(r.value5())
+                                .status(ProcessStatus.valueOf(r.get(PROCESS_QUEUE.CURRENT_STATUS)))
                                 .build());
             });
         }

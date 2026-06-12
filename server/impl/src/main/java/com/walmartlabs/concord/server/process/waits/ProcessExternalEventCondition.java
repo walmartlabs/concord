@@ -59,6 +59,7 @@ public abstract class ProcessExternalEventCondition extends AbstractWaitConditio
      * Optional payload of variables to set when the event is cleared.
      */
     @Nullable
+    @Value.Redacted
     public abstract Map<String, Serializable> variables();
 
     /**

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.PathUtils;
@@ -52,7 +53,6 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.process.waits.AbstractWaitCondition;
-import com.walmartlabs.concord.server.process.waits.ImmutableProcessExternalEventCondition;
 import com.walmartlabs.concord.server.process.waits.ProcessExternalEventCondition;
 import com.walmartlabs.concord.server.process.waits.ProcessWaitManager;
 import com.walmartlabs.concord.server.sdk.*;
@@ -955,10 +955,28 @@ public class ProcessResource implements Resource {
             condition = assertExternalWaitCondition(extCond);
         }
 
-        processWaitManager.addWait(processKey, condition);
+        ProcessWaitEntry entry = processWaitManager.getWait(processKey);
+        List<?> currentWaits = entry != null ? entry.waits() : null;
+        if (currentWaits != null && currentWaits.size() >= processCfg.waitLimitProcessExternalEventCount()) {
+            String msg = "Too many process external event waits: cannot exceed " + processCfg.waitLimitProcessExternalEventCount();
+            throw new ConcordApplicationException(msg, Status.BAD_REQUEST);
+        }
+
+        // Attempt to add the wait with database-level enforcement of the max limit
+        int rowsUpdated = processWaitManager.addWait(processKey, condition, processCfg.waitLimitProcessExternalEventCount());
+        if (rowsUpdated == 0) {
+            // This should not happen if the soft check above is correctly enforced,
+            // but it indicates a race condition where the limit was exceeded
+            String msg = "Too many process external event waits: cannot exceed " + processCfg.waitLimitProcessExternalEventCount();
+            throw new ConcordApplicationException(msg, Status.BAD_REQUEST);
+        }
         return Response.ok().build();
     }
 
+    /**
+     * Deserializes a "raw" {@link AbstractWaitCondition} to a concrete instance.
+     * Throws a {@link ConcordApplicationException} if the condition is null.
+     */
     private AbstractWaitCondition assertWaitCondition(Map<String, Object> waitCondition) {
         try {
             AbstractWaitCondition condition = objectMapper.convertValue(waitCondition, AbstractWaitCondition.class);
@@ -994,6 +1012,19 @@ public class ProcessResource implements Resource {
             throw new ConcordApplicationException("External event name is required for external event wait condition", Status.BAD_REQUEST);
         }
 
+        if (condition.externalEvent().length() > 128) {
+            throw new ConcordApplicationException("externalEvent value is too long", Status.BAD_REQUEST);
+        }
+
+        if (condition.resumeEvent().length() > 128) {
+            throw new ConcordApplicationException("resumeEvent value is too long", Status.BAD_REQUEST);
+        }
+
+        String saveAs = condition.saveAs();
+        if (saveAs != null && saveAs.length() > 128) {
+            throw new ConcordApplicationException("saveAs value is too long", Status.BAD_REQUEST);
+        }
+
         return condition;
     }
 
@@ -1004,10 +1035,13 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{id}/wait/external/{eventId}/clear")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(description = "Resolves a process' wait condition for an external event")
-    public Response clearExternalWaitCondition(@PathParam("id") UUID instanceId,
-                                      @PathParam("eventId") String externalEvent,
-                                      Map<String, Serializable> variables) {
+    @WithTimer
+    @Operation(description = "Clears a process' wait condition for an external event with optional variables payload")
+    public Response clearExternalWaitCondition(
+            @PathParam("id") UUID instanceId,
+            @PathParam("eventId") String externalEvent,
+            InputStream body
+    ) {
 
         // Find the process and its wait condition(s)
         ProcessKey pk = assertProcessKey(instanceId);
@@ -1016,6 +1050,8 @@ public class ProcessResource implements Resource {
         if (waitEntry == null || waitEntry.waits() == null) {
             return Response.status(Status.NOT_FOUND).entity("No wait conditions found").build();
         }
+
+        Map<String, Serializable> variables = readWaitResumeVars(body);
 
         AtomicBoolean updated = new AtomicBoolean(false);
 
@@ -1027,7 +1063,7 @@ public class ProcessResource implements Resource {
                             && extCond.waiting()) {
 
                         updated.set(true);
-                        return ImmutableProcessExternalEventCondition.builder()
+                        return ProcessExternalEventCondition.builder()
                                 .from(extCond)
                                 .waiting(false)
                                 .variables(variables)
@@ -1050,6 +1086,39 @@ public class ProcessResource implements Resource {
         });
 
         return Response.ok().build();
+    }
+
+    private Map<String, Serializable> readWaitResumeVars(InputStream is) {
+        if (is == null) {
+            return Map.of();
+        }
+
+        // Read body in chunks to avoid loading large payloads into memory
+        // Enforce a maximum size limit to prevent abuse
+        final int maxBodySize = processCfg.waitLimitProcessExternalEventVarsSize();
+        final int chunkSize = 2046;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(maxBodySize);
+
+        try {
+            byte[] buffer = new byte[chunkSize];
+            int bytesRead;
+            while ((bytesRead = is.read(buffer)) > 0) {
+                baos.write(buffer, 0, bytesRead);
+                if (baos.size() > maxBodySize) {
+                    throw new ConcordApplicationException(
+                            "Request body too large: exceeds " + maxBodySize + " bytes limit",
+                            Status.BAD_REQUEST);
+                }
+            }
+
+            if (baos.size() == 0) {
+                return Map.of();
+            }
+
+            return objectMapper.readValue(baos.toByteArray(), new TypeReference<>() {});
+        } catch (IOException e) {
+            throw new ConcordApplicationException("Error parsing request body: " + e.getMessage(), Status.BAD_REQUEST);
+        }
     }
 
     private ProcessKey assertProcessKey(UUID instanceId) {
