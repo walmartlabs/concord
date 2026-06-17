@@ -1,9 +1,6 @@
 # Change Log
 
-## [2.42.0] - TBD
-
-### Added
-
+## [2.42.0] - 2026-06-17
 
 ### Changed
 
@@ -11,6 +8,8 @@
 ([#1279](https://github.com/walmartlabs/concord/pull/1279));
 - runtime-v2: preserve logback versions in shaded runner
 ([#1331](https://github.com/walmartlabs/concord/pull/1331));
+- concord-console2: update dependencies
+([#1335](https://github.com/walmartlabs/concord/pull/1335));
 - server: fix jetty metrics integration for prometheus
 ([#1336](https://github.com/walmartlabs/concord/pull/1336)).
 
