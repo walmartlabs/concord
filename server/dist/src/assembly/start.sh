@@ -40,6 +40,13 @@ if (( $JAVA_VERSION > 8 )); then
   JDK_SPECIFIC_OPTS="--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED"
 fi
 
+if (( $JAVA_VERSION > 24 )); then
+  echo "Applying JDK 25+ specific options..."
+  # added to suppress warnings for graalvm on jdk25
+  # https://www.graalvm.org/release-notes/JDK_24/#polyglot-runtime
+  JDK_SPECIFIC_OPTS="${JDK_SPECIFIC_OPTS} --enable-native-access=ALL-UNNAMED"
+fi
+
 if [[ -z "${EXTRA_CLASSPATH}" ]]; then
   EXTRA_CLASSPATH=""
 fi
@@ -52,6 +59,7 @@ ${JDK_SPECIFIC_OPTS} \
 -Dfile.encoding=UTF-8 \
 -Djava.net.preferIPv4Stack=true \
 -Djava.security.egd=file:/dev/./urandom \
+-Dpolyglot.engine.WarnInterpreterOnly=false \
 -Dconcord.conf=${CONCORD_CFG_FILE} \
 -cp "${BASE_DIR}/lib/*:${BASE_DIR}/ext/*:${BASE_DIR}/classes:${EXTRA_CLASSPATH}" \
 "${MAIN_CLASS}"
