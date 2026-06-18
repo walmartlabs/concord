@@ -20,19 +20,27 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
+import com.walmartlabs.concord.common.cfg.UnzipLimits;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ZipUtilsTest {
+class ZipUtilsTest {
+
+    @TempDir
+    Path workDir;
 
     @Test
-    public void testZipUnzip() throws Exception {
-        Path src = Files.createTempDirectory("test-zip");
+    void testZipUnzip() throws Exception {
+        Path src = Files.createTempDirectory(workDir, "test-zip");
         Files.createFile(src.resolve("a.txt"));
         Files.createFile(src.resolve("b\\c.txt"));
         Files.createDirectory(src.resolve("b"));
@@ -51,5 +59,40 @@ public class ZipUtilsTest {
         assertTrue(Files.exists(dst.resolve("a.txt")));
         assertTrue(Files.exists(dst.resolve("b\\c.txt")));
         assertTrue(Files.exists(dst.resolve("b").resolve("c.txt")));
+    }
+
+    @Test
+    void testUnzipRejectsLargeEntry() throws Exception {
+        Path archive = Files.createTempFile(workDir, "archive-large-entry", ".zip");
+
+        try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(archive))) {
+            zip.putArchiveEntry(new org.apache.commons.compress.archivers.zip.ZipArchiveEntry("large.txt"));
+            zip.write(new byte[64]);
+            zip.closeArchiveEntry();
+        }
+
+        Path dst = Files.createTempDirectory("test-large-entry");
+
+        UnzipLimits limits = new UnzipLimits(10, 1024, 16, 100);
+        assertThrows(IOException.class, () -> ZipUtils.unzip(archive, dst, false, null, limits));
+        assertFalse(Files.exists(dst.resolve("large.txt")));
+    }
+
+    @Test
+    void testUnzipRejectsTooManyEntries() throws Exception {
+        Path archive = Files.createTempFile(workDir, "archive-many-entries", ".zip");
+
+        try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(archive))) {
+            for (int i = 0; i < 3; i++) {
+                zip.putArchiveEntry(new org.apache.commons.compress.archivers.zip.ZipArchiveEntry("f" + i + ".txt"));
+                zip.write(new byte[]{1});
+                zip.closeArchiveEntry();
+            }
+        }
+
+        Path dst = Files.createTempDirectory("test-many-entries");
+
+        UnzipLimits limits = new UnzipLimits(2, 1024, 64, 100);
+        assertThrows(IOException.class, () -> ZipUtils.unzip(archive, dst, false, null, limits));
     }
 }

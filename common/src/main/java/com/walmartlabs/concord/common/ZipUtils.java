@@ -20,19 +20,30 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
+import com.walmartlabs.concord.common.cfg.UnzipLimits;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Enumeration;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 public final class ZipUtils {
+
+    private static final UnzipLimits DEFAULT_UNZIP_LIMITS = new UnzipLimits(
+            10_000,
+            1024L * 1024L * 1024L,
+            256L * 1024L * 1024L,
+            200
+    );
 
     public static void zipFile(ZipArchiveOutputStream zip, Path src, String name) throws IOException {
         ZipArchiveEntry e = new ZipArchiveEntry(name) {
@@ -57,7 +68,7 @@ public final class ZipUtils {
     }
 
     public static void zip(ZipArchiveOutputStream zip, String dstPrefix, Path srcDir, String... filters) throws IOException {
-        Files.walkFileTree(srcDir, new SimpleFileVisitor<Path>() {
+        Files.walkFileTree(srcDir, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
                 if (dir.toAbsolutePath().equals(srcDir)) {
@@ -97,28 +108,53 @@ public final class ZipUtils {
     }
 
     public static void unzip(Path in, Path targetDir, CopyOption... options) throws IOException {
-        unzip(in, targetDir, false, null, options);
+        unzip(in, targetDir, false, null, DEFAULT_UNZIP_LIMITS, options);
     }
 
     public static void unzip(Path in, Path targetDir, boolean skipExisting, CopyOption... options) throws IOException {
-        unzip(in, targetDir, skipExisting, null, options);
+        unzip(in, targetDir, skipExisting, null, DEFAULT_UNZIP_LIMITS, options);
     }
 
     public static void unzip(InputStream in, Path targetDir, boolean skipExisting, FileVisitor visitor, CopyOption... options) throws IOException {
         try (TemporaryPath tmpZip = new TemporaryPath(PathUtils.createTempFile("unzip", "zip"))) {
             Files.copy(in, tmpZip.path(), StandardCopyOption.REPLACE_EXISTING);
-            unzip(tmpZip.path(), targetDir, skipExisting, visitor, options);
+            unzip(tmpZip.path(), targetDir, skipExisting, visitor, DEFAULT_UNZIP_LIMITS, options);
         }
     }
 
     public static void unzip(Path in, Path targetDir, boolean skipExisting, FileVisitor visitor, CopyOption... options) throws IOException {
-        targetDir = targetDir.normalize().toAbsolutePath();
+        unzip(in, targetDir, skipExisting, visitor, DEFAULT_UNZIP_LIMITS, options);
+    }
 
-        try (ZipFile zip = new ZipFile(in.toFile())) {
+    public static void unzip(
+            Path in,
+            Path targetDir,
+            boolean skipExisting,
+            FileVisitor visitor,
+            UnzipLimits limits,
+            CopyOption... options
+    ) throws IOException {
+
+        targetDir = targetDir.normalize().toAbsolutePath();
+        Objects.requireNonNull(limits);
+
+        BytesTracker totalBytes = new BytesTracker(limits.maxTotalUncompressedBytes());
+        long entryCount = 0;
+
+        try (ZipFile zip = new ZipFile.Builder().setFile(in.toFile()).get()) {
             Enumeration<ZipArchiveEntry> entries = zip.getEntries();
 
             while (entries.hasMoreElements()) {
                 ZipArchiveEntry e = entries.nextElement();
+                entryCount++;
+                if (entryCount > limits.maxEntries()) {
+                    throw new IOException("Unzip aborted: entry count limit exceeded: " + limits.maxEntries());
+                }
+
+                long advertisedSize = e.getSize();
+                if (advertisedSize > limits.maxEntryUncompressedBytes()) {
+                    throw new IOException("Unzip aborted: entry size limit exceeded for '" + e.getName() + "'");
+                }
 
                 Path p = targetDir.resolve(e.getName());
 
@@ -141,7 +177,7 @@ public final class ZipUtils {
                     }
 
                     try (InputStream src = zip.getInputStream(e)) {
-                        Files.copy(src, p, options);
+                        copyWithLimits(src, p, e, totalBytes, limits, options);
                     }
 
                     int unixMode = e.getUnixMode();
@@ -156,6 +192,78 @@ public final class ZipUtils {
                 }
             }
         }
+    }
+
+    private static class BytesTracker {
+        private final long maxRead;
+        private final AtomicLong currentRead;
+
+        public BytesTracker(long maxRead) {
+            this.maxRead = maxRead;
+            this.currentRead = new AtomicLong();
+        }
+
+        public long increment(long read) throws IOException {
+            long result = currentRead.addAndGet(read);
+            if (result > maxRead) {
+                throw new IOException("Unzip aborted: total uncompressed size limit exceeded: " + maxRead);
+            }
+            return result;
+        }
+    }
+
+    private static void copyWithLimits(
+            InputStream src,
+            Path dst,
+            ZipArchiveEntry e,
+            BytesTracker totalBytes,
+            UnzipLimits limits,
+            CopyOption... options
+    ) throws IOException {
+
+        try (OutputStream out = Files.newOutputStream(dst, toOpenOptions(options))) {
+            byte[] buf = new byte[8192];
+            long entryBytes = 0;
+            long compressedSize = e.getCompressedSize();
+
+            int read;
+            while ((read = src.read(buf)) >= 0) {
+                if (read == 0) {
+                    continue;
+                }
+
+                entryBytes += read;
+                if (entryBytes > limits.maxEntryUncompressedBytes()) {
+                    throw new IOException("Unzip aborted: entry size limit exceeded for '" + e.getName() + "'");
+                }
+
+                if (compressedSize > 0 && entryBytes > compressedSize * limits.maxCompressionRatio()) {
+                    throw new IOException("Unzip aborted: compression ratio limit exceeded for '" + e.getName() + "'");
+                }
+
+                totalBytes.increment(read);
+                out.write(buf, 0, read);
+            }
+        } catch (IOException ex) {
+            Files.deleteIfExists(dst);
+            throw ex;
+        }
+    }
+
+    private static OpenOption[] toOpenOptions(CopyOption... options) {
+        boolean replaceExisting = false;
+        for (CopyOption o : options) {
+            if (o == StandardCopyOption.REPLACE_EXISTING) {
+                replaceExisting = true;
+                break;
+            }
+        }
+
+        if (replaceExisting) {
+            return new OpenOption[]{StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE};
+        }
+
+        return new OpenOption[]{StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE};
     }
 
     private static boolean matches(Path p, String... filters) {
