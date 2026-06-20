@@ -119,7 +119,7 @@
         <shiro.version>2.2.1</shiro.version>
         <siesta.version>2.3.2</siesta.version>
         <sisu.version>1.0.0</sisu.version>
-        <slf4j.version>2.0.17</slf4j.version>
+        <slf4j.version>2.0.18</slf4j.version>
         <snakeyaml.version>2.5</snakeyaml.version>
         <sshd.version>2.15.0</sshd.version>
         <sysoutslf4j.version>1.0.2</sysoutslf4j.version>
