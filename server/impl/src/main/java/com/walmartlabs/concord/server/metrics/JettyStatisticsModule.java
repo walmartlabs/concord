@@ -22,56 +22,64 @@ package com.walmartlabs.concord.server.metrics;
 
 import com.codahale.metrics.Gauge;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
+import com.walmartlabs.concord.server.boot.HttpServer;
 import com.walmartlabs.concord.server.sdk.metrics.GaugeProvider;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-import java.lang.management.ManagementFactory;
+import java.util.function.ToDoubleFunction;
+import java.util.function.ToLongFunction;
+import org.eclipse.jetty.server.handler.StatisticsHandler;
 
 public class JettyStatisticsModule extends AbstractModule {
 
-    private static final String[] ATTRIBUTES = {
-            "responses1xx",
-            "responses2xx",
-            "responses3xx",
-            "responses4xx",
-            "responses5xx",
-
-            "requestsActive",
-            "requestTimeMax",
-            "requestTimeMean"
-    };
-
     @Override
     protected void configure() {
+        Provider<HttpServer> provider = getProvider(HttpServer.class);
+
         Multibinder<GaugeProvider> tasks = Multibinder.newSetBinder(binder(), GaugeProvider.class);
-        for (String a : ATTRIBUTES) {
-            tasks.addBinding().toInstance(attribute(a));
-        }
+        tasks.addBinding().toInstance(longAttribute("responses1xx", provider, StatisticsHandler::getResponses1xx));
+        tasks.addBinding().toInstance(longAttribute("responses2xx", provider, StatisticsHandler::getResponses2xx));
+        tasks.addBinding().toInstance(longAttribute("responses3xx", provider, StatisticsHandler::getResponses3xx));
+        tasks.addBinding().toInstance(longAttribute("responses4xx", provider, StatisticsHandler::getResponses4xx));
+        tasks.addBinding().toInstance(longAttribute("responses5xx", provider, StatisticsHandler::getResponses5xx));
+
+        tasks.addBinding().toInstance(longAttribute("requestsActive", provider, StatisticsHandler::getRequestsActive));
+        tasks.addBinding().toInstance(longAttribute("requestTimeMax", provider, StatisticsHandler::getRequestTimeMax));
+        tasks.addBinding().toInstance(doubleAttribute("requestTimeMean", provider, StatisticsHandler::getRequestTimeMean));
     }
 
-    @SuppressWarnings("unchecked")
-    private static <T> GaugeProvider<T> attribute(String attribute) {
-        return new GaugeProvider<T>() {
+    private static GaugeProvider<Long> longAttribute(String attribute,
+                                                     Provider<HttpServer> provider,
+                                                     ToLongFunction<StatisticsHandler> value) {
+        return new GaugeProvider<>() {
             @Override
             public String name() {
                 return "jetty-" + attribute;
             }
 
             @Override
-            public Gauge<T> gauge() {
-                return () -> (T) getAttribute(attribute);
+            public Gauge<Long> gauge() {
+                StatisticsHandler statistics = provider.get().getStatisticsHandler();
+                return () -> value.applyAsLong(statistics);
             }
         };
     }
 
-    private static Object getAttribute(String attribute) {
-        try {
-            MBeanServer mBeans = ManagementFactory.getPlatformMBeanServer();
-            return mBeans.getAttribute(new ObjectName("org.eclipse.jetty.server.handler:type=statisticshandler,id=0"), attribute);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    private static GaugeProvider<Double> doubleAttribute(String attribute,
+                                                         Provider<HttpServer> provider,
+                                                         ToDoubleFunction<StatisticsHandler> value) {
+        return new GaugeProvider<>() {
+            @Override
+            public String name() {
+                return "jetty-" + attribute;
+            }
+
+            @Override
+            public Gauge<Double> gauge() {
+                StatisticsHandler statistics = provider.get().getStatisticsHandler();
+                return () -> value.applyAsDouble(statistics);
+            }
+        };
     }
 }

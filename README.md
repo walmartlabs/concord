@@ -26,7 +26,7 @@ different systems together using scenarios and plugins created by users.
 
 Dependencies:
 - [Git](https://git-scm.com/) 2.18+
-- [Java 17](https://adoptium.net/)
+- [Java 25](https://adoptium.net/)
 - [Docker Community Edition](https://www.docker.com/community-edition)
 - [Docker Buildx](https://docs.docker.com/build/buildx/install/)
 - (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 24 LTS)
@@ -41,12 +41,12 @@ Available Maven profiles:
 
 - `docker` - build Docker images;
 - `it` - run integration tests;
-- `jdk17-aarch64` - use a different JDK version for building artifacts and Docker images.
+- `jdk25-aarch64` - build Docker images for aarch64.
 
 Profiles can be combined, e.g.
 
 ```
-./mvnw clean install -Pdocker -Pit -Pjdk17-aarch64
+./mvnw clean install -Pdocker -Pit -Pjdk25-aarch64
 ```
 
 ## Console
