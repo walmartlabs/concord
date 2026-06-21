@@ -196,19 +196,18 @@ public final class ZipUtils {
 
     private static class BytesTracker {
         private final long maxRead;
-        private final AtomicLong currentRead;
+        private long currentRead;
 
         public BytesTracker(long maxRead) {
             this.maxRead = maxRead;
-            this.currentRead = new AtomicLong();
+            this.currentRead = 0;
         }
 
-        public long increment(long read) throws IOException {
-            long result = currentRead.addAndGet(read);
+        public void increment(long read) throws IOException {
+            long result = currentRead += read;
             if (result > maxRead) {
                 throw new IOException("Unzip aborted: total uncompressed size limit exceeded: " + maxRead);
             }
-            return result;
         }
     }
 

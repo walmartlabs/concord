@@ -54,7 +54,7 @@ class ZipUtilsTest {
 
         PathUtils.deleteRecursively(src);
 
-        Path dst = Files.createTempDirectory("test");
+        Path dst = Files.createTempDirectory(workDir, "test");
         ZipUtils.unzip(archive, dst);
         assertTrue(Files.exists(dst.resolve("a.txt")));
         assertTrue(Files.exists(dst.resolve("b\\c.txt")));
@@ -71,7 +71,7 @@ class ZipUtilsTest {
             zip.closeArchiveEntry();
         }
 
-        Path dst = Files.createTempDirectory("test-large-entry");
+        Path dst = Files.createTempDirectory(workDir, "test-large-entry");
 
         UnzipLimits limits = new UnzipLimits(10, 1024, 16, 100);
         assertThrows(IOException.class, () -> ZipUtils.unzip(archive, dst, false, null, limits));
@@ -90,7 +90,7 @@ class ZipUtilsTest {
             }
         }
 
-        Path dst = Files.createTempDirectory("test-many-entries");
+        Path dst = Files.createTempDirectory(workDir, "test-many-entries");
 
         UnzipLimits limits = new UnzipLimits(2, 1024, 64, 100);
         assertThrows(IOException.class, () -> ZipUtils.unzip(archive, dst, false, null, limits));
