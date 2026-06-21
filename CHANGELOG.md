@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.43.0] - TBD
+
+### Breaking
+
+- project: switch to JDK 25. Drop support for Java 17.
+([#1326](https://github.com/walmartlabs/concord/pull/1326)).
+
+
+
 ## [2.42.0] - 2026-06-17
 
 ### Changed
