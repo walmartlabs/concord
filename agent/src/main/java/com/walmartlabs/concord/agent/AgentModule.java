@@ -30,7 +30,9 @@ import com.walmartlabs.concord.agent.executors.runner.ProcessPool;
 import com.walmartlabs.concord.agent.remote.ApiClientFactory;
 import com.walmartlabs.concord.agent.remote.QueueClientProvider;
 import com.walmartlabs.concord.common.ObjectMapperProvider;
+import com.walmartlabs.concord.common.ZipService;
 import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
+import com.walmartlabs.concord.common.cfg.UnzipLimits;
 import com.walmartlabs.concord.config.ConfigModule;
 import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
 import com.walmartlabs.concord.server.queueclient.QueueClient;
@@ -69,8 +71,11 @@ public class AgentModule implements Module {
         binder.bind(PreForkConfiguration.class).in(SINGLETON);
         binder.bind(RepositoryCacheConfiguration.class).in(SINGLETON);
         binder.bind(ServerConfiguration.class).in(SINGLETON);
+        binder.bind(UnzipLimits.class).to(UnzipLimitsConfiguration.class).in(SINGLETON);
+//        binder.bind(UnzipLimitsConfiguration.class).in(SINGLETON);
 
         binder.bind(DefaultDependencies.class).in(SINGLETON);
+        binder.bind(ZipService.class).in(SINGLETON);
         binder.bind(ProcessPool.class).in(SINGLETON);
         binder.bind(ApiClientFactory.class).in(SINGLETON);
         binder.bind(QueueClient.class).toProvider(QueueClientProvider.class).in(SINGLETON);

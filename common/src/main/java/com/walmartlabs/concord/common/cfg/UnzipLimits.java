@@ -20,16 +20,51 @@ package com.walmartlabs.concord.common.cfg;
  * =====
  */
 
-public record UnzipLimits(
+public class UnzipLimits {
+    private final long maxEntries;
+    private final long maxTotalUncompressedBytes;
+    private final long maxEntryUncompressedBytes;
+    private final int maxCompressionRatio;
+
+    public UnzipLimits(
         long maxEntries,
         long maxTotalUncompressedBytes,
         long maxEntryUncompressedBytes,
         int maxCompressionRatio
-) {
+    ) {
 
-    public UnzipLimits {
         if (maxEntries <= 0 || maxTotalUncompressedBytes <= 0 || maxEntryUncompressedBytes <= 0 || maxCompressionRatio <= 0) {
             throw new IllegalArgumentException("All unzip limits must be positive");
         }
+
+        this.maxEntries = maxEntries;
+        this.maxTotalUncompressedBytes = maxTotalUncompressedBytes;
+        this.maxEntryUncompressedBytes = maxEntryUncompressedBytes;
+        this.maxCompressionRatio = maxCompressionRatio;
+    }
+
+    public static UnzipLimits getInstance() {
+        return new UnzipLimits(
+                10_000,
+                1024L * 1024L * 1024L,
+                256L * 1024L * 1024L,
+                200
+        );
+    }
+
+    public long maxEntries() {
+        return maxEntries;
+    }
+
+    public long maxTotalUncompressedBytes() {
+        return maxTotalUncompressedBytes;
+    }
+
+    public long maxEntryUncompressedBytes() {
+        return maxEntryUncompressedBytes;
+    }
+
+    public int maxCompressionRatio() {
+        return maxCompressionRatio;
     }
 }

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.agent.cfg.GitConfiguration;
 import com.walmartlabs.concord.agent.cfg.RepositoryCacheConfiguration;
 import com.walmartlabs.concord.client2.SecretClient;
+import com.walmartlabs.concord.common.ZipService;
 import com.walmartlabs.concord.imports.Import.SecretDefinition;
 import com.walmartlabs.concord.repository.*;
 import com.walmartlabs.concord.sdk.Secret;
@@ -51,7 +52,8 @@ public class RepositoryManager {
                              RepositoryCacheConfiguration cacheCfg,
                              ObjectMapper objectMapper,
                              DependencyManager dependencyManager,
-                             AgentAuthTokenProvider agentAuthTokenProvider) throws IOException {
+                             AgentAuthTokenProvider agentAuthTokenProvider,
+                             ZipService zipService) throws IOException {
 
         this.secretClient = secretClient;
         this.gitCfg = gitCfg;
@@ -67,7 +69,7 @@ public class RepositoryManager {
                 .build();
 
         this.providers = new RepositoryProviders(List.of(
-                new MavenRepositoryProvider(dependencyManager),
+                new MavenRepositoryProvider(dependencyManager, zipService),
                 new GitCliRepositoryProvider(clientCfg, agentAuthTokenProvider)
         ));
         this.repositoryCache = new RepositoryCache(cacheCfg.getCacheDir(),

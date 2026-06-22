@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.repository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
+import com.walmartlabs.concord.common.ZipService;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.repository.*;
 import com.walmartlabs.concord.sdk.Secret;
@@ -65,7 +66,8 @@ public class RepositoryManager {
                              ProjectDao projectDao,
                              SecretManager secretManager,
                              DependencyManager dependencyManager,
-                             AuthTokenProvider authProvider) throws IOException {
+                             AuthTokenProvider authProvider,
+                             ZipService zipService) throws IOException {
 
         GitClientConfiguration gitCliCfg = GitClientConfiguration.builder()
                 .defaultOperationTimeout(gitCfg.getDefaultOperationTimeout())
@@ -82,7 +84,7 @@ public class RepositoryManager {
         this.providers =
                 new RepositoryProviders(List.of(
                         new ClasspathRepositoryProvider(),
-                        new MavenRepositoryProvider(dependencyManager),
+                        new MavenRepositoryProvider(dependencyManager, zipService),
                         new GitCliRepositoryProvider(gitCliCfg, authProvider)
                 ));
         this.secretManager = secretManager;

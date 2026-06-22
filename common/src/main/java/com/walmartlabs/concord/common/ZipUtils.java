@@ -100,15 +100,27 @@ public final class ZipUtils {
         });
     }
 
-    public static void unzip(InputStream in, Path targetDir, CopyOption... options) throws IOException {
+    public static void unzip(InputStream in, Path targetDir, UnzipLimits unzipLimits, CopyOption... options) throws IOException {
         try (TemporaryPath tmpZip = new TemporaryPath(PathUtils.createTempFile("unzip", "zip"))) {
             Files.copy(in, tmpZip.path(), StandardCopyOption.REPLACE_EXISTING);
-            unzip(tmpZip.path(), targetDir, options);
+            unzip(tmpZip.path(), targetDir, unzipLimits, options);
         }
+    }
+
+    public static void unzip(InputStream in, Path targetDir, CopyOption... options) throws IOException {
+        unzip(in, targetDir, DEFAULT_UNZIP_LIMITS, options);
+    }
+
+    public static void unzip(Path in, Path targetDir, UnzipLimits unzipLimits, CopyOption... options) throws IOException {
+        unzip(in, targetDir, false, null, unzipLimits, options);
     }
 
     public static void unzip(Path in, Path targetDir, CopyOption... options) throws IOException {
         unzip(in, targetDir, false, null, DEFAULT_UNZIP_LIMITS, options);
+    }
+
+    public static void unzip(Path in, Path targetDir, boolean skipExisting, UnzipLimits unzipLimits, CopyOption... options) throws IOException {
+        unzip(in, targetDir, skipExisting, null, unzipLimits, options);
     }
 
     public static void unzip(Path in, Path targetDir, boolean skipExisting, CopyOption... options) throws IOException {
