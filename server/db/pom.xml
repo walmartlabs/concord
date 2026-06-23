@@ -182,7 +182,6 @@
                     <url>jdbc:postgresql://${db.host}:${db.port}/postgres</url>
                     <username>${db.username}</username>
                     <password>${db.password}</password>
-                    <promptOnNonLocalDatabase>false</promptOnNonLocalDatabase>
                     <contexts>codegen</contexts>
                     <expressionVariables>
                         <superuserAvailable>true</superuserAvailable>
