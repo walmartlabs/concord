@@ -130,6 +130,7 @@
                 </executions>
                 <configuration>
                     <verbose>false</verbose>
+                    <ignoreNoFileToScan>true</ignoreNoFileToScan>
                     <licenseName>apache_v2</licenseName>
                     <organizationName>Walmart Inc.</organizationName>
                     <projectName>Concord</projectName>
