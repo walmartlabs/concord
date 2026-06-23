@@ -138,6 +138,12 @@
                     <sectionDelimiter>-----</sectionDelimiter>
                     <processEndTag>=====</processEndTag>
                     <trimHeaderLine>true</trimHeaderLine>
+                    <excludes>
+                        <exclude>**/SensitiveDataMasker.java</exclude>
+                        <exclude>**/SensitiveDataMaskerTest.java</exclude>
+                        <exclude>**/runtime/v2/runner/MainTest.java</exclude>
+                        <exclude>**/runtime/v2/runner/LogSegmentsTest.java</exclude>
+                    </excludes>
                     <roots>
                         <root>src/main/java</root>
                         <root>src/test/java</root>
