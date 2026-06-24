@@ -262,12 +262,13 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        byte[] payload = archive(CryptoIT.class.getResource("decryptStringTooBig").toURI());
+        byte[] payload = archive(CryptoIT.class.getResource("decryptString").toURI());
 
         StartProcessResponse spr = start(ImmutableMap.of(
                 "org", orgName,
                 "project", projectName,
-                "archive", payload));
+                "archive", payload,
+                "arguments.encryptedValue", DatatypeConverter.printBase64Binary(new byte[102401])));
 
         // ---
 

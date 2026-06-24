@@ -3,6 +3,8 @@ configuration:
 flows:
   default:
     - script: js
+      in:
+        esVersion: 2022
       body: |
         const Base64 = Java.type('java.util.Base64');
         const auth = processInfo.sessionToken + ":";

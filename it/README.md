@@ -20,6 +20,11 @@ above before running `it/console`.
 
 Notes:
 
+- Integration test resources are part of the regression surface. Prefer adding
+  new flows or fixtures for additional coverage instead of changing existing
+  flows. Modify an existing flow only when the previous behavior is explicitly
+  no longer supported, or when the fixture itself is incorrect, and document the
+  reason in the corresponding change.
 - The single-test command starts Postgres, Concord Server, Concord Agent,
   and Selenium via Docker.
 - The first `LoginIT` run may need to pull browser images, so it can be
