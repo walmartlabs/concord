@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.43.1]
+
+### Changed
+
+- project: update dependencies
+([#1338](https://github.com/walmartlabs/concord/pull/1338)).
+
+
+
 ## [2.43.0] - 2026-06-21
 
 ### Breaking
