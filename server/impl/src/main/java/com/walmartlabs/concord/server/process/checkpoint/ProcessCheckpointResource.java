@@ -43,8 +43,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -70,16 +72,32 @@ public class ProcessCheckpointResource implements Resource {
         this.checkpointManager = checkpointManager;
     }
 
+    /**
+     * @deprecated Use {@link com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointV3Resource#list(UUID, int, int)}
+     */
     @GET
     @Path("{id}/checkpoint")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Operation(description = "List the process checkpoints", operationId = "listCheckpoints")
+    @Deprecated(since = "2.44.0")
     public List<ProcessCheckpointEntry> list(@PathParam("id") UUID instanceId,
-                                             @QueryParam("offset") @DefaultValue("0") int offset,
-                                             @QueryParam("limit") @DefaultValue("15") int limit) {
+                                             @Context HttpServletRequest request) {
+
         ProcessEntry entry = processManager.assertProcess(instanceId);
         ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
+        int limit = 50;
+        int offset = 0;
+
+        String limitParam = request.getParameter("limit");
+        if (limitParam != null && !limitParam.isBlank()) {
+            limit = Integer.parseInt(limitParam);
+        }
+
+        String offsetParam = request.getParameter("offset");
+        if (offsetParam != null && !offsetParam.isBlank()) {
+            offset = Integer.parseInt(offsetParam);
+        }
 
         checkpointManager.assertProcessAccess(entry);
 
