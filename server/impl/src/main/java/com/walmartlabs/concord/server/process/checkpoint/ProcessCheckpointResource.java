@@ -75,13 +75,15 @@ public class ProcessCheckpointResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Operation(description = "List the process checkpoints", operationId = "listCheckpoints")
-    public List<ProcessCheckpointEntry> list(@PathParam("id") UUID instanceId) {
+    public List<ProcessCheckpointEntry> list(@PathParam("id") UUID instanceId,
+                                             @QueryParam("offset") @DefaultValue("0") int offset,
+                                             @QueryParam("limit") @DefaultValue("15") int limit) {
         ProcessEntry entry = processManager.assertProcess(instanceId);
         ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
         checkpointManager.assertProcessAccess(entry);
 
-        return checkpointManager.list(processKey);
+        return checkpointManager.list(processKey, offset, limit);
     }
 
     @POST
