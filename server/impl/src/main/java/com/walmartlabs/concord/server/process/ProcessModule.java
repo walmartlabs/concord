@@ -28,6 +28,7 @@ import com.walmartlabs.concord.runtime.v1.ProjectLoaderV1;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointResource;
 import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointV2Resource;
+import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointV3Resource;
 import com.walmartlabs.concord.server.process.event.ProcessEventDao;
 import com.walmartlabs.concord.server.process.event.ProcessEventManager;
 import com.walmartlabs.concord.server.process.event.ProcessEventResource;
@@ -112,6 +113,7 @@ public class ProcessModule implements Module {
 
         bindJaxRsResource(binder, ProcessCheckpointResource.class);
         bindJaxRsResource(binder, ProcessCheckpointV2Resource.class);
+        bindJaxRsResource(binder, ProcessCheckpointV3Resource.class);
         bindJaxRsResource(binder, ProcessEventResource.class);
         bindJaxRsResource(binder, ProcessHeartbeatResource.class);
         bindJaxRsResource(binder, ProcessKvResource.class);
