@@ -5,7 +5,9 @@
 ### Changed
 
 - project: update dependencies
-([#1338](https://github.com/walmartlabs/concord/pull/1338)).
+([#1338](https://github.com/walmartlabs/concord/pull/1338));
+- server: paginate list checkpoints API, omit checkpoint data from retrieval
+([#1343](https://github.com/walmartlabs/concord/pull/1343)).
 
 
 
