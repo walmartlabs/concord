@@ -123,8 +123,8 @@ public class ProcessCheckpointManager {
     /**
      * List checkpoints of a given instanceId
      */
-    public List<ProcessCheckpointEntry> list(ProcessKey processKey) {
-        return checkpointDao.list(processKey);
+    public List<ProcessCheckpointEntry> list(ProcessKey processKey, int offset, int limit) {
+        return checkpointDao.list(processKey, offset, limit);
     }
 
     public void assertProcessAccess(ProcessEntry e) {

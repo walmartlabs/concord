@@ -50,11 +50,18 @@ public class ProcessCheckpointDao extends AbstractDao {
         super(cfg);
     }
 
-    public List<ProcessCheckpointEntry> list(ProcessKey processKey) {
-        return txResult(tx -> tx.select()
+    public List<ProcessCheckpointEntry> list(ProcessKey processKey, int offset, int limit) {
+        return txResult(tx -> tx.select(
+                        PROCESS_CHECKPOINTS.CHECKPOINT_ID,
+                        PROCESS_CHECKPOINTS.CHECKPOINT_NAME,
+                        PROCESS_CHECKPOINTS.CHECKPOINT_DATE,
+                        PROCESS_CHECKPOINTS.CORRELATION_ID)
                 .from(PROCESS_CHECKPOINTS)
                 .where(PROCESS_CHECKPOINTS.INSTANCE_ID.eq(processKey.getInstanceId())
                         .and(PROCESS_CHECKPOINTS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
+                .orderBy(PROCESS_CHECKPOINTS.CHECKPOINT_DATE.desc())
+                .offset(offset)
+                .limit(limit)
                 .fetch(ProcessCheckpointDao::toEntry));
     }
 
