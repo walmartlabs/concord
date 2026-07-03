@@ -84,8 +84,6 @@ public class ProcessCheckpointResource implements Resource {
     public List<ProcessCheckpointEntry> list(@PathParam("id") UUID instanceId,
                                              @Context HttpServletRequest request) {
 
-        ProcessEntry entry = processManager.assertProcess(instanceId);
-        ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
         int limit = 50;
         int offset = 0;
 
@@ -98,6 +96,17 @@ public class ProcessCheckpointResource implements Resource {
         if (offsetParam != null && !offsetParam.isBlank()) {
             offset = Integer.parseInt(offsetParam);
         }
+
+        if (limit <= 0) {
+            throw new ValidationErrorsException("'limit' must be a positive number");
+        }
+
+        if (offset < 0) {
+            throw new ValidationErrorsException("'offset' must be a positive number or zero");
+        }
+
+        ProcessEntry entry = processManager.assertProcess(instanceId);
+        ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
         checkpointManager.assertProcessAccess(entry);
 
