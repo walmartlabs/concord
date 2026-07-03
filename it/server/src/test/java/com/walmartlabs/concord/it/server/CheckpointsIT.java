@@ -287,12 +287,18 @@ public class CheckpointsIT extends AbstractServerIT {
 
     private void restoreFromCheckpoint(UUID instanceId, String name) throws ApiException {
         CheckpointApi checkpointApi = new CheckpointApi(getApiClient());
+        CheckpointV3Api checkpointV3Api = new CheckpointV3Api(getApiClient());
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
         List<ProcessEventEntry> processEvents = eventsApi.listProcessEvents(instanceId, null, null, null, null, null, true, null);
         assertNotNull(processEvents);
 
         // restore from ONE checkpoint
         String checkpointId = assertCheckpoint(name, processEvents);
+
+        checkpointV3Api.pageCheckpoints(instanceId, 0, 10).stream()
+                .filter(c -> c.getId().toString().equals(checkpointId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("can't find checkpoint with id: " + checkpointId));
 
         ResumeProcessResponse resp = checkpointApi.restore(instanceId,
                 new RestoreCheckpointRequest().id(UUID.fromString(checkpointId)));

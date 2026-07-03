@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.42.1] - 2026-07-01
+
+### Changed
+
+- server: paginate list checkpoints API, omit checkpoint data from retrieval
+([#1343](https://github.com/walmartlabs/concord/pull/1343)).
+
+
+
 ## [2.42.0] - 2026-06-17
 
 ### Changed
@@ -12,6 +21,7 @@
 ([#1335](https://github.com/walmartlabs/concord/pull/1335));
 - server: fix jetty metrics integration for prometheus
 ([#1336](https://github.com/walmartlabs/concord/pull/1336)).
+
 
 
 ## [2.41.0] - 2026-05-14
