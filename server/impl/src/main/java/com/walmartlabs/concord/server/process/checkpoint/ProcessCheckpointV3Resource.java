@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -65,6 +66,14 @@ public class ProcessCheckpointV3Resource implements Resource {
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("10") int limit
     ) {
+
+        if (limit <= 0) {
+            throw new ValidationErrorsException("'limit' must be a positive number");
+        }
+
+        if (offset < 0) {
+            throw new ValidationErrorsException("'offset' must be a positive number or zero");
+        }
 
         ProcessEntry entry = processManager.assertProcess(instanceId);
         ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
