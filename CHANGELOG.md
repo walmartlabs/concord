@@ -9,7 +9,9 @@
 - server: paginate list checkpoints API, omit checkpoint data from retrieval
 ([#1343](https://github.com/walmartlabs/concord/pull/1343));
 - server: throw error on invalid checkpoint list pagination params
-([#1346](https://github.com/walmartlabs/concord/pull/1346)).
+([#1346](https://github.com/walmartlabs/concord/pull/1346));
+- project: update dependencies
+([#1348](https://github.com/walmartlabs/concord/pull/1348)).
 
 
 
