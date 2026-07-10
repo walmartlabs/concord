@@ -62,10 +62,17 @@ const OrganizationProcesses = ({ orgName, forceRefresh }: ExternalProps) => {
                 orgName={orgName}
                 columns={data.meta.ui.processList}
                 usePagination={true}
+                forceRefresh={forceRefresh}
             />
         );
     } else {
-        return <ProcessListActivity orgName={orgName} usePagination={true} />;
+        return (
+            <ProcessListActivity
+                orgName={orgName}
+                usePagination={true}
+                forceRefresh={forceRefresh}
+            />
+        );
     }
 };
 
