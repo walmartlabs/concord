@@ -11,7 +11,9 @@
 - server: throw error on invalid checkpoint list pagination params
 ([#1346](https://github.com/walmartlabs/concord/pull/1346));
 - project: update dependencies
-([#1348](https://github.com/walmartlabs/concord/pull/1348)).
+([#1348](https://github.com/walmartlabs/concord/pull/1348));
+- runtime-v1, runtime-v2: containerd retry compat for refused connection
+([#1353](https://github.com/walmartlabs/concord/pull/1353)).
 
 
 
