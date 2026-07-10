@@ -51,7 +51,7 @@ public class DefaultDockerService implements DockerService {
 
     private static final Pattern[] REGISTRY_ERROR_PATTERNS = {
             Pattern.compile("Error response from daemon.*received unexpected HTTP status: 5.*"),
-            Pattern.compile("Error response from daemon.*Get.*connection refused.*"),
+            Pattern.compile("Error response from daemon.*(Get|Head).*connection refused.*"),
             Pattern.compile("Error response from daemon.*Client.Timeout exceeded.*")
     };
 
