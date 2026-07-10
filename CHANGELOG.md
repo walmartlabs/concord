@@ -13,7 +13,9 @@
 - project: update dependencies
 ([#1348](https://github.com/walmartlabs/concord/pull/1348));
 - runtime-v1, runtime-v2: containerd retry compat for refused connection
-([#1353](https://github.com/walmartlabs/concord/pull/1353)).
+([#1353](https://github.com/walmartlabs/concord/pull/1353));
+- console2: fix process list refresh in OrganizationActivity
+([#1350](https://github.com/walmartlabs/concord/pull/1350)).
 
 
 
