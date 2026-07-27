@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.notifications;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -44,6 +45,7 @@ public class CommunicationHistoryEntry implements Serializable {
     @Nullable
     private final String emailBcc;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     private final OffsetDateTime emailTimestamp;
 
     @JsonCreator

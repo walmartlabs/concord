@@ -110,4 +110,10 @@
         <sql>ALTER TABLE notifications ADD CONSTRAINT chk_notifications_single_owner CHECK (num_nonnulls(user_id, org_id, project_id) = 1)</sql>
         <sql>ALTER TABLE notifications ADD CONSTRAINT chk_notifications_repo_requires_project CHECK (repo_id IS NULL OR project_id IS NOT NULL)</sql>
     </changeSet>
+
+    <changeSet id="2430001" author="lauren.connors@walmart.com">
+        <insert tableName="ROLES">
+            <column name="ROLE_NAME">concordModerator</column>
+        </insert>
+    </changeSet>
 </databaseChangeLog>
