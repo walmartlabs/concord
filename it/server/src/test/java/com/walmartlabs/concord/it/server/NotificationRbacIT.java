@@ -26,7 +26,9 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class NotificationRbacIT extends AbstractServerIT {
 
@@ -56,7 +58,7 @@ public class NotificationRbacIT extends AbstractServerIT {
         setApiKey(adminApiKey.getKey());
 
         NotificationsApi notificationsApi = new NotificationsApi(getApiClient());
-        ProjectEntry project = projectsApi.getProjectByNameAndOrg(orgName, projectName);
+        ProjectEntry project = projectsApi.getProject(orgName, projectName);
 
         // Create notification
         NotificationEntry notification = new NotificationEntry()
@@ -66,7 +68,7 @@ public class NotificationRbacIT extends AbstractServerIT {
                 .triggerEmail(false);
 
         NotificationOperationResponse createResponse = notificationsApi.createNotification(notification);
-        assertTrue(createResponse.getOk());
+        assertEquals(NotificationOperationResponse.ResultEnum.CREATED, createResponse.getResult());
         UUID notificationId = createResponse.getId();
         assertNotNull(notificationId);
 
@@ -105,7 +107,7 @@ public class NotificationRbacIT extends AbstractServerIT {
         setApiKey(modApiKey.getKey());
 
         NotificationsApi notificationsApi = new NotificationsApi(getApiClient());
-        ProjectEntry project = projectsApi.getProjectByNameAndOrg(orgName, projectName);
+        ProjectEntry project = projectsApi.getProject(orgName, projectName);
 
         // Create notification
         NotificationEntry notification = new NotificationEntry()
@@ -115,7 +117,7 @@ public class NotificationRbacIT extends AbstractServerIT {
                 .triggerEmail(false);
 
         NotificationOperationResponse createResponse = notificationsApi.createNotification(notification);
-        assertTrue(createResponse.getOk());
+        assertEquals(NotificationOperationResponse.ResultEnum.CREATED, createResponse.getResult());
         UUID notificationId = createResponse.getId();
         assertNotNull(notificationId);
 
@@ -152,7 +154,7 @@ public class NotificationRbacIT extends AbstractServerIT {
         setApiKey(regularApiKey.getKey());
 
         NotificationsApi notificationsApi = new NotificationsApi(getApiClient());
-        ProjectEntry project = projectsApi.getProjectByNameAndOrg(orgName, projectName);
+        ProjectEntry project = projectsApi.getProject(orgName, projectName);
 
         // Attempt to create notification - should fail
         NotificationEntry notification = new NotificationEntry()
@@ -191,7 +193,7 @@ public class NotificationRbacIT extends AbstractServerIT {
         setApiKey(adminApiKey.getKey());
 
         NotificationsApi notificationsApi = new NotificationsApi(getApiClient());
-        ProjectEntry project = projectsApi.getProjectByNameAndOrg(orgName, projectName);
+        ProjectEntry project = projectsApi.getProject(orgName, projectName);
 
         NotificationEntry notification = new NotificationEntry()
                 .projectId(project.getId())
@@ -243,7 +245,7 @@ public class NotificationRbacIT extends AbstractServerIT {
         setApiKey(adminApiKey.getKey());
 
         NotificationsApi notificationsApi = new NotificationsApi(getApiClient());
-        ProjectEntry project = projectsApi.getProjectByNameAndOrg(orgName, projectName);
+        ProjectEntry project = projectsApi.getProject(orgName, projectName);
 
         // Admin should be able to create notifications
         NotificationEntry notification = new NotificationEntry()
@@ -253,6 +255,6 @@ public class NotificationRbacIT extends AbstractServerIT {
                 .triggerEmail(false);
 
         NotificationOperationResponse createResponse = notificationsApi.createNotification(notification);
-        assertTrue(createResponse.getOk());
+        assertEquals(NotificationOperationResponse.ResultEnum.CREATED, createResponse.getResult());
     }
 }

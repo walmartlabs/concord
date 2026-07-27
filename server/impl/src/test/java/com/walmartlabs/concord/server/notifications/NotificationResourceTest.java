@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server.notifications;
  */
 
 import com.walmartlabs.concord.server.OperationResult;
+import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +37,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -45,11 +46,17 @@ public class NotificationResourceTest {
     @Mock
     private NotificationsDao notificationsDao;
 
+    @Mock
+    private ProjectAccessManager projectAccessManager;
+
+    @Mock
+    private OrganizationManager orgManager;
+
     private NotificationResource notificationResource;
 
     @BeforeEach
     public void setUp() {
-        notificationResource = new NotificationResource(notificationsDao);
+        notificationResource = new NotificationResource(notificationsDao, projectAccessManager, orgManager);
     }
 
     @Test
@@ -68,6 +75,7 @@ public class NotificationResourceTest {
                 "Test Body",
                 "http://example.com",
                 false,
+                OffsetDateTime.now(),
                 null,
                 null
         );
@@ -91,6 +99,7 @@ public class NotificationResourceTest {
                 "Test Body",
                 "http://example.com",
                 false,
+                OffsetDateTime.now(),
                 null,
                 null
         );
@@ -137,6 +146,7 @@ public class NotificationResourceTest {
                 "Test Body",
                 "http://example.com",
                 true,
+                OffsetDateTime.now(),
                 null,
                 null
         );
@@ -168,6 +178,7 @@ public class NotificationResourceTest {
                 null,
                 null,
                 false,
+                OffsetDateTime.now(),
                 null,
                 null
         );
@@ -199,6 +210,7 @@ public class NotificationResourceTest {
                 "Test Body",
                 null,
                 false,
+                OffsetDateTime.now(),
                 null,
                 null
         );
@@ -247,6 +259,7 @@ public class NotificationResourceTest {
                 "This triggers email",
                 "http://example.com/action",
                 true,
+                OffsetDateTime.now(),
                 null,
                 null
         );

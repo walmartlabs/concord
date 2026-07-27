@@ -16,7 +16,7 @@
                 <constraints nullable="true"/>
             </column>
             <column name="PROJECT_ID" type="uuid">
-                <constraints nullable="false"/>
+                <constraints nullable="true"/>
             </column>
             <column name="ORG_ID" type="uuid">
                 <constraints nullable="true"/>
@@ -38,6 +38,9 @@
             </column>
             <column name="DISMISSED_BY" type="uuid">
                 <constraints nullable="true"/>
+            </column>
+            <column name="CREATED_AT" type="timestamptz" defaultValueComputed="now()">
+                <constraints nullable="false"/>
             </column>
         </createTable>
 
@@ -103,5 +106,8 @@
                                  referencedTableName="NOTIFICATIONS"
                                  referencedColumnNames="ID"
                                  onDelete="CASCADE"/>
+
+        <sql>ALTER TABLE notifications ADD CONSTRAINT chk_notifications_single_owner CHECK (num_nonnulls(user_id, org_id, project_id) = 1)</sql>
+        <sql>ALTER TABLE notifications ADD CONSTRAINT chk_notifications_repo_requires_project CHECK (repo_id IS NULL OR project_id IS NOT NULL)</sql>
     </changeSet>
 </databaseChangeLog>

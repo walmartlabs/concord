@@ -56,6 +56,7 @@ public class NotificationsDaoTest extends AbstractDaoTest {
         assertEquals("Test Body", entry.getBody());
         assertEquals("http://example.com", entry.getActionLink());
         assertTrue(entry.isTriggerEmail());
+        assertNotNull(entry.getCreatedAt());
         assertNull(entry.getDismissedTimestamp());
         assertNull(entry.getDismissedBy());
     }

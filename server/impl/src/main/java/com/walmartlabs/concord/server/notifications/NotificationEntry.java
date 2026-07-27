@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -42,6 +43,7 @@ public class NotificationEntry implements Serializable {
     @Nullable
     private final UUID orgId;
 
+    @Nullable
     private final UUID projectId;
 
     @Nullable
@@ -51,6 +53,8 @@ public class NotificationEntry implements Serializable {
     private final String body;
     private final String actionLink;
     private final boolean triggerEmail;
+
+    private final OffsetDateTime createdAt;
 
     @Nullable
     private final OffsetDateTime dismissedTimestamp;
@@ -68,6 +72,7 @@ public class NotificationEntry implements Serializable {
                              @JsonProperty("body") String body,
                              @JsonProperty("actionLink") String actionLink,
                              @JsonProperty("triggerEmail") boolean triggerEmail,
+                             @JsonProperty("createdAt") OffsetDateTime createdAt,
                              @JsonProperty("dismissedTimestamp") OffsetDateTime dismissedTimestamp,
                              @JsonProperty("dismissedBy") UUID dismissedBy) {
         this.id = id;
@@ -79,6 +84,7 @@ public class NotificationEntry implements Serializable {
         this.body = body;
         this.actionLink = actionLink;
         this.triggerEmail = triggerEmail;
+        this.createdAt = createdAt;
         this.dismissedTimestamp = dismissedTimestamp;
         this.dismissedBy = dismissedBy;
     }
@@ -97,6 +103,7 @@ public class NotificationEntry implements Serializable {
         return orgId;
     }
 
+    @Nullable
     public UUID getProjectId() {
         return projectId;
     }
@@ -122,6 +129,10 @@ public class NotificationEntry implements Serializable {
         return triggerEmail;
     }
 
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
     @Nullable
     public OffsetDateTime getDismissedTimestamp() {
         return dismissedTimestamp;
@@ -130,6 +141,27 @@ public class NotificationEntry implements Serializable {
     @Nullable
     public UUID getDismissedBy() {
         return dismissedBy;
+    }
+
+    /**
+     * Derives the effective owner kind using the first non-null owner field
+     * in precedence order: userId → projectId → orgId.
+     */
+    public Optional<NotificationOwnerKind> effectiveOwnerKind() {
+        if (userId != null) return Optional.of(NotificationOwnerKind.USER);
+        if (projectId != null) return Optional.of(NotificationOwnerKind.PROJECT);
+        if (orgId != null) return Optional.of(NotificationOwnerKind.ORG);
+        return Optional.empty();
+    }
+
+    /**
+     * Returns the owner ID corresponding to {@link #effectiveOwnerKind()}.
+     */
+    public Optional<UUID> effectiveOwnerId() {
+        if (userId != null) return Optional.of(userId);
+        if (projectId != null) return Optional.of(projectId);
+        if (orgId != null) return Optional.of(orgId);
+        return Optional.empty();
     }
 
     @Override
@@ -144,6 +176,7 @@ public class NotificationEntry implements Serializable {
                 ", body='" + body + '\'' +
                 ", actionLink='" + actionLink + '\'' +
                 ", triggerEmail=" + triggerEmail +
+                ", createdAt=" + createdAt +
                 ", dismissedTimestamp=" + dismissedTimestamp +
                 ", dismissedBy=" + dismissedBy +
                 '}';

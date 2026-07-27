@@ -27,11 +27,13 @@ import com.walmartlabs.concord.server.jooq.tables.Notifications;
 import com.walmartlabs.concord.server.jooq.tables.records.NotificationsRecord;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
-import org.jooq.Record11;
+import org.jooq.Record12;
+import org.jooq.SelectWhereStep;
 import org.jooq.UpdateQuery;
 
 import javax.inject.Inject;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.Notifications.NOTIFICATIONS;
@@ -67,6 +69,8 @@ public class NotificationsDao extends AbstractDao {
                        String summary, String body, String actionLink, boolean triggerEmail) {
         UUID id = uuidGenerator.generate();
 
+        OffsetDateTime now = OffsetDateTime.now();
+
         return tx.insertInto(NOTIFICATIONS)
                 .columns(NOTIFICATIONS.ID,
                         NOTIFICATIONS.USER_ID,
@@ -76,8 +80,9 @@ public class NotificationsDao extends AbstractDao {
                         NOTIFICATIONS.SUMMARY,
                         NOTIFICATIONS.BODY,
                         NOTIFICATIONS.ACTION_LINK,
-                        NOTIFICATIONS.TRIGGER_EMAIL)
-                .values(id, userId, orgId, projectId, repoId, summary, body, actionLink, triggerEmail)
+                        NOTIFICATIONS.TRIGGER_EMAIL,
+                        NOTIFICATIONS.CREATED_AT)
+                .values(id, userId, orgId, projectId, repoId, summary, body, actionLink, triggerEmail, now)
                 .returning()
                 .fetchOne()
                 .getId();
@@ -121,6 +126,36 @@ public class NotificationsDao extends AbstractDao {
                 .execute());
     }
 
+    public List<NotificationEntry> list(NotificationOwnerKind ownerKind, UUID ownerId, int offset, int limit) {
+        Notifications n = NOTIFICATIONS.as("n");
+
+        SelectWhereStep<Record12<UUID, UUID, UUID, UUID, UUID, String, String, String, Boolean, OffsetDateTime, UUID, OffsetDateTime>> q =
+                dsl().select(n.ID, n.USER_ID, n.ORG_ID, n.PROJECT_ID, n.REPO_ID,
+                                n.SUMMARY, n.BODY, n.ACTION_LINK, n.TRIGGER_EMAIL,
+                                n.DISMISSED_TIMESTAMP, n.DISMISSED_BY, n.CREATED_AT)
+                        .from(n);
+
+        if (ownerKind != null && ownerId != null) {
+            switch (ownerKind) {
+                case USER -> q.where(n.USER_ID.eq(ownerId));
+                case ORG -> q.where(n.ORG_ID.eq(ownerId));
+                case PROJECT -> q.where(n.PROJECT_ID.eq(ownerId));
+                case REPOSITORY -> q.where(n.REPO_ID.eq(ownerId));
+            }
+        }
+
+        if (offset > 0) {
+            q.offset(offset);
+        }
+
+        if (limit > 0) {
+            q.limit(limit);
+        }
+
+        return q.orderBy(n.ID)
+                .fetch(this::toEntry);
+    }
+
     public NotificationEntry get(UUID id) {
         return get(dsl(), id);
     }
@@ -130,13 +165,13 @@ public class NotificationsDao extends AbstractDao {
 
         return tx.select(n.ID, n.USER_ID, n.ORG_ID, n.PROJECT_ID, n.REPO_ID,
                         n.SUMMARY, n.BODY, n.ACTION_LINK, n.TRIGGER_EMAIL,
-                        n.DISMISSED_TIMESTAMP, n.DISMISSED_BY)
+                        n.DISMISSED_TIMESTAMP, n.DISMISSED_BY, n.CREATED_AT)
                 .from(n)
                 .where(n.ID.eq(id))
                 .fetchOne(this::toEntry);
     }
 
-    private NotificationEntry toEntry(Record11<UUID, UUID, UUID, UUID, UUID, String, String, String, Boolean, OffsetDateTime, UUID> r) {
+    private NotificationEntry toEntry(Record12<UUID, UUID, UUID, UUID, UUID, String, String, String, Boolean, OffsetDateTime, UUID, OffsetDateTime> r) {
         boolean triggerEmail = r.value9();
         return new NotificationEntry(
                 r.value1(),   // id
@@ -148,6 +183,7 @@ public class NotificationsDao extends AbstractDao {
                 r.value7(),   // body
                 r.value8(),   // actionLink
                 triggerEmail,
+                r.value12(),  // createdAt
                 r.value10(),  // dismissedTimestamp
                 r.value11()   // dismissedBy
         );
