@@ -37,6 +37,7 @@
 
         <activation.api.version>1.2.2</activation.api.version>
         <aopalliance.version>1.0</aopalliance.version>
+        <asm.version>9.9.1</asm.version>
         <aws.version>1.11.475</aws.version>
         <bouncycastle.version>1.84</bouncycastle.version>
         <bpm.version>1.0.3</bpm.version>
@@ -585,11 +586,17 @@
                 <groupId>com.google.inject</groupId>
                 <artifactId>guice</artifactId>
                 <version>${guice.version}</version>
+                <classifier>classes</classifier>
             </dependency>
             <dependency>
                 <groupId>com.google.inject.extensions</groupId>
                 <artifactId>guice-servlet</artifactId>
                 <version>${guice.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+                <version>${asm.version}</version>
             </dependency>
             <dependency> <!-- for backwards compat with bpm-engine-impl -->
                 <groupId>org.graalvm.js</groupId>
