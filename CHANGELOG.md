@@ -1,6 +1,6 @@
 # Change Log
 
-## [2.43.1]
+## [2.43.1] - TBD
 
 ### Changed
 
@@ -15,7 +15,9 @@
 - runtime-v1, runtime-v2: containerd retry compat for refused connection
 ([#1353](https://github.com/walmartlabs/concord/pull/1353));
 - console2: fix process list refresh in OrganizationActivity
-([#1350](https://github.com/walmartlabs/concord/pull/1350)).
+([#1350](https://github.com/walmartlabs/concord/pull/1350));
+- server, agent: restore usage of config's git.oauth settings
+([#1349](https://github.com/walmartlabs/concord/pull/1349)).
 
 
 
