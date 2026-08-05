@@ -19,7 +19,9 @@
 - server, agent: restore usage of config's git.oauth settings
 ([#1349](https://github.com/walmartlabs/concord/pull/1349));
 - console2: enable tests in ci
-([#1351](https://github.com/walmartlabs/concord/pull/1351)).
+([#1351](https://github.com/walmartlabs/concord/pull/1351));
+- runtime-v2: migrate json schema generator to com.github.victools:jsonschema-generator
+([#1355](https://github.com/walmartlabs/concord/pull/1355)).
 
 
 
