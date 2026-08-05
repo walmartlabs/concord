@@ -5,7 +5,8 @@
     "type": "module",
     "devDependencies": {
         "@datasert/cronjs-matcher": "^1.4.0",
-        "@testing-library/react": "12.1.2",
+        "@testing-library/dom": "^10.4.1",
+        "@testing-library/react": "^12.1.2",
         "@types/jest": "27.0.3",
         "@types/lodash": "4.14.178",
         "@types/react": "^17.0.91",
@@ -16,12 +17,14 @@
         "@vitejs/plugin-react": "^6.0.1",
         "esbuild": "^0.28.1",
         "eslint": "8.57.1",
+        "jsdom": "^29.1.1",
         "prettier": "2.5.1",
         "react-hooks-testing-library": "0.6.0",
         "shx": "0.3.3",
         "ts-node": "10.4.0",
         "typescript": "5.3.3",
-        "vite": "^8.0.5"
+        "vite": "^8.0.5",
+        "vitest": "^4.1.9"
     },
     "dependencies": {
         "@monaco-editor/react": "4.3.1",
