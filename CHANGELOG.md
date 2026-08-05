@@ -21,7 +21,9 @@
 - console2: enable tests in ci
 ([#1351](https://github.com/walmartlabs/concord/pull/1351));
 - runtime-v2: migrate json schema generator to com.github.victools:jsonschema-generator
-([#1355](https://github.com/walmartlabs/concord/pull/1355)).
+([#1355](https://github.com/walmartlabs/concord/pull/1355));
+- concord-cli: enable native access
+([#1341](https://github.com/walmartlabs/concord/pull/1341)).
 
 
 
