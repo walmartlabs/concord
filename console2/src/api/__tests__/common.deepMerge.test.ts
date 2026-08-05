@@ -17,6 +17,8 @@
  * limitations under the License.
  * =====
  */
+
+import { expect, test } from 'vitest'
 import { deepMerge } from '../common';
 
 test('deepMerge works', () => {
