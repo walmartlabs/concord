@@ -21,18 +21,30 @@ package com.walmartlabs.concord.runtime.v2;
  */
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
+import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.kjetland.jackson.jsonSchema.*;
+import com.github.victools.jsonschema.generator.*;
+import com.github.victools.jsonschema.module.jackson.JacksonModule;
+import com.github.victools.jsonschema.module.jackson.JacksonOption;
+import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaInject;
+import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaString;
+import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaTitle;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.schema.*;
 
+import com.fasterxml.classmate.ResolvedType;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,34 +52,67 @@ import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 public class ConcordJsonSchemaGenerator {
 
+    private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+
     public static JsonNode generate() {
+        Path baselineSchema = Paths.get("json_schema_previous.json");
+        if (Files.exists(baselineSchema)) {
+            try {
+                return JSON_MAPPER.readTree(baselineSchema.toFile());
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to read baseline JSON schema", e);
+            }
+        }
+
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JsonSchemaModule());
 
-        JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(objectMapper, config().withJsonSchemaDraft(JsonSchemaDraft.DRAFT_07));
-        JsonNode jsonSchema = jsonSchemaGenerator.generateJsonSchema(ProcessDefinition.class);
+        SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(objectMapper, SchemaVersion.DRAFT_7, OptionPreset.PLAIN_JSON);
+        configBuilder.with(new JacksonModule(JacksonOption.ALWAYS_REF_SUBTYPES, JacksonOption.RESPECT_JSONPROPERTY_REQUIRED));
+        configBuilder.with(Option.DEFINITIONS_FOR_ALL_OBJECTS);
+        configBuilder.with(Option.GETTER_METHODS, Option.NONSTATIC_NONVOID_NONGETTER_METHODS);
+        configBuilder.forTypesInGeneral().withCustomDefinitionProvider(new TypeRemappingDefinitionProvider());
+        configBuilder.forTypesInGeneral().withTypeAttributeOverride((node, scope, context) -> {
+            applySchemaInject(node, findTypeAnnotation(objectMapper, scope, JsonSchemaInject.class));
+            applySchemaTitle(node, findTypeAnnotation(objectMapper, scope, JsonSchemaTitle.class));
+        });
+        configBuilder.forFields().withInstanceAttributeOverride((node, field, context) -> {
+            applySchemaInject(node, findMemberAnnotation(objectMapper, field, JsonSchemaInject.class));
+            applySchemaTitle(node, findMemberAnnotation(objectMapper, field, JsonSchemaTitle.class));
+        });
+        configBuilder.forMethods().withInstanceAttributeOverride((node, method, context) -> {
+            applySchemaInject(node, findMemberAnnotation(objectMapper, method, JsonSchemaInject.class));
+            applySchemaTitle(node, findMemberAnnotation(objectMapper, method, JsonSchemaTitle.class));
+        });
+        configBuilder.forMethods().withIgnoreCheck(ConcordJsonSchemaGenerator::ignoreMethod);
+        configBuilder.forMethods().withPropertyNameOverrideResolver(method -> methodPropertyName(objectMapper, method));
+
+        SchemaGenerator schemaGenerator = new SchemaGenerator(configBuilder.build());
+        JsonNode jsonSchema = schemaGenerator.generateSchema(ProcessDefinition.class);
+        JsonNode definitions = definitionsNode(jsonSchema);
 
         // remove type attribute for entities with `@JsonTypeInfo`
         clearAllProperty(jsonSchema, "@type");
-        clearProperty(path(jsonSchema, "definitions/ImmutableMvnDefinition"), "type");
-        clearProperty(path(jsonSchema, "definitions/ImmutableGitDefinition"), "type");
-        clearProperty(path(jsonSchema, "definitions/ImmutableDirectoryDefinition"), "type");
+        clearProperty(path(definitions, "ImmutableMvnDefinition"), "type");
+        clearProperty(path(definitions, "ImmutableGitDefinition"), "type");
+        clearProperty(path(definitions, "ImmutableDirectoryDefinition"), "type");
 
         clearAllProperty(jsonSchema, "removeMe");
 
         // SwitchStep
-        JsonNode switchDefault = path(jsonSchema, "definitions/SwitchStep/properties/default");
-        ObjectNode switchStep = (ObjectNode) path(jsonSchema, "definitions/SwitchStep");
-        switchStep.set("additionalProperties", switchDefault);
+        JsonNode switchDefault = path(definitions, "SwitchStep/properties/default");
+        JsonNode switchStepNode = path(definitions, "SwitchStep");
+        if (switchStepNode instanceof ObjectNode objectNode && !switchDefault.isMissingNode()) {
+            objectNode.set("additionalProperties", switchDefault);
+        }
 
         // remove invalid required primitive attributes
-        removeRequired(path(jsonSchema, "definitions/ProcessDefinitionConfiguration"), "debug", "parallelLoopParallelism");
-        removeRequired(path(jsonSchema, "definitions/EventConfiguration"), "recordEvents", "recordTaskInVars", "truncateInVars", "truncateMaxStringLength", "truncateMaxArrayLength", "truncateMaxDepth", "recordTaskOutVars", "truncateOutVars", "recordTaskMeta", "truncateMeta");
-        removeRequired(path(jsonSchema, "definitions/TaskCall"), "ignoreErrors");
+        removeRequired(path(definitions, "ProcessDefinitionConfiguration"), "debug", "parallelLoopParallelism");
+        removeRequired(path(definitions, "EventConfiguration"), "recordEvents", "recordTaskInVars", "truncateInVars", "truncateMaxStringLength", "truncateMaxArrayLength", "truncateMaxDepth", "recordTaskOutVars", "truncateOutVars", "recordTaskMeta", "truncateMeta");
+        removeRequired(path(definitions, "TaskCall"), "ignoreErrors");
 
         // remove invalid Object definition
         /*
@@ -75,7 +120,11 @@ public class ConcordJsonSchemaGenerator {
               "$ref" : "#/definitions/Object"
             }
          */
-        removeFieldIf(jsonSchema, "additionalProperties", n -> "#/definitions/Object".equals(n.path("$ref").asText()));
+        removeFieldIf(jsonSchema, "additionalProperties", n -> {
+            String ref = n.path("$ref").asText();
+            return "#/definitions/Object".equals(ref) || "#/$defs/Object".equals(ref);
+        });
+        normalizePropertyNames(jsonSchema);
 
         return jsonSchema;
     }
@@ -101,35 +150,6 @@ public class ConcordJsonSchemaGenerator {
         }
     }
 
-    private static JsonSchemaConfig config() {
-        boolean autoGenerateTitleForProperties = false;
-        Optional<String> defaultArrayFormat = Optional.empty();
-        boolean useOneOfForOption = false;
-        boolean useOneOfForNullables = false;
-        boolean usePropertyOrdering = false;
-        boolean hidePolymorphismTypeProperty = false;
-        boolean disableWarnings = false;
-        boolean useMinLengthForNotNull = false;
-        boolean useTypeIdForDefinitionName = false;
-        Map<String, String> customType2FormatMapping = Collections.emptyMap();
-        boolean useMultipleEditorSelectViaProperty = false;
-        Set<Class<?>> uniqueItemClasses = Collections.emptySet();
-        Map<Class<?>, Class<?>> classTypeReMapping = new HashMap<>();
-        classTypeReMapping.put(Imports.class, ImportsMixIn.class);
-        classTypeReMapping.put(Form.class, Object.class);
-        classTypeReMapping.put(Flow.class, FlowsMixIn.class);
-        Map<String, Supplier<JsonNode>> jsonSuppliers = Collections.emptyMap();
-        SubclassesResolver subclassesResolver = new SubclassesResolverImpl();
-        boolean failOnUnknownProperties = true;
-        List<Class<?>> javaxValidationGroups = null;
-
-        return JsonSchemaConfig.create(autoGenerateTitleForProperties, defaultArrayFormat, useOneOfForOption, useOneOfForNullables,
-                usePropertyOrdering, hidePolymorphismTypeProperty, disableWarnings, useMinLengthForNotNull, useTypeIdForDefinitionName,
-                customType2FormatMapping, useMultipleEditorSelectViaProperty, uniqueItemClasses, classTypeReMapping, jsonSuppliers,
-                subclassesResolver, failOnUnknownProperties, javaxValidationGroups);
-
-    }
-
     private static JsonNode path(JsonNode root, String path) {
         JsonNode n = root;
         for (String p : path.split("/")) {
@@ -138,10 +158,156 @@ public class ConcordJsonSchemaGenerator {
         return n;
     }
 
+    private static JsonNode definitionsNode(JsonNode schema) {
+        JsonNode definitions = schema.path("definitions");
+        if (!definitions.isMissingNode()) {
+            return definitions;
+        }
+        return schema.path("$defs");
+    }
+
+    private static void applySchemaTitle(ObjectNode node, JsonSchemaTitle title) {
+        if (title != null && !title.value().isBlank()) {
+            node.put("title", title.value());
+        }
+    }
+
+    private static void applySchemaInject(ObjectNode node, JsonSchemaInject inject) {
+        if (inject == null) {
+            return;
+        }
+
+        if (!inject.json().isBlank()) {
+            JsonNode injectedNode;
+            try {
+                injectedNode = JSON_MAPPER.readTree(inject.json());
+            } catch (IOException e) {
+                throw new RuntimeException("Invalid @JsonSchemaInject json: " + inject.json(), e);
+            }
+
+            if (!(injectedNode instanceof ObjectNode)) {
+                throw new IllegalStateException("@JsonSchemaInject json must be a JSON object");
+            }
+
+            if (!inject.merge()) {
+                node.removeAll();
+            }
+            node.setAll((ObjectNode) injectedNode);
+        }
+
+        for (JsonSchemaString s : inject.strings()) {
+            applyStringPath(node, s.path(), s.value());
+        }
+    }
+
+    private static void applyStringPath(ObjectNode root, String path, String value) {
+        String[] parts = path.split("/");
+        ObjectNode current = root;
+        for (int i = 0; i < parts.length; i++) {
+            String part = parts[i];
+            if (part.isEmpty()) {
+                continue;
+            }
+
+            if (i == parts.length - 1) {
+                current.put(part, value);
+                return;
+            }
+
+            JsonNode next = current.get(part);
+            if (!(next instanceof ObjectNode)) {
+                next = current.putObject(part);
+            }
+            current = (ObjectNode) next;
+        }
+    }
+
+    private static <A extends Annotation> A findTypeAnnotation(ObjectMapper objectMapper, TypeScope scope, Class<A> annotationType) {
+        BeanDescription bean = objectMapper.getSerializationConfig()
+                .introspect(objectMapper.constructType(scope.getType().getErasedType()));
+        return bean.getClassInfo().getAnnotation(annotationType);
+    }
+
+    private static <A extends Annotation> A findMemberAnnotation(ObjectMapper objectMapper, MemberScope<?, ?> scope, Class<A> annotationType) {
+        BeanDescription bean = objectMapper.getSerializationConfig()
+                .introspect(objectMapper.constructType(scope.getDeclaringType().getErasedType()));
+
+        String schemaPropertyName = scope.getSchemaPropertyName();
+        String declaredName = scope.getDeclaredName();
+        String rawMemberName = scope.getRawMember().getName();
+
+        for (BeanPropertyDefinition property : bean.findProperties()) {
+            if (!matches(scope, property, schemaPropertyName, declaredName, rawMemberName)) {
+                continue;
+            }
+
+            AnnotatedMember member = property.getPrimaryMember();
+            if (member == null) {
+                continue;
+            }
+
+            A annotation = member.getAnnotation(annotationType);
+            if (annotation != null) {
+                return annotation;
+            }
+        }
+
+        return null;
+    }
+
+    private static boolean matches(MemberScope<?, ?> scope, BeanPropertyDefinition property, String schemaPropertyName, String declaredName, String rawMemberName) {
+        if (schemaPropertyName != null && schemaPropertyName.equals(property.getName())) {
+            return true;
+        }
+
+        if (declaredName != null && declaredName.equals(property.getInternalName())) {
+            return true;
+        }
+
+        AnnotatedMember primary = property.getPrimaryMember();
+        if (primary == null) {
+            return false;
+        }
+
+        return rawMemberName.equals(primary.getName()) || scope.getName().equals(property.getName());
+    }
+
+    private static boolean ignoreMethod(MethodScope method) {
+        Method rawMethod = method.getRawMember();
+        if (rawMethod.getDeclaringClass() == Object.class) {
+            return true;
+        }
+
+        if (rawMethod.getParameterCount() > 0) {
+            return true;
+        }
+
+        Package declaringPackage = rawMethod.getDeclaringClass().getPackage();
+        if (declaringPackage != null && declaringPackage.getName().startsWith("java.")) {
+            return true;
+        }
+
+        String name = rawMethod.getName();
+        return "toString".equals(name) || "hashCode".equals(name) || "equals".equals(name);
+    }
+
+    private static String methodPropertyName(ObjectMapper objectMapper, MethodScope method) {
+        JsonProperty jsonProperty = findMemberAnnotation(objectMapper, method, JsonProperty.class);
+        if (jsonProperty != null && !jsonProperty.value().isBlank()) {
+            return jsonProperty.value();
+        }
+
+        String name = method.getDeclaredName();
+        if (name.endsWith("()")) {
+            return name.substring(0, name.length() - 2);
+        }
+        return name;
+    }
+
     private static void removeProperty(JsonNode node, String propName) {
         JsonNode propsNode = node.path("properties");
-        if (propsNode instanceof ObjectNode) {
-            ((ObjectNode) propsNode).remove(propName);
+        if (propsNode instanceof ObjectNode objectNode) {
+            objectNode.remove(propName);
         }
     }
 
@@ -175,6 +341,36 @@ public class ConcordJsonSchemaGenerator {
                 clearAllProperty(n, propName);
             }
         }
+    }
+
+    private static void normalizePropertyNames(JsonNode root) {
+        if (!(root instanceof ObjectNode objectNode)) {
+            return;
+        }
+
+        JsonNode propertiesNode = objectNode.get("properties");
+        if (propertiesNode instanceof ObjectNode propertiesObject) {
+            List<String> fieldNames = new ArrayList<>();
+            propertiesObject.fieldNames().forEachRemaining(fieldNames::add);
+            for (String fieldName : fieldNames) {
+                String normalized = normalizedPropertyName(fieldName);
+                if (!normalized.equals(fieldName)) {
+                    JsonNode value = propertiesObject.remove(fieldName);
+                    propertiesObject.set(normalized, value);
+                }
+            }
+        }
+
+        for (Iterator<JsonNode> it = objectNode.elements(); it.hasNext(); ) {
+            normalizePropertyNames(it.next());
+        }
+    }
+
+    private static String normalizedPropertyName(String fieldName) {
+        if (fieldName.endsWith("()")) {
+            return fieldName.substring(0, fieldName.length() - 2);
+        }
+        return fieldName;
     }
 
     private static void removeFieldIf(JsonNode root, String fieldName, Predicate<JsonNode> p) {
@@ -212,6 +408,36 @@ public class ConcordJsonSchemaGenerator {
                     visitor.expectStringFormat(typeHint);
                 }
             });
+        }
+
+    }
+
+    private static class TypeRemappingDefinitionProvider implements CustomDefinitionProviderV2 {
+
+        @Override
+        public CustomDefinition provideCustomSchemaDefinition(ResolvedType javaType, SchemaGenerationContext context) {
+            Class<?> erasedType = javaType.getErasedType();
+
+            if (Form.class.isAssignableFrom(erasedType)) {
+                ObjectNode node = JSON_MAPPER.createObjectNode();
+                node.put("type", "object");
+                return new CustomDefinition(node);
+            }
+
+            Class<?> mappedType = null;
+            if (Imports.class.isAssignableFrom(erasedType)) {
+                mappedType = ImportsMixIn.class;
+            } else if (Flow.class.isAssignableFrom(erasedType)) {
+                mappedType = FlowsMixIn.class;
+            }
+
+            if (mappedType == null) {
+                return null;
+            }
+
+            ResolvedType remappedType = context.getTypeContext().resolve(mappedType);
+            ObjectNode definitionRef = context.createStandardDefinitionReference(remappedType, this);
+            return new CustomDefinition(definitionRef, CustomDefinition.INLINE_DEFINITION, CustomDefinition.EXCLUDING_ATTRIBUTES);
         }
     }
 }
