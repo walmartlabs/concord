@@ -17,7 +17,9 @@
 - console2: fix process list refresh in OrganizationActivity
 ([#1350](https://github.com/walmartlabs/concord/pull/1350));
 - server, agent: restore usage of config's git.oauth settings
-([#1349](https://github.com/walmartlabs/concord/pull/1349)).
+([#1349](https://github.com/walmartlabs/concord/pull/1349));
+- console2: enable tests in ci
+([#1351](https://github.com/walmartlabs/concord/pull/1351)).
 
 
 
