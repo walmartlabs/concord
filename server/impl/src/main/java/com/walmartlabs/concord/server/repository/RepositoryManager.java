@@ -70,6 +70,9 @@ public class RepositoryManager {
                              ZipService zipService) throws IOException {
 
         GitClientConfiguration gitCliCfg = GitClientConfiguration.builder()
+                .oauthToken(gitCfg.getOauthToken())
+                .oauthUsername(gitCfg.getOauthUsername())
+                .oauthUrlPattern(gitCfg.getOauthUrlPattern())
                 .defaultOperationTimeout(gitCfg.getDefaultOperationTimeout())
                 .fetchTimeout(gitCfg.getFetchTimeout())
                 .httpLowSpeedLimit(gitCfg.getHttpLowSpeedLimit())
