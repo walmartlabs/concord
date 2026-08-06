@@ -57,6 +57,7 @@ interface Props {
     onSegmentInfo?: () => void;
     onCopy: () => void;
     copying: boolean;
+    copied: boolean;
     loading: boolean;
     forceOpen: boolean;
 }
@@ -78,6 +79,7 @@ const LogSegment = ({
     onSegmentInfo,
     onCopy,
     copying,
+    copied,
     loading,
     forceOpen,
 }: Props) => {
@@ -206,34 +208,41 @@ const LogSegment = ({
 
     return (
         <div className="LogSegment" id={`segmentId=${segmentId}`} ref={myRef}>
-            <Button
-                fluid={true}
-                size="medium"
-                className="Segment"
-                onClick={() => setOpen((prevState) => !prevState)}
-            >
-                <Icon name={isOpen ? 'caret down' : 'caret right'} className="State" />
+            <div className="Segment">
+                <Button
+                    size="medium"
+                    className="SegmentToggle"
+                    onClick={() => setOpen((prevState) => !prevState)}
+                >
+                    <Icon name={isOpen ? 'caret down' : 'caret right'} className="State" />
 
-                <StatusIcon
-                    status={status}
-                    processStatus={processStatus}
-                    warnings={warnings}
-                    errors={errors}
-                />
+                    <StatusIcon
+                        status={status}
+                        processStatus={processStatus}
+                        warnings={warnings}
+                        errors={errors}
+                    />
 
-                <span className="Caption">{name}</span>
+                    <span className="Caption">{name}</span>
 
-                {(hasWarnings || hasErrors) && (
-                    <>
-                        <span className="Counter">warn: {warnings ? warnings : 0}</span>
-                        <span className="Counter">error: {errors ? errors : 0}</span>
-                    </>
-                )}
+                    {(hasWarnings || hasErrors) && (
+                        <>
+                            <span className="Counter">warn: {warnings ? warnings : 0}</span>
+                            <span className="Counter">error: {errors ? errors : 0}</span>
+                        </>
+                    )}
 
-                {beenRunningFor && <span className="RunningFor">running for {beenRunningFor}</span>}
-                {wasRunningFor && <span className="RunningFor">{wasRunningFor}</span>}
+                    {beenRunningFor && (
+                        <span className="RunningFor">running for {beenRunningFor}</span>
+                    )}
+                    {wasRunningFor && <span className="RunningFor">{wasRunningFor}</span>}
+                </Button>
 
-                <div className="SegmentControls">
+                <div
+                    className={`SegmentControls${
+                        copying || copied || isAutoScroll || isLoadAll ? ' ForceVisible' : ''
+                    }`}
+                >
                     {isOpen && (
                         <div className="RowControls">
                             <div
@@ -258,7 +267,7 @@ const LogSegment = ({
 
                     <div className="ActionsGrid">
                         <div
-                            className="ActionSlot"
+                            className={`ActionSlot${onSegmentInfo === undefined ? ' Empty' : ''}`}
                             data-tooltip={onSegmentInfo !== undefined ? 'Show Info' : undefined}
                             data-inverted="">
                             {onSegmentInfo !== undefined && (
@@ -272,7 +281,6 @@ const LogSegment = ({
 
                         <a
                             href={`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`}
-                            onClick={(event) => event.stopPropagation()}
                             rel="noopener noreferrer"
                             target="_blank"
                             className="ActionSlot"
@@ -283,10 +291,20 @@ const LogSegment = ({
                         </a>
 
                         <div
-                            className="ActionSlot"
-                            data-tooltip={copying ? 'Copying log contents...' : 'Copy log contents'}
+                            className={`ActionSlot${copied ? ' Copied' : ''}`}
+                            data-tooltip={
+                                copied
+                                    ? 'Copied!'
+                                    : copying
+                                    ? 'Copying log contents...'
+                                    : 'Copy log contents'
+                            }
                             data-inverted="">
-                            <Icon loading={copying} name="copy" onClick={copyClickHandler} />
+                            <Icon
+                                loading={copying}
+                                name={copied ? 'checkmark' : 'copy'}
+                                onClick={copyClickHandler}
+                            />
                         </div>
 
                         <Link
@@ -300,7 +318,7 @@ const LogSegment = ({
                     </div>
                 </div>
                 {loading && <div className="Loader" />}
-            </Button>
+            </div>
 
             {isOpen && (
                 <div className="ContentContainer">

@@ -23,21 +23,27 @@
 }
 
 .LogSegment .Segment {
-    display: flex !important;
+    display: flex;
     align-items: center;
-    text-align: left;
     background-color: white;
     position: sticky;
     top: 57px;
 }
 
-.LogSegment .Segment:focus {
-    background: white none;
-}
-
 .LogSegment .Segment:hover {
     background-color: rgb(230, 230, 230);
     border-radius: 3px;
+}
+
+.LogSegment .Segment .SegmentToggle {
+    flex: 1 1 auto;
+    text-align: left;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.LogSegment .Segment .SegmentToggle:focus {
+    background: transparent !important;
 }
 
 .LogSegment .Loader {
@@ -79,6 +85,15 @@
     gap: 14px;
     margin-left: auto;
     padding-left: 10px;
+    padding-right: 16px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.LogSegment .Segment:hover .SegmentControls,
+.LogSegment .Segment:has(:focus-visible) .SegmentControls,
+.LogSegment .Segment .SegmentControls.ForceVisible {
+    opacity: 1;
 }
 
 .LogSegment .Segment .RowControls {
@@ -97,7 +112,6 @@
 
 .LogSegment .Segment .ActionSlot {
     width: 32px;
-    padding: 2px 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -107,11 +121,21 @@
 
 .LogSegment .Segment .ActionSlot i.icon {
     margin: 0 !important;
+    line-height: 1 !important;
 }
 
 .LogSegment .Segment .ActionSlot:hover {
     background: rgba(0, 0, 0, 0.06);
     color: #4183c4;
+}
+
+.LogSegment .Segment .ActionSlot.Copied,
+.LogSegment .Segment .ActionSlot.Copied:hover {
+    color: #21ba45;
+}
+
+.LogSegment .Segment .ActionSlot.Empty {
+    pointer-events: none;
 }
 
 .LogSegment .Segment .ActionSlot.Active {

@@ -98,6 +98,8 @@ const LogSegmentActivity = ({
     const [segmentInfoOpen, setSegmentInfoOpen] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
     const [copying, setCopying] = useState<boolean>(false);
+    const [copied, setCopied] = useState<boolean>(false);
+    const copiedTimeout = useRef<number | undefined>(undefined);
     const [continueFetch, setContinueFetch] = useState<boolean>(true);
 
     const fetchData = useCallback(
@@ -146,10 +148,24 @@ const LogSegmentActivity = ({
         try {
             const log = loadedRange.low === 0 ? rawData.join('') : await getFullSegmentLog(instanceId, segmentId);
             (copyToClipboard as any)(log);
+
+            setCopied(true);
+            if (copiedTimeout.current) {
+                window.clearTimeout(copiedTimeout.current);
+            }
+            copiedTimeout.current = window.setTimeout(() => setCopied(false), 1500);
         } finally {
             setCopying(false);
         }
     }, [instanceId, loadedRange.low, rawData, segmentId]);
+
+    useEffect(() => {
+        return () => {
+            if (copiedTimeout.current) {
+                window.clearTimeout(copiedTimeout.current);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         setRefresh((prevState) => !prevState);
@@ -207,6 +223,7 @@ const LogSegmentActivity = ({
                 onSegmentInfo={correlationId ? segmentInfoHandler : undefined}
                 onCopy={copyLogHandler}
                 copying={copying}
+                copied={copied}
                 data={visibleData}
                 lowRange={loadedRange.low}
                 loading={loading}
