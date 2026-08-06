@@ -29,10 +29,16 @@ import {
     useState
 } from 'react';
 import { Header, Modal } from 'semantic-ui-react';
+import copyToClipboard from 'copy-to-clipboard';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import { LogSegment } from '../../molecules';
-import { getSegmentLog as apiGetLog, LogRange, SegmentStatus } from '../../../api/process/log';
+import {
+    getFullSegmentLog,
+    getSegmentLog as apiGetLog,
+    LogRange,
+    SegmentStatus
+} from '../../../api/process/log';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { LogProcessorOptions, processText } from '../../../state/data/processes/logs/processors';
 import { isFinal, ProcessStatus } from '../../../api/process';
@@ -61,6 +67,7 @@ interface ExternalProps {
 
 interface FetchResponse {
     data: string;
+    rawData: string;
     range: LogRange;
 }
 
@@ -85,10 +92,12 @@ const LogSegmentActivity = ({
     const [refresh, setRefresh] = useState<boolean>(false);
     const [stopPolling, setStopPolling] = useState<boolean>(true);
     const [data, setData] = useState<string[]>([]);
+    const [rawData, setRawData] = useState<string[]>([]);
     const [loadedRange, setLoadedRange] = useState<LogRange>({});
     const [visibleData, setVisibleData] = useState<string[]>([]);
     const [segmentInfoOpen, setSegmentInfoOpen] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
+    const [copying, setCopying] = useState<boolean>(false);
     const [continueFetch, setContinueFetch] = useState<boolean>(true);
 
     const fetchData = useCallback(
@@ -100,6 +109,7 @@ const LogSegmentActivity = ({
 
             return {
                 data: processedData,
+                rawData: data || '',
                 range: chunk.range
             };
         },
@@ -116,18 +126,30 @@ const LogSegmentActivity = ({
         }
 
         setData([]);
+        setRawData([]);
         setStopPolling(false);
         setRefresh((prevState) => !prevState);
     }, []);
 
     const stopPollingHandler = useCallback(() => {
         setData([]);
+        setRawData([]);
         setStopPolling(true);
     }, []);
 
     const segmentInfoHandler = useCallback(() => {
         setSegmentInfoOpen(true);
     }, []);
+
+    const copyLogHandler = useCallback(async () => {
+        setCopying(true);
+        try {
+            const log = loadedRange.low === 0 ? rawData.join('') : await getFullSegmentLog(instanceId, segmentId);
+            (copyToClipboard as any)(log);
+        } finally {
+            setCopying(false);
+        }
+    }, [instanceId, loadedRange.low, rawData, segmentId]);
 
     useEffect(() => {
         setRefresh((prevState) => !prevState);
@@ -136,6 +158,7 @@ const LogSegmentActivity = ({
     useEffect(() => {
         range.current = rangeInit.current;
         setData([]);
+        setRawData([]);
     }, [opts]);
 
     useEffect(() => {
@@ -155,6 +178,7 @@ const LogSegmentActivity = ({
         fetchData,
         range,
         setData,
+        setRawData,
         setLoadedRange,
         setLoading,
         refresh,
@@ -181,6 +205,8 @@ const LogSegmentActivity = ({
                 onStartLoading={startPollingHandler}
                 onStopLoading={stopPollingHandler}
                 onSegmentInfo={correlationId ? segmentInfoHandler : undefined}
+                onCopy={copyLogHandler}
+                copying={copying}
                 data={visibleData}
                 lowRange={loadedRange.low}
                 loading={loading}
@@ -206,6 +232,7 @@ const usePolling = (
     request: (range: LogRange) => Promise<FetchResponse>,
     rangeRef: MutableRefObject<LogRange>,
     setData: Dispatch<SetStateAction<string[]>>,
+    setRawData: Dispatch<SetStateAction<string[]>>,
     setRange: Dispatch<SetStateAction<LogRange>>,
     setLoading: Dispatch<SetStateAction<boolean>>,
     refresh: boolean,
@@ -231,6 +258,7 @@ const usePolling = (
                 if (!cancelled && resp.data.length > 0) {
                     rangeRef.current = r;
                     setData((prev) => [...prev, resp.data]);
+                    setRawData((prev) => [...prev, resp.rawData]);
                     setRange((prev) => {
                         // was a full load or a first tail load
                         if (range.low === 0 || range.high !== undefined) {
@@ -270,6 +298,7 @@ const usePolling = (
     }, [
         request,
         setData,
+        setRawData,
         setRange,
         rangeRef,
         setLoading,

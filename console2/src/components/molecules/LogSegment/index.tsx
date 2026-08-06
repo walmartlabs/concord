@@ -55,6 +55,8 @@ interface Props {
     onStartLoading: (isLoadWholeLog: boolean) => void;
     onStopLoading: () => void;
     onSegmentInfo?: () => void;
+    onCopy: () => void;
+    copying: boolean;
     loading: boolean;
     forceOpen: boolean;
 }
@@ -74,6 +76,8 @@ const LogSegment = ({
     onStartLoading,
     onStopLoading,
     onSegmentInfo,
+    onCopy,
+    copying,
     loading,
     forceOpen,
 }: Props) => {
@@ -140,6 +144,18 @@ const LogSegment = ({
         ev.stopPropagation();
         setAutoScroll((prevState) => !prevState);
     }, []);
+
+    const copyClickHandler = useCallback(
+        (event: React.MouseEvent<any>) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (!copying) {
+                onCopy();
+            }
+        },
+        [copying, onCopy]
+    );
 
     useEffect(() => {
         if (prevForceOpen.current === forceOpen) {
@@ -225,6 +241,13 @@ const LogSegment = ({
                 >
                     <Icon name="linkify" />
                 </Link>
+
+                <div
+                    className="AdditionalAction"
+                    data-tooltip={copying ? 'Copying log contents...' : 'Copy log contents'}
+                    data-inverted="">
+                    <Icon loading={copying} name="copy" onClick={copyClickHandler} />
+                </div>
 
                 <a
                     href={`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`}

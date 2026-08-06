@@ -149,3 +149,12 @@ export const getSegmentLog = async (
     const data = await resp.text();
     return toChunk(data, parseRange(headers));
 };
+
+export const getFullSegmentLog = async (
+    instanceId: ConcordId,
+    segmentId: number
+): Promise<string> => {
+    const response = await managedFetch(`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`);
+
+    return response.text();
+};
