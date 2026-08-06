@@ -72,7 +72,6 @@ public class AgentModule implements Module {
         binder.bind(RepositoryCacheConfiguration.class).in(SINGLETON);
         binder.bind(ServerConfiguration.class).in(SINGLETON);
         binder.bind(UnzipLimits.class).to(UnzipLimitsConfiguration.class).in(SINGLETON);
-//        binder.bind(UnzipLimitsConfiguration.class).in(SINGLETON);
 
         binder.bind(DefaultDependencies.class).in(SINGLETON);
         binder.bind(ZipService.class).in(SINGLETON);
