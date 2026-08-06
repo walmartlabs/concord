@@ -26,7 +26,7 @@ import {
     useCallback,
     useEffect,
     useRef,
-    useState
+    useState,
 } from 'react';
 import { Header, Modal } from 'semantic-ui-react';
 import copyToClipboard from 'copy-to-clipboard';
@@ -37,7 +37,8 @@ import {
     getFullSegmentLog,
     getSegmentLog as apiGetLog,
     LogRange,
-    SegmentStatus
+    LogTooLargeError,
+    SegmentStatus,
 } from '../../../api/process/log';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { LogProcessorOptions, processText } from '../../../state/data/processes/logs/processors';
@@ -48,6 +49,7 @@ import './styles.css';
 
 const DATA_FETCH_INTERVAL = 5000;
 const DEFAULT_RANGE: LogRange = { low: undefined, high: 2048 };
+const MAX_COPY_SIZE_BYTES = 5 * 1024 * 1024; // copying huge logs freezes the tab and is rarely useful
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -67,9 +69,20 @@ interface ExternalProps {
 
 interface FetchResponse {
     data: string;
-    rawData: string;
     range: LogRange;
 }
+
+const copyTextToClipboard = async (text: string): Promise<boolean> => {
+    if (navigator.clipboard && window.isSecureContext) {
+        try {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch {
+            // fall through to the legacy fallback below
+        }
+    }
+    return copyToClipboard(text);
+};
 
 const LogSegmentActivity = ({
     instanceId,
@@ -84,7 +97,7 @@ const LogSegmentActivity = ({
     errors,
     opts,
     forceRefresh,
-    forceOpen
+    forceOpen,
 }: ExternalProps) => {
     const range = useRef<LogRange>(DEFAULT_RANGE);
     const rangeInit = useRef<LogRange>(DEFAULT_RANGE);
@@ -92,14 +105,15 @@ const LogSegmentActivity = ({
     const [refresh, setRefresh] = useState<boolean>(false);
     const [stopPolling, setStopPolling] = useState<boolean>(true);
     const [data, setData] = useState<string[]>([]);
-    const [rawData, setRawData] = useState<string[]>([]);
     const [loadedRange, setLoadedRange] = useState<LogRange>({});
     const [visibleData, setVisibleData] = useState<string[]>([]);
     const [segmentInfoOpen, setSegmentInfoOpen] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
     const [copying, setCopying] = useState<boolean>(false);
     const [copied, setCopied] = useState<boolean>(false);
-    const copiedTimeout = useRef<number | undefined>(undefined);
+    const [copyFailed, setCopyFailed] = useState<boolean>(false);
+    const [copyTooLarge, setCopyTooLarge] = useState<boolean>(false);
+    const copyFeedbackTimeout = useRef<number | undefined>(undefined);
     const [continueFetch, setContinueFetch] = useState<boolean>(true);
 
     const fetchData = useCallback(
@@ -111,8 +125,7 @@ const LogSegmentActivity = ({
 
             return {
                 data: processedData,
-                rawData: data || '',
-                range: chunk.range
+                range: chunk.range,
             };
         },
         [instanceId, segmentId, opts]
@@ -128,14 +141,12 @@ const LogSegmentActivity = ({
         }
 
         setData([]);
-        setRawData([]);
         setStopPolling(false);
         setRefresh((prevState) => !prevState);
     }, []);
 
     const stopPollingHandler = useCallback(() => {
         setData([]);
-        setRawData([]);
         setStopPolling(true);
     }, []);
 
@@ -143,26 +154,40 @@ const LogSegmentActivity = ({
         setSegmentInfoOpen(true);
     }, []);
 
+    const showCopyFeedback = useCallback((result: 'copied' | 'failed' | 'too-large') => {
+        setCopied(result === 'copied');
+        setCopyFailed(result === 'failed');
+        setCopyTooLarge(result === 'too-large');
+        if (copyFeedbackTimeout.current) {
+            window.clearTimeout(copyFeedbackTimeout.current);
+        }
+        copyFeedbackTimeout.current = window.setTimeout(
+            () => {
+                setCopied(false);
+                setCopyFailed(false);
+                setCopyTooLarge(false);
+            },
+            result === 'too-large' ? 3000 : 1500
+        );
+    }, []);
+
     const copyLogHandler = useCallback(async () => {
         setCopying(true);
         try {
-            const log = loadedRange.low === 0 ? rawData.join('') : await getFullSegmentLog(instanceId, segmentId);
-            (copyToClipboard as any)(log);
-
-            setCopied(true);
-            if (copiedTimeout.current) {
-                window.clearTimeout(copiedTimeout.current);
-            }
-            copiedTimeout.current = window.setTimeout(() => setCopied(false), 1500);
+            const log = await getFullSegmentLog(instanceId, segmentId, MAX_COPY_SIZE_BYTES);
+            const ok = await copyTextToClipboard(log);
+            showCopyFeedback(ok ? 'copied' : 'failed');
+        } catch (e) {
+            showCopyFeedback(e instanceof LogTooLargeError ? 'too-large' : 'failed');
         } finally {
             setCopying(false);
         }
-    }, [instanceId, loadedRange.low, rawData, segmentId]);
+    }, [instanceId, segmentId, showCopyFeedback]);
 
     useEffect(() => {
         return () => {
-            if (copiedTimeout.current) {
-                window.clearTimeout(copiedTimeout.current);
+            if (copyFeedbackTimeout.current) {
+                window.clearTimeout(copyFeedbackTimeout.current);
             }
         };
     }, []);
@@ -174,7 +199,6 @@ const LogSegmentActivity = ({
     useEffect(() => {
         range.current = rangeInit.current;
         setData([]);
-        setRawData([]);
     }, [opts]);
 
     useEffect(() => {
@@ -194,7 +218,6 @@ const LogSegmentActivity = ({
         fetchData,
         range,
         setData,
-        setRawData,
         setLoadedRange,
         setLoading,
         refresh,
@@ -224,6 +247,8 @@ const LogSegmentActivity = ({
                 onCopy={copyLogHandler}
                 copying={copying}
                 copied={copied}
+                copyFailed={copyFailed}
+                copyTooLarge={copyTooLarge}
                 data={visibleData}
                 lowRange={loadedRange.low}
                 loading={loading}
@@ -234,7 +259,8 @@ const LogSegmentActivity = ({
                 <Modal
                     open={segmentInfoOpen}
                     onClose={() => setSegmentInfoOpen(false)}
-                    size="small">
+                    size="small"
+                >
                     <Header icon="browser" content={name} />
                     <Modal.Content scrolling={true}>
                         <TaskCallDetails instanceId={instanceId} correlationId={correlationId} />
@@ -249,7 +275,6 @@ const usePolling = (
     request: (range: LogRange) => Promise<FetchResponse>,
     rangeRef: MutableRefObject<LogRange>,
     setData: Dispatch<SetStateAction<string[]>>,
-    setRawData: Dispatch<SetStateAction<string[]>>,
     setRange: Dispatch<SetStateAction<LogRange>>,
     setLoading: Dispatch<SetStateAction<boolean>>,
     refresh: boolean,
@@ -275,14 +300,13 @@ const usePolling = (
                 if (!cancelled && resp.data.length > 0) {
                     rangeRef.current = r;
                     setData((prev) => [...prev, resp.data]);
-                    setRawData((prev) => [...prev, resp.rawData]);
                     setRange((prev) => {
                         // was a full load or a first tail load
                         if (range.low === 0 || range.high !== undefined) {
                             return {
                                 low: resp.range.low,
                                 high: resp.range.high,
-                                length: resp.range.length
+                                length: resp.range.length,
                             };
                         }
 
@@ -315,13 +339,12 @@ const usePolling = (
     }, [
         request,
         setData,
-        setRawData,
         setRange,
         rangeRef,
         setLoading,
         refresh,
         stopPollingIndicator,
-        continueFetch
+        continueFetch,
     ]);
 
     const stopPolling = () => {

@@ -58,6 +58,8 @@ interface Props {
     onCopy: () => void;
     copying: boolean;
     copied: boolean;
+    copyFailed: boolean;
+    copyTooLarge: boolean;
     loading: boolean;
     forceOpen: boolean;
 }
@@ -80,6 +82,8 @@ const LogSegment = ({
     onCopy,
     copying,
     copied,
+    copyFailed,
+    copyTooLarge,
     loading,
     forceOpen,
 }: Props) => {
@@ -240,76 +244,104 @@ const LogSegment = ({
 
                 <div
                     className={`SegmentControls${
-                        copying || copied || isAutoScroll || isLoadAll ? ' ForceVisible' : ''
+                        copying || copied || copyFailed || copyTooLarge || isAutoScroll || isLoadAll
+                            ? ' ForceVisible'
+                            : ''
                     }`}
                 >
                     {isOpen && (
                         <div className="RowControls">
-                            <div
+                            <button
+                                type="button"
                                 className={`ActionSlot${isAutoScroll ? ' Active' : ''}`}
+                                aria-pressed={isAutoScroll}
+                                aria-label="Auto scroll"
                                 data-tooltip="Auto Scroll"
                                 data-inverted=""
+                                onClick={autoscrollClickHandler}
                             >
-                                <Icon name={'angle double down'} onClick={autoscrollClickHandler} />
-                            </div>
-                            <div
+                                <Icon name={'angle double down'} />
+                            </button>
+                            <button
+                                type="button"
                                 className={`ActionSlot${isLoadAll ? ' Active' : ''}`}
+                                aria-pressed={isLoadAll}
+                                aria-label="Show full log"
                                 data-tooltip="Show Full Log"
                                 data-inverted=""
+                                onClick={loadAllClickHandler}
                             >
-                                <Icon
-                                    name={'arrows alternate vertical'}
-                                    onClick={loadAllClickHandler}
-                                />
-                            </div>
+                                <Icon name={'arrows alternate vertical'} />
+                            </button>
                         </div>
                     )}
 
                     <div className="ActionsGrid">
-                        <div
-                            className={`ActionSlot${onSegmentInfo === undefined ? ' Empty' : ''}`}
-                            data-tooltip={onSegmentInfo !== undefined ? 'Show Info' : undefined}
-                            data-inverted="">
-                            {onSegmentInfo !== undefined && (
-                                <Icon
-                                    name={'info circle'}
-                                    title={'Show info'}
-                                    onClick={segmentInfoClickHandler}
-                                />
-                            )}
-                        </div>
+                        {onSegmentInfo !== undefined ? (
+                            <button
+                                type="button"
+                                className="ActionSlot"
+                                aria-label="Show info"
+                                data-tooltip="Show Info"
+                                data-inverted=""
+                                onClick={segmentInfoClickHandler}
+                            >
+                                <Icon name={'info circle'} />
+                            </button>
+                        ) : (
+                            <div className="ActionSlot Empty" aria-hidden="true" />
+                        )}
 
                         <a
                             href={`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`}
                             rel="noopener noreferrer"
                             target="_blank"
                             className="ActionSlot"
+                            aria-label="Download log"
                             data-tooltip="Download: InstanceId_SegmentId.log"
                             data-inverted=""
                         >
                             <Icon name="download" />
                         </a>
 
-                        <div
-                            className={`ActionSlot${copied ? ' Copied' : ''}`}
+                        <button
+                            type="button"
+                            className={`ActionSlot${copied ? ' Copied' : ''}${
+                                copyFailed ? ' CopyFailed' : ''
+                            }${copyTooLarge ? ' CopyTooLarge' : ''}`}
+                            aria-label="Copy log contents"
                             data-tooltip={
-                                copied
+                                copyTooLarge
+                                    ? 'Log is too large to copy — use Download instead'
+                                    : copyFailed
+                                    ? 'Copy failed'
+                                    : copied
                                     ? 'Copied!'
                                     : copying
                                     ? 'Copying log contents...'
                                     : 'Copy log contents'
                             }
-                            data-inverted="">
+                            data-inverted=""
+                            onClick={copyClickHandler}
+                        >
                             <Icon
                                 loading={copying}
-                                name={copied ? 'checkmark' : 'copy'}
-                                onClick={copyClickHandler}
+                                name={
+                                    copyTooLarge
+                                        ? 'exclamation triangle'
+                                        : copyFailed
+                                        ? 'exclamation circle'
+                                        : copied
+                                        ? 'checkmark'
+                                        : 'copy'
+                                }
                             />
-                        </div>
+                        </button>
 
                         <Link
                             to={`${baseUrl}#segmentId=${segmentId}`}
                             className="ActionSlot"
+                            aria-label="Copy link to this segment"
                             data-tooltip="Hyperlink"
                             data-inverted=""
                         >

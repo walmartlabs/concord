@@ -87,12 +87,16 @@
     padding-left: 10px;
     padding-right: 16px;
     opacity: 0;
-    transition: opacity 0.15s ease;
 }
 
 .LogSegment .Segment:hover .SegmentControls,
-.LogSegment .Segment:has(:focus-visible) .SegmentControls,
 .LogSegment .Segment .SegmentControls.ForceVisible {
+    opacity: 1;
+}
+
+/* kept separate: an unsupported selector in a comma list invalidates the whole
+   rule, and :has() isn't supported by every browser in this project's targets */
+.LogSegment .Segment:has(:focus-visible) .SegmentControls {
     opacity: 1;
 }
 
@@ -117,6 +121,11 @@
     justify-content: center;
     border-radius: 4px;
     color: #6b7280;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
 }
 
 .LogSegment .Segment .ActionSlot i.icon {
@@ -132,6 +141,16 @@
 .LogSegment .Segment .ActionSlot.Copied,
 .LogSegment .Segment .ActionSlot.Copied:hover {
     color: #21ba45;
+}
+
+.LogSegment .Segment .ActionSlot.CopyFailed,
+.LogSegment .Segment .ActionSlot.CopyFailed:hover {
+    color: #db2828;
+}
+
+.LogSegment .Segment .ActionSlot.CopyTooLarge,
+.LogSegment .Segment .ActionSlot.CopyTooLarge:hover {
+    color: #f2711c;
 }
 
 .LogSegment .Segment .ActionSlot.Empty {
