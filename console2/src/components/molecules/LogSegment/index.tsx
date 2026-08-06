@@ -135,33 +135,21 @@ const LogSegment = ({
         setLoadAll((prevState) => !prevState);
     }, []);
 
-    const segmentInfoClickHandler = useCallback(
-        (event: React.MouseEvent<any>) => {
-            event.stopPropagation();
-            if (onSegmentInfo !== undefined) {
-                onSegmentInfo();
-            }
-        },
-        [onSegmentInfo]
-    );
+    const segmentInfoClickHandler = useCallback(() => {
+        if (onSegmentInfo !== undefined) {
+            onSegmentInfo();
+        }
+    }, [onSegmentInfo]);
 
-    const autoscrollClickHandler = useCallback((ev: React.MouseEvent<any>) => {
-        ev.preventDefault();
-        ev.stopPropagation();
+    const autoscrollClickHandler = useCallback(() => {
         setAutoScroll((prevState) => !prevState);
     }, []);
 
-    const copyClickHandler = useCallback(
-        (event: React.MouseEvent<any>) => {
-            event.preventDefault();
-            event.stopPropagation();
-
-            if (!copying) {
-                onCopy();
-            }
-        },
-        [copying, onCopy]
-    );
+    const copyClickHandler = useCallback(() => {
+        if (!copying) {
+            onCopy();
+        }
+    }, [copying, onCopy]);
 
     useEffect(() => {
         if (prevForceOpen.current === forceOpen) {
@@ -309,7 +297,16 @@ const LogSegment = ({
                             className={`ActionSlot${copied ? ' Copied' : ''}${
                                 copyFailed ? ' CopyFailed' : ''
                             }${copyTooLarge ? ' CopyTooLarge' : ''}`}
-                            aria-label="Copy log contents"
+                            aria-label={
+                                copyTooLarge
+                                    ? 'Log is too large to copy — use Download instead'
+                                    : copyFailed
+                                    ? 'Copy failed'
+                                    : copied
+                                    ? 'Copied to clipboard'
+                                    : 'Copy log contents'
+                            }
+                            aria-busy={copying}
                             data-tooltip={
                                 copyTooLarge
                                     ? 'Log is too large to copy — use Download instead'

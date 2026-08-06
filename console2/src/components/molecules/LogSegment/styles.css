@@ -100,6 +100,17 @@
     opacity: 1;
 }
 
+/* :focus-within reveals on any focus, including a mouse click on the toggle button
+   (which keeps the controls visible until focus moves elsewhere) - :has(:focus-visible)
+   above avoids that by only reacting to keyboard-visible focus. Only fall back to the
+   coarser :focus-within behavior where :has() isn't supported, so a keyboard user on
+   those browsers isn't left tabbing onto fully invisible (opacity: 0) buttons. */
+@supports not selector(:has(*)) {
+    .LogSegment .Segment:focus-within .SegmentControls {
+        opacity: 1;
+    }
+}
+
 .LogSegment .Segment .RowControls {
     display: flex;
     align-items: center;

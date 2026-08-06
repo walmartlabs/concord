@@ -29,7 +29,6 @@ import {
     useState,
 } from 'react';
 import { Header, Modal } from 'semantic-ui-react';
-import copyToClipboard from 'copy-to-clipboard';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import { LogSegment } from '../../molecules';
@@ -73,15 +72,21 @@ interface FetchResponse {
 }
 
 const copyTextToClipboard = async (text: string): Promise<boolean> => {
-    if (navigator.clipboard && window.isSecureContext) {
-        try {
-            await navigator.clipboard.writeText(text);
-            return true;
-        } catch {
-            // fall through to the legacy fallback below
-        }
+    // deliberately no execCommand()/prompt() fallback here: this call happens after an
+    // await (the log fetch), so by the time we get here the browser may have already
+    // revoked "user activation" — falling back to the execCommand-based library in that
+    // state doesn't help (it needs activation too) and its own failure path is a
+    // window.prompt() containing the entire (possibly multi-MB) log text, which is worse
+    // than just reporting the copy as failed
+    if (!navigator.clipboard || !window.isSecureContext) {
+        return false;
     }
-    return copyToClipboard(text);
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch {
+        return false;
+    }
 };
 
 const LogSegmentActivity = ({

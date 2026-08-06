@@ -162,43 +162,21 @@ export const getFullSegmentLog = async (
     segmentId: number,
     maxBytes?: number
 ): Promise<string> => {
-    const response = await managedFetch(
-        `/api/v2/process/${instanceId}/log/segment/${segmentId}/data`
-    );
-
     if (maxBytes === undefined) {
+        const response = await managedFetch(
+            `/api/v2/process/${instanceId}/log/segment/${segmentId}/data`
+        );
         return response.text();
     }
 
-    const contentLength = response.headers.get('Content-Length');
-    if (contentLength && Number(contentLength) > maxBytes) {
-        throw new LogTooLargeError(Number(contentLength), maxBytes);
+    // ask the server for at most maxBytes: it caps the query on its side (rather than
+    // loading the entire, potentially huge, segment into memory before we get a say),
+    // and the Content-Range total tells us the real size regardless of compression/chunking
+    const chunk = await getSegmentLog(instanceId, segmentId, { low: 0, high: maxBytes });
+    const total = chunk.range.length;
+    if (total !== undefined && total > maxBytes) {
+        throw new LogTooLargeError(total, maxBytes);
     }
 
-    if (!response.body) {
-        return response.text();
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let receivedBytes = 0;
-    let result = '';
-
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-            break;
-        }
-
-        receivedBytes += value.byteLength;
-        if (receivedBytes > maxBytes) {
-            await reader.cancel();
-            throw new LogTooLargeError(receivedBytes, maxBytes);
-        }
-
-        result += decoder.decode(value, { stream: true });
-    }
-
-    result += decoder.decode();
-    return result;
+    return chunk.data;
 };
