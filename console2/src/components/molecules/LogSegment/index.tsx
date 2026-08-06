@@ -233,58 +233,18 @@ const LogSegment = ({
                 {beenRunningFor && <span className="RunningFor">running for {beenRunningFor}</span>}
                 {wasRunningFor && <span className="RunningFor">{wasRunningFor}</span>}
 
-                <Link
-                    to={`${baseUrl}#segmentId=${segmentId}`}
-                    className="AdditionalAction Anchor"
-                    data-tooltip="Hyperlink"
-                    data-inverted=""
-                >
-                    <Icon name="linkify" />
-                </Link>
-
-                <div
-                    className="AdditionalAction"
-                    data-tooltip={copying ? 'Copying log contents...' : 'Copy log contents'}
-                    data-inverted="">
-                    <Icon loading={copying} name="copy" onClick={copyClickHandler} />
-                </div>
-
-                <a
-                    href={`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`}
-                    onClick={(event) => event.stopPropagation()}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                    className="AdditionalAction Last"
-                    data-tooltip="Download: InstanceId_SegmentId.log"
-                    data-inverted=""
-                >
-                    <Icon name="download" />
-                </a>
-
-                {onSegmentInfo !== undefined && (
-                    <div className={'AdditionalAction'} data-tooltip="Show Info" data-inverted="">
-                        <Icon
-                            name={'info circle'}
-                            title={'Show info'}
-                            onClick={segmentInfoClickHandler}
-                        />
-                    </div>
-                )}
-
-                {isOpen && (
-                    <>
-                        <div className="AdditionalAction">
+                <div className="SegmentControls">
+                    {isOpen && (
+                        <div className="RowControls">
                             <div
-                                className={isAutoScroll ? 'on' : 'off'}
+                                className={`ActionSlot${isAutoScroll ? ' Active' : ''}`}
                                 data-tooltip="Auto Scroll"
                                 data-inverted=""
                             >
                                 <Icon name={'angle double down'} onClick={autoscrollClickHandler} />
                             </div>
-                        </div>
-                        <div className="AdditionalAction">
                             <div
-                                className={isLoadAll ? 'on' : 'off'}
+                                className={`ActionSlot${isLoadAll ? ' Active' : ''}`}
                                 data-tooltip="Show Full Log"
                                 data-inverted=""
                             >
@@ -294,8 +254,51 @@ const LogSegment = ({
                                 />
                             </div>
                         </div>
-                    </>
-                )}
+                    )}
+
+                    <div className="ActionsGrid">
+                        <div
+                            className="ActionSlot"
+                            data-tooltip={onSegmentInfo !== undefined ? 'Show Info' : undefined}
+                            data-inverted="">
+                            {onSegmentInfo !== undefined && (
+                                <Icon
+                                    name={'info circle'}
+                                    title={'Show info'}
+                                    onClick={segmentInfoClickHandler}
+                                />
+                            )}
+                        </div>
+
+                        <a
+                            href={`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`}
+                            onClick={(event) => event.stopPropagation()}
+                            rel="noopener noreferrer"
+                            target="_blank"
+                            className="ActionSlot"
+                            data-tooltip="Download: InstanceId_SegmentId.log"
+                            data-inverted=""
+                        >
+                            <Icon name="download" />
+                        </a>
+
+                        <div
+                            className="ActionSlot"
+                            data-tooltip={copying ? 'Copying log contents...' : 'Copy log contents'}
+                            data-inverted="">
+                            <Icon loading={copying} name="copy" onClick={copyClickHandler} />
+                        </div>
+
+                        <Link
+                            to={`${baseUrl}#segmentId=${segmentId}`}
+                            className="ActionSlot"
+                            data-tooltip="Hyperlink"
+                            data-inverted=""
+                        >
+                            <Icon name="linkify" />
+                        </Link>
+                    </div>
+                </div>
                 {loading && <div className="Loader" />}
             </Button>
 

@@ -23,6 +23,8 @@
 }
 
 .LogSegment .Segment {
+    display: flex !important;
+    align-items: center;
     text-align: left;
     background-color: white;
     position: sticky;
@@ -71,37 +73,49 @@
     display: inline-block;
 }
 
-.LogSegment .Segment .AdditionalAction {
-    margin-top: 0 !important;
-    float: right;
-    padding-right: 10px;
-}
-
-.LogSegment .Segment .AdditionalAction.Last {
-    padding-right: 0;
-    color: #4183c4;
-}
-
-.LogSegment .Segment .AdditionalAction.Anchor {
-    padding-right: 0;
+.LogSegment .Segment .SegmentControls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-left: auto;
     padding-left: 10px;
+}
+
+.LogSegment .Segment .RowControls {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding-right: 12px;
+    border-right: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.LogSegment .Segment .ActionsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 32px);
+    gap: 2px;
+}
+
+.LogSegment .Segment .ActionSlot {
+    width: 32px;
+    padding: 2px 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    color: #6b7280;
+}
+
+.LogSegment .Segment .ActionSlot i.icon {
+    margin: 0 !important;
+}
+
+.LogSegment .Segment .ActionSlot:hover {
+    background: rgba(0, 0, 0, 0.06);
     color: #4183c4;
 }
 
-.LogSegment .Segment .AdditionalAction .on {
+.LogSegment .Segment .ActionSlot.Active {
     color: #4183c4;
-}
-
-.LogSegment .Segment .AdditionalAction .off {
-    color: #767676;
-}
-
-.LogSegment .Segment .AdditionalAction .off:hover {
-    color: #000000;
-}
-
-.LogSegment .Segment .AdditionalAction i:hover{
-    color: rgb(43, 43, 43) !important;
 }
 
 .LogSegment .ContentContainer {
