@@ -1,8 +1,10 @@
+package com.kjetland.jackson.jsonSchema.annotations;
+
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2026 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +20,14 @@
  * =====
  */
 
-import { expect, test } from 'vitest'
-import { deepMerge } from '../common';
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-test('deepMerge works', () => {
-    const actual = deepMerge({ x: { y: 123 } }, { x: { z: 234 } });
-    const expected = { x: { y: 123, z: 234 } };
-    expect(actual).toEqual(expected);
-});
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD})
+public @interface JsonSchemaTitle {
+
+    String value();
+}

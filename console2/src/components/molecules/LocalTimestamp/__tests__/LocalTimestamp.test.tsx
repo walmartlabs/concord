@@ -26,9 +26,8 @@ test('Accepts date input of 2018-02-05 19:03:19', () => {
     expect(container.innerHTML).toContain('2018-02-05 19:03:19');
 });
 
-test('Renders a message if date format is invalid', () => {
-    const { container } = render(<LocalTimeStamp value={' '} />);
-    expect(container.innerHTML).toContain('Invalid Date');
+test('Throws an error if date format is invalid', () => {
+    expect(() => render(<LocalTimeStamp value={' '} />)).toThrow('Invalid time value');
 });
 
 test('Renders a message if bad date value is provided', () => {
