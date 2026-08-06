@@ -37,6 +37,7 @@
 
         <activation.api.version>1.2.2</activation.api.version>
         <aopalliance.version>1.0</aopalliance.version>
+        <asm.version>9.9.1</asm.version>
         <aws.version>1.11.475</aws.version>
         <bouncycastle.version>1.84</bouncycastle.version>
         <bpm.version>1.0.3</bpm.version>
@@ -53,13 +54,13 @@
         <commons.validator.version>1.10.0</commons.validator.version>
         <config.version>1.4.2</config.version>
         <cronutils.version>9.2.0</cronutils.version>
-        <errorproneannotations.version>2.28.0</errorproneannotations.version>
+        <errorproneannotations.version>2.47.0</errorproneannotations.version>
         <glassfish.el.version>3.0.1-b12</glassfish.el.version>
         <graalvm.version>25.0.3</graalvm.version>
         <greenmail.version>1.6.5</greenmail.version>
         <groovy.version>5.0.4</groovy.version>
-        <guava.version>33.3.1-jre</guava.version>
-        <guice.version>5.1.0</guice.version>
+        <guava.version>33.6.0-jre</guava.version>
+        <guice.version>6.0.0</guice.version>
         <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
         <hikaricp.version>6.0.0</hikaricp.version>
         <httpclient.version>4.5.13</httpclient.version>
@@ -588,9 +589,26 @@
                 <version>${guava.version}</version>
             </dependency>
             <dependency>
+                <!-- keep for now to satisfy existing downstream dependants.
+                     e.g. plugins referencing guice with provided scope  -->
                 <groupId>com.google.inject</groupId>
                 <artifactId>guice</artifactId>
                 <version>${guice.version}</version>
+            </dependency>
+            <dependency>
+                <!-- Default guice release comes with embedded asm dependency classes,
+                     and it's a fairly out-of-date release. The classes release
+                     classifier omits asm, so we can define a newer version
+                     that is compatible with JDK25+ -->
+                <groupId>com.google.inject</groupId>
+                <artifactId>guice</artifactId>
+                <version>${guice.version}</version>
+                <classifier>classes</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+                <version>${asm.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.inject.extensions</groupId>
