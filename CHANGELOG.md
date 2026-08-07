@@ -25,8 +25,9 @@
 - concord-cli: enable native access
 ([#1341](https://github.com/walmartlabs/concord/pull/1341))
 - project: upgrade guice to 6.x and guava to 33.6.0
-([#1356](https://github.com/walmartlabs/concord/pull/1356)).
-
+([#1356](https://github.com/walmartlabs/concord/pull/1356));
+console2: add copy action for log segments
+([#1357](https://github.com/walmartlabs/concord/pull/1357)).
 
 
 ## [2.43.0] - 2026-06-21
