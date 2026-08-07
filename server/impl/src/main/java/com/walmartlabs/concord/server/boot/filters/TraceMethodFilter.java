@@ -38,7 +38,7 @@ public class TraceMethodFilter implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) {
-        log.info("TRACE/TRACK method filter enabled");
+        log.info("TRACE method filter enabled");
     }
 
     @Override
