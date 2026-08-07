@@ -27,6 +27,8 @@ import org.eclipse.jetty.ee8.websocket.server.JettyWebSocketServletFactory;
 
 import javax.inject.Inject;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 @WebServlet("/websocket")
 public class ConcordWebSocketServlet extends JettyWebSocketServlet {
@@ -45,5 +47,10 @@ public class ConcordWebSocketServlet extends JettyWebSocketServlet {
     @Override
     public void configure(JettyWebSocketServletFactory factory) {
         factory.setCreator(new WebSocketCreator(channelManager, apiKeyDao));
+    }
+
+    @Override
+    protected void doTrace(HttpServletRequest req, HttpServletResponse resp) {
+        resp.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
     }
 }
