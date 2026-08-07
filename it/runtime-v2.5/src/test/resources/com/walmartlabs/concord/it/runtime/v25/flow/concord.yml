@@ -1,0 +1,32 @@
+configuration:
+  arguments:
+    base: 40
+  runtime: concord-v2.5
+flows:
+  default:
+    - set:
+        marker: set-ok
+    - out: answer
+      expr: ${base + 2}
+    - out:
+        scriptValue: ${result.scriptValue}
+      body: result.set("scriptValue", answer + 1);
+      script: js
+    - out: nested
+      in:
+        value: ${answer}
+      call: child
+    - out: looped
+      loop:
+        items: [1, 2, 3]
+        mode: serial
+      block:
+        - set:
+            looped: ${item}
+    - in:
+        msg: "runtime-v2.5-remote-ok marker=${marker} answer=${answer} script=${scriptValue} nested=${nested} loop=${looped} currentUser=${hasVariable('currentUser')}"
+      out: result
+      task: log
+  child:
+    - set:
+        nested: ${value + 1}

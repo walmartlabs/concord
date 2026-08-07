@@ -1,0 +1,12 @@
+configuration:
+  runtime: concord-v2.5
+  dependencies:
+    - "mvn://com.walmartlabs.concord.it.tasks:schema-test:PROJECT_VERSION"
+flows:
+  default:
+    - task: schemaTest
+      in:
+        message: hello
+        count: 5
+      out: result
+    - log: "v25-sdk-task result=${result.echo}"

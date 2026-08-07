@@ -99,6 +99,11 @@ public class TaskContext implements Context {
     }
 
     @Override
+    public NestedFlowExecutor nestedFlowExecutor() {
+        return delegate.nestedFlowExecutor();
+    }
+
+    @Override
     public <T> T eval(Object v, Class<T> type) {
         return delegate.eval(v, type);
     }

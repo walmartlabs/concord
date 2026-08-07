@@ -41,6 +41,11 @@ public final class StateManager {
     private static final String SUSPEND_MARKER = Constants.Files.SUSPEND_MARKER_FILE_NAME;
 
     public static void finalizeSuspendedState(Path baseDir, Serializable state, Set<String> eventNames) throws IOException {
+        finalizeSuspendedState(baseDir, eventNames);
+        saveProcessState(baseDir, state);
+    }
+
+    public static void finalizeSuspendedState(Path baseDir, Set<String> eventNames) throws IOException {
         Path stateDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(Constants.Files.JOB_STATE_DIR_NAME);
 
@@ -60,8 +65,6 @@ public final class StateManager {
 
         Path marker = stateDir.resolve(SUSPEND_MARKER);
         Files.write(marker, eventNames);
-
-        saveProcessState(baseDir, state);
     }
 
     public static void cleanupState(Path baseDir) throws IOException {

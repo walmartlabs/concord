@@ -246,6 +246,26 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.walmartlabs.concord.runtime.v25</groupId>
+                <artifactId>concord-runtime-model-v2.5</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.runtime.v25</groupId>
+                <artifactId>concord-runner-v2.5</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.runtime.v25</groupId>
+                <artifactId>concord-runner-v2.5-dist</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.runtime.v25</groupId>
+                <artifactId>concord-runner-v2.5-test</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.walmartlabs.concord.it</groupId>
                 <artifactId>concord-common-it</artifactId>
                 <version>${project.version}</version>

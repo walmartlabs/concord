@@ -1,0 +1,17 @@
+configuration:
+  runtime: concord-v2.5
+  dependencies:
+    - "mvn://com.walmartlabs.concord.it.tasks:serialization-test:PROJECT_VERSION"
+    - "mvn://com.walmartlabs.concord.plugins.basic:mock-tasks:PROJECT_VERSION"
+  arguments:
+    mocks:
+      - task: serializationTest
+        in:
+          value: does-not-match
+        out:
+          value: never-used
+flows:
+  default:
+    - task: serializationTest
+      in:
+        value: actual

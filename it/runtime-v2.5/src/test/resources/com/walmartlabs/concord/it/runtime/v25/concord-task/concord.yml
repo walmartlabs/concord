@@ -1,0 +1,9 @@
+configuration:
+  runtime: concord-v2.5
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:concord-tasks:PROJECT_VERSION"
+flows:
+  default:
+    - expr: ${concord.listSubprocesses(txId)}
+      out: children
+    - log: "v25-concord-task children=${children}"

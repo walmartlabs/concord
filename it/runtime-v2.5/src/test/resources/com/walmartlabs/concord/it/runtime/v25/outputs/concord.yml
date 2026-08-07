@@ -1,0 +1,9 @@
+configuration:
+  runtime: concord-v2.5
+flows:
+  default:
+    - set:
+        answer: 42
+    - set:
+        nested.value: remote
+    - log: "v25-outputs answer=${answer} nested=${nested.value}"

@@ -22,11 +22,9 @@ package com.walmartlabs.concord.plugins.mock;
 
 import com.google.inject.Binder;
 import com.google.inject.multibindings.Multibinder;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.CustomBeanMethodResolver;
 import com.walmartlabs.concord.runtime.v2.sdk.CustomTaskMethodResolver;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
-import com.walmartlabs.concord.svm.ExecutionListener;
 
 import javax.inject.Named;
 
@@ -44,10 +42,25 @@ public class MockModule implements com.google.inject.Module {
         var beanMethodResolvers = Multibinder.newSetBinder(binder, CustomBeanMethodResolver.class);
         beanMethodResolvers.addBinding().to(VerifierBeanMethodResolver.class);
 
-        var taskCallListeners = Multibinder.newSetBinder(binder, TaskCallListener.class);
-        taskCallListeners.addBinding().to(InvocationsCollector.class);
+        bindV2InvocationCollectors(binder);
+    }
 
-        var executionListeners = Multibinder.newSetBinder(binder, ExecutionListener.class);
-        executionListeners.addBinding().to(InvocationsCollector.class);
+    private static void bindV2InvocationCollectors(Binder binder) {
+        try {
+            var classLoader = MockModule.class.getClassLoader();
+            var taskCallListener = Class.forName("com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener",
+                    false, classLoader);
+            var executionListener = Class.forName("com.walmartlabs.concord.svm.ExecutionListener", false, classLoader);
+            var collector = Class.forName("com.walmartlabs.concord.plugins.mock.InvocationsCollector", false, classLoader);
+            addListener(binder, taskCallListener, collector);
+            addListener(binder, executionListener, collector);
+        } catch (ClassNotFoundException | LinkageError ignored) {
+            // Invocation verification uses runtime-v2 listener APIs and is unavailable without them.
+        }
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void addListener(Binder binder, Class<?> listenerType, Class<?> implementationType) {
+        Multibinder.newSetBinder(binder, (Class) listenerType).addBinding().to((Class) implementationType);
     }
 }

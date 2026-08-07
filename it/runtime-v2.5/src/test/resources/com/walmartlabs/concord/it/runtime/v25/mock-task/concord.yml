@@ -1,0 +1,15 @@
+configuration:
+  runtime: concord-v2.5
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:concord-tasks:PROJECT_VERSION"
+    - "mvn://com.walmartlabs.concord.plugins.basic:mock-tasks:PROJECT_VERSION"
+  arguments:
+    mocks:
+      - task: concord
+        out:
+          value: mocked
+flows:
+  default:
+    - task: concord
+      out: result
+    - log: "v25-mock-task result=${result.value}"

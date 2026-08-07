@@ -1,0 +1,16 @@
+configuration:
+  runtime: concord-v2.5
+forms:
+  approval:
+    - choice:
+        type: string
+flows:
+  default:
+    - name: approval-segment
+      block:
+        - form: approval
+        - task: sleep
+          in:
+            duration: 5
+        - name: post-resume-output
+          log: "v25-m12 post-resume choice=${approval.choice}"

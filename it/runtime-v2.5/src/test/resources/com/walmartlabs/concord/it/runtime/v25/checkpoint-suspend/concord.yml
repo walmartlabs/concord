@@ -1,0 +1,11 @@
+configuration:
+  runtime: concord-v2.5
+forms:
+  approval:
+    - choice:
+        type: string
+flows:
+  default:
+    - checkpoint: stable
+    - form: approval
+    - log: "v25-checkpoint-suspend choice=${approval.choice}"

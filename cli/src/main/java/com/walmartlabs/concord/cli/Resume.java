@@ -34,6 +34,8 @@ import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelExecutionException;
 import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v25.model.Definition25;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -135,6 +137,55 @@ public class Resume implements Callable<Integer> {
                     metadata.defaultTaskVarsPath(),
                     dependencyManager,
                     verbosity);
+
+            if (Definition25.RUNTIME_TYPE.equals(metadata.runtime())) {
+                String resumeEvent;
+                Map<String, Object> input;
+                if (formMode) {
+                    LocalFormState.assertSupported(workDir, pendingForms);
+                    var form = pendingForms.get(0);
+                    resumeEvent = form.eventName();
+                    input = new LocalFormPrompts(workDir, true).prompt(form);
+                } else {
+                    resumeEvent = selectedEvent.event();
+                    var selectedForm = findPendingForm(pendingForms, resumeEvent);
+                    if (selectedForm != null && !hasManualInputFlags()) {
+                        LocalSuspendPrinter.printInputRequired(resumeDir, waitingEvents, pendingForms, interactiveAvailable);
+                        return CliExitCodes.INPUT_REQUIRED;
+                    }
+                    input = loadInput();
+                    if (selectedForm != null) {
+                        try {
+                            input = LocalFormInputs.convertAndValidate(selectedForm, input, true).payload(selectedForm);
+                        } catch (LocalFormInputs.InputException e) {
+                            printFormInputErrors(e);
+                            LocalSuspendPrinter.printInputRequired(resumeDir, waitingEvents, pendingForms, interactiveAvailable);
+                            return CliExitCodes.INPUT_REQUIRED;
+                        }
+                    }
+                }
+                var processConfiguration = ProcessConfiguration.builder().from(metadata.processConfiguration())
+                        .arguments(input).build();
+                StateManager.saveResumeEvent(workDir, resumeEvent);
+                var result = LocalCliRuntime.runV25(injector, workDir, metadata.runnerConfiguration(),
+                        processConfiguration, verbosity);
+                if (result.status() == com.walmartlabs.concord.runtime.v25.runner.engine.ProcessStatus.SUCCEEDED) {
+                    LocalSuspendPersistence.cleanup(workDir);
+                    System.out.println("...done!");
+                    return CliExitCodes.SUCCESS;
+                }
+                if (result.status() == com.walmartlabs.concord.runtime.v25.runner.engine.ProcessStatus.SUSPENDED) {
+                    var nextWaitingEvents = LocalSuspendPersistence.readWaitingEvents(workDir);
+                    if (nextWaitingEvents == null || nextWaitingEvents.isEmpty()) {
+                        throw new IllegalStateException("Suspended runtime v2.5 process has no waiting events");
+                    }
+                    var nextPendingForms = LocalFormState.syncPendingForms(workDir, nextWaitingEvents);
+                    LocalSuspendPersistence.printResumeGuidance(metadata.resumeDirPath(), nextWaitingEvents,
+                            nextPendingForms, interactiveAvailable);
+                    return CliExitCodes.SUSPENDED;
+                }
+                return CliExitCodes.PROCESS_FAILED;
+            }
 
             LocalCliRuntime.notifyProjectLoaded(workDir);
 

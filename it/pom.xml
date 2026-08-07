@@ -27,6 +27,7 @@
         <module>console</module>
         <module>runtime-v1</module>
         <module>runtime-v2</module>
+        <module>runtime-v2.5</module>
         <module>compat</module>
 
         <module>testing-server</module>

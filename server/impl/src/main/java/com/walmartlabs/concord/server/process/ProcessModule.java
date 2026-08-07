@@ -26,6 +26,7 @@ import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.runtime.v1.ProjectLoaderV1;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
+import com.walmartlabs.concord.runtime.v25.model.ProjectLoader25;
 import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointResource;
 import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointV2Resource;
 import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointV3Resource;
@@ -79,6 +80,7 @@ public class ProcessModule implements Module {
 
         newSetBinder(binder, ProjectLoader.class).addBinding().to(ProjectLoaderV1.class);
         newSetBinder(binder, ProjectLoader.class).addBinding().to(ProjectLoaderV2.class);
+        newSetBinder(binder, ProjectLoader.class).addBinding().to(ProjectLoader25.class);
 
         bindSingletonScheduledTask(binder, ProcessCleaner.class);
         bindSingletonScheduledTask(binder, ProcessLocksWatchdog.class);

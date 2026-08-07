@@ -49,6 +49,7 @@
         <module>runtime/loader</module>
         <module>runtime/v1</module>
         <module>runtime/v2</module>
+        <module>runtime/v2.5</module>
         <module>plugins</module>
         <module>agent</module>
         <module>console2</module>

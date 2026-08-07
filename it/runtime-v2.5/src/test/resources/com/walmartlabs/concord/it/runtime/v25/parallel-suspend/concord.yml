@@ -1,0 +1,17 @@
+configuration:
+  runtime: concord-v2.5
+flows:
+  default:
+    - parallel:
+        - block:
+            - suspend: first-event
+            - set:
+                firstDone: ${firstAnswer}
+          out: firstDone
+        - block:
+            - suspend: second-event
+            - set:
+                secondDone: ${secondAnswer}
+          out: secondDone
+      out: [firstDone, secondDone]
+    - log: "v25-parallel-resume first=${firstDone} second=${secondDone}"

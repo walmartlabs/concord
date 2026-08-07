@@ -1,0 +1,10 @@
+configuration:
+  runtime: concord-v2.5
+flows:
+  default:
+    - try:
+        - throw: handled-v2.5-error
+      error:
+        - set:
+            handled: true
+    - throw: unhandled-v2.5-error

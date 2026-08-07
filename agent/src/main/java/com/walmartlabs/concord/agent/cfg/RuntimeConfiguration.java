@@ -21,6 +21,7 @@ package com.walmartlabs.concord.agent.cfg;
  */
 
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,7 @@ public class RuntimeConfiguration {
         var runtimes = config.getObject("runtimes");
         var configs = new HashMap<String, Entry>();
         for (var runtime : runtimes.keySet()) {
-            var cfg = Entry.parse(config.getConfig("runtimes." + runtime));
+            var cfg = Entry.parse(config.getConfig(ConfigUtil.joinPath("runtimes", runtime)));
             configs.put(runtime, cfg);
         }
         log.info("Available runtimes: {}", configs.keySet().stream().sorted().collect(joining(", ")));

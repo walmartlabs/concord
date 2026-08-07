@@ -1,0 +1,12 @@
+configuration:
+  runtime: concord-v2.5
+
+flows:
+  default:
+    - task: test
+      in:
+        value: 1
+      out: result
+
+  child:
+    - return

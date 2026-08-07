@@ -1,0 +1,12 @@
+flows:
+  default:
+    - out: result
+      retry:
+        times: ${1 + 1}
+      in:
+        message: ${greeting}
+      task: test
+configuration:
+  arguments:
+    greeting: hello
+  runtime: concord-v2.5

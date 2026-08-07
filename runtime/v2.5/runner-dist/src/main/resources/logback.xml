@@ -1,0 +1,15 @@
+<configuration>
+    <appender name="STDOUT" class="com.walmartlabs.concord.runtime.v25.runner.V25LogAppender">
+        <encoder class="com.walmartlabs.concord.runtime.v25.runner.V25LogEncoder">
+            <layout class="com.walmartlabs.concord.runtime.v25.runner.V25LogLayout">
+                <pattern>%date{yyyy-MM-dd'T'HH:mm:ss.SSSZ, UTC} [%-5level] %msg%n%rEx{full, com.sun, sun}</pattern>
+            </layout>
+        </encoder>
+    </appender>
+    <logger name="processLog" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>

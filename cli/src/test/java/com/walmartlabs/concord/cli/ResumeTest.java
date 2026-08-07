@@ -353,6 +353,7 @@ class ResumeTest extends AbstractTest {
                 new CliConfig.Overrides(Path.of("secrets"), Path.of("vault"), "test"),
                 List.of(),
                 null,
+                null,
                 null);
 
         assertTrue(Path.of(metadata.workDir()).isAbsolute());
@@ -369,7 +370,8 @@ class ResumeTest extends AbstractTest {
                 "resume/target",
                 "defaultTaskVars.json",
                 "deps",
-                new LocalSuspendPersistence.CliConfigData("default", false, "secrets", "vault", "test"));
+                new LocalSuspendPersistence.CliConfigData("default", false, "secrets", "vault", "test"),
+                null);
 
         assertEquals(Path.of("resume", "defaultTaskVars.json").normalize().toAbsolutePath(), oldMetadata.defaultTaskVarsPath());
         assertEquals(Path.of("resume", "deps").normalize().toAbsolutePath(), oldMetadata.depsCacheDirPath());

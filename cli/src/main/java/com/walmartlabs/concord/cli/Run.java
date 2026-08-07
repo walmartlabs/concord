@@ -32,12 +32,17 @@ import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.ZipService;
 import com.walmartlabs.concord.common.cfg.UnzipLimits;
 import com.walmartlabs.concord.forms.Form;
+import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.imports.*;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.model.EffectiveConfiguration;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
+import com.walmartlabs.concord.runtime.v25.model.Definition25;
+import com.walmartlabs.concord.runtime.v25.model.Diagnostic;
+import com.walmartlabs.concord.runtime.v25.model.ModelException;
+import com.walmartlabs.concord.runtime.v25.model.ProjectLoader25;
 import com.walmartlabs.concord.runtime.v2.model.Flow;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
@@ -169,13 +174,17 @@ public class Run implements Callable<Integer> {
                 new ZipService(UnzipLimits.getInstance()))
                 .create();
 
+        if (com.walmartlabs.concord.process.loader.ProjectLoaderUtils.getRuntimeType(workDir)
+                .filter(Definition25.RUNTIME_TYPE::equals).isPresent()) {
+            return runV25(workDir, importManager, dependencyManager, cliConfigContext, cliConfigOverrides, verbosity);
+        }
+
         ProjectLoaderV2.Result loadResult;
         try {
             loadResult = new ProjectLoaderV2(importManager)
                     .load(workDir, new CliImportsNormalizer(importsSource, verbosity.verbose(), defaultVersion), verbosity.verbose() ? new CliImportsListener() : null);
         } catch (ImportProcessingException e) {
-            ObjectMapper om = new ObjectMapper();
-            System.err.println("Error while processing import " + om.writeValueAsString(e.getImport()) + ": " + e.getMessage());
+            System.err.println("Error while processing " + describeImport(e.getImport()) + ": " + e.getMessage());
             return CliExitCodes.PROCESS_FAILED;
         } catch (Exception e) {
             System.err.println("Error while loading " + workDir);
@@ -312,7 +321,8 @@ public class Run implements Callable<Integer> {
                     cliConfigOverrides,
                     profiles,
                     cfg,
-                    runnerCfg);
+                    runnerCfg,
+                    null);
             LocalSuspendPersistence.save(workDir, snapshot, metadata);
             Set<String> events = LocalSuspendPersistence.getEvents(snapshot);
             List<Form> pendingForms = LocalFormState.syncPendingForms(workDir, events);
@@ -359,6 +369,159 @@ public class Run implements Callable<Integer> {
         System.out.println(ansi().fgBrightGreen().a("...done!").reset());
 
         return CliExitCodes.SUCCESS;
+    }
+
+    private int runV25(Path workDir, ImportManager importManager, DependencyManager dependencyManager,
+                       CliConfigContext cliConfigContext, CliConfig.Overrides cliConfigOverrides,
+                       Verbosity verbosity) throws Exception {
+        Definition25 definition;
+        List<String> activeProfiles;
+        List<String> extraDependencies;
+        try {
+            var normalizer = new CliImportsNormalizer(importsSource, verbosity.verbose(), defaultVersion);
+            var loaded = new ProjectLoader25(importManager).loadProject(workDir, Definition25.RUNTIME_TYPE,
+                    normalizer::normalize, verbosity.verbose() ? new CliImportsListener() : ImportsListener.NOP_LISTENER);
+            definition = (Definition25) loaded.projectDefinition();
+            activeProfiles = new ArrayList<>(definition.configuration().activeProfiles());
+            activeProfiles.addAll(profiles);
+            extraDependencies = new ArrayList<>(definition.configuration().extraDependencies());
+            activeProfiles.stream()
+                    .map(definition.profiles()::get)
+                    .filter(Objects::nonNull)
+                    .forEach(profile -> extraDependencies.addAll(profile.configuration().extraDependencies()));
+            definition = definition.effective(activeProfiles);
+        } catch (ImportProcessingException e) {
+            System.err.println("Error while processing " + describeImport(e.getImport()) + ": " + e.getMessage());
+            return CliExitCodes.PROCESS_FAILED;
+        } catch (com.walmartlabs.concord.runtime.v25.model.ModelException e) {
+            V25DiagnosticRenderer.print(e, System.err);
+            return CliExitCodes.PROCESS_FAILED;
+        } catch (Exception e) {
+            System.err.println("Error while loading " + workDir);
+            e.printStackTrace();
+            return CliExitCodes.PROCESS_FAILED;
+        }
+
+        var dependencies = new ArrayList<>(definition.configuration().dependencies());
+        extraDependencies.stream()
+                .filter(dependency -> !dependencies.contains(dependency))
+                .forEach(dependencies::add);
+        Collection<String> resolvedDependencies;
+        try {
+            resolvedDependencies = new DependencyResolver(dependencyManager, verbosity.verbose())
+                    .resolveDeps(dependencies);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return CliExitCodes.PROCESS_FAILED;
+        }
+
+        var instanceId = UUID.randomUUID();
+        var args = Definition25.deepMerge(definition.configuration().arguments(), extraVars);
+        args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
+        args.put(Constants.Context.WORK_DIR_KEY, workDir.toAbsolutePath().toString());
+        if (verbosity.verbose()) {
+            dumpArguments(args);
+        }
+        if (effectiveYaml) {
+            definition.serialize(com.walmartlabs.concord.runtime.model.Options.builder()
+                    .instanceId(instanceId).entryPoint(entryPoint).activeProfiles(activeProfiles)
+                    .configuration(Map.of(Constants.Request.ARGUMENTS_KEY, args)).build(), System.out);
+            return CliExitCodes.SUCCESS;
+        }
+
+        var runnerCfg = RunnerConfiguration.builder()
+                .api(buildApiConfiguration(cliConfigContext))
+                .dependencies(resolvedDependencies)
+                .debug(Boolean.TRUE.equals(definition.configuration().values().get("debug")))
+                .build();
+        var processInfo = ProcessInfo.builder().activeProfiles(activeProfiles).sessionToken("<undefined>").build();
+        var cfg = ProcessConfiguration.builder()
+                .instanceId(instanceId)
+                .entryPoint(entryPoint)
+                .debug(runnerCfg.debug())
+                .dryRun(dryRunMode)
+                .arguments(args)
+                .processInfo(processInfo)
+                .projectInfo(projectInfo(args))
+                .defaultTaskVariables(CliServicesModule.readDefaultVars(defaultTaskVars))
+                .meta(MapUtils.getMap(definition.configuration().values(), "meta", Collections.emptyMap()))
+                .events(events(definition.configuration().values()))
+                .out(MapUtils.getList(definition.configuration().values(), "out", Collections.emptyList()))
+                .build();
+
+        System.out.println(ansi().fgBrightGreen().a("Starting...").reset());
+        if (dryRunMode) {
+            System.out.println("Running in the dry-run mode.");
+        }
+        var injector = LocalCliRuntime.createInjector(workDir, runnerCfg, cfg, cliConfigContext,
+                defaultTaskVars, dependencyManager, verbosity);
+        com.walmartlabs.concord.runtime.v25.runner.engine.ProcessResult result;
+        try {
+            result = LocalCliRuntime.runV25(injector, workDir, runnerCfg, cfg, verbosity);
+        } catch (ModelException e) {
+            V25DiagnosticRenderer.print(e, System.err);
+            return CliExitCodes.PROCESS_FAILED;
+        } catch (IllegalArgumentException e) {
+            V25DiagnosticRenderer.print(planFailure(definition, e), System.err);
+            return CliExitCodes.PROCESS_FAILED;
+        }
+        switch (result.status()) {
+            case SUSPENDED:
+                var events = LocalSuspendPersistence.readWaitingEvents(workDir);
+                if (events == null || events.isEmpty()) {
+                    throw new IllegalStateException("Suspended runtime v2.5 process has no waiting events");
+                }
+                var pendingForms = LocalFormState.syncPendingForms(workDir, events);
+                var metadata = LocalSuspendPersistence.ResumeMetadata.from(workDir, workDir, defaultTaskVars,
+                        depsCacheDir, context, cliConfigOverrides, activeProfiles, cfg, runnerCfg, Definition25.RUNTIME_TYPE);
+                LocalSuspendPersistence.saveMetadata(workDir, metadata);
+                LocalSuspendPersistence.printResumeGuidance(workDir, events, pendingForms, canPromptInteractively());
+                return CliExitCodes.SUSPENDED;
+            case SUCCEEDED:
+                System.out.println(ansi().fgBrightGreen().a("...done!").reset());
+                return CliExitCodes.SUCCESS;
+            case FAILED:
+            case CANCELLED:
+            case TIMED_OUT:
+            case RUNNING:
+                return CliExitCodes.PROCESS_FAILED;
+        }
+        throw new IllegalStateException("Unhandled runtime v2.5 status: " + result.status());
+    }
+
+    private static ModelException planFailure(Definition25 definition, IllegalArgumentException error) {
+        return new ModelException(List.of(new Diagnostic("V25_PLAN", Diagnostic.Severity.ERROR, error.getMessage(),
+                definition.configuration().sourceRange(), "$", null)));
+    }
+
+    private static String describeImport(Import definition) {
+        if (definition instanceof Import.GitDefinition git) {
+            return "git import from " + describeSource(git.url()) + " to " + describeDestination(git.dest());
+        }
+        if (definition instanceof Import.MvnDefinition mvn) {
+            return "maven import from " + describeSource(mvn.url()) + " to " + describeDestination(mvn.dest());
+        }
+        if (definition instanceof Import.DirectoryDefinition directory) {
+            return "directory import from " + describeSource(directory.src()) + " to " + describeDestination(directory.dest());
+        }
+        return "import of type '" + definition.type() + "'";
+    }
+
+    private static String describeSource(String source) {
+        if (source == null) {
+            return "<unspecified>";
+        }
+
+        var scheme = source.indexOf("://");
+        var credentialsEnd = scheme < 0 ? -1 : source.indexOf('@', scheme + 3);
+        if (credentialsEnd < 0) {
+            return "'" + source + "'";
+        }
+        return "'" + source.substring(0, scheme + 3) + "***" + source.substring(credentialsEnd) + "'";
+    }
+
+    private static String describeDestination(String destination) {
+        return destination == null ? "<working directory>" : "'" + destination + "'";
     }
 
     private boolean canPromptInteractively() {
@@ -411,6 +574,14 @@ public class Run implements Callable<Integer> {
                 .processInfo(processInfo)
                 .projectInfo(projectInfo)
                 .out(cfg.out());
+    }
+
+    private static com.walmartlabs.concord.runtime.v2.model.EventConfiguration events(Map<String, Object> configuration) {
+        var events = configuration.get("events");
+        if (events == null) {
+            return com.walmartlabs.concord.runtime.v2.model.EventConfiguration.builder().build();
+        }
+        return new ObjectMapper().convertValue(events, com.walmartlabs.concord.runtime.v2.model.EventConfiguration.class);
     }
 
     private static Map<String, Object> fromExtraVars(String key, Map<String, Object> args) {

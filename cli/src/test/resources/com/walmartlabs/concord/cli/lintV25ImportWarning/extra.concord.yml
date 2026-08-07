@@ -1,0 +1,6 @@
+imports:
+  - dir:
+      src: .
+flows:
+  other:
+    - log: ok

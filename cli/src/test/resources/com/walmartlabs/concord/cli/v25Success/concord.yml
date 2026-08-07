@@ -1,0 +1,23 @@
+flows:
+  default:
+    - out: answer
+      expr: ${base + 2}
+    - out:
+        scriptValue: ${result.scriptValue}
+      body: result.set("scriptValue", answer + 1);
+      script: js
+    - in:
+        value: ${answer}
+      out: nested
+      call: child
+    - in:
+        msg: "cli-v2.5-ok answer=${answer} script=${scriptValue} nested=${nested}"
+      out: result
+      task: log
+  child:
+    - set:
+        nested: ${value + 1}
+configuration:
+  arguments:
+    base: 40
+  runtime: concord-v2.5

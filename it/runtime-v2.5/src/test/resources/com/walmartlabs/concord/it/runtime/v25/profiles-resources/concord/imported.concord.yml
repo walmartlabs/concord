@@ -1,0 +1,3 @@
+flows:
+  imported:
+    - log: "v25-imported-flow profile=${profile}"

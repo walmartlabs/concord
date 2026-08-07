@@ -58,6 +58,10 @@ final class LocalSuspendPersistence {
         writeMetadata(workDir, metadata);
     }
 
+    static void saveMetadata(Path workDir, ResumeMetadata metadata) throws IOException {
+        writeMetadata(workDir, metadata);
+    }
+
     static ResumeMetadata readMetadata(Path workDir) throws IOException {
         var metadataPath = metadataPath(workDir);
         if (Files.notExists(metadataPath)) {
@@ -81,7 +85,8 @@ final class LocalSuspendPersistence {
     }
 
     static boolean hasSnapshot(Path workDir) {
-        return Files.exists(snapshotPath(workDir));
+        return Files.exists(snapshotPath(workDir))
+                || Files.exists(stateDir(workDir).resolve("runtime-v2.5.state"));
     }
 
     static boolean hasMetadata(Path workDir) {
@@ -151,7 +156,8 @@ final class LocalSuspendPersistence {
                           String workDir,
                           String defaultTaskVars,
                           String depsCacheDir,
-                          CliConfigData cliConfig) {
+                          CliConfigData cliConfig,
+                          String runtime) {
 
         static ResumeMetadata from(Path workDir,
                                    Path resumeDir,
@@ -161,7 +167,8 @@ final class LocalSuspendPersistence {
                                    CliConfig.Overrides cliConfigOverrides,
                                    List<String> activeProfiles,
                                    ProcessConfiguration processConfiguration,
-                                   RunnerConfiguration runnerConfiguration) {
+                                   RunnerConfiguration runnerConfiguration,
+                                   String runtime) {
 
             return new ResumeMetadata(processConfiguration,
                     runnerConfiguration,
@@ -170,7 +177,8 @@ final class LocalSuspendPersistence {
                     pathToString(workDir),
                     pathToString(defaultTaskVars),
                     pathToString(depsCacheDir),
-                    CliConfigData.from(contextName, cliConfigOverrides));
+                    CliConfigData.from(contextName, cliConfigOverrides),
+                    runtime);
         }
 
         CliConfigContext loadCliConfigContext(Verbosity verbosity) throws Exception {

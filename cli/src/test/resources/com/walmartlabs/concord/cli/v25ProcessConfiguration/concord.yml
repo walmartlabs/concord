@@ -1,0 +1,13 @@
+configuration:
+  runtime: concord-v2.5
+  meta:
+    source: local
+  events:
+    recordEvents: false
+  out:
+    - processResult
+flows:
+  default:
+    - task: v25ProcessConfiguration
+      out: observed
+    - log: "v25-process-configuration meta=${observed.meta} events=${observed.events} out=${observed.out}"

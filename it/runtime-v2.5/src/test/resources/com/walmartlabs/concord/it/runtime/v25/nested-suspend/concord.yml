@@ -1,0 +1,18 @@
+configuration:
+  runtime: concord-v2.5
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:concord-tasks:PROJECT_VERSION"
+    - "mvn://com.walmartlabs.concord.plugins.basic:mock-tasks:PROJECT_VERSION"
+  arguments:
+    mocks:
+      - task: concord
+        executeFlow: suspendedChild
+forms:
+  approval:
+    - choice:
+        type: string
+flows:
+  default:
+    - task: concord
+  suspendedChild:
+    - form: approval

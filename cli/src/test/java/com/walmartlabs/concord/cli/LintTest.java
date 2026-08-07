@@ -49,6 +49,65 @@ class LintTest extends AbstractTest {
         assertLog(".*flows: 2.*");
     }
 
+    @Test
+    void lintV25Test() throws Exception {
+        int exitCode = lint("lintV25");
+        assertEquals(0, exitCode);
+        assertLog(".*flows: 2.*");
+    }
+
+    @Test
+    void lintV25RejectsMalformedTopLevelExpressionWithLocation() throws Exception {
+        int exitCode = lint("lintV25InvalidTopLevel");
+
+        assertEquals(CliExitCodes.PROCESS_FAILED, exitCode);
+        assertErrContainsRegex("ERROR V25_EXPRESSION at concord\\.yml:\\d+:\\d+-\\d+:\\d+ "
+                + "\\(flows\\.default\\[0\\]\\.expr\\): Invalid expression");
+    }
+
+    @Test
+    void lintV25RejectsMalformedNestedExpressionWithLocation() throws Exception {
+        int exitCode = lint("lintV25InvalidNested");
+
+        assertEquals(CliExitCodes.PROCESS_FAILED, exitCode);
+        assertErrContainsRegex("ERROR V25_EXPRESSION at concord\\.yml:\\d+:\\d+-\\d+:\\d+ "
+                + "\\(flows\\.default\\[0\\]\\.in\\): Invalid expression");
+    }
+
+    @Test
+    void lintV25AcceptsReorderedStepKeys() throws Exception {
+        int exitCode = lint("lintV25Reordered");
+
+        assertEquals(0, exitCode);
+        assertLog(".*VALID.*");
+    }
+
+    @Test
+    void lintV25RendersAllModelDiagnostics() throws Exception {
+        int exitCode = lint("lintV25Diagnostics");
+        assertEquals(CliExitCodes.PROCESS_FAILED, exitCode);
+        assertErrContainsRegex("(?s).*ERROR V25_STEP_OPTION at concord.yml:\\d+:\\d+-\\d+:\\d+.*suggestion: retry.*");
+        assertErrContainsRegex("(?s).*ERROR V25_DEPRECATED_LOOP at concord.yml:\\d+:\\d+-\\d+:\\d+.*suggestion: loop.*");
+    }
+
+    @Test
+    void lintV25RejectsUnknownLiteralCallTargetWithLocation() throws Exception {
+        int exitCode = lint("lintV25UnknownCall");
+
+        assertEquals(CliExitCodes.PROCESS_FAILED, exitCode);
+        assertErrContainsRegex("ERROR V25_PLAN at concord\\.yml:\\d+:\\d+-\\d+:\\d+ "
+                + "\\(flows\\.default\\[0\\]\\): Unknown flow 'missingFlow'");
+    }
+
+    @Test
+    void lintV25ReportsNonFatalLoaderDiagnostics() throws Exception {
+        int exitCode = lint("lintV25ImportWarning");
+
+        assertEquals(CliExitCodes.SUCCESS, exitCode);
+        assertLog(".*V25_EXTRA_IMPORTS_IGNORED: Imports declared outside the project root definition are ignored.*");
+        assertLog(".*Result: 0 error\\(s\\), 1 warning\\(s\\).*");
+    }
+
     private static int lint(String payload) throws Exception {
         URI uri = LintTest.class.getResource(payload).toURI();
         Path source = Paths.get(uri);

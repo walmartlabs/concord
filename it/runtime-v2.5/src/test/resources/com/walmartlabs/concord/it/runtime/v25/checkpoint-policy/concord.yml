@@ -1,0 +1,6 @@
+configuration:
+  runtime: concord-v2.5
+flows:
+  default:
+    - checkpoint: policy-ready
+    - log: "v25-c1 checkpoint policy must survive restore"

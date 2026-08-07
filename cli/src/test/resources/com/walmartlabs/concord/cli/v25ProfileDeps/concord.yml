@@ -1,0 +1,17 @@
+configuration:
+  runtime: concord-v2.5
+profiles:
+  first:
+    configuration:
+      extraDependencies:
+        - "mvn://com.walmartlabs.concord.plugins.basic:file-tasks:1.96.0"
+  second:
+    configuration:
+      extraDependencies:
+        - "mvn://com.walmartlabs.concord.plugins.basic:http-tasks:1.96.0"
+flows:
+  default:
+    - log: "file=${files.exists('concord.yml')}"
+    - expr: "${http != null}"
+      out: httpAvailable
+    - log: "http=${httpAvailable}"

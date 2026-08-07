@@ -1,0 +1,11 @@
+configuration:
+  runtime: concord-v2.5
+flows:
+  default:
+    - parallel:
+        - set:
+            left: left
+        - set:
+            right: right
+      out: [left, right]
+    - log: "v25-parallel left=${left} right=${right}"

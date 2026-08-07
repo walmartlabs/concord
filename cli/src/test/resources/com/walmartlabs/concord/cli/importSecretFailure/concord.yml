@@ -1,0 +1,9 @@
+imports:
+  - git:
+      dest: imported
+      secret:
+        name: private-import
+        password: secret-import-password
+flows:
+  default:
+    - log: noop

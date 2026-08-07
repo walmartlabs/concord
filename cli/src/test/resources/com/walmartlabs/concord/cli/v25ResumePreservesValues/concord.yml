@@ -1,0 +1,8 @@
+configuration:
+  runtime: concord-v2.5
+flows:
+  default:
+    - set:
+        x: 2
+    - suspend: continue
+    - log: "v25-resume-x=${x}"

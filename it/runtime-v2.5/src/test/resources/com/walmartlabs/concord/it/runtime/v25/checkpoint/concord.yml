@@ -1,0 +1,7 @@
+configuration:
+  runtime: concord-v2.5
+flows:
+  default:
+    - log: "v25-checkpoint before"
+    - checkpoint: stable
+    - log: "v25-checkpoint after"

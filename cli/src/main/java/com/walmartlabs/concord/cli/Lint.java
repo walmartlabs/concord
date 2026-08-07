@@ -23,6 +23,7 @@ package com.walmartlabs.concord.cli;
 import com.walmartlabs.concord.cli.lint.*;
 import com.walmartlabs.concord.cli.lint.LintResult.Type;
 import com.walmartlabs.concord.cli.runner.CliImportsListener;
+import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.process.loader.DelegatingProjectLoader;
@@ -30,6 +31,12 @@ import com.walmartlabs.concord.runtime.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.model.SourceMap;
 import com.walmartlabs.concord.runtime.v1.ProjectLoaderV1;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
+import com.walmartlabs.concord.runtime.v25.model.Definition25;
+import com.walmartlabs.concord.runtime.v25.model.Diagnostic;
+import com.walmartlabs.concord.runtime.v25.model.ModelException;
+import com.walmartlabs.concord.runtime.v25.model.PlanValidator25;
+import com.walmartlabs.concord.runtime.v25.model.ProjectLoader25;
+import com.walmartlabs.concord.runtime.v25.model.ProjectLoader25Listener;
 import org.fusesource.jansi.Ansi;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
@@ -74,10 +81,22 @@ public class Lint implements Callable<Integer> {
         ImportManager importManager = new NoopImportManager();
         ProjectLoaderV1 v1 = new ProjectLoaderV1(importManager);
         ProjectLoaderV2 v2 = new ProjectLoaderV2(importManager);
-        DelegatingProjectLoader loader = new DelegatingProjectLoader(Set.of(v1, v2));
-        ProcessDefinition pd = loader.loadProject(targetDir, new DummyImportsNormalizer(), verbose ? new CliImportsListener() : null).projectDefinition();
+        ProjectLoader25 v25 = new ProjectLoader25(importManager);
+        DelegatingProjectLoader loader = new DelegatingProjectLoader(Set.of(v1, v2, v25));
+        var listener = new LintListener(verbose);
+        ProcessDefinition pd;
+        try {
+            pd = loader.loadProject(targetDir, new DummyImportsNormalizer(), listener).projectDefinition();
+            if (pd instanceof Definition25 definition) {
+                new PlanValidator25().validate(definition);
+            }
+        } catch (ModelException e) {
+            V25DiagnosticRenderer.print(e, System.err);
+            return CliExitCodes.PROCESS_FAILED;
+        }
 
         List<LintResult> lintResults = new ArrayList<>();
+        listener.diagnostics().forEach(diagnostic -> lintResults.add(diagnosticResult(diagnostic)));
         linters().forEach(l -> lintResults.addAll(l.apply(pd)));
 
         if (!lintResults.isEmpty()) {
@@ -106,6 +125,13 @@ public class Lint implements Callable<Integer> {
 
         return hasErrors ? 10 : 0;
     }
+
+    private static LintResult diagnosticResult(Diagnostic diagnostic) {
+        var type = diagnostic.severity() == Diagnostic.Severity.ERROR ? Type.ERROR : Type.WARNING;
+        return new LintResult(type, diagnostic.range() == null ? null : diagnostic.range().toSourceMap(),
+                diagnostic.code() + ": " + diagnostic.message());
+    }
+
 
     private List<Linter> linters() {
         return Arrays.asList(
@@ -158,5 +184,52 @@ public class Lint implements Callable<Integer> {
 
     private static boolean hasErrors(List<LintResult> results) {
         return results.stream().anyMatch(l -> l.getType() == Type.ERROR);
+    }
+
+    private static final class LintListener implements ProjectLoader25Listener {
+
+        private final CliImportsListener importsListener;
+        private final List<Diagnostic> diagnostics = new ArrayList<>();
+
+        private LintListener(boolean verbose) {
+            this.importsListener = verbose ? new CliImportsListener() : null;
+        }
+
+        @Override
+        public void onStart(List<Import> items) {
+            if (importsListener != null) {
+                importsListener.onStart(items);
+            }
+        }
+
+        @Override
+        public void onEnd(List<Import> items) {
+            if (importsListener != null) {
+                importsListener.onEnd(items);
+            }
+        }
+
+        @Override
+        public void beforeImport(Import item) {
+            if (importsListener != null) {
+                importsListener.beforeImport(item);
+            }
+        }
+
+        @Override
+        public void afterImport(Import item) {
+            if (importsListener != null) {
+                importsListener.afterImport(item);
+            }
+        }
+
+        @Override
+        public void onDiagnostic(Diagnostic diagnostic) {
+            diagnostics.add(diagnostic);
+        }
+
+        private List<Diagnostic> diagnostics() {
+            return List.copyOf(diagnostics);
+        }
     }
 }

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.plugins.mock;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.Constants;
 import com.walmartlabs.concord.runtime.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
@@ -127,6 +128,19 @@ public class MockDefinitionMatcherTest {
                 "method", "myMethod",
                 "args", List.of(1, 2),
                 "stepMeta", Map.of("taskId", "BO.*")
+        ));
+
+        assertTrue(mockDefinitionMatcher.matches(context, mock));
+    }
+
+    @Test
+    public void testTaskMatchByStepNameFromCurrentStep() {
+        var currentStep = new TaskCall(Location.builder().build(), "myTask",
+                TaskCallOptions.builder().meta(Map.of(Constants.SEGMENT_NAME, "named-step")).build());
+        var context = MockDefinitionContext.task(currentStep, "myTask", new MapBackedVariables(Map.of()));
+        var mock = new MockDefinition(Map.of(
+                "task", "myTask",
+                "stepName", "named-step"
         ));
 
         assertTrue(mockDefinitionMatcher.matches(context, mock));

@@ -1,0 +1,12 @@
+configuration:
+  runtime: concord-v2.5
+  dependencies:
+    - "mvn://com.walmartlabs.concord.it.tasks:serialization-test:PROJECT_VERSION"
+flows:
+  default:
+    - task: customBean
+      in:
+        msg: bean-survives
+      out: bean
+    - checkpoint: bean-state
+    - log: "v25-dependency-bean value=${bean.value}"

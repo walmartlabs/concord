@@ -113,6 +113,16 @@ public interface Context {
      */
     Compiler compiler();
 
+    /**
+     * Provides execution of a nested flow without exposing runner implementation details.
+     *
+     * @return nested-flow executor for the current task invocation.
+     * @throws UnsupportedOperationException when the active runtime does not support nested flows.
+     */
+    default NestedFlowExecutor nestedFlowExecutor() {
+        throw new UnsupportedOperationException("Nested flow execution is not supported by this runtime");
+    }
+
     // TODO add "evaluate" method as well?
 
     /**

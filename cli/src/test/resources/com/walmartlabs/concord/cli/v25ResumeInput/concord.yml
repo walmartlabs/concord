@@ -1,0 +1,8 @@
+configuration:
+  runtime: concord-v2.5
+flows:
+  default:
+    - suspend: continue
+    - in:
+        msg: "v25-resume-answer=${answer}"
+      task: log

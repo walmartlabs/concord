@@ -35,6 +35,8 @@ import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SimpleLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
+import com.walmartlabs.concord.runtime.v2.sdk.CustomBeanMethodResolver;
+import com.walmartlabs.concord.runtime.v2.sdk.CustomTaskMethodResolver;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
 import com.walmartlabs.concord.runtime.v2.sdk.LockService;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
@@ -103,9 +105,12 @@ public class CliServicesModule extends AbstractModule {
             Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
             taskCallListeners.addBinding().toInstance(new TaskParamsLogger());
         }
+
+        Multibinder.newSetBinder(binder(), CustomTaskMethodResolver.class);
+        Multibinder.newSetBinder(binder(), CustomBeanMethodResolver.class);
     }
 
-    private static Map<String, Map<String, Object>> readDefaultVars(Path defaultTaskVars) {
+    public static Map<String, Map<String, Object>> readDefaultVars(Path defaultTaskVars) {
         if (Files.exists(defaultTaskVars)) {
             try (InputStream is = Files.newInputStream(defaultTaskVars)) {
                 return parseDefaultVars(() -> is);

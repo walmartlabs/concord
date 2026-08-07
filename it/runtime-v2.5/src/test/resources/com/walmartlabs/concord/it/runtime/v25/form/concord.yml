@@ -1,0 +1,10 @@
+configuration:
+  runtime: concord-v2.5
+forms:
+  approval:
+    - choice:
+        type: string
+flows:
+  default:
+    - form: approval
+    - log: "v25-form choice=${approval.choice}"

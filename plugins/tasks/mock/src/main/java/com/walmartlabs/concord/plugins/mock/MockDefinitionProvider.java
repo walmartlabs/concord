@@ -21,8 +21,8 @@ package com.walmartlabs.concord.plugins.mock;
  */
 
 import com.walmartlabs.concord.plugins.mock.matcher.ArgsMatcher;
+import com.walmartlabs.concord.runtime.v2.Constants;
 import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
-import com.walmartlabs.concord.runtime.v2.runner.logging.LogUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
@@ -126,8 +126,26 @@ public class MockDefinitionProvider {
                 return true;
             }
 
-            var logContext = LogUtils.getContext();
-            return logContext != null && ArgsMatcher.match(logContext.segmentName(), mock.stepName());
+            return ArgsMatcher.match(currentSegmentName(context), mock.stepName());
+        }
+
+        private static Object currentSegmentName(MockDefinitionContext context) {
+            var currentStep = context.currentStep();
+            if (currentStep instanceof AbstractStep<?> step && step.getOptions() != null) {
+                var name = step.getOptions().meta().get(Constants.SEGMENT_NAME);
+                if (name != null) {
+                    return name;
+                }
+            }
+
+            try {
+                var logUtils = Class.forName("com.walmartlabs.concord.runtime.v2.runner.logging.LogUtils");
+                var logContext = Class.forName("com.walmartlabs.concord.runtime.v2.runner.logging.LogContext");
+                var logContextValue = logUtils.getMethod("getContext").invoke(null);
+                return logContextValue != null ? logContext.getMethod("segmentName").invoke(logContextValue) : null;
+            } catch (ReflectiveOperationException | LinkageError ignored) {
+                return null;
+            }
         }
     }
 

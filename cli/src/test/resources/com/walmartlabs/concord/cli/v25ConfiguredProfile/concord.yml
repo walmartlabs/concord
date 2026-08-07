@@ -1,0 +1,16 @@
+configuration:
+  runtime: concord-v2.5
+  activeProfiles:
+    - configured
+flows:
+  default:
+    - in:
+        msg: base-profile
+      task: log
+profiles:
+  configured:
+    flows:
+      default:
+        - in:
+            msg: "v25-configured-profile ${processInfo.activeProfiles}"
+          task: log

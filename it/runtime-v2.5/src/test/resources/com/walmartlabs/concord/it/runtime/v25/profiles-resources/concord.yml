@@ -1,0 +1,13 @@
+configuration:
+  runtime: concord-v2.5
+  arguments:
+    profile: base
+profiles:
+  remote:
+    configuration:
+      arguments:
+        profile: remote
+flows:
+  default:
+    - call: imported
+    - log: "v25-profile-resource profile=${profile} resource=${resource.asString('message.txt')}"

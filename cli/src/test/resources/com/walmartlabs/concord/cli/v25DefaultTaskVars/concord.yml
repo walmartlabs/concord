@@ -1,0 +1,5 @@
+configuration:
+  runtime: concord-v2.5
+flows:
+  default:
+    - task: log

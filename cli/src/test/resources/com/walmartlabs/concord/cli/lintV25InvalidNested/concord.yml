@@ -1,0 +1,10 @@
+configuration:
+  runtime: concord-v2.5
+flows:
+  default:
+    - task: test
+      in:
+        request:
+          value: ${payload + }
+      retry:
+        times: 1

@@ -1,0 +1,9 @@
+configuration:
+  runtime: concord-v2.5
+flows:
+  default:
+    - parallel:
+        - block:
+            - suspend: first-event
+        - block:
+            - suspend: second-event

@@ -45,6 +45,10 @@
             <artifactId>concord-runtime-model-v2</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.walmartlabs.concord.runtime.v25</groupId>
+            <artifactId>concord-runtime-model-v2.5</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.walmartlabs.concord.runtime</groupId>
             <artifactId>concord-runtime-model</artifactId>
         </dependency>

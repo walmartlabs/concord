@@ -20,12 +20,16 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.model.Location;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
+import com.walmartlabs.concord.runtime.v2.model.FlowCall;
+import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.runner.vm.SuspendCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.TaskSuspendCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.VMUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.svm.Runtime;
@@ -187,6 +191,33 @@ public class ContextImpl implements Context {
     @Override
     public Compiler compiler() {
         return compiler;
+    }
+
+    @Override
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public NestedFlowExecutor nestedFlowExecutor() {
+        return (flowName, input) -> {
+            var callOptions = FlowCallOptions.builder()
+                    .input((Map) input)
+                    .addOut("result")
+                    .build();
+            var command = compiler.compile(processDefinition,
+                    new FlowCall(Location.builder().build(), flowName, callOptions));
+            var childThreadId = state.nextThreadId();
+            state.fork(currentThreadId, childThreadId, command);
+
+            var childFrame = state.peekFrame(childThreadId);
+            VMUtils.putLocals(childFrame, VMUtils.getCombinedLocals(state, currentThreadId));
+            try {
+                return stateResult(runtime.eval(state, childThreadId));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
+    private static Serializable stateResult(com.walmartlabs.concord.svm.EvalResult result) {
+        return result.lastFrame().getLocal("result");
     }
 
     @Override

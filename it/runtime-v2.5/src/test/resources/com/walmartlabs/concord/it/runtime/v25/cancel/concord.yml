@@ -1,0 +1,9 @@
+configuration:
+  runtime: concord-v2.5
+flows:
+  default:
+    - set:
+        marker: parent-state
+    - suspend: cancel-event
+  onCancel:
+    - log: "v25-cancel-handler marker=${marker}"

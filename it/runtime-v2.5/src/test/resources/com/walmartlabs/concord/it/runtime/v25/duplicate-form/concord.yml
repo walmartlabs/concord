@@ -1,0 +1,13 @@
+configuration:
+  runtime: concord-v2.5
+forms:
+  approval:
+    - choice:
+        type: string
+flows:
+  default:
+    - parallel:
+        - block:
+            - form: approval
+        - block:
+            - form: approval
