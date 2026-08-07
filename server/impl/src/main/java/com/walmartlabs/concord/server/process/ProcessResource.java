@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.PathUtils;
@@ -52,6 +53,7 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.process.waits.AbstractWaitCondition;
+import com.walmartlabs.concord.server.process.waits.ProcessExternalEventCondition;
 import com.walmartlabs.concord.server.process.waits.ProcessWaitManager;
 import com.walmartlabs.concord.server.sdk.*;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -85,11 +87,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
+import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
@@ -812,6 +817,7 @@ public class ProcessResource implements Resource {
                     schema = @Schema(type = "string", format = "binary")
             )
     )
+
     public void uploadAttachments(@PathParam("id") UUID instanceId, InputStream data) {
         ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
@@ -942,12 +948,177 @@ public class ProcessResource implements Resource {
     @Operation(description = "Set the process' wait condition")
     public Response setWaitCondition(@PathParam("id") UUID instanceId, Map<String, Object> waitCondition) {
         ProcessKey processKey = assertProcessKey(instanceId);
-        AbstractWaitCondition condition = objectMapper.convertValue(waitCondition, AbstractWaitCondition.class);
-        if (condition == null) {
-            throw new ConcordApplicationException("Wait condition is required", Status.BAD_REQUEST);
+        AbstractWaitCondition condition = assertWaitCondition(waitCondition);
+
+        if (condition instanceof ProcessExternalEventCondition extCond) {
+            // do some extra sanitizing
+            condition = assertExternalWaitCondition(extCond);
         }
-        processWaitManager.addWait(processKey, condition);
+
+        ProcessWaitEntry entry = processWaitManager.getWait(processKey);
+        List<?> currentWaits = entry != null ? entry.waits() : null;
+        if (currentWaits != null && currentWaits.size() >= processCfg.waitLimitProcessExternalEventCount()) {
+            String msg = "Too many process external event waits: cannot exceed " + processCfg.waitLimitProcessExternalEventCount();
+            throw new ConcordApplicationException(msg, Status.BAD_REQUEST);
+        }
+
+        // Attempt to add the wait with database-level enforcement of the max limit
+        int rowsUpdated = processWaitManager.addWait(processKey, condition, processCfg.waitLimitProcessExternalEventCount());
+        if (rowsUpdated == 0) {
+            // This should not happen if the soft check above is correctly enforced,
+            // but it indicates a race condition where the limit was exceeded
+            String msg = "Too many process external event waits: cannot exceed " + processCfg.waitLimitProcessExternalEventCount();
+            throw new ConcordApplicationException(msg, Status.BAD_REQUEST);
+        }
         return Response.ok().build();
+    }
+
+    /**
+     * Deserializes a "raw" {@link AbstractWaitCondition} to a concrete instance.
+     * Throws a {@link ConcordApplicationException} if the condition is null.
+     */
+    private AbstractWaitCondition assertWaitCondition(Map<String, Object> waitCondition) {
+        try {
+            AbstractWaitCondition condition = objectMapper.convertValue(waitCondition, AbstractWaitCondition.class);
+            if (condition == null) {
+                throw new ConcordApplicationException("Wait condition is required", Status.BAD_REQUEST);
+            }
+            return condition;
+        } catch (IllegalArgumentException e) {
+            throw new ConcordApplicationException("Unable to construct WaitCondition from given payload.", Status.BAD_REQUEST);
+        }
+    }
+
+    private ProcessExternalEventCondition assertExternalWaitCondition(ProcessExternalEventCondition condition) {
+        if (condition.expiresAt() == null) {
+            condition = ProcessExternalEventCondition.builder()
+                    .from(condition)
+                    // TODO make default configurable by server config or policy?
+                    .expiresAt(OffsetDateTime.now().plusHours(2))
+                    .build();
+        }
+
+        // not in past
+        if (OffsetDateTime.now().isAfter(condition.expiresAt())) {
+            throw new ConcordApplicationException("Expiration time must be in the future for external event wait condition", Status.BAD_REQUEST);
+        }
+
+        // not too far in the future
+        if (OffsetDateTime.now().plusDays(2).isBefore(condition.expiresAt())) {
+            throw new ConcordApplicationException("Expiration time is too far in the future for external event wait condition", Status.BAD_REQUEST);
+        }
+
+        if (condition.externalEvent() == null || condition.externalEvent().isBlank()) {
+            throw new ConcordApplicationException("External event name is required for external event wait condition", Status.BAD_REQUEST);
+        }
+
+        if (condition.externalEvent().length() > 128) {
+            throw new ConcordApplicationException("externalEvent value is too long", Status.BAD_REQUEST);
+        }
+
+        if (condition.resumeEvent().length() > 128) {
+            throw new ConcordApplicationException("resumeEvent value is too long", Status.BAD_REQUEST);
+        }
+
+        String saveAs = condition.saveAs();
+        if (saveAs != null && saveAs.length() > 128) {
+            throw new ConcordApplicationException("saveAs value is too long", Status.BAD_REQUEST);
+        }
+
+        return condition;
+    }
+
+    /**
+     * Clears an external event wait condition for a process.
+     */
+    @POST
+    @javax.ws.rs.Path("/{id}/wait/external/{eventId}/clear")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    @Operation(description = "Clears a process' wait condition for an external event with optional variables payload")
+    public Response clearExternalWaitCondition(
+            @PathParam("id") UUID instanceId,
+            @PathParam("eventId") String externalEvent,
+            InputStream body
+    ) {
+
+        // Find the process and its wait condition(s)
+        ProcessKey pk = assertProcessKey(instanceId);
+        ProcessWaitEntry waitEntry = processWaitManager.getWait(pk);
+
+        if (waitEntry == null || waitEntry.waits() == null) {
+            return Response.status(Status.NOT_FOUND).entity("No wait conditions found").build();
+        }
+
+        Map<String, Serializable> variables = readWaitResumeVars(body);
+
+        AtomicBoolean updated = new AtomicBoolean(false);
+
+        List<AbstractWaitCondition> waits = Objects.requireNonNull(waitEntry.waits()).stream()
+                .map(this::assertWaitCondition)
+                .map(condition -> {
+                    if (condition instanceof ProcessExternalEventCondition extCond
+                            && extCond.externalEvent().equals(externalEvent)
+                            && extCond.waiting()) {
+
+                        updated.set(true);
+                        return ProcessExternalEventCondition.builder()
+                                .from(extCond)
+                                .waiting(false)
+                                .variables(variables)
+                                .build();
+                    } else {
+                        return condition;
+                    }
+                })
+                .toList();
+
+        if (!updated.get()) {
+            return Response.status(Status.NOT_FOUND)
+                    .entity("No matching external event wait condition found or already cleared")
+                    .build();
+        }
+
+        // Persist the updated wait conditions
+        processWaitManager.tx(tx -> {
+            processWaitManager.setWait(tx, pk, waits, true, waitEntry.version());
+        });
+
+        return Response.ok().build();
+    }
+
+    private Map<String, Serializable> readWaitResumeVars(InputStream is) {
+        if (is == null) {
+            return Map.of();
+        }
+
+        // Read body in chunks to avoid loading large payloads into memory
+        // Enforce a maximum size limit to prevent abuse
+        final int maxBodySize = processCfg.waitLimitProcessExternalEventVarsSize();
+        final int chunkSize = 2046;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(maxBodySize);
+
+        try {
+            byte[] buffer = new byte[chunkSize];
+            int bytesRead;
+            while ((bytesRead = is.read(buffer)) > 0) {
+                baos.write(buffer, 0, bytesRead);
+                if (baos.size() > maxBodySize) {
+                    throw new ConcordApplicationException(
+                            "Request body too large: exceeds " + maxBodySize + " bytes limit",
+                            Status.BAD_REQUEST);
+                }
+            }
+
+            if (baos.size() == 0) {
+                return Map.of();
+            }
+
+            return objectMapper.readValue(baos.toByteArray(), new TypeReference<>() {});
+        } catch (IOException e) {
+            throw new ConcordApplicationException("Error parsing request body: " + e.getMessage(), Status.BAD_REQUEST);
+        }
     }
 
     private ProcessKey assertProcessKey(UUID instanceId) {
