@@ -23,19 +23,27 @@
 }
 
 .LogSegment .Segment {
-    text-align: left;
+    display: flex;
+    align-items: center;
     background-color: white;
     position: sticky;
     top: 57px;
 }
 
-.LogSegment .Segment:focus {
-    background: white none;
-}
-
 .LogSegment .Segment:hover {
     background-color: rgb(230, 230, 230);
     border-radius: 3px;
+}
+
+.LogSegment .Segment .SegmentToggle {
+    flex: 1 1 auto;
+    text-align: left;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.LogSegment .Segment .SegmentToggle:focus {
+    background: transparent !important;
 }
 
 .LogSegment .Loader {
@@ -71,37 +79,97 @@
     display: inline-block;
 }
 
-.LogSegment .Segment .AdditionalAction {
-    margin-top: 0 !important;
-    float: right;
-    padding-right: 10px;
-}
-
-.LogSegment .Segment .AdditionalAction.Last {
-    padding-right: 0;
-    color: #4183c4;
-}
-
-.LogSegment .Segment .AdditionalAction.Anchor {
-    padding-right: 0;
+.LogSegment .Segment .SegmentControls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-left: auto;
     padding-left: 10px;
+    padding-right: 16px;
+    opacity: 0;
+}
+
+.LogSegment .Segment:hover .SegmentControls,
+.LogSegment .Segment .SegmentControls.ForceVisible {
+    opacity: 1;
+}
+
+/* kept separate: an unsupported selector in a comma list invalidates the whole
+   rule, and :has() isn't supported by every browser in this project's targets */
+.LogSegment .Segment:has(:focus-visible) .SegmentControls {
+    opacity: 1;
+}
+
+/* :focus-within reveals on any focus, including a mouse click on the toggle button
+   (which keeps the controls visible until focus moves elsewhere) - :has(:focus-visible)
+   above avoids that by only reacting to keyboard-visible focus. Only fall back to the
+   coarser :focus-within behavior where :has() isn't supported, so a keyboard user on
+   those browsers isn't left tabbing onto fully invisible (opacity: 0) buttons. */
+@supports not selector(:has(*)) {
+    .LogSegment .Segment:focus-within .SegmentControls {
+        opacity: 1;
+    }
+}
+
+.LogSegment .Segment .RowControls {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding-right: 12px;
+    border-right: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.LogSegment .Segment .ActionsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 32px);
+    gap: 2px;
+}
+
+.LogSegment .Segment .ActionSlot {
+    width: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    color: #6b7280;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+.LogSegment .Segment .ActionSlot i.icon {
+    margin: 0 !important;
+    line-height: 1 !important;
+}
+
+.LogSegment .Segment .ActionSlot:hover {
+    background: rgba(0, 0, 0, 0.06);
     color: #4183c4;
 }
 
-.LogSegment .Segment .AdditionalAction .on {
+.LogSegment .Segment .ActionSlot.Copied,
+.LogSegment .Segment .ActionSlot.Copied:hover {
+    color: #21ba45;
+}
+
+.LogSegment .Segment .ActionSlot.CopyFailed,
+.LogSegment .Segment .ActionSlot.CopyFailed:hover {
+    color: #db2828;
+}
+
+.LogSegment .Segment .ActionSlot.CopyTooLarge,
+.LogSegment .Segment .ActionSlot.CopyTooLarge:hover {
+    color: #f2711c;
+}
+
+.LogSegment .Segment .ActionSlot.Empty {
+    pointer-events: none;
+}
+
+.LogSegment .Segment .ActionSlot.Active {
     color: #4183c4;
-}
-
-.LogSegment .Segment .AdditionalAction .off {
-    color: #767676;
-}
-
-.LogSegment .Segment .AdditionalAction .off:hover {
-    color: #000000;
-}
-
-.LogSegment .Segment .AdditionalAction i:hover{
-    color: rgb(43, 43, 43) !important;
 }
 
 .LogSegment .ContentContainer {
