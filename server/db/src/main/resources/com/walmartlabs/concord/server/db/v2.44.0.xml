@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="2360000" author="benjamin.broadaway@walmart.com">
+        <createTable tableName="PROCESS_FORM_STATE_ITEMS">
+            <column name="ITEM_HASH" type="varchar(68)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ITEM_DATA" type="longblob">
+                <constraints nullable="false"/>
+            </column>
+            <column name="IS_ENCRYPTED" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="PROCESS_FORM_STATE">
+            <column name="INSTANCE_ID" type="uuid" remarks="Unique process ID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamptz" remarks="Timestamp of process creation">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ITEM_PATH" type="varchar(2048)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="UNIX_MODE" type="number(4)" defaultValueNumeric="420"> <!-- 420 is octal 0644 -->
+                <constraints nullable="false"/>
+            </column>
+            <column name="ITEM_HASH" type="varchar(68)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="PROCESS_FORM_STATE"
+                                 baseColumnNames="ITEM_HASH"
+                                 constraintName="FK_PROCESS_FORM_STATE_ITEM_HASH"
+                                 referencedTableName="PROCESS_FORM_STATE_ITEMS"
+                                 referencedColumnNames="ITEM_HASH"
+                                 onDelete="CASCADE"/>
+
+        <createIndex tableName="PROCESS_FORM_STATE" indexName="IDX_PFS_INSTANCE_ID">
+            <column name="INSTANCE_ID"/>
+        </createIndex>
+
+        <createIndex tableName="PROCESS_FORM_STATE" indexName="IDX_PFS_ITEM_HASH">
+            <column name="ITEM_HASH"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

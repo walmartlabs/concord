@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.jooq.*;
+import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +50,12 @@ public class ProcessCleaner implements ScheduledTask {
             ProcessStatus.RUNNING.toString(),
             ProcessStatus.RESUMING.toString()
     };
+
+    private static final Table<?> FORM_STATE = DSL.table(DSL.name("process_form_state"));
+    private static final Field<UUID> FORM_STATE_INSTANCE_ID = DSL.field(DSL.name("process_form_state", "instance_id"), UUID.class);
+    private static final Table<?> FORM_STATE_ITEMS = DSL.table(DSL.name("process_form_state_items"));
+    private static final Field<String> FORM_STATE_ITEM_HASH = DSL.field(DSL.name("process_form_state", "item_hash"), String.class);
+    private static final Field<String> FORM_STATE_ITEMS_ITEM_HASH = DSL.field(DSL.name("process_form_state_items", "item_hash"), String.class);
 
     private final ProcessConfiguration cfg;
     private final CleanerDao cleanerDao;
@@ -102,6 +109,12 @@ public class ProcessCleaner implements ScheduledTask {
                     initialStateRecords = tx.deleteFrom(PROCESS_INITIAL_STATE)
                             .where(PROCESS_INITIAL_STATE.INSTANCE_ID.in(ids))
                             .execute();
+
+                    tx.deleteFrom(FORM_STATE)
+                            .where(FORM_STATE_INSTANCE_ID.in(ids))
+                            .execute();
+
+                    cleanupOrphanFormStateItems(tx);
                 }
 
                 int events = 0;
@@ -160,6 +173,12 @@ public class ProcessCleaner implements ScheduledTask {
                     stateRecords = tx.deleteFrom(PROCESS_STATE)
                             .where(PROCESS_STATE.INSTANCE_ID.notIn(alive))
                             .execute();
+
+                    tx.deleteFrom(FORM_STATE)
+                            .where(FORM_STATE_INSTANCE_ID.notIn(alive))
+                            .execute();
+
+                    cleanupOrphanFormStateItems(tx);
                 }
 
                 int events = 0;
@@ -194,6 +213,14 @@ public class ProcessCleaner implements ScheduledTask {
 
             long t2 = System.currentTimeMillis();
             log.info("deleteOrphans -> took {}ms", (t2 - t1));
+        }
+
+        private void cleanupOrphanFormStateItems(DSLContext tx) {
+            tx.deleteFrom(FORM_STATE_ITEMS)
+                    .whereNotExists(tx.selectOne()
+                            .from(FORM_STATE)
+                            .where(FORM_STATE_ITEM_HASH.eq(FORM_STATE_ITEMS_ITEM_HASH)))
+                    .execute();
         }
     }
 }

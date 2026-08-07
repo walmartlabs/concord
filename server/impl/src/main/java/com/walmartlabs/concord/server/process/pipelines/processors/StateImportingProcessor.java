@@ -37,6 +37,7 @@ import java.util.ListIterator;
 public class StateImportingProcessor implements PayloadProcessor {
 
     private static final String PASS_THROUGH_PATH = "forms/";
+    private static final String GENERATED_FORM_DATA_FILE = "/data.js";
 
     private final ProcessStateManager stateManager;
 
@@ -60,9 +61,17 @@ public class StateImportingProcessor implements PayloadProcessor {
      * Return {@code true} for each {@code p} that must be included into the process state.
      */
     private boolean filter(Path p, BasicFileAttributes attrs, List<Snapshot> snapshots, Path workDir) {
+        String relPath = workDir.relativize(p).toString();
+
         // those files we need to store in the DB regardless of whether they are from a repository or not
         // e.g. custom forms: we need those files in the DB in order to serve custom form files
-        if (workDir.relativize(p).toString().startsWith(PASS_THROUGH_PATH)) {
+        if (relPath.startsWith(PASS_THROUGH_PATH)) {
+
+            // data.js is generated when form is accessed. No need to store it in the DB.
+            if (relPath.endsWith(GENERATED_FORM_DATA_FILE)) {
+                return false;
+            }
+
             return true;
         }
 

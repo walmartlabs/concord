@@ -60,6 +60,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -76,7 +78,22 @@ public class ProcessStateManager extends AbstractDao {
     private static final Logger log = LoggerFactory.getLogger(ProcessStateManager.class);
 
     private static final String PATH_SEPARATOR = "/";
+    private static final String FORMS_PATH_PREFIX = "forms/";
     private static final int INSERT_BATCH_SIZE = 10;
+    private static final String FORM_STATE_TABLE_NAME = "process_form_state";
+    private static final String FORM_STATE_ITEMS_TABLE_NAME = "process_form_state_items";
+
+    private static final Table<?> FORM_STATE = table(name(FORM_STATE_TABLE_NAME));
+    private static final Field<UUID> FORM_STATE_INSTANCE_ID = field(name(FORM_STATE_TABLE_NAME, "instance_id"), UUID.class);
+    private static final Field<OffsetDateTime> FORM_STATE_INSTANCE_CREATED_AT = field(name(FORM_STATE_TABLE_NAME, "instance_created_at"), OffsetDateTime.class);
+    private static final Field<String> FORM_STATE_ITEM_PATH = field(name(FORM_STATE_TABLE_NAME, "item_path"), String.class);
+    private static final Field<Short> FORM_STATE_UNIX_MODE = field(name(FORM_STATE_TABLE_NAME, "unix_mode"), Short.class);
+    private static final Field<String> FORM_STATE_ITEM_HASH = field(name(FORM_STATE_TABLE_NAME, "item_hash"), String.class);
+
+    private static final Table<?> FORM_STATE_ITEMS = table(name(FORM_STATE_ITEMS_TABLE_NAME));
+    private static final Field<String> FORM_STATE_ITEMS_ITEM_HASH = field(name(FORM_STATE_ITEMS_TABLE_NAME, "item_hash"), String.class);
+    private static final Field<byte[]> FORM_STATE_ITEMS_ITEM_DATA = field(name(FORM_STATE_ITEMS_TABLE_NAME, "item_data"), byte[].class);
+    private static final Field<Boolean> FORM_STATE_ITEMS_IS_ENCRYPTED = field(name(FORM_STATE_ITEMS_TABLE_NAME, "is_encrypted"), Boolean.class);
 
     private final SecretStoreConfiguration secretCfg;
     private final PolicyManager policyManager;
@@ -134,11 +151,52 @@ public class ProcessStateManager extends AbstractDao {
     }
 
     private <T> Optional<T> doGet(DSLContext tx, ProcessStateTable table, ProcessKey processKey, String path, Function<InputStream, Optional<T>> converter) {
+        Optional<T> result = doGetFromStateTable(tx, table, processKey, path, converter);
+        if (result.isPresent()) {
+            return result;
+        }
+
+        if (isCurrentProcessState(table) && isFormResource(path)) {
+            return doGetFormState(tx, processKey, path, converter);
+        }
+
+        return Optional.empty();
+    }
+
+    private <T> Optional<T> doGetFromStateTable(DSLContext tx, ProcessStateTable table, ProcessKey processKey, String path, Function<InputStream, Optional<T>> converter) {
         String sql = tx.select(table.IS_ENCRYPTED(), table.ITEM_DATA())
                 .from(table.table())
                 .where(table.INSTANCE_ID().eq((UUID) null)
                         .and(table.INSTANCE_CREATED_AT().eq((OffsetDateTime) null))
                         .and(table.ITEM_PATH().eq((String) null)))
+                .getSQL();
+
+        return tx.connectionResult(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setObject(1, processKey.getInstanceId());
+                ps.setObject(2, processKey.getCreatedAt());
+                ps.setString(3, path);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        return Optional.empty();
+                    }
+                    boolean encrypted = rs.getBoolean(1);
+                    try (InputStream in = rs.getBinaryStream(2);
+                         InputStream processed = encrypted ? decrypt(in) : in) {
+                        return converter.apply(processed);
+                    }
+                }
+            }
+        });
+    }
+
+    private <T> Optional<T> doGetFormState(DSLContext tx, ProcessKey processKey, String path, Function<InputStream, Optional<T>> converter) {
+        String sql = tx.select(FORM_STATE_ITEMS_IS_ENCRYPTED, FORM_STATE_ITEMS_ITEM_DATA)
+                .from(FORM_STATE.join(FORM_STATE_ITEMS).on(FORM_STATE_ITEM_HASH.eq(FORM_STATE_ITEMS_ITEM_HASH)))
+                .where(FORM_STATE_INSTANCE_ID.eq((UUID) null)
+                        .and(FORM_STATE_INSTANCE_CREATED_AT.eq((OffsetDateTime) null))
+                        .and(FORM_STATE_ITEM_PATH.eq((String) null)))
                 .getSQL();
 
         return tx.connectionResult(conn -> {
@@ -194,6 +252,30 @@ public class ProcessStateManager extends AbstractDao {
                     }
                 }
 
+                String formSql = tx.select(FORM_STATE_ITEMS_IS_ENCRYPTED, FORM_STATE_ITEMS_ITEM_DATA)
+                        .from(FORM_STATE.join(FORM_STATE_ITEMS).on(FORM_STATE_ITEM_HASH.eq(FORM_STATE_ITEMS_ITEM_HASH)))
+                        .where(FORM_STATE_INSTANCE_ID.eq((UUID) null)
+                                .and(FORM_STATE_INSTANCE_CREATED_AT.eq((OffsetDateTime) null))
+                                .and(FORM_STATE_ITEM_PATH.startsWith((String) null)))
+                        .getSQL();
+
+                try (PreparedStatement formPs = conn.prepareStatement(formSql)) {
+                    formPs.setObject(1, processKey.getInstanceId());
+                    formPs.setObject(2, processKey.getCreatedAt());
+                    formPs.setString(3, path);
+
+                    try (ResultSet rs = formPs.executeQuery()) {
+                        while (rs.next()) {
+                            boolean encrypted = rs.getBoolean(1);
+                            try (InputStream in = rs.getBinaryStream(2);
+                                 InputStream processed = encrypted ? decrypt(in) : in) {
+                                Optional<T> o = converter.apply(processed);
+                                o.ifPresent(result::add);
+                            }
+                        }
+                    }
+                }
+
                 return result;
             }
         });
@@ -204,27 +286,41 @@ public class ProcessStateManager extends AbstractDao {
      */
     public List<String> list(PartialProcessKey partialProcessKey, String path) {
         ProcessKey processKey = processKeyCache.assertKey(partialProcessKey.getInstanceId());
-        return dsl().select(PROCESS_STATE.ITEM_PATH)
+        List<String> result = dsl().select(PROCESS_STATE.ITEM_PATH)
                 .from(PROCESS_STATE)
                 .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
                         .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
                         .and(PROCESS_STATE.ITEM_PATH.startsWith(path)))
                 .fetch(PROCESS_STATE.ITEM_PATH);
+
+        result.addAll(dsl().select(FORM_STATE_ITEM_PATH)
+                .from(FORM_STATE)
+                .where(FORM_STATE_INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(FORM_STATE_INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                        .and(FORM_STATE_ITEM_PATH.startsWith(path)))
+                .fetch(FORM_STATE_ITEM_PATH));
+        return result;
     }
 
     /**
      * Finds all item paths that starts with the specified value.
      */
     public <T> Optional<T> findPath(ProcessKey processKey, String path, Function<Stream<String>, Optional<T>> converter) {
-        Stream<String> s = dsl().select(PROCESS_STATE.ITEM_PATH)
+        List<String> result = dsl().select(PROCESS_STATE.ITEM_PATH)
                 .from(PROCESS_STATE)
                 .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
                         .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
                         .and(PROCESS_STATE.ITEM_PATH.startsWith(path)))
-                .fetch(PROCESS_STATE.ITEM_PATH)
-                .stream();
+                .fetch(PROCESS_STATE.ITEM_PATH);
 
-        return converter.apply(s);
+        result.addAll(dsl().select(FORM_STATE_ITEM_PATH)
+                .from(FORM_STATE)
+                .where(FORM_STATE_INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(FORM_STATE_INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                        .and(FORM_STATE_ITEM_PATH.startsWith(path)))
+                .fetch(FORM_STATE_ITEM_PATH));
+
+        return converter.apply(result.stream());
     }
 
     public boolean exists(PartialProcessKey partialProcessKey, String path) {
@@ -236,10 +332,19 @@ public class ProcessStateManager extends AbstractDao {
      * Checks if a value exists.
      */
     public boolean exists(ProcessKey processKey, String path) {
-        return dsl().fetchExists(selectFrom(PROCESS_STATE)
+        boolean exists = dsl().fetchExists(selectFrom(PROCESS_STATE)
                 .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
                         .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
                         .and(PROCESS_STATE.ITEM_PATH.startsWith(path))));
+
+        if (exists) {
+            return true;
+        }
+
+        return dsl().fetchExists(selectFrom(FORM_STATE)
+                .where(FORM_STATE_INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(FORM_STATE_INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                        .and(FORM_STATE_ITEM_PATH.startsWith(path))));
     }
 
     /**
@@ -255,6 +360,12 @@ public class ProcessStateManager extends AbstractDao {
                         .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
                         .and(PROCESS_STATE.ITEM_PATH.eq(path)))
                 .execute();
+
+        if (isFormResource(path)) {
+            deleteFormState(tx, FORM_STATE_INSTANCE_ID.eq(processKey.getInstanceId())
+                    .and(FORM_STATE_INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                    .and(FORM_STATE_ITEM_PATH.eq(path)));
+        }
     }
 
     public void delete(ProcessKey processKey) {
@@ -276,6 +387,13 @@ public class ProcessStateManager extends AbstractDao {
                 .and(PROCESS_STATE.ITEM_PATH.eq(path)
                         .or(PROCESS_STATE.ITEM_PATH.startsWith(fixPath(path))))
                 .execute();
+
+        if (isFormPath(path)) {
+            deleteFormState(tx, FORM_STATE_INSTANCE_ID.eq(processKey.getInstanceId())
+                    .and(FORM_STATE_INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                    .and(FORM_STATE_ITEM_PATH.eq(path)
+                            .or(FORM_STATE_ITEM_PATH.startsWith(fixPath(path)))));
+        }
     }
 
     /**
@@ -349,6 +467,7 @@ public class ProcessStateManager extends AbstractDao {
         String prefix = fixPath(path);
 
         List<BatchItem> batch = new ArrayList<>();
+        List<FormBatchItem> formBatch = new ArrayList<>();
         try {
             Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
                 @Override
@@ -375,15 +494,32 @@ public class ProcessStateManager extends AbstractDao {
                     int unixMode = Posix.unixMode(permissions);
                     boolean needsEncryption = secureFiles.contains(n);
 
-                    tx.deleteFrom(table.table()).where(table.INSTANCE_ID().eq(processKey.getInstanceId())
-                                    .and(table.INSTANCE_CREATED_AT().eq(processKey.getCreatedAt()))
-                                    .and(table.ITEM_PATH().eq(n)))
-                            .execute();
+                    if (isCurrentProcessState(table) && isFormResource(n)) {
+                        tx.deleteFrom(table.table()).where(table.INSTANCE_ID().eq(processKey.getInstanceId())
+                                        .and(table.INSTANCE_CREATED_AT().eq(processKey.getCreatedAt()))
+                                        .and(table.ITEM_PATH().eq(n)))
+                                .execute();
 
-                    batch.add(new BatchItem(n, file, unixMode, needsEncryption));
-                    if (batch.size() >= INSERT_BATCH_SIZE) {
-                        doInsert(tx, table, processKey.getInstanceId(), processKey.getCreatedAt(), batch);
-                        batch.clear();
+                        deleteFormState(tx, FORM_STATE_INSTANCE_ID.eq(processKey.getInstanceId())
+                                .and(FORM_STATE_INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                                .and(FORM_STATE_ITEM_PATH.eq(n)));
+
+                        formBatch.add(new FormBatchItem(n, file, unixMode, needsEncryption));
+                        if (formBatch.size() >= INSERT_BATCH_SIZE) {
+                            insertFormState(tx, processKey, formBatch);
+                            formBatch.clear();
+                        }
+                    } else {
+                        tx.deleteFrom(table.table()).where(table.INSTANCE_ID().eq(processKey.getInstanceId())
+                                        .and(table.INSTANCE_CREATED_AT().eq(processKey.getCreatedAt()))
+                                        .and(table.ITEM_PATH().eq(n)))
+                                .execute();
+
+                        batch.add(new BatchItem(n, file, unixMode, needsEncryption));
+                        if (batch.size() >= INSERT_BATCH_SIZE) {
+                            doInsert(tx, table, processKey.getInstanceId(), processKey.getCreatedAt(), batch);
+                            batch.clear();
+                        }
                     }
 
                     return FileVisitResult.CONTINUE;
@@ -392,6 +528,10 @@ public class ProcessStateManager extends AbstractDao {
 
             if (!batch.isEmpty()) {
                 doInsert(tx, table, processKey.getInstanceId(), processKey.getCreatedAt(), batch);
+            }
+
+            if (!formBatch.isEmpty()) {
+                insertFormState(tx, processKey, formBatch);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -428,6 +568,30 @@ public class ProcessStateManager extends AbstractDao {
                         try (InputStream in = rs.getBinaryStream(4);
                              InputStream processed = encrypted ? decrypt(in) : in) {
                             consumer.accept(n, unixMode, processed);
+                        }
+                    }
+                }
+
+                String formSql = tx.select(FORM_STATE_ITEM_PATH, FORM_STATE_UNIX_MODE, FORM_STATE_ITEMS_IS_ENCRYPTED, FORM_STATE_ITEMS_ITEM_DATA)
+                        .from(FORM_STATE.join(FORM_STATE_ITEMS).on(FORM_STATE_ITEM_HASH.eq(FORM_STATE_ITEMS_ITEM_HASH)))
+                        .where(FORM_STATE_INSTANCE_ID.eq((UUID) null).and(FORM_STATE_INSTANCE_CREATED_AT.eq((OffsetDateTime) null)))
+                        .getSQL();
+
+                try (PreparedStatement formPs = conn.prepareStatement(formSql)) {
+                    formPs.setObject(1, processKey.getInstanceId());
+                    formPs.setObject(2, processKey.getCreatedAt());
+
+                    try (ResultSet rs = formPs.executeQuery()) {
+                        while (rs.next()) {
+                            found = true;
+
+                            String n = rs.getString(1);
+                            int unixMode = rs.getShort(2);
+                            boolean encrypted = rs.getBoolean(3);
+                            try (InputStream in = rs.getBinaryStream(4);
+                                 InputStream processed = encrypted ? decrypt(in) : in) {
+                                consumer.accept(n, unixMode, processed);
+                            }
                         }
                     }
                 }
@@ -482,6 +646,35 @@ public class ProcessStateManager extends AbstractDao {
                     }
                 }
 
+                if (isCurrentProcessState(table) && isFormPath(path)) {
+                    String formSql = tx.select(FORM_STATE_ITEM_PATH, FORM_STATE_UNIX_MODE, FORM_STATE_ITEMS_IS_ENCRYPTED, FORM_STATE_ITEMS_ITEM_DATA)
+                            .from(FORM_STATE.join(FORM_STATE_ITEMS).on(FORM_STATE_ITEM_HASH.eq(FORM_STATE_ITEMS_ITEM_HASH)))
+                            .where(FORM_STATE_INSTANCE_ID.eq((UUID) null)
+                                    .and(FORM_STATE_INSTANCE_CREATED_AT.eq((OffsetDateTime) null))
+                                    .and(FORM_STATE_ITEM_PATH.startsWith((String) null)))
+                            .getSQL();
+
+                    try (PreparedStatement formPs = conn.prepareStatement(formSql)) {
+                        formPs.setObject(1, processKey.getInstanceId());
+                        formPs.setObject(2, processKey.getCreatedAt());
+                        formPs.setString(3, dir);
+
+                        try (ResultSet rs = formPs.executeQuery()) {
+                            while (rs.next()) {
+                                found = true;
+
+                                String n = relativize(dir, rs.getString(1));
+                                int unixMode = rs.getShort(2);
+                                boolean encrypted = rs.getBoolean(3);
+                                try (InputStream in = rs.getBinaryStream(4);
+                                     InputStream processed = encrypted ? decrypt(in) : in) {
+                                    consumer.accept(n, unixMode, processed);
+                                }
+                            }
+                        }
+                    }
+                }
+
                 return found;
             }
         });
@@ -529,6 +722,9 @@ public class ProcessStateManager extends AbstractDao {
     }
 
     private void delete(DSLContext tx, UUID instanceId, OffsetDateTime instanceCreatedAt) {
+        deleteFormState(tx, FORM_STATE_INSTANCE_ID.eq(instanceId)
+                .and(FORM_STATE_INSTANCE_CREATED_AT.eq(instanceCreatedAt)));
+
         tx.deleteFrom(PROCESS_STATE)
                 .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
                         .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(instanceCreatedAt)))
@@ -633,6 +829,108 @@ public class ProcessStateManager extends AbstractDao {
         }
     }
 
+    private void insertFormState(DSLContext tx, ProcessKey processKey, Collection<FormBatchItem> batch) {
+        String upsertItemSql = tx.insertInto(FORM_STATE_ITEMS)
+                .columns(FORM_STATE_ITEMS_ITEM_HASH, FORM_STATE_ITEMS_ITEM_DATA, FORM_STATE_ITEMS_IS_ENCRYPTED)
+                .values((String) null, (byte[]) null, null)
+                .onConflict(FORM_STATE_ITEMS_ITEM_HASH)
+                .doNothing()
+                .getSQL();
+
+        String insertRefSql = tx.insertInto(FORM_STATE)
+                .columns(FORM_STATE_INSTANCE_ID, FORM_STATE_INSTANCE_CREATED_AT, FORM_STATE_ITEM_PATH, FORM_STATE_UNIX_MODE, FORM_STATE_ITEM_HASH)
+                .values((UUID) null, null, null, null, null)
+                .getSQL();
+
+        tx.connection(conn -> {
+            try (PreparedStatement upsertItemPs = conn.prepareStatement(upsertItemSql);
+                 PreparedStatement insertRefPs = conn.prepareStatement(insertRefSql)) {
+                for (FormBatchItem item : batch) {
+                    byte[] data = Files.readAllBytes(item.path);
+                    String itemHash = itemHash(data, item.needsEncryption);
+                    byte[] stored = data;
+                    if (item.needsEncryption) {
+                        stored = encrypt(data);
+                    }
+
+                    upsertItemPs.setString(1, itemHash);
+                    upsertItemPs.setBytes(2, stored);
+                    upsertItemPs.setBoolean(3, item.needsEncryption);
+                    upsertItemPs.addBatch();
+
+                    insertRefPs.setObject(1, processKey.getInstanceId());
+                    insertRefPs.setObject(2, processKey.getCreatedAt());
+                    insertRefPs.setString(3, item.itemPath);
+                    insertRefPs.setInt(4, item.unixMode);
+                    insertRefPs.setString(5, itemHash);
+                    insertRefPs.addBatch();
+                }
+
+                upsertItemPs.executeBatch();
+                insertRefPs.executeBatch();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException("Error while reading form state file", e);
+            }
+        });
+    }
+
+    private void deleteFormState(DSLContext tx, org.jooq.Condition condition) {
+        List<String> affected = tx.select(FORM_STATE_ITEM_HASH)
+                .from(FORM_STATE)
+                .where(condition)
+                .fetch(FORM_STATE_ITEM_HASH);
+
+        if (affected.isEmpty()) {
+            return;
+        }
+
+        tx.deleteFrom(FORM_STATE)
+                .where(condition)
+                .execute();
+
+        cleanupUnreferencedFormStateItems(tx, affected);
+    }
+
+    private void cleanupUnreferencedFormStateItems(DSLContext tx, Collection<String> itemHashes) {
+        if (itemHashes == null || itemHashes.isEmpty()) {
+            return;
+        }
+
+        tx.deleteFrom(FORM_STATE_ITEMS)
+                .where(FORM_STATE_ITEMS_ITEM_HASH.in(itemHashes)
+                        .andNotExists(selectOne()
+                                .from(FORM_STATE)
+                                .where(FORM_STATE_ITEM_HASH.eq(FORM_STATE_ITEMS_ITEM_HASH))))
+                .execute();
+    }
+
+    private static boolean isFormResource(String path) {
+        return path != null && path.startsWith(FORMS_PATH_PREFIX);
+    }
+
+    private static boolean isFormPath(String path) {
+        return FORMS_PATH_PREFIX.substring(0, FORMS_PATH_PREFIX.length() - 1).equals(path) || isFormResource(path);
+    }
+
+    private static boolean isCurrentProcessState(ProcessStateTable table) {
+        return table == CurrentProcessStateTable.INSTANCE;
+    }
+
+    private static String itemHash(byte[] data, boolean encrypted) {
+        return (encrypted ? "enc:" : "raw:") + sha256Hex(data);
+    }
+
+    private static String sha256Hex(byte[] data) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(digest.digest(data));
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 digest is not available", e);
+        }
+    }
+
     private InputStream decrypt(InputStream in) {
         return SecretUtils.decrypt(in, secretCfg.getServerPwd(), secretCfg.getSecretStoreSalt());
     }
@@ -704,11 +1002,20 @@ public class ProcessStateManager extends AbstractDao {
     }
 
     private static StatePolicy.StateStats getStateStats(DSLContext tx, ProcessKey processKey) {
-        return tx.select(DSL.sum(PgUtils.length(PROCESS_STATE.ITEM_DATA)), count(PROCESS_STATE.ITEM_DATA))
+        StatePolicy.StateStats processStateStats = tx.select(coalesce(DSL.sum(PgUtils.length(PROCESS_STATE.ITEM_DATA)), 0L), count(PROCESS_STATE.ITEM_DATA))
                 .from(PROCESS_STATE)
                 .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
                         .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
-                .fetchOne(r -> new StatePolicy.StateStats(r.value1().longValue(), r.value2()));
+                .fetchOne(r -> new StatePolicy.StateStats(((Number) r.value1()).longValue(), r.value2()));
+
+        StatePolicy.StateStats formsStateStats = tx.select(coalesce(DSL.sum(PgUtils.length(FORM_STATE_ITEMS_ITEM_DATA)), 0L), count(FORM_STATE_ITEM_PATH))
+                .from(FORM_STATE.join(FORM_STATE_ITEMS).on(FORM_STATE_ITEM_HASH.eq(FORM_STATE_ITEMS_ITEM_HASH)))
+                .where(FORM_STATE_INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(FORM_STATE_INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
+                .fetchOne(r -> new StatePolicy.StateStats(((Number) r.value1()).longValue(), r.value2()));
+
+        return new StatePolicy.StateStats(processStateStats.getSize() + formsStateStats.getSize(),
+                processStateStats.getFilesCount() + formsStateStats.getFilesCount());
     }
 
     private PolicyEngine getPolicyEngine(DSLContext tx, ProcessKey processKey) {
@@ -841,6 +1148,21 @@ public class ProcessStateManager extends AbstractDao {
         private final boolean needsEncryption;
 
         private BatchItem(String itemPath, Path path, int unixMode, boolean needsEncryption) {
+            this.itemPath = itemPath;
+            this.path = path;
+            this.unixMode = unixMode;
+            this.needsEncryption = needsEncryption;
+        }
+    }
+
+    private static final class FormBatchItem {
+
+        private final String itemPath;
+        private final Path path;
+        private final int unixMode;
+        private final boolean needsEncryption;
+
+        private FormBatchItem(String itemPath, Path path, int unixMode, boolean needsEncryption) {
             this.itemPath = itemPath;
             this.path = path;
             this.unixMode = unixMode;
