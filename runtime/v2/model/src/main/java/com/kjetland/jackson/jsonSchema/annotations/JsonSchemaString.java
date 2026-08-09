@@ -1,8 +1,10 @@
+package com.kjetland.jackson.jsonSchema.annotations;
+
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2026 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +19,17 @@
  * limitations under the License.
  * =====
  */
-import React from 'react';
-import { render } from '@testing-library/react';
-import Message from './';
 
-test('Renders a message describing there are no checkpoints', () => {
-    const { container } = render(<Message />);
-    expect(container.innerHTML).toContain('No checkpoints');
-});
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target({})
+public @interface JsonSchemaString {
+
+    String path();
+
+    String value();
+}
