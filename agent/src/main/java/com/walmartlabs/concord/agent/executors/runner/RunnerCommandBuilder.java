@@ -104,10 +104,6 @@ public class RunnerCommandBuilder {
 
         // speeds up the start, we don't care much about all potential optimizations done by HotSpot
         l.add("-client");
-        if (majorJavaVersion < 13) {
-            // don't do bytecode verification
-            l.add("-noverify");
-        }
         // enable support for calling vararg methods in JUEL
         l.add("-Djavax.el.varArgs=true");
         // avoid blocking on crypto
@@ -143,13 +139,13 @@ public class RunnerCommandBuilder {
         l.add("-Dpolyglot.engine.WarnInterpreterOnly=false");
 
         // Java 9+ requires additional add-opens for compatibility
-        if (majorJavaVersion >= 9) {
-            l.add("--add-opens");
-            l.add("java.base/java.lang=ALL-UNNAMED");
-            l.add("--add-opens");
-            l.add("java.base/java.util=ALL-UNNAMED");
-            l.add("--enable-native-access=ALL-UNNAMED");
-        }
+        l.add("--add-opens");
+        l.add("java.base/java.lang=ALL-UNNAMED");
+        l.add("--add-opens");
+        l.add("java.base/java.util=ALL-UNNAMED");
+        l.add("--enable-native-access=ALL-UNNAMED");
+        // suppress until we get to guice >=7.0.0
+        l.add("--sun-misc-unsafe-memory-access=allow");
 
         // classpath
         l.add("-cp");
