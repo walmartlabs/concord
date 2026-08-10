@@ -55,6 +55,11 @@ interface Props {
     onStartLoading: (isLoadWholeLog: boolean) => void;
     onStopLoading: () => void;
     onSegmentInfo?: () => void;
+    onCopy: () => void;
+    copying: boolean;
+    copied: boolean;
+    copyFailed: boolean;
+    copyTooLarge: boolean;
     loading: boolean;
     forceOpen: boolean;
 }
@@ -74,6 +79,11 @@ const LogSegment = ({
     onStartLoading,
     onStopLoading,
     onSegmentInfo,
+    onCopy,
+    copying,
+    copied,
+    copyFailed,
+    copyTooLarge,
     loading,
     forceOpen,
 }: Props) => {
@@ -125,21 +135,21 @@ const LogSegment = ({
         setLoadAll((prevState) => !prevState);
     }, []);
 
-    const segmentInfoClickHandler = useCallback(
-        (event: React.MouseEvent<any>) => {
-            event.stopPropagation();
-            if (onSegmentInfo !== undefined) {
-                onSegmentInfo();
-            }
-        },
-        [onSegmentInfo]
-    );
+    const segmentInfoClickHandler = useCallback(() => {
+        if (onSegmentInfo !== undefined) {
+            onSegmentInfo();
+        }
+    }, [onSegmentInfo]);
 
-    const autoscrollClickHandler = useCallback((ev: React.MouseEvent<any>) => {
-        ev.preventDefault();
-        ev.stopPropagation();
+    const autoscrollClickHandler = useCallback(() => {
         setAutoScroll((prevState) => !prevState);
     }, []);
+
+    const copyClickHandler = useCallback(() => {
+        if (!copying) {
+            onCopy();
+        }
+    }, [copying, onCopy]);
 
     useEffect(() => {
         if (prevForceOpen.current === forceOpen) {
@@ -190,91 +200,154 @@ const LogSegment = ({
 
     return (
         <div className="LogSegment" id={`segmentId=${segmentId}`} ref={myRef}>
-            <Button
-                fluid={true}
-                size="medium"
-                className="Segment"
-                onClick={() => setOpen((prevState) => !prevState)}
-            >
-                <Icon name={isOpen ? 'caret down' : 'caret right'} className="State" />
-
-                <StatusIcon
-                    status={status}
-                    processStatus={processStatus}
-                    warnings={warnings}
-                    errors={errors}
-                />
-
-                <span className="Caption">{name}</span>
-
-                {(hasWarnings || hasErrors) && (
-                    <>
-                        <span className="Counter">warn: {warnings ? warnings : 0}</span>
-                        <span className="Counter">error: {errors ? errors : 0}</span>
-                    </>
-                )}
-
-                {beenRunningFor && <span className="RunningFor">running for {beenRunningFor}</span>}
-                {wasRunningFor && <span className="RunningFor">{wasRunningFor}</span>}
-
-                <Link
-                    to={`${baseUrl}#segmentId=${segmentId}`}
-                    className="AdditionalAction Anchor"
-                    data-tooltip="Hyperlink"
-                    data-inverted=""
+            <div className="Segment">
+                <Button
+                    size="medium"
+                    className="SegmentToggle"
+                    onClick={() => setOpen((prevState) => !prevState)}
                 >
-                    <Icon name="linkify" />
-                </Link>
+                    <Icon name={isOpen ? 'caret down' : 'caret right'} className="State" />
 
-                <a
-                    href={`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`}
-                    onClick={(event) => event.stopPropagation()}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                    className="AdditionalAction Last"
-                    data-tooltip="Download: InstanceId_SegmentId.log"
-                    data-inverted=""
+                    <StatusIcon
+                        status={status}
+                        processStatus={processStatus}
+                        warnings={warnings}
+                        errors={errors}
+                    />
+
+                    <span className="Caption">{name}</span>
+
+                    {(hasWarnings || hasErrors) && (
+                        <>
+                            <span className="Counter">warn: {warnings ? warnings : 0}</span>
+                            <span className="Counter">error: {errors ? errors : 0}</span>
+                        </>
+                    )}
+
+                    {beenRunningFor && (
+                        <span className="RunningFor">running for {beenRunningFor}</span>
+                    )}
+                    {wasRunningFor && <span className="RunningFor">{wasRunningFor}</span>}
+                </Button>
+
+                <div
+                    className={`SegmentControls${
+                        copying || copied || copyFailed || copyTooLarge || isAutoScroll || isLoadAll
+                            ? ' ForceVisible'
+                            : ''
+                    }`}
                 >
-                    <Icon name="download" />
-                </a>
-
-                {onSegmentInfo !== undefined && (
-                    <div className={'AdditionalAction'} data-tooltip="Show Info" data-inverted="">
-                        <Icon
-                            name={'info circle'}
-                            title={'Show info'}
-                            onClick={segmentInfoClickHandler}
-                        />
-                    </div>
-                )}
-
-                {isOpen && (
-                    <>
-                        <div className="AdditionalAction">
-                            <div
-                                className={isAutoScroll ? 'on' : 'off'}
+                    {isOpen && (
+                        <div className="RowControls">
+                            <button
+                                type="button"
+                                className={`ActionSlot${isAutoScroll ? ' Active' : ''}`}
+                                aria-pressed={isAutoScroll}
+                                aria-label="Auto scroll"
                                 data-tooltip="Auto Scroll"
                                 data-inverted=""
+                                onClick={autoscrollClickHandler}
                             >
-                                <Icon name={'angle double down'} onClick={autoscrollClickHandler} />
-                            </div>
-                        </div>
-                        <div className="AdditionalAction">
-                            <div
-                                className={isLoadAll ? 'on' : 'off'}
+                                <Icon name={'angle double down'} />
+                            </button>
+                            <button
+                                type="button"
+                                className={`ActionSlot${isLoadAll ? ' Active' : ''}`}
+                                aria-pressed={isLoadAll}
+                                aria-label="Show full log"
                                 data-tooltip="Show Full Log"
                                 data-inverted=""
+                                onClick={loadAllClickHandler}
                             >
-                                <Icon
-                                    name={'arrows alternate vertical'}
-                                    onClick={loadAllClickHandler}
-                                />
-                            </div>
+                                <Icon name={'arrows alternate vertical'} />
+                            </button>
                         </div>
-                    </>
-                )}
+                    )}
+
+                    <div className="ActionsGrid">
+                        {onSegmentInfo !== undefined ? (
+                            <button
+                                type="button"
+                                className="ActionSlot"
+                                aria-label="Show info"
+                                data-tooltip="Show Info"
+                                data-inverted=""
+                                onClick={segmentInfoClickHandler}
+                            >
+                                <Icon name={'info circle'} />
+                            </button>
+                        ) : (
+                            <div className="ActionSlot Empty" aria-hidden="true" />
+                        )}
+
+                        <a
+                            href={`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`}
+                            rel="noopener noreferrer"
+                            target="_blank"
+                            className="ActionSlot"
+                            aria-label="Download log"
+                            data-tooltip="Download: InstanceId_SegmentId.log"
+                            data-inverted=""
+                        >
+                            <Icon name="download" />
+                        </a>
+
+                        <button
+                            type="button"
+                            className={`ActionSlot${copied ? ' Copied' : ''}${
+                                copyFailed ? ' CopyFailed' : ''
+                            }${copyTooLarge ? ' CopyTooLarge' : ''}`}
+                            aria-label={
+                                copyTooLarge
+                                    ? 'Log is too large to copy — use Download instead'
+                                    : copyFailed
+                                    ? 'Copy failed'
+                                    : copied
+                                    ? 'Copied to clipboard'
+                                    : 'Copy log contents'
+                            }
+                            aria-busy={copying}
+                            data-tooltip={
+                                copyTooLarge
+                                    ? 'Log is too large to copy — use Download instead'
+                                    : copyFailed
+                                    ? 'Copy failed'
+                                    : copied
+                                    ? 'Copied!'
+                                    : copying
+                                    ? 'Copying log contents...'
+                                    : 'Copy log contents'
+                            }
+                            data-inverted=""
+                            onClick={copyClickHandler}
+                        >
+                            <Icon
+                                loading={copying}
+                                name={
+                                    copyTooLarge
+                                        ? 'exclamation triangle'
+                                        : copyFailed
+                                        ? 'exclamation circle'
+                                        : copied
+                                        ? 'checkmark'
+                                        : 'copy'
+                                }
+                            />
+                        </button>
+
+                        <Link
+                            to={`${baseUrl}#segmentId=${segmentId}`}
+                            className="ActionSlot"
+                            aria-label="Copy link to this segment"
+                            data-tooltip="Hyperlink"
+                            data-inverted=""
+                        >
+                            <Icon name="linkify" />
+                        </Link>
+                    </div>
+                </div>
                 {loading && <div className="Loader" />}
-            </Button>
+            </div>
 
             {isOpen && (
                 <div className="ContentContainer">
