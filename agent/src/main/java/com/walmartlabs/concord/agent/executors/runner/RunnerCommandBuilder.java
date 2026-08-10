@@ -144,8 +144,11 @@ public class RunnerCommandBuilder {
         l.add("--add-opens");
         l.add("java.base/java.util=ALL-UNNAMED");
         l.add("--enable-native-access=ALL-UNNAMED");
-        // suppress until we get to guice >=7.0.0
-        l.add("--sun-misc-unsafe-memory-access=allow");
+
+        if (majorJavaVersion >= 23) {
+            // suppress until we get to guice >=7.0.0
+            l.add("--sun-misc-unsafe-memory-access=allow");
+        }
 
         // classpath
         l.add("-cp");
