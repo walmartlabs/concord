@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
+import com.networknt.schema.regex.RegularExpression;
 import com.walmartlabs.concord.common.TruncBufferedReader;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
@@ -48,6 +49,10 @@ public class DefaultDockerService implements DockerService {
 
     private static final int SUCCESS_EXIT_CODE = 0;
     private static final String WORKSPACE_TARGET_DIR = "/workspace";
+    /*
+        source: https://testregex.com/patterns/docker-image
+     */
+    private static final String VALID_DOCKER_IMAGE_REGEX = "^(?:(?=[^:\\/]{1,253})(?!-)[a-z0-9-]{1,63}(?<!-)(?:\\.(?!-)[a-z0-9-]{1,63}(?<!-))*(?::[0-9]{1,5})?/)?((?![._-])(?:[a-z0-9._-]*)(?<![._-])(?:\\/(?![._-])[a-z0-9._-]*(?<![._-]))*)(?::(?![.-])[a-zA-Z0-9_.-]{1,128})?$";
 
     private static final Pattern[] REGISTRY_ERROR_PATTERNS = {
             Pattern.compile("Error response from daemon.*received unexpected HTTP status: 5.*"),
@@ -104,6 +109,9 @@ public class DefaultDockerService implements DockerService {
     }
 
     private DockerProcess build(DockerContainerSpec spec) throws IOException {
+        if(!spec.image().matches(VALID_DOCKER_IMAGE_REGEX)) {
+            throw new RuntimeException("Invalid image spec: " + spec.image());
+        }
         DockerProcessBuilder b = DockerProcessBuilder.from(instanceId.getValue(), spec);
 
         b.env(createEffectiveEnv(spec.env(), exposeDockerDaemon));
