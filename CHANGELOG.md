@@ -3,7 +3,8 @@
 ## [2.43.1] - TBD
 
 ### Added
-console2: add copy action for log segments
+
+- console2: add copy action for log segments
 ([#1357](https://github.com/walmartlabs/concord/pull/1357)).
 
 ### Changed
@@ -27,13 +28,15 @@ console2: add copy action for log segments
 - runtime-v2: migrate json schema generator to com.github.victools:jsonschema-generator
 ([#1355](https://github.com/walmartlabs/concord/pull/1355));
 - concord-cli: enable native access
-([#1341](https://github.com/walmartlabs/concord/pull/1341))
+([#1341](https://github.com/walmartlabs/concord/pull/1341));
 - project: upgrade guice to 6.x and guava to 33.6.0
 ([#1356](https://github.com/walmartlabs/concord/pull/1356));
-concord-server: disable TRACE
+- concord-server: disable TRACE
 ([#1347](https://github.com/walmartlabs/concord/pull/1347));
-targetplatform: remove unused shiro-guice (CVE-2026-56091)
-([#1354](https://github.com/walmartlabs/concord/pull/1354)).
+- targetplatform: remove unused shiro-guice (CVE-2026-56091)
+([#1354](https://github.com/walmartlabs/concord/pull/1354));
+- agent: update mandatory runner params for jdk25+
+([#1358](https://github.com/walmartlabs/concord/pull/1358)).
 
 
 ## [2.43.0] - 2026-06-21
