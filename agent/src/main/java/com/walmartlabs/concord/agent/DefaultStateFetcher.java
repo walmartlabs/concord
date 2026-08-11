@@ -22,7 +22,7 @@ package com.walmartlabs.concord.agent;
 
 import com.walmartlabs.concord.client2.ClientUtils;
 import com.walmartlabs.concord.client2.ProcessApi;
-import com.walmartlabs.concord.common.ZipUtils;
+import com.walmartlabs.concord.common.ZipService;
 
 import javax.inject.Inject;
 import java.io.InputStream;
@@ -31,16 +31,18 @@ import java.nio.file.StandardCopyOption;
 public class DefaultStateFetcher implements StateFetcher {
 
     private final ProcessApi processApi;
+    private final ZipService zipService;
 
     @Inject
-    public DefaultStateFetcher(ProcessApi processApi) {
+    public DefaultStateFetcher(ProcessApi processApi, ZipService zipService) {
         this.processApi = processApi;
+        this.zipService = zipService;
     }
 
     @Override
     public void downloadState(JobRequest job) throws Exception {
         try (InputStream is = ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY, () -> processApi.downloadState(job.getInstanceId()))){
-            ZipUtils.unzip(is, job.getPayloadDir(), StandardCopyOption.REPLACE_EXISTING);
+            zipService.unzip(is, job.getPayloadDir(), StandardCopyOption.REPLACE_EXISTING);
         }
     }
 }

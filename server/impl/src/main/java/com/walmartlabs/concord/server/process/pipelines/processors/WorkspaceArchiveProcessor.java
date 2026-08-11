@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.common.ZipUtils;
+import com.walmartlabs.concord.common.ZipService;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
@@ -39,10 +39,12 @@ import java.nio.file.StandardCopyOption;
 public class WorkspaceArchiveProcessor implements PayloadProcessor {
 
     private final ProcessLogManager logManager;
+    private final ZipService zipService;
 
     @Inject
-    public WorkspaceArchiveProcessor(ProcessLogManager logManager) {
+    public WorkspaceArchiveProcessor(ProcessLogManager logManager, ZipService zipService) {
         this.logManager = logManager;
+        this.zipService = zipService;
     }
 
     @Override
@@ -61,7 +63,7 @@ public class WorkspaceArchiveProcessor implements PayloadProcessor {
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         try {
-            ZipUtils.unzip(archive, workspace, StandardCopyOption.REPLACE_EXISTING);
+            zipService.unzip(archive, workspace, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             logManager.error(processKey, "Error while unpacking an archive: " + archive, e);
             throw new ProcessException(processKey, "Error while unpacking an archive: " + archive, e);

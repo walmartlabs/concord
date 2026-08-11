@@ -26,6 +26,7 @@ import com.google.inject.Module;
 import com.typesafe.config.Config;
 import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.ObjectMapperProvider;
+import com.walmartlabs.concord.common.ZipService;
 import com.walmartlabs.concord.config.ConfigModule;
 import com.walmartlabs.concord.db.DatabaseModule;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
@@ -81,6 +82,8 @@ public class ConcordServerModule implements Module {
 
         binder.install(new ConfigurationModule(config));
         binder.install(new MetricModule());
+
+        binder.bind(ZipService.class).in(SINGLETON);
 
         binder.install(new DatabaseConfigurationModule());
         binder.install(new DatabaseModule());

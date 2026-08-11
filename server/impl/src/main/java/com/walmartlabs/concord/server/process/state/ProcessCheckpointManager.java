@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.process.state;
 
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
-import com.walmartlabs.concord.common.ZipUtils;
+import com.walmartlabs.concord.common.ZipService;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
@@ -54,17 +54,20 @@ public class ProcessCheckpointManager {
     private final ProcessQueueDao queueDao;
     private final ProcessStateManager stateManager;
     private final ProjectAccessManager projectAccessManager;
+    private final ZipService zipService;
 
     @Inject
     protected ProcessCheckpointManager(ProcessCheckpointDao checkpointDao,
                                        ProcessQueueDao queueDao,
                                        ProcessStateManager stateManager,
-                                       ProjectAccessManager projectAccessManager) {
+                                       ProjectAccessManager projectAccessManager,
+                                       ZipService zipService) {
 
         this.checkpointDao = checkpointDao;
         this.queueDao = queueDao;
         this.stateManager = stateManager;
         this.projectAccessManager = projectAccessManager;
+        this.zipService = zipService;
     }
 
     public UUID getRecentCheckpointId(ProcessKey processKey, String checkpointName) {
@@ -95,7 +98,7 @@ public class ProcessCheckpointManager {
             }
 
             try (TemporaryPath extractedDir = PathUtils.tempDir("unzipped-checkpoint")) {
-                ZipUtils.unzip(checkpointArchive.path(), extractedDir.path());
+                zipService.unzip(checkpointArchive.path(), extractedDir.path());
 
                 // TODO: only for v1 runtime
                 String eventName = readCheckpointEventName(extractedDir.path());
