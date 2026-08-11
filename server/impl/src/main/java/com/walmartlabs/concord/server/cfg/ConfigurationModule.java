@@ -24,6 +24,7 @@ import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.typesafe.config.Config;
 import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
+import com.walmartlabs.concord.common.cfg.UnzipLimits;
 import com.walmartlabs.concord.config.ConfigModule;
 import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
 
@@ -73,6 +74,7 @@ public class ConfigurationModule implements Module {
         binder.bind(ServerConfiguration.class).in(SINGLETON);
         binder.bind(TemplatesConfiguration.class).in(SINGLETON);
         binder.bind(TriggersConfiguration.class).in(SINGLETON);
+        binder.bind(UnzipLimits.class).to(UnzipLimitsConfiguration.class).in(SINGLETON);
         binder.bind(WorkerMetricsConfiguration.class).in(SINGLETON);
     }
 }

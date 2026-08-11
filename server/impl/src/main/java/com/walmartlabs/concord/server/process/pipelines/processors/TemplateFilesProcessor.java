@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.common.ZipUtils;
+import com.walmartlabs.concord.common.ZipService;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
@@ -46,15 +46,18 @@ public class TemplateFilesProcessor implements PayloadProcessor {
     private final ProcessLogManager logManager;
     private final DependencyManager dependencyManager;
     private final TemplateAliasDao aliasDao;
+    private final ZipService zipService;
 
     @Inject
     public TemplateFilesProcessor(DependencyManager dependencyManager,
                                   ProcessLogManager logManager,
-                                  TemplateAliasDao aliasDao) {
+                                  TemplateAliasDao aliasDao,
+                                  ZipService zipService) {
 
         this.logManager = logManager;
         this.aliasDao = aliasDao;
         this.dependencyManager = dependencyManager;
+        this.zipService = zipService;
     }
 
     @Override
@@ -108,6 +111,6 @@ public class TemplateFilesProcessor implements PayloadProcessor {
         Path workspacePath = payload.getHeader(Payload.WORKSPACE_DIR);
 
         // copy template's files to the payload, skipping the existing files
-        ZipUtils.unzip(template, workspacePath, true);
+        zipService.unzip(template, workspacePath, true);
     }
 }

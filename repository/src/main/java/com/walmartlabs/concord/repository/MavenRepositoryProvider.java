@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.repository;
 
 import com.walmartlabs.concord.common.PathUtils;
-import com.walmartlabs.concord.common.ZipUtils;
+import com.walmartlabs.concord.common.ZipService;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,9 +38,11 @@ public class MavenRepositoryProvider implements RepositoryProvider {
     private static final String URL_PREFIX = "mvn://";
     private static final Logger log = LoggerFactory.getLogger(MavenRepositoryProvider.class);
     private final DependencyManager dependencyManager;
+    private final ZipService zipService;
 
-    public MavenRepositoryProvider(DependencyManager dependencyManager) {
+    public MavenRepositoryProvider(DependencyManager dependencyManager, ZipService zipService) {
         this.dependencyManager = dependencyManager;
+        this.zipService = zipService;
     }
 
     /**
@@ -62,7 +64,7 @@ public class MavenRepositoryProvider implements RepositoryProvider {
         try {
             URI uri = new URI(request.url().concat(":").concat(request.version().value()));
             Path dependencyPath = dependencyManager.resolveSingle(uri).getPath();
-            ZipUtils.unzip(dependencyPath, dst, false, StandardCopyOption.REPLACE_EXISTING);
+            zipService.unzip(dependencyPath, dst, false, StandardCopyOption.REPLACE_EXISTING);
             return null;
         } catch (URISyntaxException | IOException e) {
             try {
