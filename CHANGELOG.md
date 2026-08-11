@@ -5,7 +5,9 @@
 ### Added
 
 - console2: add copy action for log segments
-([#1357](https://github.com/walmartlabs/concord/pull/1357)).
+([#1357](https://github.com/walmartlabs/concord/pull/1357))
+- common: add size and entry count limits for unzipping
+([#1337](https://github.com/walmartlabs/concord/pull/1337)).
 
 ### Changed
 
