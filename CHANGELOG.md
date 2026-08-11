@@ -1,5 +1,46 @@
 # Change Log
 
+## [2.44.0] - 2026-08-11
+
+### Added
+
+- console2: add copy action for log segments
+([#1357](https://github.com/walmartlabs/concord/pull/1357))
+- common: add size and entry count limits for unzipping
+([#1337](https://github.com/walmartlabs/concord/pull/1337)).
+
+### Changed
+
+- project: update dependencies
+([#1338](https://github.com/walmartlabs/concord/pull/1338));
+- server: paginate list checkpoints API, omit checkpoint data from retrieval
+([#1343](https://github.com/walmartlabs/concord/pull/1343));
+- server: throw error on invalid checkpoint list pagination params
+([#1346](https://github.com/walmartlabs/concord/pull/1346));
+- project: update dependencies
+([#1348](https://github.com/walmartlabs/concord/pull/1348));
+- runtime-v1, runtime-v2: containerd retry compat for refused connection
+([#1353](https://github.com/walmartlabs/concord/pull/1353));
+- console2: fix process list refresh in OrganizationActivity
+([#1350](https://github.com/walmartlabs/concord/pull/1350));
+- server, agent: restore usage of config's git.oauth settings
+([#1349](https://github.com/walmartlabs/concord/pull/1349));
+- console2: enable tests in ci
+([#1351](https://github.com/walmartlabs/concord/pull/1351));
+- runtime-v2: migrate json schema generator to com.github.victools:jsonschema-generator
+([#1355](https://github.com/walmartlabs/concord/pull/1355));
+- concord-cli: enable native access
+([#1341](https://github.com/walmartlabs/concord/pull/1341));
+- project: upgrade guice to 6.x and guava to 33.6.0
+([#1356](https://github.com/walmartlabs/concord/pull/1356));
+- concord-server: disable TRACE
+([#1347](https://github.com/walmartlabs/concord/pull/1347));
+- targetplatform: remove unused shiro-guice (CVE-2026-56091)
+([#1354](https://github.com/walmartlabs/concord/pull/1354));
+- agent: update mandatory runner params for jdk25+
+([#1358](https://github.com/walmartlabs/concord/pull/1358)).
+
+
 ## [2.43.0] - 2026-06-21
 
 ### Breaking
