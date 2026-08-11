@@ -20,7 +20,7 @@ package com.walmartlabs.concord.imports;
  * =====
  */
 
-import com.walmartlabs.concord.common.ZipUtils;
+import com.walmartlabs.concord.common.ZipService;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.imports.Import.MvnDefinition;
 import com.walmartlabs.concord.repository.LastModifiedSnapshot;
@@ -34,9 +34,11 @@ import java.nio.file.StandardCopyOption;
 public class MvnProcessor implements ImportProcessor<MvnDefinition> {
 
     private final DependencyManager dependencyManager;
+    private final ZipService zipService;
 
-    public MvnProcessor(DependencyManager dependencyManager) {
+    public MvnProcessor(DependencyManager dependencyManager, ZipService zipService) {
         this.dependencyManager = dependencyManager;
+        this.zipService = zipService;
     }
 
     @Override
@@ -58,7 +60,7 @@ public class MvnProcessor implements ImportProcessor<MvnDefinition> {
         }
 
         LastModifiedSnapshot snapshot = new LastModifiedSnapshot();
-        ZipUtils.unzip(archivePath, dest, false, snapshot, StandardCopyOption.REPLACE_EXISTING);
+        zipService.unzip(archivePath, dest, false, snapshot, StandardCopyOption.REPLACE_EXISTING);
         return snapshot;
     }
 }

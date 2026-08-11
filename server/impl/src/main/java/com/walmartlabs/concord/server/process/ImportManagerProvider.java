@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.walmartlabs.concord.common.ZipService;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.imports.Import.GitDefinition;
 import com.walmartlabs.concord.imports.Import.SecretDefinition;
@@ -49,10 +50,11 @@ public class ImportManagerProvider implements Provider<ImportManager> {
                                  OrganizationDao organizationDao,
                                  SecretManager secretManager,
                                  RepositoryManager repositoryManager,
-                                 ImportConfiguration cfg) {
+                                 ImportConfiguration cfg,
+                                 ZipService zipService) {
 
         RepositoryExporterImpl exporter = new RepositoryExporterImpl(organizationDao, secretManager, repositoryManager);
-        this.factory = new ImportManagerFactory(dependencyManager, exporter, cfg.getDisabledProcessors());
+        this.factory = new ImportManagerFactory(dependencyManager, exporter, cfg.getDisabledProcessors(), zipService);
     }
 
     @Override

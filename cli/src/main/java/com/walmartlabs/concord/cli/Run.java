@@ -29,7 +29,8 @@ import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.FileVisitor;
 import com.walmartlabs.concord.common.PathUtils;
-import com.walmartlabs.concord.dependencymanager.DependencyManager;
+import com.walmartlabs.concord.common.ZipService;
+import com.walmartlabs.concord.common.cfg.UnzipLimits;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.imports.*;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
@@ -163,7 +164,9 @@ public class Run implements Callable<Integer> {
 
         var dependencyManager = LocalCliRuntime.createDependencyManager(depsCacheDir);
         var importManager = new ImportManagerFactory(dependencyManager,
-                new CliRepositoryExporter(repoCacheDir), Collections.emptySet())
+                new CliRepositoryExporter(repoCacheDir),
+                Set.of(),
+                new ZipService(UnzipLimits.getInstance()))
                 .create();
 
         ProjectLoaderV2.Result loadResult;
