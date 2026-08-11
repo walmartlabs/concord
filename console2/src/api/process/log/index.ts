@@ -35,7 +35,7 @@ export interface LogChunk {
 const str = (s?: {}): string => (s === undefined ? '' : String(s));
 
 const formatRangeHeader = (range: LogRange) => ({
-    Range: `bytes=${str(range.low)}-${str(range.high)}`
+    Range: `bytes=${str(range.low)}-${str(range.high)}`,
 });
 
 const parseRange = (s: string): LogRange => {
@@ -49,7 +49,7 @@ const parseRange = (s: string): LogRange => {
         unit: 'bytes',
         length: parseInt(m[3], 10),
         low: parseInt(m[1], 10),
-        high: parseInt(m[2], 10)
+        high: parseInt(m[2], 10),
     };
 };
 
@@ -58,13 +58,13 @@ const toChunk = (data: string, range: LogRange): LogChunk => {
     // this will work only with our current implementation of the API
     return {
         data,
-        range
+        range,
     };
 };
 
 export const getLog = async (instanceId: ConcordId, range: LogRange): Promise<LogChunk> => {
     const opts = {
-        headers: formatRangeHeader(range)
+        headers: formatRangeHeader(range),
     };
 
     const resp = await managedFetch(`/api/v1/process/${instanceId}/log`, opts);
@@ -82,7 +82,7 @@ export enum SegmentStatus {
     OK = 'OK',
     FAILED = 'FAILED',
     RUNNING = 'RUNNING',
-    SUSPENDED = 'SUSPENDED'
+    SUSPENDED = 'SUSPENDED',
 }
 
 export interface LogSegmentEntry {
@@ -111,7 +111,7 @@ export const listLogSegments = async (
     const data: LogSegmentEntry[] = await fetchJson(
         `/api/v2/process/${instanceId}/log/segment?${queryParams({
             offset,
-            limit: limitParam
+            limit: limitParam,
         })}`
     );
 
@@ -123,7 +123,7 @@ export const listLogSegments = async (
 
     return {
         items: data,
-        next: hasMoreElements
+        next: hasMoreElements,
     };
 };
 
@@ -133,7 +133,7 @@ export const getSegmentLog = async (
     range: LogRange
 ): Promise<LogChunk> => {
     const opts = {
-        headers: formatRangeHeader(range)
+        headers: formatRangeHeader(range),
     };
 
     const resp = await managedFetch(
@@ -148,4 +148,35 @@ export const getSegmentLog = async (
 
     const data = await resp.text();
     return toChunk(data, parseRange(headers));
+};
+
+export class LogTooLargeError extends Error {
+    constructor(public readonly sizeBytes: number, public readonly limitBytes: number) {
+        super(`Log is too large (${sizeBytes} bytes, limit is ${limitBytes} bytes)`);
+        this.name = 'LogTooLargeError';
+    }
+}
+
+export const getFullSegmentLog = async (
+    instanceId: ConcordId,
+    segmentId: number,
+    maxBytes?: number
+): Promise<string> => {
+    if (maxBytes === undefined) {
+        const response = await managedFetch(
+            `/api/v2/process/${instanceId}/log/segment/${segmentId}/data`
+        );
+        return response.text();
+    }
+
+    // ask the server for at most maxBytes: it caps the query on its side (rather than
+    // loading the entire, potentially huge, segment into memory before we get a say),
+    // and the Content-Range total tells us the real size regardless of compression/chunking
+    const chunk = await getSegmentLog(instanceId, segmentId, { low: 0, high: maxBytes });
+    const total = chunk.range.length;
+    if (total !== undefined && total > maxBytes) {
+        throw new LogTooLargeError(total, maxBytes);
+    }
+
+    return chunk.data;
 };
