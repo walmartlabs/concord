@@ -113,9 +113,9 @@
                         <IT_SERVER_BASE_URL>http://localhost:${it.server.port}</IT_SERVER_BASE_URL>
                         <IT_WEBDRIVER_TYPE>${it.webdriver.type}</IT_WEBDRIVER_TYPE>
                     </environmentVariables>
-                    <systemProperties>
+                    <systemPropertyVariables>
                         <java.io.tmpdir>${tmp.dir}</java.io.tmpdir>
-                    </systemProperties>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>

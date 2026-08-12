@@ -95,10 +95,10 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <skipTests>${skip.it.tests}</skipTests>
-                    <systemProperties>
+                    <systemPropertyVariables>
                         <server.image>${server.image}</server.image>
                         <agent.image>${prev.agent.image}</agent.image>
-                    </systemProperties>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
 
