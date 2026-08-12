@@ -26,6 +26,7 @@ import com.walmartlabs.concord.sdk.Constants;
  * Implementation-specific constants.
  * @deprecated will be removed after the v2 runtime introduction.
  */
+@Deprecated
 public final class InternalConstants extends Constants {
 
     /**

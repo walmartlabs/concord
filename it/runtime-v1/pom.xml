@@ -106,13 +106,13 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <skipTests>${skip.it.tests}</skipTests>
-                    <systemProperties>
+                    <systemPropertyVariables>
                         <it.local.mode>${it.local.mode}</it.local.mode>
                         <db.image>${db.image}</db.image>
                         <server.image>${server.image}</server.image>
                         <agent.image>${agent.image}</agent.image>
                         <ryuk.image>${ryuk.image}</ryuk.image>
-                    </systemProperties>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>
