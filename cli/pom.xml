@@ -206,6 +206,7 @@
                                     </manifestEntries>
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                                <transformer implementation="com.walmartlabs.concord.build.shade.LicenseNoticeResourceTransformer" />
                             </transformers>
                             <filters>
                                 <filter>
