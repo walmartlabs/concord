@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.runtime.v1</groupId>
         <artifactId>parent</artifactId>
-        <version>2.43.1-SNAPSHOT</version>
+        <version>2.44.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -276,6 +276,8 @@
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
+                                        <exclude>module-info.class</exclude>
+                                        <exclude>META-INF/versions/**/module-info.class</exclude>
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>

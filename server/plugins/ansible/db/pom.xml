@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
         <artifactId>parent</artifactId>
-        <version>2.43.1-SNAPSHOT</version>
+        <version>2.44.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -159,7 +159,6 @@
                     <url>jdbc:postgresql://${db.host}:${db.port}/postgres</url>
                     <username>${db.username}</username>
                     <password>${db.password}</password>
-                    <promptOnNonLocalDatabase>false</promptOnNonLocalDatabase>
                     <expressionVariables>
                         <superuserAvailable>true</superuserAvailable>
                         <createExtensionAvailable>true</createExtensionAvailable>

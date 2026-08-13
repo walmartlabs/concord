@@ -20,6 +20,7 @@ package com.walmartlabs.concord.imports;
  * =====
  */
 
+import com.walmartlabs.concord.common.ZipService;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 
 import java.util.ArrayList;
@@ -31,17 +32,22 @@ public class ImportManagerFactory {
     private final DependencyManager dependencyManager;
     private final RepositoryExporter repositoryExporter;
     private final Set<String> disabledProcessors;
+    private final ZipService zipService;
 
-    public ImportManagerFactory(DependencyManager dependencyManager, RepositoryExporter repositoryExporter, Set<String> disabledProcessors) {
+    public ImportManagerFactory(DependencyManager dependencyManager,
+                                RepositoryExporter repositoryExporter,
+                                Set<String> disabledProcessors,
+                                ZipService zipService) {
         this.dependencyManager = dependencyManager;
         this.repositoryExporter = repositoryExporter;
         this.disabledProcessors = disabledProcessors;
+        this.zipService = zipService;
     }
 
     public ImportManager create() {
         List<ImportProcessor> processors = new ArrayList<>();
         processors.add(new RepositoryProcessor(repositoryExporter));
-        processors.add(new MvnProcessor(dependencyManager));
+        processors.add(new MvnProcessor(dependencyManager, zipService));
         processors.add(new DirectoryProcessor());
         return new DefaultImportManager(processors, disabledProcessors);
     }

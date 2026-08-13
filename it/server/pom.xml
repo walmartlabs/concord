@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>2.43.1-SNAPSHOT</version>
+        <version>2.44.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -258,11 +258,11 @@
                         <IT_PROJECT_VERSION>${project.version}</IT_PROJECT_VERSION>
                         <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
                     </environmentVariables>
-                    <systemProperties>
+                    <systemPropertyVariables>
                         <java.io.tmpdir>${tmp.dir}</java.io.tmpdir>
                         <isDocker>${is.docker.profile}</isDocker>
                         <local.mvn.repo>${local.repository.src.mount}</local.mvn.repo>
-                    </systemProperties>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
             <plugin>
