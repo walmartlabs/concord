@@ -126,6 +126,8 @@
                                 <transformer implementation="com.walmartlabs.concord.build.shade.LogbackManifestResourceTransformer">
                                     <mainClass>com.walmartlabs.concord.agentoperator.Operator</mainClass>
                                 </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                                <transformer implementation="com.walmartlabs.concord.build.shade.LicenseNoticeResourceTransformer" />
                             </transformers>
                             <filters>
                                 <filter>
