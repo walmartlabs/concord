@@ -27,11 +27,10 @@ import java.math.BigInteger;
 public final class GitHubUtils {
 
     // from github.secret configuration parameter
-    private static final String GITHUB_WEBHOOK_SECRET = "12345";
     private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
 
-    public static String sign(String payload) throws Exception {
-        SecretKeySpec signingKey = new SecretKeySpec(GITHUB_WEBHOOK_SECRET.getBytes(), HMAC_SHA1_ALGORITHM);
+    public static String sign(byte[] secretBytes, String payload) throws Exception {
+        SecretKeySpec signingKey = new SecretKeySpec(secretBytes, HMAC_SHA1_ALGORITHM);
         Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
         mac.init(signingKey);
         byte[] digest = mac.doFinal(payload.getBytes());
