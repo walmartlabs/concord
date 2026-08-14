@@ -57,6 +57,7 @@ import com.walmartlabs.concord.server.user.UserManager;
 import org.jooq.Configuration;
 
 import javax.inject.Inject;
+import javax.validation.Valid;
 import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.HttpHeaders;
@@ -295,8 +296,9 @@ public class ConsoleService implements Resource {
     @Path("/repository/test")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Validate
     @WithTimer
-    public boolean testRepository(RepositoryTestRequest req) {
+    public boolean testRepository(@Valid RepositoryTestRequest req) {
         OrganizationEntry org = orgManager.assertAccess(null, req.getOrgName(), false);
         ProjectEntry project = projectAccessManager.assertAccess(org.getId(), null, req.getProjectName(), ResourceAccessLevel.READER, false);
 
