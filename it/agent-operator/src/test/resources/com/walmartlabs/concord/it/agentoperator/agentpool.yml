@@ -1,0 +1,140 @@
+## Concord Agent Pool definition for the agent-operator ITs.
+##
+## Based on agent-operator/deploy/crds/example.agentpool.yml, but without
+## the "dind" sidecar - the test flow doesn't need Docker.
+##
+## "%%var%%" are template variables replaced by the test or by the operator:
+##
+## %%serverApiBaseUrl%% - Concord Server API URL reachable from k3s pods (the test)
+## %%serverWebsocketUrl%% - Concord Server websocket URL (the test)
+## %%agentToken%% - agent's API key, must match the server's defaultAgentToken (the test)
+## %%agentImage%% - concord-agent image reference, pre-imported into k3s (the test)
+## %%configMapName%% - name of the ConfigMap resource used by the Agent's pod (the operator)
+## %%podName%% - Agent's pod name (the operator)
+## %%app%% - the operator's label (the operator)
+## %%poolName%% - name of the pool, the operator automatically uses the CR's name as the pool name (the operator)
+## %%concordCfgHash%% - configuration hash (the operator)
+## %%preStopHook%% - content of the preStop script (the operator)
+
+apiVersion: concord.walmartlabs.com/v1alpha1
+kind: AgentPool
+metadata:
+  name: test-pool
+spec:
+  queueSelector:
+    agent:
+      flavor: "k8s-it"
+
+  autoScale: false
+  minSize: 1
+  maxSize: 1
+  size: 1
+
+  configMap:
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: "%%configMapName%%"
+    data:
+      mvn.json: |
+        {
+          "repositories": [
+            {
+              "id": "central",
+              "url": "https://repo.maven.apache.org/maven2/"
+            }
+          ]
+        }
+
+      agent.conf: |
+        concord-agent {
+          capabilities = {
+              flavor = "k8s-it"
+              k8s {
+                  cluster = "k3s-testcontainers"
+                  namespace = "default"
+                  pod = ${MY_POD_NAME}
+              }
+          }
+
+          workersCount = 1
+          dependencyResolveTimeout = "2 minutes"
+          logMaxDelay = "250 milliseconds"
+          pollInterval = "250 milliseconds"
+
+          server {
+              apiBaseUrl = "%%serverApiBaseUrl%%"
+              websocketUrl = "%%serverWebsocketUrl%%"
+              apiKey = "%%agentToken%%"
+              readTimeout = "10 minutes"
+          }
+        }
+      preStopHook.sh: "%%preStopHook%%"
+
+  pod:
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: "%%podName%%"
+      labels:
+        app: "%%app%%"
+        poolName: "%%poolName%%"
+        concordCfgHash: "%%concordCfgHash%%"
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: agent
+          image: "%%agentImage%%"
+          imagePullPolicy: Never
+          volumeMounts:
+            - mountPath: "/opt/concord/conf/agent.conf"
+              name: cfg
+              subPath: agent.conf
+            - mountPath: "/opt/concord/conf/mvn.json"
+              name: cfg
+              subPath: mvn.json
+            - mountPath: "/opt/concord/hooks/preStopHook.sh"
+              name: cfg
+              subPath: preStopHook.sh
+            - mountPath: "/tmp"
+              name: process-tmp
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1G"
+            limits:
+              cpu: 2
+              memory: "2G"
+          env:
+            - name: CONCORD_TMP_DIR
+              value: "/tmp/concord"
+            - name: CONCORD_CFG_FILE
+              value: "/opt/concord/conf/agent.conf"
+            - name: CONCORD_MAVEN_CFG
+              value: "/opt/concord/conf/mvn.json"
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: USER_AGENT
+              value: "k8s-agent $(MY_POD_NAMESPACE)/$(MY_POD_NAME) @ $(MY_POD_IP)"
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - "/bin/bash"
+                  - "/opt/concord/hooks/preStopHook.sh"
+      volumes:
+        - name: cfg
+          configMap:
+            name: "%%configMapName%%"
+        - name: process-tmp
+          emptyDir: { }
