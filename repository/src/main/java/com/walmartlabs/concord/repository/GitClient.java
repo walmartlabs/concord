@@ -217,7 +217,7 @@ public class GitClient {
         exec(Command.builder()
                 .workDir(workDir)
                 .timeout(cfg.defaultOperationTimeout())
-                .addArgs("checkout", "-q", "-f", "--", rev)
+                .addArgs("checkout", "-q", "-f", rev)
                 .build());
     }
 
@@ -225,7 +225,7 @@ public class GitClient {
         exec(Command.builder()
                 .workDir(workDir)
                 .timeout(cfg.defaultOperationTimeout())
-                .addArgs("reset", "--hard", "--", rev)
+                .addArgs("reset", "--hard", rev)
                 .build());
     }
 
@@ -241,7 +241,7 @@ public class GitClient {
         String result = exec(Command.builder()
                 .workDir(workDir)
                 .timeout(cfg.defaultOperationTimeout())
-                .addArgs("rev-parse", "--", rev)
+                .addArgs("rev-parse", rev)
                 .build());
         String line = result.trim();
         if (line.isEmpty()) {
