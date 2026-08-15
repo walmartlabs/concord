@@ -30,6 +30,7 @@ import com.walmartlabs.concord.it.common.ITUtils;
 import com.walmartlabs.concord.it.common.ServerClient;
 import org.eclipse.jgit.api.Git;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -186,7 +187,7 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
         Map<String, Object> payloadMap = client.getObjectMapper().readValue(payload, Map.class);
         payload = client.getObjectMapper().writeValueAsString(payloadMap);
 
-        client.addDefaultHeader("X-Hub-Signature", "sha1=" + GitHubUtils.sign(payload));
+        client.addDefaultHeader("X-Hub-Signature", "sha1=" + GitHubUtils.sign("09876".getBytes(StandardCharsets.UTF_8), payload));
 
         GitHubEventsApi eventsApi = new GitHubEventsApi(client);
         if (queryParams.isEmpty()) {

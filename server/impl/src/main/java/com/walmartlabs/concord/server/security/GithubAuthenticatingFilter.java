@@ -65,12 +65,25 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
     private final GithubConfiguration cfg;
     private final EncryptedProjectValueManager encryptedValueManager;
     private final ObjectMapper objectMapper;
+    private final boolean isReady;
 
     @Inject
     public GithubAuthenticatingFilter(GithubConfiguration cfg, EncryptedProjectValueManager encryptedValueManager, ObjectMapper objectMapper) {
         this.cfg = cfg;
         this.encryptedValueManager = encryptedValueManager;
         this.objectMapper = objectMapper;
+
+        String secret = cfg.getSecret();
+        if (secret == null || secret.isEmpty()) {
+            isReady = false;
+            log.warn("GithubAuthenticatingFilter is disabled because github.secret is not configured");
+        } else {
+            isReady = true;
+        }
+    }
+
+    public boolean isReady() {
+        return isReady;
     }
 
     @Override
@@ -81,6 +94,10 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
 
     @Override
     protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) throws Exception {
+        if (!isReady) {
+            throw new IllegalStateException("GithubAuthenticatingFilter is disabled because github.secret is not configured");
+        }
+
         CachingRequestWrapper req = (CachingRequestWrapper) request;
 
         final byte[] payload = req.getPayload();
