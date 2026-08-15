@@ -21,9 +21,11 @@ package com.walmartlabs.concord.it.runtime.v2;
  */
 
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
+import com.walmartlabs.concord.it.common.ITUtils;
 import org.testcontainers.images.PullPolicy;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,6 +35,7 @@ import java.util.Base64;
 
 public final class ConcordConfiguration {
 
+    public static final String AGENT_API_KEY = Base64.getEncoder().encodeToString(ITUtils.randomString().getBytes(StandardCharsets.UTF_8));
     private static final String DEPENDENCY_RESOLVE_TIMEOUT = System.getProperty("it.runtime.v2.dependencyResolveTimeout", "2 minutes");
 
     private static final Path sharedDir = Paths.get(System.getProperty("java.io.tmpdir")).resolve("concord-it");
@@ -76,6 +79,10 @@ public final class ConcordConfiguration {
                         process {
                             signingKeyPath = "%%sharedDir%%/signing.pem"
                         }
+                        websockets {
+                            # TODO set to true, uncomment agent api token, and create agent user + token like runtime-v1 ITs
+                            requirePermission = false
+                        }
                     }
                     concord-agent {
                         dependencyResolveTimeout = "%%dependencyResolveTimeout%%"
@@ -84,10 +91,14 @@ public final class ConcordConfiguration {
                         prefork {
                             enabled = true
                         }
+                        server {
+                            #apiKey = "%%agentApiKey%%"
+                        }
                     }
                     """
                         .replace("%%sharedDir%%", sharedDir().toString())
-                        .replace("%%dependencyResolveTimeout%%", DEPENDENCY_RESOLVE_TIMEOUT));
+                        .replace("%%dependencyResolveTimeout%%", DEPENDENCY_RESOLVE_TIMEOUT)
+                        .replace("%%agentApiKey%%", AGENT_API_KEY));
 
         boolean localMode = Boolean.parseBoolean(System.getProperty("it.local.mode"));
         if (localMode) {

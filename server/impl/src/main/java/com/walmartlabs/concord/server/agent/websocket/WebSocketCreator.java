@@ -22,8 +22,11 @@ package com.walmartlabs.concord.server.agent.websocket;
 
 import com.walmartlabs.concord.server.message.MessageChannelManager;
 import com.walmartlabs.concord.server.queueclient.QueueClient;
+import com.walmartlabs.concord.server.security.Permission;
+import com.walmartlabs.concord.server.security.UserSecurityContext;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyEntry;
+import org.apache.shiro.authz.AuthorizationException;
 import org.eclipse.jetty.ee8.websocket.server.JettyServerUpgradeRequest;
 import org.eclipse.jetty.ee8.websocket.server.JettyServerUpgradeResponse;
 import org.eclipse.jetty.ee8.websocket.server.JettyWebSocketCreator;
@@ -42,10 +45,19 @@ public class WebSocketCreator implements JettyWebSocketCreator {
 
     private final MessageChannelManager channelManager;
     private final ApiKeyDao apiKeyDao;
+    private final WebsocketsConfiguration cfg;
+    private final UserSecurityContext userSecurityContext;
 
-    public WebSocketCreator(MessageChannelManager channelManager, ApiKeyDao apiKeyDao) {
+    public WebSocketCreator(
+            MessageChannelManager channelManager,
+            ApiKeyDao apiKeyDao,
+            WebsocketsConfiguration cfg,
+            UserSecurityContext userSecurityContext
+    ) {
         this.channelManager = channelManager;
         this.apiKeyDao = apiKeyDao;
+        this.cfg = cfg;
+        this.userSecurityContext = userSecurityContext;
     }
 
     @Override
@@ -72,10 +84,36 @@ public class WebSocketCreator implements JettyWebSocketCreator {
             return null;
         }
 
+        if (cfg.isRequirePermission() && !hasPermission(apiKey.getUserId())) {
+            sendError(HttpServletResponse.SC_FORBIDDEN, "Permission denied", resp);
+            return null;
+        }
+
         String channelId = "ws-" + UUID.randomUUID();
         String agentId = req.getHeader(QueueClient.AGENT_ID);
         String userAgent = req.getHeader(QueueClient.AGENT_UA);
         return new WebSocketListener(channelManager, channelId, agentId, userAgent);
+    }
+
+    private boolean hasPermission(UUID userId) {
+        try {
+            return userSecurityContext.runAs(userId, () -> {
+                assertPermission(Permission.AGENT_WEBSOCKET);
+                return true;
+            });
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static void assertPermission(Permission p) {
+        if (p.isPermitted()) {
+            return;
+        }
+
+        throw new AuthorizationException(
+                String.format("Only roles with '%s' permission are allowed to connect websockets", p.getKey())
+        );
     }
 
     private static boolean invalidApiKey(String s) {

@@ -27,6 +27,7 @@ import com.walmartlabs.concord.common.cfg.OauthTokenConfig;
 import com.walmartlabs.concord.common.cfg.UnzipLimits;
 import com.walmartlabs.concord.config.ConfigModule;
 import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
+import com.walmartlabs.concord.server.agent.websocket.WebsocketsConfiguration;
 
 import static com.google.inject.Scopes.SINGLETON;
 
@@ -76,5 +77,6 @@ public class ConfigurationModule implements Module {
         binder.bind(TriggersConfiguration.class).in(SINGLETON);
         binder.bind(UnzipLimits.class).to(UnzipLimitsConfiguration.class).in(SINGLETON);
         binder.bind(WorkerMetricsConfiguration.class).in(SINGLETON);
+        binder.bind(WebsocketsConfiguration.class).in(SINGLETON);
     }
 }
