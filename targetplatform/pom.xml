@@ -122,7 +122,7 @@
         <sisu.version>1.0.0</sisu.version>
         <slf4j.version>2.0.18</slf4j.version>
         <snakeyaml.version>2.5</snakeyaml.version>
-        <sshd.version>2.15.0</sshd.version>
+        <sshd.version>2.18.0</sshd.version>
         <sysoutslf4j.version>1.0.2</sysoutslf4j.version>
         <testcontainers.concord.version>2.0.4</testcontainers.concord.version>
         <testcontainers.version>2.0.3</testcontainers.version>
