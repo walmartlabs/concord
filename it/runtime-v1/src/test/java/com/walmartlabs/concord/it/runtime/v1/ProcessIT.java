@@ -70,7 +70,7 @@ public class ProcessIT {
         JGitUtils.applyWorkarounds();
 
         try {
-            ITUtils.createAgentUser(concord.apiClient(), ConcordConfiguration.AGENT_API_KEY);
+            ITUtils.createAgentUser(concord.apiClient(), ConcordConfiguration.agentApiKey);
         } catch (ApiException e) {
             log.error("init -> error", e);
             throw new RuntimeException(e);

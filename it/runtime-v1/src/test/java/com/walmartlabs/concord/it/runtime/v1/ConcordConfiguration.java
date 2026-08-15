@@ -29,7 +29,7 @@ import java.util.Base64;
 
 public final class ConcordConfiguration {
 
-    public static final String AGENT_API_KEY = Base64.getEncoder().encodeToString(ITUtils.randomString().getBytes(StandardCharsets.UTF_8));
+    public static final String agentApiKey = Base64.getEncoder().encodeToString(ITUtils.randomString().getBytes(StandardCharsets.UTF_8));
 
     public static ConcordRule configure() {
         ConcordRule concord = new ConcordRule()
@@ -62,7 +62,7 @@ public final class ConcordConfiguration {
                                 apiKey = "%%agentApiKey%%"
                             }
                         }
-                        """.replace("%%agentApiKey%%", AGENT_API_KEY));
+                        """.replace("%%agentApiKey%%", agentApiKey));
 
         boolean localMode = Boolean.parseBoolean(System.getProperty("it.local.mode"));
         if (localMode) {
