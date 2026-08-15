@@ -76,6 +76,9 @@ public final class ConcordConfiguration {
                                 pollDelay = "250 milliseconds"
                             }
                         }
+                        github {
+                            secret = "09876"
+                        }
                         process {
                             signingKeyPath = "%%sharedDir%%/signing.pem"
                         }
