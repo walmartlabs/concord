@@ -28,6 +28,7 @@ import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -126,7 +127,7 @@ public class GitHubNonOrgEventIt extends AbstractServerIT {
         eventStr = getApiClient().getObjectMapper().writeValueAsString(event);
 
         ApiClient client = getApiClient();
-        client.addDefaultHeader("X-Hub-Signature", "sha1=" + GitHubUtils.sign(eventStr));
+        client.addDefaultHeader("X-Hub-Signature", "sha1=" + GitHubUtils.sign("09876".getBytes(StandardCharsets.UTF_8), eventStr));
 
         GitHubEventsApi gitHubEvents = new GitHubEventsApi(client);
 
