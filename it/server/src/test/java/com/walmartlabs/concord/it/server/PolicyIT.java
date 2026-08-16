@@ -108,7 +108,11 @@ public class PolicyIT extends AbstractServerIT {
 
         waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.RUNNING);
 
-        waitForCompletion(getApiClient(), spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(StatusEnum.FAILED, pir.getStatus(), "Forking beyond the max depth must fail the process");
+
+        byte[] ab = getLog(pir.getInstanceId());
+        assertLog(".*Found fork policy violations.*", ab);
     }
 
     @Test
