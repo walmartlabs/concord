@@ -152,7 +152,7 @@ public class AgentOperatorIT {
         serverUrl = "http://" + serverIp + ":8001";
         log.info("Concord Server URL for k3s pods: {}", serverUrl);
 
-        k3s = new K3sContainer(DockerImageName.parse(K3S_IMAGE))
+        k3s = new K3sContainer(DockerImageName.parse(K3S_IMAGE).asCompatibleSubstituteFor("rancher/k3s"))
                 .withNetwork(network)
                 .withNetworkAliases("k3s");
         k3s.start();
