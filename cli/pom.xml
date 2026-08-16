@@ -206,8 +206,15 @@
                                     </manifestEntries>
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                                <transformer implementation="com.walmartlabs.concord.build.shade.LicenseNoticeResourceTransformer" />
                             </transformers>
                             <filters>
+                                <filter>
+                                    <artifact>com.walmartlabs.concord.runtime.v2:concord-runner-v2</artifact>
+                                    <excludes>
+                                        <exclude>logback.xml</exclude>
+                                    </excludes>
+                                </filter>
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>

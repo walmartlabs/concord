@@ -322,6 +322,7 @@
                                     </manifestEntries>
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                                <transformer implementation="com.walmartlabs.concord.build.shade.LicenseNoticeResourceTransformer" />
                             </transformers>
                             <filters>
                                 <filter>
@@ -332,9 +333,6 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
-                                        <exclude>META-INF/NOTICE.txt</exclude>
-                                        <exclude>META-INF/LICENSE</exclude>
-                                        <exclude>META-INF/LICENSE.txt</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
