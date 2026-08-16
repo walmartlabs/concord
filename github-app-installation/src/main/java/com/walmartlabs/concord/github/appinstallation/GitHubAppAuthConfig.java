@@ -24,14 +24,24 @@ import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 
 import java.util.regex.Pattern;
 
-public record GitHubAppAuthConfig(String id,
-                                  String apiUrl,
-                                  String clientId,
-                                  String privateKey,
-                                  String username,
-                                  Pattern urlPattern) implements MappingAuthConfig {
+public record GitHubAppAuthConfig(
+        String id,
+        String apiUrl,
+        String clientId,
+        String privateKey,
+        String username,
+        Pattern urlPattern
+) implements MappingAuthConfig {
 
-    public GitHubAppAuthConfig(String id, String apiUrl, String clientId, String privateKey, String username, Pattern urlPattern) {
+    public GitHubAppAuthConfig(
+            String id,
+            String apiUrl,
+            String clientId,
+            String privateKey,
+            String username,
+            Pattern urlPattern
+    ) {
+
         if (clientId == null || clientId.isBlank()) {
             throw new IllegalArgumentException("clientId must be provided");
         }
