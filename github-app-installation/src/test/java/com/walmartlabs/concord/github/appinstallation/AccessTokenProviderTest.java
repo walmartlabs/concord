@@ -25,6 +25,8 @@ import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationC
 import com.walmartlabs.concord.github.appinstallation.exception.GitHubAppException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -32,6 +34,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandler;
 import java.util.List;
 
 import static com.walmartlabs.concord.github.appinstallation.TestConstants.PRIVATE_KEY_TEXT;
@@ -54,6 +57,9 @@ class AccessTokenProviderTest {
     @Mock
     HttpResponse<InputStream> accessTokenResponse;
 
+    @Captor
+    ArgumentCaptor<BodyHandler<InputStream>> bodyHandlerCaptor;
+
     private static final GitHubAppAuthConfig auth = new GitHubAppAuthConfig("test-auth", null, "123", PRIVATE_KEY_TEXT, null, MappingAuthConfig.assertBaseUrlPattern("(?<baseUrl>github.local)/"));
 
     private static final GitHubAppInstallationConfig CFG = GitHubAppInstallationConfig.builder()
@@ -61,9 +67,10 @@ class AccessTokenProviderTest {
             .build();
 
     @Test
-    void test() throws Exception {
-        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(tokenUrlResponse, accessTokenResponse);
+    void testValidTokenResponse() throws Exception {
+        when(httpClient.send(any(), bodyHandlerCaptor.capture()))
+                .thenReturn(tokenUrlResponse)
+                .thenReturn(accessTokenResponse);
 
         when(tokenUrlResponse.statusCode()).thenReturn(200);
         when(tokenUrlResponse.body()).thenReturn(asInputStream(ACCESS_TOKEN_INSTALLATION_RESPONSE));
@@ -86,7 +93,7 @@ class AccessTokenProviderTest {
 
     @Test
     void testAppNotInstalled() throws Exception {
-        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class)))
+        when(httpClient.send(any(), bodyHandlerCaptor.capture()))
                 .thenReturn(tokenUrlResponse);
 
         when(tokenUrlResponse.statusCode()).thenReturn(404);
@@ -106,8 +113,9 @@ class AccessTokenProviderTest {
 
     @Test
     void testErrorCreatingToken() throws Exception {
-        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(tokenUrlResponse, accessTokenResponse);
+        when(httpClient.send(any(), bodyHandlerCaptor.capture()))
+                .thenReturn(tokenUrlResponse)
+                .thenReturn(accessTokenResponse);
 
         when(tokenUrlResponse.statusCode()).thenReturn(200);
         when(tokenUrlResponse.body()).thenReturn(asInputStream(ACCESS_TOKEN_INSTALLATION_RESPONSE));
