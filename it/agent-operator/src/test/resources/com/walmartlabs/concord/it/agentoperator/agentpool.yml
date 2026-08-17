@@ -1,26 +1,33 @@
-## Concord Agent Pool definition
+## Concord Agent Pool definition for the agent-operator ITs.
 ##
-## "%%var%%" are template variables which will be replaces by the operator
+## Based on agent-operator/deploy/crds/example.agentpool.yml, but without
+## the "dind" sidecar - the test flow doesn't need Docker.
 ##
-## %%configMapName%% - name of the ConfigMap resource used by the Agent's pod
-## %%podName%% - Agent's pod name
-## %%app%% - the operator's label
-## %%poolName%% - name of the pool, the operator automatically uses the CR's name as the pool name
-## %%concordCfgHash%% - configuration hash
-## %%preStopHook%% - content of the preStop script
+## "%%var%%" are template variables replaced by the test or by the operator:
+##
+## %%serverApiBaseUrl%% - Concord Server API URL reachable from k3s pods (the test)
+## %%serverWebsocketUrl%% - Concord Server websocket URL (the test)
+## %%agentToken%% - agent's API key, must match the server's defaultAgentToken (the test)
+## %%agentImage%% - concord-agent image reference, pre-imported into k3s (the test)
+## %%configMapName%% - name of the ConfigMap resource used by the Agent's pod (the operator)
+## %%podName%% - Agent's pod name (the operator)
+## %%app%% - the operator's label (the operator)
+## %%poolName%% - name of the pool, the operator automatically uses the CR's name as the pool name (the operator)
+## %%concordCfgHash%% - configuration hash (the operator)
+## %%preStopHook%% - content of the preStop script (the operator)
 
 apiVersion: concord.walmartlabs.com/v1alpha1
 kind: AgentPool
 metadata:
-  name: example
+  name: test-pool
 spec:
   queueSelector:
     agent:
-      flavor: "k8s-test"
+      flavor: "k8s-it"
 
   autoScale: false
   minSize: 1
-  maxSize: 10
+  maxSize: 1
   size: 1
 
   configMap:
@@ -42,19 +49,23 @@ spec:
       agent.conf: |
         concord-agent {
           capabilities = {
-              flavor = "k8s-test"
+              flavor = "k8s-it"
               k8s {
-                  cluster = "minikube"
+                  cluster = "k3s-testcontainers"
                   namespace = "default"
                   pod = ${MY_POD_NAME}
               }
           }
 
           workersCount = 1
+          dependencyResolveTimeout = "2 minutes"
+          logMaxDelay = "250 milliseconds"
+          pollInterval = "250 milliseconds"
 
           server {
-              apiBaseUrl = "http://11.12.13.14:8001"
-              websocketUrl = "ws://11.12.13.14:8001/websocket"
+              apiBaseUrl = "%%serverApiBaseUrl%%"
+              websocketUrl = "%%serverWebsocketUrl%%"
+              apiKey = "%%agentToken%%"
               readTimeout = "10 minutes"
           }
         }
@@ -70,37 +81,10 @@ spec:
         poolName: "%%poolName%%"
         concordCfgHash: "%%concordCfgHash%%"
     spec:
-      terminationGracePeriodSeconds: 3600
+      terminationGracePeriodSeconds: 60
       containers:
-        - name: dind
-          image: "docker:latest"
-          args: [ "-H", "tcp://0.0.0.0:6666" ]
-          resources:
-            requests:
-              cpu: 1
-              memory: "2G"
-              ephemeral-storage: "2G"
-            limits:
-              cpu: 2
-              memory: "3G"
-              ephemeral-storage: "3G"
-          volumeMounts:
-            - name: "process-tmp"
-              mountPath: "/tmp"
-            - mountPath: "/hooks/preStopHook.sh"
-              name: cfg
-              subPath: preStopHook.sh
-          securityContext:
-            privileged: true
-          lifecycle:
-            preStop:
-              exec:
-                command:
-                  - "sh"
-                  - "/hooks/preStopHook.sh"
-
         - name: agent
-          image: "walmartlabs/concord-agent:latest"
+          image: "%%agentImage%%"
           imagePullPolicy: Never
           volumeMounts:
             - mountPath: "/opt/concord/conf/agent.conf"
@@ -116,7 +100,7 @@ spec:
               name: process-tmp
           resources:
             requests:
-              cpu: 1
+              cpu: "500m"
               memory: "1G"
             limits:
               cpu: 2
@@ -124,10 +108,6 @@ spec:
           env:
             - name: CONCORD_TMP_DIR
               value: "/tmp/concord"
-            - name: CONCORD_DOCKER_LOCAL_MODE
-              value: "false"
-            - name: DOCKER_HOST
-              value: "tcp://localhost:6666"
             - name: CONCORD_CFG_FILE
               value: "/opt/concord/conf/agent.conf"
             - name: CONCORD_MAVEN_CFG
