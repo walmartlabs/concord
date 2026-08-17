@@ -28,6 +28,7 @@
         <module>runtime-v1</module>
         <module>runtime-v2</module>
         <module>compat</module>
+        <module>agent-operator</module>
 
         <module>testing-server</module>
     </modules>
