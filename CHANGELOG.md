@@ -1,5 +1,16 @@
 # Change Log
 
+## [2.44.1] - TBD
+
+### Changed
+
+- agent-operator: only inform on target namespace
+([#1361](https://github.com/walmartlabs/concord/pull/1361));
+- docker: fix concord-server image dependency
+([#1364](https://github.com/walmartlabs/concord/pull/1364)).
+
+
+
 ## [2.44.0] - 2026-08-11
 
 ### Added
