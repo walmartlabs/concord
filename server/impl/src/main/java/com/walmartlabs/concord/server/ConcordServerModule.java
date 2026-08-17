@@ -40,6 +40,7 @@ import com.walmartlabs.concord.server.console.ConsoleModule;
 import com.walmartlabs.concord.server.events.EventModule;
 import com.walmartlabs.concord.server.message.MessageChannelManager;
 import com.walmartlabs.concord.server.metrics.MetricModule;
+import com.walmartlabs.concord.server.notifications.NotificationModule;
 import com.walmartlabs.concord.server.org.OrganizationModule;
 import com.walmartlabs.concord.server.policy.PolicyModule;
 import com.walmartlabs.concord.server.process.ProcessModule;
@@ -106,6 +107,7 @@ public class ConcordServerModule implements Module {
         binder.install(new AuditLogModule());
         binder.install(new ConsoleModule());
         binder.install(new EventModule());
+        binder.install(new NotificationModule());
         binder.install(new OrganizationModule());
         binder.install(new PolicyModule());
         binder.install(new ProcessModule());

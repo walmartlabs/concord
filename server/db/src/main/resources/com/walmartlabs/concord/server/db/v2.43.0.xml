@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="2430000" author="lauren.connors@walmart.com">
+        <createTable tableName="NOTIFICATIONS">
+            <column name="ID" type="uuid">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="USER_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="REPO_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="PROJECT_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="ORG_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="SUMMARY" type="varchar(256)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="BODY" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ACTION_LINK" type="varchar(256)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TRIGGER_EMAIL" type="bool" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DISMISSED_TIMESTAMP" type="timestamptz">
+                <constraints nullable="true"/>
+            </column>
+            <column name="DISMISSED_BY" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="CREATED_AT" type="timestamptz" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="NOTIFICATIONS"
+                                 baseColumnNames="DISMISSED_BY"
+                                 constraintName="FK_NOTIFICATIONS_DISMISSED_BY_USER_ID"
+                                 referencedTableName="USERS"
+                                 referencedColumnNames="USER_ID"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="NOTIFICATIONS"
+                                 baseColumnNames="USER_ID"
+                                 constraintName="FK_NOTIFICATIONS_USER_ID_USERS_USER_ID"
+                                 referencedTableName="USERS"
+                                 referencedColumnNames="USER_ID"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="NOTIFICATIONS"
+                                 baseColumnNames="REPO_ID"
+                                 constraintName="FK_NOTIFICATIONS_REPOSITORY_ID_REPOSITORY_ID"
+                                 referencedTableName="REPOSITORIES"
+                                 referencedColumnNames="REPO_ID"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="NOTIFICATIONS"
+                                 baseColumnNames="PROJECT_ID"
+                                 constraintName="FK_PROJECT_ID_PROJECT_ID"
+                                 referencedTableName="PROJECTS"
+                                 referencedColumnNames="PROJECT_ID"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="NOTIFICATIONS"
+                                 baseColumnNames="ORG_ID"
+                                 constraintName="FK_ORG_ID_ORG_ID"
+                                 referencedTableName="ORGANIZATIONS"
+                                 referencedColumnNames="ORG_ID"
+                                 onDelete="CASCADE"/>
+
+        <createTable tableName="NOTIFICATION_COMMUNICATION_HISTORY">
+            <column name="ID" type="uuid">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="NOTIFICATION_ID" type="uuid">
+                <constraints primaryKey="false" nullable="false"/>
+            </column>
+            <column name="EMAIL_TO" type="varchar(512)">
+                <constraints primaryKey="false" nullable="false"/>
+            </column>
+            <column name="EMAIL_CC" type="varchar(512)">
+                <constraints primaryKey="false" nullable="true"/>
+            </column>
+            <column name="EMAIL_BCC" type="varchar(512)">
+                <constraints primaryKey="false" nullable="true"/>
+            </column>
+            <column name="EMAIL_TIMESTAMP" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="NOTIFICATION_COMMUNICATION_HISTORY"
+                                 baseColumnNames="NOTIFICATION_ID"
+                                 constraintName="FK_NOTIFICATION_ID_COMMUNICATION_HISTORY"
+                                 referencedTableName="NOTIFICATIONS"
+                                 referencedColumnNames="ID"
+                                 onDelete="CASCADE"/>
+
+        <sql>ALTER TABLE notifications ADD CONSTRAINT chk_notifications_single_owner CHECK (num_nonnulls(user_id, org_id, project_id) = 1)</sql>
+        <sql>ALTER TABLE notifications ADD CONSTRAINT chk_notifications_repo_requires_project CHECK (repo_id IS NULL OR project_id IS NOT NULL)</sql>
+    </changeSet>
+
+    <changeSet id="2430001" author="lauren.connors@walmart.com">
+        <insert tableName="ROLES">
+            <column name="ROLE_NAME">concordModerator</column>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
