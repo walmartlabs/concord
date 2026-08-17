@@ -396,7 +396,7 @@ public class DockerProcessBuilder {
             return null;
         }
 
-        return "'" + s + "'";
+        return "'" + s.replace("'", "\"'\"") + "'";
     }
 
     private static String env(String k, String defaultValue) {
