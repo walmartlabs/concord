@@ -48,6 +48,13 @@ public class DefaultDockerService implements DockerService {
 
     private static final int SUCCESS_EXIT_CODE = 0;
     private static final String WORKSPACE_TARGET_DIR = "/workspace";
+    // Matches bare image names (alpine), namespaced (library/alpine), and fully-qualified
+    // (registry:port/path:tag, digest refs). Rejects whitespace and shell metacharacters.
+    private static final String VALID_DOCKER_IMAGE_REGEX =
+            "^(?:[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?(?::[0-9]+)?\\/)*" + // optional registry+port+path prefix
+            "[a-z0-9][a-z0-9._/-]*"                                     + // image name / path segments
+            "(?::[a-zA-Z0-9._-]+)?"                                     + // optional :tag
+            "(?:@sha256:[a-fA-F0-9]{64})?$";                              // optional @digest
 
     private static final Pattern[] REGISTRY_ERROR_PATTERNS = {
             Pattern.compile("Error response from daemon.*received unexpected HTTP status: 5.*"),
@@ -59,6 +66,16 @@ public class DefaultDockerService implements DockerService {
     private final InstanceId instanceId;
     private final List<String> extraVolumes;
     private final boolean exposeDockerDaemon;
+
+    static void validateDockerImage(String image) {
+        if( !image.matches(VALID_DOCKER_IMAGE_REGEX)) {
+            throw new IllegalArgumentException("Invalid image spec: " + image);
+        }
+    }
+
+    static void validateDockerSpec(DockerContainerSpec spec) {
+        validateDockerImage(spec.image());
+    }
 
     @Inject
     public DefaultDockerService(WorkingDirectory workingDirectory, InstanceId instanceId, RunnerConfiguration runnerCfg) {
@@ -104,6 +121,7 @@ public class DefaultDockerService implements DockerService {
     }
 
     private DockerProcess build(DockerContainerSpec spec) throws IOException {
+        validateDockerSpec(spec);
         DockerProcessBuilder b = DockerProcessBuilder.from(instanceId.getValue(), spec);
 
         b.env(createEffectiveEnv(spec.env(), exposeDockerDaemon));

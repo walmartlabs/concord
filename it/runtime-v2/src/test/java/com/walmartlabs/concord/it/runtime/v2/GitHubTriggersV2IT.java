@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
@@ -246,7 +247,7 @@ public class GitHubTriggersV2IT extends AbstractTest {
         payload = apiClient().getObjectMapper().writeValueAsString(event);
 
         ApiClient client = apiClient();
-        client.addDefaultHeader("X-Hub-Signature", "sha1=" + GitHubUtils.sign(payload));
+        client.addDefaultHeader("X-Hub-Signature", "sha1=" + GitHubUtils.sign("09876".getBytes(StandardCharsets.UTF_8), payload));
 
         GitHubEventsApi eventsApi = new GitHubEventsApi(client);
         eventsApi.onEvent( null, "abc", eventName, new ObjectMapper().readValue(payload, Map.class));
