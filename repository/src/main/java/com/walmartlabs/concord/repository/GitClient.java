@@ -254,7 +254,7 @@ public class GitClient {
         String result = execWithCredentials(Command.builder()
                 .workDir(workDir)
                 .timeout(cfg.defaultOperationTimeout())
-                .addArgs("ls-remote", "--symref", "origin", version)
+                .addArgs("ls-remote", "--symref", "--", "origin", version)
                 .build(), secret);
 
         List<Ref> refs = new ArrayList<>();
@@ -624,7 +624,7 @@ public class GitClient {
     private Path createUnixGitSSH(Path key) throws IOException {
         Path ssh = PathUtils.createTempFile("ssh", ".sh");
 
-        try (PrintWriter w = new PrintWriter(ssh.toFile(), Charset.defaultCharset().toString())) {
+        try (PrintWriter w = new PrintWriter(ssh.toFile(), Charset.defaultCharset())) {
             w.println("#!/bin/sh");
             // ${SSH_ASKPASS} might be ignored if ${DISPLAY} is not set
             w.println("if [ -z \"${DISPLAY}\" ]; then");
@@ -647,7 +647,7 @@ public class GitClient {
 
     private static Path createUnixStandardAskpass(UsernamePassword creds) throws IOException {
         Path askpass = PathUtils.createTempFile("pass", ".sh");
-        try (PrintWriter w = new PrintWriter(askpass.toFile(), Charset.defaultCharset().toString())) {
+        try (PrintWriter w = new PrintWriter(askpass.toFile(), Charset.defaultCharset())) {
             w.println("#!/bin/sh");
             w.println("case \"$1\" in");
             w.println("Username*) echo '" + quoteUnixCredentials(creds.getUsername()) + "' ;;");

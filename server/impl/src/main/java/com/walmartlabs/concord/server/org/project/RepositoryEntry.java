@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.*;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Map;
@@ -47,9 +48,14 @@ public class RepositoryEntry implements Serializable {
     private final String url;
 
     @Size(max = 255)
+    // Enforce git check-ref-format rules: no ASCII control chars, no whitespace,
+    // no DEL (0x7F), and none of the characters git explicitly forbids: ~ ^ : ? * [ \
+    @Pattern(regexp = "^[^\\x00-\\x20\\x7F~^:?*\\[\\\\]+$",
+             message = "Branch must be a valid git ref name (no whitespace or special characters ~^:?*[\\)")
     private final String branch;
 
     @Size(max = 64)
+    @Pattern(regexp = "^[0-9a-fA-F]+$", message = "Commit ID must be a hexadecimal SHA value")
     private final String commitId;
 
     @Size(max = 2048)
