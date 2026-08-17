@@ -37,65 +37,65 @@
 
         <activation.api.version>1.2.2</activation.api.version>
         <aopalliance.version>1.0</aopalliance.version>
-        <asm.version>9.10</asm.version>
+        <asm.version>9.10.1</asm.version>
         <aws.version>1.11.475</aws.version>
-        <bouncycastle.version>1.84</bouncycastle.version>
+        <bouncycastle.version>1.85</bouncycastle.version>
         <bpm.version>1.0.3</bpm.version>
-        <bytebuddy.version>1.14.9</bytebuddy.version>
-        <classmate.version>1.7.1</classmate.version>
+        <bytebuddy.version>1.18.12-jdk5</bytebuddy.version>
+        <classmate.version>1.7.3</classmate.version>
         <commons.beanutils.version>1.11.0</commons.beanutils.version>
-        <commons.codec.version>1.19.0</commons.codec.version>
+        <commons.codec.version>1.22.1</commons.codec.version>
         <commons.collections.version>3.2.2</commons.collections.version>
         <commons.compress.version>1.28.0</commons.compress.version>
-        <commons.email.version>1.5</commons.email.version>
-        <commons.io.version>2.20.0</commons.io.version>
-        <commons.lang.version>3.18.0</commons.lang.version>
-        <commons.text.version>1.12.0</commons.text.version>
-        <commons.validator.version>1.10.0</commons.validator.version>
-        <config.version>1.4.2</config.version>
-        <cronutils.version>9.2.0</cronutils.version>
-        <errorproneannotations.version>2.47.0</errorproneannotations.version>
+        <commons.email.version>1.6.0</commons.email.version>
+        <commons.io.version>2.22.0</commons.io.version>
+        <commons.lang.version>3.20.0</commons.lang.version>
+        <commons.text.version>1.15.0</commons.text.version>
+        <commons.validator.version>1.11.0</commons.validator.version>
+        <config.version>1.4.9</config.version>
+        <cronutils.version>9.2.1</cronutils.version>
+        <errorproneannotations.version>2.50.0</errorproneannotations.version>
         <glassfish.el.version>3.0.1-b12</glassfish.el.version>
-        <graalvm.version>25.0.3</graalvm.version>
-        <greenmail.version>1.6.5</greenmail.version>
-        <groovy.version>5.0.4</groovy.version>
-        <guava.version>33.6.0-jre</guava.version>
+        <graalvm.version>25.2.4</graalvm.version>
+        <greenmail.version>1.6.15</greenmail.version>
+        <groovy.version>5.1.0</groovy.version>
+        <guava.version>33.7.0-jre</guava.version>
         <guice.version>6.0.0</guice.version>
         <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
-        <hikaricp.version>6.0.0</hikaricp.version>
-        <httpclient.version>4.5.13</httpclient.version>
-        <httpcore.version>4.4.13</httpcore.version>
-        <httpmime.version>4.5.11</httpmime.version>
-        <immutables.version>2.9.3</immutables.version>
+        <hikaricp.version>6.3.3</hikaricp.version>
+        <httpclient.version>4.5.14</httpclient.version>
+        <httpcore.version>4.4.16</httpcore.version>
+        <httpmime.version>4.5.14</httpmime.version>
+        <immutables.version>2.12.2</immutables.version>
         <jackson.annotations.version>2.22</jackson.annotations.version>
-        <jackson.databind.version>2.22.1</jackson.databind.version>
-        <jackson.version>2.22.1</jackson.version>
-        <jansi.version>2.4.2</jansi.version>
+        <jackson.databind.version>2.22.2</jackson.databind.version>
+        <jackson.version>2.22.2</jackson.version>
+        <jansi.version>2.4.3</jansi.version>
         <javax.activation.version>1.2.0</javax.activation.version>
         <javax.annotations.api.version>1.3.2</javax.annotations.api.version>
         <javax.inject.version>1</javax.inject.version>
         <javax.mail.version>1.6.2</javax.mail.version>
         <javax.validation.version>2.0.1.Final</javax.validation.version>
-        <javax.ws.rs.version>2.0.1.Final</javax.ws.rs.version>
-        <javers.version>6.6.2</javers.version>
-        <jboss.logging>3.4.2.Final</jboss.logging>
+        <javax.ws.rs.version>2.0.2.Final</javax.ws.rs.version>
+        <javers.version>6.14.0</javers.version>
+        <jboss.logging>3.6.3.Final</jboss.logging>
         <jcl-over-slf4j.version>1.7.36</jcl-over-slf4j.version>
-        <jetbrain.annotations.version>23.0.0</jetbrain.annotations.version>
-        <jetty.version>12.0.36</jetty.version>
+        <jetbrain.annotations.version>23.1.0</jetbrain.annotations.version>
+        <jetty.version>12.1.12</jetty.version>
         <jgit.version>6.10.1.202505221210-r</jgit.version>
-        <jna.version>5.18.1</jna.version>
-        <jooq.version>3.19.33</jooq.version>
-        <jsch.version>2.27.3</jsch.version>
-        <json.schema.validator.version>1.5.4</json.schema.validator.version>
-        <json.smart.version>2.5.2</json.smart.version>
+        <jna.version>5.19.1</jna.version>
+        <jooq.version>3.21.7</jooq.version>
+        <jsch.version>2.28.6</jsch.version>
+        <json.schema.validator.version>1.5.9</json.schema.validator.version>
+        <json.smart.version>2.6.0</json.smart.version>
         <jsr305.version>3.0.2</jsr305.version>
-        <junit.version>5.9.1</junit.version>
+        <junit.version>5.14.4</junit.version>
         <kafka.client.version>3.9.2</kafka.client.version>
-        <kerby.version>2.0.1</kerby.version>
-        <kubernetes.client.version>7.0.1</kubernetes.client.version>
+        <kerby.version>2.1.2</kerby.version>
+        <kubernetes.client.version>7.8.0</kubernetes.client.version>
         <launcher.version>0.128</launcher.version>
-        <liquibase.version>4.29.2</liquibase.version>
-        <logback.version>1.5.34</logback.version>
+        <liquibase.version>4.33.0</liquibase.version>
+        <logback.version>1.6.3</logback.version>
         <maven.annotation.version>3.5</maven.annotation.version>
         <maven.api.version>3.0.5</maven.api.version>
         <maven.artifact.version>3.9.15</maven.artifact.version>
@@ -104,32 +104,32 @@
         <maven.model.builder.version>3.9.15</maven.model.builder.version>
         <maven.resolver.version>1.9.27</maven.resolver.version>
         <maven.resolver.version.concord>0.0.4</maven.resolver.version.concord>
-        <metrics.version>4.2.25</metrics.version>
-        <mockito.version>4.9.0</mockito.version>
-        <mustache.version>0.9.10</mustache.version>
-        <nimbus.jwt.version>10.5</nimbus.jwt.version>
+        <metrics.version>4.2.39</metrics.version>
+        <mockito.version>4.11.0</mockito.version>
+        <mustache.version>0.9.14</mustache.version>
+        <nimbus.jwt.version>10.9.1</nimbus.jwt.version>
         <parc.version>0.1.2</parc.version>
-        <picocli.version>4.7.0</picocli.version>
-        <postgres.version>42.7.12</postgres.version>
+        <picocli.version>4.7.7</picocli.version>
+        <postgres.version>42.7.13</postgres.version>
         <prometheus.simpleclient.version>0.16.0</prometheus.simpleclient.version>
-        <reactive.streams.version>1.0.3</reactive.streams.version>
-        <reflections.version>0.9.11</reflections.version>
-        <resteasy.version>4.7.9.Final</resteasy.version>
-        <selenium.version>4.27.0</selenium.version>
+        <reactive.streams.version>1.0.4</reactive.streams.version>
+        <reflections.version>0.10.2</reflections.version>
+        <resteasy.version>4.7.10.Final</resteasy.version>
+        <selenium.version>4.47.0</selenium.version>
         <servlet.version>4.0.1</servlet.version>
         <shiro.version>2.2.1</shiro.version>
         <siesta.version>2.3.2</siesta.version>
-        <sisu.version>1.0.0</sisu.version>
+        <sisu.version>1.1.0</sisu.version>
         <slf4j.version>2.0.18</slf4j.version>
-        <snakeyaml.version>2.5</snakeyaml.version>
-        <sshd.version>2.18.0</sshd.version>
+        <snakeyaml.version>2.6</snakeyaml.version>
+        <sshd.version>2.19.0</sshd.version>
         <sysoutslf4j.version>1.0.2</sysoutslf4j.version>
-        <testcontainers.concord.version>2.0.4</testcontainers.concord.version>
-        <testcontainers.version>2.0.3</testcontainers.version>
+        <testcontainers.concord.version>2.0.5</testcontainers.concord.version>
+        <testcontainers.version>2.0.5</testcontainers.version>
         <threetenbp.version>1.3.5</threetenbp.version>
-        <uuid.generator.version>5.1.0</uuid.generator.version>
+        <uuid.generator.version>5.2.0</uuid.generator.version>
         <victools.jsonschema.version>4.38.0</victools.jsonschema.version>
-        <wiremock.version>3.10.0</wiremock.version>
+        <wiremock.version>3.13.2</wiremock.version>
     </properties>
 
     <dependencyManagement>
