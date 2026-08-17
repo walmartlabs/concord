@@ -30,7 +30,7 @@ Make sure the API token used in the `operator.yml` is valid and working.
 2. Build the operator's image:
   ```
   $ eval $(minikube docker-env)
-  $ cd concord/agent-operator
+  $ cd docker-images/agent-operator
   $ docker build . -t walmartlabs/concord-agent-operator:latest
   ```
 3. Build the app's images (might take a while, depending on cached layers
@@ -104,6 +104,31 @@ minikube kubectl -- logs -f <pod_name> -c <container_name> -n default
   ```
 4. Check the operator's pod logs;
 5. Deploy one or more CRs using `deploy/crds/example.agentpool.yml` as a template.
+
+## Debug deployed agent-operator pod
+
+Edit the operator deployment and add an environment variable for `JAVA_TOOL_OPTIONS`:
+
+```
+# ...
+      containers:
+      # ...
+      - name: concord-agent-operator
+        env:
+          - name: JAVA_TOOL_OPTIONS
+            value: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+      # ...
+```
+
+Use `suspend=y` to force the JVM to wait for a debugger to attach before executing
+`Operator.main(String args[])`.
+
+Then forward the pod's debugger port to a local port
+
+```
+# forward local port 5006 to pod port 5005
+$ kubectl port-forward -n default pod/<agent-operator-pod-name> 5006:5005
+```
 
 ## How To Release New Versions
 

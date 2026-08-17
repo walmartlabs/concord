@@ -22,6 +22,13 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.walmartlabs.concord.docker</groupId>
+            <artifactId>concord-base</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+        </dependency>
+
         <!-- dependency tree fix for mvnd -->
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>

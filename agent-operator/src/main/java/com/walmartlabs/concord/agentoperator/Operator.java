@@ -73,7 +73,6 @@ public class Operator {
         };
 
         var informer = k8sClient.resources(AgentPool.class, AgentPoolList.class)
-                .inAnyNamespace()
                 .inform(handler, RESYNC_PERIOD);
 
         scheduler.start();

@@ -78,15 +78,14 @@ public class Scheduler {
 
         for (Event e : evs) {
             AgentPool resource = e.getResource();
-            String resourceName = resource.getMetadata().getName();
 
             switch (e.getType()) {
                 case MODIFIED: {
-                    onAdd(resourceName, resource);
+                    onAdd(resource);
                     break;
                 }
                 case DELETED: {
-                    onDelete(resourceName);
+                    onDelete(resource);
                     break;
                 }
                 default:
@@ -127,23 +126,25 @@ public class Scheduler {
         });
     }
 
-    private void onAdd(String resourceName, AgentPool resource) {
+    private void onAdd(AgentPool resource) {
+        String resourceName = resource.getMetadata().getName();
         int targetSize = resource.getSpec().getSize();
         synchronized (pools) {
             long currentTimeStamp = System.currentTimeMillis();
-            pools.put(resourceName, new AgentPoolInstance(resourceName, resource, AgentPoolInstance.Status.ACTIVE,
+            pools.put(poolKey(resource), new AgentPoolInstance(resourceName, resource, AgentPoolInstance.Status.ACTIVE,
                     targetSize, currentTimeStamp, currentTimeStamp, currentTimeStamp));
         }
     }
 
-    private void onDelete(String resourceName) {
+    private void onDelete(AgentPool resource) {
+        String poolKey = poolKey(resource);
         synchronized (pools) {
-            AgentPoolInstance i = pools.get(resourceName);
+            AgentPoolInstance i = pools.get(poolKey);
             if (i == null) {
                 return;
             }
 
-            pools.put(resourceName, AgentPoolInstance.updateStatus(i, AgentPoolInstance.Status.DELETED));
+            pools.put(poolKey, AgentPoolInstance.updateStatus(i, AgentPoolInstance.Status.DELETED));
         }
     }
 
@@ -155,7 +156,7 @@ public class Scheduler {
         AgentPoolInstance result = autoScalerFactory.create(i).apply(i);
 
         synchronized (pools) {
-            pools.put(i.getName(), result);
+            pools.put(poolKey(i), result);
         }
 
         return result;
@@ -179,7 +180,7 @@ public class Scheduler {
         List<Pod> pods = AgentPod.list(k8sClient, resourceName);
         if (pods.isEmpty()) {
             synchronized (pools) {
-                pools.remove(resourceName);
+                pools.remove(poolKey(i));
                 log.info("processDeleted ['{}'] -> no pods left, the pool was removed", resourceName);
             }
         } else {
@@ -197,6 +198,14 @@ public class Scheduler {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    private static String poolKey(AgentPool resource) {
+        return resource.getMetadata().getNamespace() + "/" + resource.getMetadata().getName();
+    }
+
+    private static String poolKey(AgentPoolInstance instance) {
+        return poolKey(instance.getResource());
     }
 
     private class Worker implements Runnable {
