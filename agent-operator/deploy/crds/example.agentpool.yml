@@ -73,8 +73,8 @@ spec:
       terminationGracePeriodSeconds: 3600
       containers:
         - name: dind
-          image: "docker:dind"
-          args: [ "-H tcp://0.0.0.0:6666" ]
+          image: "docker:latest"
+          args: [ "-H", "tcp://0.0.0.0:6666" ]
           resources:
             requests:
               cpu: 1
