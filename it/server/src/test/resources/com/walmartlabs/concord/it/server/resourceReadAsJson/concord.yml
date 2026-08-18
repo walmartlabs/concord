@@ -1,5 +1,0 @@
-flows:
-  default:
-    - expr: ${resource.asJson('sample.json')}
-      out: jsonObj
-    - log: "Hello ${jsonObj.name}!"

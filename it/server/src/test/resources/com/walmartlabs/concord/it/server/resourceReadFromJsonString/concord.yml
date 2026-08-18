@@ -1,7 +1,0 @@
-flows:
-  default:
-    - set:
-        jsonString: '{"name":"Concord"}'
-    - expr: ${resource.fromJsonString(jsonString)}
-      out: jsonObj
-    - log: "Hello ${jsonObj.name}!"

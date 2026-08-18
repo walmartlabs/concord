@@ -26,13 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.Select;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.console.Utils.DEFAULT_TEST_TIMEOUT;
@@ -88,31 +83,18 @@ public class SecretIT {
 
         createOrg(client, orgName);
         createUsernamePasswordSecret(client, orgName, secretName, SecretEntryV2.VisibilityEnum.PUBLIC);
-        createTeamWithUser(client, orgName, teamName);
+        TeamAccessUi.createTeamWithUser(client, orgName, teamName);
 
         consoleRule.login(Concord.ADMIN_API_KEY);
         consoleRule.navigateToRelative("/#/org/" + orgName + "/secret/" + secretName + "/access");
         consoleRule.waitForLoad();
 
-        var editButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-edit-btn']"));
-        editButton.click();
-        Thread.sleep(500);
+        TeamAccessUi.startEditing(consoleRule);
 
-        var teamDropdown = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-add-dropdown'] input"));
-        teamDropdown.click();
-        new Actions(consoleRule.getDriver())
-                .sendKeys(teamName)
-                .pause(500)
-                .sendKeys(Keys.ENTER)
-                .perform();
-        Thread.sleep(500);
-
-        var teamRow = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-row-" + teamName + "']"));
+        var teamRow = TeamAccessUi.addTeam(consoleRule, teamName);
         assertNotNull(teamRow);
 
-        var saveButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-save-btn']:not([disabled])"));
-        saveButton.click();
-        Thread.sleep(1500);
+        TeamAccessUi.save(consoleRule);
 
         var accessList = new SecretsApi(client).getSecretAccessLevel(orgName, secretName);
         assertEquals(1, accessList.size());
@@ -140,19 +122,4 @@ public class SecretIT {
                 .build());
     }
 
-    private void createTeamWithUser(ApiClient client, String orgName, String teamName) throws Exception {
-        var teamsApi = new TeamsApi(client);
-        teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name(teamName));
-
-        var userName = "user_" + ITUtils.randomString();
-        var usersApi = new UsersApi(client);
-        usersApi.createOrUpdateUser(new CreateUserRequest()
-                .username(userName)
-                .type(CreateUserRequest.TypeEnum.LOCAL));
-
-        teamsApi.addUsersToTeam(orgName, teamName, false,
-                Collections.singletonList(new TeamUserEntry()
-                        .username(userName)
-                        .role(TeamUserEntry.RoleEnum.MEMBER)));
-    }
 }

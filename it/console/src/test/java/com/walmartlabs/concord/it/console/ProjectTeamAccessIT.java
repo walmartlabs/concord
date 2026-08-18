@@ -26,11 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.Actions;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -58,8 +55,8 @@ public class ProjectTeamAccessIT {
 
         String team1Name = "team_" + ITUtils.randomString();
         String team2Name = "team_" + ITUtils.randomString();
-        createTeamWithUser(client, orgName, team1Name);
-        createTeamWithUser(client, orgName, team2Name);
+        TeamAccessUi.createTeamWithUser(client, orgName, team1Name);
+        TeamAccessUi.createTeamWithUser(client, orgName, team2Name);
 
         assignTeamAccess(client, orgName, projectName, team1Name, ResourceAccessEntry.LevelEnum.READER);
 
@@ -78,29 +75,16 @@ public class ProjectTeamAccessIT {
 
         // ---
 
-        WebElement editButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-edit-btn']"));
-        editButton.click();
-        Thread.sleep(500);
+        TeamAccessUi.startEditing(consoleRule);
 
         // ---
 
-        WebElement teamDropdown = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-add-dropdown'] input"));
-        teamDropdown.click();
-        new Actions(consoleRule.getDriver())
-                .sendKeys(team2Name)
-                .pause(500)
-                .sendKeys(Keys.ENTER)
-                .perform();
-        Thread.sleep(500);
-
-        WebElement team2Row = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-row-" + team2Name + "']"));
+        WebElement team2Row = TeamAccessUi.addTeam(consoleRule, team2Name);
         assertTrue(team2Row.getDomAttribute("class").contains("positive"));
 
         // ---
 
-        WebElement saveButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-save-btn']:not([disabled])"));
-        saveButton.click();
-        Thread.sleep(1500);
+        TeamAccessUi.save(consoleRule);
 
         // ---
 
@@ -125,7 +109,7 @@ public class ProjectTeamAccessIT {
         createOrgAndProject(client, orgName, projectName);
 
         String teamName = "team_" + ITUtils.randomString();
-        createTeamWithUser(client, orgName, teamName);
+        TeamAccessUi.createTeamWithUser(client, orgName, teamName);
 
         assignTeamAccess(client, orgName, projectName, teamName, ResourceAccessEntry.LevelEnum.READER);
 
@@ -142,9 +126,7 @@ public class ProjectTeamAccessIT {
 
         // ---
 
-        WebElement editButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-edit-btn']"));
-        editButton.click();
-        Thread.sleep(500);
+        TeamAccessUi.startEditing(consoleRule);
 
         // ---
 
@@ -158,9 +140,7 @@ public class ProjectTeamAccessIT {
 
         // ---
 
-        WebElement saveButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-save-btn']"));
-        saveButton.click();
-        Thread.sleep(1500);
+        TeamAccessUi.save(consoleRule);
 
         // ---
 
@@ -187,8 +167,8 @@ public class ProjectTeamAccessIT {
 
         String team1Name = "team_" + ITUtils.randomString();
         String team2Name = "team_" + ITUtils.randomString();
-        createTeamWithUser(client, orgName, team1Name);
-        createTeamWithUser(client, orgName, team2Name);
+        TeamAccessUi.createTeamWithUser(client, orgName, team1Name);
+        TeamAccessUi.createTeamWithUser(client, orgName, team2Name);
 
         assignTeamAccess(client, orgName, projectName, team1Name, ResourceAccessEntry.LevelEnum.READER);
         assignTeamAccess(client, orgName, projectName, team2Name, ResourceAccessEntry.LevelEnum.WRITER);
@@ -206,9 +186,7 @@ public class ProjectTeamAccessIT {
 
         // ---
 
-        WebElement editButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-edit-btn']"));
-        editButton.click();
-        Thread.sleep(500);
+        TeamAccessUi.startEditing(consoleRule);
 
         // ---
 
@@ -228,9 +206,7 @@ public class ProjectTeamAccessIT {
 
         // ---
 
-        WebElement saveButton = consoleRule.waitFor(By.cssSelector("[data-testid='team-access-save-btn']"));
-        saveButton.click();
-        Thread.sleep(1500);
+        TeamAccessUi.save(consoleRule);
 
         // ---
 
@@ -254,21 +230,6 @@ public class ProjectTeamAccessIT {
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(projectName));
     }
 
-    private void createTeamWithUser(ApiClient client, String orgName, String teamName) throws Exception {
-        TeamsApi teamsApi = new TeamsApi(client);
-        teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name(teamName));
-
-        String userName = "user_" + ITUtils.randomString();
-        UsersApi usersApi = new UsersApi(client);
-        usersApi.createOrUpdateUser(new CreateUserRequest()
-                .username(userName)
-                .type(CreateUserRequest.TypeEnum.LOCAL));
-
-        teamsApi.addUsersToTeam(orgName, teamName, false,
-                Collections.singletonList(new TeamUserEntry()
-                        .username(userName)
-                        .role(TeamUserEntry.RoleEnum.MEMBER)));
-    }
 
     private void assignTeamAccess(ApiClient client, String orgName, String projectName,
                                   String teamName, ResourceAccessEntry.LevelEnum level) throws Exception {

@@ -49,26 +49,12 @@ public class AttachmentRbacIT extends AbstractServerIT {
         // add the users A, B and C
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        String userAName = "userA_" + randomString();
-        usersApi.createOrUpdateUser(new CreateUserRequest().
-                username(userAName).type(CreateUserRequest.TypeEnum.LOCAL));
 
-        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse apiKeyA = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
+        TestUser userA = createUser("userA");
+        TestUser userB = createUser("userB");
 
-        String userBName = "userB_" + randomString();
-        usersApi.createOrUpdateUser(new CreateUserRequest()
-                .username(userBName)
-                .type(CreateUserRequest.TypeEnum.LOCAL));
-
-        CreateApiKeyResponse apiKeyB = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userBName));
-
-        String userCName = "userC_" + randomString();
-        usersApi.createOrUpdateUser(new CreateUserRequest()
-                .username(userCName)
-                .type(CreateUserRequest.TypeEnum.LOCAL));
-        UUID userCUUID = usersApi.findByUsername(userCName).getId();
-        CreateApiKeyResponse apiKeyC = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userCName));
+        TestUser userC = createUser("userC");
+        UUID userCUUID = usersApi.findByUsername(userC.username).getId();
 
         // create the user A's team
 
@@ -77,21 +63,13 @@ public class AttachmentRbacIT extends AbstractServerIT {
         TeamsApi teamsApi = new TeamsApi(getApiClient());
         CreateTeamResponse ctr = teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name(teamName));
 
-        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .username(userAName)
-                .role(TeamUserEntry.RoleEnum.MEMBER)));
-
-        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .username(userCName)
-                .role(TeamUserEntry.RoleEnum.OWNER)));
-
-        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .username(userBName)
-                .role(TeamUserEntry.RoleEnum.MEMBER)));
+        addUserToTeam(orgName, teamName, userA.username, TeamUserEntry.RoleEnum.MEMBER);
+        addUserToTeam(orgName, teamName, userC.username, TeamUserEntry.RoleEnum.OWNER);
+        addUserToTeam(orgName, teamName, userB.username, TeamUserEntry.RoleEnum.MEMBER);
 
         // switch to the user A and create a new private project
 
-        setApiKey(apiKeyA.getKey());
+        setApiKey(userA.apiKey.getKey());
 
         String projectName = "project_" + randomString();
 
@@ -131,7 +109,7 @@ public class AttachmentRbacIT extends AbstractServerIT {
 
         // switch to admin and add the user B
 
-        setApiKey(apiKeyA.getKey());
+        setApiKey(userA.apiKey.getKey());
 
         ProjectEntry projectEntry = projectsApi.getProject(orgName, projectName);
 
@@ -162,7 +140,7 @@ public class AttachmentRbacIT extends AbstractServerIT {
 
         // switch to the user B (non admin) and try to list and download the attachments
 
-        setApiKey(apiKeyB.getKey());
+        setApiKey(userB.apiKey.getKey());
 
         // Non-admin who is only a member shall not able to list the attachments
         try {
@@ -183,7 +161,7 @@ public class AttachmentRbacIT extends AbstractServerIT {
 
         // Switch to userC who should be able to list and download the attachments since its
         // set to owner of the project
-        setApiKey(apiKeyC.getKey());
+        setApiKey(userC.apiKey.getKey());
 
         attachments = processApi.listAttachments(spr.getInstanceId());
         assertNotNull(attachments, "Attachments shall not be null for non-admin who is a owner");
