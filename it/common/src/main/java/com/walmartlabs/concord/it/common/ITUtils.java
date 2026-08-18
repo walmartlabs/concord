@@ -20,6 +20,14 @@ package com.walmartlabs.concord.it.common;
  * =====
  */
 
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ApiException;
+import com.walmartlabs.concord.client2.ApiKeysV2Api;
+import com.walmartlabs.concord.client2.CreateApiKeyRequest;
+import com.walmartlabs.concord.client2.CreateUserRequest;
+import com.walmartlabs.concord.client2.RoleEntry;
+import com.walmartlabs.concord.client2.RolesApi;
+import com.walmartlabs.concord.client2.UsersApi;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.common.ZipUtils;
@@ -129,6 +137,26 @@ public final class ITUtils {
         }
 
         return tmpDir;
+    }
+
+    public static void createAgentUser(ApiClient apiClient, String apiKey) throws ApiException {
+            new RolesApi(apiClient)
+                    .createOrUpdateRole(new RoleEntry()
+                            .name("agentWebsocket")
+                            .addpermissionsItem("agentWebsocket"));
+
+            var userApi = new UsersApi(apiClient);
+            var agentUser = userApi.createOrUpdateUser(new CreateUserRequest()
+                    .username("agent")
+                    .userType(CreateUserRequest.UserTypeEnum.LOCAL)
+                    .addrolesItem("agentWebsocket")
+            );
+
+            new ApiKeysV2Api(apiClient)
+                    .createOrUpdateUserApiKey(new CreateApiKeyRequest()
+                        .key(apiKey)
+                        .userType(CreateApiKeyRequest.UserTypeEnum.LOCAL)
+                        .userId(agentUser.getId()));
     }
 
     private ITUtils() {

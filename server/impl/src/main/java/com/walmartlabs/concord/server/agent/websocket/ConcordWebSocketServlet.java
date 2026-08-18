@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.agent.websocket;
  */
 
 import com.walmartlabs.concord.server.message.MessageChannelManager;
+import com.walmartlabs.concord.server.security.UserSecurityContext;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import org.eclipse.jetty.ee8.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.ee8.websocket.server.JettyWebSocketServletFactory;
@@ -37,16 +38,25 @@ public class ConcordWebSocketServlet extends JettyWebSocketServlet {
 
     private final MessageChannelManager channelManager;
     private final ApiKeyDao apiKeyDao;
+    private final UserSecurityContext userSecurityContext;
+    private final WebsocketsConfiguration cfg;
 
     @Inject
-    public ConcordWebSocketServlet(MessageChannelManager channelManager, ApiKeyDao apiKeyDao) {
+    public ConcordWebSocketServlet(
+            MessageChannelManager channelManager,
+            ApiKeyDao apiKeyDao,
+            WebsocketsConfiguration cfg,
+            UserSecurityContext userSecurityContext
+    ) {
         this.channelManager = channelManager;
         this.apiKeyDao = apiKeyDao;
+        this.cfg = cfg;
+        this.userSecurityContext = userSecurityContext;
     }
 
     @Override
     public void configure(JettyWebSocketServletFactory factory) {
-        factory.setCreator(new WebSocketCreator(channelManager, apiKeyDao));
+        factory.setCreator(new WebSocketCreator(channelManager, apiKeyDao, cfg, userSecurityContext));
     }
 
     @Override

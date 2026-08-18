@@ -46,7 +46,11 @@ public enum Permission {
      * <p>
      * As in {@code com/walmartlabs/concord/server/db/v2.31.0.xml}
      */
-    API_KEY_SPECIFY_VALUE("apiKeySpecifyValue");
+    API_KEY_SPECIFY_VALUE("apiKeySpecifyValue"),
+    /**
+     * Permission to connect a websocket as an agent
+     */
+    AGENT_WEBSOCKET("agentWebsocket"),;
 
     private final String key;
 

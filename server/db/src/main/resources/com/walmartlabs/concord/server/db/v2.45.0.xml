@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <property name="agentWebsocketPermissionId" value="2aaf4dbb-9a59-41e7-9748-1e9928a8bc04"/>
+
+    <changeSet id="2450000" author="benjamin.broadaway@walmart.com">
+        <insert tableName="PERMISSIONS">
+            <column name="PERMISSION_ID" value="${agentWebsocketPermissionId}"/>
+            <column name="PERMISSION_NAME" value="agentWebsocket"/>
+            <column name="DESCRIPTION" value="Allows users to connect websockets"/>
+        </insert>
+
+        <sql>
+            insert into ROLE_PERMISSIONS values (
+                (select ROLE_ID from ROLES where ROLE_NAME = 'concordAdmin'),
+                '${agentWebsocketPermissionId}'
+            )
+        </sql>
+    </changeSet>
+</databaseChangeLog>

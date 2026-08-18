@@ -22,6 +22,8 @@ package com.walmartlabs.concord.server.agent.websocket;
 
 import com.walmartlabs.concord.server.message.MessageChannelManager;
 import com.walmartlabs.concord.server.queueclient.QueueClient;
+import com.walmartlabs.concord.server.security.Permission;
+import com.walmartlabs.concord.server.security.UserSecurityContext;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyEntry;
 import org.eclipse.jetty.ee8.websocket.server.JettyServerUpgradeRequest;
@@ -42,10 +44,19 @@ public class WebSocketCreator implements JettyWebSocketCreator {
 
     private final MessageChannelManager channelManager;
     private final ApiKeyDao apiKeyDao;
+    private final WebsocketsConfiguration cfg;
+    private final UserSecurityContext userSecurityContext;
 
-    public WebSocketCreator(MessageChannelManager channelManager, ApiKeyDao apiKeyDao) {
+    public WebSocketCreator(
+            MessageChannelManager channelManager,
+            ApiKeyDao apiKeyDao,
+            WebsocketsConfiguration cfg,
+            UserSecurityContext userSecurityContext
+    ) {
         this.channelManager = channelManager;
         this.apiKeyDao = apiKeyDao;
+        this.cfg = cfg;
+        this.userSecurityContext = userSecurityContext;
     }
 
     @Override
@@ -69,6 +80,11 @@ public class WebSocketCreator implements JettyWebSocketCreator {
         ApiKeyEntry apiKey = apiKeyDao.find(auth);
         if (apiKey == null) {
             sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid API key or user not found", resp);
+            return null;
+        }
+
+        if (cfg.isRequirePermission() && !userSecurityContext.isPermitted(apiKey.getUserId(), Permission.AGENT_WEBSOCKET)) {
+            sendError(HttpServletResponse.SC_FORBIDDEN, "Permission denied", resp);
             return null;
         }
 

@@ -25,6 +25,7 @@ import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import com.walmartlabs.concord.client2.ApiException;
 import com.walmartlabs.concord.client2.FormListEntry;
 import com.walmartlabs.concord.client2.FormSubmitResponse;
 import com.walmartlabs.concord.client2.ProcessApi;
@@ -33,12 +34,15 @@ import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.client2.ProcessEventEntry;
 import com.walmartlabs.concord.client2.ProcessEventsApi;
 import com.walmartlabs.concord.client2.ProcessListFilter;
+import com.walmartlabs.concord.it.common.ITUtils;
 import com.walmartlabs.concord.it.common.JGitUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -59,10 +63,18 @@ public class ProcessIT {
 
     @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure();
+    private static final Logger log = LoggerFactory.getLogger(ProcessIT.class);
 
     @BeforeAll
     public static void init() {
         JGitUtils.applyWorkarounds();
+
+        try {
+            ITUtils.createAgentUser(concord.apiClient(), ConcordConfiguration.agentApiKey);
+        } catch (ApiException e) {
+            log.error("init -> error", e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
