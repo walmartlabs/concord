@@ -25,9 +25,13 @@
 ### Breaking
 
 - server: disable github event handling in default config
-([#1366](https://github.com/walmartlabs/concord/pull/1366)).
+([#1366](https://github.com/walmartlabs/concord/pull/1366));
   - GitHub webhook event handling is now disabled by default. Always use a unique
     secret value when enabling webhook handling.
+- server: require 'agentWebsocket' permission for websockets
+([#1368](https://github.com/walmartlabs/concord/pull/1368)).
+  - Prepare ahead of time by granting your agent user the `agentWebsocket` permission,
+    or disable permission requirement in server config with `websockets.requirePermission = false`.
 
 
 
