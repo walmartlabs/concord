@@ -21,9 +21,15 @@ package com.walmartlabs.concord.it.runtime.v1;
  */
 
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
+import com.walmartlabs.concord.it.common.ITUtils;
 import org.testcontainers.images.PullPolicy;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
 public final class ConcordConfiguration {
+
+    public static final String agentApiKey = Base64.getEncoder().encodeToString(ITUtils.randomString().getBytes(StandardCharsets.UTF_8));
 
     public static ConcordRule configure() {
         ConcordRule concord = new ConcordRule()
@@ -52,8 +58,11 @@ public final class ConcordConfiguration {
                             prefork {
                                 enabled = true
                             }
+                            server {
+                                apiKey = "%%agentApiKey%%"
+                            }
                         }
-                        """);
+                        """.replace("%%agentApiKey%%", agentApiKey));
 
         boolean localMode = Boolean.parseBoolean(System.getProperty("it.local.mode"));
         if (localMode) {
