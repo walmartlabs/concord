@@ -2,12 +2,32 @@
 
 ## [2.44.1] - TBD
 
+### Added
+
+- it: add agent-operator tests
+([#1362](https://github.com/walmartlabs/concord/pull/1362)).
+
 ### Changed
 
 - agent-operator: only inform on target namespace
 ([#1361](https://github.com/walmartlabs/concord/pull/1361));
 - docker: fix concord-server image dependency
-([#1364](https://github.com/walmartlabs/concord/pull/1364)).
+([#1364](https://github.com/walmartlabs/concord/pull/1364))
+- runtime-v1, runtime-v2: Sanitize docker image references
+([#1359](https://github.com/walmartlabs/concord/pull/1359));
+- github-app-installation: address unit test warnings, tidy formatting
+([#1363](https://github.com/walmartlabs/concord/pull/1363));
+- server, repository: sanitize user-provided git parameters
+([#1365](https://github.com/walmartlabs/concord/pull/1365));
+- project: update dependencies
+([#1367](https://github.com/walmartlabs/concord/pull/1367)).
+
+### Breaking
+
+- server: disable github event handling in default config
+([#1366](https://github.com/walmartlabs/concord/pull/1366)).
+  - GitHub webhook event handling is now disabled by default. Always use a unique
+    secret value when enabling webhook handling.
 
 
 
@@ -50,6 +70,7 @@
 ([#1354](https://github.com/walmartlabs/concord/pull/1354));
 - agent: update mandatory runner params for jdk25+
 ([#1358](https://github.com/walmartlabs/concord/pull/1358)).
+
 
 
 ## [2.43.0] - 2026-06-21
