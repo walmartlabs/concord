@@ -92,7 +92,8 @@
         <junit.version>5.9.1</junit.version>
         <kafka.client.version>3.9.2</kafka.client.version>
         <kerby.version>2.0.1</kerby.version>
-        <kubernetes.client.version>7.0.1</kubernetes.client.version>
+        <!-- 7.4.1+ is required for compatibility with Jackson 2.22 (GenericKubernetesResource serialization) -->
+        <kubernetes.client.version>7.4.1</kubernetes.client.version>
         <launcher.version>0.128</launcher.version>
         <liquibase.version>4.29.2</liquibase.version>
         <logback.version>1.5.34</logback.version>
@@ -1191,6 +1192,11 @@
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers-postgresql</artifactId>
+                <version>${testcontainers.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-k3s</artifactId>
                 <version>${testcontainers.version}</version>
             </dependency>
             <dependency>
