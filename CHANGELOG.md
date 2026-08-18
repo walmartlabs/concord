@@ -21,6 +21,8 @@
 ([#1365](https://github.com/walmartlabs/concord/pull/1365));
 - project: update dependencies
 ([#1367](https://github.com/walmartlabs/concord/pull/1367)).
+- concord-server: use parameterized LDAP query for email search
+([#1372](https://github.com/walmartlabs/concord/pull/1372)).
 
 ### Breaking
 
