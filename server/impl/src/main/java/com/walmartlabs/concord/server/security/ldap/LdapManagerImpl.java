@@ -184,7 +184,7 @@ public class LdapManagerImpl implements LdapManager {
             return getPrincipal(new SearchFn(ctx) {
                 @Override
                 public NamingEnumeration<SearchResult> lookup(SearchControls ctls) throws NamingException {
-                    Object[] args = new Object[]{email};
+                    String[] args = new String[]{email};
                     return ctx.search(searchDn, "(mail={0})", args, ctls);
                 }
 
