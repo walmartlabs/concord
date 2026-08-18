@@ -40,6 +40,18 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Serializes {@link PrincipalCollection}s into a stable JSON snapshot by delegating to
+ * {@link PrincipalSerializer} implementations registered for each principal type.
+ *
+ * <p>Collections containing principal types without a registered serializer (e.g. principals produced by a plugin
+ * that doesn't ship a {@link PrincipalSerializer}) are serialized in the legacy Java-serialization format, which
+ * is readable by both older and newer servers. Deserialization accepts both formats.
+ *
+ * <p>Note: the JSON format is only understood by servers that include this class. During a mixed-version upgrade,
+ * snapshots written by a newer node cannot be read by nodes running older code - such processes can only be
+ * resumed once the upgrade is complete.
+ */
 public class PrincipalCollectionSerializer {
 
     private static final String SNAPSHOT_TYPE = "concord.security.principal-collection";
@@ -60,6 +72,10 @@ public class PrincipalCollectionSerializer {
     }
 
     public byte[] serialize(PrincipalCollection data) {
+        if (usesLegacySerialization(data)) {
+            return legacySerialize(data);
+        }
+
         var snapshot = new Snapshot(SNAPSHOT_TYPE, SNAPSHOT_VERSION, serializedPrincipals(data));
 
         try {
@@ -72,7 +88,7 @@ public class PrincipalCollectionSerializer {
     private List<SerializedPrincipal> serializedPrincipals(PrincipalCollection data) {
         var result = new ArrayList<SerializedPrincipal>();
         if (data != null) {
-            for (var realmName : data.getRealmNames()) {
+            for (var realmName : realmNames(data)) {
                 var principals = (Collection<?>) data.fromRealm(realmName);
                 if (principals.isEmpty()) {
                     continue;
@@ -95,6 +111,33 @@ public class PrincipalCollectionSerializer {
         return result;
     }
 
+    /**
+     * Returns {@code true} if {@code data} contains at least one principal type without a registered serializer.
+     * Such collections are kept in the legacy Java-serialization format so that both older and newer servers
+     * can read them (e.g. processes started before a plugin shipped its serializer).
+     */
+    private boolean usesLegacySerialization(PrincipalCollection data) {
+        if (data == null) {
+            return false;
+        }
+
+        for (var realmName : realmNames(data)) {
+            for (var principal : (Collection<?>) data.fromRealm(realmName)) {
+                if (findSerializer(principal) == null) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static Set<String> realmNames(PrincipalCollection data) {
+        // Shiro returns null for empty collections
+        var realmNames = data.getRealmNames();
+        return realmNames != null ? realmNames : Set.of();
+    }
+
     public Optional<PrincipalCollection> deserialize(byte[] data) {
         if (data == null || data.length == 0) {
             return Optional.empty();
@@ -115,7 +158,7 @@ public class PrincipalCollectionSerializer {
         }
     }
 
-    public static byte[] legacySerialize(PrincipalCollection data) {
+    static byte[] legacySerialize(PrincipalCollection data) {
         var baos = new ByteArrayOutputStream();
         try (var oos = new ObjectOutputStream(baos)) {
             oos.writeObject(data);
@@ -160,7 +203,7 @@ public class PrincipalCollectionSerializer {
         }
     }
 
-    private PrincipalSerializer<?> getSerializer(Object principal) {
+    private PrincipalSerializer<?> findSerializer(Object principal) {
         var result = serializers.stream()
                 .filter(serializer -> serializer.supports(principal))
                 .toList();
@@ -168,9 +211,17 @@ public class PrincipalCollectionSerializer {
             return result.get(0);
         }
         if (result.isEmpty()) {
-            throw new IllegalArgumentException("Unsupported principal type: " + typeName(principal));
+            return null;
         }
         throw new IllegalArgumentException("Ambiguous principal serializers for type: " + typeName(principal));
+    }
+
+    private PrincipalSerializer<?> getSerializer(Object principal) {
+        var serializer = findSerializer(principal);
+        if (serializer == null) {
+            throw new IllegalArgumentException("Unsupported principal type: " + typeName(principal));
+        }
+        return serializer;
     }
 
     private PrincipalSerializer<?> getSerializer(String type) {

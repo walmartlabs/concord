@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static io.smallrye.common.constraint.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -126,6 +127,8 @@ public class OidcRealmTest {
         var serializer = new PrincipalCollectionSerializer(objectMapper, Set.<PrincipalSerializer<?>>of(new OidcTokenPrincipalSerializer(objectMapper)));
         var bytes = serializer.serialize(spc);
         assertNotNull(bytes);
-        assertNotNull(serializer.deserialize(bytes).orElseThrow().oneByType(OidcToken.class));
+        var restored = serializer.deserialize(bytes).orElseThrow().oneByType(OidcToken.class);
+        assertNotNull(restored);
+        assertEquals(userProfile, restored.getProfile());
     }
 }
