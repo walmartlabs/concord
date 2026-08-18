@@ -114,6 +114,7 @@ public class AgentOperatorIT {
                                 pollDelay = "250 milliseconds"
                             }
                         }
+                        websockets.requirePermission = false
                     }
                     concord-agent {
                         server.apiKey = "%s"

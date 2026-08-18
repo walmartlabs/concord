@@ -151,8 +151,13 @@ public class TestingConcordServer implements AutoCloseable {
      * Just an example.
      */
     public static void main(String[] args) throws Exception {
+        var config = Map.<String, Object>of(
+                "process.watchdogPeriod", "10 seconds",
+                "websockets.requirePermission", false
+        );
+
         try (var db = new PostgreSQLContainer<>("postgres:15-alpine");
-             var server = new TestingConcordServer(db, 8001, Map.of("process.watchdogPeriod", "10 seconds"), List.of())) {
+             var server = new TestingConcordServer(db, 8001, config, List.of())) {
             db.start();
             server.start();
             System.out.printf("""

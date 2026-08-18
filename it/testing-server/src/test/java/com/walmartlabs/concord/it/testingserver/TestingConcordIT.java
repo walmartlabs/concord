@@ -54,7 +54,7 @@ public class TestingConcordIT {
         db.start();
 
         int apiPort = getFreePort();
-        concordServer = new TestingConcordServer(db, apiPort, Map.of(), List.of());
+        concordServer = new TestingConcordServer(db, apiPort, Map.of("websockets.requirePermission", false), List.of());
         concordServer.start();
 
         concordAgent = new TestingConcordAgent(concordServer);
