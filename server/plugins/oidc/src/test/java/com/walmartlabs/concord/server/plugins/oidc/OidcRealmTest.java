@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamEntry;
@@ -28,15 +27,18 @@ import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.plugins.oidc.PluginConfiguration.Source;
 import com.walmartlabs.concord.server.plugins.oidc.PluginConfiguration.TeamMapping;
 import com.walmartlabs.concord.server.role.RoleDao;
-import com.walmartlabs.concord.server.security.SecurityUtils;
+import com.walmartlabs.concord.server.security.PrincipalCollectionSerializer;
+import com.walmartlabs.concord.server.security.PrincipalSerializer;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static io.smallrye.common.constraint.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -117,11 +119,16 @@ public class OidcRealmTest {
                   ]
                 }""";
 
-        var userProfile = UserProfileConverter.convert(new ObjectMapper(), profile, "accessToken");
+        var objectMapper = new ObjectMapper();
+        var userProfile = UserProfileConverter.convert(objectMapper, profile, "accessToken");
 
         var spc = new SimplePrincipalCollection();
         spc.add(new OidcToken(userProfile), "oidc");
-        var bytes = SecurityUtils.serialize(spc);
+        var serializer = new PrincipalCollectionSerializer(objectMapper, Set.<PrincipalSerializer<?>>of(new OidcTokenPrincipalSerializer(objectMapper)));
+        var bytes = serializer.serialize(spc);
         assertNotNull(bytes);
+        var restored = serializer.deserialize(bytes).orElseThrow().oneByType(OidcToken.class);
+        assertNotNull(restored);
+        assertEquals(userProfile, restored.getProfile());
     }
 }
