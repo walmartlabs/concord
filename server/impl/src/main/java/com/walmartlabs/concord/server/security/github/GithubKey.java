@@ -28,7 +28,7 @@ import java.util.UUID;
 public class GithubKey implements AuthenticationToken {
 
     public static GithubKey getCurrent() {
-        return SecurityUtils.getCurrent(GithubKey.class);
+        return SecurityUtils.getPrincipal(GithubKey.class);
     }
 
     private static final long serialVersionUID = 1L;

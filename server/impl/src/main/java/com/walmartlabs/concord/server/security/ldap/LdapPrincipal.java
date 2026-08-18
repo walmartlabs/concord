@@ -63,7 +63,7 @@ public class LdapPrincipal implements Serializable {
     }
 
     public static LdapPrincipal getCurrent() {
-        return SecurityUtils.getCurrent(LdapPrincipal.class);
+        return SecurityUtils.getPrincipal(LdapPrincipal.class);
     }
 
     public String getUsername() {
