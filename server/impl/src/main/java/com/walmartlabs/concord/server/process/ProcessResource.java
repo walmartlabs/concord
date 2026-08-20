@@ -329,7 +329,7 @@ public class ProcessResource implements Resource {
         ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
-        assertProcessAccess(entry, ResourceAccessLevel.READER, Constants.Files.SUSPEND_MARKER_FILE_NAME);
+        assertProcessAccess(entry, ResourceAccessLevel.WRITER, Constants.Files.SUSPEND_MARKER_FILE_NAME);
 
         processManager.assertResumeEvents(processKey, Set.of(eventName));
 

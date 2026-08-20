@@ -20,10 +20,12 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.client2.ApiException;
 import com.walmartlabs.concord.client2.ApiKeysApi;
 import com.walmartlabs.concord.client2.CreateApiKeyRequest;
 import com.walmartlabs.concord.client2.CreateApiKeyResponse;
+import com.walmartlabs.concord.client2.CreateTeamResponse;
 import com.walmartlabs.concord.client2.CreateUserRequest;
 import com.walmartlabs.concord.client2.CreateUserResponse;
 import com.walmartlabs.concord.client2.OrganizationEntry;
@@ -32,7 +34,11 @@ import com.walmartlabs.concord.client2.ProcessApi;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.client2.ProjectEntry;
 import com.walmartlabs.concord.client2.ProjectsApi;
+import com.walmartlabs.concord.client2.ResourceAccessEntry;
 import com.walmartlabs.concord.client2.StartProcessResponse;
+import com.walmartlabs.concord.client2.TeamEntry;
+import com.walmartlabs.concord.client2.TeamUserEntry;
+import com.walmartlabs.concord.client2.TeamsApi;
 import com.walmartlabs.concord.client2.UsersApi;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Test;
@@ -141,13 +147,13 @@ public class SuspendIT extends AbstractServerIT {
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        TeamsApi teamsApi = new TeamsApi(getApiClient()); // save for later with admin token
+
 
         URI dir = SuspendIT.class.getResource("suspend").toURI();
         byte[] payload = archive(dir);
 
-        // ---
-
-        ProcessApi processApi = new ProcessApi(getApiClient());
+        // ---  start process, wait for it to suspend for a resume event
 
         Map<String, Object> input = new HashMap<>();
 
@@ -168,11 +174,12 @@ public class SuspendIT extends AbstractServerIT {
         CreateApiKeyResponse car = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
                 .userId(cur.getId()));
 
-        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
-        // --- switch to non-project user
+        // --- try to resume with non-project member user
 
-        setApiKey(car.getKey());
+        ApiClient userClient = getApiClientForKey(car.getKey());
+        ProcessApi userProcessApi = new ProcessApi(userClient);
 
         // --- Expect resume call to be blocked by lack of permission
 
@@ -180,21 +187,27 @@ public class SuspendIT extends AbstractServerIT {
         Map<String, Object> args = Collections.singletonMap("testValue", testValue);
         Map<String, Object> req = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY, args);
 
-        ApiException ex = assertThrows(ApiException.class, () -> processApi.resume(spr.getInstanceId(), "ev1", null, req));
+        ApiException ex = assertThrows(ApiException.class, () -> userProcessApi.resume(spr.getInstanceId(), "ev1", null, req));
 
         assertEquals(403, ex.getCode());
-        assertEquals("The current user (" + userName +") doesn't have the necessary access level (READER) to the project: " + projectName, ex.getResponseBody());
+        assertEquals("The current user (" + userName + ") doesn't have the necessary access level (WRITER) to the project: " + projectName, ex.getResponseBody());
 
+        // --- Add user to project team access
 
-        // --- back to test default user
+        CreateTeamResponse ctr = teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name("writer_team"));
 
-        resetApiKey();
+        teamsApi.addUsersToTeam(orgName, "writer_team", true, List.of(new TeamUserEntry().userId(cur.getId())));
+        projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
+                .teamId(ctr.getId())
+                .orgName(orgName)
+                .teamName("writer_team")
+                .level(ResourceAccessEntry.LevelEnum.WRITER));
 
-        // --- Resume should be allowed by process owner
+        // --- should work now
 
-        assertDoesNotThrow(() -> processApi.resume(spr.getInstanceId(), "ev1", null, req));
+        assertDoesNotThrow(() -> userProcessApi.resume(spr.getInstanceId(), "ev1", null, req));
 
-        pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         waitForLog(pir.getInstanceId(), ".*bbbb.*");
@@ -209,7 +222,7 @@ public class SuspendIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessApi ownerProcessApi = new ProcessApi(getApiClient());
 
         Map<String, Object> input = new HashMap<>();
 
@@ -232,7 +245,8 @@ public class SuspendIT extends AbstractServerIT {
 
         // --- switch to non-project user
 
-        setApiKey(car.getKey());
+        ApiClient userClient = getApiClientForKey(car.getKey());
+        ProcessApi userProcessApi = new ProcessApi(userClient);
 
         // --- Expect resume call to be blocked by lack of permission
 
@@ -240,7 +254,7 @@ public class SuspendIT extends AbstractServerIT {
         Map<String, Object> args = Collections.singletonMap("testValue", testValue);
         Map<String, Object> req = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY, args);
 
-        ApiException ex = assertThrows(ApiException.class, () -> processApi.resume(spr.getInstanceId(), "ev1", null, req));
+        ApiException ex = assertThrows(ApiException.class, () -> userProcessApi.resume(spr.getInstanceId(), "ev1", null, req));
 
         assertEquals(403, ex.getCode());
         assertEquals("The current user (" + userName +") doesn't have the necessary permissions to the download _suspend : " + pir.getInstanceId(), ex.getResponseBody());
@@ -252,7 +266,7 @@ public class SuspendIT extends AbstractServerIT {
 
         // --- Resume should be allowed by process owner
 
-        assertDoesNotThrow(() -> processApi.resume(spr.getInstanceId(), "ev1", null, req));
+        assertDoesNotThrow(() -> ownerProcessApi.resume(spr.getInstanceId(), "ev1", null, req));
 
         pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
