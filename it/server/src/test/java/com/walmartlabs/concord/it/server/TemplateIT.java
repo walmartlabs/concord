@@ -155,7 +155,7 @@ public class TemplateIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*Invalid template scheme: http.*", ab);
+        assertLog(".*Invalid template scheme: 'http'.*", ab);
     }
 
     @Test

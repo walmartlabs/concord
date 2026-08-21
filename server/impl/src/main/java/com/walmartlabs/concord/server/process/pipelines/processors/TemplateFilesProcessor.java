@@ -36,9 +36,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Extracts template files into the workspace.
@@ -101,13 +101,23 @@ public class TemplateFilesProcessor implements PayloadProcessor {
                 throw new IllegalArgumentException("Templates must be configured through an alias.");
             }
 
-            if (!templatesConfiguration.getAllowedUriScheme().contains(scheme)) {
-                throw new IllegalArgumentException("Invalid template scheme: " + scheme);
-            }
+            assertAllowedScheme(scheme);
 
             return u;
         } catch (URISyntaxException e) {
             return getByAlias(processKey, template);
+        }
+    }
+
+    private void assertAllowedScheme(String scheme) {
+        Set<String> allowedSchemes = templatesConfiguration.getAllowedUriSchemes();
+
+        if (allowedSchemes.isEmpty()) {
+            return; // allow all
+        }
+
+        if (!allowedSchemes.contains(scheme)) {
+            throw new IllegalArgumentException("Invalid template scheme: '" + scheme + "'. Allowed schemes: " + String.join(", ", allowedSchemes));
         }
     }
 

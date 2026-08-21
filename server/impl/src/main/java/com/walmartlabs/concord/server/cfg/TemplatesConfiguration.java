@@ -24,6 +24,7 @@ import com.walmartlabs.concord.config.Config;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Set;
 
 public class TemplatesConfiguration {
 
@@ -47,7 +48,7 @@ public class TemplatesConfiguration {
         return allowUriSource;
     }
 
-    public List<String> getAllowedUriScheme() {
-        return allowedUriSchemes;
+    public Set<String> getAllowedUriSchemes() {
+        return Set.copyOf(allowedUriSchemes);
     }
 }
