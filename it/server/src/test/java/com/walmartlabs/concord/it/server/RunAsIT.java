@@ -24,7 +24,6 @@ import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
@@ -72,14 +71,17 @@ public class RunAsIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("org", orgName);
         input.put("project", projectName);
+        input.put("arguments.runAsUser", "admin");
 
         StartProcessResponse p = start(input);
-        ProcessApi processApi = new ProcessApi(getApiClient());
         ProcessEntry pe = waitForStatus(getApiClient(), p.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         byte[] ab = getLog(pe.getInstanceId());
         // assume Concord forces all user/domain names to lower case
         assertLog(".*username=" + userAName.toLowerCase() + ".*==.*username=" + userAName.toLowerCase() + ".*", ab);
+
+        CheckpointV3Api checkpointV3Api = new CheckpointV3Api(getApiClient());
+        assertEquals(1, checkpointV3Api.pageCheckpoints(p.getInstanceId(), 0, 5).size());
 
         String formName = findForm(p.getInstanceId());
 
@@ -89,12 +91,11 @@ public class RunAsIT extends AbstractServerIT {
 
         // try submit as a wrong user
 
-        try {
-            formsApi.submitForm(p.getInstanceId(), formName, data);
-            fail("exception expected");
-        } catch (ApiException e) {
-            // ignore
-        }
+        assertThrows(
+                ApiException.class,
+                () -> formsApi.submitForm(p.getInstanceId(), formName, data),
+                "exception expected"
+        );
 
         // submit as the proper user
 
@@ -108,6 +109,82 @@ public class RunAsIT extends AbstractServerIT {
 
         ab = getLog(pe.getInstanceId());
         assertLog(".*Now we are running as admin. Initiator: " + userAName.toLowerCase() + ".*", ab);
+
+        // switching users invalidates checkpoints created before the user switch
+        assertEquals(0, checkpointV3Api.pageCheckpoints(p.getInstanceId(), 0, 5).size());
+    }
+
+    @Test
+    public void testKeepSameUser() throws Exception {
+        // create a new org
+
+        String orgName = "org_" + randomString();
+        createOrg(orgName);
+
+        // add the user A
+
+        String userAName = "userA_" + randomString();
+        CreateApiKeyResponse apiKeyA = addUser(userAName);
+
+        // create the user A's team
+
+        String teamName = "team_" + randomString();
+        UUID teamId = createTeam(orgName, teamName, userAName);
+
+        // switch to the user A and create a new project
+
+        setApiKey(apiKeyA.getKey());
+
+        String projectName = "project_" + randomString();
+        createProject(orgName, projectName);
+
+        // grant the team access to the project
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
+                .teamId(teamId)
+                .orgName(orgName)
+                .teamName(teamName)
+                .level(ResourceAccessEntry.LevelEnum.READER));
+
+        // Start a process
+
+        byte[] payload = archive(RunAsIT.class.getResource("runas").toURI());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("arguments.runAsUser", userAName.toLowerCase());
+
+        StartProcessResponse p = start(input);
+        ProcessEntry pe = waitForStatus(getApiClient(), p.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+
+        byte[] ab = getLog(pe.getInstanceId());
+        // assume Concord forces all user/domain names to lower case
+        assertLog(".*username=" + userAName.toLowerCase() + ".*==.*username=" + userAName.toLowerCase() + ".*", ab);
+
+        CheckpointV3Api checkpointV3Api = new CheckpointV3Api(getApiClient());
+        assertEquals(1, checkpointV3Api.pageCheckpoints(p.getInstanceId(), 0, 5).size());
+
+        String formName = findForm(p.getInstanceId());
+
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
+
+        Map<String, Object> data = Collections.singletonMap("firstName", "xxx");
+
+        // submit with same user
+
+        FormSubmitResponse fsr = formsApi.submitForm(p.getInstanceId(), formName, data);
+        assertTrue(fsr.getOk());
+
+        pe = waitForCompletion(getApiClient(), p.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+
+        ab = getLog(pe.getInstanceId());
+        assertLog(".*Now we are running as " + userAName.toLowerCase() +". Initiator: " + userAName.toLowerCase() + ".*", ab);
+
+        // we didn't actually switch, so checkpoints should still exist
+        assertEquals(1, checkpointV3Api.pageCheckpoints(p.getInstanceId(), 0, 5).size());
     }
 
     @Test
@@ -158,7 +235,6 @@ public class RunAsIT extends AbstractServerIT {
         input.put("arguments.testUser", userBName.toLowerCase());
 
         StartProcessResponse p = start(input);
-        ProcessApi processApi = new ProcessApi(getApiClient());
         ProcessEntry pe = waitForStatus(getApiClient(), p.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         byte[] ab = getLog(pe.getInstanceId());
@@ -276,7 +352,7 @@ public class RunAsIT extends AbstractServerIT {
                 .map(u -> new TeamUserEntry()
                         .username(u)
                         .role(TeamUserEntry.RoleEnum.MEMBER))
-                .collect(Collectors.toList()));
+                .toList());
 
         return ctr.getId();
     }
