@@ -22,7 +22,12 @@
 - project: update dependencies
 ([#1367](https://github.com/walmartlabs/concord/pull/1367)).
 - concord-server: use parameterized LDAP query for email search
-([#1372](https://github.com/walmartlabs/concord/pull/1372)).
+([#1372](https://github.com/walmartlabs/concord/pull/1372));
+- concord-server: assert access before process resume
+([#1373](https://github.com/walmartlabs/concord/pull/1373));
+- concord-server: only allow server to update serialized current user, delete
+checkpoints when user changes
+([#1369](https://github.com/walmartlabs/concord/pull/1369)).
 
 ### Breaking
 
@@ -31,9 +36,17 @@
   - GitHub webhook event handling is now disabled by default. Always use a unique
     secret value when enabling webhook handling.
 - server: require 'agentWebsocket' permission for websockets
-([#1368](https://github.com/walmartlabs/concord/pull/1368)).
+([#1368](https://github.com/walmartlabs/concord/pull/1368));
   - Prepare ahead of time by granting your agent user the `agentWebsocket` permission,
     or disable permission requirement in server config with `websockets.requirePermission = false`.
+- concord-server: only allow server to update serialized current user, delete
+checkpoints when user changes
+([#1369](https://github.com/walmartlabs/concord/pull/1369)).
+  - Checkpoints created before a user change at runtime will result in the checkpoints
+    created by the previous user being deleted for the current process. Change
+    the user only when necessary. Use
+    [the `saveSubmittedBy` form option](https://concord.walmartlabs.com/docs/getting-started/forms.html#form-submitter)
+    to capture the submitter rather than changing the user.
 
 
 
