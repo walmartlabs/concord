@@ -142,6 +142,23 @@ public class TemplateIT extends AbstractServerIT {
     }
 
     @Test
+    void testInvalidScheme() throws Exception {
+        Map<String, Object> input = new HashMap<>();
+        input.put("template", "http://example.local/insecure.yml");
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getInstanceId());
+        assertLog(".*Invalid template scheme: 'http'.*", ab);
+    }
+
+    @Test
     public void testEntryPointReference() throws Exception {
         final String processYml = "fromTemplate:\n- log: \"hello!\"";
         Path templatePath = createTemplate(processYml, null);
