@@ -24,10 +24,7 @@
 - concord-server: use parameterized LDAP query for email search
 ([#1372](https://github.com/walmartlabs/concord/pull/1372));
 - concord-server: assert access before process resume
-([#1373](https://github.com/walmartlabs/concord/pull/1373));
-- concord-server: only allow server to update serialized current user, delete
-checkpoints when user changes
-([#1369](https://github.com/walmartlabs/concord/pull/1369)).
+([#1373](https://github.com/walmartlabs/concord/pull/1373)).
 
 ### Breaking
 
@@ -47,6 +44,11 @@ checkpoints when user changes
     the user only when necessary. Use
     [the `saveSubmittedBy` form option](https://concord.walmartlabs.com/docs/getting-started/forms.html#form-submitter)
     to capture the submitter rather than changing the user.
+- concord-server: config option to enable template UI sources with scheme allow-list
+([#1374](https://github.com/walmartlabs/concord/pull/1374)).
+  - The default supported schemes for non-alias template sources have been
+    restricted to `https` and `mvn`. The allowed list of schemes can be customized
+    or fully disabled in the server configuration.
 
 
 
