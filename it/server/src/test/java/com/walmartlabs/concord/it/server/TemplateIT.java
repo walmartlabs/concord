@@ -144,7 +144,7 @@ public class TemplateIT extends AbstractServerIT {
     @Test
     void testInvalidScheme() throws Exception {
         Map<String, Object> input = new HashMap<>();
-        input.put("template", "file:///etc/passwd");
+        input.put("template", "http://example.local/insecure.yml");
         StartProcessResponse spr = start(input);
 
         // ---
@@ -155,7 +155,7 @@ public class TemplateIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*Invalid template scheme: file.*", ab);
+        assertLog(".*Invalid template scheme: http.*", ab);
     }
 
     @Test
