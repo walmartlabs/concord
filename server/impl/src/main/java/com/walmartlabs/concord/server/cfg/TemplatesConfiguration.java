@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.cfg;
 import com.walmartlabs.concord.config.Config;
 
 import javax.inject.Inject;
+import java.util.List;
 
 public class TemplatesConfiguration {
 
@@ -30,8 +31,23 @@ public class TemplatesConfiguration {
     @Config("templates.allowScripting")
     private boolean allowScripting;
 
+    @Inject
+    @Config("templates.allowUriSource")
+    private boolean allowUriSource;
+
+    @Inject
+    @Config("templates.allowedUriSchemes")
+    private List<String> allowedUriSchemes;
+
     public boolean isAllowScripting() {
         return allowScripting;
     }
 
+    public boolean isAllowUriSource() {
+        return allowUriSource;
+    }
+
+    public List<String> getAllowedUriScheme() {
+        return allowedUriSchemes;
+    }
 }

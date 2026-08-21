@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.common.ZipService;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.cfg.TemplatesConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -46,17 +48,20 @@ public class TemplateFilesProcessor implements PayloadProcessor {
     private final ProcessLogManager logManager;
     private final DependencyManager dependencyManager;
     private final TemplateAliasDao aliasDao;
+    private final TemplatesConfiguration templatesConfiguration;
     private final ZipService zipService;
 
     @Inject
     public TemplateFilesProcessor(DependencyManager dependencyManager,
                                   ProcessLogManager logManager,
                                   TemplateAliasDao aliasDao,
+                                  TemplatesConfiguration templatesConfiguration,
                                   ZipService zipService) {
 
         this.logManager = logManager;
         this.aliasDao = aliasDao;
         this.dependencyManager = dependencyManager;
+        this.templatesConfiguration = templatesConfiguration;
         this.zipService = zipService;
     }
 
@@ -92,6 +97,14 @@ public class TemplateFilesProcessor implements PayloadProcessor {
                 return getByAlias(processKey, template);
             }
 
+            if (!templatesConfiguration.isAllowUriSource()) {
+                throw new IllegalArgumentException("Templates must be configured through an alias.");
+            }
+
+            if (!templatesConfiguration.getAllowedUriScheme().contains(scheme)) {
+                throw new IllegalArgumentException("Invalid template scheme: " + scheme);
+            }
+
             return u;
         } catch (URISyntaxException e) {
             return getByAlias(processKey, template);
@@ -100,7 +113,7 @@ public class TemplateFilesProcessor implements PayloadProcessor {
 
     private URI getByAlias(PartialProcessKey processKey, String s) throws URISyntaxException {
         Optional<String> o = aliasDao.get(s);
-        if (!o.isPresent()) {
+        if (o.isEmpty()) {
             throw new ProcessException(processKey, "Invalid template URL or alias: " + s);
         }
 
