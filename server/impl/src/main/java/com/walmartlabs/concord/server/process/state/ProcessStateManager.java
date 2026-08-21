@@ -268,13 +268,21 @@ public class ProcessStateManager extends AbstractDao {
     /**
      * Remove a directory and all content from it.
      */
-    @WithTimer
     public void deleteDirectory(DSLContext tx, ProcessKey processKey, String path) {
+        deleteDirectory(tx, processKey, path, Set.of());
+    }
+
+    /**
+     * Remove a directory and all content from it, excluding specified paths.
+     */
+    @WithTimer
+    public void deleteDirectory(DSLContext tx, ProcessKey processKey, String path, Set<String> excludePaths) {
         tx.deleteFrom(PROCESS_STATE)
                 .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
                         .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
                 .and(PROCESS_STATE.ITEM_PATH.eq(path)
-                        .or(PROCESS_STATE.ITEM_PATH.startsWith(fixPath(path))))
+                        .or(PROCESS_STATE.ITEM_PATH.startsWith(fixPath(path)))
+                        .and(PROCESS_STATE.ITEM_PATH.notIn(excludePaths)))
                 .execute();
     }
 

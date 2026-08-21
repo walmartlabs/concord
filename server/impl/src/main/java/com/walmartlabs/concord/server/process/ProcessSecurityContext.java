@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.security.SecurityUtils;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.PrincipalCollection;
@@ -35,6 +36,7 @@ import org.apache.shiro.util.ThreadContext;
 
 import javax.inject.Inject;
 import java.util.Collection;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -70,6 +72,24 @@ public class ProcessSecurityContext {
             }
         }
         return SecurityUtils.serialize(dst);
+    }
+
+    /**
+     * Compares current security principal to last-saved principal for the
+     * specified process. If they are different, it means that the user has changed.
+     */
+    public boolean hasChanged(ProcessKey processKey) {
+        UserPrincipal current = SecurityUtils.getSubject().getPrincipals().oneByType(UserPrincipal.class);
+        UserPrincipal previous = getPrincipals(processKey).oneByType(UserPrincipal.class);
+
+        if (current == null || previous == null) {
+            return true; // something's funky if either is null. should we throw an exception?
+        }
+
+        UUID currentUserId = current.getUser().getId();
+        UUID previousUserId = previous.getUser().getId();
+
+        return !previousUserId.equals(currentUserId);
     }
 
     // TODO: invalidate cache for processKey?
