@@ -326,7 +326,10 @@ public class ProcessResource implements Resource {
                                         @QueryParam("saveAs") String saveAs,
                                         Map<String, Object> req) {
 
-        ProcessKey processKey = assertProcessKey(instanceId);
+        ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
+        ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
+
+        assertProcessAccess(entry, ResourceAccessLevel.WRITER, Constants.Files.SUSPEND_MARKER_FILE_NAME);
 
         processManager.assertResumeEvents(processKey, Set.of(eventName));
 
@@ -538,7 +541,7 @@ public class ProcessResource implements Resource {
                                        @PathParam("name") @NotNull @Size(min = 1) String attachmentName) {
 
         ProcessEntry processEntry = processManager.assertProcess(instanceId);
-        assertProcessAccess(processEntry, "attachment");
+        assertProcessAccessOwner(processEntry, "attachment");
         PartialProcessKey processKey = new ProcessKey(processEntry.instanceId(), processEntry.createdAt());
 
         // TODO replace with javax.validation
@@ -587,7 +590,7 @@ public class ProcessResource implements Resource {
     public List<String> listAttachments(@PathParam("id") UUID instanceId) {
 
         ProcessEntry processEntry = processManager.assertProcess(instanceId);
-        assertProcessAccess(processEntry, "attachments");
+        assertProcessAccessOwner(processEntry, "attachments");
 
         PartialProcessKey processKey = new ProcessKey(processEntry.instanceId(), processEntry.createdAt());
 
@@ -749,7 +752,7 @@ public class ProcessResource implements Resource {
         ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
-        assertProcessAccess(entry, "state");
+        assertProcessAccessOwner(entry, "state");
 
         StreamingOutput out = output -> {
             try (ZipArchiveOutputStream dst = new ZipArchiveOutputStream(output)) {
@@ -785,7 +788,7 @@ public class ProcessResource implements Resource {
         ProcessEntry p = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = new ProcessKey(p.instanceId(), p.createdAt());
 
-        assertProcessAccess(p, "state");
+        assertProcessAccessOwner(p, "state");
         assertResourceAccess(p, fileName);
 
         StreamingOutput out = output -> {
@@ -961,7 +964,11 @@ public class ProcessResource implements Resource {
         return processKey;
     }
 
-    private void assertProcessAccess(ProcessEntry pe, String downloadEntity) {
+    private void assertProcessAccessOwner(ProcessEntry pe, String downloadEntity) {
+        assertProcessAccess(pe, ResourceAccessLevel.OWNER, downloadEntity);
+    }
+
+    private void assertProcessAccess(ProcessEntry pe, ResourceAccessLevel accessLevel, String entity) {
         UserPrincipal principal = UserPrincipal.assertCurrent();
 
         UUID initiatorId = pe.initiatorId();
@@ -975,12 +982,12 @@ public class ProcessResource implements Resource {
         }
 
         if (pe.projectId() != null) {
-            projectAccessManager.assertAccess(pe.projectId(), ResourceAccessLevel.OWNER, true);
+            projectAccessManager.assertAccess(pe.projectId(), accessLevel, true);
             return;
         }
 
         throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
-                                        "the necessary permissions to the download " + downloadEntity + " : " + pe.instanceId());
+                "the necessary permissions to the download " + entity + " : " + pe.instanceId());
     }
 
     private void assertResourceAccess(ProcessEntry pe, String resource) {
