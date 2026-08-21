@@ -99,6 +99,7 @@ public class ProcessCheckpointDao extends AbstractDao {
                     ps.setObject(3, checkpointId);
                     ps.setString(4, checkpointName);
                     ps.setTimestamp(5, new Timestamp(new Date().getTime()));
+                    // TODO filter archive contents here (or earlier) before adding to DB
                     try (InputStream in = Files.newInputStream(data)) {
                         ps.setBinaryStream(6, in);
                     }
@@ -138,6 +139,13 @@ public class ProcessCheckpointDao extends AbstractDao {
                 }
             });
         });
+    }
+
+    public void deleteAll(ProcessKey processKey) {
+        tx(tx -> tx.deleteFrom(PROCESS_CHECKPOINTS)
+                .where(PROCESS_CHECKPOINTS.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_CHECKPOINTS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
+                .execute());
     }
 
     private static ProcessCheckpointEntry toEntry(Record r) {
