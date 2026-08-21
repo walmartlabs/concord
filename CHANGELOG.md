@@ -1,5 +1,57 @@
 # Change Log
 
+## [2.44.1] - TBD
+
+### Added
+
+- it: add agent-operator tests
+([#1362](https://github.com/walmartlabs/concord/pull/1362)).
+
+### Changed
+
+- agent-operator: only inform on target namespace
+([#1361](https://github.com/walmartlabs/concord/pull/1361));
+- docker: fix concord-server image dependency
+([#1364](https://github.com/walmartlabs/concord/pull/1364))
+- runtime-v1, runtime-v2: Sanitize docker image references
+([#1359](https://github.com/walmartlabs/concord/pull/1359));
+- github-app-installation: address unit test warnings, tidy formatting
+([#1363](https://github.com/walmartlabs/concord/pull/1363));
+- server, repository: sanitize user-provided git parameters
+([#1365](https://github.com/walmartlabs/concord/pull/1365));
+- project: update dependencies
+([#1367](https://github.com/walmartlabs/concord/pull/1367)).
+- concord-server: use parameterized LDAP query for email search
+([#1372](https://github.com/walmartlabs/concord/pull/1372));
+- concord-server: assert access before process resume
+([#1373](https://github.com/walmartlabs/concord/pull/1373)).
+
+### Breaking
+
+- server: disable github event handling in default config
+([#1366](https://github.com/walmartlabs/concord/pull/1366));
+  - GitHub webhook event handling is now disabled by default. Always use a unique
+    secret value when enabling webhook handling.
+- server: require 'agentWebsocket' permission for websockets
+([#1368](https://github.com/walmartlabs/concord/pull/1368));
+  - Prepare ahead of time by granting your agent user the `agentWebsocket` permission,
+    or disable permission requirement in server config with `websockets.requirePermission = false`.
+- concord-server: only allow server to update serialized current user, delete
+checkpoints when user changes
+([#1369](https://github.com/walmartlabs/concord/pull/1369)).
+  - Checkpoints created before a user change at runtime will result in the checkpoints
+    created by the previous user being deleted for the current process. Change
+    the user only when necessary. Use
+    [the `saveSubmittedBy` form option](https://concord.walmartlabs.com/docs/getting-started/forms.html#form-submitter)
+    to capture the submitter rather than changing the user.
+- concord-server: config option to enable template UI sources with scheme allow-list
+([#1374](https://github.com/walmartlabs/concord/pull/1374)).
+  - The default supported schemes for non-alias template sources have been
+    restricted to `https` and `mvn`. The allowed list of schemes can be customized
+    or fully disabled in the server configuration.
+
+
+
 ## [2.44.0] - 2026-08-11
 
 ### Added
@@ -39,6 +91,7 @@
 ([#1354](https://github.com/walmartlabs/concord/pull/1354));
 - agent: update mandatory runner params for jdk25+
 ([#1358](https://github.com/walmartlabs/concord/pull/1358)).
+
 
 
 ## [2.43.0] - 2026-06-21
