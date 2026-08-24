@@ -24,7 +24,9 @@
 - concord-server: use parameterized LDAP query for email search
 ([#1372](https://github.com/walmartlabs/concord/pull/1372));
 - concord-server: assert access before process resume
-([#1373](https://github.com/walmartlabs/concord/pull/1373)).
+([#1373](https://github.com/walmartlabs/concord/pull/1373));
+- project: update central-publishing-plugin, wait for upload instead of validation
+([#1375](https://github.com/walmartlabs/concord/pull/1375)).
 
 ### Breaking
 
