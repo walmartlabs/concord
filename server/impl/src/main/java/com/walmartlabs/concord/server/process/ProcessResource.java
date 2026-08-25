@@ -886,6 +886,7 @@ public class ProcessResource implements Resource {
                             @Parameter(schema = @Schema(type = "string", format = "byte"))
                             InputStream data) {
         ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
+        assertProcessAccess(entry, ResourceAccessLevel.READER, "generic decryption");
         if (entry.projectId() == null) {
             throw new ConcordApplicationException("Project is required", Status.BAD_REQUEST);
         }
