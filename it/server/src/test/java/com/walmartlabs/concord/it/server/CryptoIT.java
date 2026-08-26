@@ -26,7 +26,7 @@ import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.DatatypeConverter;
-import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -240,7 +240,7 @@ public class CryptoIT extends AbstractServerIT {
     }
 
     @Test
-    public void testAnonymousDecryptProessString() throws Exception {
+    public void testAnonymousDecryptProcessString() throws Exception {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
@@ -279,6 +279,7 @@ public class CryptoIT extends AbstractServerIT {
         byte[] payload = archive(CryptoIT.class.getResource("decryptString").toURI());
 
         String encryptedData = evr.getData();
+        byte[] rawEncryptedData = Base64.getDecoder().decode(encryptedData);
 
         StartProcessResponse spr = start(ImmutableMap.of(
                 "org", orgName,
@@ -287,11 +288,15 @@ public class CryptoIT extends AbstractServerIT {
                 "entryPoint", "waitForever",
                 "arguments.encryptedValue", encryptedData));
 
-        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
-        ApiException result = assertThrows(ApiException.class, ()->userProcessApi.decryptString(spr.getInstanceId(), encryptedData.getBytes(StandardCharsets.UTF_8)));
-        String expectedErrorMessage = "The current user (" + username + ") doesn't have " +
-                "the necessary permissions to download " + "project encrypted string" + " : " + spr.getInstanceId();
+        ApiException result = assertThrows(ApiException.class,
+                () -> userProcessApi.decryptString(spr.getInstanceId(), rawEncryptedData));
+
+        // ---
+
+        String expectedErrorMessage = "decryptString call failed with: 403 - The current user (" +
+                username + ") doesn't have the necessary access level (READER) to the project: " + projectName;
         assertEquals(expectedErrorMessage,result.getMessage());
     }
 
