@@ -886,6 +886,7 @@ public class ProcessResource implements Resource {
                             @Parameter(schema = @Schema(type = "string", format = "byte"))
                             InputStream data) {
         ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
+        assertProcessAccess(entry, ResourceAccessLevel.READER, "project encrypted string");
         if (entry.projectId() == null) {
             throw new ConcordApplicationException("Project is required", Status.BAD_REQUEST);
         }
@@ -987,7 +988,7 @@ public class ProcessResource implements Resource {
         }
 
         throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
-                "the necessary permissions to the download " + entity + " : " + pe.instanceId());
+                "the necessary permissions to download " + entity + " : " + pe.instanceId());
     }
 
     private void assertResourceAccess(ProcessEntry pe, String resource) {

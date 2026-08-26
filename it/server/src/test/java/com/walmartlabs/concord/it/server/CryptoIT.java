@@ -26,6 +26,7 @@ import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.DatatypeConverter;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +36,7 @@ import java.util.regex.Pattern;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CryptoIT extends AbstractServerIT {
@@ -235,6 +237,67 @@ public class CryptoIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*We got " + value + ".*", ab);
+    }
+
+    @Test
+    public void testAnonymousDecryptProcessString() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
+
+        String username = "user_" + randomString();
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
+
+        ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse cakr = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
+                .username(username));
+
+        ApiClient randomUserClient = getApiClientForKey(cakr.getKey());
+        ProcessApi userProcessApi = new ProcessApi(randomUserClient);
+
+        // ---
+
+        String projectName = "project_" + randomString();
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+
+        // ---
+
+        String value = "value_" + randomString();
+
+        EncryptValueResponse evr = projectsApi.encrypt(orgName, projectName, value);
+        assertTrue(evr.getOk());
+
+        byte[] payload = archive(CryptoIT.class.getResource("decryptString").toURI());
+
+        String encryptedData = evr.getData();
+        byte[] rawEncryptedData = Base64.getDecoder().decode(encryptedData);
+
+        StartProcessResponse spr = start(ImmutableMap.of(
+                "org", orgName,
+                "project", projectName,
+                "archive", payload,
+                "entryPoint", "waitForever",
+                "arguments.encryptedValue", encryptedData));
+
+        waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+
+        ApiException result = assertThrows(ApiException.class,
+                () -> userProcessApi.decryptString(spr.getInstanceId(), rawEncryptedData));
+
+        // ---
+
+        String expectedErrorMessage = "decryptString call failed with: 403 - The current user (" +
+                username + ") doesn't have the necessary access level (READER) to the project: " + projectName;
+        assertEquals(expectedErrorMessage,result.getMessage());
     }
 
     @Test
