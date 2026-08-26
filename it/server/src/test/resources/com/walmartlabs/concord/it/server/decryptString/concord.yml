@@ -2,3 +2,8 @@ flows:
   default:
   - log: "${encryptedValue}"
   - log: "We got ${crypto.decryptString(encryptedValue)}"
+  waitForever:
+    - task: sleep
+      in:
+        duration: 300
+        suspend: true

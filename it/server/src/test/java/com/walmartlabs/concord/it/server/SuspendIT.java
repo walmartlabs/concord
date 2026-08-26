@@ -257,7 +257,7 @@ public class SuspendIT extends AbstractServerIT {
         ApiException ex = assertThrows(ApiException.class, () -> userProcessApi.resume(spr.getInstanceId(), "ev1", null, req));
 
         assertEquals(403, ex.getCode());
-        assertEquals("The current user (" + userName +") doesn't have the necessary permissions to the download _suspend : " + pir.getInstanceId(), ex.getResponseBody());
+        assertEquals("The current user (" + userName +") doesn't have the necessary permissions to download _suspend : " + pir.getInstanceId(), ex.getResponseBody());
 
 
         // --- back to test default user
