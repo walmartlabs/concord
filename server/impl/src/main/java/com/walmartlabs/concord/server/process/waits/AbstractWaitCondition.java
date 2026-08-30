@@ -38,7 +38,8 @@ import java.io.Serializable;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = ImmutableProcessCompletionCondition.class, name = "PROCESS_COMPLETION"),
         @JsonSubTypes.Type(value = ImmutableProcessLockCondition.class, name = "PROCESS_LOCK"),
-        @JsonSubTypes.Type(value = ImmutableProcessSleepCondition.class, name = "PROCESS_SLEEP")
+        @JsonSubTypes.Type(value = ImmutableProcessSleepCondition.class, name = "PROCESS_SLEEP"),
+        @JsonSubTypes.Type(value = ImmutableProcessExternalEventCondition.class, name = "EXTERNAL_EVENT")
 })
 public abstract class AbstractWaitCondition implements Serializable {
 
