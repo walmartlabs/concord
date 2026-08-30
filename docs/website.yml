@@ -1,0 +1,92 @@
+# Jekyll metadata used by walmartlabs/concord-website when importing these mdBook docs.
+# Keys are website doc paths relative to /docs after import. Most paths map to docs/src
+# directly; plugins-v2/* maps to docs/src/plugins/*.
+# Keep Jekyll-only fields here; put visible page titles in the Markdown headings.
+---
+getting-started/configuration.md:
+  description: Concord server configuration
+getting-started/development.md:
+  description: Docs for Concord developers
+getting-started/forms.md:
+  description: Gather user input from a flow
+getting-started/index.md:
+  description: Getting started with Concord
+getting-started/install/docker-compose.md:
+  description: Install Concord with Docker Compose
+getting-started/install/docker.md:
+  description: Install Concord with Docker
+getting-started/install/index.md:
+  description: Concord installation overview
+getting-started/install/vagrant.md:
+  description: Install Concord with Vagrant
+getting-started/installation.md:
+  description: Concord installation options
+getting-started/json-store.md:
+  description: Getting started with JSON Store
+getting-started/node-roster.md:
+  description: Getting started with Node Roster
+getting-started/orgs.md:
+  description: Concord Organization overview
+getting-started/policies.md:
+  description: Getting started with Policies
+getting-started/processes.md:
+  description: Processes overview
+getting-started/projects.md:
+  description: Projects overview
+getting-started/quickstart.md:
+  description: Concord quickstart steps
+getting-started/scripting.md:
+  description: Execute scripts in a flow
+getting-started/security.md:
+  description: Managing Concord security
+getting-started/tasks.md:
+  description: Concord Tasks overview
+plugins-v2/ansible.md:
+  description: Plugin for executing Ansible playbooks
+plugins-v2/asserts.md:
+  description: Plugin makes it easy to add validation to your flows
+plugins-v2/concord.md:
+  description: Plugin for interacting with the Concord Process API
+plugins-v2/crypto.md:
+  description: Plugin for handling Concord Secret data
+plugins-v2/datetime.md:
+  description: Plugin for working with dates
+plugins-v2/docker.md:
+  description: Plugin for running Docker containers in a flow
+plugins-v2/files.md:
+  description: Plugin for handling local files
+plugins-v2/http.md:
+  description: Plugin for performing HTTP calls
+plugins-v2/json-store.md:
+  description: Plugin for interacting with Concord's JSON Store API
+plugins-v2/key-value.md:
+  description: Plugin for storing key-value data
+plugins-v2/lock.md:
+  description: Plugin for synchronizing execution
+plugins-v2/mocks.md:
+  description: Safely and efficiently simulate behavior, verify interactions, and
+    validate process logic with the Concord Mocks plugin.
+plugins-v2/node-roster.md:
+  description: Plugin for interacting with Concord's Node Roster API
+plugins-v2/resource.md:
+  description: Plugin for reading and writing local resources
+plugins-v2/slack.md:
+  description: Plugin for sending Slack messages
+plugins-v2/sleep.md:
+  description: Plugin for pausing workflow execution
+plugins-v2/smtp.md:
+  description: Plugin for sending email
+processes-v1/configuration.md:
+  deprecated: true
+processes-v1/flows.md:
+  deprecated: true
+processes-v1/imports.md:
+  deprecated: true
+processes-v1/index.md:
+  deprecated: true
+processes-v1/profiles.md:
+  deprecated: true
+processes-v1/resources.md:
+  deprecated: true
+processes-v1/tasks.md:
+  deprecated: true
