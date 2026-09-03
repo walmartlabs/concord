@@ -21,11 +21,14 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.server.org.OrganizationDao;
+import com.walmartlabs.concord.server.org.OrganizationEntry;
+import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.*;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
+import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -42,21 +45,20 @@ import java.util.UUID;
 @Tag(name = "TriggersV2")
 public class TriggerV2Resource implements Resource {
 
-    private final OrganizationDao orgDao;
+    private final OrganizationManager orgManager;
     private final ProjectDao projectDao;
     private final TriggersDao triggersDao;
     private final ProjectAccessManager projectAccessManager;
-
     private final ProjectRepositoryManager projectRepositoryManager;
 
     @Inject
-    public TriggerV2Resource(OrganizationDao orgDao,
+    public TriggerV2Resource(OrganizationManager orgManager,
                              ProjectDao projectDao,
                              TriggersDao triggersDao,
                              ProjectAccessManager projectAccessManager,
                              ProjectRepositoryManager projectRepositoryManager) {
 
-        this.orgDao = orgDao;
+        this.orgManager = orgManager;
         this.projectDao = projectDao;
         this.triggersDao = triggersDao;
         this.projectAccessManager = projectAccessManager;
@@ -77,48 +79,49 @@ public class TriggerV2Resource implements Resource {
                                    @QueryParam("repoId") UUID repoId,
                                    @QueryParam("repoName") @ConcordKey String repoName) {
 
-        // TODO: assert org/project access
-
         if (type != null && (type.isEmpty() || type.length() > 128)) {
             throw new ValidationErrorsException("Invalid type value: " + type);
         }
 
-        if (orgId == null && orgName != null) {
-            orgId = orgDao.getId(orgName);
-            if (orgId == null) {
-                throw new ValidationErrorsException("Organization not found: " + orgName);
-            }
+        if (orgId == null && orgName == null) {
+            throw new ValidationErrorsException("Organization ID or name is required");
         }
 
-        if (projectId == null && projectName != null) {
-            if (orgId == null) {
-                throw new IllegalArgumentException("Organization ID or name is required");
-            }
+        // Assert org exists and the caller has at least read access to it.
+        OrganizationEntry org = orgManager.assertAccess(orgId, orgName, false);
+        orgId = org.getId();
 
+        if (projectId == null && projectName != null) {
             projectId = projectDao.getId(orgId, projectName);
             if (projectId == null) {
                 throw new ValidationErrorsException("Project not found: " + projectName);
             }
         }
 
+        // Assert the caller has read access to the project when one is in scope.
+        ProjectEntry project = null;
+        if (projectId != null) {
+            project = projectAccessManager.assertAccess(projectId, ResourceAccessLevel.READER, false);
+        }
+
         if (repoId == null && repoName != null) {
-            ProjectEntry p = assertProject(projectId);
-            RepositoryEntry r = projectRepositoryManager.get(p.getId(), repoName);
+            if (project == null) {
+                throw new ValidationErrorsException("Project ID or name is required to look up a repository by name");
+            }
+            RepositoryEntry r = projectRepositoryManager.get(project.getId(), repoName);
             if (r == null) {
-                throw new ValidationErrorsException("Repository not found");
+                throw new ValidationErrorsException("Repository not found: " + repoName);
             }
             repoId = r.getId();
         }
 
-        return triggersDao.list(orgId, projectId, repoId, type);
-    }
-
-
-    private ProjectEntry assertProject(UUID projectId) {
-        if (projectId == null) {
-            throw new ValidationErrorsException("Invalid project ID or name");
+        // For org-wide queries (no specific project), filter to projects the caller can see.
+        // Admins and global readers/writers pass null to skip per-user filtering.
+        UUID currentUserId = null;
+        if (projectId == null && !(Roles.isAdmin() || Roles.isGlobalReader() || Roles.isGlobalWriter())) {
+            currentUserId = UserPrincipal.assertCurrent().getId();
         }
 
-        return projectAccessManager.assertAccess(projectId, ResourceAccessLevel.READER, false);
+        return triggersDao.list(orgId, projectId, repoId, type, currentUserId);
     }
 }
