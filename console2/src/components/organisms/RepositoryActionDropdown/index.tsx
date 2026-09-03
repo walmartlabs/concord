@@ -24,7 +24,6 @@ import { Dropdown, Icon, Table } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import {
-    listTriggersV2 as apiListTriggers,
     RepositoryEntry,
     TriggerEntry
 } from '../../../api/org/project/repository';
