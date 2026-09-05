@@ -31,7 +31,7 @@ import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import com.walmartlabs.concord.server.security.SecurityUtils;
+import com.walmartlabs.concord.server.security.PrincipalCollectionSerializer;
 import org.apache.shiro.subject.PrincipalCollection;
 
 import javax.inject.Inject;
@@ -47,11 +47,14 @@ public class PayloadRestoreProcessor implements PayloadProcessor {
     private final ObjectMapper objectMapper;
     private final ProcessStateManager stateManager;
     private final ProcessSecurityContext securityContext;
+    private final PrincipalCollectionSerializer principalCollectionSerializer;
 
     @Inject
     public PayloadRestoreProcessor(ProcessStateManager stateManager,
-                                   ProcessSecurityContext securityContext) {
+                                   ProcessSecurityContext securityContext,
+                                   PrincipalCollectionSerializer principalCollectionSerializer) {
         this.securityContext = securityContext;
+        this.principalCollectionSerializer = principalCollectionSerializer;
         this.objectMapper = new ObjectMapper()
                 .enableDefaultTyping(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT)
                 .registerModule(new GuavaModule())
@@ -83,7 +86,7 @@ public class PayloadRestoreProcessor implements PayloadProcessor {
         });
         payload = payload.putAttachments(attachments);
 
-        PrincipalCollection principals = stateManager.getInitial(processKey, "initiator", SecurityUtils::deserialize)
+        PrincipalCollection principals = stateManager.getInitial(processKey, "initiator", principalCollectionSerializer::deserialize)
                 .orElseThrow(() -> new ConcordApplicationException("Process initiator not found", Response.Status.INTERNAL_SERVER_ERROR));
 
         securityContext.storeSubject(processKey, principals);
