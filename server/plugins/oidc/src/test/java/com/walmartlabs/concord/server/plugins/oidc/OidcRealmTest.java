@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.plugins.oidc;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.server.cfg.PrincipalSerializationConfiguration;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamEntry;
 import com.walmartlabs.concord.server.org.team.TeamRole;
@@ -28,7 +29,11 @@ import com.walmartlabs.concord.server.plugins.oidc.PluginConfiguration.Source;
 import com.walmartlabs.concord.server.plugins.oidc.PluginConfiguration.TeamMapping;
 import com.walmartlabs.concord.server.role.RoleDao;
 import com.walmartlabs.concord.server.security.PrincipalCollectionSerializer;
-import com.walmartlabs.concord.server.security.PrincipalSerializer;
+import com.walmartlabs.concord.server.sdk.security.PrincipalSerializer;
+import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.UserPrincipalSerializer;
+import com.walmartlabs.concord.server.user.UserEntry;
+import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.junit.jupiter.api.Test;
 
@@ -104,7 +109,6 @@ public class OidcRealmTest {
 
         assertFalse(OidcRealm.match(userProfile, List.of(new Source("groups", ".*superadmins.*"))));
     }
-
     @Test
     public void testSerialization() throws Exception {
         var profile = """
@@ -122,13 +126,30 @@ public class OidcRealmTest {
         var objectMapper = new ObjectMapper();
         var userProfile = UserProfileConverter.convert(objectMapper, profile, "accessToken");
 
+        var user = new UserEntry(UUID.randomUUID(), "oidc-user", null, "OIDC User", null, UserType.LOCAL,
+                "user@example.com", null, false, null, false);
+
         var spc = new SimplePrincipalCollection();
+        spc.add(new UserPrincipal("oidc", user), "oidc");
         spc.add(new OidcToken(userProfile), "oidc");
-        var serializer = new PrincipalCollectionSerializer(objectMapper, Set.<PrincipalSerializer<?>>of(new OidcTokenPrincipalSerializer(objectMapper)));
+        var serializer = new PrincipalCollectionSerializer(objectMapper, Set.<PrincipalSerializer<?>>of(
+                new OidcTokenPrincipalSerializer(objectMapper),
+                new UserPrincipalSerializer(objectMapper)),
+                new PrincipalSerializationConfiguration());
         var bytes = serializer.serialize(spc);
         assertNotNull(bytes);
-        var restored = serializer.deserialize(bytes).orElseThrow().oneByType(OidcToken.class);
+
+        var restoredCollection = serializer.deserialize(bytes).orElseThrow();
+        assertEquals(Set.of("oidc"), restoredCollection.getRealmNames());
+        assertEquals(2, restoredCollection.fromRealm("oidc").size());
+
+        var restored = restoredCollection.oneByType(OidcToken.class);
         assertNotNull(restored);
         assertEquals(userProfile, restored.getProfile());
+
+        var restoredUser = restoredCollection.oneByType(UserPrincipal.class);
+        assertNotNull(restoredUser);
+        assertEquals("oidc-user", restoredUser.getUsername());
+        assertEquals("oidc", restoredUser.getRealm());
     }
 }

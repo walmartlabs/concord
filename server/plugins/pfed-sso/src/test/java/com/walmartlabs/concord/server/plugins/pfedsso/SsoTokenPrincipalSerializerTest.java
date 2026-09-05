@@ -21,8 +21,17 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.server.cfg.PrincipalSerializationConfiguration;
 import com.walmartlabs.concord.server.security.PrincipalCollectionSerializer;
-import com.walmartlabs.concord.server.security.PrincipalSerializer;
+import com.walmartlabs.concord.server.sdk.security.PrincipalSerializer;
+import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.UserPrincipalSerializer;
+import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
+import com.walmartlabs.concord.server.security.ldap.LdapPrincipalSerializer;
+import com.walmartlabs.concord.server.user.UserEntry;
+import com.walmartlabs.concord.server.user.UserType;
+import java.util.Map;
+import java.util.UUID;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +47,8 @@ public class SsoTokenPrincipalSerializerTest {
     public void roundTripsSsoTokens() {
         var objectMapper = new ObjectMapper();
         var serializer = new PrincipalCollectionSerializer(objectMapper,
-                Set.<PrincipalSerializer<?>>of(new SsoTokenPrincipalSerializer(objectMapper)));
+                Set.<PrincipalSerializer<?>>of(new SsoTokenPrincipalSerializer(objectMapper)),
+                new PrincipalSerializationConfiguration());
 
         var token = new SsoToken("test-user", "example.org", "Test User", "test-user@example.org",
                 "test-user@example.org", "cn=test-user,dc=example,dc=org", Set.of("devs", "admins"));
@@ -59,5 +69,50 @@ public class SsoTokenPrincipalSerializerTest {
         assertEquals("test-user@example.org", restored.getUserPrincipalName());
         assertEquals("cn=test-user,dc=example,dc=org", restored.getNameInNamespace());
         assertEquals(Set.of("devs", "admins"), restored.getGroups());
+    }
+    @Test
+    public void roundTripsMixedPrincipalSets() {
+        var objectMapper = new ObjectMapper();
+        var serializer = new PrincipalCollectionSerializer(objectMapper, Set.<PrincipalSerializer<?>>of(
+                new SsoTokenPrincipalSerializer(objectMapper),
+                new UserPrincipalSerializer(objectMapper),
+                new LdapPrincipalSerializer(objectMapper)),
+                new PrincipalSerializationConfiguration());
+
+        var token = new SsoToken("test-user", "example.org", "Test User", "test-user@example.org",
+                "test-user@example.org", "cn=test-user,dc=example,dc=org", Set.of("devs", "admins"));
+        var user = new UserEntry(UUID.randomUUID(), "sso-user", "example.org", "SSO User", null, UserType.SSO,
+                "test-user@example.org", null, false, null, false);
+        var ldap = new LdapPrincipal("test-user", "example.org", "cn=test-user,dc=example,dc=org",
+                "test-user@example.org", "Test User", "test-user@example.org", Set.of("devs"),
+                Map.of("mail", "test-user@example.org"));
+
+        var src = new SimplePrincipalCollection();
+        src.add(token, SsoRealm.REALM_NAME);
+        src.add(new UserPrincipal(SsoRealm.REALM_NAME, user), SsoRealm.REALM_NAME);
+        src.add(ldap, SsoRealm.REALM_NAME);
+
+        var bytes = serializer.serialize(src);
+        assertEquals('{', new String(bytes, StandardCharsets.UTF_8).charAt(0));
+
+        var dst = serializer.deserialize(bytes).orElseThrow();
+        assertEquals(Set.of(SsoRealm.REALM_NAME), dst.getRealmNames());
+        assertEquals(3, dst.fromRealm(SsoRealm.REALM_NAME).size());
+
+        var restoredToken = dst.oneByType(SsoToken.class);
+        assertNotNull(restoredToken);
+        assertEquals("test-user", restoredToken.getUsername());
+        assertEquals(Set.of("devs", "admins"), restoredToken.getGroups());
+
+        var restoredUser = dst.oneByType(UserPrincipal.class);
+        assertNotNull(restoredUser);
+        assertEquals("sso-user", restoredUser.getUsername());
+        assertEquals(UserType.SSO, restoredUser.getType());
+        assertEquals(SsoRealm.REALM_NAME, restoredUser.getRealm());
+
+        var restoredLdap = dst.oneByType(LdapPrincipal.class);
+        assertNotNull(restoredLdap);
+        assertEquals("test-user", restoredLdap.getUsername());
+        assertEquals(Set.of("devs"), restoredLdap.getGroups());
     }
 }

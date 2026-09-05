@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.inject.Inject;
-import java.util.Optional;
 
 import static com.walmartlabs.concord.server.security.PrincipalSerializerSupport.USER_PRINCIPAL_TYPE;
 import static com.walmartlabs.concord.server.security.PrincipalSerializerSupport.toBytes;
@@ -35,11 +34,6 @@ public class UserPrincipalSerializer extends AbstractPrincipalSerializer<UserPri
     @Inject
     public UserPrincipalSerializer(ObjectMapper objectMapper) {
         super(objectMapper, UserPrincipal.class, USER_PRINCIPAL_TYPE);
-    }
-
-    @Override
-    public Optional<String> realmName(UserPrincipal principal) {
-        return Optional.ofNullable(principal.getRealm());
     }
 
     @Override

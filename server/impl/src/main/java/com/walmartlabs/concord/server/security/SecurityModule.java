@@ -33,6 +33,7 @@ import com.walmartlabs.concord.server.security.internal.InternalRealm;
 import com.walmartlabs.concord.server.security.internal.LocalUserInfoProvider;
 import com.walmartlabs.concord.server.security.ldap.*;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyRealm;
+import com.walmartlabs.concord.server.sdk.security.PrincipalSerializer;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.realm.ldap.LdapContextFactory;

@@ -21,9 +21,9 @@ package com.walmartlabs.concord.server.security;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.server.sdk.security.PrincipalSerializer;
 
 import java.util.Objects;
-import java.util.Optional;
 
 public abstract class AbstractPrincipalSerializer<T> implements PrincipalSerializer<T> {
 
@@ -31,17 +31,11 @@ public abstract class AbstractPrincipalSerializer<T> implements PrincipalSeriali
 
     private final Class<T> principalType;
     private final String type;
-    private final String realmName;
 
     protected AbstractPrincipalSerializer(ObjectMapper objectMapper, Class<T> principalType, String type) {
-        this(objectMapper, principalType, type, null);
-    }
-
-    protected AbstractPrincipalSerializer(ObjectMapper objectMapper, Class<T> principalType, String type, String realmName) {
         this.objectMapper = Objects.requireNonNull(objectMapper);
         this.principalType = Objects.requireNonNull(principalType);
         this.type = Objects.requireNonNull(type);
-        this.realmName = realmName;
     }
 
     @Override
@@ -52,10 +46,5 @@ public abstract class AbstractPrincipalSerializer<T> implements PrincipalSeriali
     @Override
     public String type() {
         return type;
-    }
-
-    @Override
-    public Optional<String> realmName(T principal) {
-        return Optional.ofNullable(realmName);
     }
 }

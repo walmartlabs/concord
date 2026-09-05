@@ -29,8 +29,10 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.PrincipalCollectionSerializer;
+import org.apache.shiro.subject.PrincipalCollection;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
@@ -65,26 +67,26 @@ public class PayloadRestoreProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
-        var processKey = payload.getProcessKey();
+        ProcessKey processKey = payload.getProcessKey();
 
-        var headers = stateManager.getInitial(processKey, "payload.json", inputStream -> {
-            var result = deserialize(inputStream);
+        Map<String, Object> headers = stateManager.getInitial(processKey, "payload.json", inputStream -> {
+            Map<String, Object> result = deserialize(inputStream);
             return Optional.ofNullable(result);
         }).orElseThrow(() -> new ConcordApplicationException("Initial state not found", Response.Status.INTERNAL_SERVER_ERROR));
 
         payload = payload.putHeaders(headers);
 
-        var baseDir = payload.getHeader(Payload.BASE_DIR);
+        Path baseDir = payload.getHeader(Payload.BASE_DIR);
 
-        var cp = ProcessStateManager.copyTo(baseDir);
-        var attachments = new HashMap<String, Path>();
+        ProcessStateManager.ItemConsumer cp = ProcessStateManager.copyTo(baseDir);
+        Map<String, Path> attachments = new HashMap<>();
         stateManager.exportDirectoryInitial(processKey, "attachments/", (name, unixMode, src) -> {
             cp.accept(name, unixMode, src);
             attachments.put(name, baseDir.resolve(name));
         });
         payload = payload.putAttachments(attachments);
 
-        var principals = stateManager.getInitial(processKey, "initiator", principalCollectionSerializer::deserialize)
+        PrincipalCollection principals = stateManager.getInitial(processKey, "initiator", principalCollectionSerializer::deserialize)
                 .orElseThrow(() -> new ConcordApplicationException("Process initiator not found", Response.Status.INTERNAL_SERVER_ERROR));
 
         securityContext.storeSubject(processKey, principals);

@@ -34,7 +34,7 @@ public class OidcTokenPrincipalSerializer extends AbstractPrincipalSerializer<Oi
 
     @Inject
     public OidcTokenPrincipalSerializer(ObjectMapper objectMapper) {
-        super(objectMapper, OidcToken.class, OIDC_TOKEN_TYPE, OidcRealm.REALM_NAME);
+        super(objectMapper, OidcToken.class, OIDC_TOKEN_TYPE);
     }
 
     @Override

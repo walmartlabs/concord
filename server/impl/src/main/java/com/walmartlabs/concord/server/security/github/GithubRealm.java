@@ -42,7 +42,7 @@ public class GithubRealm extends AuthorizingRealm {
 
     private static final Logger log = LoggerFactory.getLogger(GithubRealm.class);
 
-    static final String REALM_NAME = "github";
+    private static final String REALM_NAME = "github";
     private static final UUID USER_ID = UUID.fromString("acc17a02-b471-46af-9914-48cba3dd31ab"); // as in v0.47.0.xml
 
     private final UserManager userManager;

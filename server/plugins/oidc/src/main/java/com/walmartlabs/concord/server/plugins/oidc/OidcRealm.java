@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 public class OidcRealm extends AuthorizingRealm {
 
     private static final Logger log = LoggerFactory.getLogger(OidcRealm.class);
-    static final String REALM_NAME = "oidc";
+    private static final String REALM_NAME = "oidc";
 
     private final UserManager userManager;
     private final UserDao userDao;

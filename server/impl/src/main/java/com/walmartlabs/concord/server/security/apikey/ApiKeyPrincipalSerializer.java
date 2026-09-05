@@ -38,7 +38,7 @@ public class ApiKeyPrincipalSerializer extends AbstractPrincipalSerializer<ApiKe
 
     @Inject
     public ApiKeyPrincipalSerializer(ObjectMapper objectMapper) {
-        super(objectMapper, ApiKey.class, API_KEY_TYPE, ApiKeyRealm.REALM_NAME);
+        super(objectMapper, ApiKey.class, API_KEY_TYPE);
     }
 
     @Override

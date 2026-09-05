@@ -42,7 +42,7 @@ import java.util.List;
 
 public class ApiKeyRealm extends AuthorizingRealm {
 
-    static final String REALM_NAME = "apikey";
+    private static final String REALM_NAME = "apikey";
 
     private final UserManager userManager;
     private final AuditLog auditLog;

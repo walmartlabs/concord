@@ -25,7 +25,7 @@ import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
 import com.walmartlabs.concord.server.boot.FilterChainConfigurator;
 import com.walmartlabs.concord.server.boot.filters.AuthenticationHandler;
-import com.walmartlabs.concord.server.security.PrincipalSerializer;
+import com.walmartlabs.concord.server.sdk.security.PrincipalSerializer;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import org.apache.shiro.realm.Realm;
 

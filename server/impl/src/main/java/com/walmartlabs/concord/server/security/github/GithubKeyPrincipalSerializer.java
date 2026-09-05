@@ -37,7 +37,7 @@ public class GithubKeyPrincipalSerializer extends AbstractPrincipalSerializer<Gi
 
     @Inject
     public GithubKeyPrincipalSerializer(ObjectMapper objectMapper) {
-        super(objectMapper, GithubKey.class, GITHUB_KEY_TYPE, GithubRealm.REALM_NAME);
+        super(objectMapper, GithubKey.class, GITHUB_KEY_TYPE);
     }
 
     @Override

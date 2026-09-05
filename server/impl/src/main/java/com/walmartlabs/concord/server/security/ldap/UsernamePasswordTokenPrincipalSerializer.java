@@ -38,7 +38,7 @@ public class UsernamePasswordTokenPrincipalSerializer extends AbstractPrincipalS
 
     @Inject
     public UsernamePasswordTokenPrincipalSerializer(ObjectMapper objectMapper) {
-        super(objectMapper, UsernamePasswordToken.class, USERNAME_PASSWORD_TYPE, LdapRealm.REALM_NAME);
+        super(objectMapper, UsernamePasswordToken.class, USERNAME_PASSWORD_TYPE);
     }
 
     @Override

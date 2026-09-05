@@ -41,7 +41,7 @@ public class SsoTokenPrincipalSerializer extends AbstractPrincipalSerializer<Sso
 
     @Inject
     public SsoTokenPrincipalSerializer(ObjectMapper objectMapper) {
-        super(objectMapper, SsoToken.class, SSO_TOKEN_TYPE, SsoRealm.REALM_NAME);
+        super(objectMapper, SsoToken.class, SSO_TOKEN_TYPE);
     }
 
     @Override
