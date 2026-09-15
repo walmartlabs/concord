@@ -33,5 +33,12 @@ Notes:
   `it/console/target/screenshots/`.
 - New test modules should prefer `testcontainer-concord` instead of the
   older setup pattern used in `it/server`.
+- `it/agent-operator` deploys the agent operator into a k3s testcontainer.
+  It requires the locally built `walmartlabs/concord-server`,
+  `walmartlabs/concord-agent` and `walmartlabs/concord-agent-operator`
+  images (see the docker-profile command above). Run it with:
+  ```shell
+  ./mvnw -pl it/agent-operator verify -Pit -Dit.test=AgentOperatorIT
+  ```
 - For broader context on prerequisites and the general `-Pit` flow, see
   [../README.md](../README.md).

@@ -177,7 +177,6 @@ public class LdapManagerImpl implements LdapManager {
     @Override
     public LdapPrincipal getPrincipalByMail(String email) throws NamingException {
         String searchDn = cfg.getSearchBase();
-        String mailAttr = "(mail=" + email + ")";
 
         LdapContext ctx = null;
         try {
@@ -185,7 +184,8 @@ public class LdapManagerImpl implements LdapManager {
             return getPrincipal(new SearchFn(ctx) {
                 @Override
                 public NamingEnumeration<SearchResult> lookup(SearchControls ctls) throws NamingException {
-                    return ctx.search(searchDn, mailAttr, ctls);
+                    String[] args = new String[]{email};
+                    return ctx.search(searchDn, "(mail={0})", args, ctls);
                 }
 
                 @Override

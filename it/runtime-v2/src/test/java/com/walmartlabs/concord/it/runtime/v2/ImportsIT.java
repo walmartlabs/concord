@@ -41,8 +41,13 @@ public class ImportsIT extends AbstractTest {
 
     @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure()
-            .extraConfigurationSupplier(() -> "concord-server { imports { disabledProcessors = [] } }\n" +
-                    "concord-agent { imports { disabledProcessors = [] } }");
+            .extraConfigurationSupplier(() -> """
+                    concord-server {
+                        imports { disabledProcessors = [] }
+                        websockets { requirePermission = false }
+                    }
+                    concord-agent { imports { disabledProcessors = [] } }
+                    """);
 
     @Test
     public void testDir() throws Exception {

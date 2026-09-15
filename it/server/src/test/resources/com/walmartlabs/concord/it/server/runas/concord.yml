@@ -1,9 +1,10 @@
 flows:
   default:
+    - checkpoint: init
     - log: "${initiator} == ${currentUser}"        # currentUser is the initiator
     - form: myForm
       runAs:
-        username: "admin"                        # optional
+        username: "${runAsUser}"                    # optional
   #      ldap:                                      # optional
   #        group: "CN=Admin,DN=Concord"
         keep: true                                 # continue the execution as the specified user

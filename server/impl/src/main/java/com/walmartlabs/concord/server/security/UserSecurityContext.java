@@ -72,4 +72,16 @@ public class UserSecurityContext {
             ThreadContext.unbindSecurityManager();
         }
     }
+
+    public boolean isPermitted(UUID userId, Permission permission) {
+        var user = userManager.get(userId).orElse(null);
+        if (user == null) {
+            return false;
+        }
+
+        var principal = new UserPrincipal(InternalRealm.REALM_NAME, user);
+        var principals = new SimplePrincipalCollection(principal, InternalRealm.REALM_NAME);
+
+        return securityManager.isPermitted(principals, permission.getKey());
+    }
 }

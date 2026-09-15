@@ -45,6 +45,7 @@ public class OldAgentIT {
     public final ConcordRule concord = new ConcordRule()
             .serverImage(System.getProperty("server.image", "walmartlabs/concord-server"))
             .agentImage(System.getProperty("agent.image", "walmartlabs/concord-agent"))
+            .extraConfigurationSupplier(() -> "concord-server { websockets { requirePermission = false } }")
             .pullPolicy(PullPolicy.defaultPolicy())
             .streamServerLogs(true)
             .streamAgentLogs(true);

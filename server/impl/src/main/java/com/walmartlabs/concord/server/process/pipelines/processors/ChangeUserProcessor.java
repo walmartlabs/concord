@@ -25,6 +25,7 @@ import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.process.form.FormServiceV1;
+import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 
 import javax.inject.Inject;
 import java.util.Map;
@@ -37,12 +38,15 @@ public class ChangeUserProcessor implements PayloadProcessor {
 
     private final ProcessSecurityContext securityContext;
     private final CurrentUserInfoProcessor currentUserInfoProcessor;
+    private final ProcessCheckpointManager checkpointManager;
 
     @Inject
     public ChangeUserProcessor(ProcessSecurityContext securityContext,
-                               CurrentUserInfoProcessor currentUserInfoProcessor) {
+                               CurrentUserInfoProcessor currentUserInfoProcessor,
+                               ProcessCheckpointManager checkpointManager) {
         this.securityContext = securityContext;
         this.currentUserInfoProcessor = currentUserInfoProcessor;
+        this.checkpointManager = checkpointManager;
     }
 
     @Override
@@ -59,7 +63,13 @@ public class ChangeUserProcessor implements PayloadProcessor {
 
         boolean keep = MapUtils.getBoolean(runAsParams, Constants.Forms.RUN_AS_KEEP_KEY, false);
         if (keep) {
-            securityContext.storeCurrentSubject(payload.getProcessKey());
+            if (securityContext.hasChanged(payload.getProcessKey())) {
+                securityContext.storeCurrentSubject(payload.getProcessKey());
+                // Changing current user loses previous principal data from process state.
+                // Don't allow restoring previously-created checkpoints
+                checkpointManager.deleteAllCheckpoints(payload.getProcessKey());
+            }
+
             return currentUserInfoProcessor.process(chain, payload);
         }
 

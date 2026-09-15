@@ -20,9 +20,26 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ApiException;
+import com.walmartlabs.concord.client2.ApiKeysApi;
+import com.walmartlabs.concord.client2.CreateApiKeyRequest;
+import com.walmartlabs.concord.client2.CreateApiKeyResponse;
+import com.walmartlabs.concord.client2.CreateTeamResponse;
+import com.walmartlabs.concord.client2.CreateUserRequest;
+import com.walmartlabs.concord.client2.CreateUserResponse;
+import com.walmartlabs.concord.client2.OrganizationEntry;
+import com.walmartlabs.concord.client2.OrganizationsApi;
 import com.walmartlabs.concord.client2.ProcessApi;
 import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.client2.ProjectEntry;
+import com.walmartlabs.concord.client2.ProjectsApi;
+import com.walmartlabs.concord.client2.ResourceAccessEntry;
 import com.walmartlabs.concord.client2.StartProcessResponse;
+import com.walmartlabs.concord.client2.TeamEntry;
+import com.walmartlabs.concord.client2.TeamUserEntry;
+import com.walmartlabs.concord.client2.TeamsApi;
+import com.walmartlabs.concord.client2.UsersApi;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +49,9 @@ import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class SuspendIT extends AbstractServerIT {
 
@@ -115,4 +134,145 @@ public class SuspendIT extends AbstractServerIT {
 
         assertLog(".*task completed.*", ab);
     }
+
+    @Test
+    void resumeAssertPermission() throws Exception {
+
+        String orgName = "org_" + randomString();
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
+
+        String projectName = "project_" + randomString();
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        TeamsApi teamsApi = new TeamsApi(getApiClient()); // save for later with admin token
+
+
+        URI dir = SuspendIT.class.getResource("suspend").toURI();
+        byte[] payload = archive(dir);
+
+        // ---  start process, wait for it to suspend for a resume event
+
+        Map<String, Object> input = new HashMap<>();
+
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("archive", payload);
+
+        StartProcessResponse spr = start(input);
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+
+        String userName = "user_" + randomString();
+        CreateUserResponse cur = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
+
+        ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse car = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
+                .userId(cur.getId()));
+
+        waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+
+        // --- try to resume with non-project member user
+
+        ApiClient userClient = getApiClientForKey(car.getKey());
+        ProcessApi userProcessApi = new ProcessApi(userClient);
+
+        // --- Expect resume call to be blocked by lack of permission
+
+        String testValue = "test#" + randomString();
+        Map<String, Object> args = Collections.singletonMap("testValue", testValue);
+        Map<String, Object> req = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY, args);
+
+        ApiException ex = assertThrows(ApiException.class, () -> userProcessApi.resume(spr.getInstanceId(), "ev1", null, req));
+
+        assertEquals(403, ex.getCode());
+        assertEquals("The current user (" + userName + ") doesn't have the necessary access level (WRITER) to the project: " + projectName, ex.getResponseBody());
+
+        // --- Add user to project team access
+
+        CreateTeamResponse ctr = teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name("writer_team"));
+
+        teamsApi.addUsersToTeam(orgName, "writer_team", true, List.of(new TeamUserEntry().userId(cur.getId())));
+        projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
+                .teamId(ctr.getId())
+                .orgName(orgName)
+                .teamName("writer_team")
+                .level(ResourceAccessEntry.LevelEnum.WRITER));
+
+        // --- should work now
+
+        assertDoesNotThrow(() -> userProcessApi.resume(spr.getInstanceId(), "ev1", null, req));
+
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        waitForLog(pir.getInstanceId(), ".*bbbb.*");
+        waitForLog(pir.getInstanceId(), ".*" + Pattern.quote(testValue) + ".*");
+    }
+
+    @Test
+    void resumeAssertPermissionNoProject() throws Exception {
+
+        URI dir = SuspendIT.class.getResource("suspend").toURI();
+        byte[] payload = archive(dir);
+
+        // ---
+
+        ProcessApi ownerProcessApi = new ProcessApi(getApiClient());
+
+        Map<String, Object> input = new HashMap<>();
+
+        input.put("archive", payload);
+
+        StartProcessResponse spr = start(input);
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+
+        String userName = "user_" + randomString();
+        CreateUserResponse cur = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
+
+        ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse car = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
+                .userId(cur.getId()));
+
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+
+        // --- switch to non-project user
+
+        ApiClient userClient = getApiClientForKey(car.getKey());
+        ProcessApi userProcessApi = new ProcessApi(userClient);
+
+        // --- Expect resume call to be blocked by lack of permission
+
+        String testValue = "test#" + randomString();
+        Map<String, Object> args = Collections.singletonMap("testValue", testValue);
+        Map<String, Object> req = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY, args);
+
+        ApiException ex = assertThrows(ApiException.class, () -> userProcessApi.resume(spr.getInstanceId(), "ev1", null, req));
+
+        assertEquals(403, ex.getCode());
+        assertEquals("The current user (" + userName +") doesn't have the necessary permissions to the download _suspend : " + pir.getInstanceId(), ex.getResponseBody());
+
+
+        // --- back to test default user
+
+        resetApiKey();
+
+        // --- Resume should be allowed by process owner
+
+        assertDoesNotThrow(() -> ownerProcessApi.resume(spr.getInstanceId(), "ev1", null, req));
+
+        pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        waitForLog(pir.getInstanceId(), ".*bbbb.*");
+        waitForLog(pir.getInstanceId(), ".*" + Pattern.quote(testValue) + ".*");
+    }
+
 }
