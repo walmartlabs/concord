@@ -4,7 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
-    <changeSet id="2430000" author="lauren.connors@walmart.com">
+    <changeSet id="2460000" author="lauren.connors@walmart.com">
         <createTable tableName="NOTIFICATIONS">
             <column name="ID" type="uuid">
                 <constraints nullable="false" primaryKey="true"/>
@@ -111,7 +111,7 @@
         <sql>ALTER TABLE notifications ADD CONSTRAINT chk_notifications_repo_requires_project CHECK (repo_id IS NULL OR project_id IS NOT NULL)</sql>
     </changeSet>
 
-    <changeSet id="2430001" author="lauren.connors@walmart.com">
+    <changeSet id="2460001" author="lauren.connors@walmart.com">
         <insert tableName="ROLES">
             <column name="ROLE_NAME">concordModerator</column>
         </insert>
