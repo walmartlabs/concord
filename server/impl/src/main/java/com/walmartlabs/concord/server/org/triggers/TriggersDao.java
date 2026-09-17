@@ -34,12 +34,13 @@ import org.jooq.*;
 import javax.inject.Inject;
 import java.util.*;
 
+import com.walmartlabs.concord.server.org.project.ProjectVisibility;
+
 import static com.walmartlabs.concord.db.PgUtils.jsonbText;
 import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Triggers.TRIGGERS;
 import static java.util.Objects.requireNonNull;
-import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.value;
+import static org.jooq.impl.DSL.*;
 
 public class TriggersDao extends AbstractDao {
 
@@ -138,6 +139,61 @@ public class TriggersDao extends AbstractDao {
             SelectConditionStep<Record1<UUID>> projectIds = select(PROJECTS.PROJECT_ID)
                     .from(PROJECTS)
                     .where(PROJECTS.ORG_ID.eq(orgId));
+
+            query.where(TRIGGERS.PROJECT_ID.in(projectIds));
+        }
+
+        if (projectId != null) {
+            query.where(TRIGGERS.PROJECT_ID.eq(projectId));
+        }
+
+        if (repositoryId != null) {
+            query.where(TRIGGERS.REPO_ID.eq(repositoryId));
+        }
+
+        if (type != null) {
+            query.where(TRIGGERS.EVENT_SOURCE.eq(type));
+        }
+
+        return query.fetch(this::toEntity);
+    }
+
+    /**
+     * Like {@link #list(UUID, UUID, UUID, String)} but, for org-wide queries (no specific
+     * {@code projectId}), restricts results to projects visible to {@code currentUserId}.
+     * Pass {@code null} for {@code currentUserId} to skip per-user filtering (e.g. admins).
+     */
+    public List<TriggerEntry> list(UUID orgId, UUID projectId, UUID repositoryId, String type, UUID currentUserId) {
+        SelectJoinStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], JSONB, JSONB, JSONB>> query = selectTriggers(dsl());
+
+        if (orgId != null) {
+            SelectConditionStep<Record1<UUID>> projectIds;
+
+            if (projectId == null && currentUserId != null) {
+                // Filter the org-wide project set to only those visible to the caller,
+                // mirroring the visibility logic in ProjectDao.list().
+                SelectConditionStep<Record1<UUID>> orgTeamIds = select(TEAMS.TEAM_ID)
+                        .from(TEAMS)
+                        .where(TEAMS.ORG_ID.eq(orgId));
+
+                Condition accessible = or(
+                        PROJECTS.VISIBILITY.eq(ProjectVisibility.PUBLIC.toString()),
+                        PROJECTS.OWNER_ID.eq(currentUserId),
+                        ORGANIZATIONS.OWNER_ID.eq(currentUserId),
+                        exists(selectOne().from(V_USER_TEAMS)
+                                .where(V_USER_TEAMS.USER_ID.eq(currentUserId)
+                                        .and(V_USER_TEAMS.TEAM_ID.in(orgTeamIds))))
+                );
+
+                projectIds = select(PROJECTS.PROJECT_ID)
+                        .from(PROJECTS)
+                        .join(ORGANIZATIONS).on(ORGANIZATIONS.ORG_ID.eq(PROJECTS.ORG_ID))
+                        .where(PROJECTS.ORG_ID.eq(orgId).and(accessible));
+            } else {
+                projectIds = select(PROJECTS.PROJECT_ID)
+                        .from(PROJECTS)
+                        .where(PROJECTS.ORG_ID.eq(orgId));
+            }
 
             query.where(TRIGGERS.PROJECT_ID.in(projectIds));
         }
