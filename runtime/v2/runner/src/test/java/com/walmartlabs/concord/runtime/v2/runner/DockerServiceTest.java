@@ -23,7 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -45,5 +45,26 @@ public class DockerServiceTest {
         assertThrows(IllegalArgumentException.class, () -> DefaultDockerService.validateDockerImage("repo' && whoami && '"));
         assertThrows(IllegalArgumentException.class, () -> DefaultDockerService.validateDockerImage("ghcr.io/acme/app:tag\nuname -a"));
         assertThrows(IllegalArgumentException.class, () -> DefaultDockerService.validateDockerImage("alpine'; id > /tmp/id_out.txt; echo '"));
+    }
+
+    @Test
+    void testEtcHostValueIsShellQuoted() throws Exception {
+        var host = "example.local:127.0.0.1'; touch /tmp/pwned; echo '";
+
+        try (var process = new DockerProcessBuilder("alpine")
+                .forcePull(false)
+                .useHostNetwork(false)
+                .options(new DockerProcessBuilder.DockerOptionsBuilder()
+                        .etcHost(host)
+                        .build())
+                .build()) {
+            var cmd = process.cmd()[2];
+            assertTrue(cmd.contains("--add-host " + shellQuote(host)));
+            assertFalse(cmd.contains("--add-host " + host));
+        }
+    }
+
+    private static String shellQuote(String value) {
+        return "'" + value.replace("'", "\"'\"") + "'";
     }
 }
