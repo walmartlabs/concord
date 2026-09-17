@@ -1,0 +1,14 @@
+flows:
+  default:
+    - task: docker
+      in:
+        image: ${image}
+        debug: true
+        forcePull: false
+        stderr: myErrout
+        cmd: |
+          for i in {1..10000}
+          do
+            echo "stdout loop $i"
+            >&2 echo "stderr loop $i"
+          done
