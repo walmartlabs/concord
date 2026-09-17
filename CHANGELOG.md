@@ -7,7 +7,9 @@
 - server: assert process access for decrypting project strings
 ([#1376](https://github.com/walmartlabs/concord/pull/1376));
 - common, runtime-v2: sanitize docker service's host input
-([#1379](https://github.com/walmartlabs/concord/pull/1379)).
+([#1379](https://github.com/walmartlabs/concord/pull/1379));
+- server: assert access to org/project before listing triggers
+([#1377](https://github.com/walmartlabs/concord/pull/1377)).
 
 
 
