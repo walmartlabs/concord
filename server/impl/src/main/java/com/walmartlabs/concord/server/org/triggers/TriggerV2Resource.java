@@ -118,7 +118,7 @@ public class TriggerV2Resource implements Resource {
         // For org-wide queries (no specific project), filter to projects the caller can see.
         // Admins and global readers/writers pass null to skip per-user filtering.
         UUID currentUserId = null;
-        if (projectId == null && !(Roles.isAdmin() || Roles.isGlobalReader() || Roles.isGlobalWriter())) {
+        if (projectId == null && !(Roles.isAdmin() || Roles.isGlobalReader())) {
             currentUserId = UserPrincipal.assertCurrent().getId();
         }
 
