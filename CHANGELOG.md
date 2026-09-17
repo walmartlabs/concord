@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.46.0] - TBD
+
+### Changed
+
+- server: assert process access for decrypting project strings
+([#1376](https://github.com/walmartlabs/concord/pull/1376)).
+
+
+
 ## [2.45.0] - 2026-08-24
 
 ### Added
