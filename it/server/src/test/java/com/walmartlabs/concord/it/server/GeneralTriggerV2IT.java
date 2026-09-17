@@ -30,6 +30,10 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class GeneralTriggerV2IT extends AbstractGeneralTriggerIT {
 
@@ -148,5 +152,114 @@ public class GeneralTriggerV2IT extends AbstractGeneralTriggerIT {
         // ---
 
         cleanup();
+    }
+
+    // --- authorization tests ---
+
+    @Test
+    public void testListTriggersNoOrgRejected() throws Exception {
+        // calling without orgId or orgName must be rejected
+        TriggersV2Api triggersApi = new TriggersV2Api(getApiClient());
+        try {
+            triggersApi.listTriggersV2(null, null, null, null, null, null, null);
+            fail("Should fail");
+        } catch (ApiException e) {
+            assertEquals(400, e.getCode());
+        }
+    }
+
+    @Test
+    public void testListTriggersRepoNameWithoutProjectRejected() throws Exception {
+        // a repoName query parameter requires a project to scope it
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
+
+        try {
+            TriggersV2Api triggersApi = new TriggersV2Api(getApiClient());
+            try {
+                triggersApi.listTriggersV2(null, null, orgName, null, null, null, "some-repo");
+                fail("Should fail");
+            } catch (ApiException e) {
+                assertEquals(400, e.getCode());
+            }
+        } finally {
+            orgApi.deleteOrg(orgName, "yes");
+        }
+    }
+
+    @Test
+    public void testListTriggersPrivateProjectRequiresAccess() throws Exception {
+        // a user with no project access must be denied when querying a specific private project
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        ProjectOperationResponse projectResponse = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name("project_" + randomString())
+                .visibility(ProjectEntry.VisibilityEnum.PRIVATE));
+        UUID projectId = projectResponse.getId();
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        String userName = "user_" + randomString();
+        CreateUserResponse cur = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
+
+        ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse car = apiKeysApi.createUserApiKey(new CreateApiKeyRequest().userId(cur.getId()));
+
+        setApiKey(car.getKey());
+
+        try {
+            TriggersV2Api triggersApi = new TriggersV2Api(getApiClient());
+            try {
+                triggersApi.listTriggersV2(null, null, orgName, projectId, null, null, null);
+                fail("Should fail");
+            } catch (ApiException e) {
+                assertEquals(403, e.getCode());
+            }
+        } finally {
+            resetApiKey();
+            orgApi.deleteOrg(orgName, "yes");
+        }
+    }
+
+    @Test
+    public void testListTriggersOrgMemberCanQueryOrgScope() throws Exception {
+        // an org member listing triggers without specifying a project must succeed
+        String orgName = "org_" + randomString();
+        String teamName = "team_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        String userName = "user_" + randomString();
+        CreateUserResponse cur = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
+
+        ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse car = apiKeysApi.createUserApiKey(new CreateApiKeyRequest().userId(cur.getId()));
+
+        TeamsApi teamsApi = new TeamsApi(getApiClient());
+        teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name(teamName));
+        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
+                .userId(cur.getId())
+                .role(TeamUserEntry.RoleEnum.MEMBER)));
+
+        setApiKey(car.getKey());
+
+        try {
+            TriggersV2Api triggersApi = new TriggersV2Api(getApiClient());
+            triggersApi.listTriggersV2(null, null, orgName, null, null, null, null);
+        } finally {
+            resetApiKey();
+            orgApi.deleteOrg(orgName, "yes");
+        }
     }
 }
