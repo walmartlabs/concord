@@ -92,6 +92,7 @@ const TopBar = () => {
             activeTab={activeTab}
             extraSystemLinks={getExtraSystemLinks()}
             customResources={getCustomResources()}
+            username={userSession.userInfo?.username}
             userDisplayName={userSession.userInfo?.displayName}
             {...navigationProps}
             logOut={logOut}
