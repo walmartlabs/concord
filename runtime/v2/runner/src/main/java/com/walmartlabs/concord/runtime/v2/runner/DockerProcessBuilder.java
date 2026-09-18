@@ -238,7 +238,7 @@ public class DockerProcessBuilder {
         options.forEach(o -> {
             c.add(o.getKey());
             if (o.getValue() != null) {
-                c.add(o.getValue());
+                c.add(q(o.getValue()));
             }
         });
         c.add(q(image));
