@@ -64,7 +64,7 @@
         <guava.version>33.7.1-jre</guava.version>
         <guice.version>6.0.0</guice.version>
         <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
-        <hikaricp.version>6.0.0</hikaricp.version>
+        <hikaricp.version>7.1.0</hikaricp.version>
         <httpclient.version>4.5.14</httpclient.version>
         <httpcore.version>4.4.16</httpcore.version>
         <httpmime.version>4.5.14</httpmime.version>
@@ -87,11 +87,13 @@
         <jcl-over-slf4j.version>1.7.36</jcl-over-slf4j.version>
         <jetbrain.annotations.version>23.0.0</jetbrain.annotations.version>
         <jetty.version>12.0.36</jetty.version>
-        <jgit.version>6.10.1.202505221210-r</jgit.version>
+        <jgit.version>7.8.0.202609011348-r</jgit.version>
         <jna.version>5.19.1</jna.version>
-        <jooq.version>3.19.33</jooq.version>
+        <jooq.version>3.21.8</jooq.version>
         <jsch.version>2.27.3</jsch.version>
-        <json.schema.validator.version>1.5.4</json.schema.validator.version>
+        <!-- 2.0.x is the newest line still built against Jackson 2; 3.x moved to the
+             tools.jackson.* namespace (Jackson 3), which Concord does not use -->
+        <json.schema.validator.version>2.0.7</json.schema.validator.version>
         <json.smart.version>2.5.2</json.smart.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>5.9.1</junit.version>
@@ -101,7 +103,7 @@
         <kubernetes.client.version>7.4.1</kubernetes.client.version>
         <launcher.version>0.128</launcher.version>
         <liquibase.version>4.29.2</liquibase.version>
-        <logback.version>1.5.34</logback.version>
+        <logback.version>1.6.3</logback.version>
         <maven.annotation.version>3.5</maven.annotation.version>
         <maven.api.version>3.0.5</maven.api.version>
         <maven.artifact.version>3.9.15</maven.artifact.version>
@@ -120,7 +122,7 @@
         <postgres.version>42.7.13</postgres.version>
         <prometheus.simpleclient.version>0.16.0</prometheus.simpleclient.version>
         <reactive.streams.version>1.0.3</reactive.streams.version>
-        <reflections.version>0.9.11</reflections.version>
+        <reflections.version>0.10.2</reflections.version>
         <resteasy.version>4.7.9.Final</resteasy.version>
         <selenium.version>4.27.0</selenium.version>
         <servlet.version>4.0.1</servlet.version>
