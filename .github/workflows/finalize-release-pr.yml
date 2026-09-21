@@ -1,0 +1,69 @@
+name: finalize-release-pr
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: Release version, e.g. 2.41.0
+        required: true
+        type: string
+      next_development_version:
+        description: Next development version, e.g. 2.41.1-SNAPSHOT
+        required: true
+        type: string
+      changelog_branch:
+        description: Existing changelog PR branch to finalize
+        required: true
+        type: string
+      release_date:
+        description: Release date in YYYY-MM-DD format. Empty uses the current UTC date.
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: finalize-release-pr-${{ inputs.changelog_branch }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Configure Git
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Finalize release PR branch
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+          NEXT_DEVELOPMENT_VERSION: ${{ inputs.next_development_version }}
+          CHANGELOG_BRANCH: ${{ inputs.changelog_branch }}
+          RELEASE_DATE: ${{ inputs.release_date }}
+        run: bash .github/scripts/finalize-release-pr.sh
+
+      - name: Merge reminder
+        run: |
+          set -euo pipefail
+          echo "Merge the final release PR with GitHub 'Rebase and merge'. Do not squash merge it."
