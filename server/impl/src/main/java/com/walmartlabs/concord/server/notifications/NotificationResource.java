@@ -138,6 +138,11 @@ public class NotificationResource implements Resource {
         if (entry == null) {
             throw new ConcordApplicationException("Notification not found: " + id, Status.NOT_FOUND);
         }
+
+        if (!Roles.isAdminOrModerator()) {
+            assertOwnerAccess(entry);
+        }
+
         return entry;
     }
 
@@ -185,7 +190,7 @@ public class NotificationResource implements Resource {
      * Asserts that the current user has access to the specified notification owner.
      * <ul>
      *   <li>USER — current user must be the target user</li>
-     *   <li>PROJECT — current user must be a project owner</li>
+     *   <li>PROJECT — current user must have at least reader access to the project</li>
      *   <li>ORG — current user must be an org member</li>
      * </ul>
      */
@@ -197,7 +202,7 @@ public class NotificationResource implements Resource {
                     throw new UnauthorizedException("Only the target user can access their own notifications");
                 }
             }
-            case PROJECT -> projectAccessManager.assertAccess(ownerId, ResourceAccessLevel.OWNER, true);
+            case PROJECT -> projectAccessManager.assertAccess(ownerId, ResourceAccessLevel.READER, true);
             case ORG -> orgManager.assertAccess(ownerId, true);
             default -> throw new UnauthorizedException("Only admins or moderators can access this notification");
         }
