@@ -19,13 +19,14 @@
  */
 
 import * as React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
 import { Message } from 'semantic-ui-react';
 import { ConcordId, ConcordKey } from '../../../api/common';
 import { dismissNotification, listNotifications, NotificationEntry } from '../../../api/notifications';
 import { get as getOrg } from '../../../api/org';
 import { get as getProject } from '../../../api/org/project';
+import { UserSessionContext } from '../../../session';
 import NotificationModal from '../NotificationModal';
 
 interface Props {
@@ -33,21 +34,22 @@ interface Props {
     projectName?: ConcordKey;
 }
 
-const POLL_INTERVAL_MS = 60_000;
-
 const NotificationBanners: React.FunctionComponent<Props> = ({ orgName, projectName }) => {
     const location = useLocation();
+    const { userInfo } = useContext(UserSessionContext);
     const [notifications, setNotifications] = useState<NotificationEntry[]>([]);
     const [selectedId, setSelectedId] = useState<ConcordId | null>(null);
     const [ownerKind, setOwnerKind] = useState<'ORG' | 'PROJECT' | null>(null);
     const [ownerId, setOwnerId] = useState<ConcordId | null>(null);
 
-    // Resolve org/project name → UUID
     useEffect(() => {
         setOwnerId(null);
         setOwnerKind(null);
 
         if (!orgName) return;
+
+        const isMember = Object.values(userInfo?.orgs ?? {}).some((org) => org.name === orgName);
+        if (!isMember) return;
 
         if (projectName) {
             getProject(orgName, projectName)
@@ -64,7 +66,7 @@ const NotificationBanners: React.FunctionComponent<Props> = ({ orgName, projectN
                 })
                 .catch((e) => console.warn('[NotificationBanners] failed to resolve org:', e));
         }
-    }, [orgName, projectName]);
+    }, [orgName, projectName, userInfo]);
 
     const fetchBanners = useCallback(async () => {
         if (!ownerKind || !ownerId) return;
@@ -72,25 +74,14 @@ const NotificationBanners: React.FunctionComponent<Props> = ({ orgName, projectN
             const data = await listNotifications(ownerKind, ownerId);
             setNotifications(data.filter((n) => !n.dismissedTimestamp));
         } catch (e) {
-            // 403 = user lacks access (expected for non-members); log other errors
-            const status = (e as any)?.status;
-            if (status !== 403) {
-                console.warn('[NotificationBanners] fetch failed:', e);
-            }
+            console.warn('[NotificationBanners] fetch failed:', e);
         }
     }, [ownerKind, ownerId]);
 
-    // Fetch immediately on mount, after ID resolves, and on every route change
-    // (covers: initial load, tab switches after creating a notification on the Notify tab)
+    // Fetch on mount, after resource ID resolves, and on every navigation event
     useEffect(() => {
         fetchBanners();
     }, [location.pathname, fetchBanners]);
-
-    // Background polling
-    useEffect(() => {
-        const timer = window.setInterval(fetchBanners, POLL_INTERVAL_MS);
-        return () => window.clearInterval(timer);
-    }, [fetchBanners]);
 
     const handleDismiss = useCallback(async (id: ConcordId) => {
         await dismissNotification(id);
