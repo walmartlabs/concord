@@ -126,7 +126,7 @@ public class NotificationsDao extends AbstractDao {
                 .execute());
     }
 
-    public List<NotificationEntry> list(NotificationOwnerKind ownerKind, UUID ownerId, int offset, int limit) {
+    public List<NotificationEntry> list(NotificationScope ownerKind, UUID ownerId, int offset, int limit) {
         Notifications n = NOTIFICATIONS.as("n");
 
         SelectWhereStep<Record12<UUID, UUID, UUID, UUID, UUID, String, String, String, Boolean, OffsetDateTime, UUID, OffsetDateTime>> q =

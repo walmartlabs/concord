@@ -19,7 +19,7 @@ package com.walmartlabs.concord.server.notifications;
  * limitations under the License.
  * =====
  */
-public enum NotificationOwnerKind {
+public enum NotificationScope {
     USER("USER"),
     ORG("ORG"),
     PROJECT("PROJECT"),
@@ -27,7 +27,7 @@ public enum NotificationOwnerKind {
 
     private final String kind;
 
-    NotificationOwnerKind(String kind) {
+    NotificationScope(String kind) {
         this.kind = kind;
     }
 

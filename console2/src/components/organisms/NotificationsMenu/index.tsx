@@ -19,6 +19,7 @@
  */
 
 import * as React from 'react';
+import { useLocation } from 'react-router';
 import { Dropdown, Label } from 'semantic-ui-react';
 import {
     dismissNotification,
@@ -29,7 +30,6 @@ import { ConcordId } from '../../../api/common';
 import NotificationModal from '../NotificationModal';
 
 const STORAGE_KEY_PREFIX = 'concord_notifications_viewed_';
-const POLL_INTERVAL_MS = 60_000;
 
 const getViewedKey = (username: string) => `${STORAGE_KEY_PREFIX}${username}`;
 
@@ -55,6 +55,7 @@ interface Props {
 }
 
 const NotificationsMenu: React.FunctionComponent<Props> = ({ username }) => {
+    const location = useLocation();
     const [notifications, setNotifications] = React.useState<NotificationEntry[]>([]);
     const [viewedIds, setViewedIds] = React.useState<Set<ConcordId>>(() =>
         loadViewedIds(username)
@@ -77,16 +78,15 @@ const NotificationsMenu: React.FunctionComponent<Props> = ({ username }) => {
                 }
                 return pruned;
             });
-        } catch {
-            // Silently ignore poll failures
+        } catch(e) {
+            // ignore fetch failures
+            console.error("There was an issue fetching notifications: ", e)
         }
     }, [username]);
 
     React.useEffect(() => {
         fetchNotifications();
-        const timer = window.setInterval(fetchNotifications, POLL_INTERVAL_MS);
-        return () => window.clearInterval(timer);
-    }, [fetchNotifications]);
+    }, [fetchNotifications, location.pathname]);
 
     const markAllViewed = (current: NotificationEntry[]) => {
         const updated = new Set<ConcordId>([...viewedIds, ...current.map((n) => n.id)]);

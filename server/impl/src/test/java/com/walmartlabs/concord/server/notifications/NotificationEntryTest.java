@@ -39,7 +39,7 @@ public class NotificationEntryTest {
         UUID userId = UUID.randomUUID();
         NotificationEntry entry = entryWithOwners(userId, null, null);
 
-        assertEquals(Optional.of(NotificationOwnerKind.USER), entry.effectiveOwnerKind());
+        assertEquals(Optional.of(NotificationScope.USER), entry.effectiveOwnerKind());
     }
 
     @Test
@@ -47,7 +47,7 @@ public class NotificationEntryTest {
         UUID projectId = UUID.randomUUID();
         NotificationEntry entry = entryWithOwners(null, projectId, null);
 
-        assertEquals(Optional.of(NotificationOwnerKind.PROJECT), entry.effectiveOwnerKind());
+        assertEquals(Optional.of(NotificationScope.PROJECT), entry.effectiveOwnerKind());
     }
 
     @Test
@@ -55,7 +55,7 @@ public class NotificationEntryTest {
         UUID orgId = UUID.randomUUID();
         NotificationEntry entry = entryWithOwners(null, null, orgId);
 
-        assertEquals(Optional.of(NotificationOwnerKind.ORG), entry.effectiveOwnerKind());
+        assertEquals(Optional.of(NotificationScope.ORG), entry.effectiveOwnerKind());
     }
 
     @Test
@@ -138,7 +138,7 @@ public class NotificationEntryTest {
     }
 
     private static void assertOwnerConsistency(NotificationEntry entry) {
-        Optional<NotificationOwnerKind> kind = entry.effectiveOwnerKind();
+        Optional<NotificationScope> kind = entry.effectiveOwnerKind();
         Optional<UUID> id = entry.effectiveOwnerId();
 
         assertEquals(kind.isPresent(), id.isPresent(),

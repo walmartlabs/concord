@@ -150,10 +150,10 @@ public class NotificationEntry implements Serializable {
      * Derives the effective owner kind using the first non-null owner field
      * in precedence order: userId → projectId → orgId.
      */
-    public Optional<NotificationOwnerKind> effectiveOwnerKind() {
-        if (userId != null) return Optional.of(NotificationOwnerKind.USER);
-        if (projectId != null) return Optional.of(NotificationOwnerKind.PROJECT);
-        if (orgId != null) return Optional.of(NotificationOwnerKind.ORG);
+    public Optional<NotificationScope> effectiveOwnerKind() {
+        if (userId != null) return Optional.of(NotificationScope.USER);
+        if (projectId != null) return Optional.of(NotificationScope.PROJECT);
+        if (orgId != null) return Optional.of(NotificationScope.ORG);
         return Optional.empty();
     }
 

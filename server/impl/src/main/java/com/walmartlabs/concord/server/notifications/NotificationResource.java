@@ -67,7 +67,7 @@ public class NotificationResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Operation(description = "List notifications", operationId = "listNotifications")
-    public List<NotificationEntry> list(@QueryParam("ownerKind") @DefaultValue("USER") NotificationOwnerKind ownerKind,
+    public List<NotificationEntry> list(@QueryParam("ownerKind") @DefaultValue("USER") NotificationScope ownerKind,
                                         @QueryParam("ownerId") UUID ownerId,
                                         @QueryParam("offset") @DefaultValue("0") int offset,
                                         @QueryParam("limit") @DefaultValue("30") int limit) {
@@ -82,11 +82,11 @@ public class NotificationResource implements Resource {
         UserPrincipal currentUser = UserPrincipal.assertCurrent();
 
         // When listing USER-scoped notifications, default ownerId to the current user
-        UUID resolvedOwnerId = (ownerKind == NotificationOwnerKind.USER && ownerId == null)
+        UUID resolvedOwnerId = (ownerKind == NotificationScope.USER && ownerId == null)
                 ? currentUser.getId()
                 : ownerId;
 
-        if (ownerKind != NotificationOwnerKind.USER && resolvedOwnerId == null) {
+        if (ownerKind != NotificationScope.USER && resolvedOwnerId == null) {
             throw new ValidationErrorsException("'ownerId' is required when ownerKind is " + ownerKind);
         }
 
@@ -174,7 +174,7 @@ public class NotificationResource implements Resource {
      * Asserts that the current user has access to the owner of the given notification entry.
      */
     private void assertOwnerAccess(NotificationEntry entry) {
-        NotificationOwnerKind kind = entry.effectiveOwnerKind()
+        NotificationScope kind = entry.effectiveOwnerKind()
                 .orElseThrow(() -> new UnauthorizedException("Only admins or moderators can access this notification"));
         UUID ownerId = entry.effectiveOwnerId()
                 .orElseThrow(() -> new UnauthorizedException("Only admins or moderators can access this notification"));
@@ -189,7 +189,7 @@ public class NotificationResource implements Resource {
      *   <li>ORG — current user must be an org member</li>
      * </ul>
      */
-    private void assertOwnerAccess(NotificationOwnerKind ownerKind, UUID ownerId) {
+    private void assertOwnerAccess(NotificationScope ownerKind, UUID ownerId) {
         switch (ownerKind) {
             case USER -> {
                 UserPrincipal currentUser = UserPrincipal.assertCurrent();
