@@ -119,7 +119,7 @@
         <nimbus.jwt.version>10.5</nimbus.jwt.version>
         <parc.version>0.1.2</parc.version>
         <picocli.version>4.7.7</picocli.version>
-        <postgres.version>42.7.13</postgres.version>
+        <postgres.version>42.7.12</postgres.version>
         <prometheus.simpleclient.version>0.16.0</prometheus.simpleclient.version>
         <reactive.streams.version>1.0.3</reactive.streams.version>
         <reflections.version>0.10.2</reflections.version>
