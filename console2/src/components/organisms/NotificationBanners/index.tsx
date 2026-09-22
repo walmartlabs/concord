@@ -42,6 +42,9 @@ const NotificationBanners: React.FunctionComponent<Props> = ({ orgName, projectN
     const [ownerKind, setOwnerKind] = useState<'ORG' | 'PROJECT' | null>(null);
     const [ownerId, setOwnerId] = useState<ConcordId | null>(null);
 
+    // Resolve org/project name → UUID.
+    // Only proceeds if the session confirms the user is a member of the relevant org;
+    // if not, ownerKind/ownerId stay null and fetchBanners will no-op.
     useEffect(() => {
         setOwnerId(null);
         setOwnerKind(null);
