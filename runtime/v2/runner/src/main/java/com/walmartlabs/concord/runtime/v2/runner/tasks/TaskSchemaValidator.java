@@ -22,8 +22,8 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.Error;
+import com.networknt.schema.Schema;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,6 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Validates task input and output parameters against JSON schemas.
@@ -92,17 +91,17 @@ public class TaskSchemaValidator {
             return TaskSchemaValidationResult.invalid(lookupResult.resourceName(), lookupResult.errors());
         }
 
-        JsonSchema schema = lookupResult.schema();
+        Schema schema = lookupResult.schema();
         try {
             JsonNode dataNode = objectMapper.valueToTree(data);
 
-            Set<ValidationMessage> errors = schema.validate(dataNode);
+            List<Error> errors = schema.validate(dataNode);
             if (errors.isEmpty()) {
                 return TaskSchemaValidationResult.valid(lookupResult.resourceName());
             }
 
             List<String> errorMessages = errors.stream()
-                    .map(ValidationMessage::getMessage)
+                    .map(Error::getMessage)
                     .toList();
 
             log.debug("Validation errors for task '{}' {}: {}", taskName, section, errorMessages);

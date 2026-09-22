@@ -22,9 +22,9 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SpecVersion;
+import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SpecificationVersion;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ public class TaskSchemaValidatorTest {
     private TaskSchemaRegistry registry;
     private TaskSchemaValidator validator;
     private ObjectMapper objectMapper;
-    private JsonSchemaFactory schemaFactory;
+    private SchemaRegistry schemaRegistry;
 
     @BeforeEach
     void setUp() {
@@ -50,7 +50,7 @@ public class TaskSchemaValidatorTest {
         objectMapper = new ObjectMapper();
         when(registry.getObjectMapper()).thenReturn(objectMapper);
         validator = new TaskSchemaValidator(registry);
-        schemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
+        schemaRegistry = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_7);
     }
 
     @Test
@@ -98,7 +98,7 @@ public class TaskSchemaValidatorTest {
             }
             """);
 
-        JsonSchema schema = schemaFactory.getSchema(schemaNode);
+        Schema schema = schemaRegistry.getSchema(schemaNode);
         when(registry.getInputSchema("testTask", TASK_CLASS)).thenReturn(TaskSchemaLookupResult.found(schema, schemaNode, "testTask.schema.json"));
 
         TaskSchemaValidationResult result = validator.validateInput("testTask", TASK_CLASS, Map.of("message", "hello"));
@@ -119,7 +119,7 @@ public class TaskSchemaValidatorTest {
             }
             """);
 
-        JsonSchema schema = schemaFactory.getSchema(schemaNode);
+        Schema schema = schemaRegistry.getSchema(schemaNode);
         when(registry.getInputSchema("testTask", TASK_CLASS)).thenReturn(TaskSchemaLookupResult.found(schema, schemaNode, "testTask.schema.json"));
 
         // Missing required 'message'
@@ -144,7 +144,7 @@ public class TaskSchemaValidatorTest {
             }
             """);
 
-        JsonSchema schema = schemaFactory.getSchema(schemaNode);
+        Schema schema = schemaRegistry.getSchema(schemaNode);
         when(registry.getInputSchema("testTask", TASK_CLASS)).thenReturn(TaskSchemaLookupResult.found(schema, schemaNode, "testTask.schema.json"));
 
         // Missing 'message' and 'count'
@@ -169,7 +169,7 @@ public class TaskSchemaValidatorTest {
             }
             """);
 
-        JsonSchema schema = schemaFactory.getSchema(schemaNode);
+        Schema schema = schemaRegistry.getSchema(schemaNode);
         when(registry.getOutputSchema("testTask", TASK_CLASS)).thenReturn(TaskSchemaLookupResult.found(schema, schemaNode, "testTask.schema.json"));
 
         TaskSchemaValidationResult result = validator.validateOutput("testTask", TASK_CLASS,
@@ -190,7 +190,7 @@ public class TaskSchemaValidatorTest {
             }
             """);
 
-        JsonSchema schema = schemaFactory.getSchema(schemaNode);
+        Schema schema = schemaRegistry.getSchema(schemaNode);
         when(registry.getInputSchema("testTask", TASK_CLASS)).thenReturn(TaskSchemaLookupResult.found(schema, schemaNode, "testTask.schema.json"));
 
         // String instead of integer

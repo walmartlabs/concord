@@ -26,10 +26,7 @@ import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.typesafe.config.*;
 import org.reflections.Reflections;
-import org.reflections.scanners.FieldAnnotationsScanner;
-import org.reflections.scanners.MethodAnnotationsScanner;
-import org.reflections.scanners.MethodParameterScanner;
-import org.reflections.scanners.TypeAnnotationsScanner;
+import org.reflections.scanners.Scanners;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
@@ -57,11 +54,14 @@ public class ConfigModule extends AbstractModule {
         var configBuilder = new ConfigurationBuilder()
                 .filterInputsBy(new FilterBuilder().includePackage(packageToScan))
                 .setUrls(ClasspathHelper.forPackage(packageToScan))
+                // ConstructorsParameter must be listed separately: the old MethodParameterScanner
+                // covered both methods and constructors, while Scanners splits them apart
                 .setScanners(
-                        new TypeAnnotationsScanner(),
-                        new MethodParameterScanner(),
-                        new MethodAnnotationsScanner(),
-                        new FieldAnnotationsScanner());
+                        Scanners.TypesAnnotated,
+                        Scanners.MethodsParameter,
+                        Scanners.ConstructorsParameter,
+                        Scanners.MethodsAnnotated,
+                        Scanners.FieldsAnnotated);
 
         this.config = config;
         this.reflections = new Reflections(configBuilder);
@@ -90,13 +90,13 @@ public class ConfigModule extends AbstractModule {
 
     @Override
     public void configure() {
-        var annotatedConstructors = reflections.getConstructorsWithAnyParamAnnotated(Config.class);
+        var annotatedConstructors = reflections.getConstructorsWithParameter(Config.class);
         for (var c : annotatedConstructors) {
             var params = c.getParameters();
             bindParameters(params);
         }
 
-        var annotatedMethods = reflections.getMethodsWithAnyParamAnnotated(Config.class);
+        var annotatedMethods = reflections.getMethodsWithParameter(Config.class);
         for (var m : annotatedMethods) {
             var params = m.getParameters();
             bindParameters(params);
