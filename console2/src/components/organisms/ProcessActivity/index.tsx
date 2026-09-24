@@ -44,6 +44,8 @@ import RequestErrorActivity from '../RequestErrorActivity';
 import { useStatusFavicon } from './favicon';
 import { gitUrlParse } from '../../molecules/GitHubLink';
 import { useIdleTimer } from 'react-idle-timer';
+import CreateNotificationActivity from '../CreateNotificationActivity';
+import { get as getUserInfo } from '../../../api/profile/user';
 
 export type TabLink =
     | 'status'
@@ -54,6 +56,7 @@ export type TabLink =
     | 'wait'
     | 'children'
     | 'attachments'
+    | 'notify'
     | null;
 
 interface ExternalProps {
@@ -167,11 +170,39 @@ const ProcessActivity = (props: ExternalProps) => {
 
     const error = usePolling(fetchData, dataFetchInterval, loadingHandler, refresh);
 
+    const [canNotify, setCanNotify] = useState(false);
+    useEffect(() => {
+        getUserInfo()
+            .then((info) => {
+                setCanNotify(
+                    info.roles?.some(
+                        (r) => r === 'concordAdmin' || r === 'concordModerator'
+                    ) ?? false
+                );
+            })
+            .catch(() => {});
+    }, []);
+
     if (error) {
         return <RequestErrorActivity error={error} />;
     }
 
     const { instanceId, activeTab } = props;
+
+    // Derive notification defaults from the loaded process
+    const notifyProps = process
+        ? process.projectName
+            ? {
+                  defaultOwnerType: 'PROJECT' as const,
+                  defaultOrgName: process.orgName,
+                  defaultProjectName: process.projectName,
+                  defaultRepoName: process.repoName,
+              }
+            : {
+                  defaultOwnerType: 'USER' as const,
+                  defaultInitiatorUsername: process.initiator,
+              }
+        : {};
 
     const baseUrl = `/process/${instanceId}`;
 
@@ -219,6 +250,12 @@ const ProcessActivity = (props: ExternalProps) => {
                     <Icon name="paperclip" />
                     <Link to={`${baseUrl}/attachments`}>Attachments</Link>
                 </Menu.Item>
+                {canNotify && (
+                    <Menu.Item active={activeTab === 'notify'}>
+                        <Icon name="bell" />
+                        <Link to={`${baseUrl}/notify`}>Notify</Link>
+                    </Menu.Item>
+                )}
             </Menu>
 
             <Routes>
@@ -334,6 +371,10 @@ const ProcessActivity = (props: ExternalProps) => {
                             dataFetchInterval={dataFetchInterval}
                         />
                     }
+                />
+                <Route
+                    path="notify"
+                    element={<CreateNotificationActivity {...notifyProps} />}
                 />
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>
