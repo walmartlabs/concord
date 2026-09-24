@@ -690,7 +690,7 @@ public class NotificationIT extends AbstractServerIT {
     }
 
     @Test
-    public void testNonProjectOwnerCannotListProjectNotifications() throws Exception {
+    public void testUnrelatedUserCannotListProjectNotifications() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         UsersApi usersApi = new UsersApi(getApiClient());
@@ -702,31 +702,23 @@ public class NotificationIT extends AbstractServerIT {
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(projectName));
         UUID projectId = projectsApi.getProject(orgName, projectName).getId();
 
-        String readerUsername = "reader-" + randomString();
-        UUID readerUserId = usersApi.createOrUpdateUser(new CreateUserRequest()
-                .username(readerUsername)
+        // User has no org membership and no explicit project access
+        String outsiderUsername = "outsider-" + randomString();
+        UUID outsiderUserId = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(outsiderUsername)
                 .type(CreateUserRequest.TypeEnum.LOCAL)).getId();
-        String readerApiKey = apiKeysApi.createUserApiKey(
-                new CreateApiKeyRequest().username(readerUsername)).getKey();
-
-        // Grant only READER access (not OWNER)
-        String teamName = "team-" + randomString();
-        TeamsApi teamsApi = new TeamsApi(getApiClient());
-        teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name(teamName));
-        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(
-                new TeamUserEntry().username(readerUsername).role(TeamUserEntry.RoleEnum.MEMBER)));
-        projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
-                .orgName(orgName).teamName(teamName).level(ResourceAccessEntry.LevelEnum.READER));
+        String outsiderApiKey = apiKeysApi.createUserApiKey(
+                new CreateApiKeyRequest().username(outsiderUsername)).getKey();
 
         try {
-            setApiKey(readerApiKey);
+            setApiKey(outsiderApiKey);
             ApiException ex = assertThrows(ApiException.class, () ->
                     new NotificationsApi(getApiClient())
                             .listNotifications("PROJECT", projectId, 0, 30));
             assertEquals(403, ex.getCode());
         } finally {
             resetApiKey();
-            usersApi.deleteUser(readerUserId);
+            usersApi.deleteUser(outsiderUserId);
             projectsApi.deleteProject(orgName, projectName);
             orgApi.deleteOrg(orgName, "yes");
         }
