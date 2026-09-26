@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -56,6 +57,24 @@ public interface Profile extends Serializable {
 
     @Value.Default
     default Map<String, Form> forms() {
+        return Collections.emptyMap();
+    }
+
+    /**
+     * The profile's {@code configuration} block as it appears in the source YAML.
+     * <p/>
+     * Most attributes of {@link ProcessDefinitionConfiguration} have non-empty default
+     * values, so an attribute the author never specified is indistinguishable from an
+     * attribute explicitly set to its default value once {@link #configuration()} is
+     * serialized. A profile is an overlay and must only override what its author actually
+     * wrote, so keep the original shape of the block around to tell those two apart.
+     * <p/>
+     * Populated by the parser, ignored when (de)serializing.
+     */
+    @JsonIgnore
+    @Value.Auxiliary
+    @Value.Default
+    default Map<String, Serializable> rawConfiguration() {
         return Collections.emptyMap();
     }
 

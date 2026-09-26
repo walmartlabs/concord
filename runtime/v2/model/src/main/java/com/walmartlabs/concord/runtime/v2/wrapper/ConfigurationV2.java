@@ -30,6 +30,7 @@ import com.walmartlabs.concord.sdk.MapUtils;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,12 +40,43 @@ public class ConfigurationV2 implements Configuration, Serializable {
 
     private final Map<String, Object> values;
 
-    @SuppressWarnings("unchecked")
     public ConfigurationV2(ProcessDefinitionConfiguration cfg) {
+        this(cfg, null);
+    }
+
+    /**
+     * @param shape when not {@code null}, keep only the keys present in it, at any depth.
+     *              Used for profiles: an overlay must not carry the default values of the
+     *              attributes its author never specified, otherwise merging it resets the
+     *              values it was never meant to touch. Values are still taken from the
+     *              parsed configuration, so they stay normalized.
+     */
+    @SuppressWarnings("unchecked")
+    public ConfigurationV2(ProcessDefinitionConfiguration cfg, Map<String, ?> shape) {
         ObjectMapper om = new ObjectMapper();
         om.registerModule(new Jdk8Module());
         om.registerModule(new JavaTimeModule());
-        this.values = om.convertValue(cfg, Map.class);
+
+        Map<String, Object> values = om.convertValue(cfg, Map.class);
+        this.values = shape != null ? retainByShape(values, shape) : values;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> retainByShape(Map<String, Object> values, Map<String, ?> shape) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        shape.forEach((k, shapeValue) -> {
+            if (!values.containsKey(k)) {
+                return;
+            }
+
+            Object value = values.get(k);
+            if (value instanceof Map && shapeValue instanceof Map) {
+                result.put(k, retainByShape((Map<String, Object>) value, (Map<String, ?>) shapeValue));
+            } else {
+                result.put(k, value);
+            }
+        });
+        return result;
     }
 
     @Override

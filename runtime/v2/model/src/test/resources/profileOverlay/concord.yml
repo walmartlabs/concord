@@ -1,0 +1,55 @@
+configuration:
+  debug: true
+  entryPoint: "myEntry"
+  parallelLoopParallelism: 3
+  dependencies:
+    - "mvn://base:base:1.0"
+  events:
+    recordTaskInVars: true
+    recordTaskOutVars: true
+    inVarsBlacklist:
+      - "baseSecret"
+      - "baseToken"
+  validation:
+    taskCalls:
+      in: "FAIL"
+      out: "WARN"
+
+profiles:
+  # a profile that doesn't mention anything but "dependencies" must not affect
+  # the top-level values
+  onlyDeps:
+    configuration:
+      dependencies:
+        - "mvn://profile:profile:1.0"
+
+  # an explicitly specified value must win, even if it is equal to the default
+  explicitDebug:
+    configuration:
+      debug: false
+
+  # a partially specified nested block must only override the nested keys it
+  # actually specifies
+  partialEvents:
+    configuration:
+      events:
+        recordTaskOutVars: false
+        batchSize: 7
+
+  partialValidation:
+    configuration:
+      validation:
+        taskCalls:
+          out: "DISABLED"
+
+  # a nested list is replaced as a whole, like any other specified value, but
+  # must not affect its siblings
+  nestedList:
+    configuration:
+      events:
+        inVarsBlacklist:
+          - "profileSecret"
+
+flows:
+  default:
+    - log: "hello"

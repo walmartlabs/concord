@@ -36,7 +36,7 @@ public class ProfileV2 implements Profile, Serializable {
     private final Map<String, FlowDefinition> flows;
 
     public ProfileV2(com.walmartlabs.concord.runtime.v2.model.Profile delegate) {
-        this.cfg = new ConfigurationV2(delegate.configuration());
+        this.cfg = new ConfigurationV2(delegate.configuration(), delegate.rawConfiguration());
 
         this.publicFlows = delegate.publicFlows() != null ? new HashSet<>(delegate.publicFlows()) : Collections.emptySet();
 
