@@ -57,19 +57,19 @@ public class ConfigurationV2 implements Configuration, Serializable {
         om.registerModule(new Jdk8Module());
         om.registerModule(new JavaTimeModule());
 
-        Map<String, Object> values = om.convertValue(cfg, Map.class);
-        this.values = shape != null ? retainByShape(values, shape) : values;
+        Map<String, Object> allValues = om.convertValue(cfg, Map.class);
+        this.values = shape != null ? retainByShape(allValues, shape) : allValues;
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> retainByShape(Map<String, Object> values, Map<String, ?> shape) {
+    private static Map<String, Object> retainByShape(Map<String, Object> source, Map<String, ?> shape) {
         Map<String, Object> result = new LinkedHashMap<>();
         shape.forEach((k, shapeValue) -> {
-            if (!values.containsKey(k)) {
+            if (!source.containsKey(k)) {
                 return;
             }
 
-            Object value = values.get(k);
+            Object value = source.get(k);
             if (value instanceof Map && shapeValue instanceof Map) {
                 result.put(k, retainByShape((Map<String, Object>) value, (Map<String, ?>) shapeValue));
             } else {
