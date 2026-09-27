@@ -57,12 +57,20 @@ public final class ProfilesGrammar {
      */
     private static Parser<Atom, ProcessDefinitionConfiguration> profileCfgVal(ImmutableProfile.Builder o) {
         return in -> {
-            // the input is immutable, so the same position can be parsed twice
+            // parse the typed configuration first, so that invalid values are reported in
+            // terms of the configuration's own grammar rather than as a plain object
+            Result<Atom, ProcessDefinitionConfiguration> cfg = processCfgVal.apply(in);
+            if (!cfg.isSuccess()) {
+                return cfg;
+            }
+
+            // the input is immutable, so the same position can be parsed again
             Result<Atom, Map<String, Serializable>> raw = mapVal.apply(in);
             if (raw.isSuccess()) {
                 o.rawConfiguration(raw.toSuccess().getResult());
             }
-            return processCfgVal.apply(in);
+
+            return cfg;
         };
     }
 
