@@ -56,6 +56,12 @@ profiles:
       someFlow:
         - log: "hi"
 
+  # used to check the ordering of multiple active profiles, together with
+  # "explicitDebug" which sets the same key
+  debugBackOn:
+    configuration:
+      debug: true
+
 flows:
   default:
     - log: "hello"

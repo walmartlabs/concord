@@ -119,6 +119,43 @@ public class ProfileOverlayTest {
     }
 
     /**
+     * Active profiles are applied one after another, so each one must keep both the
+     * top-level values and whatever the previous profiles contributed.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testMultipleActiveProfiles() throws Exception {
+        for (List<String> profiles : List.of(
+                List.of("explicitDebug", "partialEvents"),
+                List.of("partialEvents", "explicitDebug"))) {
+
+            Map<String, Object> cfg = effectiveConfiguration(profiles);
+
+            // from "explicitDebug"
+            assertEquals(false, cfg.get("debug"), profiles::toString);
+
+            // from "partialEvents"
+            Map<String, Object> events = (Map<String, Object>) cfg.get("events");
+            assertEquals(false, events.get("recordTaskOutVars"), profiles::toString);
+            assertEquals(7, events.get("batchSize"), profiles::toString);
+
+            // neither profile mentions these
+            assertEquals(true, events.get("recordTaskInVars"), profiles::toString);
+            assertEquals("myEntry", cfg.get("entryPoint"), profiles::toString);
+            assertEquals(3, cfg.get("parallelLoopParallelism"), profiles::toString);
+        }
+    }
+
+    /**
+     * When several active profiles specify the same key, the last one wins.
+     */
+    @Test
+    public void testMultipleActiveProfilesOrder() throws Exception {
+        assertEquals(true, effectiveConfiguration(List.of("explicitDebug", "debugBackOn")).get("debug"));
+        assertEquals(false, effectiveConfiguration(List.of("debugBackOn", "explicitDebug")).get("debug"));
+    }
+
+    /**
      * A profile without a {@code configuration} block at all overrides nothing.
      */
     @Test
