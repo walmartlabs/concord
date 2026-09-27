@@ -81,7 +81,6 @@ public interface Profile extends Serializable {
      */
     @Nullable
     @JsonIgnore
-    @Value.Auxiliary
     Map<String, Serializable> rawConfiguration();
 
     static ImmutableProfile.Builder builder() {

@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.Mockito.mock;
 
 public class ProfileOverlayTest {
@@ -151,6 +152,45 @@ public class ProfileOverlayTest {
                 new ProcessDefinitionV2(pd), List.of("assembled"));
 
         assertEquals(Map.of("myString", "hello"), cfg.get("arguments"));
+    }
+
+    /**
+     * The shape is part of a profile's identity: two profiles with an equal
+     * {@link Profile#configuration()} but a different shape override different things, so
+     * they must not be equal either.
+     */
+    @Test
+    public void testShapeIsPartOfProfileIdentity() {
+        ProcessDefinitionConfiguration cfg = ProcessDefinitionConfiguration.builder()
+                .debug(false)
+                .build();
+
+        Profile explicit = Profile.builder()
+                .configuration(cfg)
+                .rawConfiguration(Map.of("debug", false))
+                .build();
+
+        Profile implicit = Profile.builder()
+                .configuration(cfg)
+                .rawConfiguration(Map.of())
+                .build();
+
+        assertNotEquals(explicit, implicit);
+
+        // ...and they really do behave differently
+        assertEquals(false, overlay(explicit).get("debug"));
+        assertEquals(true, overlay(implicit).get("debug"));
+    }
+
+    private static Map<String, Object> overlay(Profile profile) {
+        ProcessDefinition pd = ProcessDefinition.builder()
+                .configuration(ProcessDefinitionConfiguration.builder()
+                        .debug(true)
+                        .build())
+                .putProfiles("p", profile)
+                .build();
+
+        return EffectiveConfiguration.getEffectiveConfiguration(new ProcessDefinitionV2(pd), List.of("p"));
     }
 
     @SuppressWarnings("unchecked")
