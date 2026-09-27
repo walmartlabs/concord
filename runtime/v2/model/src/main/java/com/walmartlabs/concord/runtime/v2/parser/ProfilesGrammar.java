@@ -39,47 +39,52 @@ import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.mapVal;
 import static io.takari.parc.Combinators.many;
+import static io.takari.parc.Combinators.ok;
 
 public final class ProfilesGrammar {
 
+    /**
+     * The profile's {@code configuration} block, both as a typed object and in its
+     * original YAML shape -- see {@link Profile#rawConfiguration()}.
+     */
+    private static final Parser<Atom, ParsedConfiguration> profileCfgVal = in -> {
+        // parse the typed configuration first, so that invalid values are reported in
+        // terms of the configuration's own grammar rather than as a plain object
+        Result<Atom, ProcessDefinitionConfiguration> cfg = processCfgVal.apply(in);
+        if (!cfg.isSuccess()) {
+            return cfg.cast();
+        }
+
+        // the input is immutable, so the same position can be parsed again
+        Result<Atom, Map<String, Serializable>> raw = mapVal.apply(in);
+
+        return ok(new ParsedConfiguration(
+                cfg.toSuccess().getResult(),
+                raw.isSuccess() ? raw.toSuccess().getResult() : Collections.emptyMap()), cfg.getRest());
+    };
+
     public static final Parser<Atom, Profile> profileDefinition =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    with(ImmutableProfile::builder,
-                            o -> {
-                                // everything the parser produces has a known shape, even when
-                                // there's no "configuration" block at all -- in that case the
-                                // profile overrides nothing
-                                o.rawConfiguration(Collections.emptyMap());
-
-                                return options(
-                                        optional("configuration", profileCfgVal(o).map(o::configuration)),
-                                        optional("flows", flowsVal.map(o::flows)),
-                                        optional("forms", formsVal.map(o::forms)));
-                            })
+                    with(ProfilesGrammar::profileBuilder,
+                            o -> options(
+                                    optional("configuration", profileCfgVal.map(v -> o
+                                            .configuration(v.configuration())
+                                            .rawConfiguration(v.rawConfiguration()))),
+                                    optional("flows", flowsVal.map(o::flows)),
+                                    optional("forms", formsVal.map(o::forms))))
                             .map(ImmutableProfile.Builder::build));
 
     /**
-     * Parses the profile's {@code configuration} block into a {@link ProcessDefinitionConfiguration},
-     * additionally keeping the block's original YAML shape in
-     * {@link Profile#rawConfiguration()}.
+     * Everything the parser produces has a known configuration shape, even when there's no
+     * {@code configuration} block at all -- in that case the profile overrides nothing.
      */
-    private static Parser<Atom, ProcessDefinitionConfiguration> profileCfgVal(ImmutableProfile.Builder o) {
-        return in -> {
-            // parse the typed configuration first, so that invalid values are reported in
-            // terms of the configuration's own grammar rather than as a plain object
-            Result<Atom, ProcessDefinitionConfiguration> cfg = processCfgVal.apply(in);
-            if (!cfg.isSuccess()) {
-                return cfg;
-            }
+    private static ImmutableProfile.Builder profileBuilder() {
+        return ImmutableProfile.builder()
+                .rawConfiguration(Collections.emptyMap());
+    }
 
-            // the input is immutable, so the same position can be parsed again
-            Result<Atom, Map<String, Serializable>> raw = mapVal.apply(in);
-            if (raw.isSuccess()) {
-                o.rawConfiguration(raw.toSuccess().getResult());
-            }
-
-            return cfg;
-        };
+    private record ParsedConfiguration(ProcessDefinitionConfiguration configuration,
+                                       Map<String, Serializable> rawConfiguration) {
     }
 
     private static final Parser<Atom, KV<String, Profile>> profile =
