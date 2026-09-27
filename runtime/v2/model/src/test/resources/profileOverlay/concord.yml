@@ -50,6 +50,12 @@ profiles:
         inVarsBlacklist:
           - "profileSecret"
 
+  # a profile without a "configuration" block at all overrides nothing
+  noConfiguration:
+    flows:
+      someFlow:
+        - log: "hi"
+
 flows:
   default:
     - log: "hello"

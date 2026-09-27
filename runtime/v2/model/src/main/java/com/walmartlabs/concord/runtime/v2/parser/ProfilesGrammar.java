@@ -28,6 +28,7 @@ import io.takari.parc.Parser;
 import io.takari.parc.Result;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Map;
 
 import static com.walmartlabs.concord.runtime.v2.parser.ConfigurationGrammar.processCfgVal;
@@ -44,10 +45,17 @@ public final class ProfilesGrammar {
     public static final Parser<Atom, Profile> profileDefinition =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                     with(ImmutableProfile::builder,
-                            o -> options(
-                                    optional("configuration", profileCfgVal(o).map(o::configuration)),
-                                    optional("flows", flowsVal.map(o::flows)),
-                                    optional("forms", formsVal.map(o::forms))))
+                            o -> {
+                                // everything the parser produces has a known shape, even when
+                                // there's no "configuration" block at all -- in that case the
+                                // profile overrides nothing
+                                o.rawConfiguration(Collections.emptyMap());
+
+                                return options(
+                                        optional("configuration", profileCfgVal(o).map(o::configuration)),
+                                        optional("flows", flowsVal.map(o::flows)),
+                                        optional("forms", formsVal.map(o::forms)));
+                            })
                             .map(ImmutableProfile.Builder::build));
 
     /**

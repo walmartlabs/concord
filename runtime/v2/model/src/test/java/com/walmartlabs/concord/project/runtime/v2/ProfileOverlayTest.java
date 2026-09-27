@@ -25,6 +25,9 @@ import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.runtime.model.EffectiveConfiguration;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.Profile;
 import com.walmartlabs.concord.runtime.v2.wrapper.ProcessDefinitionV2;
 import org.junit.jupiter.api.Test;
 
@@ -112,6 +115,42 @@ public class ProfileOverlayTest {
         assertEquals(List.of("profileSecret"), events.get("inVarsBlacklist"));
         assertEquals(true, events.get("recordTaskInVars"));
         assertEquals(true, events.get("recordTaskOutVars"));
+    }
+
+    /**
+     * A profile without a {@code configuration} block at all overrides nothing.
+     */
+    @Test
+    public void testProfileWithoutConfiguration() throws Exception {
+        Map<String, Object> cfg = effectiveConfiguration(List.of("noConfiguration"));
+
+        assertTopLevelValues(cfg);
+        assertEquals(List.of("mvn://base:base:1.0"), cfg.get("dependencies"));
+    }
+
+    /**
+     * A profile that didn't come from the parser has no recorded shape, so its
+     * configuration has to be applied as a whole. Dropping it would silently lose the
+     * overlay -- see {@link Profile#rawConfiguration()}.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testProfileWithoutRecordedShapeKeepsItsConfiguration() {
+        ProcessDefinition pd = ProcessDefinition.builder()
+                .configuration(ProcessDefinitionConfiguration.builder()
+                        .entryPoint("myEntry")
+                        .build())
+                .putProfiles("assembled", Profile.builder()
+                        .configuration(ProcessDefinitionConfiguration.builder()
+                                .putArguments("myString", "hello")
+                                .build())
+                        .build())
+                .build();
+
+        Map<String, Object> cfg = EffectiveConfiguration.getEffectiveConfiguration(
+                new ProcessDefinitionV2(pd), List.of("assembled"));
+
+        assertEquals(Map.of("myString", "hello"), cfg.get("arguments"));
     }
 
     @SuppressWarnings("unchecked")

@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
@@ -61,7 +62,8 @@ public interface Profile extends Serializable {
     }
 
     /**
-     * The profile's {@code configuration} block as it appears in the source YAML.
+     * The profile's {@code configuration} block as it appears in the source YAML, or
+     * {@code null} if this profile didn't come from the parser.
      * <p/>
      * Most attributes of {@link ProcessDefinitionConfiguration} have non-empty default
      * values, so an attribute the author never specified is indistinguishable from an
@@ -69,14 +71,18 @@ public interface Profile extends Serializable {
      * serialized. A profile is an overlay and must only override what its author actually
      * wrote, so keep the original shape of the block around to tell those two apart.
      * <p/>
-     * Populated by the parser, ignored when (de)serializing.
+     * An empty map means the author wrote nothing to override. That is different from
+     * {@code null}, which means the shape was never recorded and {@link #configuration()}
+     * therefore has to be applied as a whole -- dropping it instead would silently lose
+     * the profile's configuration. The parser always sets this, so {@code null} only
+     * happens for profiles assembled by other means.
+     * <p/>
+     * Ignored when (de)serializing.
      */
+    @Nullable
     @JsonIgnore
     @Value.Auxiliary
-    @Value.Default
-    default Map<String, Serializable> rawConfiguration() {
-        return Collections.emptyMap();
-    }
+    Map<String, Serializable> rawConfiguration();
 
     static ImmutableProfile.Builder builder() {
         return ImmutableProfile.builder();
