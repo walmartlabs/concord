@@ -46,10 +46,7 @@ public class ConfigurationV2 implements Configuration, Serializable {
 
     /**
      * @param shape when not {@code null}, keep only the keys present in it, at any depth.
-     *              Used for profiles: an overlay must not carry the default values of the
-     *              attributes its author never specified, otherwise merging it resets the
-     *              values it was never meant to touch. Values are still taken from the
-     *              parsed configuration, so they stay normalized.
+     *              Values still come from the parsed configuration, so they stay normalized.
      */
     @SuppressWarnings("unchecked")
     public ConfigurationV2(ProcessDefinitionConfiguration cfg, Map<String, ?> shape) {

@@ -75,8 +75,8 @@ public final class ProfilesGrammar {
                             .map(ImmutableProfile.Builder::build));
 
     /**
-     * Everything the parser produces has a known configuration shape, even when there's no
-     * {@code configuration} block at all -- in that case the profile overrides nothing.
+     * Parsed profiles always carry a configuration shape, even without a
+     * {@code configuration} block -- an empty one overrides nothing.
      */
     private static ImmutableProfile.Builder profileBuilder() {
         return ImmutableProfile.builder()

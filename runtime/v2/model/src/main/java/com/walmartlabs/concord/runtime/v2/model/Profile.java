@@ -62,22 +62,14 @@ public interface Profile extends Serializable {
     }
 
     /**
-     * The profile's {@code configuration} block as it appears in the source YAML, or
-     * {@code null} if this profile didn't come from the parser.
+     * Original YAML shape of the {@code configuration} block, used to restrict the overlay
+     * to the keys it actually contains. Most attributes of
+     * {@link ProcessDefinitionConfiguration} have non-empty defaults, which makes an unset
+     * attribute indistinguishable from one set to its default once {@link #configuration()}
+     * is serialized.
      * <p/>
-     * Most attributes of {@link ProcessDefinitionConfiguration} have non-empty default
-     * values, so an attribute the author never specified is indistinguishable from an
-     * attribute explicitly set to its default value once {@link #configuration()} is
-     * serialized. A profile is an overlay and must only override what its author actually
-     * wrote, so keep the original shape of the block around to tell those two apart.
-     * <p/>
-     * An empty map means the author wrote nothing to override. That is different from
-     * {@code null}, which means the shape was never recorded and {@link #configuration()}
-     * therefore has to be applied as a whole -- dropping it instead would silently lose
-     * the profile's configuration. The parser always sets this, so {@code null} only
-     * happens for profiles assembled by other means.
-     * <p/>
-     * Ignored when (de)serializing.
+     * An empty map overrides nothing. {@code null} means the shape is unknown, and
+     * {@link #configuration()} has to be applied as a whole.
      */
     @Nullable
     @JsonIgnore
