@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <!--
+    Structure of segmented logs: nesting, retry attempts, loop iterations, error handlers and threads.
+
+    PROCESS_LOG_SEGMENTS is large (and partitioned by day on big installations):
+    - all columns are nullable without defaults, so adding them doesn't rewrite the table;
+    - a single ALTER, so the exclusive lock on the table (and every partition) is taken once;
+    - lock_timeout: fail (and retry on the next start) instead of blocking the segment inserts
+      while waiting for long-running queries;
+    - can be applied manually beforehand, the changeset is skipped if the columns exist.
+    -->
+    <changeSet id="2461001" author="ybrigo@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <and>
+                    <columnExists tableName="PROCESS_LOG_SEGMENTS" columnName="PARENT_SEGMENT_ID"/>
+                    <columnExists tableName="PROCESS_LOG_SEGMENTS" columnName="SEGMENT_ATTEMPT"/>
+                    <columnExists tableName="PROCESS_LOG_SEGMENTS" columnName="SEGMENT_LOOP_INDEX"/>
+                    <columnExists tableName="PROCESS_LOG_SEGMENTS" columnName="SEGMENT_ROLE"/>
+                    <columnExists tableName="PROCESS_LOG_SEGMENTS" columnName="SEGMENT_THREAD"/>
+                </and>
+            </not>
+        </preConditions>
+
+        <sql>
+            set local lock_timeout = '5s';
+
+            alter table PROCESS_LOG_SEGMENTS
+                add column if not exists PARENT_SEGMENT_ID bigint,
+                add column if not exists SEGMENT_ATTEMPT smallint,
+                add column if not exists SEGMENT_LOOP_INDEX int,
+                add column if not exists SEGMENT_ROLE smallint,
+                add column if not exists SEGMENT_THREAD int;
+        </sql>
+    </changeSet>
+</databaseChangeLog>
