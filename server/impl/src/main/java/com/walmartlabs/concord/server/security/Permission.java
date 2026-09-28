@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server.security;
  */
 
 
+import java.util.UUID;
+
 public enum Permission {
 
     /**
@@ -48,18 +50,37 @@ public enum Permission {
      */
     API_KEY_SPECIFY_VALUE("apiKeySpecifyValue"),
     /**
-     * Permission to connect a websocket as an agent
+     * Permission to connect a websocket as an agent.
+     * <p>
+     * Implicitly granted to API keys without a user (e.g. the default agent
+     * token, see {@code com/walmartlabs/concord/server/db/v2.21.0.xml}) since
+     * those keys represent a fixed system identity rather than a human account
+     * that can hold roles.
      */
-    AGENT_WEBSOCKET("agentWebsocket"),;
+    AGENT_WEBSOCKET("agentWebsocket", true),;
 
     private final String key;
+    private final boolean grantedToSystemKeys;
 
     Permission(String key) {
+        this(key, false);
+    }
+
+    Permission(String key, boolean grantedToSystemKeys) {
         this.key = key;
+        this.grantedToSystemKeys = grantedToSystemKeys;
     }
 
     public String getKey() {
         return key;
+    }
+
+    /**
+     * Whether this permission is implicitly granted to API keys that have no
+     * associated user (see {@link UserSecurityContext#isPermitted(UUID, Permission)}).
+     */
+    public boolean isGrantedToSystemKeys() {
+        return grantedToSystemKeys;
     }
 
     public boolean isPermitted() {
