@@ -41,6 +41,30 @@ public interface LogSegmentRequest {
 
     String name();
 
+    @Nullable
+    Long parentId();
+
+    /**
+     * Number of the attempt (starting from 1) of a step with {@code retry}.
+     */
+    @Nullable
+    Integer attempt();
+
+    /**
+     * Index of the loop iteration (starting from 0) the segment belongs to.
+     */
+    @Nullable
+    Integer loopIndex();
+
+    @Nullable
+    LogSegment.Role role();
+
+    /**
+     * ID of the runtime thread, {@code null} for the main thread.
+     */
+    @Nullable
+    Integer threadId();
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     @Nullable
     OffsetDateTime createdAt();
