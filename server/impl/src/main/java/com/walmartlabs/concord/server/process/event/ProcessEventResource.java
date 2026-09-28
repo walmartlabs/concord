@@ -158,6 +158,39 @@ public class ProcessEventResource implements Resource {
         return l;
     }
 
+    /**
+     * List ELEMENT events of the step run that produced the specified log segment.
+     * Unlike {@code eventCorrelationId}, distinguishes loop iterations and retry attempts of a step.
+     */
+    @GET
+    @Path("/{processInstanceId}/event/segment/{segmentId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    @Operation(description = "List events of a process log segment", operationId = "listProcessLogSegmentEvents")
+    public List<ProcessEventEntry> listSegmentEvents(@PathParam("processInstanceId") UUID processInstanceId,
+                                                     @PathParam("segmentId") long segmentId,
+                                                     @QueryParam("includeAll") @DefaultValue("false") boolean includeAll) {
+
+        ProcessKey processKey = assertProcessKey(processInstanceId);
+
+        if (includeAll) {
+            // verify that the user can access potentially sensitive data
+            assertAccessRights(processKey);
+        }
+
+        ProcessEventFilter f = ProcessEventFilter.builder()
+                .processKey(processKey)
+                .eventType(ELEMENT_EVENT_TYPE)
+                .eventLogSegmentId(segmentId)
+                .build();
+
+        List<ProcessEventEntry> l = eventManager.list(f);
+        if (!includeAll) {
+            l = filterOutSensitiveData(l);
+        }
+        return l;
+    }
+
     private ProcessKey assertProcessKey(UUID instanceId) {
         ProcessKey processKey = processKeyCache.get(instanceId);
         if (processKey == null) {
