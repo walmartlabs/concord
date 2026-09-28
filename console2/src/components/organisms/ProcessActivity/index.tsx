@@ -35,6 +35,7 @@ import {
     ProcessHistoryActivity,
     ProcessLogActivity,
     ProcessLogActivityV2,
+    ProcessLogTreeActivity,
     ProcessStatusActivity,
     ProcessWaitActivity,
 } from '../index';
@@ -49,6 +50,7 @@ export type TabLink =
     | 'status'
     | 'ansible'
     | 'log'
+    | 'logTree'
     | 'events'
     | 'history'
     | 'wait'
@@ -203,6 +205,12 @@ const ProcessActivity = (props: ExternalProps) => {
                     <Icon name="book" />
                     <Link to={`${baseUrl}/log`}>Logs</Link>
                 </Menu.Item>
+                {process && (process.runtime === 'concord-v2' || process.runtime === undefined) && (
+                    <Menu.Item active={activeTab === 'logTree'}>
+                        <Icon name="sitemap" />
+                        <Link to={`${baseUrl}/log-tree`}>Log Tree</Link>
+                    </Menu.Item>
+                )}
                 <Menu.Item active={activeTab === 'history'}>
                     <Icon name="history" />
                     <Link to={`${baseUrl}/history`}>History</Link>
@@ -284,6 +292,18 @@ const ProcessActivity = (props: ExternalProps) => {
                                     />
                                 )}
                         </>
+                    }
+                />
+                <Route
+                    path="log-tree"
+                    element={
+                        <ProcessLogTreeActivity
+                            instanceId={instanceId}
+                            processStatus={process ? process.status : undefined}
+                            loadingHandler={loadingHandler}
+                            forceRefresh={refresh}
+                            dataFetchInterval={dataFetchInterval}
+                        />
                     }
                 />
                 <Route
