@@ -29,8 +29,10 @@ import com.walmartlabs.concord.runtime.v2.model.EventConfiguration;
 import com.walmartlabs.concord.runtime.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.EventReportingService;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogUtils;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
+import com.walmartlabs.concord.runtime.v2.runner.vm.LogSegmentUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Inject;
@@ -125,6 +127,13 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
             m.put("fileName", currentStep.getLocation().fileName());
             m.put("line", currentStep.getLocation().lineNum());
             m.put("column", currentStep.getLocation().column());
+        }
+
+        // tasks run in the log context of their step: links the event to the log segment
+        // of this particular run of the step (loop iterations and retry attempts share the correlation ID)
+        Long segmentId = LogSegmentUtils.getStepSegmentId(LogUtils.getContext(), event.correlationId());
+        if (segmentId != null) {
+            m.put("logSegmentId", segmentId);
         }
 
         String taskName = event.taskName();

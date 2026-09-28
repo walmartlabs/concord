@@ -25,6 +25,7 @@ import com.walmartlabs.concord.runtime.common.SensitiveDataMasker;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogSegmentAttributes;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
@@ -55,7 +56,8 @@ public class LogSegmentScopeCommand<T extends Step> extends StepCommand<T> {
         frame.pop();
 
         Context ctx = runtime.getService(Context.class);
-        LogContext logContext = getLogContext(runtime, ctx, getCorrelationId());
+        LogSegmentAttributes attributes = LogSegmentUtils.getSegmentAttributes(threadId, state);
+        LogContext logContext = getLogContext(runtime, ctx, getCorrelationId(), attributes);
         if (logContext == null || logContext.segmentId() == null) {
             frame.push(cmd);
             return;
@@ -73,7 +75,7 @@ public class LogSegmentScopeCommand<T extends Step> extends StepCommand<T> {
         state.pushFrame(threadId, scopeFrame);
     }
 
-    private LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
+    private LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId, LogSegmentAttributes attributes) {
         String segmentName = getSegmentName(ctx, (AbstractStep<?>) getStep());
         if (segmentName == null) {
             return null;
@@ -81,10 +83,10 @@ public class LogSegmentScopeCommand<T extends Step> extends StepCommand<T> {
 
         segmentName = SensitiveDataMasker.mask(segmentName, runtime.getService(SensitiveDataHolder.class).get());
 
-        return buildLogContext(runtime, segmentName, correlationId);
+        return buildLogContext(runtime, segmentName, correlationId, attributes);
     }
 
-    private LogContext buildLogContext(Runtime runtime, String segmentName, UUID correlationId) {
+    private LogContext buildLogContext(Runtime runtime, String segmentName, UUID correlationId, LogSegmentAttributes attributes) {
         RunnerConfiguration runnerCfg = runtime.getService(RunnerConfiguration.class);
         boolean redirectSystemOutAndErr = runnerCfg.logging().sendSystemOutAndErrToSLF4J();
 
@@ -93,7 +95,7 @@ public class LogSegmentScopeCommand<T extends Step> extends StepCommand<T> {
                 .correlationId(correlationId)
                 .redirectSystemOutAndErr(redirectSystemOutAndErr)
                 .logLevel(getLogLevel((AbstractStep<?>) getStep()))
-                .segmentId(runtime.getService(RunnerLogger.class).createSegment(segmentName, correlationId))
+                .segmentId(runtime.getService(RunnerLogger.class).createSegment(segmentName, correlationId, attributes))
                 .build();
     }
 

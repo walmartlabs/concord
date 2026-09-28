@@ -54,8 +54,14 @@ public class CloseLogSegmentCommand implements Command {
         }
         assert correlationId == logContext.correlationId();
 
+        LogSegmentStatus status = getStatus(state, threadId);
+        if (status == LogSegmentStatus.ERROR) {
+            // the parent of the segments of the "error" block, if any
+            LogSegmentUtils.setLastFailedSegmentId(threadId, state, segmentId);
+        }
+
         runtime.getService(RunnerLogger.class)
-                .setSegmentStatus(segmentId, getStatus(state, threadId));
+                .setSegmentStatus(segmentId, status);
     }
 
     private static LogSegmentStatus getStatus(State state, ThreadId threadId) {

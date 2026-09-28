@@ -38,5 +38,9 @@ public class ExposeLastErrorCommand implements Command {
 
         Exception cause = (Exception) frame.getLocal(Frame.LAST_EXCEPTION_KEY);
         frame.setLocal(Constants.Context.LAST_ERROR_KEY, cause);
+
+        // mark the frame: the "error" block runs in it
+        Long failedSegmentId = LogSegmentUtils.getLastFailedSegmentId(threadId, state);
+        frame.setLocal(LogSegmentUtils.ERROR_HANDLER_KEY, failedSegmentId != null ? failedSegmentId : -1L);
     }
 }
