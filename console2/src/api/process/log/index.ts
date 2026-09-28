@@ -85,8 +85,21 @@ export enum SegmentStatus {
     SUSPENDED = 'SUSPENDED',
 }
 
+export enum SegmentRole {
+    // a part of the "error" block of the failed parent segment
+    ERROR_HANDLER = 'ERROR_HANDLER',
+}
+
 export interface LogSegmentEntry {
     id: number;
+    parentId?: number;
+    // number of the attempt (starting from 1) of a step with "retry"
+    attempt?: number;
+    // index of the loop iteration (starting from 0)
+    loopIndex?: number;
+    role?: SegmentRole;
+    // runtime thread, undefined for the main thread
+    threadId?: number;
     correlationId?: string;
     name: string;
     createdAt: string;
