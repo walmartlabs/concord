@@ -38,6 +38,10 @@ import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointUploader;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.DefaultCheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
+import com.walmartlabs.concord.client2.ProcessEventRequest;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogSegmentAttributes;
+import com.walmartlabs.concord.runtime.v2.runner.remote.EventRecordingExecutionListener;
+import com.walmartlabs.concord.runtime.v2.runner.remote.TaskCallEventRecordingListener;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggerProvider;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingClient;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
@@ -68,6 +72,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -91,6 +96,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
 
     protected TestCheckpointUploader checkpointService;
     protected TestLoggingClient testLoggingClient;
+    protected TestEventReportingService testEventReportingService;
 
     protected boolean skipSerializationAssert = false;
 
@@ -140,6 +146,10 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
 
     public TestCheckpointUploader checkpointService() {
         return checkpointService;
+    }
+
+    public TestEventReportingService testEventReportingService() {
+        return testEventReportingService;
     }
 
     public TestLoggingClient testLoggingClient() {
@@ -374,6 +384,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
 
         checkpointService = spy(new TestCheckpointUploader());
         testLoggingClient = spy(new TestLoggingClient());
+        testEventReportingService = new TestEventReportingService();
 
         testServices = new AbstractModule() {
             @Override
@@ -396,6 +407,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
                 bind(ProcessStatusCallback.class).toInstance(processStatusCallback);
                 bind(SecretService.class).to(DefaultSecretService.class);
                 bind(ApiClient.class).toInstance(mock(ApiClient.class));
+                bind(EventReportingService.class).toInstance(testEventReportingService);
 
                 Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
                 taskProviders.addBinding().to(TaskV2Provider.class);
@@ -403,6 +415,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
                 Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
                 taskCallListeners.addBinding().to(TaskCallPolicyChecker.class);
                 taskCallListeners.addBinding().to(TaskResultListener.class);
+                taskCallListeners.addBinding().to(TaskCallEventRecordingListener.class);
 
                 Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
                 executionListeners.addBinding().toInstance(new ExecutionListener() {
@@ -412,6 +425,7 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
                     }
                 });
                 executionListeners.addBinding().to(StackTraceCollector.class);
+                executionListeners.addBinding().to(EventRecordingExecutionListener.class);
 
                 executionListeners.addBinding().toInstance(new ExecutionListener() {
                     @Override
@@ -462,20 +476,64 @@ public class TestRuntimeV2 implements BeforeEachCallback, AfterEachCallback {
         return true;
     }
 
+    public static class TestEventReportingService implements EventReportingService {
+
+        private final List<ProcessEventRequest> events = new CopyOnWriteArrayList<>();
+
+        @Override
+        public void report(ProcessEventRequest req) {
+            events.add(req);
+        }
+
+        @SuppressWarnings("unchecked")
+        public List<Map<String, Object>> elementEvents() {
+            return events.stream()
+                    .filter(e -> "ELEMENT".equals(e.getEventType()))
+                    .map(e -> (Map<String, Object>) e.getData())
+                    .toList();
+        }
+    }
+
     public static class TestLoggingClient implements LoggingClient {
 
         private final AtomicLong id = new AtomicLong(1L);
         private final Map<Long, String> segmentNames = new ConcurrentHashMap<>();
+        private final Map<Long, LogSegmentAttributes> segmentAttributes = new ConcurrentHashMap<>();
 
         @Override
-        public long createSegment(UUID correlationId, String name) {
+        public long createSegment(UUID correlationId, String name, LogSegmentAttributes attributes) {
             long segmentId = id.getAndIncrement();
             segmentNames.put(segmentId, name);
+            segmentAttributes.put(segmentId, attributes);
             return segmentId;
         }
 
         public String getSegmentName(long segmentId) {
             return segmentNames.get(segmentId);
+        }
+
+        public Long getSegmentParentId(long segmentId) {
+            return getSegmentAttributes(segmentId).parentId();
+        }
+
+        public LogSegmentAttributes getSegmentAttributes(long segmentId) {
+            return segmentAttributes.get(segmentId);
+        }
+
+        public List<Long> getSegmentIds(String name) {
+            return segmentNames.entrySet().stream()
+                    .filter(e -> e.getValue().equals(name))
+                    .map(Map.Entry::getKey)
+                    .sorted()
+                    .toList();
+        }
+
+        public long getSegmentId(String name) {
+            return segmentNames.entrySet().stream()
+                    .filter(e -> e.getValue().equals(name))
+                    .map(Map.Entry::getKey)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Segment not found: " + name));
         }
     }
 }

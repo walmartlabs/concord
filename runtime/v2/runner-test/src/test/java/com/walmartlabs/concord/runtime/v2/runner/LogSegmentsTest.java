@@ -24,6 +24,7 @@ import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogSegmentAttributes;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.ReentrantTaskExample;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -693,6 +695,112 @@ public class LogSegmentsTest {
         assertSegmentLog(log, 1, "[INFO ] Still masked: ******");
         assertSegmentStatusOk(log, 1);
         assertNoMoreSegments();
+    }
+
+    @Test
+    public void nestedSegmentsHaveParents() throws Exception {
+        deploy("logSegments/nestedSegments");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        runWithSegments();
+
+        long outer = segmentId("outer");
+        assertSegmentParent("outer", null);
+        assertSegmentParent("inner task", outer);
+        // parallel branches inherit the segment of the forking thread
+        assertSegmentParent("branch A", outer);
+        assertSegmentParent("branch B", outer);
+        assertSegmentParent("leaf task", segmentId("branch B"));
+        assertSegmentParent("top level", null);
+    }
+
+    @Test
+    public void segmentAttributes() throws Exception {
+        deploy("logSegments/segmentAttributes");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        runWithSegments();
+
+        // retry: one segment per attempt
+        List<Long> retried = segmentIds("retried");
+        assertEquals(2, retried.size());
+        assertAttributes(retried.get(0), null, 1, null, false, false);
+        assertAttributes(retried.get(1), null, 2, null, false, false);
+
+        // loops: one segment per iteration, parallel iterations run in their own threads
+        assertAttributes(segmentId("serial a"), null, null, 0, false, false);
+        assertAttributes(segmentId("serial b"), null, null, 1, false, false);
+        assertAttributes(segmentId("parallel a"), null, null, 0, false, true);
+        assertAttributes(segmentId("parallel b"), null, null, 1, false, true);
+
+        // loop over a step with retry: both the iteration and the attempt
+        List<Long> x = segmentIds("looped retry x");
+        assertEquals(2, x.size());
+        assertAttributes(x.get(0), null, 1, 0, false, false);
+        assertAttributes(x.get(1), null, 2, 0, false, false);
+        List<Long> y = segmentIds("looped retry y");
+        assertEquals(2, y.size());
+        assertAttributes(y.get(0), null, 1, 1, false, false);
+        assertAttributes(y.get(1), null, 2, 1, false, false);
+
+        // the error block is a child of the failed step
+        long caught = segmentId("caught");
+        assertAttributes(caught, null, null, null, false, false);
+        assertAttributes(segmentId("handler"), caught, null, null, true, false);
+
+        // the attempt number doesn't leak into the steps of the retried call (even into forked threads)
+        long outer = segmentId("outer");
+        assertAttributes(outer, null, 1, null, false, false);
+        assertAttributes(segmentId("branch"), outer, null, null, false, true);
+
+        // events are linked to the segment of the particular run of the step
+        assertEventSegments("conditionallyFailTask", retried.get(0), retried.get(1), x.get(0), x.get(1), y.get(0), y.get(1));
+        assertEventSegments("faultyTask", caught);
+        // a flow call with a segment of its own
+        assertEquals(List.of((Object) outer), runtime.testEventReportingService().elementEvents().stream()
+                .filter(e -> "Flow call: inner".equals(e.get("description")))
+                .map(e -> e.get("logSegmentId"))
+                .toList());
+    }
+
+    // pre/post events of the task calls in the order of the segments
+    private static void assertEventSegments(String taskName, Long... segmentIds) {
+        List<Object> actual = runtime.testEventReportingService().elementEvents().stream()
+                .filter(e -> taskName.equals(e.get("name")))
+                .map(e -> e.get("logSegmentId"))
+                .toList();
+        List<Object> expected = Arrays.stream(segmentIds)
+                .flatMap(id -> java.util.stream.Stream.of(id, id))
+                .map(id -> (Object) id)
+                .toList();
+        assertEquals(expected, actual, "logSegmentId of '" + taskName + "' events");
+    }
+
+    private static List<Long> segmentIds(String name) {
+        return runtime.testLoggingClient().getSegmentIds(name);
+    }
+
+    private static void assertAttributes(long segmentId, Long parentId, Integer attempt, Integer loopIndex,
+                                         boolean errorHandler, boolean forked) {
+        LogSegmentAttributes a = runtime.testLoggingClient().getSegmentAttributes(segmentId);
+        String name = runtime.testLoggingClient().getSegmentName(segmentId);
+        assertEquals(parentId, a.parentId(), "parentId of '" + name + "'");
+        assertEquals(attempt, a.attempt(), "attempt of '" + name + "'");
+        assertEquals(loopIndex, a.loopIndex(), "loopIndex of '" + name + "'");
+        assertEquals(errorHandler, a.errorHandler(), "errorHandler of '" + name + "'");
+        assertEquals(forked, a.threadId() != null, "threadId of '" + name + "': " + a.threadId());
+    }
+
+    private static long segmentId(String name) {
+        return runtime.testLoggingClient().getSegmentId(name);
+    }
+
+    private static void assertSegmentParent(String name, Long expectedParentId) {
+        assertEquals(expectedParentId, runtime.testLoggingClient().getSegmentParentId(segmentId(name)), "parent of '" + name + "'");
     }
 
     private void assertSegmentName(int segmentId, String expectedName) {

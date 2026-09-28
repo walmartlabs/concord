@@ -44,6 +44,7 @@ public class ForkCommand implements Command {
 
         // create a new root frame
         state.fork(threadId, childThreadId, cmds);
+        LogSegmentUtils.inheritParentSegmentId(threadId, childThreadId, state);
 
         // copy all "in" variables
         Frame targetFrame = state.peekFrame(childThreadId);
