@@ -18,7 +18,7 @@
  * =====
  */
 
-import { ConcordId, fetchJson, managedFetch, queryParams } from '../../common';
+import { ConcordId, fetchJson, managedFetch, queryParams, RequestErrorData } from '../../common';
 
 export interface LogRange {
     unit?: string;
@@ -42,7 +42,11 @@ const parseRange = (s: string): LogRange => {
     const regex = /^bytes (\d*)-(\d*)\/(\d*)$/;
     const m = regex.exec(s);
     if (!m) {
-        throw Object({ error: true, message: `Invalid Content-Range header: ${s}` });
+        throw {
+            status: 0,
+            message: 'Invalid Content-Range header (0)',
+            details: s,
+        } satisfies RequestErrorData;
     }
 
     return {
@@ -71,7 +75,11 @@ export const getLog = async (instanceId: ConcordId, range: LogRange): Promise<Lo
 
     const headers = resp.headers.get('Content-Range');
     if (!headers) {
-        return Promise.reject({ error: true, message: `Range header is missing: ${instanceId}` });
+        throw {
+            status: 0,
+            message: 'Content-Range header is missing (0)',
+            details: instanceId,
+        } satisfies RequestErrorData;
     }
 
     const data = await resp.text();
@@ -143,10 +151,12 @@ export const listLogSegments = async (
 export const getSegmentLog = async (
     instanceId: ConcordId,
     segmentId: number,
-    range: LogRange
+    range: LogRange,
+    signal?: AbortSignal
 ): Promise<LogChunk> => {
-    const opts = {
+    const opts: RequestInit = {
         headers: formatRangeHeader(range),
+        signal,
     };
 
     const resp = await managedFetch(
@@ -156,7 +166,11 @@ export const getSegmentLog = async (
 
     const headers = resp.headers.get('Content-Range');
     if (!headers) {
-        return Promise.reject({ error: true, message: `Range header is missing: ${instanceId}` });
+        throw {
+            status: 0,
+            message: 'Content-Range header is missing (0)',
+            details: instanceId,
+        } satisfies RequestErrorData;
     }
 
     const data = await resp.text();
