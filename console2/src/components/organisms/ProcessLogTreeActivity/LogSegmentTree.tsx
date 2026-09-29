@@ -19,11 +19,13 @@
  */
 
 import * as React from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Icon, Menu, SemanticCOLORS, SemanticICONS } from 'semantic-ui-react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Icon, Menu } from 'semantic-ui-react';
+import type { SemanticCOLORS, SemanticICONS } from 'semantic-ui-react';
 
 import { SegmentStatus } from '../../../api/process/log';
-import { isFinal, ProcessStatus } from '../../../api/process';
+import { isFinal } from '../../../api/process';
+import type { ProcessStatus } from '../../../api/process';
 import {
     categoryOf,
     describeNode,
@@ -32,15 +34,18 @@ import {
     getSegmentTiming,
     isFailure,
     isGroup,
-    SegmentNode,
-    SegmentTree,
 } from './segmentTree';
+import type { SegmentNode, SegmentTree } from './segmentTree';
 
-import SegmentedFilter, { SegmentedOption } from './SegmentedFilter';
+import SegmentedFilter from './SegmentedFilter';
+import type { SegmentedOption } from './SegmentedFilter';
 
 import './LogSegmentTree.css';
 
 type StatusFilter = 'ALL' | 'FAILED' | 'WARNINGS' | 'RUNNING' | 'OK';
+
+const ROW_HEIGHT = 28;
+const OVERSCAN_ROWS = 5;
 
 interface Props {
     tree: SegmentTree;
@@ -55,6 +60,107 @@ interface Row {
     // shown only because one of the descendants matches the filter
     dimmed: boolean;
 }
+
+interface TreeTimeRange {
+    start: number;
+    end: number;
+    now: number;
+}
+
+interface SegmentTreeRowProps {
+    row: Row;
+    selected: boolean;
+    processStatus?: ProcessStatus;
+    timeRange: TreeTimeRange;
+    onSelect: (segmentId: number) => void;
+    onToggle: (segmentId: number, open?: boolean) => void;
+}
+
+const SegmentTreeRow = React.memo(
+    ({
+        row: { node, open, dimmed },
+        selected,
+        processStatus,
+        timeRange,
+        onSelect,
+        onToggle,
+    }: SegmentTreeRowProps) => {
+        const s = node.segment;
+        const hasChildren = node.children.length > 0;
+        const timing = getSegmentTiming(s, processStatus, timeRange.now);
+        const { kind, name, note } = describeNode(node);
+        const span = Math.max(timeRange.end - timeRange.start, 1);
+
+        // collapsed nodes show counters of all their descendants
+        const warnings = hasChildren && !open ? node.totalWarnings : s.warnings ?? 0;
+        const errors = hasChildren && !open ? node.totalErrors : s.errors ?? 0;
+
+        return (
+            <div
+                data-segment-id={s.id}
+                role="treeitem"
+                aria-selected={selected}
+                aria-expanded={hasChildren ? open : undefined}
+                className={`TreeRow${selected ? ' Selected' : ''}${dimmed ? ' Dimmed' : ''}${
+                    isGroup(node) ? ' Group' : ''
+                }`}
+                onClick={() => onSelect(s.id)}
+                onDoubleClick={() => hasChildren && onToggle(s.id)}
+            >
+                {Array.from({ length: node.depth }, (_, i) => (
+                    <span key={i} className="Guide" />
+                ))}
+                <span
+                    className="Caret"
+                    onClick={(ev) => {
+                        if (hasChildren) {
+                            ev.stopPropagation();
+                            onToggle(s.id);
+                        }
+                    }}
+                >
+                    {hasChildren && <Icon name={open ? 'caret down' : 'caret right'} />}
+                </span>
+                <SegmentStatusIcon
+                    status={s.status}
+                    processStatus={processStatus}
+                    failedInside={!open && node.hasFailedDescendant}
+                    retried={node.retried}
+                    recovered={node.recovered}
+                />
+                {kind && <span className={`Kind Kind-${kind}`}>{kind}</span>}
+                <span className="Name" title={s.name}>
+                    {name}
+                </span>
+                {note && <span className={`Note${node.retried ? ' Retried' : ''}`}>{note}</span>}
+                {errors > 0 && (
+                    <span className="Counter Errors" title="errors">
+                        {errors}
+                    </span>
+                )}
+                {warnings > 0 && (
+                    <span className="Counter Warnings" title="warnings">
+                        {warnings}
+                    </span>
+                )}
+                <span className="Duration">
+                    {timing.known && formatDuration(timing.end - timing.start)}
+                </span>
+                <span className="Timeline">
+                    {timing.known && (
+                        <i
+                            className={`Bar Bar-${s.status ?? 'NONE'}`}
+                            style={{
+                                left: `${((timing.start - timeRange.start) / span) * 100}%`,
+                                width: `${((timing.end - timing.start) / span) * 100}%`,
+                            }}
+                        />
+                    )}
+                </span>
+            </div>
+        );
+    }
+);
 
 // filters and counters work with the real steps only, not with the groups
 const matchesStatus = (n: SegmentNode, filter: StatusFilter) => {
@@ -72,6 +178,34 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
     const [showTimeline, setShowTimeline] = useState<boolean>(true);
     const treeRef = useRef<HTMLDivElement>(null);
+    const [viewport, setViewport] = useState({ height: 0, scrollTop: 0 });
+    const updateViewport = useCallback(() => {
+        const el = treeRef.current;
+        if (!el) {
+            return;
+        }
+        const height = el.clientHeight;
+        const scrollTop = el.scrollTop;
+        setViewport((prev) =>
+            prev.height === height &&
+            Math.floor(prev.scrollTop / ROW_HEIGHT) === Math.floor(scrollTop / ROW_HEIGHT) &&
+            Math.ceil((prev.scrollTop + height) / ROW_HEIGHT) ===
+                Math.ceil((scrollTop + height) / ROW_HEIGHT)
+                ? prev
+                : { height, scrollTop }
+        );
+    }, []);
+
+    useLayoutEffect(() => {
+        const el = treeRef.current;
+        if (!el) {
+            return;
+        }
+        updateViewport();
+        const observer = new ResizeObserver(updateViewport);
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [updateViewport]);
 
     const filterActive = statusFilter !== 'ALL' || query.length > 0;
 
@@ -149,7 +283,7 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
                 .map((n, pos) => ({ n, pos }))
                 .filter(
                     ({ n }) =>
-                        !isGroup(n) && !n.retried && (isFailure(n) || (n.segment.errors ?? 0) > 0)
+                        !isGroup(n) && !n.recovered && (isFailure(n) || (n.segment.errors ?? 0) > 0)
                 )
                 .map(({ pos }) => pos),
         [tree]
@@ -194,20 +328,57 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
     // scroll to the selected row once per selection. The row can appear only after its ancestors
     // are expanded, but expanding/collapsing other nodes must not move the tree back to it
     const scrollPending = useRef<boolean>(false);
-    useEffect(() => {
+    useLayoutEffect(() => {
         scrollPending.current = true;
     }, [selectedId]);
 
-    useEffect(() => {
-        if (!scrollPending.current || selectedId === undefined || !treeRef.current) {
+    useLayoutEffect(() => {
+        const el = treeRef.current;
+        if (!el) {
             return;
         }
-        const el = treeRef.current.querySelector(`[data-segment-id="${selectedId}"]`);
-        if (el) {
-            el.scrollIntoView({ block: 'nearest' });
-            scrollPending.current = false;
+        const height = el.clientHeight;
+        const maxTop = Math.max(0, rows.length * ROW_HEIGHT + 12 - height);
+        const clamp = (offset: number) => Math.max(0, Math.min(offset, maxTop));
+        const clampedTop = clamp(el.scrollTop);
+        if (el.scrollTop !== clampedTop) {
+            el.scrollTop = clampedTop;
         }
-    }, [selectedId, rows]);
+        updateViewport();
+        if (selectedId === undefined) {
+            scrollPending.current = false;
+            return;
+        }
+        if (!scrollPending.current || height <= 0) {
+            return;
+        }
+        const index = rows.findIndex((row) => row.node.segment.id === selectedId);
+        if (index < 0) {
+            return;
+        }
+        const top = index * ROW_HEIGHT;
+        const bottom = top + ROW_HEIGHT;
+        if (top < el.scrollTop) {
+            el.scrollTop = clamp(top);
+        } else if (bottom > el.scrollTop + height) {
+            el.scrollTop = clamp(bottom - height);
+        }
+        updateViewport();
+        scrollPending.current = false;
+    }, [selectedId, rows, viewport.height, updateViewport]);
+
+    const maxTop = Math.max(0, rows.length * ROW_HEIGHT + 12 - viewport.height);
+    const sampledTop = Math.min(viewport.scrollTop, maxTop);
+    const start =
+        rows.length === 0 ? 0 : Math.max(0, Math.floor(sampledTop / ROW_HEIGHT) - OVERSCAN_ROWS);
+    const end =
+        rows.length === 0
+            ? 0
+            : Math.min(
+                  rows.length,
+                  Math.ceil((sampledTop + viewport.height) / ROW_HEIGHT) + OVERSCAN_ROWS
+              );
+    const visibleRows = useMemo(() => rows.slice(start, end), [rows, start, end]);
 
     const toggle = useCallback(
         (segmentId: number, open?: boolean) => {
@@ -321,7 +492,7 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
         },
         { value: 'OK', label: 'OK', count: counts.OK },
     ];
-    if (counts.RUNNING > 0) {
+    if (counts.RUNNING > 0 || statusFilter === 'RUNNING') {
         statusOptions.splice(3, 0, {
             value: 'RUNNING',
             label: 'Running',
@@ -428,90 +599,31 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
                 tabIndex={0}
                 role="tree"
                 onKeyDown={keyDownHandler}
+                onScroll={updateViewport}
             >
                 {rows.length === 0 && <div className="Empty">No steps match the filter.</div>}
 
-                {rows.map(({ node, open, dimmed }) => {
-                    const s = node.segment;
-                    const hasChildren = node.children.length > 0;
-                    const timing = getSegmentTiming(s, processStatus, timeRange.now);
-                    const { kind, name, note } = describeNode(node);
-
-                    // collapsed nodes show counters of all their descendants
-                    const warnings = hasChildren && !open ? node.totalWarnings : s.warnings ?? 0;
-                    const errors = hasChildren && !open ? node.totalErrors : s.errors ?? 0;
-
-                    return (
-                        <div
-                            key={s.id}
-                            data-segment-id={s.id}
-                            role="treeitem"
-                            aria-selected={s.id === selectedId}
-                            aria-expanded={hasChildren ? open : undefined}
-                            className={`TreeRow${s.id === selectedId ? ' Selected' : ''}${
-                                dimmed ? ' Dimmed' : ''
-                            }${isGroup(node) ? ' Group' : ''}`}
-                            onClick={() => onSelect(s.id)}
-                            onDoubleClick={() => hasChildren && toggle(s.id)}
-                        >
-                            {Array.from({ length: node.depth }, (_, i) => (
-                                <span key={i} className="Guide" />
-                            ))}
-                            <span
-                                className="Caret"
-                                onClick={(ev) => {
-                                    if (hasChildren) {
-                                        ev.stopPropagation();
-                                        toggle(s.id);
-                                    }
-                                }}
-                            >
-                                {hasChildren && <Icon name={open ? 'caret down' : 'caret right'} />}
-                            </span>
-                            <SegmentStatusIcon
-                                status={s.status}
-                                processStatus={processStatus}
-                                failedInside={!open && node.hasFailedDescendant}
-                                retried={node.retried}
-                            />
-                            {kind && <span className={`Kind Kind-${kind}`}>{kind}</span>}
-                            <span className="Name" title={s.name}>
-                                {name}
-                            </span>
-                            {note && (
-                                <span className={`Note${node.retried ? ' Retried' : ''}`}>
-                                    {note}
-                                </span>
-                            )}
-                            {errors > 0 && (
-                                <span className="Counter Errors" title="errors">
-                                    {errors}
-                                </span>
-                            )}
-                            {warnings > 0 && (
-                                <span className="Counter Warnings" title="warnings">
-                                    {warnings}
-                                </span>
-                            )}
-                            <span className="Duration">
-                                {timing.known && formatDuration(timing.end - timing.start)}
-                            </span>
-                            <span className="Timeline">
-                                {timing.known && (
-                                    <i
-                                        className={`Bar Bar-${s.status ?? 'NONE'}`}
-                                        style={{
-                                            left: `${
-                                                ((timing.start - timeRange.start) / span) * 100
-                                            }%`,
-                                            width: `${((timing.end - timing.start) / span) * 100}%`,
-                                        }}
-                                    />
-                                )}
-                            </span>
-                        </div>
-                    );
-                })}
+                <div
+                    aria-hidden="true"
+                    role="presentation"
+                    style={{ height: start * ROW_HEIGHT }}
+                />
+                {visibleRows.map((row) => (
+                    <SegmentTreeRow
+                        key={row.node.segment.id}
+                        row={row}
+                        selected={row.node.segment.id === selectedId}
+                        processStatus={processStatus}
+                        timeRange={timeRange}
+                        onSelect={onSelect}
+                        onToggle={toggle}
+                    />
+                ))}
+                <div
+                    aria-hidden="true"
+                    role="presentation"
+                    style={{ height: (rows.length - end) * ROW_HEIGHT }}
+                />
             </div>
         </div>
     );
@@ -522,6 +634,7 @@ interface SegmentStatusIconProps {
     processStatus?: ProcessStatus;
     failedInside: boolean;
     retried?: boolean;
+    recovered?: boolean;
 }
 
 export const SegmentStatusIcon = ({
@@ -529,12 +642,14 @@ export const SegmentStatusIcon = ({
     processStatus,
     failedInside,
     retried,
+    recovered,
 }: SegmentStatusIconProps) => {
     let color: SemanticCOLORS = 'grey';
     let icon: SemanticICONS = 'circle outline';
     let spinning = false;
 
-    if (retried) {
+    const recoveredFailure = recovered && status === SegmentStatus.FAILED;
+    if (recoveredFailure || retried) {
         color = 'orange';
         icon = 'redo';
     } else if (status === SegmentStatus.RUNNING && isFinal(processStatus)) {
@@ -564,9 +679,9 @@ export const SegmentStatusIcon = ({
             loading={spinning}
             name={icon}
             color={color}
-            title={retried ? 'RETRIED' : status ?? ''}
+            title={recoveredFailure ? 'RECOVERED' : retried ? 'RETRIED' : status ?? ''}
         />
     );
 };
 
-export default LogSegmentTree;
+export default React.memo(LogSegmentTree);

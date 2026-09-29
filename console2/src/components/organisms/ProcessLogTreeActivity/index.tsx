@@ -183,8 +183,7 @@ const ProcessLogTreeActivityView = ({
                             dataFetchInterval={dataFetchInterval}
                             forceRefresh={forceRefresh}
                             pollingEnabled={
-                                !isFinal(processStatus) &&
-                                processStatus !== ProcessStatus.SUSPENDED
+                                !isFinal(processStatus) && processStatus !== ProcessStatus.SUSPENDED
                             }
                             onSelect={selectHandler}
                         />
@@ -200,8 +199,8 @@ const ProcessLogTreeActivityView = ({
     );
 };
 
-const ProcessLogTreeActivity = (props: ExternalProps) => (
+const ProcessLogTreeActivity = React.memo((props: ExternalProps) => (
     <ProcessLogTreeActivityView key={props.instanceId} {...props} />
-);
+));
 
 export default ProcessLogTreeActivity;

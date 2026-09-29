@@ -158,6 +158,7 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
                     processStatus={processStatus}
                     failedInside={false}
                     retried={node.retried}
+                    recovered={node.recovered}
                 />
                 <span className="Name" title={name}>
                     {name}
@@ -197,6 +198,7 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
                         processStatus={processStatus}
                         failedInside={false}
                         retried={node.retried}
+                        recovered={node.recovered}
                     />
                     <div className="HeaderText">
                         <div className="HeaderTitle">

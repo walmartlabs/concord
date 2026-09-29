@@ -20,7 +20,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { LogSegmentEntry, SegmentRole, SegmentStatus } from '../../../../api/process/log';
+import { SegmentRole, SegmentStatus } from '../../../../api/process/log';
+import type { LogSegmentEntry } from '../../../../api/process/log';
 import { ProcessStatus } from '../../../../api/process';
 import {
     buildSegmentTree,
@@ -28,6 +29,7 @@ import {
     describeNode,
     formatDuration,
     getAncestors,
+    isFailure,
     parseSegmentName,
     pickDefaultSegment,
 } from '../segmentTree';
@@ -147,6 +149,33 @@ describe('groups', () => {
         expect(pickDefaultSegment(tree, ProcessStatus.FINISHED)!.segment.id).not.toBe(1);
     });
 
+    test('a successful retry recovers nested failures without relabeling descendants', () => {
+        const tree = buildSegmentTree([
+            seg(1, undefined, {
+                correlationId: 'a',
+                attempt: 1,
+                status: FAILED,
+                errors: 1,
+            }),
+            seg(2, 1, { status: FAILED, errors: 1 }),
+            seg(3, 2, { status: FAILED, errors: 1 }),
+            seg(4, 1, { status: OK }),
+            seg(5, undefined, { correlationId: 'a', attempt: 2, status: OK }),
+        ]);
+
+        expect(tree.byId.get(1)).toMatchObject({ retried: true, recovered: true });
+        expect(tree.byId.get(2)).toMatchObject({ recovered: true });
+        expect(tree.byId.get(3)).toMatchObject({ recovered: true });
+        expect(tree.byId.get(4)).toMatchObject({ recovered: true });
+        expect(tree.byId.get(2)?.retried).toBeUndefined();
+        expect(tree.roots[0].hasFailedDescendant).toBe(false);
+        expect(categoryOf(tree.byId.get(1)!)).toBe('WARNINGS');
+        expect(categoryOf(tree.byId.get(2)!)).toBe('WARNINGS');
+        expect(categoryOf(tree.byId.get(4)!)).toBe('OK');
+        expect(categoryOf(tree.byId.get(5)!)).toBe('OK');
+        expect(pickDefaultSegment(tree, ProcessStatus.FINISHED)?.segment.id).toBe(5);
+    });
+
     test('attempts interleaved with other steps (parallel branches)', () => {
         const tree = buildSegmentTree([
             seg(1, undefined, { correlationId: 'a', attempt: 1, threadId: 1, status: FAILED }),
@@ -159,25 +188,60 @@ describe('groups', () => {
         expect(shape(tree.roots)).toEqual([{ 'retry:-11': [1, 3] }, { 'retry:-21': [2, 4] }, 5]);
     });
 
-    test('exhausted retries fail the group', () => {
+    test('exhausted retries leave only the final attempt failed', () => {
         const tree = buildSegmentTree([
             seg(1, undefined, { correlationId: 'a', attempt: 1, status: FAILED }),
             seg(2, undefined, { correlationId: 'a', attempt: 2, status: FAILED }),
         ]);
         expect(tree.roots[0].segment.status).toBe(FAILED);
         expect(describeNode(tree.roots[0]).note).toBe('2 attempts · exhausted');
+        expect(tree.byId.get(1)).toMatchObject({ retried: true, recovered: true });
+        expect(tree.byId.get(2)?.recovered).toBeFalsy();
+        expect(isFailure(tree.byId.get(1)!)).toBe(false);
+        expect(isFailure(tree.byId.get(2)!)).toBe(true);
         expect(pickDefaultSegment(tree, ProcessStatus.FAILED)!.segment.id).toBe(2);
     });
 
-    test('loop iterations, including parallel ones out of order', () => {
-        const tree = buildSegmentTree([
-            seg(1, undefined, { correlationId: 'a', loopIndex: 1 }),
-            seg(2, undefined, { correlationId: 'a', loopIndex: 0 }),
-            seg(3, undefined, { correlationId: 'a', loopIndex: 2 }),
+    test('late loop iterations keep group identity and update the timeline start', () => {
+        const first = buildSegmentTree([
+            seg(1, undefined, {
+                correlationId: 'a',
+                loopIndex: 1,
+                createdAt: '2026-01-02T00:00:00Z',
+            }),
+            seg(3, undefined, {
+                correlationId: 'a',
+                loopIndex: 2,
+                createdAt: '2026-01-03T00:00:00Z',
+            }),
             seg(4),
         ]);
-        expect(shape(tree.roots)).toEqual([{ 'loop:-22': [2, 1, 3] }, 4]);
-        expect(describeNode(tree.byId.get(2)!).note).toBe('item 1');
+        const groupId = first.roots[0].segment.id;
+
+        const second = buildSegmentTree([
+            seg(1, undefined, {
+                correlationId: 'a',
+                loopIndex: 1,
+                createdAt: '2026-01-02T00:00:00Z',
+            }),
+            seg(3, undefined, {
+                correlationId: 'a',
+                loopIndex: 2,
+                createdAt: '2026-01-03T00:00:00Z',
+            }),
+            seg(2, undefined, {
+                correlationId: 'a',
+                loopIndex: 0,
+                createdAt: '2026-01-01T00:00:00Z',
+            }),
+            seg(4),
+        ]);
+        const loop = second.roots[0];
+
+        expect(loop.segment.id).toBe(groupId);
+        expect(loop.children.map((child) => child.segment.id)).toEqual([2, 1, 3]);
+        expect(loop.segment.createdAt).toBe('2026-01-01T00:00:00Z');
+        expect(describeNode(second.byId.get(2)!).note).toBe('item 1');
     });
 
     test('iterations with several steps and attempts inside', () => {
@@ -238,6 +302,40 @@ describe('groups', () => {
         ]);
         expect(shape(tree.roots)).toEqual([{ 'segment:1': [2, { 'errorHandler:-34': [3, 4] }] }]);
         expect(describeNode(tree.byId.get(-34)!)).toEqual({ name: 'Error handler' });
+    });
+
+    test('retrying and looping error handlers remain inside one handler group', () => {
+        const tree = buildSegmentTree([
+            seg(1, undefined, { status: FAILED }),
+            seg(2, 1, {
+                role: SegmentRole.ERROR_HANDLER,
+                correlationId: 'retry',
+                attempt: 1,
+                status: FAILED,
+            }),
+            seg(3, 1, {
+                role: SegmentRole.ERROR_HANDLER,
+                correlationId: 'retry',
+                attempt: 2,
+                status: OK,
+            }),
+            seg(4, 1, {
+                role: SegmentRole.ERROR_HANDLER,
+                correlationId: 'loop',
+                loopIndex: 0,
+            }),
+            seg(5, 1, {
+                role: SegmentRole.ERROR_HANDLER,
+                correlationId: 'loop',
+                loopIndex: 1,
+            }),
+        ]);
+        const handler = tree.byId.get(1)!.children.find((child) => child.kind === 'errorHandler')!;
+
+        expect(handler.children.map((child) => child.kind)).toEqual(['retry', 'loop']);
+        expect(handler.children.flatMap((child) => child.children.map((member) => member.segment.id))).toEqual([
+            2, 3, 4, 5,
+        ]);
     });
 });
 
