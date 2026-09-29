@@ -1,5 +1,12 @@
 # Change Log
 
+## [2.46.1] - TBD
+
+- project: update dependencies, minimal compiler version to 21
+([#1381](https://github.com/walmartlabs/concord/pull/1381)).
+
+
+
 ## [2.46.0] - 2026-09-18
 
 ### Changed
