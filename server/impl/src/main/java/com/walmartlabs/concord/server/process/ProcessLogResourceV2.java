@@ -186,9 +186,8 @@ public class ProcessLogResourceV2 implements Resource {
     public static Response toResponse(UUID instanceId, long segmentId, ProcessLog l, HttpUtils.Range range) {
         List<ProcessLogChunk> data = l.getChunks();
         if (data.isEmpty()) {
-            int actualStart = range.start() != null ? range.start() : 0;
-            int actualEnd = range.end() != null ? range.end() : actualStart;
-            return downloadableFile(instanceId, segmentId, null, actualStart, actualEnd, l.getSize());
+            int size = l.getSize();
+            return downloadableFile(instanceId, segmentId, null, size, size, size);
         }
 
         ProcessLogChunk firstChunk = data.get(0);
