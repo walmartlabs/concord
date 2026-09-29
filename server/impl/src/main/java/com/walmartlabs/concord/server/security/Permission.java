@@ -48,18 +48,32 @@ public enum Permission {
      */
     API_KEY_SPECIFY_VALUE("apiKeySpecifyValue"),
     /**
-     * Permission to connect a websocket as an agent
+     * Permission to connect a websocket as an agent.
+     * <p>
+     * Implicitly granted to API keys without a user (e.g. the default agent
+     * token, see {@code com/walmartlabs/concord/server/db/v2.21.0.xml}) since
+     * such keys can't hold roles.
      */
-    AGENT_WEBSOCKET("agentWebsocket"),;
+    AGENT_WEBSOCKET("agentWebsocket", true),;
 
     private final String key;
+    private final boolean grantedToUserlessKeys;
 
     Permission(String key) {
+        this(key, false);
+    }
+
+    Permission(String key, boolean grantedToUserlessKeys) {
         this.key = key;
+        this.grantedToUserlessKeys = grantedToUserlessKeys;
     }
 
     public String getKey() {
         return key;
+    }
+
+    public boolean isGrantedToUserlessKeys() {
+        return grantedToUserlessKeys;
     }
 
     public boolean isPermitted() {
