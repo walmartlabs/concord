@@ -25,14 +25,11 @@ import { format as formatDate, parseISO as parseDate } from 'date-fns';
 
 import { ConcordId } from '../../../api/common';
 import { ProcessStatus } from '../../../api/process';
-import {
-    listStepEvents as apiListStepEvents,
-    ProcessElementEvent,
-    ProcessEventEntry,
-} from '../../../api/process/event';
+import { ProcessElementEvent, ProcessEventEntry } from '../../../api/process/event';
 import CallData from './CallData';
 import { SegmentStatusIcon } from './LogSegmentTree';
 import { describeNode, isGroup, SegmentNode } from './segmentTree';
+import { useStepEvents } from './useStepEvents';
 
 import './StepHeader.css';
 
@@ -93,38 +90,24 @@ const MetaRow = ({
 
 const StepHeader = ({ instanceId, node, processStatus }: Props) => {
     const s = node.segment;
-    const [event, setEvent] = useState<ProcessElementEvent>();
+    const run = stepRunOf(node)?.segment;
+    const {
+        events,
+        error: eventError,
+        exhausted: eventsExhausted,
+        refresh: refreshEvents,
+    } = useStepEvents(instanceId, run, {
+        includeAll: false,
+        enabled: true,
+        waitForPost: false,
+        processStatus,
+    });
+    const event = events ? pickEvent(events) : undefined;
     const [infoOpen, setInfoOpen] = useState<boolean>(false);
     const [linkCopied, setLinkCopied] = useState<boolean>(false);
     const linkTimeout = useRef<number | undefined>(undefined);
 
     // location, flow and error of the step come from the ELEMENT events of its segment
-    const run = stepRunOf(node)?.segment;
-    useEffect(() => {
-        setEvent(undefined);
-        if (!run?.correlationId) {
-            return;
-        }
-
-        let cancelled = false;
-        apiListStepEvents<ProcessElementEvent>(instanceId, {
-            segmentId: run.id,
-            correlationId: run.correlationId,
-            repeated: run.attempt !== undefined || run.loopIndex !== undefined,
-        })
-            .then((events) => {
-                if (!cancelled) {
-                    setEvent(pickEvent(events));
-                }
-            })
-            .catch(() => {
-                // the header works without the event details
-            });
-
-        return () => {
-            cancelled = true;
-        };
-    }, [instanceId, run?.id, run?.correlationId, run?.attempt, run?.loopIndex, run?.status]);
 
     useEffect(() => () => window.clearTimeout(linkTimeout.current), []);
 
@@ -173,7 +156,10 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
                         data-tooltip="Step details"
                         data-position="bottom right"
                         data-inverted=""
-                        onClick={() => setInfoOpen(true)}
+                        onClick={() => {
+                            refreshEvents();
+                            setInfoOpen(true);
+                        }}
                     >
                         <Icon name="info circle" />
                     </button>
@@ -224,7 +210,28 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
                             </MetaRow>
                         )}
                     </div>
-                    {taskCall && run && <CallData instanceId={instanceId} run={run} />}
+                    {eventError && (
+                        <div className="EventState" role="alert">
+                            Step details are not available: {eventError.message}
+                            {eventError.details && (
+                                <span className="Details"> {eventError.details}</span>
+                            )}
+                            <button type="button" onClick={refreshEvents}>
+                                Retry
+                            </button>
+                        </div>
+                    )}
+                    {eventsExhausted && !event && (
+                        <div className="EventState">
+                            Step details have not arrived yet.
+                            <button type="button" onClick={refreshEvents}>
+                                Refresh details
+                            </button>
+                        </div>
+                    )}
+                    {taskCall && run && (
+                        <CallData instanceId={instanceId} run={run} processStatus={processStatus} />
+                    )}
                 </Modal.Content>
             </Modal>
         </div>
