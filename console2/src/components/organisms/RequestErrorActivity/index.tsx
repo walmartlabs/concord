@@ -19,47 +19,12 @@
  */
 
 import * as React from 'react';
-import { Navigate } from 'react-router';
 
-import { RequestError } from '../../../api/common';
-import { RequestErrorMessage } from '../../molecules';
-import { useLocation } from 'react-router';
-import { Dimmer, Loader } from 'semantic-ui-react';
-import { setQueryParam } from '../../../utils';
+import type { RequestError } from '../../../api/common';
+import RequestErrorMessage from '../../molecules/RequestErrorMessage';
 
 interface Props {
     error: RequestError;
 }
 
-export default ({ error }: Props) => {
-    const location = useLocation();
-
-    if (error && error.status === 401) {
-        const loginUrl = window.concord?.loginUrl;
-        if (loginUrl) {
-            const requested = new URL(window.location.href).hash;
-            // delay the redirect to avoid layout issues
-            setTimeout(() => {
-                window.location.href = setQueryParam(loginUrl, 'from', '/' + requested);
-            }, 1000);
-
-            return (
-                <Dimmer active={true} inverted={true} page={true}>
-                    <Loader active={true} size="massive" content={'Logging in'} />
-                </Dimmer>
-            );
-        } else {
-            return (
-                <Navigate
-                    to="/login"
-                    replace={true}
-                    state={{
-                        from: location,
-                    }}
-                />
-            );
-        }
-    }
-
-    return <RequestErrorMessage error={error} />;
-};
+export default ({ error }: Props) => <RequestErrorMessage error={error} />;
