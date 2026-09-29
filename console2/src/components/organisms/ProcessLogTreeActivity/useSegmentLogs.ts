@@ -18,21 +18,27 @@
  * =====
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { ConcordId } from '../../../api/common';
+import { toRequestError } from '../../../api/common';
+import type { ConcordId, RequestErrorData } from '../../../api/common';
 import { getSegmentLog } from '../../../api/process/log';
+import type { LogChunk, LogRange } from '../../../api/process/log';
 
-const POLL_INTERVAL = 2000;
 const CONCURRENCY = 4;
+const MAX_CACHE_CHARS = 8 * 1024 * 1024;
 
 export interface SegmentLog {
     text: string;
     // the beginning of the log is not loaded
     truncated: boolean;
+    // an explicit full-log request is currently displayed
+    full: boolean;
     totalBytes?: number;
+    // increases whenever displayed text changes, including equal-length tail replacements
+    revision: number;
     loaded: boolean;
-    error?: string;
+    error?: RequestErrorData;
 }
 
 export interface SegmentLogRequest {
@@ -46,119 +52,412 @@ export interface SegmentLogRequest {
 }
 
 interface Entry extends SegmentLog {
-    // the offset to load new data from
+    coverageStart?: number;
+    // exclusive offset to load through on the next request
     next?: number;
-    full: boolean;
-    busy: boolean;
+    lastDesiredLive?: boolean;
+    finalPending: boolean;
+    generation: number;
+    lastUsed: number;
 }
 
-const EMPTY: SegmentLog = { text: '', truncated: false, loaded: false };
+interface ActiveRequest {
+    controller: AbortController;
+    generation: number;
+    tailBytes: number;
+    full: boolean;
+    final: boolean;
+}
+
+type FetchSegmentLog = (
+    instanceId: ConcordId,
+    segmentId: number,
+    range: LogRange,
+    signal?: AbortSignal
+) => Promise<LogChunk>;
+
+const EMPTY: SegmentLog = { text: '', truncated: false, full: false, revision: 0, loaded: false };
 
 /**
- * Loads the logs of several segments: the tails first, then the new data of the running ones.
- * Already loaded logs are kept when the list of segments changes (e.g. new nested steps appear).
+ * Process-scoped, bounded scheduler and cache for segment log requests.
  */
-export const useSegmentLogs = (
-    instanceId: ConcordId,
-    requests: SegmentLogRequest[]
-): ((segmentId: number) => SegmentLog) => {
-    const store = useRef(new Map<number, Entry>());
-    const requestsRef = useRef(requests);
-    requestsRef.current = requests;
-    const [, setVersion] = useState(0);
+export class SegmentLogLoader {
+    private readonly entries = new Map<number, Entry>();
+    private desired = new Map<number, SegmentLogRequest>();
+    private queue: number[] = [];
+    private readonly queuedIds = new Set<number>();
+    private readonly active = new Map<number, ActiveRequest>();
+    private disposed = false;
+    private clock = 0;
 
-    useEffect(() => {
-        let cancelled = false;
-        const queue: SegmentLogRequest[] = [];
-        let active = 0;
+    constructor(
+        private readonly instanceId: ConcordId,
+        private readonly onChange: () => void,
+        private readonly fetchLog: FetchSegmentLog = getSegmentLog
+    ) {}
 
-        const load = async (r: SegmentLogRequest) => {
-            const e = store.current.get(r.id)!;
-            const initial = e.next === undefined || (r.full && !e.full);
-            try {
-                const chunk = await getSegmentLog(
-                    instanceId,
-                    r.id,
-                    initial ? (r.full ? { low: 0 } : { high: r.tailBytes }) : { low: e.next }
-                );
-                if (cancelled) {
-                    return;
+    reconcile = (requests: SegmentLogRequest[]) => {
+        if (this.disposed) {
+            return;
+        }
+
+        const desired = new Map(requests.map((request) => [request.id, request]));
+        this.desired = desired;
+
+        this.queue = this.queue.filter((id) => desired.has(id));
+        this.queuedIds.clear();
+        this.queue.forEach((id) => this.queuedIds.add(id));
+
+        this.active.forEach((request, id) => {
+            if (!desired.has(id)) {
+                const entry = this.entries.get(id);
+                if (entry) {
+                    entry.generation++;
                 }
-
-                let data = chunk.data;
-                const truncated = initial && (chunk.range.low ?? 0) > 0;
-                if (truncated) {
-                    // the tail starts in the middle of a line
-                    data = data.substring(data.indexOf('\n') + 1);
-                }
-
-                store.current.set(r.id, {
-                    ...e,
-                    text: initial ? data : e.text + data,
-                    truncated: initial ? truncated : e.truncated,
-                    totalBytes: chunk.range.length,
-                    next: chunk.range.high ?? e.next,
-                    full: e.full || r.full,
-                    loaded: true,
-                    error: undefined,
-                    busy: false,
-                });
-            } catch (err) {
-                store.current.set(r.id, {
-                    ...e,
-                    loaded: true,
-                    error: err instanceof Error ? err.message : String(err),
-                    busy: false,
-                });
-            }
-            setVersion((v) => v + 1);
-        };
-
-        const pump = () => {
-            while (!cancelled && active < CONCURRENCY && queue.length > 0) {
-                const r = queue.shift()!;
-                active++;
-                load(r).finally(() => {
-                    active--;
-                    pump();
-                });
-            }
-        };
-
-        const schedule = (r: SegmentLogRequest) => {
-            const e = store.current.get(r.id) ?? { ...EMPTY, full: false, busy: false };
-            if (e.busy) {
-                return;
-            }
-            store.current.set(r.id, { ...e, busy: true });
-            queue.push(r);
-        };
-
-        // the logs that are not loaded yet, in the order of the requests
-        requests.forEach((r) => {
-            const e = store.current.get(r.id);
-            if (!e?.loaded || (r.full && !e.full)) {
-                schedule(r);
+                this.active.delete(id);
+                request.controller.abort();
             }
         });
-        pump();
 
-        // new data of the running segments
-        const timer = window.setInterval(() => {
-            requestsRef.current
-                .filter((r) => r.live && store.current.get(r.id)?.loaded)
-                .forEach(schedule);
-            pump();
-        }, POLL_INTERVAL);
+        requests.forEach((request) => {
+            const entry = this.ensureEntry(request.id);
+            if (request.live) {
+                entry.lastDesiredLive = true;
+                entry.finalPending = false;
+            } else if (entry.lastDesiredLive === true) {
+                entry.finalPending = true;
+            } else if (entry.lastDesiredLive === undefined) {
+                entry.lastDesiredLive = false;
+            }
 
-        return () => {
-            cancelled = true;
-            window.clearInterval(timer);
-            // allow reloading of the interrupted requests
-            store.current.forEach((e, id) => store.current.set(id, { ...e, busy: false }));
+            if (this.needsLoad(request.id, entry, request)) {
+                this.enqueue(request.id);
+            }
+        });
+
+        this.trim();
+        this.pump();
+    };
+
+    poll = () => {
+        if (this.disposed) {
+            return;
+        }
+        this.desired.forEach((request) => {
+            if (request.live && !this.entries.get(request.id)?.error) {
+                this.enqueue(request.id);
+            }
+        });
+        this.pump();
+    };
+
+    refresh = () => {
+        if (this.disposed) {
+            return;
+        }
+        this.desired.forEach((request) => this.enqueue(request.id));
+        this.pump();
+    };
+
+    get = (segmentId: number): SegmentLog => {
+        const entry = this.entries.get(segmentId);
+        if (!entry) {
+            return EMPTY;
+        }
+        entry.lastUsed = ++this.clock;
+        return entry;
+    };
+
+    retry = (segmentId: number) => {
+        if (this.disposed || !this.desired.has(segmentId)) {
+            return;
+        }
+        const entry = this.ensureEntry(segmentId);
+        entry.error = undefined;
+        this.enqueue(segmentId);
+        this.onChange();
+        this.pump();
+    };
+
+    dispose = () => {
+        if (this.disposed) {
+            return;
+        }
+        this.disposed = true;
+        this.queue = [];
+        this.queuedIds.clear();
+        this.active.forEach((request) => request.controller.abort());
+        this.active.clear();
+        this.desired.clear();
+    };
+
+    private ensureEntry(id: number): Entry {
+        let entry = this.entries.get(id);
+        if (!entry) {
+            entry = {
+                ...EMPTY,
+                finalPending: false,
+                generation: 0,
+                lastUsed: ++this.clock,
+            };
+            this.entries.set(id, entry);
+        }
+        return entry;
+    }
+
+    private needsLoad(id: number, entry: Entry, request: SegmentLogRequest): boolean {
+        if (entry.error) {
+            return false;
+        }
+
+        const active = this.active.get(id);
+        if (active) {
+            if (active.controller.signal.aborted) {
+                return true;
+            }
+            return (
+                (entry.finalPending && !active.final) ||
+                (request.full && !entry.full && !active.full) ||
+                (entry.coverageStart !== undefined &&
+                    entry.coverageStart > 0 &&
+                    entry.next !== undefined &&
+                    entry.next - entry.coverageStart < request.tailBytes &&
+                    active.tailBytes < request.tailBytes)
+            );
+        }
+
+        return (
+            !entry.loaded ||
+            (request.full && !entry.full) ||
+            entry.finalPending ||
+            (entry.coverageStart !== undefined &&
+                entry.coverageStart > 0 &&
+                entry.next !== undefined &&
+                entry.next - entry.coverageStart < request.tailBytes)
+        );
+    }
+
+    private enqueue(id: number) {
+        if (!this.desired.has(id) || this.queuedIds.has(id)) {
+            return;
+        }
+        this.queue.push(id);
+        this.queuedIds.add(id);
+    }
+
+    private pump() {
+        while (!this.disposed && this.active.size < CONCURRENCY && this.queue.length > 0) {
+            let next: number | undefined;
+            const count = this.queue.length;
+            for (let i = 0; i < count; i++) {
+                const id = this.queue.shift()!;
+                this.queuedIds.delete(id);
+                if (!this.desired.has(id)) {
+                    continue;
+                }
+                if (this.active.has(id)) {
+                    this.queue.push(id);
+                    this.queuedIds.add(id);
+                    continue;
+                }
+                next = id;
+                break;
+            }
+
+            if (next === undefined) {
+                return;
+            }
+            this.dispatch(next);
+        }
+    }
+
+    private dispatch(id: number) {
+        const desired = this.desired.get(id);
+        if (!desired) {
+            return;
+        }
+
+        const entry = this.ensureEntry(id);
+        const full = desired.full && !entry.full;
+        const final = entry.finalPending && !desired.live;
+        let range: LogRange;
+        if (full) {
+            range = { low: 0 };
+        } else if (entry.next === undefined) {
+            range = { high: desired.tailBytes };
+        } else {
+            range = { low: Math.max(0, entry.next - desired.tailBytes) };
+        }
+
+        const controller = new AbortController();
+        const generation = ++entry.generation;
+        const active: ActiveRequest = {
+            controller,
+            generation,
+            tailBytes: desired.tailBytes,
+            full,
+            final,
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [instanceId, requests.map((r) => `${r.id}:${r.full}`).join(',')]);
+        this.active.set(id, active);
 
-    return (segmentId) => store.current.get(segmentId) ?? EMPTY;
+        this.fetchLog(this.instanceId, id, range, controller.signal)
+            .then((chunk) => this.complete(id, active, chunk))
+            .catch((error: unknown) => this.fail(id, active, error))
+            .finally(() => {
+                if (this.active.get(id) === active) {
+                    this.active.delete(id);
+                }
+                this.trim();
+                this.pump();
+            });
+    }
+
+    private complete(id: number, request: ActiveRequest, chunk: LogChunk) {
+        const entry = this.entries.get(id);
+        if (
+            this.disposed ||
+            request.controller.signal.aborted ||
+            !entry ||
+            entry.generation !== request.generation
+        ) {
+            return;
+        }
+
+        entry.loaded = true;
+        entry.error = undefined;
+        entry.totalBytes = chunk.range.length;
+
+        const previousText = entry.text;
+        if (chunk.data.length > 0) {
+            const responseStart = chunk.range.low ?? 0;
+            const responseNext = chunk.range.high;
+            entry.text = chunk.data;
+            entry.coverageStart = responseStart;
+            entry.truncated = responseStart > 0;
+            if (!request.full && responseStart > 0) {
+                entry.full = false;
+            }
+
+            // Process log ranges use the returned high value as the next exclusive offset.
+            if (responseNext !== undefined && Number.isFinite(responseNext)) {
+                entry.next = responseNext;
+            }
+        }
+
+        if (request.full && chunk.data.length === 0) {
+            entry.text = '';
+            entry.coverageStart = 0;
+            entry.truncated = false;
+        }
+        if (entry.text !== previousText) {
+            entry.revision++;
+        }
+
+        if (request.full) {
+            entry.full = true;
+        }
+        if (request.final) {
+            entry.finalPending = false;
+            entry.lastDesiredLive = false;
+        }
+        entry.lastUsed = ++this.clock;
+        this.onChange();
+
+        const desired = this.desired.get(id);
+        if (desired && this.needsLoad(id, entry, desired)) {
+            this.enqueue(id);
+        }
+    }
+
+    private fail(id: number, request: ActiveRequest, error: unknown) {
+        const entry = this.entries.get(id);
+        if (
+            this.disposed ||
+            request.controller.signal.aborted ||
+            !entry ||
+            entry.generation !== request.generation
+        ) {
+            return;
+        }
+
+        entry.loaded = true;
+        entry.error = toRequestError(error);
+        entry.lastUsed = ++this.clock;
+        this.onChange();
+    }
+
+    private trim() {
+        let size = 0;
+        this.entries.forEach((entry) => {
+            size += entry.text.length;
+        });
+        if (size <= MAX_CACHE_CHARS) {
+            return;
+        }
+
+        const candidates = [...this.entries.entries()]
+            .filter(
+                ([id]) =>
+                    !this.desired.has(id) && !this.queuedIds.has(id) && !this.active.has(id)
+            )
+            .sort((a, b) => a[1].lastUsed - b[1].lastUsed);
+        for (const [id, entry] of candidates) {
+            this.entries.delete(id);
+            size -= entry.text.length;
+            if (size <= MAX_CACHE_CHARS) {
+                break;
+            }
+        }
+    }
+}
+
+export interface SegmentLogs {
+    reconcile: (requests: SegmentLogRequest[]) => void;
+    get: (segmentId: number) => SegmentLog;
+    retry: (segmentId: number) => void;
+}
+
+interface UseSegmentLogsOptions {
+    pollInterval: number;
+    pollingEnabled: boolean;
+    refreshToken: unknown;
+}
+
+export const useSegmentLogs = (
+    instanceId: ConcordId,
+    { pollInterval, pollingEnabled, refreshToken }: UseSegmentLogsOptions
+): SegmentLogs => {
+    const [, setVersion] = useState(0);
+    const loader = useMemo(
+        () => new SegmentLogLoader(instanceId, () => setVersion((value) => value + 1)),
+        [instanceId]
+    );
+    const refreshState = useRef({ loader, refreshToken });
+
+    useEffect(() => () => loader.dispose(), [loader]);
+
+    useEffect(() => {
+        if (!pollingEnabled || pollInterval <= 0) {
+            return;
+        }
+        const timer = window.setInterval(loader.poll, pollInterval);
+        return () => window.clearInterval(timer);
+    }, [loader, pollInterval, pollingEnabled]);
+
+    useEffect(() => {
+        const previous = refreshState.current;
+        if (previous.loader === loader && previous.refreshToken !== refreshToken) {
+            loader.refresh();
+        }
+        refreshState.current = { loader, refreshToken };
+    }, [loader, refreshToken]);
+
+    return useMemo(
+        () => ({
+            reconcile: loader.reconcile,
+            get: loader.get,
+            retry: loader.retry,
+        }),
+        [loader]
+    );
 };

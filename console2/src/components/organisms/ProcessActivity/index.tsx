@@ -24,27 +24,29 @@ import { useCallback, useRef, useState, useEffect } from 'react';
 import { Link, Navigate, Route, Routes } from 'react-router';
 import { Icon, Menu } from 'semantic-ui-react';
 
-import { ConcordId } from '../../../api/common';
-import { get as apiGet, getRoot as apiGetRoot, isFinal, ProcessEntry } from '../../../api/process';
-import { NotFoundPage } from '../../pages';
-import {
-    ProcessAnsibleActivity,
-    ProcessAttachmentsActivity,
-    ProcessChildrenActivity,
-    ProcessEventsActivity,
-    ProcessHistoryActivity,
-    ProcessLogActivity,
-    ProcessLogActivityV2,
-    ProcessLogTreeActivity,
-    ProcessStatusActivity,
-    ProcessWaitActivity,
-} from '../index';
+import type { ConcordId } from '../../../api/common';
+import { get as apiGet, getRoot as apiGetRoot, isFinal } from '../../../api/process';
+import type { ProcessEntry } from '../../../api/process';
+import NotFoundPage from '../../pages/NotFoundPage';
+import RequestErrorMessage from '../../molecules/RequestErrorMessage';
+import ProcessAnsibleActivity from '../ansible/ProcessAnsibleActivity';
+import ProcessAttachmentsActivity from '../ProcessAttachmentsActivity';
+import ProcessChildrenActivity from '../ProcessChildrenActivity';
+import ProcessEventsActivity from '../ProcessEventsActivity';
+import ProcessHistoryActivity from '../ProcessHistoryActivity';
+import ProcessLogActivity from '../ProcessLogActivity';
+import ProcessLogActivityV2 from '../ProcessLogActivityV2';
+import ProcessLogTreeActivity from '../ProcessLogTreeActivity';
+import ProcessStatusActivity from '../ProcessStatusActivity';
+import ProcessWaitActivity from '../ProcessWaitActivity';
 import ProcessToolbar from './Toolbar';
 import { usePolling } from '../../../api/usePolling';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { useStatusFavicon } from './favicon';
 import { gitUrlParse } from '../../molecules/GitHubLink';
 import { useIdleTimer } from 'react-idle-timer';
+
+import './styles.css';
 
 export type TabLink =
     | 'status'
@@ -108,7 +110,7 @@ const buildDefinitionLinkBase = (process?: ProcessEntry) => {
     }
 };
 
-const ProcessActivity = (props: ExternalProps) => {
+const ProcessActivityView = (props: ExternalProps) => {
     const stickyRef = useRef(null);
 
     const [loading, setLoading] = useState<boolean>(false);
@@ -126,10 +128,12 @@ const ProcessActivity = (props: ExternalProps) => {
     }, []);
 
     const [process, setProcess] = useState<ProcessEntry>();
+    const retainedProcessRef = useRef<ProcessEntry>();
     const rootProcessRef = useRef<ProcessEntry | null>(null);
 
     const fetchData = useCallback(async () => {
         const process = await apiGet(props.instanceId, []);
+        retainedProcessRef.current = process;
         setProcess(process);
 
         if (process.parentInstanceId && !rootProcessRef.current) {
@@ -144,6 +148,7 @@ const ProcessActivity = (props: ExternalProps) => {
     }, [props.instanceId]);
 
     useEffect(() => {
+        retainedProcessRef.current = undefined;
         rootProcessRef.current = null;
     }, [props.instanceId]);
 
@@ -168,8 +173,9 @@ const ProcessActivity = (props: ExternalProps) => {
     });
 
     const error = usePolling(fetchData, dataFetchInterval, loadingHandler, refresh);
+    const retainedProcess = process ?? retainedProcessRef.current;
 
-    if (error) {
+    if (error && !retainedProcess) {
         return <RequestErrorActivity error={error} />;
     }
 
@@ -182,11 +188,20 @@ const ProcessActivity = (props: ExternalProps) => {
             <ProcessToolbar
                 loading={loading}
                 instanceId={instanceId}
-                process={process}
+                process={retainedProcess}
                 rootInstanceId={rootProcessRef.current?.instanceId}
                 refresh={refreshHandler}
                 stickyRef={stickyRef}
             />
+
+            {error && (
+                <div className="ProcessPollError">
+                    <RequestErrorMessage error={error} />
+                    <button type="button" onClick={refreshHandler}>
+                        Retry
+                    </button>
+                </div>
+            )}
 
             <Menu tabular={true} style={{ marginTop: 0 }}>
                 <Menu.Item active={activeTab === 'status'}>
@@ -205,12 +220,14 @@ const ProcessActivity = (props: ExternalProps) => {
                     <Icon name="book" />
                     <Link to={`${baseUrl}/log`}>Logs</Link>
                 </Menu.Item>
-                {process && (process.runtime === 'concord-v2' || process.runtime === undefined) && (
-                    <Menu.Item active={activeTab === 'logTree'}>
-                        <Icon name="sitemap" />
-                        <Link to={`${baseUrl}/log-tree`}>Log Tree</Link>
-                    </Menu.Item>
-                )}
+                {retainedProcess &&
+                    (retainedProcess.runtime === 'concord-v2' ||
+                        retainedProcess.runtime === undefined) && (
+                        <Menu.Item active={activeTab === 'logTree'}>
+                            <Icon name="sitemap" />
+                            <Link to={`${baseUrl}/log-tree`}>Log Tree</Link>
+                        </Menu.Item>
+                    )}
                 <Menu.Item active={activeTab === 'history'}>
                     <Icon name="history" />
                     <Link to={`${baseUrl}/history`}>History</Link>
@@ -248,10 +265,10 @@ const ProcessActivity = (props: ExternalProps) => {
                     element={
                         <ProcessEventsActivity
                             instanceId={instanceId}
-                            processStatus={process ? process.status : undefined}
+                            processStatus={retainedProcess?.status}
                             loadingHandler={loadingHandler}
                             forceRefresh={refresh}
-                            definitionLinkBase={buildDefinitionLinkBase(process)}
+                            definitionLinkBase={buildDefinitionLinkBase(retainedProcess)}
                             dataFetchInterval={dataFetchInterval}
                         />
                     }
@@ -271,21 +288,21 @@ const ProcessActivity = (props: ExternalProps) => {
                     path="log"
                     element={
                         <>
-                            {process && process.runtime === 'concord-v1' && (
+                            {retainedProcess && retainedProcess.runtime === 'concord-v1' && (
                                 <ProcessLogActivity
                                     instanceId={instanceId}
-                                    processStatus={process ? process.status : undefined}
+                                    processStatus={retainedProcess.status}
                                     loadingHandler={loadingHandler}
                                     forceRefresh={refresh}
                                     dataFetchInterval={dataFetchInterval}
                                 />
                             )}
-                            {process &&
-                                (process.runtime === 'concord-v2' ||
-                                    process.runtime === undefined) && (
+                            {retainedProcess &&
+                                (retainedProcess.runtime === 'concord-v2' ||
+                                    retainedProcess.runtime === undefined) && (
                                     <ProcessLogActivityV2
                                         instanceId={instanceId}
-                                        processStatus={process ? process.status : undefined}
+                                        processStatus={retainedProcess.status}
                                         loadingHandler={loadingHandler}
                                         forceRefresh={refresh}
                                         dataFetchInterval={dataFetchInterval}
@@ -299,10 +316,11 @@ const ProcessActivity = (props: ExternalProps) => {
                     element={
                         <ProcessLogTreeActivity
                             instanceId={instanceId}
-                            processStatus={process ? process.status : undefined}
+                            processStatus={retainedProcess?.status}
                             loadingHandler={loadingHandler}
                             forceRefresh={refresh}
                             dataFetchInterval={dataFetchInterval}
+                            onRefresh={refreshHandler}
                         />
                     }
                 />
@@ -322,7 +340,7 @@ const ProcessActivity = (props: ExternalProps) => {
                     element={
                         <ProcessWaitActivity
                             instanceId={instanceId}
-                            processStatus={process ? process.status : undefined}
+                            processStatus={retainedProcess?.status}
                             loadingHandler={loadingHandler}
                             forceRefresh={refresh}
                             dataFetchInterval={dataFetchInterval}
@@ -334,9 +352,9 @@ const ProcessActivity = (props: ExternalProps) => {
                     element={
                         <ProcessChildrenActivity
                             instanceId={instanceId}
-                            processStatus={process ? process.status : undefined}
-                            processOrgName={process ? process.orgName : undefined}
-                            processProjectName={process ? process.projectName : undefined}
+                            processStatus={retainedProcess?.status}
+                            processOrgName={retainedProcess?.orgName}
+                            processProjectName={retainedProcess?.projectName}
                             loadingHandler={loadingHandler}
                             forceRefresh={refresh}
                             dataFetchInterval={dataFetchInterval}
@@ -348,7 +366,7 @@ const ProcessActivity = (props: ExternalProps) => {
                     element={
                         <ProcessAttachmentsActivity
                             instanceId={instanceId}
-                            processStatus={process ? process.status : undefined}
+                            processStatus={retainedProcess?.status}
                             loadingHandler={loadingHandler}
                             forceRefresh={refresh}
                             dataFetchInterval={dataFetchInterval}
@@ -360,5 +378,9 @@ const ProcessActivity = (props: ExternalProps) => {
         </div>
     );
 };
+
+const ProcessActivity = (props: ExternalProps) => (
+    <ProcessActivityView key={props.instanceId} {...props} />
+);
 
 export default ProcessActivity;

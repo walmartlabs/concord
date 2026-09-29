@@ -54,3 +54,25 @@
     padding: 20px;
     color: rgba(0, 0, 0, 0.5);
 }
+
+.ProcessLogTreeError {
+    position: relative;
+}
+
+.ProcessLogTreeError .ui.message {
+    margin-bottom: 12px;
+    padding-right: 72px;
+}
+
+.ProcessLogTreeError > button {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #2185d0;
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}

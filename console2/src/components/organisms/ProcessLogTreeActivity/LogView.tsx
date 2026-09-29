@@ -23,24 +23,30 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon, SemanticICONS } from 'semantic-ui-react';
 import { format as formatDate, parseISO as parseDate } from 'date-fns';
 
-import { ConcordId } from '../../../api/common';
-import { isFinal, ProcessStatus } from '../../../api/process';
+import type { ConcordId } from '../../../api/common';
+import { isFinal } from '../../../api/process';
+import type { ProcessStatus } from '../../../api/process';
 import { getFullSegmentLog, LogTooLargeError, SegmentStatus } from '../../../api/process/log';
+import RequestErrorMessage from '../../molecules/RequestErrorMessage';
 import { SegmentStatusIcon } from './LogSegmentTree';
-import { buildLogFlow, FlowSegment, LogLevel, LogLine, parseLog, splitLinks } from './logParser';
-import { describeNode, isGroup, SegmentNode } from './segmentTree';
+import { buildLogFlow, parseLog, splitLinks } from './logParser';
+import type { FlowItem, FlowSegment, LogLevel, LogLine } from './logParser';
+import { describeNode, isGroup } from './segmentTree';
+import type { SegmentNode } from './segmentTree';
 
-import { SegmentLog, SegmentLogRequest, useSegmentLogs } from './useSegmentLogs';
+import { useSegmentLogs } from './useSegmentLogs';
+import type { SegmentLog, SegmentLogRequest, SegmentLogs } from './useSegmentLogs';
 
 import SegmentedFilter from './SegmentedFilter';
 
 import './LogView.css';
 
-// how much of the logs to load at first, the rest is loaded on demand
-const TAIL_BYTES = 1024 * 1024;
-const NESTED_TAIL_BYTES = 256 * 1024;
-// nested steps shown at once (e.g. loops can have thousands of iterations)
-const NESTED_PAGE = 100;
+const ROOT_TAIL_BYTES = 256 * 1024;
+const NESTED_TAIL_BYTES = 64 * 1024;
+const INITIAL_REQUEST_BUDGET_BYTES = 2 * 1024 * 1024;
+const REQUEST_BUDGET_PAGE_BYTES = 2 * 1024 * 1024;
+const INITIAL_RENDER_ITEMS = 2_000;
+const RENDER_ITEM_PAGE = 2_000;
 const MAX_COPY_SIZE_BYTES = 5 * 1024 * 1024;
 const OPTS_KEY = 'logTree.logOpts';
 
@@ -74,12 +80,15 @@ const levelOk = (line: LogLine, filter: LevelFilter) => {
 
 // the real segments directly under the node, groups are unwrapped
 const nestedSegments = (node: SegmentNode): SegmentNode[] =>
-    node.children.flatMap((c) => (isGroup(c) ? nestedSegments(c) : [c]));
+    node.children.flatMap((child) => (isGroup(child) ? nestedSegments(child) : [child]));
 
 interface Props {
     instanceId: ConcordId;
-    node: SegmentNode;
+    node?: SegmentNode;
     processStatus?: ProcessStatus;
+    dataFetchInterval: number;
+    forceRefresh: unknown;
+    pollingEnabled: boolean;
     onSelect: (segmentId: number) => void;
 }
 
@@ -101,58 +110,142 @@ const COPY_ICONS: Record<CopyState, SemanticICONS> = {
     tooLarge: 'exclamation triangle',
 };
 
-const isLive = (n: SegmentNode, processStatus?: ProcessStatus) =>
-    n.segment.status === SegmentStatus.RUNNING && !isFinal(processStatus);
+const isLive = (node: SegmentNode, processStatus?: ProcessStatus) =>
+    node.segment.status === SegmentStatus.RUNNING && !isFinal(processStatus);
 
-const LogView = ({ instanceId, node, processStatus, onSelect }: Props) => {
-    const s = node.segment;
-    const [fullIds, setFullIds] = useState<ReadonlySet<number>>(new Set());
-    const [nestedLimit, setNestedLimit] = useState(NESTED_PAGE);
+const LogView = ({
+    instanceId,
+    node,
+    processStatus,
+    dataFetchInterval,
+    forceRefresh,
+    pollingEnabled,
+    onSelect,
+}: Props) => {
     const [opts, setOpts] = useState<LogOpts>(loadOpts);
-    const [copyState, setCopyState] = useState<CopyState>('idle');
-    const bottomRef = useRef<HTMLDivElement>(null);
-    const parsed = useRef(new Map<number, { text: string; lines: LogLine[] }>());
+    const logs = useSegmentLogs(instanceId, {
+        pollInterval: dataFetchInterval,
+        pollingEnabled,
+        refreshToken: forceRefresh,
+    });
 
     useEffect(() => {
         localStorage.setItem(OPTS_KEY, JSON.stringify(opts));
     }, [opts]);
 
-    // the selected step and its nested steps (up to the limit), in the tree order
-    const { tree, included, hiddenCount } = useMemo(() => {
-        let budget = nestedLimit;
-        let total = 0;
-        const included: SegmentNode[] = [node];
-        const build = (n: SegmentNode): FlowTreeNode => {
-            const nested = nestedSegments(n);
-            total += nested.length;
-            const shown = nested.slice(0, Math.max(0, budget));
-            budget -= shown.length;
-            included.push(...shown);
-            return { node: n, children: shown.map(build) };
-        };
-        const tree = build(node);
-        return { tree, included, hiddenCount: total - (included.length - 1) };
-    }, [node, nestedLimit]);
+    useEffect(() => {
+        if (!node) {
+            logs.reconcile([]);
+        }
+    }, [logs, node]);
 
-    // groups (retry attempts, loop iterations, error handlers) have no log of their own
+    return node ? (
+        <SelectedLogView
+            key={`${instanceId}:${node.segment.id}`}
+            instanceId={instanceId}
+            node={node}
+            processStatus={processStatus}
+            logs={logs}
+            opts={opts}
+            setOpts={setOpts}
+            onSelect={onSelect}
+        />
+    ) : null;
+};
+
+interface SelectedLogViewProps {
+    instanceId: ConcordId;
+    node: SegmentNode;
+    processStatus?: ProcessStatus;
+    logs: SegmentLogs;
+    opts: LogOpts;
+    setOpts: React.Dispatch<React.SetStateAction<LogOpts>>;
+    onSelect: (segmentId: number) => void;
+}
+
+const SelectedLogView = ({
+    instanceId,
+    node,
+    processStatus,
+    logs,
+    opts,
+    setOpts,
+    onSelect,
+}: SelectedLogViewProps) => {
+    const segment = node.segment;
+    const [fullIds, setFullIds] = useState<ReadonlySet<number>>(new Set());
+    const [requestBudget, setRequestBudget] = useState(INITIAL_REQUEST_BUDGET_BYTES);
+    const [renderItemLimit, setRenderItemLimit] = useState(INITIAL_RENDER_ITEMS);
+    const [copyState, setCopyState] = useState<CopyState>('idle');
+    const bottomRef = useRef<HTMLDivElement>(null);
+    const parsed = useRef(new Map<number, { text: string; lines: LogLine[] }>());
+    const copyGeneration = useRef(0);
+    const copyTimer = useRef<number>();
+
     const ownLog = !isGroup(node);
+    const { tree, included, hiddenCount } = useMemo(() => {
+        let remaining = requestBudget - (ownLog ? ROOT_TAIL_BYTES : 0);
+        const included: SegmentNode[] = [node];
+        let hiddenCount = 0;
+
+        const countNested = (current: SegmentNode): number =>
+            nestedSegments(current).reduce((count, child) => count + 1 + countNested(child), 0);
+
+        const build = (current: SegmentNode): FlowTreeNode => {
+            const children: FlowTreeNode[] = [];
+            nestedSegments(current).forEach((child) => {
+                if (remaining >= NESTED_TAIL_BYTES) {
+                    remaining -= NESTED_TAIL_BYTES;
+                    included.push(child);
+                    children.push(build(child));
+                } else {
+                    hiddenCount += 1 + countNested(child);
+                }
+            });
+            return { node: current, children };
+        };
+
+        return { tree: build(node), included, hiddenCount };
+    }, [node, ownLog, requestBudget]);
 
     const requests = useMemo(
         (): SegmentLogRequest[] =>
             included
-                .filter((n) => !isGroup(n))
-                .map((n) => ({
-                    id: n.segment.id,
-                    live: isLive(n, processStatus),
-                    tailBytes: n === node ? TAIL_BYTES : NESTED_TAIL_BYTES,
-                    full: fullIds.has(n.segment.id),
+                .filter((current) => !isGroup(current))
+                .map((current) => ({
+                    id: current.segment.id,
+                    live: isLive(current, processStatus),
+                    tailBytes: current === node ? ROOT_TAIL_BYTES : NESTED_TAIL_BYTES,
+                    full: fullIds.has(current.segment.id),
                 })),
         [included, node, processStatus, fullIds]
     );
-    const logOf = useSegmentLogs(instanceId, requests);
+
+    useEffect(() => {
+        logs.reconcile(requests);
+    }, [logs, requests]);
+
+    useEffect(() => {
+        const includedIds = new Set(included.map((current) => current.segment.id));
+        parsed.current.forEach((_value, id) => {
+            if (!includedIds.has(id)) {
+                parsed.current.delete(id);
+            }
+        });
+    }, [included]);
+
+    useEffect(
+        () => () => {
+            copyGeneration.current++;
+            if (copyTimer.current !== undefined) {
+                window.clearTimeout(copyTimer.current);
+            }
+        },
+        []
+    );
 
     const linesOf = (id: number): LogLine[] => {
-        const text = logOf(id).text;
+        const text = logs.get(id).text;
         const cached = parsed.current.get(id);
         if (cached && cached.text === text) {
             return cached.lines;
@@ -162,44 +255,87 @@ const LogView = ({ instanceId, node, processStatus, onSelect }: Props) => {
         return lines;
     };
 
-    const toFlow = (t: FlowTreeNode): FlowSegment<SegmentNode> => ({
-        segment: t.node,
-        start: parseDate(t.node.segment.createdAt).getTime(),
-        lines: linesOf(t.node.segment.id).filter((l) => levelOk(l, opts.level)),
-        children: t.children.map(toFlow),
+    const toFlow = (current: FlowTreeNode): FlowSegment<SegmentNode> => ({
+        segment: current.node,
+        start: parseDate(current.node.segment.createdAt).getTime(),
+        lines: linesOf(current.node.segment.id).filter((line) => levelOk(line, opts.level)),
+        children: current.children.map(toFlow),
     });
-    const items = buildLogFlow(toFlow(tree));
+    const allItems = buildLogFlow(toFlow(tree));
+    let items: FlowItem<SegmentNode>[] = allItems.slice(-renderItemLimit);
+    if (
+        allItems.length > renderItemLimit &&
+        items[0]?.kind === 'line' &&
+        items[0].segment.segment.id !== segment.id
+    ) {
+        items = [
+            { kind: 'header', segment: items[0].segment, continued: true },
+            ...items.slice(1),
+        ];
+    }
 
-    const rootLog: SegmentLog = ownLog ? logOf(s.id) : { text: '', truncated: false, loaded: true };
+    const rootLog: SegmentLog = ownLog
+        ? logs.get(segment.id)
+        : { text: '', truncated: false, full: false, revision: 0, loaded: true };
+    const completedFullRequestKey = included
+        .filter(
+            (current) =>
+                !isGroup(current) &&
+                fullIds.has(current.segment.id) &&
+                logs.get(current.segment.id).full
+        )
+        .map((current) => current.segment.id)
+        .join(',');
+    useEffect(() => {
+        if (completedFullRequestKey) {
+            const completed = completedFullRequestKey.split(',').map(Number);
+            setFullIds((previous) => {
+                const next = new Set(previous);
+                completed.forEach((id) => next.delete(id));
+                return next;
+            });
+        }
+    }, [completedFullRequestKey]);
+
     const live = isLive(node, processStatus);
-    const loadedBytes = included.reduce((acc, n) => acc + logOf(n.segment.id).text.length, 0);
+    const contentRevision = included.reduce(
+        (total, current) => total + logs.get(current.segment.id).revision,
+        0
+    );
 
-    // follow the running log
     useEffect(() => {
         if (live && opts.follow && bottomRef.current) {
             bottomRef.current.scrollIntoView({ block: 'end' });
         }
-    }, [live, opts.follow, loadedBytes]);
+    }, [live, opts.follow, contentRevision]);
 
     const loadFull = useCallback((id: number) => {
-        setFullIds((prev) => new Set([...prev, id]));
+        setFullIds((previous) => new Set([...previous, id]));
     }, []);
 
     const copyHandler = useCallback(async () => {
+        const generation = ++copyGeneration.current;
         setCopyState('copying');
         let result: CopyState;
         try {
-            const text = await getFullSegmentLog(instanceId, s.id, MAX_COPY_SIZE_BYTES);
+            const text = await getFullSegmentLog(instanceId, segment.id, MAX_COPY_SIZE_BYTES);
             await navigator.clipboard.writeText(text);
             result = 'copied';
-        } catch (e) {
-            result = e instanceof LogTooLargeError ? 'tooLarge' : 'failed';
+        } catch (error) {
+            result = error instanceof LogTooLargeError ? 'tooLarge' : 'failed';
+        }
+        if (generation !== copyGeneration.current) {
+            return;
         }
         setCopyState(result);
-        window.setTimeout(() => setCopyState('idle'), 2000);
-    }, [instanceId, s.id]);
+        copyTimer.current = window.setTimeout(() => {
+            if (generation === copyGeneration.current) {
+                setCopyState('idle');
+            }
+        }, 2000);
+    }, [instanceId, segment.id]);
 
-    const setLevel = (level: LevelFilter) => setOpts((prev) => ({ ...prev, level }));
+    const setLevel = (level: LevelFilter) => setOpts((previous) => ({ ...previous, level }));
 
     return (
         <div className={`LogView${opts.wrap ? '' : ' NoWrap'}`}>
@@ -218,7 +354,9 @@ const LogView = ({ instanceId, node, processStatus, onSelect }: Props) => {
                     <input
                         type="checkbox"
                         checked={opts.wrap}
-                        onChange={(ev) => setOpts((prev) => ({ ...prev, wrap: ev.target.checked }))}
+                        onChange={(event) =>
+                            setOpts((previous) => ({ ...previous, wrap: event.target.checked }))
+                        }
                     />
                     Wrap
                 </label>
@@ -230,8 +368,8 @@ const LogView = ({ instanceId, node, processStatus, onSelect }: Props) => {
                         type="checkbox"
                         checked={opts.follow}
                         disabled={!live}
-                        onChange={(ev) =>
-                            setOpts((prev) => ({ ...prev, follow: ev.target.checked }))
+                        onChange={(event) =>
+                            setOpts((previous) => ({ ...previous, follow: event.target.checked }))
                         }
                     />
                     Follow
@@ -252,21 +390,41 @@ const LogView = ({ instanceId, node, processStatus, onSelect }: Props) => {
                 )}
             </div>
 
+            {rootLog.error && (
+                <div className="LogError">
+                    <RequestErrorMessage error={rootLog.error} />
+                    <button type="button" onClick={() => logs.retry(segment.id)}>
+                        Retry
+                    </button>
+                </div>
+            )}
+
             {rootLog.truncated && (
                 <div className="Truncated">
-                    Showing the last {Math.round(TAIL_BYTES / 1024)} KB of{' '}
+                    Showing the last {Math.round(ROOT_TAIL_BYTES / 1024)} KB of{' '}
                     {rootLog.totalBytes !== undefined
                         ? `${Math.round(rootLog.totalBytes / 1024)} KB`
                         : 'the log'}
                     .{' '}
-                    <button type="button" onClick={() => loadFull(s.id)}>
+                    <button type="button" onClick={() => loadFull(segment.id)}>
                         Load full log
                     </button>
                 </div>
             )}
 
             <div className="LogLines">
-                {items.map((item, idx) =>
+                {allItems.length > items.length && (
+                    <div className="More">
+                        <button
+                            type="button"
+                            onClick={() => setRenderItemLimit((limit) => limit + RENDER_ITEM_PAGE)}
+                        >
+                            Show up to 2,000 earlier log entries
+                        </button>
+                    </div>
+                )}
+
+                {items.map((item, index) =>
                     item.kind === 'line' ? (
                         <LogLineRow
                             key={`l${item.segment.segment.id}:${item.line.n}`}
@@ -275,15 +433,16 @@ const LogView = ({ instanceId, node, processStatus, onSelect }: Props) => {
                         />
                     ) : (
                         <SegmentHeader
-                            key={`h${item.segment.segment.id}:${idx}`}
+                            key={`h${item.segment.segment.id}:${index}`}
                             node={item.segment}
                             continued={item.continued}
-                            log={logOf(item.segment.segment.id)}
+                            log={logs.get(item.segment.segment.id)}
                             lines={linesOf(item.segment.segment.id)}
                             level={opts.level}
                             processStatus={processStatus}
                             onSelect={onSelect}
                             onLoadFull={loadFull}
+                            onRetry={logs.retry}
                         />
                     )
                 )}
@@ -294,18 +453,18 @@ const LogView = ({ instanceId, node, processStatus, onSelect }: Props) => {
                         shown.{' '}
                         <button
                             type="button"
-                            onClick={() => setNestedLimit((l) => l + NESTED_PAGE)}
+                            onClick={() =>
+                                setRequestBudget((budget) => budget + REQUEST_BUDGET_PAGE_BYTES)
+                            }
                         >
-                            Show {Math.min(hiddenCount, NESTED_PAGE)} more
+                            Show more nested steps
                         </button>
                     </div>
                 )}
 
-                {rootLog.loaded && items.length === 0 && (
+                {rootLog.loaded && items.length === 0 && !rootLog.error && (
                     <div className="Empty">
-                        {rootLog.error
-                            ? `Failed to load the log: ${rootLog.error}`
-                            : linesOf(s.id).length > 0
+                        {linesOf(segment.id).length > 0
                             ? 'No lines at this level.'
                             : 'The step has no log output.'}
                     </div>
@@ -363,6 +522,7 @@ interface SegmentHeaderProps {
     processStatus?: ProcessStatus;
     onSelect: (segmentId: number) => void;
     onLoadFull: (segmentId: number) => void;
+    onRetry: (segmentId: number) => void;
 }
 
 // the beginning (or the continuation) of the lines of a nested step, a link to the step
@@ -375,6 +535,7 @@ const SegmentHeader = ({
     processStatus,
     onSelect,
     onLoadFull,
+    onRetry,
 }: SegmentHeaderProps) => {
     const { name, note } = describeNode(node);
 
@@ -416,7 +577,21 @@ const SegmentHeader = ({
 
             {!continued && !log.loaded && <span className="Hint">loading...</span>}
             {empty && <span className="Hint">{empty}</span>}
-            {!continued && log.error && <span className="Hint Error">{log.error}</span>}
+            {!continued && log.error && (
+                <span className="Hint Error" title={log.error.details}>
+                    {log.error.message}
+                    {' · '}
+                    <button
+                        type="button"
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            onRetry(node.segment.id);
+                        }}
+                    >
+                        Retry
+                    </button>
+                </span>
+            )}
             {!continued && log.truncated && (
                 <span className="Hint">
                     last {Math.round(NESTED_TAIL_BYTES / 1024)} KB ·{' '}
