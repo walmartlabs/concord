@@ -4,16 +4,6 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
-    <!--
-    Structure of segmented logs: nesting, retry attempts, loop iterations, error handlers and threads.
-
-    PROCESS_LOG_SEGMENTS is large (and partitioned by day on big installations):
-    - all columns are nullable without defaults, so adding them doesn't rewrite the table;
-    - a single ALTER, so the exclusive lock on the table (and every partition) is taken once;
-    - lock_timeout: fail (and retry on the next start) instead of blocking the segment inserts
-      while waiting for long-running queries;
-    - can be applied manually beforehand, the changeset is skipped if the columns exist.
-    -->
     <changeSet id="2461001" author="ybrigo@gmail.com">
         <preConditions onFail="MARK_RAN">
             <not>
@@ -36,6 +26,40 @@
                 add column if not exists SEGMENT_LOOP_INDEX int,
                 add column if not exists SEGMENT_ROLE smallint,
                 add column if not exists SEGMENT_THREAD int;
+        </sql>
+    </changeSet>
+
+    <changeSet id="2461010" author="ybrigo@gmail.com" runInTransaction="false">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists
+                        tableName="PROCESS_EVENTS"
+                        indexName="IDX_PROC_EVENTS_LOG_SEGMENT"/>
+            </not>
+            <sqlCheck expectedResult="1">
+                SELECT count(*)
+                FROM pg_catalog.pg_class c
+                JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                WHERE n.nspname = current_schema()
+                  AND c.relname = 'process_events'
+                  AND c.relkind = 'r'
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM pg_catalog.pg_inherits i
+                      WHERE i.inhparent = c.oid
+                  )
+            </sqlCheck>
+        </preConditions>
+
+        <sql>
+            CREATE INDEX CONCURRENTLY IDX_PROC_EVENTS_LOG_SEGMENT
+                ON PROCESS_EVENTS (
+                    INSTANCE_ID,
+                    INSTANCE_CREATED_AT,
+                    ((EVENT_DATA::jsonb ->> 'logSegmentId')::varchar),
+                    EVENT_SEQ
+                )
+                WHERE EVENT_TYPE = 'ELEMENT'
         </sql>
     </changeSet>
 </databaseChangeLog>
