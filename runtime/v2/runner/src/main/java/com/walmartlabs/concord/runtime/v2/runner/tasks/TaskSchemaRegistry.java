@@ -23,9 +23,9 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SpecVersion;
+import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SpecificationVersion;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,7 +92,7 @@ public class TaskSchemaRegistry {
 
     private record SectionSchema(
             TaskSchemaLookupResult.Status status,
-            JsonSchema schema,
+            Schema schema,
             List<String> errors
     ) {
 
@@ -121,7 +121,7 @@ public class TaskSchemaRegistry {
             return new SectionSchema(TaskSchemaLookupResult.Status.INVALID, null, errors);
         }
 
-        private static SectionSchema found(JsonSchema schema) {
+        private static SectionSchema found(Schema schema) {
             return new SectionSchema(TaskSchemaLookupResult.Status.FOUND, schema, List.of());
         }
     }
@@ -130,12 +130,12 @@ public class TaskSchemaRegistry {
 
     private final ConcurrentMap<SchemaKey, CachedSchema> cache = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper;
-    private final JsonSchemaFactory schemaFactory;
+    private final SchemaRegistry schemaRegistry;
 
     @Inject
     public TaskSchemaRegistry(ObjectMapper objectMapper) {
         this.objectMapper = Objects.requireNonNull(objectMapper);
-        this.schemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
+        this.schemaRegistry = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_7);
     }
 
     /**
@@ -251,7 +251,7 @@ public class TaskSchemaRegistry {
             sectionSchema.fields().forEachRemaining(entry ->
                 newSchema.set(entry.getKey(), entry.getValue()));
 
-            return SectionSchema.found(schemaFactory.getSchema(newSchema));
+            return SectionSchema.found(schemaRegistry.getSchema(newSchema));
         } catch (Exception e) {
             String msg = "Failed to compile schema resource '" + resourceName + "' section '" + section + "' for task '" + taskName + "': " + e.getMessage();
             log.warn(msg);
