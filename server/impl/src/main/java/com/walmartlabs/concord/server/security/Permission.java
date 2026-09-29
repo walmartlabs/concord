@@ -52,29 +52,28 @@ public enum Permission {
      * <p>
      * Implicitly granted to API keys without a user (e.g. the default agent
      * token, see {@code com/walmartlabs/concord/server/db/v2.21.0.xml}) since
-     * those keys represent a fixed system identity rather than a human account
-     * that can hold roles.
+     * such keys can't hold roles.
      */
     AGENT_WEBSOCKET("agentWebsocket", true),;
 
     private final String key;
-    private final boolean grantedToSystemKeys;
+    private final boolean grantedToUserlessKeys;
 
     Permission(String key) {
         this(key, false);
     }
 
-    Permission(String key, boolean grantedToSystemKeys) {
+    Permission(String key, boolean grantedToUserlessKeys) {
         this.key = key;
-        this.grantedToSystemKeys = grantedToSystemKeys;
+        this.grantedToUserlessKeys = grantedToUserlessKeys;
     }
 
     public String getKey() {
         return key;
     }
 
-    public boolean isGrantedToSystemKeys() {
-        return grantedToSystemKeys;
+    public boolean isGrantedToUserlessKeys() {
+        return grantedToUserlessKeys;
     }
 
     public boolean isPermitted() {

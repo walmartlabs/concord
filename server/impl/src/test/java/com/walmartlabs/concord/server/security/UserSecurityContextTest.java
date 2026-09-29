@@ -42,7 +42,7 @@ public class UserSecurityContextTest {
     private final UserSecurityContext ctx = new UserSecurityContext(securityManager, userManager);
 
     @Test
-    public void userlessApiKeyIsGrantedSystemKeyPermissions() {
+    public void userlessApiKeyIsGrantedUserlessPermissions() {
         assertTrue(ctx.isPermitted(null, Permission.AGENT_WEBSOCKET));
     }
 

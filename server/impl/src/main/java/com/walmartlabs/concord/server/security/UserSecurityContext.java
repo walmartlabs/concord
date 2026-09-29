@@ -76,11 +76,11 @@ public class UserSecurityContext {
     /**
      * API keys without a user (e.g. the default agent token) aren't backed by
      * a real account and can't hold roles, so their access is decided by
-     * {@link Permission#isGrantedToSystemKeys()} instead of a role lookup.
+     * {@link Permission#isGrantedToUserlessKeys()} instead of a role lookup.
      */
     public boolean isPermitted(UUID userId, Permission permission) {
         if (userId == null) {
-            return permission.isGrantedToSystemKeys();
+            return permission.isGrantedToUserlessKeys();
         }
 
         var user = userManager.get(userId).orElse(null);
