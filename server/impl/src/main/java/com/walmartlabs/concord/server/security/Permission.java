@@ -21,8 +21,6 @@ package com.walmartlabs.concord.server.security;
  */
 
 
-import java.util.UUID;
-
 public enum Permission {
 
     /**
@@ -75,10 +73,6 @@ public enum Permission {
         return key;
     }
 
-    /**
-     * Whether this permission is implicitly granted to API keys that have no
-     * associated user (see {@link UserSecurityContext#isPermitted(UUID, Permission)}).
-     */
     public boolean isGrantedToSystemKeys() {
         return grantedToSystemKeys;
     }
