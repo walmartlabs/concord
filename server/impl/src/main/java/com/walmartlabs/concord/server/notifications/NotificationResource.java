@@ -46,7 +46,7 @@ import java.util.UUID;
 
 import static javax.ws.rs.core.Response.Status;
 
-@Path("/api/v2/notification")
+@Path("/api/v1/notification")
 @Tag(name = "Notifications")
 public class NotificationResource implements Resource {
 
