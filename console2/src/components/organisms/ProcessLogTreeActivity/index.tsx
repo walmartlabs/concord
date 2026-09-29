@@ -22,11 +22,13 @@ import * as React from 'react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
-import { ConcordId } from '../../../api/common';
+import type { ConcordId } from '../../../api/common';
 import { isFinal, ProcessStatus } from '../../../api/process';
-import { listLogSegments as apiListLogSegments, LogSegmentEntry } from '../../../api/process/log';
+import { listLogSegments as apiListLogSegments } from '../../../api/process/log';
+import type { LogSegmentEntry } from '../../../api/process/log';
 import { usePolling } from '../../../api/usePolling';
 import RequestErrorActivity from '../RequestErrorActivity';
+import RequestErrorMessage from '../../molecules/RequestErrorMessage';
 import LogSegmentTree from './LogSegmentTree';
 import LogView from './LogView';
 import StepHeader from './StepHeader';
@@ -41,6 +43,7 @@ interface ExternalProps {
     processStatus?: ProcessStatus;
     loadingHandler: (inc: number) => void;
     forceRefresh: boolean;
+    onRefresh: () => void;
     dataFetchInterval: number;
 }
 
@@ -54,11 +57,12 @@ const getLinkedStepId = (hash: string): number | undefined => {
     return Number.isFinite(parsed) ? parsed : undefined;
 };
 
-const ProcessLogTreeActivity = ({
+const ProcessLogTreeActivityView = ({
     instanceId,
     processStatus,
     loadingHandler,
     forceRefresh,
+    onRefresh,
     dataFetchInterval,
 }: ExternalProps) => {
     const navigate = useNavigate();
@@ -71,6 +75,7 @@ const ProcessLogTreeActivity = ({
     const [autoSelect, setAutoSelect] = useState<boolean>(
         getLinkedStepId(location.hash) === undefined
     );
+    const [completed, setCompleted] = useState(false);
 
     // the page doesn't scroll: the layout takes the rest of the window and both panes scroll inside
     const layoutRef = useRef<HTMLDivElement>(null);
@@ -110,6 +115,7 @@ const ProcessLogTreeActivity = ({
     const fetchSegments = useCallback(async () => {
         const segments = await apiListLogSegments(instanceId, 0, -1);
         setSegments(segments.items);
+        setCompleted(true);
         return !isFinal(processStatus) && processStatus !== ProcessStatus.SUSPENDED;
     }, [instanceId, processStatus]);
 
@@ -136,48 +142,66 @@ const ProcessLogTreeActivity = ({
         [navigate]
     );
 
-    if (error) {
+    if (error && !completed) {
         return <RequestErrorActivity error={error} />;
     }
 
     const selected = selectedId !== undefined ? tree.byId.get(selectedId) : undefined;
 
     return (
-        <div className="ProcessLogTreeActivity" ref={layoutRef} style={{ height }}>
-            <div className="TreePane">
-                <LogSegmentTree
-                    tree={tree}
-                    processStatus={processStatus}
-                    selectedId={selectedId}
-                    onSelect={selectHandler}
-                />
-            </div>
-            <div className="ContentPane">
-                {selected ? (
-                    <>
+        <>
+            {error && (
+                <div className="ProcessLogTreeError">
+                    <RequestErrorMessage error={error} />
+                    <button type="button" onClick={onRefresh}>
+                        Retry
+                    </button>
+                </div>
+            )}
+            <div className="ProcessLogTreeActivity" ref={layoutRef} style={{ height }}>
+                <div className="TreePane">
+                    <LogSegmentTree
+                        tree={tree}
+                        processStatus={processStatus}
+                        selectedId={selectedId}
+                        onSelect={selectHandler}
+                    />
+                </div>
+                <div className="ContentPane">
+                    {selected && (
                         <StepHeader
                             instanceId={instanceId}
                             node={selected}
                             processStatus={processStatus}
                         />
-                        <div className="StepBody">
-                            <LogView
-                                key={selected.segment.id}
-                                instanceId={instanceId}
-                                node={selected}
-                                processStatus={processStatus}
-                                onSelect={selectHandler}
-                            />
-                        </div>
-                    </>
-                ) : (
-                    <div className="Placeholder">
-                        {segments.length === 0 ? 'No logs yet.' : 'Select a step.'}
+                    )}
+                    <div className="StepBody">
+                        <LogView
+                            instanceId={instanceId}
+                            node={selected}
+                            processStatus={processStatus}
+                            dataFetchInterval={dataFetchInterval}
+                            forceRefresh={forceRefresh}
+                            pollingEnabled={
+                                !isFinal(processStatus) &&
+                                processStatus !== ProcessStatus.SUSPENDED
+                            }
+                            onSelect={selectHandler}
+                        />
+                        {!selected && (
+                            <div className="Placeholder">
+                                {segments.length === 0 ? 'No logs yet.' : 'Select a step.'}
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
             </div>
-        </div>
+        </>
     );
 };
+
+const ProcessLogTreeActivity = (props: ExternalProps) => (
+    <ProcessLogTreeActivityView key={props.instanceId} {...props} />
+);
 
 export default ProcessLogTreeActivity;

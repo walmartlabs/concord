@@ -223,7 +223,8 @@
 }
 
 .LogView .SegmentLinkRow .Hint button,
-.LogView .More button {
+.LogView .More button,
+.LogView .LogError > button {
     padding: 0;
     border: none;
     background: none;
@@ -237,6 +238,23 @@
     padding: 10px 16px 0 56px;
     color: rgba(0, 0, 0, 0.55);
     font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.LogView .LogError {
+    flex: none;
+    position: relative;
+}
+
+.LogView .LogError .ui.message {
+    margin: 0;
+    border-radius: 0;
+    padding-right: 72px;
+}
+
+.LogView .LogError > button {
+    position: absolute;
+    top: 14px;
+    right: 16px;
 }
 
 /* the log's line-height is inherited by the icons and shifts the glyphs below their 1em box */
