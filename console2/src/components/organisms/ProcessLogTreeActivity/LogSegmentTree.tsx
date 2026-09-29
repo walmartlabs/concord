@@ -20,10 +20,12 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Icon, Menu, SemanticCOLORS, SemanticICONS } from 'semantic-ui-react';
+import { Icon, Menu } from 'semantic-ui-react';
+import type { SemanticCOLORS, SemanticICONS } from 'semantic-ui-react';
 
 import { SegmentStatus } from '../../../api/process/log';
-import { isFinal, ProcessStatus } from '../../../api/process';
+import { isFinal } from '../../../api/process';
+import type { ProcessStatus } from '../../../api/process';
 import {
     categoryOf,
     describeNode,
@@ -32,11 +34,11 @@ import {
     getSegmentTiming,
     isFailure,
     isGroup,
-    SegmentNode,
-    SegmentTree,
 } from './segmentTree';
+import type { SegmentNode, SegmentTree } from './segmentTree';
 
-import SegmentedFilter, { SegmentedOption } from './SegmentedFilter';
+import SegmentedFilter from './SegmentedFilter';
+import type { SegmentedOption } from './SegmentedFilter';
 
 import './LogSegmentTree.css';
 
@@ -149,7 +151,9 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
                 .map((n, pos) => ({ n, pos }))
                 .filter(
                     ({ n }) =>
-                        !isGroup(n) && !n.retried && (isFailure(n) || (n.segment.errors ?? 0) > 0)
+                        !isGroup(n) &&
+                        !n.recovered &&
+                        (isFailure(n) || (n.segment.errors ?? 0) > 0)
                 )
                 .map(({ pos }) => pos),
         [tree]
@@ -321,7 +325,7 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
         },
         { value: 'OK', label: 'OK', count: counts.OK },
     ];
-    if (counts.RUNNING > 0) {
+    if (counts.RUNNING > 0 || statusFilter === 'RUNNING') {
         statusOptions.splice(3, 0, {
             value: 'RUNNING',
             label: 'Running',
@@ -473,6 +477,7 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
                                 processStatus={processStatus}
                                 failedInside={!open && node.hasFailedDescendant}
                                 retried={node.retried}
+                                recovered={node.recovered}
                             />
                             {kind && <span className={`Kind Kind-${kind}`}>{kind}</span>}
                             <span className="Name" title={s.name}>
@@ -522,6 +527,7 @@ interface SegmentStatusIconProps {
     processStatus?: ProcessStatus;
     failedInside: boolean;
     retried?: boolean;
+    recovered?: boolean;
 }
 
 export const SegmentStatusIcon = ({
@@ -529,12 +535,14 @@ export const SegmentStatusIcon = ({
     processStatus,
     failedInside,
     retried,
+    recovered,
 }: SegmentStatusIconProps) => {
     let color: SemanticCOLORS = 'grey';
     let icon: SemanticICONS = 'circle outline';
     let spinning = false;
 
-    if (retried) {
+    const recoveredFailure = recovered && status === SegmentStatus.FAILED;
+    if (recoveredFailure || retried) {
         color = 'orange';
         icon = 'redo';
     } else if (status === SegmentStatus.RUNNING && isFinal(processStatus)) {
@@ -564,7 +572,7 @@ export const SegmentStatusIcon = ({
             loading={spinning}
             name={icon}
             color={color}
-            title={retried ? 'RETRIED' : status ?? ''}
+            title={recoveredFailure ? 'RECOVERED' : retried ? 'RETRIED' : status ?? ''}
         />
     );
 };

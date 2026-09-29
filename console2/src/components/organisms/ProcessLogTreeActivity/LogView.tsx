@@ -548,6 +548,7 @@ const SegmentHeader = ({
                 processStatus={processStatus}
                 failedInside={node.hasFailedDescendant}
                 retried={node.retried}
+                recovered={node.recovered}
             />
             <span className="Name">{name}</span>
             {note && <span className="Note">{note}</span>}

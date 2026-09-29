@@ -42,6 +42,8 @@ export interface SegmentNode {
     label?: string;
     // a failed attempt that was retried: not a failure of the process
     retried?: boolean;
+    // a failed attempt (including its descendants) that a later attempt recovered
+    recovered?: boolean;
     // number of attempts/iterations in a group
     size?: number;
     parent?: SegmentNode;
@@ -62,9 +64,9 @@ export interface SegmentTree {
 
 export const isGroup = (n: SegmentNode) => n.kind !== 'segment';
 
-// a real failure: failed and not retried
-export const isFailure = (n: SegmentNode) =>
-    n.segment.status === SegmentStatus.FAILED && !n.retried;
+// a real failure: failed and not recovered by a later attempt
+export const isFailure = (node: SegmentNode) =>
+    node.segment.status === SegmentStatus.FAILED && !node.recovered;
 
 const newNode = (kind: NodeKind, segment: LogSegmentEntry): SegmentNode => ({
     kind,
@@ -92,7 +94,7 @@ const groupId = (kind: NodeKind, first: SegmentNode) =>
 const GROUP_ID_COLLISION_STEP = 1_000_000_000_000;
 
 const aggregateStatus = (members: SegmentNode[]): SegmentStatus | undefined => {
-    const statuses = members.filter((m) => !m.retried).map((m) => m.segment.status);
+    const statuses = members.filter((member) => !member.recovered).map((member) => member.segment.status);
     if (statuses.includes(SegmentStatus.RUNNING)) {
         return SegmentStatus.RUNNING;
     }
@@ -102,7 +104,9 @@ const aggregateStatus = (members: SegmentNode[]): SegmentStatus | undefined => {
     if (statuses.includes(SegmentStatus.FAILED)) {
         return SegmentStatus.FAILED;
     }
-    return statuses.every((s) => s === SegmentStatus.OK) ? SegmentStatus.OK : undefined;
+    return statuses.every((status) => status === SegmentStatus.OK)
+        ? SegmentStatus.OK
+        : undefined;
 };
 
 const latestUpdate = (members: SegmentNode[]): string | undefined => {
@@ -136,16 +140,23 @@ const commonName = (names: string[]): string => {
 
 const makeGroup = (
     kind: NodeKind,
+    identityAnchor: SegmentNode,
     members: SegmentNode[],
     name: string,
     status: SegmentStatus | undefined,
     extra: Partial<LogSegmentEntry> = {}
 ): SegmentNode => {
-    const first = members[0];
+    const createdAt = members.reduce(
+        (earliest, member) =>
+            parseDate(member.segment.createdAt).getTime() < parseDate(earliest).getTime()
+                ? member.segment.createdAt
+                : earliest,
+        members[0].segment.createdAt
+    );
     const group = newNode(kind, {
-        id: groupId(kind, first),
+        id: groupId(kind, identityAnchor),
         name,
-        createdAt: first.segment.createdAt,
+        createdAt,
         status,
         statusUpdatedAt: latestUpdate(members),
         ...extra,
@@ -156,6 +167,11 @@ const makeGroup = (
 };
 
 const displayNameOf = (n: SegmentNode) => n.label ?? parseSegmentName(n.segment.name).name;
+
+const markRecovered = (node: SegmentNode) => {
+    node.recovered = true;
+    node.children.forEach(markRecovered);
+};
 
 // attempts of the same step. They are not always adjacent: segments of other threads
 // (e.g. parallel branches with "retry") can be created in between
@@ -194,14 +210,18 @@ const groupRetries = (nodes: SegmentNode[]): SegmentNode[] => {
             continue;
         }
 
-        run.forEach((a, idx) => {
-            a.label = `Attempt ${a.segment.attempt}`;
-            a.retried = idx < run.length - 1 && a.segment.status === SegmentStatus.FAILED;
+        run.forEach((attempt, idx) => {
+            attempt.label = `Attempt ${attempt.segment.attempt}`;
+            attempt.retried =
+                idx < run.length - 1 && attempt.segment.status === SegmentStatus.FAILED;
+            if (attempt.retried) {
+                markRecovered(attempt);
+            }
         });
         const first = run[0].segment;
         const last = run[run.length - 1].segment;
         result.push(
-            makeGroup('retry', run, parseSegmentName(first.name).name, last.status, {
+            makeGroup('retry', run[0], run, parseSegmentName(first.name).name, last.status, {
                 correlationId: first.correlationId,
                 loopIndex: first.loopIndex,
                 threadId: first.threadId,
@@ -269,6 +289,7 @@ const groupLoops = (nodes: SegmentNode[]): SegmentNode[] => {
             }
             const it = makeGroup(
                 'iteration',
+                items[0],
                 items,
                 `Iteration #${idx + 1}`,
                 aggregateStatus(items),
@@ -283,6 +304,7 @@ const groupLoops = (nodes: SegmentNode[]): SegmentNode[] => {
         result.push(
             makeGroup(
                 'loop',
+                members[0],
                 iterations,
                 commonName(members.map(displayNameOf)),
                 aggregateStatus(iterations)
@@ -294,28 +316,28 @@ const groupLoops = (nodes: SegmentNode[]): SegmentNode[] => {
 };
 
 // steps of the "error" block go into a group at the end of the failed step
-const groupErrorHandlers = (nodes: SegmentNode[]): SegmentNode[] => {
-    const handlers = nodes.filter((n) => n.segment.role === SegmentRole.ERROR_HANDLER);
+const groupChildren = (nodes: SegmentNode[]): SegmentNode[] => {
+    nodes.forEach((node) => {
+        node.children = groupChildren(node.children);
+    });
+
+    const ordinary = nodes.filter((node) => node.segment.role !== SegmentRole.ERROR_HANDLER);
+    const handlers = nodes.filter((node) => node.segment.role === SegmentRole.ERROR_HANDLER);
+    const grouped = groupLoops(groupRetries(ordinary));
     if (handlers.length === 0) {
-        return nodes;
+        return grouped;
     }
-    const rest = nodes.filter((n) => n.segment.role !== SegmentRole.ERROR_HANDLER);
+
+    const groupedHandlers = groupLoops(groupRetries(handlers));
     const group = makeGroup(
         'errorHandler',
-        groupLoops(groupRetries(handlers)),
+        handlers[0],
+        groupedHandlers,
         'Error handler',
-        undefined
+        aggregateStatus(groupedHandlers)
     );
-    group.segment.status = aggregateStatus(group.children);
     group.label = 'Error handler';
-    return [...rest, group];
-};
-
-const groupChildren = (nodes: SegmentNode[]): SegmentNode[] => {
-    nodes.forEach((n) => {
-        n.children = groupChildren(n.children);
-    });
-    return groupErrorHandlers(groupLoops(groupRetries(nodes)));
+    return [...grouped, group];
 };
 
 export const buildSegmentTree = (segments: LogSegmentEntry[]): SegmentTree => {
@@ -403,7 +425,7 @@ export const pickDefaultSegment = (
         }
     }
 
-    return steps.find((n) => !n.retried) ?? tree.ordered[0];
+    return steps.find((n) => !n.recovered) ?? tree.ordered[0];
 };
 
 export type StepCategory = 'FAILED' | 'RUNNING' | 'WARNINGS' | 'OK';
@@ -419,8 +441,13 @@ export const categoryOf = (n: SegmentNode): StepCategory => {
     if (status === SegmentStatus.RUNNING || status === SegmentStatus.SUSPENDED) {
         return 'RUNNING';
     }
-    // finished, but not cleanly: problems in the log or an attempt that was retried
-    if (n.retried || (n.segment.warnings ?? 0) > 0 || (n.segment.errors ?? 0) > 0) {
+    // A recovered failure is historical evidence, but a successful sibling that
+    // shares the recovered subtree remains clean.
+    if (
+        (n.recovered && status === SegmentStatus.FAILED) ||
+        (n.segment.warnings ?? 0) > 0 ||
+        (n.segment.errors ?? 0) > 0
+    ) {
         return 'WARNINGS';
     }
     return 'OK';
