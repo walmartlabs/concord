@@ -374,6 +374,7 @@ public abstract class LoopWrapper implements Command {
                     .commands(cmd)
                     .root()
                     .build();
+            LogSegmentUtils.copyScopedSegmentMarkers(state, threadId, cmdFrame);
             cmdFrame.setLocal(LogSegmentUtils.LOOP_INDEX_KEY, 0);
 
             loop.push(new CollectVariablesCommand(outVariables, cmdFrame, variablesAccumulator));
@@ -421,6 +422,7 @@ public abstract class LoopWrapper implements Command {
                     .commands(cmd)
                     .root()
                     .build();
+            LogSegmentUtils.copyScopedSegmentMarkers(state, threadId, cmdFrame);
             cmdFrame.setLocal(LogSegmentUtils.LOOP_INDEX_KEY, newIndex);
 
             loop.push(new CollectVariablesCommand(outVariables, cmdFrame, variablesAccumulator));

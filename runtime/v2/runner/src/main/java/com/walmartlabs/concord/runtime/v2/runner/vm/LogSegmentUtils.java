@@ -28,6 +28,7 @@ import com.walmartlabs.concord.svm.FrameType;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +38,7 @@ public final class LogSegmentUtils {
 
     private static final String KEY = "logContext";
     private static final String PARENT_SEGMENT_ID_KEY = "parentLogSegmentId";
-    private static final String LAST_FAILED_SEGMENT_ID_KEY = "lastFailedLogSegmentId";
+    private static final String LAST_FAILED_SEGMENT_KEY = "lastFailedLogSegment";
 
     /**
      * Frame variable: index of the loop iteration the frame belongs to.
@@ -127,6 +128,32 @@ public final class LogSegmentUtils {
     }
 
     /**
+     * Copies log segment markers from the current flow scope into a new frame.
+     * The nearest root is a scope boundary and is included in the search.
+     */
+    public static void copyScopedSegmentMarkers(State state, ThreadId threadId, Frame target) {
+        boolean copiedErrorHandler = false;
+        boolean copiedLoopIndex = false;
+        for (Frame source : state.getFrames(threadId)) {
+            if (!copiedErrorHandler && source.hasLocal(ERROR_HANDLER_KEY)) {
+                target.setLocal(ERROR_HANDLER_KEY, source.getLocal(ERROR_HANDLER_KEY));
+                copiedErrorHandler = true;
+            }
+            if (!copiedLoopIndex && source.hasLocal(LOOP_INDEX_KEY)) {
+                target.setLocal(LOOP_INDEX_KEY, source.getLocal(LOOP_INDEX_KEY));
+                copiedLoopIndex = true;
+            }
+            if (source.getType() == FrameType.ROOT) {
+                break;
+            }
+        }
+    }
+
+    static boolean isSegmentMarker(String key) {
+        return ERROR_HANDLER_KEY.equals(key) || LOOP_INDEX_KEY.equals(key);
+    }
+
+    /**
      * Resolves where a new segment belongs: the enclosing segment, the retry attempt, the loop iteration,
      * the error handler and the thread.
      * <p>
@@ -179,6 +206,7 @@ public final class LogSegmentUtils {
         return new LogSegmentAttributes(parentId, attempt, loopIndex, errorHandler, thread);
     }
 
+
     /**
      * The segment of the step with the specified correlation ID, if the context is the step's own
      * segment. Steps without a segment of their own (and the system segment) have none.
@@ -190,12 +218,26 @@ public final class LogSegmentUtils {
         return correlationId.equals(context.correlationId()) ? context.segmentId() : null;
     }
 
-    public static void setLastFailedSegmentId(ThreadId threadId, State state, long segmentId) {
-        state.setThreadLocal(threadId, LAST_FAILED_SEGMENT_ID_KEY, segmentId);
+    public static void setLastFailedSegment(ThreadId threadId, State state, Exception exception, long segmentId) {
+        state.setThreadLocal(threadId, LAST_FAILED_SEGMENT_KEY, new FailedSegment(exception, segmentId));
     }
 
-    public static Long getLastFailedSegmentId(ThreadId threadId, State state) {
-        return state.getThreadLocal(threadId, LAST_FAILED_SEGMENT_ID_KEY);
+    public static Long consumeLastFailedSegmentId(ThreadId threadId, State state, Exception exception) {
+        FailedSegment failedSegment = state.getThreadLocal(threadId, LAST_FAILED_SEGMENT_KEY);
+        if (failedSegment == null) {
+            return null;
+        }
+        state.removeThreadLocal(threadId, LAST_FAILED_SEGMENT_KEY);
+        if (failedSegment.exception() != exception) {
+            return null;
+        }
+        return failedSegment.segmentId();
+    }
+
+    private record FailedSegment(Exception exception, long segmentId) implements Serializable {
+
+        @Serial
+        private static final long serialVersionUID = 1L;
     }
 
     private LogSegmentUtils() {

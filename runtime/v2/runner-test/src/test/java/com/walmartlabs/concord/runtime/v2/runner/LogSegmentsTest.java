@@ -767,6 +767,44 @@ public class LogSegmentsTest {
                 .toList());
     }
 
+    @Test
+    public void errorHandlerAttributesSurviveFrameBoundaries() throws Exception {
+        deploy("logSegments/errorHandlerAttributes");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        runWithSegments();
+
+        List<Long> loopHandlers = segmentIds("loop handler");
+        assertEquals(2, loopHandlers.size());
+        long loopFailureA = segmentId("loop failure a");
+        assertAttributes(loopFailureA, null, null, 0, false, false);
+        assertAttributes(loopHandlers.get(0), loopFailureA, null, 0, true, false);
+        long loopFailureB = segmentId("loop failure b");
+        assertAttributes(loopFailureB, null, null, 1, false, false);
+        assertAttributes(loopHandlers.get(1), loopFailureB, null, 1, true, false);
+
+        List<Long> withItemsHandlers = segmentIds("withItems handler");
+        assertEquals(2, withItemsHandlers.size());
+        long withItemsFailureA = segmentId("withItems failure a");
+        assertAttributes(withItemsFailureA, null, null, null, false, false);
+        assertAttributes(withItemsHandlers.get(0), withItemsFailureA, null, null, true, false);
+        long withItemsFailureB = segmentId("withItems failure b");
+        assertAttributes(withItemsFailureB, null, null, null, false, false);
+        assertAttributes(withItemsHandlers.get(1), withItemsFailureB, null, null, true, false);
+
+        long failedBeforeRecovery = segmentId("failed before recovery");
+        assertAttributes(segmentId("guarded recovery"), failedBeforeRecovery, null, null, true, false);
+
+        long recoveryFlow = segmentId("Recovery nested flow");
+        assertAttributes(recoveryFlow, failedBeforeRecovery, null, null, true, false);
+        assertAttributes(segmentId("Recovery parallel A"), recoveryFlow, null, null, false, true);
+        assertAttributes(segmentId("Recovery parallel B"), recoveryFlow, null, null, false, true);
+
+        assertAttributes(segmentId("missing flow handler"), null, null, null, true, false);
+    }
+
     // pre/post events of the task calls in the order of the segments
     private static void assertEventSegments(String taskName, Long... segmentIds) {
         List<Object> actual = runtime.testEventReportingService().elementEvents().stream()
