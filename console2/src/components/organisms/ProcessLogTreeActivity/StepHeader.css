@@ -160,12 +160,38 @@
     font-size: 12px;
 }
 
+.StepInfo .EventState {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-top: 12px;
+    color: rgb(159, 58, 56);
+    font-size: 12px;
+}
+
+.StepInfo .EventState button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: rgb(33, 133, 208);
+    font: inherit;
+    cursor: pointer;
+}
+
+.StepInfo .EventState button:hover {
+    text-decoration: underline;
+}
+
 /* input/output of the task call */
 .StepInfo .CallData {
     display: flex;
     flex-direction: column;
     gap: 12px;
     margin-top: 18px;
+}
+
+.StepInfo .CallData > .EventState {
+    margin-top: 0;
 }
 
 .StepInfo .CallData.Muted {
