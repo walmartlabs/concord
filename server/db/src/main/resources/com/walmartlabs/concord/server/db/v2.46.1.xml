@@ -32,4 +32,81 @@
                 add column if not exists SEGMENT_THREAD int;
         </sql>
     </changeSet>
+
+    <!--
+    Deployment requirement for partitioned PROCESS_EVENTS installations:
+
+    The automatic changeset below is intentionally marked ran when PROCESS_EVENTS is a
+    declarative partitioned table or an inheritance parent. Operators must build the matching
+    index on every storage-bearing relation. Run every generated CREATE INDEX statement outside
+    a transaction:
+
+    WITH RECURSIVE event_relations AS (
+        SELECT c.oid, n.nspname, c.relname, c.relkind, 0 AS depth
+        FROM pg_catalog.pg_class c
+        JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+        WHERE n.nspname = current_schema() AND c.relname = 'process_events'
+        UNION ALL
+        SELECT child.oid, child_ns.nspname, child.relname, child.relkind, parent.depth + 1
+        FROM event_relations parent
+        JOIN pg_catalog.pg_inherits i ON i.inhparent = parent.oid
+        JOIN pg_catalog.pg_class child ON child.oid = i.inhrelid
+        JOIN pg_catalog.pg_namespace child_ns ON child_ns.oid = child.relnamespace
+    )
+    SELECT format(
+        'CREATE INDEX CONCURRENTLY %I ON %I.%I (INSTANCE_ID, INSTANCE_CREATED_AT, ((EVENT_DATA::jsonb ->> %L)::varchar), EVENT_SEQ) WHERE EVENT_TYPE = %L;',
+        'ix_' || substr(md5(nspname || '.' || relname || '.logSegmentId'), 1, 24),
+        nspname, relname, 'logSegmentId', 'ELEMENT')
+    FROM event_relations
+    WHERE relkind = 'r'
+    ORDER BY depth DESC, nspname, relname;
+
+    For declarative partitioning, create the same index on every partitioned parent with
+    CREATE INDEX <collision-safe-name> ON ONLY <schema>.<parent> (...), using the expression and
+    predicate above. Then attach each child index with ALTER INDEX
+    <schema>.<parent-index> ATTACH PARTITION <schema>.<child-index>, working bottom-up from the
+    deepest parent before attaching its index to the root. Derive every per-table name as
+    ix_ plus the first 24 characters of md5(schema || '.' || table || '.logSegmentId'), matching
+    the generator, so names are stable and collision-safe.
+
+    For inheritance partitioning, the storage query includes both every child and the queried
+    parent because all have relkind 'r'; all of them must be indexed. The site's child-creation
+    procedure or template must also create this exact expression/predicate index, with the same
+    collision-safe naming rule, on every future inheritance child before that child accepts
+    PROCESS_EVENTS rows. PostgreSQL does not inherit the parent's index. This is an ongoing
+    provisioning requirement, not only a one-time deployment operation.
+    -->
+    <changeSet id="2461010" author="ybrigo@gmail.com" runInTransaction="false">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists
+                        tableName="PROCESS_EVENTS"
+                        indexName="IDX_PROC_EVENTS_LOG_SEGMENT"/>
+            </not>
+            <sqlCheck expectedResult="1">
+                SELECT count(*)
+                FROM pg_catalog.pg_class c
+                JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                WHERE n.nspname = current_schema()
+                  AND c.relname = 'process_events'
+                  AND c.relkind = 'r'
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM pg_catalog.pg_inherits i
+                      WHERE i.inhparent = c.oid
+                  )
+            </sqlCheck>
+        </preConditions>
+
+        <sql>
+            CREATE INDEX CONCURRENTLY IDX_PROC_EVENTS_LOG_SEGMENT
+                ON PROCESS_EVENTS (
+                    INSTANCE_ID,
+                    INSTANCE_CREATED_AT,
+                    ((EVENT_DATA::jsonb ->> 'logSegmentId')::varchar),
+                    EVENT_SEQ
+                )
+                WHERE EVENT_TYPE = 'ELEMENT'
+        </sql>
+    </changeSet>
 </databaseChangeLog>
