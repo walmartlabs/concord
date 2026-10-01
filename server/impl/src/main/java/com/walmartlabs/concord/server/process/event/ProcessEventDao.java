@@ -101,6 +101,11 @@ public class ProcessEventDao extends AbstractDao {
             q.and(PgUtils.jsonbText(PROCESS_EVENTS.EVENT_DATA, "phase").eq(eventPhase.getKey()));
         }
 
+        Long eventLogSegmentId = filter.eventLogSegmentId();
+        if (eventLogSegmentId != null) {
+            q.and(PgUtils.jsonbText(PROCESS_EVENTS.EVENT_DATA, "logSegmentId").eq(eventLogSegmentId.toString()));
+        }
+
         int limit = filter.limit();
         if (limit > 0) {
             q.limit(limit);

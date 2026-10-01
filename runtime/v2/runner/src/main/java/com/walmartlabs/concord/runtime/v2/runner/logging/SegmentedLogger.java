@@ -50,11 +50,17 @@ public class SegmentedLogger implements RunnerLogger {
     }
 
     @Override
-    public Long createSegment(String segmentName, UUID correlationId) {
+    public Long createSegment(String segmentName, UUID correlationId, LogSegmentAttributes attributes) {
         if (SYSTEM_SEGMENT_NAME.equals(segmentName)) {
             return SYSTEM_SEGMENT_ID;
         }
-        return loggingClient.createSegment(correlationId, segmentName);
+        // the system segment is a flat "catch-all" segment, not a real parent
+        Long parentId = attributes.parentId();
+        if (parentId != null && parentId == SYSTEM_SEGMENT_ID) {
+            attributes = new LogSegmentAttributes(null, attributes.attempt(), attributes.loopIndex(),
+                    attributes.errorHandler(), attributes.threadId());
+        }
+        return loggingClient.createSegment(correlationId, segmentName, attributes);
     }
 
     @Override

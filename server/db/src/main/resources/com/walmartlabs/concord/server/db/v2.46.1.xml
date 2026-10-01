@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="2461001" author="ybrigo@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <and>
+                    <columnExists tableName="PROCESS_LOG_SEGMENTS" columnName="PARENT_SEGMENT_ID"/>
+                    <columnExists tableName="PROCESS_LOG_SEGMENTS" columnName="SEGMENT_ATTEMPT"/>
+                    <columnExists tableName="PROCESS_LOG_SEGMENTS" columnName="SEGMENT_LOOP_INDEX"/>
+                    <columnExists tableName="PROCESS_LOG_SEGMENTS" columnName="SEGMENT_ROLE"/>
+                    <columnExists tableName="PROCESS_LOG_SEGMENTS" columnName="SEGMENT_THREAD"/>
+                </and>
+            </not>
+        </preConditions>
+
+        <sql>
+            set local lock_timeout = '5s';
+
+            alter table PROCESS_LOG_SEGMENTS
+                add column if not exists PARENT_SEGMENT_ID bigint,
+                add column if not exists SEGMENT_ATTEMPT smallint,
+                add column if not exists SEGMENT_LOOP_INDEX int,
+                add column if not exists SEGMENT_ROLE smallint,
+                add column if not exists SEGMENT_THREAD int;
+        </sql>
+    </changeSet>
+
+    <changeSet id="2461010" author="ybrigo@gmail.com" runInTransaction="false">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists
+                        tableName="PROCESS_EVENTS"
+                        indexName="IDX_PROC_EVENTS_LOG_SEGMENT"/>
+            </not>
+            <sqlCheck expectedResult="1">
+                SELECT count(*)
+                FROM pg_catalog.pg_class c
+                JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                WHERE n.nspname = current_schema()
+                  AND c.relname = 'process_events'
+                  AND c.relkind = 'r'
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM pg_catalog.pg_inherits i
+                      WHERE i.inhparent = c.oid
+                  )
+            </sqlCheck>
+        </preConditions>
+
+        <sql>
+            CREATE INDEX CONCURRENTLY IDX_PROC_EVENTS_LOG_SEGMENT
+                ON PROCESS_EVENTS (
+                    INSTANCE_ID,
+                    INSTANCE_CREATED_AT,
+                    ((EVENT_DATA::jsonb ->> 'logSegmentId')::varchar),
+                    EVENT_SEQ
+                )
+                WHERE EVENT_TYPE = 'ELEMENT'
+        </sql>
+    </changeSet>
+</databaseChangeLog>

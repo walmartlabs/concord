@@ -66,3 +66,13 @@ concord-server {
 ```
 
 Use [./public/cfg.js](./public/cfg.js) as an example.
+
+## Process Log Tree
+
+The log-tree view mounts only the viewport's 28 px rows plus five overscan rows
+on each side. Filtering, keyboard navigation, error navigation, and selection use
+the complete logical tree, including rows outside the mounted window. Selection
+scrolls only the tree's vertical viewport; horizontal scrolling remains independent.
+
+Activity, tree, and row memo boundaries isolate unrelated parent updates. Fresh
+log snapshots still refresh mounted statuses, counters, and running-step timing.
