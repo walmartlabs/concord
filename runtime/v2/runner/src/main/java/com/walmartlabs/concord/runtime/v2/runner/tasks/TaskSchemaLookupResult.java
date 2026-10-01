@@ -21,7 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  */
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.networknt.schema.JsonSchema;
+import com.networknt.schema.Schema;
 
 import java.util.List;
 
@@ -36,7 +36,7 @@ import java.util.List;
  */
 public record TaskSchemaLookupResult(
         Status status,
-        JsonSchema schema,
+        Schema schema,
         JsonNode rawSchema,
         String resourceName,
         List<String> errors
@@ -81,7 +81,7 @@ public record TaskSchemaLookupResult(
         return new TaskSchemaLookupResult(Status.INVALID, null, rawSchema, resourceName, errors);
     }
 
-    public static TaskSchemaLookupResult found(JsonSchema schema, JsonNode rawSchema, String resourceName) {
+    public static TaskSchemaLookupResult found(Schema schema, JsonNode rawSchema, String resourceName) {
         return new TaskSchemaLookupResult(Status.FOUND, schema, rawSchema, resourceName, List.of());
     }
 }

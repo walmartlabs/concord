@@ -96,13 +96,18 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- build-time only: used by ConcordJsonSchemaGenerator to emit concord-schema.json.
+             TODO move ConcordJsonSchemaGenerator to a separate build tool (see build-tools/) so
+             that neither it nor these dependencies end up on the runtime classpath at all. -->
         <dependency>
             <groupId>com.github.victools</groupId>
             <artifactId>jsonschema-generator</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.victools</groupId>
             <artifactId>jsonschema-module-jackson</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -139,6 +144,9 @@
                         </goals>
                         <configuration>
                             <mainClass>com.walmartlabs.concord.runtime.v2.ConcordJsonSchemaGenerator</mainClass>
+                            <!-- the victools dependencies are 'provided', which the default
+                                 'runtime' scope would leave off the classpath -->
+                            <classpathScope>compile</classpathScope>
                             <arguments>
                                 <argument>${project.build.outputDirectory}/concord-schema.json</argument>
                             </arguments>

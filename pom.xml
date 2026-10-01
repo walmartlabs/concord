@@ -60,8 +60,9 @@
     </modules>
 
     <properties>
-        <!-- Build with newer JDKs, but keep Concord artifacts Java 17-compatible for now. -->
-        <maven.compiler.release>17</maven.compiler.release>
+        <!-- Build with newer JDKs, but keep Concord artifacts loadable on JDK 21 — downstream
+             consumers still run 21. Also the floor imposed by jOOQ 3.21+, which ships 21 bytecode. -->
+        <maven.compiler.release>21</maven.compiler.release>
         <maven.compiler.source>${maven.compiler.release}</maven.compiler.source>
         <maven.compiler.target>${maven.compiler.release}</maven.compiler.target>
 

@@ -23,15 +23,15 @@ package com.walmartlabs.concord.project.runtime.v2;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SpecVersion;
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.Error;
+import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SpecificationVersion;
 import com.walmartlabs.concord.runtime.v2.ConcordJsonSchemaGenerator;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.util.Set;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -43,10 +43,10 @@ public class ConcordJsonSchemaGeneratorTest {
         JsonNode concordYml = new ObjectMapper(new YAMLFactory())
                 .readTree(ConcordJsonSchemaGeneratorTest.class.getResourceAsStream("/schema/concord.yml"));
 
-        JsonSchemaFactory schemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
-        JsonSchema schema = schemaFactory.getSchema(ConcordJsonSchemaGenerator.generate());
+        SchemaRegistry schemaRegistry = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_7);
+        Schema schema = schemaRegistry.getSchema(ConcordJsonSchemaGenerator.generate());
 
-        Set<ValidationMessage> validationResult = schema.validate(concordYml);
+        List<Error> validationResult = schema.validate(concordYml);
 
         System.out.println(validationResult);
         assertTrue(validationResult.isEmpty());
