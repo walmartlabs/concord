@@ -43,11 +43,29 @@ interface Props {
     defaultInitiatorUsername?: string;
 }
 
+interface FormErrors {
+    summary?: string;
+    body?: string;
+    actionLink?: string;
+    org?: string;
+    project?: string;
+    repo?: string;
+    user?: string;
+}
+
 const OWNER_TYPE_OPTIONS = [
     { key: 'ORG', text: 'Organization', value: 'ORG' },
     { key: 'PROJECT', text: 'Project', value: 'PROJECT' },
     { key: 'USER', text: 'User', value: 'USER' },
 ];
+
+
+const CONCORD_KEY_RE = /^[0-9a-zA-Z][0-9a-zA-Z_@.\-~]{2,127}$/;
+const CONCORD_KEY_MESSAGE =
+    'Must start with a letter or digit and be 3–128 characters containing only letters, digits, _, @, ., -, or ~.';
+
+const MAX_SUMMARY_LENGTH = 255;
+const MAX_BODY_LENGTH = 4096;
 
 const CreateNotificationActivity: React.FC<Props> = ({
     defaultOwnerType,
@@ -73,7 +91,8 @@ const CreateNotificationActivity: React.FC<Props> = ({
     const [selectedUser, setSelectedUser] = useState<UserEntry | null>(null);
     const [defaultUserId, setDefaultUserId] = useState<ConcordId | undefined>(undefined);
 
-    // Submission state
+    // Validation & submission state
+    const [errors, setErrors] = useState<FormErrors>({});
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -111,41 +130,74 @@ const CreateNotificationActivity: React.FC<Props> = ({
             .catch(() => {});
     }, [ownerType, defaultOrgName]);
 
+    const clearError = (field: keyof FormErrors) =>
+        setErrors((prev) => ({ ...prev, [field]: undefined }));
+
     const handleOwnerTypeChange = (newType: OwnerType) => {
         setOwnerType(newType);
-        setSelectedOrg(null); // will be repopulated by the effect above if applicable
+        setSelectedOrg(null);
         setProjectNameValue(newType === 'PROJECT' ? (defaultProjectName ?? '') : '');
         setRepoNameValue(newType === 'PROJECT' ? (defaultRepoName ?? '') : '');
         setSelectedUser(null);
+        setErrors({});
+    };
+
+    const validate = (): FormErrors => {
+        const e: FormErrors = {};
+
+        const trimmedSummary = summary.trim();
+        if (!trimmedSummary) {
+            e.summary = 'Summary is required.';
+        } else if (trimmedSummary.length > MAX_SUMMARY_LENGTH) {
+            e.summary = `Summary must be ${MAX_SUMMARY_LENGTH} characters or fewer (currently ${trimmedSummary.length}).`;
+        }
+
+        if (body.trim().length > MAX_BODY_LENGTH) {
+            e.body = `Body must be ${MAX_BODY_LENGTH} characters or fewer (currently ${body.trim().length}).`;
+        }
+
+        const trimmedLink = actionLink.trim();
+        if (trimmedLink && !/^https?:\/\/.+/.test(trimmedLink)) {
+            e.actionLink = 'Action link must start with http:// or https://.';
+        }
+
+        if (ownerType === 'ORG' || ownerType === 'PROJECT') {
+            if (!selectedOrg) {
+                e.org = 'Please select an organization.';
+            }
+        }
+
+        if (ownerType === 'PROJECT') {
+            const trimmedProject = projectNameValue.trim();
+            if (!trimmedProject) {
+                e.project = 'Project name is required.';
+            } else if (!CONCORD_KEY_RE.test(trimmedProject)) {
+                e.project = `Invalid project name. ${CONCORD_KEY_MESSAGE}`;
+            }
+
+            const trimmedRepo = repoNameValue.trim();
+            if (trimmedRepo && !CONCORD_KEY_RE.test(trimmedRepo)) {
+                e.repo = `Invalid repository name. ${CONCORD_KEY_MESSAGE}`;
+            }
+        }
+
+        if (ownerType === 'USER' && !selectedUser) {
+            e.user = 'Please select a user.';
+        }
+
+        return e;
     };
 
     const handleSubmit = async () => {
         setSubmitError(null);
         setSubmitSuccess(false);
 
-        // Client-side validation — enforce exactly-one-owner
-        if (!summary.trim()) {
-            setSubmitError('Summary is required.');
+        const validationErrors = validate();
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
             return;
         }
-        if (ownerType === 'ORG' && !selectedOrg) {
-            setSubmitError('Please select an organization.');
-            return;
-        }
-        if (ownerType === 'PROJECT') {
-            if (!selectedOrg) {
-                setSubmitError('Please select an organization.');
-                return;
-            }
-            if (!projectNameValue.trim()) {
-                setSubmitError('Please enter a project name.');
-                return;
-            }
-        }
-        if (ownerType === 'USER' && !selectedUser) {
-            setSubmitError('Please select a user.');
-            return;
-        }
+        setErrors({});
 
         setSubmitting(true);
         try {
@@ -187,7 +239,21 @@ const CreateNotificationActivity: React.FC<Props> = ({
 
             setSubmitSuccess(true);
         } catch (e: any) {
-            setSubmitError(e.message ?? 'An error occurred while creating the notification.');
+            // managedFetch throws RequestErrorData, not a standard Error.
+            // `details` carries the parsed response body; `message` is a fallback.
+            const raw: string = e?.details || e?.message || '';
+            let displayMessage: string;
+            try {
+                // The body might itself be a JSON string (e.g. text/plain response
+                // that happens to contain JSON); try to extract a readable message.
+                const parsed = JSON.parse(raw);
+                displayMessage =
+                    parsed?.message || parsed?.details || parsed?.[0]?.message || raw;
+            } catch {
+                // Not JSON — use the body text directly.
+                displayMessage = raw || 'An error occurred while creating the notification.';
+            }
+            setSubmitError(displayMessage);
         } finally {
             setSubmitting(false);
         }
@@ -220,34 +286,52 @@ const CreateNotificationActivity: React.FC<Props> = ({
             )}
 
             <Form>
-                <Form.Field required={true}>
+                <Form.Field required={true} error={!!errors.summary}>
                     <label>Summary</label>
                     <Input
                         value={summary}
-                        onChange={(_, { value }) => setSummary(value)}
+                        onChange={(_, { value }) => {
+                            setSummary(value);
+                            clearError('summary');
+                        }}
                         placeholder="Brief description"
                         fluid={true}
                     />
+                    {errors.summary && (
+                        <div className="ui pointing red basic label">{errors.summary}</div>
+                    )}
                 </Form.Field>
 
-                <Form.Field>
+                <Form.Field error={!!errors.body}>
                     <label>Body</label>
                     <TextArea
                         value={body}
-                        onChange={(_, { value }) => setBody(value as string)}
+                        onChange={(_, { value }) => {
+                            setBody(value as string);
+                            clearError('body');
+                        }}
                         placeholder="Notification body"
                         rows={4}
                     />
+                    {errors.body && (
+                        <div className="ui pointing red basic label">{errors.body}</div>
+                    )}
                 </Form.Field>
 
-                <Form.Field>
+                <Form.Field error={!!errors.actionLink}>
                     <label>Action Link</label>
                     <Input
                         value={actionLink}
-                        onChange={(_, { value }) => setActionLink(value)}
+                        onChange={(_, { value }) => {
+                            setActionLink(value);
+                            clearError('actionLink');
+                        }}
                         placeholder="https://..."
                         fluid={true}
                     />
+                    {errors.actionLink && (
+                        <div className="ui pointing red basic label">{errors.actionLink}</div>
+                    )}
                 </Form.Field>
 
                 <Form.Field>
@@ -269,50 +353,68 @@ const CreateNotificationActivity: React.FC<Props> = ({
                 </Form.Field>
 
                 {(ownerType === 'ORG' || ownerType === 'PROJECT') && (
-                    <Form.Field required={true}>
+                    <Form.Field required={true} error={!!errors.org}>
                         <label>Organization</label>
                         <FindOrganizationsField
                             key={`org-field-${ownerType}`}
                             defaultOrgName={defaultOrgName}
                             placeholder="Search organizations..."
-                            onSelect={(org) => setSelectedOrg(org)}
-                            onReset={(org) => setSelectedOrg(org ?? null)}
+                            onSelect={(org) => { setSelectedOrg(org); clearError('org'); }}
+                            onReset={(org) => { setSelectedOrg(org ?? null); clearError('org'); }}
                             onClear={() => setSelectedOrg(null)}
                         />
+                        {errors.org && (
+                            <div className="ui pointing red basic label">{errors.org}</div>
+                        )}
                     </Form.Field>
                 )}
 
                 {ownerType === 'PROJECT' && (
                     <>
-                        <Form.Field required={true}>
+                        <Form.Field required={true} error={!!errors.project}>
                             <label>Project</label>
                             <Input
                                 value={projectNameValue}
-                                onChange={(_, { value }) => setProjectNameValue(value)}
+                                onChange={(_, { value }) => {
+                                    setProjectNameValue(value);
+                                    clearError('project');
+                                }}
                                 placeholder="Project name"
                                 fluid={true}
                             />
+                            {errors.project && (
+                                <div className="ui pointing red basic label">{errors.project}</div>
+                            )}
                         </Form.Field>
-                        <Form.Field>
+                        <Form.Field error={!!errors.repo}>
                             <label>Repository (optional)</label>
                             <Input
                                 value={repoNameValue}
-                                onChange={(_, { value }) => setRepoNameValue(value)}
+                                onChange={(_, { value }) => {
+                                    setRepoNameValue(value);
+                                    clearError('repo');
+                                }}
                                 placeholder="Repository name"
                                 fluid={true}
                             />
+                            {errors.repo && (
+                                <div className="ui pointing red basic label">{errors.repo}</div>
+                            )}
                         </Form.Field>
                     </>
                 )}
 
                 {ownerType === 'USER' && (
-                    <Form.Field required={true}>
+                    <Form.Field required={true} error={!!errors.user}>
                         <label>User</label>
                         <FindUserField2
                             defaultUserId={defaultUserId}
-                            onSelect={(user) => setSelectedUser(user)}
+                            onSelect={(user) => { setSelectedUser(user); clearError('user'); }}
                             placeholder="Search users..."
                         />
+                        {errors.user && (
+                            <div className="ui pointing red basic label">{errors.user}</div>
+                        )}
                     </Form.Field>
                 )}
 

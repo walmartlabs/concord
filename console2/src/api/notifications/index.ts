@@ -36,21 +36,18 @@ export interface NotificationEntry {
 }
 
 export const listMyNotifications = async (): Promise<NotificationEntry[]> =>
-    fetchJson<NotificationEntry[]>('/api/v2/notification');
+    fetchJson<NotificationEntry[]>('/api/v1/notification');
 
 export const listNotifications = async (
     ownerKind: 'ORG' | 'PROJECT',
     ownerId: ConcordId
 ): Promise<NotificationEntry[]> =>
     fetchJson<NotificationEntry[]>(
-        `/api/v2/notification?ownerKind=${ownerKind}&ownerId=${ownerId}`
+        `/api/v1/notification?ownerKind=${ownerKind}&ownerId=${ownerId}`
     );
 
 export const dismissNotification = async (id: ConcordId): Promise<void> => {
-    const resp = await managedFetch(`/api/v2/notification/${id}`, { method: 'DELETE' });
-    if (!resp.ok) {
-        throw new Error(`Failed to dismiss notification: ${resp.status}`);
-    }
+    await managedFetch(`/api/v1/notification/${id}`, { method: 'DELETE' });
 };
 
 export interface CreateNotificationRequest {
@@ -65,12 +62,9 @@ export interface CreateNotificationRequest {
 }
 
 export const createNotification = async (req: CreateNotificationRequest): Promise<void> => {
-    const resp = await managedFetch('/api/v2/notification', {
+    await managedFetch('/api/v1/notification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(req),
     });
-    if (!resp.ok) {
-        throw new Error(`Failed to create notification: ${resp.status}`);
-    }
 };
