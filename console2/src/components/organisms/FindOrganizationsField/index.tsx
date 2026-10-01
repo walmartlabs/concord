@@ -19,10 +19,10 @@
  */
 
 import * as React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Search } from 'semantic-ui-react';
 
-import { list as apiFindOrganizations, get as apiGet, OrganizationEntry } from '../../../api/org';
+import { list as apiFindOrganizations, OrganizationEntry } from '../../../api/org';
 import { SearchProps } from 'semantic-ui-react/dist/commonjs/modules/Search/Search';
 
 interface Props {
@@ -40,76 +40,66 @@ interface Result {
     description: string;
 }
 
+const MAX_RESULTS = 10;
+
 const renderTitle = (e: OrganizationEntry) => `${e.name}`;
 
-const renderDescription = (e: OrganizationEntry): string => '';
+const renderDescription = (_e: OrganizationEntry): string => '';
 
 export default ({ defaultOrgName, placeholder, required, onClear, onReset, onSelect }: Props) => {
+    const [allOrgs, setAllOrgs] = useState<OrganizationEntry[]>([]);
     const [defaultItem, setDefaultItem] = useState<OrganizationEntry | undefined>();
     const [value, setValue] = useState<string | undefined>();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<boolean>();
-    const [items, setItems] = useState<OrganizationEntry[]>([]);
-    const [results, setResults] = useState<Result[]>([]);
 
-    // perform search whenever the filter changes
     useEffect(() => {
-        if (!value || value.trim().length < 3) {
-            setResults([]);
-            return;
-        }
-
         const fetchData = async () => {
             setLoading(true);
             try {
-                const result = await apiFindOrganizations(true, 0, 10, value);
-                setItems(result.items);
+                // onlyCurrent=true: only orgs the user belongs to; large limit to get all of them
+                const result = await apiFindOrganizations(true, 0, 500);
+                setAllOrgs(result.items);
             } catch (e) {
-                setError(e);
+                setError(true);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, [value]);
+    }, []);
 
-    // convert OrganizationEntries into whatever <Search> accepts
-    useEffect(() => {
-        const r = items.map((i) => ({
-            key: i.id,
-            title: renderTitle(i),
-            description: renderDescription(i)
-        }));
-
-        setResults(r);
-    }, [items]);
-
-    // load the default organization's data
+    // Once the org list is loaded, resolve the default org from the cache
     useEffect(() => {
         if (!defaultOrgName) {
             setDefaultItem(undefined);
             return;
         }
 
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                const result = await apiGet(defaultOrgName);
-                setValue(result ? renderTitle(result) : '');
-                setDefaultItem(result);
-            } catch (e) {
-                setError(e);
-            } finally {
-                setLoading(false);
-            }
-        };
+        if (allOrgs.length === 0) return;
 
-        fetchData();
-    }, [defaultOrgName]);
+        const found = allOrgs.find((o) => o.name === defaultOrgName);
+        setValue(found ? renderTitle(found) : defaultOrgName);
+        setDefaultItem(found);
+    }, [defaultOrgName, allOrgs]);
+
+    // Filter the cached list client-side; show up to MAX_RESULTS
+    const results: Result[] = useMemo(() => {
+        if (!value || value.trim().length < 1) return [];
+        const lower = value.trim().toLowerCase();
+        return allOrgs
+            .filter((o) => o.name.toLowerCase().includes(lower))
+            .slice(0, MAX_RESULTS)
+            .map((o) => ({
+                key: o.id,
+                title: renderTitle(o),
+                description: renderDescription(o)
+            }));
+    }, [value, allOrgs]);
 
     const onChangeCallBack = useCallback(
-        (event: React.MouseEvent<HTMLElement>, data: SearchProps) => {
+        (_event: React.MouseEvent<HTMLElement>, data: SearchProps) => {
             setValue(data.value);
         },
         []
@@ -149,16 +139,16 @@ export default ({ defaultOrgName, placeholder, required, onClear, onReset, onSel
             results={results}
             onBlur={(event, data) => {
                 if (data.value !== '') {
-                    const item = items.find((i) => i.name === data.value);
+                    const item = allOrgs.find((o) => o.name === data.value);
                     handleItemSelected(item || defaultItem);
                 } else {
                     handleItemSelected(undefined);
                 }
             }}
-            showNoResults={!loading}
+            showNoResults={!loading && !!value && value.trim().length > 0}
             onSearchChange={onChangeCallBack}
             onResultSelect={(ev, data) => {
-                const item = items.find((i) => i.id === data.result.key);
+                const item = allOrgs.find((o) => o.id === data.result.key);
                 handleItemSelected(item || defaultItem);
             }}
         />
