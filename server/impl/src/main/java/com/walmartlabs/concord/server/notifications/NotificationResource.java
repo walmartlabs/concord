@@ -22,9 +22,12 @@ package com.walmartlabs.concord.server.notifications;
 
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
+import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
@@ -33,6 +36,7 @@ import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.UserDao;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -53,14 +57,26 @@ public class NotificationResource implements Resource {
     private final NotificationsDao notificationsDao;
     private final ProjectAccessManager projectAccessManager;
     private final OrganizationManager orgManager;
+    private final UserDao userDao;
+    private final OrganizationDao orgDao;
+    private final ProjectDao projectDao;
+    private final RepositoryDao repositoryDao;
 
     @Inject
     public NotificationResource(NotificationsDao notificationsDao,
                                  ProjectAccessManager projectAccessManager,
-                                 OrganizationManager orgManager) {
+                                 OrganizationManager orgManager,
+                                 UserDao userDao,
+                                 OrganizationDao orgDao,
+                                 ProjectDao projectDao,
+                                 RepositoryDao repositoryDao) {
         this.notificationsDao = notificationsDao;
         this.projectAccessManager = projectAccessManager;
         this.orgManager = orgManager;
+        this.userDao = userDao;
+        this.orgDao = orgDao;
+        this.projectDao = projectDao;
+        this.repositoryDao = repositoryDao;
     }
 
     @GET
@@ -107,6 +123,19 @@ public class NotificationResource implements Resource {
     @Operation(description = "Create a new notification", operationId = "createNotification")
     public NotificationOperationResponse create(@Valid NotificationEntry entry) {
         assertAdminOrModerator();
+
+        if (entry.getUserId() != null && !userDao.existsById(entry.getUserId())) {
+            throw new ValidationErrorsException("User not found: " + entry.getUserId());
+        }
+        if (entry.getOrgId() != null && orgDao.get(entry.getOrgId()) == null) {
+            throw new ValidationErrorsException("Organization not found: " + entry.getOrgId());
+        }
+        if (entry.getProjectId() != null && projectDao.get(entry.getProjectId()) == null) {
+            throw new ValidationErrorsException("Project not found: " + entry.getProjectId());
+        }
+        if (entry.getRepoId() != null && repositoryDao.get(entry.getRepoId()) == null) {
+            throw new ValidationErrorsException("Repository not found: " + entry.getRepoId());
+        }
 
         int ownerCount = (entry.getUserId() != null ? 1 : 0)
                 + (entry.getOrgId() != null ? 1 : 0)
