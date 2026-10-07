@@ -86,7 +86,7 @@
         <jboss.logging>3.4.2.Final</jboss.logging>
         <jcl-over-slf4j.version>1.7.36</jcl-over-slf4j.version>
         <jetbrain.annotations.version>23.0.0</jetbrain.annotations.version>
-        <jetty.version>12.0.36</jetty.version>
+        <jetty.version>12.0.38</jetty.version>
         <jgit.version>7.8.0.202609011348-r</jgit.version>
         <jna.version>5.19.1</jna.version>
         <jooq.version>3.21.8</jooq.version>
