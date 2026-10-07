@@ -49,6 +49,15 @@ class LintTest extends AbstractTest {
         assertLog(".*flows: 2.*");
     }
 
+    @Test
+    void lintV2DuplicateDepsTest() throws Exception {
+        int exitCode = lint("lintV2DuplicateDeps");
+        // Should still be valid (exit code 0) since duplicates are warnings, not errors
+        assertEquals(0, exitCode);
+        assertLog(".*Duplicate dependency found.*");
+        assertLog(".*1 warning.*");
+    }
+
     private static int lint(String payload) throws Exception {
         URI uri = LintTest.class.getResource(payload).toURI();
         Path source = Paths.get(uri);
