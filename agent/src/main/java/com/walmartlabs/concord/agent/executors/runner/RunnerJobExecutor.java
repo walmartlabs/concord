@@ -81,6 +81,9 @@ public class RunnerJobExecutor implements JobExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(RunnerJobExecutor.class);
 
+    private static final int PERSIST_DIR_MODE = 0755;
+    private static final int PERSIST_FILE_MODE = 0644;
+
     protected final DependencyManager dependencyManager;
 
     private final RunnerJobExecutorConfiguration cfg;
@@ -252,9 +255,9 @@ public class RunnerJobExecutor implements JobExecutor {
                 walk.forEach(f -> {
                     try {
                         if (Files.isDirectory(f)) {
-                            Files.setPosixFilePermissions(f, Posix.posix(0755));
+                            Files.setPosixFilePermissions(f, Posix.posix(PERSIST_DIR_MODE));
                         } else if (Files.isRegularFile(f)) {
-                            Files.setPosixFilePermissions(f, Posix.posix(0644));
+                            Files.setPosixFilePermissions(f, Posix.posix(PERSIST_FILE_MODE));
                         }
                     } catch (IOException e) {
                         log.warn("persistWorkDir -> can't update permissions for {}: {}", f, e.getMessage());
