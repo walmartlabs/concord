@@ -30,9 +30,7 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.ThreadContext;
 
-import java.io.*;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -93,29 +91,6 @@ public final class SecurityUtils {
             throw new AuthenticationException("Can't determine the current principal (" + type.getName() + ")");
         }
         return p;
-    }
-
-    public static byte[] serialize(PrincipalCollection data) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(data);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return baos.toByteArray();
-    }
-
-    public static Optional<PrincipalCollection> deserialize(byte[] data) {
-        InputStream in = new ByteArrayInputStream(data);
-        return deserialize(in);
-    }
-
-    public static Optional<PrincipalCollection> deserialize(InputStream in) {
-        try (ObjectInputStream ois = new ObjectInputStream(in)) {
-            return Optional.of((PrincipalCollection) ois.readObject());
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public static AuthorizationInfo toAuthorizationInfo(PrincipalCollection principals) {
