@@ -20,13 +20,14 @@
 import * as React from 'react';
 
 import {
+    ProcessExternalEventCondition,
     ProcessLockCondition,
     ProcessSleepCondition,
     ProcessWaitCondition,
     WaitCondition,
     WaitType
 } from '../../../api/process';
-import { Accordion, Icon, Table } from 'semantic-ui-react';
+import { Accordion, Icon, List, ListContent, ListDescription, ListHeader, ListItem, Table } from 'semantic-ui-react';
 import { ConcordId } from '../../../api/common';
 import { Link } from 'react-router';
 import { LocalTimestamp } from '../index';
@@ -122,6 +123,14 @@ const renderCondition = (condition: WaitCondition) => {
                 </>
             );
         }
+        case WaitType.EXTERNAL_EVENT: {
+            return (
+                <>
+                    <Icon name="hourglass half" />
+                    Waiting for external event
+                </>
+            );
+        }
         default:
             return type;
     }
@@ -155,6 +164,21 @@ const renderProcessLockDetails = (payload: ProcessLockCondition) => {
     return renderProcessLink(payload.instanceId);
 };
 
+const renderProcessExternalEventDetails = (condition: ProcessExternalEventCondition) => {
+    if (condition.reason === undefined || condition.expiresAt === undefined) {
+        return <></>;
+    }
+
+    return <List divided={true} relaxed={true}>
+        <ListItem>
+            <ListContent>
+                <ListHeader>{condition.reason}</ListHeader>
+                <ListDescription>Expires at: {<LocalTimestamp value={condition.expiresAt} />}</ListDescription>
+            </ListContent>
+        </ListItem>
+    </List>;
+};
+
 const renderDependencies = (condition: WaitCondition) => {
     const type = condition.type;
 
@@ -164,6 +188,9 @@ const renderDependencies = (condition: WaitCondition) => {
         }
         case WaitType.PROCESS_LOCK: {
             return renderProcessLockDetails(condition as ProcessLockCondition);
+        }
+        case WaitType.EXTERNAL_EVENT: {
+            return renderProcessExternalEventDetails(condition as ProcessExternalEventCondition);
         }
         default:
             return '';
