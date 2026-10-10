@@ -234,6 +234,7 @@ public abstract class WithItemsWrapper implements Command {
                     .commands(cmd)
                     .root()
                     .build();
+            LogSegmentUtils.copyScopedSegmentMarkers(state, threadId, cmdFrame);
 
             Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
             loop.push(new AppendVariablesCommand(outVariables, cmdFrame, targetFrame));
@@ -280,6 +281,7 @@ public abstract class WithItemsWrapper implements Command {
                     .commands(cmd)
                     .root()
                     .build();
+            LogSegmentUtils.copyScopedSegmentMarkers(state, threadId, cmdFrame);
 
             Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
             loop.push(new AppendVariablesCommand(outVariables, cmdFrame, targetFrame));

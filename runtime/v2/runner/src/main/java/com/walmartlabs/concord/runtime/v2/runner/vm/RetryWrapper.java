@@ -48,7 +48,7 @@ public class RetryWrapper implements Command {
 
     private static final Logger log = LoggerFactory.getLogger(RetryWrapper.class);
 
-    private static final String RETRY_CFG = "__retry_cfg";
+    static final String RETRY_CFG = "__retry_cfg";
 
     private final Command cmd;
     private final Retry retry;

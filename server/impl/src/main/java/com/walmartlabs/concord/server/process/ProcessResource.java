@@ -699,7 +699,7 @@ public class ProcessResource implements Resource {
         HttpUtils.Range range = HttpUtils.parseRangeHeaderValue(rangeHeader);
 
         ProcessLog l = logManager.get(processKey, range.start(), range.end());
-        return ProcessLogResourceV2.toResponse(instanceId, 0, l, range);
+        return ProcessLogResourceV2.toResponse(instanceId, 0, l);
     }
 
     /**
