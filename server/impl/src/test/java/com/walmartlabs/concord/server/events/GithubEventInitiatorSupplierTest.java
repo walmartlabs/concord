@@ -20,8 +20,10 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
-import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.events.GithubEventResource.GithubEventInitiatorSupplier;
 import com.walmartlabs.concord.server.events.github.Payload;
@@ -34,7 +36,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -61,6 +65,9 @@ class GithubEventInitiatorSupplierTest {
 
     @Mock
     private LoadingCache<GithubEventResource.EmailCacheKey, Optional<String>> ghUserEmailCache;
+
+    @Mock
+    private AuthTokenProvider authTokenProvider;
 
     private final UserEntry userEntry = new UserEntry(UUID.randomUUID(), "mock-login", null, null, Set.of(), UserType.LDAP, null, Set.of(), false, OffsetDateTime.now(), false);
 
@@ -107,19 +114,23 @@ class GithubEventInitiatorSupplierTest {
     }
 
     @Test
-    void emailLookupErrorFallsBackToLogin() throws ExecutionException {
+    void tokenErrorFallsBackToLogin() {
 
-        // given: the email lookup fails with an unchecked error (e.g. a transient GitHub App token failure)
+        // given: the auth token lookup fails (e.g. a transient GitHub App API error)
 
         when(githubCfg.isUseSenderEmail()).thenReturn(true);
+        when(githubCfg.getHttpClientTimeout()).thenReturn(Duration.ofSeconds(1));
 
-        when(ghUserEmailCache.get(any(GithubEventResource.EmailCacheKey.class)))
-                .thenThrow(new UncheckedExecutionException(new RuntimeException("Error sending request")));
+        when(authTokenProvider.getToken(any(), any()))
+                .thenThrow(new RuntimeException("Error sending request"));
 
         when(userManager.getOrCreate("mock-login", null, UserType.LDAP))
                 .thenReturn(Optional.of(userEntry));
 
-        var initiatorSupplier = new GithubEventInitiatorSupplier(githubCfg, userManager, ldapManager, payload, ghUserEmailCache);
+        var emailCache = CacheBuilder.newBuilder()
+                .build(new GithubEventResource.EmailCacheLoader(githubCfg, new HashMap<>(), authTokenProvider, new ObjectMapper()));
+
+        var initiatorSupplier = new GithubEventInitiatorSupplier(githubCfg, userManager, ldapManager, payload, emailCache);
 
 
         // when: get call fails to look up the sender's email

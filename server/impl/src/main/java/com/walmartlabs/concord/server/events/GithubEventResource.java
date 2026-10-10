@@ -28,7 +28,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.ExternalAuthToken;
@@ -443,7 +442,7 @@ public class GithubEventResource implements Resource {
             try {
                 return ghUserEmailCache.get(new EmailCacheKey(repoUrl, userUrl))
                         .orElse(null);
-            } catch (ExecutionException | UncheckedExecutionException ee) {
+            } catch (ExecutionException ee) {
                 Throwable t = ee.getCause();
                 log.warn(ERROR_USER_EMAIL_LOOKUP, userUrl, t.getMessage());
             }
@@ -455,6 +454,10 @@ public class GithubEventResource implements Resource {
     private static class UserLookupException extends Exception {
         public UserLookupException(String message) {
             super(message);
+        }
+
+        public UserLookupException(String message, Throwable cause) {
+            super(message, cause);
         }
     }
 
@@ -481,7 +484,8 @@ public class GithubEventResource implements Resource {
         }
     }
 
-    private static class EmailCacheLoader extends CacheLoader<EmailCacheKey, Optional<String>> {
+    @VisibleForTesting
+    static class EmailCacheLoader extends CacheLoader<EmailCacheKey, Optional<String>> {
 
         private final Map<String, Long> rateLimitGauges;
         private final AuthTokenProvider authTokenProvider;
@@ -506,7 +510,12 @@ public class GithubEventResource implements Resource {
             URI repoUrl = key.repoUrl();
             URI userUrl = key.userUrl();
 
-            Optional<ExternalAuthToken> t = authTokenProvider.getToken(repoUrl, null);
+            Optional<ExternalAuthToken> t;
+            try {
+                t = authTokenProvider.getToken(repoUrl, null);
+            } catch (RuntimeException e) {
+                throw new UserLookupException("Error retrieving auth token: " + e.getMessage(), e);
+            }
 
             if (t.isEmpty()) {
                 return Optional.empty();
