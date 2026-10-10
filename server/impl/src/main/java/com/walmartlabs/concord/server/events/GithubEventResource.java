@@ -28,6 +28,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.ExternalAuthToken;
@@ -442,7 +443,7 @@ public class GithubEventResource implements Resource {
             try {
                 return ghUserEmailCache.get(new EmailCacheKey(repoUrl, userUrl))
                         .orElse(null);
-            } catch (ExecutionException ee) {
+            } catch (ExecutionException | UncheckedExecutionException ee) {
                 Throwable t = ee.getCause();
                 log.warn(ERROR_USER_EMAIL_LOOKUP, userUrl, t.getMessage());
             }

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.events;
  */
 
 import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.events.GithubEventResource.GithubEventInitiatorSupplier;
 import com.walmartlabs.concord.server.events.github.Payload;
@@ -40,6 +41,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
@@ -102,6 +104,34 @@ class GithubEventInitiatorSupplierTest {
         verify(userManager, times(1)).getOrCreate("mock-login", null, UserType.LDAP);
         verify(userManager, times(1)).createExternalUserMapping(any(), any());
         verifyNoMoreInteractions(userManager);
+    }
+
+    @Test
+    void emailLookupErrorFallsBackToLogin() throws ExecutionException {
+
+        // given: the email lookup fails with an unchecked error (e.g. a transient GitHub App token failure)
+
+        when(githubCfg.isUseSenderEmail()).thenReturn(true);
+
+        when(ghUserEmailCache.get(any(GithubEventResource.EmailCacheKey.class)))
+                .thenThrow(new UncheckedExecutionException(new RuntimeException("Error sending request")));
+
+        when(userManager.getOrCreate("mock-login", null, UserType.LDAP))
+                .thenReturn(Optional.of(userEntry));
+
+        var initiatorSupplier = new GithubEventInitiatorSupplier(githubCfg, userManager, ldapManager, payload, ghUserEmailCache);
+
+
+        // when: get call fails to look up the sender's email
+
+        var result = initiatorSupplier.get();
+
+
+        // then: the error doesn't propagate, user is resolved via fallback
+
+        assertEquals(userEntry, result);
+        verify(userManager, times(1)).getOrCreate("mock-login", null, UserType.LDAP);
+        verifyNoInteractions(ldapManager);
     }
 
     @Test
