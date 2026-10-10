@@ -32,6 +32,7 @@ import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
 import com.walmartlabs.concord.github.appinstallation.exception.GitHubAppException;
+import com.walmartlabs.concord.github.appinstallation.exception.RepoExtractionException;
 import com.walmartlabs.concord.sdk.Secret;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -182,10 +183,10 @@ public class GitHubAppInstallation implements AuthTokenProvider {
     }
 
     private ExternalAuthToken getTokenFromAppInstall(GitHubAppAuthConfig app, URI repo) {
-        var ownerAndRepo = Utils.extractOwnerAndRepo(app, repo);
         try {
+            var ownerAndRepo = Utils.extractOwnerAndRepo(app, repo);
             return accessTokenProvider().getRepoInstallationToken(app, ownerAndRepo);
-        } catch (GitHubAppException.NotFoundException e) {
+        } catch (RepoExtractionException | GitHubAppException.NotFoundException e) {
             log.warn("getTokenFromAppInstall ['{}', '{}'] -> {}", app.apiUrl(), repo, e.getMessage());
             return null;
         }

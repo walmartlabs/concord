@@ -141,6 +141,24 @@ class GitHubAppInstallationTest {
     }
 
     @Test
+    void testSecretPatternMismatchFallsBackToAnonymous() {
+        // -- prepare 0
+        // the secret's urlPattern doesn't match the repo, so owner/repo can't be extracted
+        var repo = URI.create("https://other.local/owner/repo-1.git");
+        var app = new TestApp(CFG, MAPPER, accessTokenProvider);
+
+        // -- execute 1
+        var tokenResp = app.getToken(repo, MOCK_APP_INSTALL_SECRET);
+
+        // -- verify 1
+        // not an error, caller falls back to anonymous access
+        assertFalse(tokenResp.isPresent());
+        assertEquals(1, app.cacheSize());
+        verify(accessTokenProvider, times(0))
+                .getRepoInstallationToken(any(), any());
+    }
+
+    @Test
     void testCache() {
         // -- prepare 0
         var app = new TestApp(CFG, MAPPER, accessTokenProvider);
