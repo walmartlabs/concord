@@ -28,30 +28,31 @@ import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.FrameType;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serial;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * The per-thread stack of log scopes: the log segments of the thread and the scopes that
+ * shape the attributes of the segments opened directly in them (no other segment in between).
+ */
 public final class LogSegmentUtils {
 
+    private static final Logger log = LoggerFactory.getLogger(LogSegmentUtils.class);
+
     private static final String KEY = "logContext";
-    private static final String PARENT_SEGMENT_ID_KEY = "parentLogSegmentId";
-    private static final String LAST_FAILED_SEGMENT_KEY = "lastFailedLogSegment";
+
+    private static final long SYSTEM_SEGMENT_ID = 0;
 
     /**
      * Frame variable: index of the loop iteration the frame belongs to.
      * Set by {@link LoopWrapper} on the frame of each iteration.
      */
     static final String LOOP_INDEX_KEY = "__logSegmentLoopIndex";
-
-    /**
-     * Frame variable: ID of the failed segment ({@code -1} if unknown) whose {@code error} block
-     * runs in the frame. Set by {@link ExposeLastErrorCommand}.
-     */
-    static final String ERROR_HANDLER_KEY = "__logSegmentErrorHandlerFor";
 
     public static LogContext popLogContext(ThreadId threadId, State state) {
         List<LogScope> items = state.getThreadLocal(threadId, KEY);
@@ -98,43 +99,100 @@ public final class LogSegmentUtils {
     }
 
     public static void pushLogContext(ThreadId threadId, State state, LogContext logContext) {
-        ArrayList<LogScope> items = state.getThreadLocal(threadId, KEY);
-        if (items == null) {
-            items = new ArrayList<>();
+        pushScope(threadId, state, logContext);
+    }
+
+    /**
+     * Opens a scope guarded by an {@code error} block. Segments closed in the scope until
+     * the handler starts are recorded: the last failed one becomes the parent of the handler.
+     *
+     * @return the ID of the scope, see {@link #enterErrorHandler(ThreadId, State, UUID)}
+     * and {@link #closeScope(ThreadId, State, UUID)}
+     */
+    public static UUID openErrorScope(ThreadId threadId, State state) {
+        UUID id = UUID.randomUUID();
+        pushScope(threadId, state, new ErrorScope(id, false, null));
+        return id;
+    }
+
+    /**
+     * Marks the start of the {@code error} block of the specified scope. A {@code null} ID
+     * (a handler created before the scopes were introduced) is ignored.
+     */
+    public static void enterErrorHandler(ThreadId threadId, State state, UUID scopeId) {
+        if (scopeId == null) {
+            return;
         }
-        items.add(logContext);
+
+        ArrayList<LogScope> items = state.getThreadLocal(threadId, KEY);
+        int i = indexOf(items, scopeId);
+        if (i < 0) {
+            log.warn("enterErrorHandler ['{}'] -> scope not found", scopeId);
+            return;
+        }
+
+        ErrorScope scope = (ErrorScope) items.get(i);
+        items.set(i, new ErrorScope(scope.id(), true, scope.failedSegmentId()));
         state.setThreadLocal(threadId, KEY, items);
     }
 
     /**
-     * Returns the ID of the innermost log segment of the thread. If the thread
-     * has no segments of its own, returns the segment inherited from the parent
-     * thread (see {@link #inheritParentSegmentId(ThreadId, ThreadId, State)}).
+     * Records a closed segment in the innermost error scope that hasn't caught an error yet.
      */
-    public static Long getCurrentSegmentId(ThreadId threadId, State state) {
-        List<LogScope> items = getScopes(threadId, state);
+    public static void onSegmentClosed(ThreadId threadId, State state, long segmentId, boolean failed) {
+        ArrayList<LogScope> items = state.getThreadLocal(threadId, KEY);
+        if (items == null) {
+            return;
+        }
+
         for (int i = items.size() - 1; i >= 0; i--) {
-            if (items.get(i) instanceof LogContext ctx && ctx.segmentId() != null) {
-                return ctx.segmentId();
+            if (items.get(i) instanceof ErrorScope scope && !scope.handling()) {
+                // the system segment is shared by the steps, the failed step is unknown
+                Long failedSegmentId = failed && segmentId != SYSTEM_SEGMENT_ID ? segmentId : null;
+                items.set(i, new ErrorScope(scope.id(), false, failedSegmentId));
+                state.setThreadLocal(threadId, KEY, items);
+                return;
             }
         }
-        return state.getThreadLocal(threadId, PARENT_SEGMENT_ID_KEY);
-    }
-
-    private static List<LogScope> getScopes(ThreadId threadId, State state) {
-        List<LogScope> items = state.getThreadLocal(threadId, KEY);
-        return items != null ? items : List.of();
     }
 
     /**
-     * Makes the current segment of the parent thread the parent segment
-     * for all segments created in the child thread.
+     * Removes the specified scope. Doesn't throw: it runs in {@code finally} handlers,
+     * possibly while the stack is unwinding.
      */
-    public static void inheritParentSegmentId(ThreadId parentThreadId, ThreadId childThreadId, State state) {
-        Long segmentId = getCurrentSegmentId(parentThreadId, state);
-        if (segmentId != null) {
-            state.setThreadLocal(childThreadId, PARENT_SEGMENT_ID_KEY, segmentId);
+    public static void closeScope(ThreadId threadId, State state, UUID scopeId) {
+        ArrayList<LogScope> items = state.getThreadLocal(threadId, KEY);
+        int i = indexOf(items, scopeId);
+        if (i < 0) {
+            log.warn("closeScope ['{}'] -> scope not found", scopeId);
+            return;
         }
+
+        if (i != items.size() - 1) {
+            log.warn("closeScope ['{}'] -> not the innermost scope: {}", scopeId, items.subList(i + 1, items.size()));
+        }
+
+        items.remove(i);
+        if (items.isEmpty()) {
+            state.removeThreadLocal(threadId, KEY);
+        } else {
+            state.setThreadLocal(threadId, KEY, items);
+        }
+    }
+
+    /**
+     * Makes the segments opened directly in the child thread belong where a segment
+     * opened in the parent thread would.
+     */
+    public static void inheritScope(ThreadId parentThreadId, ThreadId childThreadId, State state) {
+        Placement placement = getPlacement(parentThreadId, state);
+        if (placement.parentId() == null && !placement.errorHandler()) {
+            return;
+        }
+
+        ArrayList<LogScope> items = new ArrayList<>();
+        items.add(new InheritedScope(placement.parentId(), placement.errorHandler()));
+        state.setThreadLocal(childThreadId, KEY, items);
     }
 
     /**
@@ -142,37 +200,32 @@ public final class LogSegmentUtils {
      * The nearest root is a scope boundary and is included in the search.
      */
     public static void copyScopedSegmentMarkers(State state, ThreadId threadId, Frame target) {
-        boolean copiedErrorHandler = false;
-        boolean copiedLoopIndex = false;
         for (Frame source : state.getFrames(threadId)) {
-            if (!copiedErrorHandler && source.hasLocal(ERROR_HANDLER_KEY)) {
-                target.setLocal(ERROR_HANDLER_KEY, source.getLocal(ERROR_HANDLER_KEY));
-                copiedErrorHandler = true;
-            }
-            if (!copiedLoopIndex && source.hasLocal(LOOP_INDEX_KEY)) {
+            if (source.hasLocal(LOOP_INDEX_KEY)) {
                 target.setLocal(LOOP_INDEX_KEY, source.getLocal(LOOP_INDEX_KEY));
-                copiedLoopIndex = true;
+                return;
             }
             if (source.getType() == FrameType.ROOT) {
-                break;
+                return;
             }
         }
     }
 
     static boolean isSegmentMarker(String key) {
-        return ERROR_HANDLER_KEY.equals(key) || LOOP_INDEX_KEY.equals(key);
+        return LOOP_INDEX_KEY.equals(key);
     }
 
     /**
      * Resolves where a new segment belongs: the enclosing segment, the retry attempt, the loop iteration,
      * the error handler and the thread.
      * <p>
-     * The markers are read only from specific frames, so they don't leak into nested flow calls
-     * (those have frames of their own) or into commands that merely copied the variables:
+     * The parent and the error handler role come from the log scope stack. The attempt and the loop index
+     * are read only from specific frames, so they don't leak into nested flow calls (those have frames
+     * of their own) or into commands that merely copied the variables:
      * <ul>
      *     <li>the top frame is a {@link RetryWrapper} frame: the attempt number, the retried
      *     command belongs to the frame below it;</li>
-     *     <li>the frame of the command: the loop iteration and the error handler markers.</li>
+     *     <li>the frame of the command: the loop iteration.</li>
      * </ul>
      */
     public static LogSegmentAttributes getSegmentAttributes(ThreadId threadId, State state) {
@@ -196,26 +249,15 @@ public final class LogSegmentUtils {
 
         Integer loopIndex = frame.getLocal(LOOP_INDEX_KEY) instanceof Integer i ? i : null;
 
-        Long parentId = getCurrentSegmentId(threadId, state);
-
-        boolean errorHandler = false;
-        Serializable failedSegmentId = frame.getLocal(ERROR_HANDLER_KEY);
-        if (failedSegmentId instanceof Long id) {
-            errorHandler = true;
-            // error handlers are shown as children of the failed step
-            if (id >= 0) {
-                parentId = id;
-            }
-        }
+        Placement placement = getPlacement(threadId, state);
 
         Integer thread = null;
         if (!threadId.equals(state.getRootThreadId()) && threadId.id() <= Integer.MAX_VALUE) {
             thread = (int) threadId.id();
         }
 
-        return new LogSegmentAttributes(parentId, attempt, loopIndex, errorHandler, thread);
+        return new LogSegmentAttributes(placement.parentId(), attempt, loopIndex, placement.errorHandler(), thread);
     }
-
 
     /**
      * The segment of the step with the specified correlation ID, if the context is the step's own
@@ -228,23 +270,86 @@ public final class LogSegmentUtils {
         return correlationId.equals(context.correlationId()) ? context.segmentId() : null;
     }
 
-    public static void setLastFailedSegment(ThreadId threadId, State state, Exception exception, long segmentId) {
-        state.setThreadLocal(threadId, LAST_FAILED_SEGMENT_KEY, new FailedSegment(exception, segmentId));
+    /**
+     * The parent is the innermost segment, unless an error handler runs directly in it:
+     * then it's the failed segment of the handler (if known).
+     */
+    private static Placement getPlacement(ThreadId threadId, State state) {
+        List<LogScope> items = getScopes(threadId, state);
+
+        ErrorScope handler = null;
+        for (int i = items.size() - 1; i >= 0; i--) {
+            LogScope scope = items.get(i);
+            if (scope instanceof ErrorScope s && s.handling()) {
+                if (handler == null) {
+                    handler = s;
+                }
+            } else if (scope instanceof LogContext ctx && ctx.segmentId() != null) {
+                return toPlacement(handler, ctx.segmentId(), false);
+            } else if (scope instanceof InheritedScope s) {
+                return toPlacement(handler, s.parentId(), s.errorHandler());
+            }
+        }
+
+        return toPlacement(handler, null, false);
     }
 
-    public static Long consumeLastFailedSegmentId(ThreadId threadId, State state, Exception exception) {
-        FailedSegment failedSegment = state.getThreadLocal(threadId, LAST_FAILED_SEGMENT_KEY);
-        if (failedSegment == null) {
-            return null;
+    private static Placement toPlacement(ErrorScope handler, Long enclosingSegmentId, boolean errorHandler) {
+        if (handler == null) {
+            return new Placement(enclosingSegmentId, errorHandler);
         }
-        state.removeThreadLocal(threadId, LAST_FAILED_SEGMENT_KEY);
-        if (failedSegment.exception() != exception) {
-            return null;
-        }
-        return failedSegment.segmentId();
+
+        Long parentId = handler.failedSegmentId() != null ? handler.failedSegmentId() : enclosingSegmentId;
+        return new Placement(parentId, true);
     }
 
-    private record FailedSegment(Exception exception, long segmentId) implements Serializable {
+    private static void pushScope(ThreadId threadId, State state, LogScope scope) {
+        ArrayList<LogScope> items = state.getThreadLocal(threadId, KEY);
+        if (items == null) {
+            items = new ArrayList<>();
+        }
+        items.add(scope);
+        state.setThreadLocal(threadId, KEY, items);
+    }
+
+    private static int indexOf(List<LogScope> items, UUID scopeId) {
+        if (items == null) {
+            return -1;
+        }
+
+        for (int i = items.size() - 1; i >= 0; i--) {
+            if (items.get(i) instanceof ErrorScope s && s.id().equals(scopeId)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static List<LogScope> getScopes(ThreadId threadId, State state) {
+        List<LogScope> items = state.getThreadLocal(threadId, KEY);
+        return items != null ? items : List.of();
+    }
+
+    private record Placement(Long parentId, boolean errorHandler) {
+    }
+
+    /**
+     * A scope guarded by an {@code error} block.
+     *
+     * @param handling        {@code true} once the {@code error} block runs
+     * @param failedSegmentId the segment that failed last in the scope, {@code null} if unknown
+     *                        or the last closed segment didn't fail
+     */
+    private record ErrorScope(UUID id, boolean handling, Long failedSegmentId) implements LogScope {
+
+        @Serial
+        private static final long serialVersionUID = 1L;
+    }
+
+    /**
+     * The bottom of the stack of a forked thread: where the segments of the thread belong.
+     */
+    private record InheritedScope(Long parentId, boolean errorHandler) implements LogScope {
 
         @Serial
         private static final long serialVersionUID = 1L;

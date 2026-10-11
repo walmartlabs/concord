@@ -23,6 +23,8 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
+import java.util.UUID;
+
 /**
  * Wraps the specified command into a new frame with an exception handler
  * consisting of a {@link ExposeLastErrorCommand} and the provided {@link #errorSteps}.
@@ -48,11 +50,13 @@ public class ErrorWrapper implements Command {
         //  block:
         //    - ExposeLastErrorCommand
         //    - ...compiled steps from the "error" block...
-        BlockCommand exceptionHandler = new BlockCommand(new ExposeLastErrorCommand(), errorSteps);
+        UUID scopeId = LogSegmentUtils.openErrorScope(threadId, state);
+        BlockCommand exceptionHandler = new BlockCommand(new ExposeLastErrorCommand(scopeId), errorSteps);
 
         Frame inner = Frame.builder()
                 .nonRoot()
                 .exceptionHandler(exceptionHandler)
+                .finallyHandler(new CloseLogScopeCommand(scopeId))
                 .commands(cmd)
                 .build();
 

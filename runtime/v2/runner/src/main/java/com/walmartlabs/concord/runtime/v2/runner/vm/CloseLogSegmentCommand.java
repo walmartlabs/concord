@@ -56,10 +56,7 @@ public class CloseLogSegmentCommand implements Command {
 
         ThreadError threadError = state.getThreadError(threadId);
         LogSegmentStatus status = threadError != null ? LogSegmentStatus.ERROR : LogSegmentStatus.OK;
-        if (threadError != null) {
-            // the parent of the segments of the "error" block, if any
-            LogSegmentUtils.setLastFailedSegment(threadId, state, threadError.exception(), segmentId);
-        }
+        LogSegmentUtils.onSegmentClosed(threadId, state, segmentId, threadError != null);
 
         runtime.getService(RunnerLogger.class)
                 .setSegmentStatus(segmentId, status);

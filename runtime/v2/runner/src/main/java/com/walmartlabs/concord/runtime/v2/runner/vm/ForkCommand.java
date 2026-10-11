@@ -44,7 +44,7 @@ public class ForkCommand implements Command {
 
         // create a new root frame
         state.fork(threadId, childThreadId, cmds);
-        LogSegmentUtils.inheritParentSegmentId(threadId, childThreadId, state);
+        LogSegmentUtils.inheritScope(threadId, childThreadId, state);
 
         // copy ordinary "in" variables, then transfer segment markers only from this flow scope
         Frame targetFrame = state.peekFrame(childThreadId);

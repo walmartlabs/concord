@@ -26,6 +26,7 @@ import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogSegmentAttributes;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.ReentrantTaskExample;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.Tasks;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -803,6 +804,86 @@ public class LogSegmentsTest {
         assertAttributes(segmentId("Recovery parallel B"), recoveryFlow, null, null, false, true);
 
         assertAttributes(segmentId("missing flow handler"), null, null, null, true, false);
+    }
+
+    @Test
+    public void handledRetryDoesNotRetainTheError() throws Exception {
+        deploy("logSegments/retryReleasesTheError");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        Tasks.FailOnceTask.reset();
+        runWithSegments();
+
+        assertEquals(2, segmentIds("retried").size());
+        assertEquals(false, Tasks.StateReferencesErrorTask.result(), "the state references the handled error");
+    }
+
+    @Test
+    public void errorHandlerOfAStepWithoutASegmentBelongsToTheEnclosingSegment() throws Exception {
+        deploy("logSegments/errorHandlerOfUnnamedStep");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        runWithSegments();
+
+        assertAttributes(segmentId("handler"), segmentId("outer"), null, null, true, false);
+    }
+
+    @Test
+    public void parallelBranchesOfAnErrorHandlerAreHandlers() throws Exception {
+        deploy("logSegments/parallelInErrorHandler");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        runWithSegments();
+
+        long failed = segmentId("failed");
+        assertAttributes(segmentId("branch A"), failed, null, null, true, true);
+        assertAttributes(segmentId("branch B"), failed, null, null, true, true);
+    }
+
+    @Test
+    public void failedAttemptOfAHandledRetryIsNotTheFailedStep() throws Exception {
+        deploy("logSegments/errorHandlerAfterHandledRetry");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        Tasks.FailOnceTask.reset();
+        runWithSegments();
+
+        assertEquals(2, segmentIds("retried").size());
+        assertAttributes(segmentId("handler"), segmentId("outer"), null, null, true, false);
+    }
+
+    @Test
+    public void rethrownErrorBelongsToTheOuterFailedStep() throws Exception {
+        deploy("logSegments/rethrowingErrorHandler");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        runWithSegments();
+
+        assertAttributes(segmentId("inner handler"), segmentId("failed"), null, null, true, false);
+        assertAttributes(segmentId("outer handler"), segmentId("outer"), null, null, true, false);
+    }
+
+    @Test
+    public void errorHandlerSurvivesSuspend() throws Exception {
+        deploy("logSegments/suspendInErrorHandler");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        runWithSegments();
+        resumeWithSegments("ev");
+
+        assertAttributes(segmentId("after resume"), segmentId("failed"), null, null, true, false);
     }
 
     // pre/post events of the task calls in the order of the segments

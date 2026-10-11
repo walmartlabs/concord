@@ -24,12 +24,23 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
+import java.util.UUID;
+
 /**
  * Provides {@code ${lastError}} variable for {@code error} blocks.
  */
 public class ExposeLastErrorCommand implements Command {
 
     private static final long serialVersionUID = 1L;
+
+    /**
+     * {@code null} in handlers created before the log scopes were introduced.
+     */
+    private final UUID scopeId;
+
+    public ExposeLastErrorCommand(UUID scopeId) {
+        this.scopeId = scopeId;
+    }
 
     @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
@@ -39,8 +50,6 @@ public class ExposeLastErrorCommand implements Command {
         Exception cause = (Exception) frame.getLocal(Frame.LAST_EXCEPTION_KEY);
         frame.setLocal(Constants.Context.LAST_ERROR_KEY, cause);
 
-        // this wrapper caught a new exception, replacing any enclosing handler marker
-        Long failedSegmentId = LogSegmentUtils.consumeLastFailedSegmentId(threadId, state, cause);
-        frame.setLocal(LogSegmentUtils.ERROR_HANDLER_KEY, failedSegmentId != null ? failedSegmentId : -1L);
+        LogSegmentUtils.enterErrorHandler(threadId, state, scopeId);
     }
 }
