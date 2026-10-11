@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogScope;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogSegmentAttributes;
 import com.walmartlabs.concord.runtime.v2.sdk.Constants;
 import com.walmartlabs.concord.svm.Frame;
@@ -53,7 +54,7 @@ public final class LogSegmentUtils {
     static final String ERROR_HANDLER_KEY = "__logSegmentErrorHandlerFor";
 
     public static LogContext popLogContext(ThreadId threadId, State state) {
-        List<LogContext> items = state.getThreadLocal(threadId, KEY);
+        List<LogScope> items = state.getThreadLocal(threadId, KEY);
         if (items == null) {
             return null;
         }
@@ -62,37 +63,42 @@ public final class LogSegmentUtils {
             throw new RuntimeException("Can't pop log context: empty log context");
         }
 
-        LogContext result = items.remove(items.size() - 1);
+        if (!(items.get(items.size() - 1) instanceof LogContext result)) {
+            throw new IllegalStateException("Can't pop log context: the innermost scope is not a log segment: " + items.get(items.size() - 1));
+        }
+
+        items.remove(items.size() - 1);
         if (items.isEmpty()) {
             state.removeThreadLocal(threadId, KEY);
         }
         return result;
     }
 
+    /**
+     * Returns the innermost log segment of the thread.
+     */
     public static LogContext getLogContext(ThreadId threadId, State state) {
-        List<LogContext> items = state.getThreadLocal(threadId, KEY);
-        if (items == null) {
-            return null;
+        List<LogScope> items = getScopes(threadId, state);
+        for (int i = items.size() - 1; i >= 0; i--) {
+            if (items.get(i) instanceof LogContext ctx) {
+                return ctx;
+            }
         }
-
-        if (items.isEmpty()) {
-            throw new RuntimeException("Can't get log context: empty log context");
-        }
-
-        return items.get(items.size() - 1);
+        return null;
     }
 
+    /**
+     * Returns the log segments of the thread, outermost first.
+     */
     public static List<LogContext> getLogContexts(ThreadId threadId, State state) {
-        List<LogContext> items = state.getThreadLocal(threadId, KEY);
-        if (items == null) {
-            return List.of();
-        }
-
-        return items;
+        return getScopes(threadId, state).stream()
+                .filter(LogContext.class::isInstance)
+                .map(LogContext.class::cast)
+                .toList();
     }
 
     public static void pushLogContext(ThreadId threadId, State state, LogContext logContext) {
-        ArrayList<LogContext> items = state.getThreadLocal(threadId, KEY);
+        ArrayList<LogScope> items = state.getThreadLocal(threadId, KEY);
         if (items == null) {
             items = new ArrayList<>();
         }
@@ -106,14 +112,18 @@ public final class LogSegmentUtils {
      * thread (see {@link #inheritParentSegmentId(ThreadId, ThreadId, State)}).
      */
     public static Long getCurrentSegmentId(ThreadId threadId, State state) {
-        List<LogContext> items = getLogContexts(threadId, state);
+        List<LogScope> items = getScopes(threadId, state);
         for (int i = items.size() - 1; i >= 0; i--) {
-            LogContext ctx = items.get(i);
-            if (ctx != null && ctx.segmentId() != null) {
+            if (items.get(i) instanceof LogContext ctx && ctx.segmentId() != null) {
                 return ctx.segmentId();
             }
         }
         return state.getThreadLocal(threadId, PARENT_SEGMENT_ID_KEY);
+    }
+
+    private static List<LogScope> getScopes(ThreadId threadId, State state) {
+        List<LogScope> items = state.getThreadLocal(threadId, KEY);
+        return items != null ? items : List.of();
     }
 
     /**
