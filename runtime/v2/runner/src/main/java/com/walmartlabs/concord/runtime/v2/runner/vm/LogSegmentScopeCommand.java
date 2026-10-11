@@ -56,8 +56,7 @@ public class LogSegmentScopeCommand<T extends Step> extends StepCommand<T> {
         frame.pop();
 
         Context ctx = runtime.getService(Context.class);
-        LogSegmentAttributes attributes = LogSegmentUtils.getSegmentAttributes(threadId, state);
-        LogContext logContext = getLogContext(runtime, ctx, getCorrelationId(), attributes);
+        LogContext logContext = getLogContext(runtime, state, threadId, ctx, getCorrelationId());
         if (logContext == null || logContext.segmentId() == null) {
             frame.push(cmd);
             return;
@@ -75,7 +74,7 @@ public class LogSegmentScopeCommand<T extends Step> extends StepCommand<T> {
         state.pushFrame(threadId, scopeFrame);
     }
 
-    private LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId, LogSegmentAttributes attributes) {
+    private LogContext getLogContext(Runtime runtime, State state, ThreadId threadId, Context ctx, UUID correlationId) {
         String segmentName = getSegmentName(ctx, (AbstractStep<?>) getStep());
         if (segmentName == null) {
             return null;
@@ -83,12 +82,13 @@ public class LogSegmentScopeCommand<T extends Step> extends StepCommand<T> {
 
         segmentName = SensitiveDataMasker.mask(segmentName, runtime.getService(SensitiveDataHolder.class).get());
 
-        return buildLogContext(runtime, segmentName, correlationId, attributes);
+        return buildLogContext(runtime, state, threadId, segmentName, correlationId);
     }
 
-    private LogContext buildLogContext(Runtime runtime, String segmentName, UUID correlationId, LogSegmentAttributes attributes) {
+    private LogContext buildLogContext(Runtime runtime, State state, ThreadId threadId, String segmentName, UUID correlationId) {
         RunnerConfiguration runnerCfg = runtime.getService(RunnerConfiguration.class);
         boolean redirectSystemOutAndErr = runnerCfg.logging().sendSystemOutAndErrToSLF4J();
+        LogSegmentAttributes attributes = LogSegmentUtils.getSegmentAttributes(threadId, state);
 
         return LogContext.builder()
                 .segmentName(segmentName)
