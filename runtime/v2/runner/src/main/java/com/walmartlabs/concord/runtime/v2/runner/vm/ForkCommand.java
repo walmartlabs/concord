@@ -46,15 +46,10 @@ public class ForkCommand implements Command {
         state.fork(threadId, childThreadId, cmds);
         LogSegmentUtils.inheritScope(threadId, childThreadId, state);
 
-        // copy ordinary "in" variables, then transfer segment markers only from this flow scope
+        // copy all "in" variables
         Frame targetFrame = state.peekFrame(childThreadId);
         Map<String, Object> locals = VMUtils.getCombinedLocals(state, threadId);
-        locals.forEach((key, value) -> {
-            if (!LogSegmentUtils.isSegmentMarker(key)) {
-                VMUtils.putLocal(targetFrame, key, value);
-            }
-        });
-        LogSegmentUtils.copyScopedSegmentMarkers(state, threadId, targetFrame);
+        VMUtils.putLocals(targetFrame, locals);
 
         // run the new thread
         runtime.spawn(state, childThreadId);

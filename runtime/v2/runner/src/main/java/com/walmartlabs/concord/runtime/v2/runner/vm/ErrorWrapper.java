@@ -60,8 +60,6 @@ public class ErrorWrapper implements Command {
                 .commands(cmd)
                 .build();
 
-        LogSegmentUtils.copyScopedSegmentMarkers(state, threadId, inner);
-
         state.pushFrame(threadId, inner);
     }
 }

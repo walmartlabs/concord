@@ -789,11 +789,11 @@ public class LogSegmentsTest {
         List<Long> withItemsHandlers = segmentIds("withItems handler");
         assertEquals(2, withItemsHandlers.size());
         long withItemsFailureA = segmentId("withItems failure a");
-        assertAttributes(withItemsFailureA, null, null, null, false, false);
-        assertAttributes(withItemsHandlers.get(0), withItemsFailureA, null, null, true, false);
+        assertAttributes(withItemsFailureA, null, null, 0, false, false);
+        assertAttributes(withItemsHandlers.get(0), withItemsFailureA, null, 0, true, false);
         long withItemsFailureB = segmentId("withItems failure b");
-        assertAttributes(withItemsFailureB, null, null, null, false, false);
-        assertAttributes(withItemsHandlers.get(1), withItemsFailureB, null, null, true, false);
+        assertAttributes(withItemsFailureB, null, null, 1, false, false);
+        assertAttributes(withItemsHandlers.get(1), withItemsFailureB, null, 1, true, false);
 
         long failedBeforeRecovery = segmentId("failed before recovery");
         assertAttributes(segmentId("guarded recovery"), failedBeforeRecovery, null, null, true, false);
@@ -818,6 +818,29 @@ public class LogSegmentsTest {
 
         assertEquals(2, segmentIds("retried").size());
         assertEquals(false, Tasks.StateReferencesErrorTask.result(), "the state references the handled error");
+    }
+
+    @Test
+    public void withItemsIterationsHaveTheirOwnLoopIndex() throws Exception {
+        deploy("logSegments/withItemsInLoop");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        runWithSegments();
+
+        // not the index of the enclosing loop
+        List<String> names = List.of("item p", "item q");
+        for (int index = 0; index < names.size(); index++) {
+            List<Long> ids = segmentIds(names.get(index));
+            assertEquals(2, ids.size());
+            for (long id : ids) {
+                assertAttributes(id, null, null, index, false, false);
+            }
+        }
+
+        assertAttributes(segmentId("parallel x"), null, null, 0, false, true);
+        assertAttributes(segmentId("parallel y"), null, null, 1, false, true);
     }
 
     @Test

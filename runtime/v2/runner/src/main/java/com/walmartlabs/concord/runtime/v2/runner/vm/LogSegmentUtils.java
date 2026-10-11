@@ -23,9 +23,6 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogScope;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogSegmentAttributes;
-import com.walmartlabs.concord.runtime.v2.sdk.Constants;
-import com.walmartlabs.concord.svm.Frame;
-import com.walmartlabs.concord.svm.FrameType;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 import org.slf4j.Logger;
@@ -47,12 +44,6 @@ public final class LogSegmentUtils {
     private static final String KEY = "logContext";
 
     private static final long SYSTEM_SEGMENT_ID = 0;
-
-    /**
-     * Frame variable: index of the loop iteration the frame belongs to.
-     * Set by {@link LoopWrapper} on the frame of each iteration.
-     */
-    static final String LOOP_INDEX_KEY = "__logSegmentLoopIndex";
 
     public static LogContext popLogContext(ThreadId threadId, State state) {
         List<LogScope> items = state.getThreadLocal(threadId, KEY);
@@ -125,13 +116,17 @@ public final class LogSegmentUtils {
         }
 
         ArrayList<LogScope> items = state.getThreadLocal(threadId, KEY);
+        if (items == null) {
+            // no scopes: nothing was opened or the state doesn't support thread locals
+            return;
+        }
+
         int i = indexOf(items, scopeId);
-        if (i < 0) {
+        if (i < 0 || !(items.get(i) instanceof ErrorScope scope)) {
             log.warn("enterErrorHandler ['{}'] -> scope not found", scopeId);
             return;
         }
 
-        ErrorScope scope = (ErrorScope) items.get(i);
         items.set(i, new ErrorScope(scope.id(), true, scope.failedSegmentId()));
         state.setThreadLocal(threadId, KEY, items);
     }
@@ -157,11 +152,61 @@ public final class LogSegmentUtils {
     }
 
     /**
+     * Opens the scope of a loop iteration.
+     */
+    public static UUID openLoopScope(ThreadId threadId, State state, int index) {
+        UUID id = UUID.randomUUID();
+        pushScope(threadId, state, new LoopScope(id, index));
+        return id;
+    }
+
+    /**
+     * Opens the scope of a step with {@code retry}.
+     *
+     * @param attempt the number of the attempt, starting from 1
+     */
+    public static UUID openAttemptScope(ThreadId threadId, State state, int attempt) {
+        UUID id = UUID.randomUUID();
+        pushScope(threadId, state, new AttemptScope(id, attempt));
+        return id;
+    }
+
+    /**
+     * Updates the attempt number of the specified scope. A {@code null} ID
+     * (a retry started before the scopes were introduced) is ignored.
+     */
+    public static void setAttempt(ThreadId threadId, State state, UUID scopeId, int attempt) {
+        if (scopeId == null) {
+            return;
+        }
+
+        ArrayList<LogScope> items = state.getThreadLocal(threadId, KEY);
+        if (items == null) {
+            // no scopes: nothing was opened or the state doesn't support thread locals
+            return;
+        }
+
+        int i = indexOf(items, scopeId);
+        if (i < 0) {
+            log.warn("setAttempt ['{}'] -> scope not found", scopeId);
+            return;
+        }
+
+        items.set(i, new AttemptScope(scopeId, attempt));
+        state.setThreadLocal(threadId, KEY, items);
+    }
+
+    /**
      * Removes the specified scope. Doesn't throw: it runs in {@code finally} handlers,
      * possibly while the stack is unwinding.
      */
     public static void closeScope(ThreadId threadId, State state, UUID scopeId) {
         ArrayList<LogScope> items = state.getThreadLocal(threadId, KEY);
+        if (items == null) {
+            // no scopes: nothing was opened or the state doesn't support thread locals
+            return;
+        }
+
         int i = indexOf(items, scopeId);
         if (i < 0) {
             log.warn("closeScope ['{}'] -> scope not found", scopeId);
@@ -186,69 +231,20 @@ public final class LogSegmentUtils {
      */
     public static void inheritScope(ThreadId parentThreadId, ThreadId childThreadId, State state) {
         Placement placement = getPlacement(parentThreadId, state);
-        if (placement.parentId() == null && !placement.errorHandler()) {
+        if (placement.equals(Placement.NONE)) {
             return;
         }
 
         ArrayList<LogScope> items = new ArrayList<>();
-        items.add(new InheritedScope(placement.parentId(), placement.errorHandler()));
+        items.add(new InheritedScope(placement.parentId(), placement.errorHandler(), placement.loopIndex(), placement.attempt()));
         state.setThreadLocal(childThreadId, KEY, items);
-    }
-
-    /**
-     * Copies log segment markers from the current flow scope into a new frame.
-     * The nearest root is a scope boundary and is included in the search.
-     */
-    public static void copyScopedSegmentMarkers(State state, ThreadId threadId, Frame target) {
-        for (Frame source : state.getFrames(threadId)) {
-            if (source.hasLocal(LOOP_INDEX_KEY)) {
-                target.setLocal(LOOP_INDEX_KEY, source.getLocal(LOOP_INDEX_KEY));
-                return;
-            }
-            if (source.getType() == FrameType.ROOT) {
-                return;
-            }
-        }
-    }
-
-    static boolean isSegmentMarker(String key) {
-        return LOOP_INDEX_KEY.equals(key);
     }
 
     /**
      * Resolves where a new segment belongs: the enclosing segment, the retry attempt, the loop iteration,
      * the error handler and the thread.
-     * <p>
-     * The parent and the error handler role come from the log scope stack. The attempt and the loop index
-     * are read only from specific frames, so they don't leak into nested flow calls (those have frames
-     * of their own) or into commands that merely copied the variables:
-     * <ul>
-     *     <li>the top frame is a {@link RetryWrapper} frame: the attempt number, the retried
-     *     command belongs to the frame below it;</li>
-     *     <li>the frame of the command: the loop iteration.</li>
-     * </ul>
      */
     public static LogSegmentAttributes getSegmentAttributes(ThreadId threadId, State state) {
-        List<Frame> frames = state.getFrames(threadId);
-        if (frames.isEmpty()) {
-            return LogSegmentAttributes.NONE;
-        }
-
-        // frames.get(0) is the top of the stack
-        Frame frame = frames.get(0);
-
-        Integer attempt = null;
-        if (frame.getType() == FrameType.NON_ROOT && frame.hasLocal(RetryWrapper.RETRY_CFG)) {
-            if (frame.getLocal(Constants.Runtime.RETRY_ATTEMPT_NUMBER) instanceof Integer n) {
-                attempt = n + 1;
-            }
-            if (frames.size() > 1) {
-                frame = frames.get(1);
-            }
-        }
-
-        Integer loopIndex = frame.getLocal(LOOP_INDEX_KEY) instanceof Integer i ? i : null;
-
         Placement placement = getPlacement(threadId, state);
 
         Integer thread = null;
@@ -256,7 +252,7 @@ public final class LogSegmentUtils {
             thread = (int) threadId.id();
         }
 
-        return new LogSegmentAttributes(placement.parentId(), attempt, loopIndex, placement.errorHandler(), thread);
+        return new LogSegmentAttributes(placement.parentId(), placement.attempt(), placement.loopIndex(), placement.errorHandler(), thread);
     }
 
     /**
@@ -272,35 +268,48 @@ public final class LogSegmentUtils {
 
     /**
      * The parent is the innermost segment, unless an error handler runs directly in it:
-     * then it's the failed segment of the handler (if known).
+     * then it's the failed segment of the handler (if known). The innermost scopes
+     * opened directly in the segment provide the loop index and the attempt.
      */
     private static Placement getPlacement(ThreadId threadId, State state) {
         List<LogScope> items = getScopes(threadId, state);
 
         ErrorScope handler = null;
+        Integer loopIndex = null;
+        Integer attempt = null;
         for (int i = items.size() - 1; i >= 0; i--) {
             LogScope scope = items.get(i);
             if (scope instanceof ErrorScope s && s.handling()) {
                 if (handler == null) {
                     handler = s;
                 }
+            } else if (scope instanceof LoopScope s) {
+                if (loopIndex == null) {
+                    loopIndex = s.index();
+                }
+            } else if (scope instanceof AttemptScope s) {
+                if (attempt == null) {
+                    attempt = s.attempt();
+                }
             } else if (scope instanceof LogContext ctx && ctx.segmentId() != null) {
-                return toPlacement(handler, ctx.segmentId(), false);
+                return toPlacement(handler, ctx.segmentId(), false, loopIndex, attempt);
             } else if (scope instanceof InheritedScope s) {
-                return toPlacement(handler, s.parentId(), s.errorHandler());
+                return toPlacement(handler, s.parentId(), s.errorHandler(),
+                        loopIndex != null ? loopIndex : s.loopIndex(),
+                        attempt != null ? attempt : s.attempt());
             }
         }
 
-        return toPlacement(handler, null, false);
+        return toPlacement(handler, null, false, loopIndex, attempt);
     }
 
-    private static Placement toPlacement(ErrorScope handler, Long enclosingSegmentId, boolean errorHandler) {
+    private static Placement toPlacement(ErrorScope handler, Long enclosingSegmentId, boolean errorHandler, Integer loopIndex, Integer attempt) {
         if (handler == null) {
-            return new Placement(enclosingSegmentId, errorHandler);
+            return new Placement(enclosingSegmentId, errorHandler, loopIndex, attempt);
         }
 
         Long parentId = handler.failedSegmentId() != null ? handler.failedSegmentId() : enclosingSegmentId;
-        return new Placement(parentId, true);
+        return new Placement(parentId, true, loopIndex, attempt);
     }
 
     private static void pushScope(ThreadId threadId, State state, LogScope scope) {
@@ -313,12 +322,8 @@ public final class LogSegmentUtils {
     }
 
     private static int indexOf(List<LogScope> items, UUID scopeId) {
-        if (items == null) {
-            return -1;
-        }
-
         for (int i = items.size() - 1; i >= 0; i--) {
-            if (items.get(i) instanceof ErrorScope s && s.id().equals(scopeId)) {
+            if (items.get(i) instanceof IdentifiedScope s && s.id().equals(scopeId)) {
                 return i;
             }
         }
@@ -330,7 +335,17 @@ public final class LogSegmentUtils {
         return items != null ? items : List.of();
     }
 
-    private record Placement(Long parentId, boolean errorHandler) {
+    private record Placement(Long parentId, boolean errorHandler, Integer loopIndex, Integer attempt) {
+
+        static final Placement NONE = new Placement(null, false, null, null);
+    }
+
+    /**
+     * A scope closed by its ID, see {@link #closeScope(ThreadId, State, UUID)}.
+     */
+    private interface IdentifiedScope extends LogScope {
+
+        UUID id();
     }
 
     /**
@@ -340,7 +355,7 @@ public final class LogSegmentUtils {
      * @param failedSegmentId the segment that failed last in the scope, {@code null} if unknown
      *                        or the last closed segment didn't fail
      */
-    private record ErrorScope(UUID id, boolean handling, Long failedSegmentId) implements LogScope {
+    private record ErrorScope(UUID id, boolean handling, Long failedSegmentId) implements IdentifiedScope {
 
         @Serial
         private static final long serialVersionUID = 1L;
@@ -349,7 +364,25 @@ public final class LogSegmentUtils {
     /**
      * The bottom of the stack of a forked thread: where the segments of the thread belong.
      */
-    private record InheritedScope(Long parentId, boolean errorHandler) implements LogScope {
+    private record InheritedScope(Long parentId, boolean errorHandler, Integer loopIndex, Integer attempt) implements LogScope {
+
+        @Serial
+        private static final long serialVersionUID = 1L;
+    }
+
+    /**
+     * An iteration of {@code loop} or {@code withItems}.
+     */
+    private record LoopScope(UUID id, int index) implements IdentifiedScope {
+
+        @Serial
+        private static final long serialVersionUID = 1L;
+    }
+
+    /**
+     * An attempt (starting from 1) of a step with {@code retry}.
+     */
+    private record AttemptScope(UUID id, int attempt) implements IdentifiedScope {
 
         @Serial
         private static final long serialVersionUID = 1L;

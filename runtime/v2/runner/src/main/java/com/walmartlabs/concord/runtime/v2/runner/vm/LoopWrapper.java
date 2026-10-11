@@ -308,9 +308,7 @@ public abstract class LoopWrapper implements Command {
             cmdFrame.setLocal(CURRENT_ITEMS, items);
             cmdFrame.setLocal(CURRENT_INDEX, index);
             cmdFrame.setLocal(CURRENT_ITEM, items.get(index));
-            // copied into the root frame of the forked thread
-            cmdFrame.setLocal(LogSegmentUtils.LOOP_INDEX_KEY, index);
-            cmdFrame.push(new ForkCommand(childThreadId, new CollectVariablesCommand(outVariables, null, outVarsAccumulator), cmd));
+            cmdFrame.push(new ForkCommand(childThreadId, new CollectVariablesCommand(outVariables, null, outVarsAccumulator), new LoopIterationCommand(index, cmd)));
 
             active.add(childThreadId);
             state.pushFrame(threadId, cmdFrame);
@@ -371,11 +369,9 @@ public abstract class LoopWrapper implements Command {
             loop.push(new WithItemsNext(outVariables, variablesAccumulator, cmd)); // next iteration
 
             Frame cmdFrame = Frame.builder()
-                    .commands(cmd)
+                    .commands(new LoopIterationCommand(0, cmd))
                     .root()
                     .build();
-            LogSegmentUtils.copyScopedSegmentMarkers(state, threadId, cmdFrame);
-            cmdFrame.setLocal(LogSegmentUtils.LOOP_INDEX_KEY, 0);
 
             loop.push(new CollectVariablesCommand(outVariables, cmdFrame, variablesAccumulator));
 
@@ -419,11 +415,9 @@ public abstract class LoopWrapper implements Command {
 
             // frame wrapped command
             Frame cmdFrame = Frame.builder()
-                    .commands(cmd)
+                    .commands(new LoopIterationCommand(newIndex, cmd))
                     .root()
                     .build();
-            LogSegmentUtils.copyScopedSegmentMarkers(state, threadId, cmdFrame);
-            cmdFrame.setLocal(LogSegmentUtils.LOOP_INDEX_KEY, newIndex);
 
             loop.push(new CollectVariablesCommand(outVariables, cmdFrame, variablesAccumulator));
 
