@@ -69,6 +69,7 @@
                     EVENT_SEQ
                 )
                 WHERE EVENT_TYPE = 'ELEMENT'
+                  AND ((EVENT_DATA::jsonb ->> 'logSegmentId')::varchar) IS NOT NULL
         </sql>
     </changeSet>
 </databaseChangeLog>
