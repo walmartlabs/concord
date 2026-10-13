@@ -41,6 +41,27 @@ public interface LogSegmentRequest {
 
     String name();
 
+    /**
+     * The segment open in the runtime thread when the segment starts.
+     */
+    @Nullable
+    Long parentId();
+
+    @Nullable
+    LogSegment.Kind kind();
+
+    /**
+     * Number of the iteration or the attempt, starting from 0.
+     */
+    @Nullable
+    Integer index();
+
+    /**
+     * ID of the runtime thread, {@code null} for the main thread.
+     */
+    @Nullable
+    Integer threadId();
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     @Nullable
     OffsetDateTime createdAt();

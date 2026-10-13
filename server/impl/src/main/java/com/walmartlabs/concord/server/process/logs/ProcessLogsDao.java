@@ -26,6 +26,7 @@ import com.walmartlabs.concord.db.PgIntRange;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogDataRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogSegmentsRecord;
 import com.walmartlabs.concord.server.process.LogSegment;
+import com.walmartlabs.concord.server.process.LogSegmentRequest;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.Range;
 import org.jooq.*;
@@ -34,6 +35,7 @@ import javax.inject.Inject;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.db.PgUtils.upperRange;
@@ -77,19 +79,28 @@ public class ProcessLogsDao extends AbstractDao {
         return PgIntRange.parse(r.getLogRange().toString());
     }
 
-    public long createSegment(ProcessKey processKey, UUID correlationId, String name, OffsetDateTime createdAt, String status) {
+    public long createSegment(ProcessKey processKey, LogSegmentRequest request, String status) {
+        OffsetDateTime createdAt = request.createdAt();
         return txResult(tx -> tx.insertInto(PROCESS_LOG_SEGMENTS)
                 .columns(PROCESS_LOG_SEGMENTS.INSTANCE_ID,
                         PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT,
                         PROCESS_LOG_SEGMENTS.CORRELATION_ID,
                         PROCESS_LOG_SEGMENTS.SEGMENT_NAME,
                         PROCESS_LOG_SEGMENTS.SEGMENT_TS,
-                        PROCESS_LOG_SEGMENTS.SEGMENT_STATUS)
+                        PROCESS_LOG_SEGMENTS.SEGMENT_STATUS,
+                        PROCESS_LOG_SEGMENTS.PARENT_SEGMENT_ID,
+                        PROCESS_LOG_SEGMENTS.SEGMENT_KIND,
+                        PROCESS_LOG_SEGMENTS.SEGMENT_INDEX,
+                        PROCESS_LOG_SEGMENTS.SEGMENT_THREAD)
                 .values(value(processKey.getInstanceId()),
                         value(processKey.getCreatedAt()),
-                        value(correlationId), value(name),
+                        value(request.correlationId()), value(request.name()),
                         createdAt != null ? value(createdAt) : currentOffsetDateTime(),
-                        value(status))
+                        value(status),
+                        value(request.parentId()),
+                        value(toKindId(request.kind())),
+                        value(request.index()),
+                        value(request.threadId()))
                 .returning(PROCESS_LOG_SEGMENTS.SEGMENT_ID)
                 .fetchOne()
                 .getSegmentId());
@@ -133,15 +144,8 @@ public class ProcessLogsDao extends AbstractDao {
         UUID instanceId = processKey.getInstanceId();
         OffsetDateTime createdAt = processKey.getCreatedAt();
 
-        SelectSeekStep2<Record8<Long, UUID, String, OffsetDateTime, String, OffsetDateTime, Integer, Integer>, OffsetDateTime, Long> q = dsl()
-                .select(PROCESS_LOG_SEGMENTS.SEGMENT_ID,
-                        PROCESS_LOG_SEGMENTS.CORRELATION_ID,
-                        PROCESS_LOG_SEGMENTS.SEGMENT_NAME,
-                        PROCESS_LOG_SEGMENTS.SEGMENT_TS,
-                        PROCESS_LOG_SEGMENTS.SEGMENT_STATUS,
-                        PROCESS_LOG_SEGMENTS.STATUS_UPDATED_AT,
-                        PROCESS_LOG_SEGMENTS.SEGMENT_WARN,
-                        PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS)
+        SelectSeekStep2<org.jooq.Record, OffsetDateTime, Long> q = dsl()
+                .select(SEGMENT_FIELDS)
                 .from(PROCESS_LOG_SEGMENTS)
                 .where(PROCESS_LOG_SEGMENTS.INSTANCE_ID.eq(instanceId)
                         .and(PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT.eq(createdAt)))
@@ -281,7 +285,42 @@ public class ProcessLogsDao extends AbstractDao {
         return new ProcessLogChunk((Integer) r.value1(), r.value2());
     }
 
-    private static LogSegment toSegment(Record8<Long, UUID, String, OffsetDateTime, String, OffsetDateTime, Integer, Integer> r) {
+    private static final List<SelectField<?>> SEGMENT_FIELDS = List.of(
+            PROCESS_LOG_SEGMENTS.SEGMENT_ID,
+            PROCESS_LOG_SEGMENTS.CORRELATION_ID,
+            PROCESS_LOG_SEGMENTS.SEGMENT_NAME,
+            PROCESS_LOG_SEGMENTS.SEGMENT_TS,
+            PROCESS_LOG_SEGMENTS.SEGMENT_STATUS,
+            PROCESS_LOG_SEGMENTS.STATUS_UPDATED_AT,
+            PROCESS_LOG_SEGMENTS.SEGMENT_WARN,
+            PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS,
+            PROCESS_LOG_SEGMENTS.PARENT_SEGMENT_ID,
+            PROCESS_LOG_SEGMENTS.SEGMENT_KIND,
+            PROCESS_LOG_SEGMENTS.SEGMENT_INDEX,
+            PROCESS_LOG_SEGMENTS.SEGMENT_THREAD);
+
+    // stored IDs of the kinds, never reuse
+    private static final Map<LogSegment.Kind, Short> KIND_IDS = Map.of(
+            LogSegment.Kind.STEP, (short) 1,
+            LogSegment.Kind.ITERATION, (short) 2,
+            LogSegment.Kind.ATTEMPT, (short) 3,
+            LogSegment.Kind.ERROR, (short) 4,
+            LogSegment.Kind.PARALLEL, (short) 5);
+
+    private static Short toKindId(LogSegment.Kind kind) {
+        return kind != null ? KIND_IDS.get(kind) : null;
+    }
+
+    private static LogSegment.Kind toKind(Short id) {
+        // unknown kinds (e.g. written by a newer version) are ignored
+        return KIND_IDS.entrySet().stream()
+                .filter(e -> e.getValue().equals(id))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private static LogSegment toSegment(org.jooq.Record r) {
         String status = r.get(PROCESS_LOG_SEGMENTS.SEGMENT_STATUS);
         return LogSegment.builder()
                 .id(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_ID))
@@ -292,6 +331,10 @@ public class ProcessLogsDao extends AbstractDao {
                 .statusUpdatedAt(r.get(PROCESS_LOG_SEGMENTS.STATUS_UPDATED_AT))
                 .warnings(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_WARN))
                 .errors(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS))
+                .parentId(r.get(PROCESS_LOG_SEGMENTS.PARENT_SEGMENT_ID))
+                .kind(toKind(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_KIND)))
+                .index(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_INDEX))
+                .threadId(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_THREAD))
                 .build();
     }
 

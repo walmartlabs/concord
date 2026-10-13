@@ -43,6 +43,30 @@ public interface LogSegment {
 
     String name();
 
+    /**
+     * The segment open in the runtime thread when the segment started.
+     */
+    @Nullable
+    Long parentId();
+
+    /**
+     * {@code null} for segments created by older runners.
+     */
+    @Nullable
+    Kind kind();
+
+    /**
+     * Number of the iteration or the attempt, starting from 0.
+     */
+    @Nullable
+    Integer index();
+
+    /**
+     * ID of the runtime thread, {@code null} for the main thread.
+     */
+    @Nullable
+    Integer threadId();
+
     @Nullable
     Status status();
 
@@ -59,11 +83,44 @@ public interface LogSegment {
     @Nullable
     Integer errors();
 
+    enum Kind {
+
+        /**
+         * The whole execution of a step.
+         */
+        STEP,
+
+        /**
+         * One iteration of a loop.
+         */
+        ITERATION,
+
+        /**
+         * One attempt of a step with {@code retry}, including the first one.
+         */
+        ATTEMPT,
+
+        /**
+         * The {@code error} block of the parent step.
+         */
+        ERROR,
+
+        /**
+         * The whole execution of a {@code parallel} block.
+         */
+        PARALLEL
+    }
+
     enum Status {
         OK,
         FAILED,
         RUNNING,
-        SUSPENDED
+        SUSPENDED,
+
+        /**
+         * The segment's own execution failed, its {@code error} block completed.
+         */
+        RECOVERED
     }
 
     static ImmutableLogSegment.Builder builder() {
