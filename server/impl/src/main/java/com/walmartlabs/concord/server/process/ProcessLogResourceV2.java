@@ -124,7 +124,7 @@ public class ProcessLogResourceV2 implements Resource {
                                                      LogSegmentUpdateRequest request) {
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
-        logManager.updateSegment(processKey, segmentId, request.status(), request.warnings(), request.errors());
+        logManager.updateSegment(processKey, segmentId, request.status(), request.warnings(), request.errors(), request.statusUpdatedAt());
         return new LogSegmentOperationResponse(segmentId, OperationResult.UPDATED);
     }
 

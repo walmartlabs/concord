@@ -30,6 +30,8 @@ import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -144,6 +146,59 @@ public class SegmentedLogsConsumerTest {
         verify(logAppender, times(1)).appendLog(any(), eq(0L), eq("trash".getBytes()));
         verify(logAppender, times(1)).appendLog(any(), eq(2L), eq(msg2.getBytes()));
         verifyNoMoreInteractions(logAppender);
+    }
+
+    /**
+     * in: |5|1|0|0|0|hello|13|1|1|0|0|1767225600123
+     */
+    @Test
+    public void statusTime() {
+        byte[] ab = Bytes.concat(bb(1, "hello", 0, 0), status(1, LogSegmentStatus.OK, "1767225600123"));
+
+        consumer.accept(toChunk(ab));
+
+        verify(logAppender, times(1)).appendLog(any(), eq(1L), eq("hello".getBytes()));
+        verify(logAppender, times(1)).updateSegment(any(), eq(1L), eq(new LogSegmentStats(LogSegmentStatus.OK, 0, 0,
+                OffsetDateTime.of(2026, 1, 1, 0, 0, 0, 123_000_000, ZoneOffset.UTC))));
+        verifyNoMoreInteractions(logAppender);
+    }
+
+    /**
+     * The time of a status split between the chunks is processed with the next chunk.
+     */
+    @Test
+    public void splitStatusTime() {
+        byte[] ab = Bytes.concat(bb(1, "hello", 0, 0), status(1, LogSegmentStatus.ERROR, "1767225600123"));
+
+        consumer.accept(toChunk(Arrays.copyOfRange(ab, 0, ab.length - 5)));
+        verify(logAppender, times(1)).appendLog(any(), eq(1L), eq("hello".getBytes()));
+        verifyNoMoreInteractions(logAppender);
+
+        consumer.accept(toChunk(Arrays.copyOfRange(ab, ab.length - 5, ab.length)));
+        verify(logAppender, times(1)).updateSegment(any(), eq(1L), eq(new LogSegmentStats(LogSegmentStatus.ERROR, 0, 0,
+                OffsetDateTime.of(2026, 1, 1, 0, 0, 0, 123_000_000, ZoneOffset.UTC))));
+        verifyNoMoreInteractions(logAppender);
+    }
+
+    /**
+     * Older runners: a status without the time.
+     */
+    @Test
+    public void statusWithoutTime() {
+        consumer.accept(toChunk(status(1, LogSegmentStatus.OK, "")));
+
+        verify(logAppender, times(1)).updateSegment(any(), eq(1L), eq(new LogSegmentStats(LogSegmentStatus.OK, 0, 0)));
+        verifyNoMoreInteractions(logAppender);
+    }
+
+    private static byte[] status(int segmentId, LogSegmentStatus status, String time) {
+        return LogSegmentSerializer.serialize(LogSegmentHeader.builder()
+                .segmentId(segmentId)
+                .length(0)
+                .warnCount(0)
+                .errorCount(0)
+                .status(status)
+                .build(), time);
     }
 
     private static Chunk toChunk(byte[] ab) {
