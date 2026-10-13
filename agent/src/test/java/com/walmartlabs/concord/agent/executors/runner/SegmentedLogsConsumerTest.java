@@ -191,6 +191,28 @@ public class SegmentedLogsConsumerTest {
         verifyNoMoreInteractions(logAppender);
     }
 
+    /**
+     * in: |16777216|1|1|0|0|hello... (a corrupted header in the raw output)
+     */
+    @Test
+    public void oversizedStatus() {
+        byte[] header = LogSegmentSerializer.serializeHeader(LogSegmentHeader.builder()
+                .segmentId(1)
+                .length(16 * 1024 * 1024)
+                .warnCount(0)
+                .errorCount(0)
+                .status(LogSegmentStatus.OK)
+                .build());
+
+        consumer.accept(toChunk(Bytes.concat(header, "hello".getBytes())));
+        verify(logAppender, times(1)).appendLog(any(), eq(1L), eq("hello".getBytes()));
+        verify(logAppender, times(1)).updateSegment(any(), eq(1L), eq(new LogSegmentStats(LogSegmentStatus.OK, 0, 0)));
+
+        consumer.accept(toChunk("bye".getBytes()));
+        verify(logAppender, times(1)).appendLog(any(), eq(1L), eq("bye".getBytes()));
+        verifyNoMoreInteractions(logAppender);
+    }
+
     private static byte[] status(int segmentId, LogSegmentStatus status, String time) {
         return LogSegmentSerializer.serialize(LogSegmentHeader.builder()
                 .segmentId(segmentId)

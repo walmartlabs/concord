@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.common.logger.ImmutableLogSegmentHeader;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentHeader;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentSerializer;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
@@ -37,6 +38,12 @@ import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Segment;
 public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chunk> {
 
     private static final byte[] EMPTY = new byte[0];
+
+    /**
+     * Max length of a status time (epoch millis). A longer body is not a time
+     * (e.g. a corrupted header in the raw output) and is processed as a log.
+     */
+    private static final int MAX_STATUS_TIME_LENGTH = 20;
 
     private final UUID instanceId;
     private final LogAppender logAppender;
@@ -66,7 +73,7 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
         // the body of a status marker is the time of the status, it can't be processed in parts
         Segment partialSegment = findPartialSegment(segments, ab.length);
         byte[] partialStatus = null;
-        if (partialSegment != null && isStatus(partialSegment)) {
+        if (partialSegment != null && hasStatusTime(partialSegment)) {
             segments.remove(partialSegment);
             partialStatus = concat(LogSegmentSerializer.serializeHeader(partialSegment.header()),
                     Arrays.copyOfRange(ab, partialSegment.msgStart(), ab.length));
@@ -76,7 +83,7 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
         Map<Long, List<Segment>> segmentsById = byId(segments);
         for (Map.Entry<Long, List<Segment>> e : segmentsById.entrySet()) {
             List<Segment> logs = e.getValue().stream()
-                    .filter(s -> !isStatus(s))
+                    .filter(s -> !hasStatusTime(s))
                     .toList();
 
             int buffLength = logs.stream().mapToInt(h -> actualLength(h, ab.length)).sum();
@@ -95,8 +102,11 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
         }
 
         if (partialSegment != null) {
+            // the status is already reported, the rest is a log
+            LogSegmentHeader header = ImmutableLogSegmentHeader.copyOf(partialSegment.header())
+                    .withStatus(LogSegmentStatus.RUNNING);
             unparsed = LogSegmentSerializer.serializeHeader(
-                    partialSegment.header(), partialSegment.header().length() - actualLength(partialSegment, ab.length));
+                    header, header.length() - actualLength(partialSegment, ab.length));
         } else if (partialStatus != null) {
             unparsed = partialStatus;
         }
@@ -131,12 +141,19 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
     }
 
     /**
+     * A status marker with the time in its body.
+     */
+    private static boolean hasStatusTime(Segment segment) {
+        return isStatus(segment) && segment.header().length() <= MAX_STATUS_TIME_LENGTH;
+    }
+
+    /**
      * The time of the status from the marker's body (epoch millis), {@code null} for markers
      * without the time (older runners).
      */
     private static OffsetDateTime statusTime(Segment segment, byte[] ab) {
         int length = segment.header().length();
-        if (length == 0) {
+        if (length == 0 || !hasStatusTime(segment)) {
             return null;
         }
 
