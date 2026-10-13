@@ -95,23 +95,14 @@ public class LogSegmentsTest {
             // ignore
         }
 
-        assertSegmentMultilineLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
+        // the step, the parallel errors are logged into it
         assertSegmentStatusError(runtime.lastLog(), 1);
 
-        assertSegmentMultilineLog(runtime.lastLog(), 2, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
-        assertSegmentStatusError(runtime.lastLog(), 2);
-
-        assertSegmentMultilineLog(runtime.lastLog(), 3, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
-        assertSegmentStatusError(runtime.lastLog(), 3);
-
-        assertSegmentMultilineLog(runtime.lastLog(), 4, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
-        assertSegmentStatusError(runtime.lastLog(), 4);
-
-        assertSegmentMultilineLog(runtime.lastLog(), 5, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
-        assertSegmentStatusError(runtime.lastLog(), 5);
-
-        assertSegmentMultilineLog(runtime.lastLog(), 6, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
-        assertSegmentStatusError(runtime.lastLog(), 6);
+        // the iterations
+        for (int segmentId = 2; segmentId <= 7; segmentId++) {
+            assertSegmentMultilineLog(runtime.lastLog(), segmentId, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
+            assertSegmentStatusError(runtime.lastLog(), segmentId);
+        }
     }
 
     @Test
@@ -137,17 +128,18 @@ public class LogSegmentsTest {
 
         byte[] log = runWithSegments();
 
-        // first try
-        assertSegmentLog(log, 1, "[INFO ] ConditionallyFailTask: fail");
-        assertSegmentLog(log, 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
-        assertSegmentStatusError(log, 1);
+        // the step
+        assertSegmentLog(log, 1, "[WARN ] Last error: boom!. Waiting for 1000ms before retry (attempt #0)");
+        assertSegmentStatusOk(log, 1);
+
+        // first attempt
+        assertSegmentLog(log, 2, "[INFO ] ConditionallyFailTask: fail");
+        assertSegmentLog(log, 2, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
+        assertSegmentStatusError(log, 2);
 
         // second
-        assertSegmentLog(log, 2, "[INFO ] ConditionallyFailTask: ok");
-        assertSegmentStatusOk(log, 2);
-
-        // TODO: maybe into task segment?
-        assertSystemSegment(log, "[WARN ] Last error: boom!. Waiting for 1000ms before retry (attempt #0)");
+        assertSegmentLog(log, 3, "[INFO ] ConditionallyFailTask: ok");
+        assertSegmentStatusOk(log, 3);
 
         assertNoMoreSegments();
     }
@@ -161,14 +153,15 @@ public class LogSegmentsTest {
 
         byte[] log = runWithSegments();
 
-        // first try
+        // the step, "return" exits the error block
         assertSegmentLog(log, 1, "[INFO ] will fail with error");
         assertSegmentLog(log, 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
-        assertSegmentStatusError(log, 1);
+        assertSegmentStatusRecovered(log, 1);
 
         // error block
-        assertSegmentLog(log, 2, "[INFO ] in error block");
         assertSegmentStatusOk(log, 2);
+        assertSegmentLog(log, 3, "[INFO ] in error block");
+        assertSegmentStatusOk(log, 3);
 
         assertNoMoreSegments();
     }
@@ -182,14 +175,18 @@ public class LogSegmentsTest {
 
         byte[] log = runWithSegments();
 
-        assertSegmentLog(log, 1, "[INFO ] test 1");
+        // the step
         assertSegmentStatusOk(log, 1);
 
-        assertSegmentLog(log, 2, "[INFO ] test 2");
+        // the iterations
+        assertSegmentLog(log, 2, "[INFO ] test 1");
         assertSegmentStatusOk(log, 2);
 
-        assertSegmentLog(log, 3, "[INFO ] test 3");
+        assertSegmentLog(log, 3, "[INFO ] test 2");
         assertSegmentStatusOk(log, 3);
+
+        assertSegmentLog(log, 4, "[INFO ] test 3");
+        assertSegmentStatusOk(log, 4);
 
         assertNoMoreSegments();
     }
@@ -203,14 +200,14 @@ public class LogSegmentsTest {
 
         byte[] log = runWithSegments();
 
-        assertSegmentLog(log, 1, "[INFO ] test");
+        // the step
         assertSegmentStatusOk(log, 1);
 
-        assertSegmentLog(log, 2, "[INFO ] test");
-        assertSegmentStatusOk(log, 2);
-
-        assertSegmentLog(log, 3, "[INFO ] test");
-        assertSegmentStatusOk(log, 3);
+        // the iterations
+        for (int segmentId = 2; segmentId <= 4; segmentId++) {
+            assertSegmentLog(log, segmentId, "[INFO ] test");
+            assertSegmentStatusOk(log, segmentId);
+        }
 
         assertNoMoreSegments();
     }
@@ -229,12 +226,16 @@ public class LogSegmentsTest {
             // ignore
         }
 
-        assertSegmentLog(runtime.lastLog(), 1, "[INFO ] ConditionallyFailTask: ok");
-        assertSegmentStatusOk(runtime.lastLog(), 1);
+        // the step
+        assertSegmentStatusError(runtime.lastLog(), 1);
 
-        assertSegmentLog(runtime.lastLog(), 2, "[INFO ] ConditionallyFailTask: fail");
-        assertSegmentLog(runtime.lastLog(), 2, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
-        assertSegmentStatusError(runtime.lastLog(), 2);
+        // the iterations
+        assertSegmentLog(runtime.lastLog(), 2, "[INFO ] ConditionallyFailTask: ok");
+        assertSegmentStatusOk(runtime.lastLog(), 2);
+
+        assertSegmentLog(runtime.lastLog(), 3, "[INFO ] ConditionallyFailTask: fail");
+        assertSegmentLog(runtime.lastLog(), 3, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
+        assertSegmentStatusError(runtime.lastLog(), 3);
 
         assertNoMoreSegments();
     }
@@ -275,7 +276,9 @@ public class LogSegmentsTest {
             // ignore
         }
 
-        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        // the step's segment is opened before the loop
+        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSegmentStatusError(runtime.lastLog(), 1);
 
         assertNoMoreSegments();
     }
@@ -362,14 +365,17 @@ public class LogSegmentsTest {
 
         byte[] log = runWithSegments();
 
-        // task error into task segment
+        // task error into task segment, the error block recovers the task
         assertSegmentLog(log, 1, "[INFO ] will fail with error");
         assertSegmentLog(log, 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. boom!");
-        assertSegmentStatusError(log, 1);
+        assertSegmentStatusRecovered(log, 1);
+
+        // error block
+        assertSegmentStatusOk(log, 2);
 
         // error handler logs
-        assertSegmentLog(log, 2, "[INFO ] in error block");
-        assertSegmentStatusOk(log, 2);
+        assertSegmentLog(log, 3, "[INFO ] in error block");
+        assertSegmentStatusOk(log, 3);
 
         assertNoMoreSegments();
     }
@@ -429,8 +435,9 @@ public class LogSegmentsTest {
             // ignore
         }
 
-        // logs to the system segment
-        assertSystemSegment(runtime.lastLog(), "[ERROR] (concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        // the step's segment is opened before the retry
+        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 3, col: 7. while evaluating expression '${undefined}': Can't find a variable 'undefined'. Check if it is defined in the current scope. Details: ELResolver cannot handle a null base Object with identifier 'undefined'");
+        assertSegmentStatusError(runtime.lastLog(), 1);
         assertNoMoreSegments();
     }
 
@@ -592,20 +599,16 @@ public class LogSegmentsTest {
 
         byte[] log = runWithSegments();
 
-        assertSegmentLog(log, 2, "[INFO ] in inner flow, item: 1");
-        assertSegmentStatusOk(log, 2);
         // (named call step)
         assertSegmentStatusOk(log, 1);
 
-        assertSegmentLog(log, 4, "[INFO ] in inner flow, item: 2");
-        assertSegmentStatusOk(log, 4);
-        // (named call step)
-        assertSegmentStatusOk(log, 3);
-
-        assertSegmentLog(log, 6, "[INFO ] in inner flow, item: 3");
-        assertSegmentStatusOk(log, 6);
-        // (named call step)
-        assertSegmentStatusOk(log, 5);
+        // an iteration and the task in it
+        for (int item = 1; item <= 3; item++) {
+            int iteration = item * 2;
+            assertSegmentStatusOk(log, iteration);
+            assertSegmentLog(log, iteration + 1, "[INFO ] in inner flow, item: " + item);
+            assertSegmentStatusOk(log, iteration + 1);
+        }
 
         assertNoMoreSegments();
     }
@@ -619,15 +622,21 @@ public class LogSegmentsTest {
 
         byte[] log = runWithSegments();
 
-        assertSegmentLog(log, 1, "[ERROR] (concord.yaml): Error @ line: 15, col: 11. FAIL");
-        assertSegmentMultilineLog(log, 1, "[ERROR] Call stack:\n" +
+        // the call step
+        assertSegmentLog(log, 1, "[WARN ] Last error: FAIL. Waiting for 1000ms before retry (attempt #0)");
+        assertSegmentStatusOk(log, 1);
+
+        // first attempt and the step that failed in it
+        assertSegmentStatusError(log, 2);
+        assertSegmentLog(log, 3, "[ERROR] (concord.yaml): Error @ line: 15, col: 11. FAIL");
+        assertSegmentMultilineLog(log, 3, "[ERROR] Call stack:\n" +
                 "(concord.yaml) @ line: 3, col: 7, thread: 0, flow: inner");
-        assertSegmentStatusError(log, 1);
+        assertSegmentStatusError(log, 3);
 
-        assertSystemSegment(log, "[WARN ] Last error: FAIL. Waiting for 1000ms before retry (attempt #0)");
-
-        assertSegmentLog(log, 2, "[INFO ] in inner flow");
-        assertSegmentStatusOk(log, 2);
+        // second attempt
+        assertSegmentStatusOk(log, 4);
+        assertSegmentLog(log, 5, "[INFO ] in inner flow");
+        assertSegmentStatusOk(log, 5);
 
         assertNoMoreSegments();
     }
@@ -641,13 +650,19 @@ public class LogSegmentsTest {
 
         byte[] log = runWithSegments();
 
-        assertSegmentLog(log, 1, "[ERROR] (concord.yaml): Error @ line: 13, col: 11. FAIL");
-        assertSegmentMultilineLog(log, 1, "[ERROR] Call stack:\n" +
-                "(concord.yaml) @ line: 3, col: 7, thread: 0, flow: inner");
-        assertSegmentStatusError(log, 1);
+        // a call with an error block has a segment, recovered by the block
+        assertSegmentStatusRecovered(log, 1);
 
-        assertSegmentLog(log, 2, "[INFO ] in error block");
-        assertSegmentStatusOk(log, 2);
+        // the failed step of the called flow
+        assertSegmentLog(log, 2, "[ERROR] (concord.yaml): Error @ line: 13, col: 11. FAIL");
+        assertSegmentMultilineLog(log, 2, "[ERROR] Call stack:\n" +
+                "(concord.yaml) @ line: 3, col: 7, thread: 0, flow: inner");
+        assertSegmentStatusError(log, 2);
+
+        // error block
+        assertSegmentStatusOk(log, 3);
+        assertSegmentLog(log, 4, "[INFO ] in error block");
+        assertSegmentStatusOk(log, 4);
 
         assertNoMoreSegments();
     }
@@ -666,16 +681,23 @@ public class LogSegmentsTest {
             // ignore
         }
 
-        assertSegmentLog(runtime.lastLog(), 1, "[ERROR] (concord.yaml): Error @ line: 13, col: 11. FAIL");
-        assertSegmentMultilineLog(runtime.lastLog(), 1, "[ERROR] Call stack:\n" +
-                "(concord.yaml) @ line: 3, col: 7, thread: 0, flow: inner");
+        // the call fails: its error block fails
         assertSegmentStatusError(runtime.lastLog(), 1);
 
-        assertSegmentLog(runtime.lastLog(), 2, "[INFO ] in error block");
-        assertSegmentStatusOk(runtime.lastLog(), 2);
+        // the failed step of the called flow
+        assertSegmentLog(runtime.lastLog(), 2, "[ERROR] (concord.yaml): Error @ line: 13, col: 11. FAIL");
+        assertSegmentMultilineLog(runtime.lastLog(), 2, "[ERROR] Call stack:\n" +
+                "(concord.yaml) @ line: 3, col: 7, thread: 0, flow: inner");
+        assertSegmentStatusError(runtime.lastLog(), 2);
 
-        assertSegmentLog(runtime.lastLog(), 3, "[ERROR] (concord.yaml): Error @ line: 8, col: 11. FAIL");
+        // error block
         assertSegmentStatusError(runtime.lastLog(), 3);
+
+        assertSegmentLog(runtime.lastLog(), 4, "[INFO ] in error block");
+        assertSegmentStatusOk(runtime.lastLog(), 4);
+
+        assertSegmentLog(runtime.lastLog(), 5, "[ERROR] (concord.yaml): Error @ line: 8, col: 11. FAIL");
+        assertSegmentStatusError(runtime.lastLog(), 5);
 
         assertNoMoreSegments();
     }
@@ -747,6 +769,10 @@ public class LogSegmentsTest {
 
     private static void assertSegmentStatusError(byte[] log, int segmentId) throws IOException {
         assertSegmentStatus(log, segmentId, LogSegmentStatus.ERROR);
+    }
+
+    private static void assertSegmentStatusRecovered(byte[] log, int segmentId) throws IOException {
+        assertSegmentStatus(log, segmentId, LogSegmentStatus.RECOVERED);
     }
 
     private static void assertSegmentStatusSuspended(byte[] log, int segmentId) throws IOException {

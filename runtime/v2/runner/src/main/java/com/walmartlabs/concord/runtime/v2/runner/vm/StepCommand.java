@@ -77,6 +77,9 @@ public abstract class StepCommand<T extends Step> implements Command {
 
         LogContext logContext = LogSegmentUtils.getLogContext(threadId, state);
         if (logContext == null) {
+            logContext = getDefaultLogContext(runtime, correlationId);
+        }
+        if (logContext == null) {
             executeWithContext(ctx, runtime, state, threadId);
         } else {
             runtime.getService(RunnerLogger.class).withContext(logContext,
@@ -137,6 +140,13 @@ public abstract class StepCommand<T extends Step> implements Command {
     private static boolean hasExceptionHandler(State state, ThreadId threadId) {
         return state.getFrames(threadId).stream()
                 .anyMatch(f -> f.getExceptionHandler() != null);
+    }
+
+    /**
+     * The log segment of the step if there's no open segment, {@code null} if none.
+     */
+    protected LogContext getDefaultLogContext(Runtime runtime, UUID correlationId) {
+        return null;
     }
 
     protected abstract void execute(Runtime runtime, State state, ThreadId threadId);

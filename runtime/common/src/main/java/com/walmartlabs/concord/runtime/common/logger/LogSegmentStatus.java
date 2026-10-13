@@ -25,7 +25,11 @@ public enum LogSegmentStatus {
     RUNNING (0),
     OK (1),
     SUSPENDED (2), // unused now...
-    ERROR (3);
+    ERROR (3),
+    /**
+     * The segment's own execution failed, its {@code error} block completed.
+     */
+    RECOVERED (4);
 
     private final int id;
 

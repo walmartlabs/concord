@@ -125,4 +125,16 @@ public class ExecutionListenerHolder {
             l.onProcessError(runtime, state, e);
         }
     }
+
+    public void fireBeforeFramePop(Runtime runtime, State state, ThreadId threadId, Frame frame) {
+        for (ExecutionListener l : listeners) {
+            l.beforeFramePop(runtime, vm, state, threadId, frame);
+        }
+    }
+
+    public void fireBeforeExceptionHandler(Runtime runtime, State state, ThreadId threadId, Frame frame) {
+        for (ExecutionListener l : listeners) {
+            l.beforeExceptionHandler(runtime, vm, state, threadId, frame);
+        }
+    }
 }

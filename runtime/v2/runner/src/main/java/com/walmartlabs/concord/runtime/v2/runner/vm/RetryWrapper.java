@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.Retry;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogSegmentKind;
 import com.walmartlabs.concord.runtime.v2.sdk.Constants;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
@@ -36,6 +37,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Wraps a command into a "retry" loop specified by {@code retry} option.
@@ -54,10 +56,23 @@ public class RetryWrapper implements Command {
     private final Retry retry;
     private final Step step;
 
+    /**
+     * {@code null} if the attempts have no log segments or in processes started by older runners.
+     */
+    private final UUID correlationId;
+
     public RetryWrapper(Command cmd, Retry retry, Step step) {
+        this(cmd, retry, step, null);
+    }
+
+    /**
+     * @param correlationId the step's correlation ID, each attempt gets a log segment with it
+     */
+    public RetryWrapper(Command cmd, Retry retry, Step step, UUID correlationId) {
         this.cmd = cmd;
         this.retry = retry;
         this.step = step;
+        this.correlationId = correlationId;
     }
 
     @Override
@@ -65,7 +80,7 @@ public class RetryWrapper implements Command {
         try {
             execute(runtime, state, threadId);
         } catch (Exception e) {
-            StepCommand.logException(step, state, threadId, e);
+            LogSegmentUtils.withLogContext(runtime, state, threadId, () -> StepCommand.logException(step, state, threadId, e));
             throw e;
         }
     }
@@ -77,9 +92,14 @@ public class RetryWrapper implements Command {
         // wrap the command into a frame with an exception handler
         Frame inner = Frame.builder()
                 .nonRoot()
-                .exceptionHandler(new NextRetry(cmd))
+                .exceptionHandler(new NextRetry(cmd, step, correlationId))
                 .commands(cmd)
                 .build();
+
+        if (correlationId != null) {
+            // closed when the frame is removed or the exception handler starts
+            inner.push(new OpenSegmentCommand(LogSegmentKind.ATTEMPT, step, correlationId, 0, true, false));
+        }
 
         // create the context explicitly
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
@@ -125,9 +145,17 @@ public class RetryWrapper implements Command {
         private static final long serialVersionUID = 1L;
 
         private final Command cmd;
+        private final Step step;
+        private final UUID correlationId;
 
         public NextRetry(Command cmd) {
+            this(cmd, null, null);
+        }
+
+        public NextRetry(Command cmd, Step step, UUID correlationId) {
             this.cmd = cmd;
+            this.step = step;
+            this.correlationId = correlationId;
         }
 
         @Override
@@ -149,7 +177,8 @@ public class RetryWrapper implements Command {
             }
 
             Duration delay = retry.delay();
-            log.warn("Last error: {}. Waiting for {}ms before retry (attempt #{})", lastError, delay.toMillis(), attemptNo);
+            LogSegmentUtils.withLogContext(runtime, state, threadId,
+                    () -> log.warn("Last error: {}. Waiting for {}ms before retry (attempt #{})", lastError, delay.toMillis(), attemptNo));
 
             try {
                 Thread.sleep(delay.toMillis());
@@ -169,6 +198,10 @@ public class RetryWrapper implements Command {
             }
 
             frame.push(cmd);
+
+            if (correlationId != null) {
+                frame.push(new OpenSegmentCommand(LogSegmentKind.ATTEMPT, step, correlationId, attemptNo + 1, true, false));
+            }
         }
     }
 }

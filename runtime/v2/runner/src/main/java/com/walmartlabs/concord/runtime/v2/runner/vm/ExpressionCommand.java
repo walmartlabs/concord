@@ -20,8 +20,12 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Expression;
 import com.walmartlabs.concord.runtime.v2.model.ExpressionOptions;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
+import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
+import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.script.VariablesSanitizer;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
@@ -46,6 +50,19 @@ public class ExpressionCommand extends StepCommand<Expression> {
 
     public ExpressionCommand(UUID correlationId, Expression step) {
         super(correlationId, step);
+    }
+
+    /**
+     * An expression outside of any segment logs into the system segment.
+     */
+    @Override
+    protected LogContext getDefaultLogContext(Runtime runtime, UUID correlationId) {
+        return LogContext.builder()
+                .segmentId(runtime.getService(RunnerLogger.class).createSegment(SegmentedLogger.SYSTEM_SEGMENT_NAME, correlationId, null))
+                .segmentName(SegmentedLogger.SYSTEM_SEGMENT_NAME)
+                .correlationId(correlationId)
+                .redirectSystemOutAndErr(runtime.getService(RunnerConfiguration.class).logging().sendSystemOutAndErrToSLF4J())
+                .build();
     }
 
     @Override

@@ -38,32 +38,50 @@ public final class TaskCallCompiler implements StepCompiler<TaskCall> {
     @Override
     public Command compile(CompilerContext context, TaskCall step) {
         UUID correlationId = UUID.randomUUID();
-        Command cmd = new LogSegmentScopeCommand<>(correlationId, new TaskCallCommand(correlationId, step), step);
-
         TaskCallOptions options = Objects.requireNonNull(step.getOptions());
+
+        Collection<String> out = Collections.emptyList();
+        if (options.out() != null) {
+            out = Collections.singletonList(options.out());
+        }
+
+        WithItems withItems = options.withItems();
+        if (withItems != null) {
+            return compileWithItems(context, step, correlationId, options, withItems, out);
+        }
+
+        Command cmd = new TaskCallCommand(correlationId, step);
+
+        Retry retry = options.retry();
+        if (retry != null) {
+            cmd = new RetryWrapper(cmd, retry, step, correlationId);
+        }
+
+        Loop loop = options.loop();
+        if (loop != null) {
+            cmd = LoopWrapper.of(context, cmd, loop, out, options.outExpr(), null, step,
+                    StepSegments.iteration(step, correlationId, retry != null));
+        }
+
+        List<Step> errorSteps = options.errorSteps();
+        return StepSegments.step(cmd, step, correlationId, loop != null || retry != null,
+                errorSteps.isEmpty() ? null : CompilerUtils.compile(context, errorSteps));
+    }
+
+    /**
+     * The deprecated {@code withItems}: a segment for each item, no iteration segments.
+     */
+    private static Command compileWithItems(CompilerContext context, TaskCall step, UUID correlationId,
+                                            TaskCallOptions options, WithItems withItems, Collection<String> out) {
+
+        Command cmd = new LogSegmentScopeCommand<>(correlationId, new TaskCallCommand(correlationId, step), step);
 
         Retry retry = options.retry();
         if (retry != null) {
             cmd = new RetryWrapper(cmd, retry, step);
         }
 
-        WithItems withItems = options.withItems();
-        if (withItems != null) {
-            Collection<String> out = Collections.emptyList();
-            if (options.out() != null) {
-                out = Collections.singletonList(options.out());
-            }
-            cmd = WithItemsWrapper.of(cmd, withItems, out, options.outExpr(), step);
-        }
-
-        Loop loop = options.loop();
-        if (loop != null) {
-            Collection<String> out = Collections.emptyList();
-            if (options.out() != null) {
-                out = Collections.singletonList(options.out());
-            }
-            cmd = LoopWrapper.of(context, cmd, loop, out, options.outExpr(), null, step);
-        }
+        cmd = WithItemsWrapper.of(cmd, withItems, out, options.outExpr(), step);
 
         List<Step> errorSteps = options.errorSteps();
         if (!errorSteps.isEmpty()) {

@@ -95,6 +95,7 @@ public class RemoteLogAppender implements LogAppender {
         return switch (status) {
             case ERROR -> LogSegmentUpdateRequest.StatusEnum.FAILED;
             case OK -> LogSegmentUpdateRequest.StatusEnum.OK;
+            case RECOVERED -> LogSegmentUpdateRequest.StatusEnum.RECOVERED;
             case RUNNING -> LogSegmentUpdateRequest.StatusEnum.RUNNING;
             case SUSPENDED -> LogSegmentUpdateRequest.StatusEnum.SUSPENDED;
         };
