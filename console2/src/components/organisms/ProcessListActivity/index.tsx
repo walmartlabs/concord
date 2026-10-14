@@ -18,7 +18,7 @@
  * =====
  */
 
-import { parse as parseQueryString } from 'query-string';
+import queryString from 'query-string';
 import * as React from 'react';
 import { useLocation } from 'react-router';
 import { useHistory } from '@/router';
@@ -98,15 +98,18 @@ interface ExternalProps {
 }
 
 export const parseSearchFilter = (s: string): ProcessSearchFilter => {
-    const v: any = parseQueryString(s);
+    const v = queryString.parse(s);
 
     const filters: ProcessFilters = {};
     Object.keys(v)
         .filter((k) => k !== 'limit')
         .filter((k) => k !== 'offset')
-        .filter((k) => v[k] !== undefined)
-        .filter((k) => typeof v[k] === 'string')
-        .forEach((key) => (filters[key] = v[key]));
+        .forEach((key) => {
+            const value = v[key];
+            if (typeof value === 'string') {
+                filters[key] = value;
+            }
+        });
 
     return {
         pagination: { limit: Number(v.limit) || undefined, offset: Number(v.offset) || undefined },
