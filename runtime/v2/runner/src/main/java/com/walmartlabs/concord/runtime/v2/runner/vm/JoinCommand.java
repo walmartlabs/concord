@@ -59,7 +59,6 @@ public class JoinCommand<T extends Step> extends StepCommand<T> {
         var failed = finalStatuses.entrySet().stream()
                 .filter(e -> e.getValue() == ThreadStatus.FAILED)
                 .map(Map.Entry::getKey)
-                // in the order of the branches: threads are forked in that order
                 .sorted()
                 .toList();
         if (!failed.isEmpty()) {

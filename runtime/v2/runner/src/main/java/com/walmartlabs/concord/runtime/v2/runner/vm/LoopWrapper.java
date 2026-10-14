@@ -245,7 +245,6 @@ public abstract class LoopWrapper implements Command {
                         continue;
                     }
 
-                    // in the order of the items: threads are forked in that order
                     throw new ParallelExecutionException(failed.stream()
                             .sorted()
                             .map(state::clearThreadError)
