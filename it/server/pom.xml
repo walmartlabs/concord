@@ -21,12 +21,12 @@
         <base.dir>${basedir}</base.dir>
         <deps.dir.src.mount>${project.basedir}/target/deps</deps.dir.src.mount>
         <deps.dir>${project.basedir}/target/deps</deps.dir>
-        <dind.image>docker:dind</dind.image>
-        <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
+        <dind.image>docker:29.9.0-dind</dind.image>
+        <docker.socket.dir>${tmp.dir}/concord-dind-${maven.build.timestamp}</docker.socket.dir>
+        <docker.daemon.addr>unix://${docker.socket.dir}/docker.sock</docker.daemon.addr>
         <docker.host.addr>localhost</docker.host.addr>
         <is.docker.profile>false</is.docker.profile>
         <it.db.addr>db-node:5432</it.db.addr>
-        <it.docker.port>2375</it.docker.port>
         <it.ldap.addr>ldap-node:389</it.ldap.addr>
         <it.server.network.mode>custom</it.server.network.mode>
         <it.server.port>8001</it.server.port>
@@ -34,8 +34,6 @@
         <network>net-server-it</network>
         <oldap.image>osixia/openldap</oldap.image>
         <server.image>walmartlabs/concord-server</server.image>
-        <skip.socat>true</skip.socat>
-        <socat.image>alpine/socat</socat.image>
         <tmp.dir.src.mount>${java.io.tmpdir}</tmp.dir.src.mount>
         <tmp.dir>${java.io.tmpdir}</tmp.dir>
         <agent.work.dir.base>${tmp.dir}/concord-agent/workDirs</agent.work.dir.base>
@@ -352,7 +350,6 @@
                 <tmp.dir>/tmp</tmp.dir>
                 <tmp.dir.src.mount>/tmp</tmp.dir.src.mount>
                 <docker.host.addr>host.docker.internal</docker.host.addr>
-                <skip.socat>false</skip.socat>
             </properties>
         </profile>
         <profile>
@@ -382,6 +379,30 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>export-workflow-image</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <skip>${skip.it.tests}</skip>
+                                    <executable>docker</executable>
+                                    <arguments>
+                                        <argument>image</argument>
+                                        <argument>save</argument>
+                                        <argument>--output</argument>
+                                        <argument>${project.build.directory}/workflow-image.tar</argument>
+                                        <argument>${ansible.image}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <groupId>io.fabric8</groupId>
                         <artifactId>docker-maven-plugin</artifactId>
                         <extensions>true</extensions>
@@ -406,23 +427,34 @@
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
-                                    <name>${socat.image}</name>
-                                    <alias>socat</alias>
+                                    <name>${dind.image}</name>
+                                    <alias>dind</alias>
                                     <run>
-                                        <skip>${skip.socat}</skip>
-                                        <network>
-                                            <mode>host</mode>
-                                        </network>
+                                        <privileged>true</privileged>
                                         <volumes>
                                             <bind>
-                                                <volume>/var/run/docker.sock:/var/run/docker.sock</volume>
+                                                <!-- Docker bind sources must match the agent's paths. -->
+                                                <volume>${tmp.dir.src.mount}:${tmp.dir}</volume>
+                                                <volume>${project.build.directory}/workflow-image.tar:/workflow-image.tar:ro</volume>
+                                                <volume>${base.dir}/src/test/resources/dind.sh:/dind.sh:ro</volume>
                                             </bind>
                                         </volumes>
+                                        <entrypoint>
+                                            <exec>
+                                                <arg>sh</arg>
+                                                <arg>/dind.sh</arg>
+                                                <arg>${docker.socket.dir}</arg>
+                                                <arg>/workflow-image.tar</arg>
+                                            </exec>
+                                        </entrypoint>
+                                        <wait>
+                                            <log>CONCORD_IT_DIND_READY</log>
+                                            <time>120000</time>
+                                            <shutdown>10000</shutdown>
+                                        </wait>
                                         <labels>
-                                            <concordTxId>${txId}</concordTxId>
-                                            <com.walmartlabs.concord.it.name>socat</com.walmartlabs.concord.it.name>
+                                            <com.walmartlabs.concord.it.name>dind</com.walmartlabs.concord.it.name>
                                         </labels>
-                                        <cmd> TCP-LISTEN:${it.docker.port},fork UNIX-CONNECT:/var/run/docker.sock</cmd>
                                     </run>
                                 </image>
                                 <image>
@@ -530,11 +562,13 @@
                                         </log>
                                     </run>
                                 </image>
-                                <!-- TODO start DIND? -->
                                 <image>
                                     <name>${agent.image}</name>
                                     <alias>agent</alias>
                                     <run>
+                                        <dependsOn>
+                                            <container>dind</container>
+                                        </dependsOn>
                                         <network>
                                             <mode>host</mode>
                                         </network>
