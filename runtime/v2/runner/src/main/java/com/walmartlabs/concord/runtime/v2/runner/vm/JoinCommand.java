@@ -59,6 +59,7 @@ public class JoinCommand<T extends Step> extends StepCommand<T> {
         var failed = finalStatuses.entrySet().stream()
                 .filter(e -> e.getValue() == ThreadStatus.FAILED)
                 .map(Map.Entry::getKey)
+                .sorted()
                 .toList();
         if (!failed.isEmpty()) {
             throw new ParallelExecutionException(failed.stream()

@@ -702,6 +702,20 @@ public class MainTest  {
         assertTrue(exception.getMessage().matches("(?s)Parallel execution errors:.*boom.*\n.*boom.*"));
     }
 
+    /**
+     * The errors of a parallel loop are in the order of the items, not in the order of the failures.
+     */
+    @Test
+    public void testParallelLoopErrorsOrder() throws Exception {
+        deploy("parallelLoopErrorsOrder");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*errors: \\[BOOM1, BOOM2\\].*");
+    }
+
     @Test
     public void testWithItemsBlock() throws Exception {
         deploy("withItemsBlock");
