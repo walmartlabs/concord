@@ -5,8 +5,9 @@
 - project: update dependencies, minimal compiler version to 21
 ([#1381](https://github.com/walmartlabs/concord/pull/1381));
 - runtime-v2: keep the order of parallel errors
-([#1390](https://github.com/walmartlabs/concord/pull/1390)).
-
+([#1390](https://github.com/walmartlabs/concord/pull/1390));
+- project: update dependencies
+([#1392](https://github.com/walmartlabs/concord/pull/1392)).
 
 
 ## [2.46.0] - 2026-09-18
