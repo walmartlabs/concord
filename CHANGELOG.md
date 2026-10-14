@@ -3,7 +3,9 @@
 ## [2.46.1] - TBD
 
 - project: update dependencies, minimal compiler version to 21
-([#1381](https://github.com/walmartlabs/concord/pull/1381)).
+([#1381](https://github.com/walmartlabs/concord/pull/1381));
+- runtime-v2: keep the order of parallel errors
+([#1390](https://github.com/walmartlabs/concord/pull/1390)).
 
 
 
