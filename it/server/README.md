@@ -2,11 +2,21 @@
 
 ## Running
 
-```
-$ ./mvnw clean install -Pdocker -Pit
+The server Docker integration tests can be run with:
+
+```shell
+./mvnw verify -Pit -Pdocker -pl it/server -Dit.test=DockerIT,DockerAnsibleIT
 ```
 
-## Running Locally
+With `-Pdocker`, Docker starts the outer DB, server, and agent containers plus
+a privileged Docker-in-Docker daemon. Maven runs these tests on the host; only
+Docker task containers started by Concord flows run inside the managed daemon.
+The daemon is accessed through a Unix socket shared with the agent, and both
+share `${tmp.dir}` at the same absolute path. The harness transfers the locally
+built `concord-ansible` image to the daemon.
+
+When running a server and agent manually, configure the agent with its own
+reachable Docker endpoint.
 
 ## OpenLDAP tests
 
