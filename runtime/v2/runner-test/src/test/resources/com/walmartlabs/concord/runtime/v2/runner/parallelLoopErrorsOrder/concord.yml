@@ -1,0 +1,15 @@
+flows:
+  default:
+    - try:
+        - expr: "${sleep.ms(item.delay)}"
+        - throw: "BOOM${item.name}"
+      loop:
+        mode: parallel
+        parallelism: 2
+        items:
+          - name: 1
+            delay: 500
+          - name: 2
+            delay: 10
+      error:
+        - log: "errors: ${lastError.exceptions.stream().map(e -> e.message).toList()}"

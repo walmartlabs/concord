@@ -70,8 +70,8 @@
         <httpmime.version>4.5.14</httpmime.version>
         <immutables.version>2.9.3</immutables.version>
         <jackson.annotations.version>2.22</jackson.annotations.version>
-        <jackson.databind.version>2.22.2</jackson.databind.version>
-        <jackson.version>2.22.2</jackson.version>
+        <jackson.databind.version>2.22.3</jackson.databind.version>
+        <jackson.version>2.22.3</jackson.version>
         <!-- the only mail implementation: replaces com.sun.mail:javax.mail, which is abandoned at 1.6.2
              and ships the same javax.mail.* packages. Stays on the 1.6.x line because 2.x moves to the
              jakarta.* namespace, which resteasy 4.x cannot use -->
