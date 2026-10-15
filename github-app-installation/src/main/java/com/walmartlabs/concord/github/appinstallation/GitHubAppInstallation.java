@@ -101,17 +101,13 @@ public class GitHubAppInstallation implements AuthTokenProvider {
             var activeToken = cache.get(cacheKey);
 
             return activeToken.map(t -> refreshBeforeExpire(t, cacheKey));
-        } catch (ExecutionException e) {
-            throw new GitHubAppException("Error retrieving access token for repo: " + repo, e);
-        } catch (UncheckedExecutionException e) {
-            // unwrap from guava
-            if (e.getCause() instanceof GitHubAppException repoEx) {
-                throw repoEx;
+        } catch (ExecutionException | UncheckedExecutionException e) {
+            var cause = e.getCause();
+            if (cause instanceof GitHubAppException ghe) {
+                throw ghe;
             }
 
-            log.warn("getAccessToken ['{}'] -> error: {}", repo,  e.getMessage());
-
-            throw new GitHubAppException("Unexpected error retrieving access token for repo: " + repo);
+            throw new GitHubAppException("Error retrieving access token for repo: " + repo, cause);
         }
     }
 
@@ -190,12 +186,10 @@ public class GitHubAppInstallation implements AuthTokenProvider {
         try {
             var ownerAndRepo = Utils.extractOwnerAndRepo(app, repo);
             return accessTokenProvider().getRepoInstallationToken(app, ownerAndRepo);
-        } catch (RepoExtractionException | GitHubAppException e) {
-            var msg = e.getMessage();
-            log.warn("getTokenFromAppInstall ['{}', '{}'] Error retrieving GitHub access token: {}", app.apiUrl(), repo, msg);
+        } catch (RepoExtractionException | GitHubAppException.NotFoundException e) {
+            log.warn("getTokenFromAppInstall ['{}', '{}'] -> {}", app.apiUrl(), repo, e.getMessage());
+            return null;
         }
-
-        return null;
     }
 
     AccessTokenProvider accessTokenProvider() {
