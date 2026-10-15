@@ -42,7 +42,7 @@ const CUSTOM_FORM_SESSION_RETRIES = 5;
 const CUSTOM_FORM_SESSION_RETRY_DELAY_MS = 300;
 
 const updateForDev = (uri: string) => {
-    if (process.env.NODE_ENV !== 'production') {
+    if (import.meta.env.DEV) {
         return `http://localhost:8001${uri}`;
     }
 

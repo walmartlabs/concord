@@ -455,6 +455,10 @@ public class GithubEventResource implements Resource {
         public UserLookupException(String message) {
             super(message);
         }
+
+        public UserLookupException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 
     private record GitHubUser(String email) {
@@ -480,7 +484,8 @@ public class GithubEventResource implements Resource {
         }
     }
 
-    private static class EmailCacheLoader extends CacheLoader<EmailCacheKey, Optional<String>> {
+    @VisibleForTesting
+    static class EmailCacheLoader extends CacheLoader<EmailCacheKey, Optional<String>> {
 
         private final Map<String, Long> rateLimitGauges;
         private final AuthTokenProvider authTokenProvider;
@@ -505,7 +510,12 @@ public class GithubEventResource implements Resource {
             URI repoUrl = key.repoUrl();
             URI userUrl = key.userUrl();
 
-            Optional<ExternalAuthToken> t = authTokenProvider.getToken(repoUrl, null);
+            Optional<ExternalAuthToken> t;
+            try {
+                t = authTokenProvider.getToken(repoUrl, null);
+            } catch (RuntimeException e) {
+                throw new UserLookupException("Error retrieving auth token: " + e.getMessage(), e);
+            }
 
             if (t.isEmpty()) {
                 return Optional.empty();
