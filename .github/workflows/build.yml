@@ -97,6 +97,15 @@ jobs:
             -Djava.io.tmpdir="${WORK}" \
             -Pgha -Pdocker -Pit${{ matrix.extra_profiles }}
 
+      - name: Verify codegen schema baseline
+        run: |
+          ./mvnw -s .github/settings.xml -B -pl server/db \
+            -Pverify-codegen-baseline -Pgha${{ matrix.extra_profiles }} \
+            -DskipTests \
+            -Dmaven.repo.local="${MAVEN_REPO_LOCAL}" \
+            -Djava.io.tmpdir="${WORK}" \
+            package
+
       - name: Remove local Concord artifacts from Maven cache
         if: success()
         run: rm -rf "${MAVEN_REPO_LOCAL}/com/walmartlabs/concord"
