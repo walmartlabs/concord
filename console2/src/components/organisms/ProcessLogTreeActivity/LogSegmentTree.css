@@ -1,0 +1,395 @@
+/*-
+ * *****
+ * Concord
+ * -----
+ * Copyright (C) 2017 - 2026 Walmart Inc.
+ * -----
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =====
+ */
+
+.LogSegmentTree {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    background: white;
+    border: 1px solid rgba(34, 36, 38, 0.15);
+    border-radius: 4px;
+}
+
+.LogSegmentTree .TreeTools {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    border-bottom: 1px solid rgba(34, 36, 38, 0.1);
+}
+
+.LogSegmentTree .ToolsRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.LogSegmentTree .Search {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    height: 30px;
+}
+
+.LogSegmentTree .Search .icon {
+    position: absolute;
+    top: 7px;
+    left: 9px;
+    margin: 0;
+    color: rgba(0, 0, 0, 0.4);
+}
+
+.LogSegmentTree .Search input {
+    width: 100%;
+    height: 30px;
+    padding: 0 10px 0 30px;
+    border: 1px solid rgba(34, 36, 38, 0.15);
+    border-radius: 4px;
+    font: inherit;
+    outline: none;
+}
+
+.LogSegmentTree .Search input:focus {
+    border-color: #85b7d9;
+}
+
+/* a segmented group of 30px icon buttons */
+.LogSegmentTree .ToolGroup {
+    display: inline-flex;
+    align-items: stretch;
+    flex: none;
+    height: 30px;
+    border: 1px solid rgba(34, 36, 38, 0.15);
+    border-radius: 4px;
+    background: white;
+}
+
+/* no overflow: hidden on the group, it would clip the tooltips */
+.LogSegmentTree .ToolGroup > :first-child {
+    border-radius: 3px 0 0 3px;
+}
+
+.LogSegmentTree .ToolGroup > :last-child {
+    border-radius: 0 3px 3px 0;
+}
+
+.LogSegmentTree .ToolGroup button {
+    width: 30px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: rgba(0, 0, 0, 0.6);
+    cursor: pointer;
+}
+
+.LogSegmentTree .ToolGroup button + button {
+    border-left: 1px solid rgba(34, 36, 38, 0.1);
+}
+
+.LogSegmentTree .ToolGroup button .icon {
+    margin: 0;
+}
+
+.LogSegmentTree .ToolGroup button:hover:not(:disabled) {
+    background: rgb(243, 244, 246);
+    color: rgba(0, 0, 0, 0.87);
+}
+
+/* the same as the active item of the filters (Semantic UI "secondary" menu) */
+.LogSegmentTree .ToolGroup button.Active {
+    background: rgba(0, 0, 0, 0.05);
+    color: rgba(0, 0, 0, 0.95);
+}
+
+.LogSegmentTree .ToolGroup button:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.LogSegmentTree .Chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+}
+
+.LogSegmentTree .TreeHeader {
+    display: flex;
+    align-items: center;
+    height: 26px;
+    padding: 0 8px 0 10px;
+    border-bottom: 1px solid rgba(34, 36, 38, 0.1);
+    color: rgba(0, 0, 0, 0.5);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.LogSegmentTree .TreeHeader .HeaderName {
+    flex: 1;
+}
+
+.LogSegmentTree .TreeHeader .HeaderDuration {
+    width: 60px;
+    text-align: right;
+}
+
+.LogSegmentTree .TreeHeader .HeaderTimeline {
+    width: 110px;
+    margin-left: 10px;
+    display: flex;
+    justify-content: space-between;
+    text-transform: none;
+    letter-spacing: 0;
+    font-family: monospace;
+}
+
+.LogSegmentTree .TreeRows {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding-bottom: 12px;
+    outline: none;
+}
+
+.LogSegmentTree .TreeRows:focus-visible {
+    box-shadow: inset 0 0 0 2px rgba(33, 133, 208, 0.4);
+}
+
+.LogSegmentTree .Empty {
+    padding: 16px;
+    color: rgba(0, 0, 0, 0.5);
+}
+
+.LogSegmentTree .TreeRow {
+    display: flex;
+    align-items: center;
+    height: 28px;
+    box-sizing: border-box;
+    padding: 0 8px 0 10px;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+}
+
+.LogSegmentTree .TreeRow:hover {
+    background: rgb(243, 244, 246);
+}
+
+.LogSegmentTree .TreeRow.Selected {
+    background: rgb(231, 239, 255);
+    box-shadow: inset 3px 0 0 #2185d0;
+}
+
+.LogSegmentTree .TreeRow.Dimmed {
+    opacity: 0.5;
+}
+
+.LogSegmentTree .TreeRow .Guide {
+    flex: none;
+    width: 18px;
+    height: 28px;
+    background: linear-gradient(rgb(226, 229, 233), rgb(226, 229, 233)) no-repeat 8px 0 / 1px 100%;
+}
+
+.LogSegmentTree .TreeRow .Caret {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    color: rgba(0, 0, 0, 0.5);
+}
+
+.LogSegmentTree .TreeRow .Caret .icon {
+    margin: 0;
+}
+
+.LogSegmentTree .TreeRow .StatusIcon {
+    flex: none;
+    margin: 0 6px 0 0;
+}
+
+.LogSegmentTree .TreeRow .Kind {
+    flex: none;
+    margin-right: 6px;
+    padding: 0 6px;
+    border-radius: 4px;
+    background: rgb(240, 242, 244);
+    color: rgb(87, 96, 106);
+    font-family: monospace;
+    font-size: 11px;
+    line-height: 18px;
+}
+
+.LogSegmentTree .TreeRow .Kind-script {
+    background: rgb(243, 238, 254);
+    color: rgb(102, 57, 186);
+}
+
+.LogSegmentTree .TreeRow .Kind-system {
+    background: rgb(236, 239, 241);
+    color: rgb(68, 68, 68);
+}
+
+.LogSegmentTree .TreeRow .Name {
+    flex: 1 1 auto;
+    min-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.LogSegmentTree .TreeRow .Counter {
+    flex: none;
+    margin-left: 4px;
+    padding: 0 6px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 16px;
+}
+
+.LogSegmentTree .TreeRow .Counter.Errors {
+    background: rgb(255, 235, 233);
+    color: rgb(207, 34, 46);
+}
+
+.LogSegmentTree .TreeRow .Counter.Warnings {
+    background: rgb(255, 248, 197);
+    color: rgb(125, 78, 0);
+}
+
+.LogSegmentTree .TreeRow .Duration {
+    flex: none;
+    width: 60px;
+    text-align: right;
+    color: rgba(0, 0, 0, 0.5);
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.LogSegmentTree .TreeRow .Timeline {
+    flex: none;
+    position: relative;
+    width: 110px;
+    height: 10px;
+    margin-left: 10px;
+    border-radius: 2px;
+    background: rgb(243, 244, 246);
+}
+
+.LogSegmentTree .TreeRow .Timeline .Bar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    min-width: 2px;
+    border-radius: 2px;
+    background: rgb(200, 204, 209);
+}
+
+.LogSegmentTree .TreeRow .Timeline .Bar-OK {
+    background: rgb(143, 209, 158);
+}
+
+.LogSegmentTree .TreeRow .Timeline .Bar-FAILED {
+    background: rgb(241, 153, 153);
+}
+
+.LogSegmentTree .TreeRow .Timeline .Bar-RUNNING {
+    background: rgb(124, 200, 216);
+}
+
+.LogSegmentTree .TreeRow .Timeline .Bar-SUSPENDED {
+    background: rgb(147, 184, 245);
+}
+
+.LogSegmentTree.NoTimeline .Timeline,
+.LogSegmentTree.NoTimeline .HeaderTimeline {
+    display: none;
+}
+
+/* show tooltips only when the pointer rests on a button, hide them immediately */
+.LogSegmentTree [data-tooltip]:hover::before,
+.LogSegmentTree [data-tooltip]:hover::after {
+    transition-delay: 1s;
+}
+
+.LogSegmentTree .TreeRow .Note {
+    /* shrinks before the name does */
+    flex: 0 100 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-left: 8px;
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 12px;
+}
+
+.LogSegmentTree .TreeRow .Note.Retried {
+    color: rgb(154, 103, 0);
+}
+
+.LogSegmentTree .TreeRow .Kind-loop {
+    background: rgb(238, 243, 255);
+    color: rgb(52, 81, 178);
+}
+
+
+/* groups have no log of their own */
+.LogSegmentTree .TreeRow.Group .Timeline .Bar {
+    opacity: 0.55;
+}
+
+/* the inherited line-height shifts the icon glyphs below their 1em box */
+.LogSegmentTree .icon {
+    height: 1em;
+    line-height: 1;
+}
+
+
+/* the error navigator: the same Semantic UI "secondary mini" menu as the filters next to it */
+.LogSegmentTree .ui.menu.ErrorNav {
+    flex: none;
+    align-items: center;
+    min-height: 0;
+    margin: 0;
+}
+
+.LogSegmentTree .ui.menu.ErrorNav .item {
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    margin: 0;
+    padding: 0 !important;
+}
+
+.LogSegmentTree .ui.menu.ErrorNav .item > .icon {
+    margin: 0 !important;
+}
+
+.LogSegmentTree .ui.menu.ErrorNav .ErrorLabel {
+    padding: 0 4px;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 12px;
+    white-space: nowrap;
+}

@@ -1,0 +1,305 @@
+/*-
+ * *****
+ * Concord
+ * -----
+ * Copyright (C) 2017 - 2026 Walmart Inc.
+ * -----
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =====
+ */
+
+.LogView {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    font-size: 12px;
+}
+
+.LogView .LogToolbar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 6px 16px 5px;
+    border-bottom: 1px solid rgba(34, 36, 38, 0.1);
+    background: white;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.LogView .LogToolbar label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.LogView .LogToolbar label.Disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.LogView .Truncated {
+    flex: none;
+    padding: 6px 16px;
+    background: rgb(255, 248, 225);
+    color: rgb(125, 78, 0);
+}
+
+.LogView .Truncated button {
+    padding: 0;
+    border: none;
+    background: none;
+    color: #2185d0;
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.LogView .LogLines {
+    /* only the lines scroll, the toolbar stays in place */
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 6px 0 24px;
+    background: rgb(251, 251, 252);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    line-height: 1.6;
+    color: rgb(31, 35, 40);
+}
+
+.LogView .LogLine {
+    display: flex;
+    padding-right: 16px;
+}
+
+.LogView .LogLine:hover {
+    background: rgb(240, 243, 246);
+}
+
+.LogView .LogLine .No {
+    flex: none;
+    width: 56px;
+    padding-right: 12px;
+    text-align: right;
+    color: rgb(140, 149, 159);
+    user-select: none;
+}
+
+.LogView .LogLine .Ts {
+    flex: none;
+    width: 72px;
+    color: rgb(140, 149, 159);
+}
+
+.LogView .LogLine .Lvl {
+    flex: none;
+    width: 52px;
+}
+
+.LogView .LogLine .Msg {
+    flex: 1;
+    min-width: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.LogView.NoWrap .LogLine .Msg {
+    white-space: pre;
+}
+
+
+.LogView .Level-INFO .Lvl {
+    color: rgb(9, 105, 218);
+}
+
+.LogView .Level-DEBUG .Lvl,
+.LogView .Level-TRACE .Lvl,
+.LogView .Level-DEBUG .Msg,
+.LogView .Level-TRACE .Msg {
+    color: rgb(140, 149, 159);
+}
+
+.LogView .Level-WARN {
+    background: rgb(255, 248, 225);
+}
+
+.LogView .Level-WARN .Lvl {
+    color: rgb(154, 103, 0);
+}
+
+.LogView .Level-ERROR {
+    background: rgb(255, 238, 240);
+}
+
+.LogView .Level-ERROR .Lvl,
+.LogView .Level-ERROR .Msg {
+    color: rgb(179, 29, 40);
+}
+
+.LogView .Empty {
+    padding: 12px 16px;
+    color: rgba(0, 0, 0, 0.5);
+    font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.LogView .SegmentLinkRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 16px 2px;
+    padding: 4px 8px 4px 10px;
+    border: 1px solid rgba(34, 36, 38, 0.15);
+    border-radius: 4px;
+    background: white;
+    color: rgba(0, 0, 0, 0.75);
+    cursor: pointer;
+    outline: none;
+}
+
+.LogView .SegmentLinkRow:hover,
+.LogView .SegmentLinkRow:focus-visible {
+    border-color: #2185d0;
+    background: rgb(244, 248, 255);
+    color: #2185d0;
+}
+
+.LogView .SegmentLinkRow.Continued {
+    margin-top: 4px;
+    border-style: dashed;
+    color: rgba(0, 0, 0, 0.55);
+}
+
+.LogView .SegmentLinkRow .StatusIcon {
+    flex: none;
+    margin: 0;
+}
+
+.LogView .SegmentLinkRow .Name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.LogView .SegmentLinkRow .Note {
+    flex: none;
+    color: rgba(0, 0, 0, 0.4);
+}
+
+.LogView .SegmentLinkRow .Spacer {
+    flex: 1;
+}
+
+.LogView .SegmentLinkRow .Go {
+    flex: none;
+    margin: 0;
+    color: rgba(0, 0, 0, 0.35);
+}
+
+.LogView .SegmentLinkRow:hover .Go,
+.LogView .SegmentLinkRow:focus-visible .Go {
+    color: #2185d0;
+}
+
+.LogView .SegmentLinkRow .Hint {
+    flex: none;
+    color: rgba(0, 0, 0, 0.45);
+    font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.LogView .SegmentLinkRow .Hint.Error {
+    color: rgb(179, 29, 40);
+}
+
+.LogView .SegmentLinkRow .Hint button,
+.LogView .More button,
+.LogView .LogError > button {
+    padding: 0;
+    border: none;
+    background: none;
+    color: #2185d0;
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.LogView .More {
+    padding: 10px 16px 0 56px;
+    color: rgba(0, 0, 0, 0.55);
+    font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.LogView .LogError {
+    flex: none;
+    position: relative;
+}
+
+.LogView .LogError .ui.message {
+    margin: 0;
+    border-radius: 0;
+    padding-right: 72px;
+}
+
+.LogView .LogError > button {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+}
+
+/* the log's line-height is inherited by the icons and shifts the glyphs below their 1em box */
+.LogView .SegmentLinkRow .icon {
+    height: 1em;
+    line-height: 1;
+}
+
+/* thin vertical separators between the groups of the toolbar */
+.LogView .LogToolbar .Divider {
+    flex: none;
+    width: 1px;
+    height: 16px;
+    background: rgba(34, 36, 38, 0.15);
+}
+
+/* a text button in the style of the checkboxes next to it */
+.LogView .TextAction {
+    display: inline-flex;
+    align-items: center;
+    height: 26px;
+    padding: 0 6px;
+    border: none;
+    border-radius: 4px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.LogView .TextAction:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.LogView .TextAction .icon {
+    height: 1em;
+    margin: 0 5px 0 0;
+    line-height: 1;
+}
+
+.LogView .TextAction.Copy-copied {
+    color: rgb(26, 127, 55);
+}
+
+.LogView .TextAction.Copy-failed,
+.LogView .TextAction.Copy-tooLarge {
+    color: rgb(179, 29, 40);
+}
