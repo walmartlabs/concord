@@ -20,7 +20,8 @@
 
 import * as React from 'react';
 import { Link } from 'react-router';
-import { Checkbox, Table } from 'semantic-ui-react';
+import { Table } from '@/components/ui';
+import { Checkbox } from '@/components/ui';
 
 import { ConcordId } from '../../../api/common';
 import { ColumnDefinition, RenderType } from '../../../api/org';

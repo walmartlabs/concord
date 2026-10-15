@@ -21,7 +21,8 @@
 import * as React from 'react';
 import { ReactNode, useContext } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router';
-import { Dimmer, Loader } from 'semantic-ui-react';
+import { Dimmer } from '@/components/ui';
+import { Loader } from '@/components/ui';
 
 import { UserSessionContext } from '../../../session';
 import { setQueryParam } from '../../../utils';

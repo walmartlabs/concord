@@ -34,7 +34,7 @@ import {
     PROJECT_COLUMN
 } from '../../molecules/ProcessList';
 import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
-import { Menu } from 'semantic-ui-react';
+import { Menu } from '@/components/ui';
 
 export interface ExternalProps {
     hostId: ConcordKey;

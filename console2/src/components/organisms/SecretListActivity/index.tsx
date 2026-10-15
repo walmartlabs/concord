@@ -20,7 +20,10 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Icon, Input, Menu, Table } from 'semantic-ui-react';
+import { Table } from '@/components/ui';
+import { Menu } from '@/components/ui';
+import { Input } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { ConcordKey, EntityType } from '../../../api/common';
 import { checkResult as apiCheckResult } from '../../../api/org';

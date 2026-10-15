@@ -18,7 +18,7 @@
  * =====
  */
 import * as React from 'react';
-import { Icon } from 'semantic-ui-react';
+import { Icon } from '@/components/ui';
 import { REPOSITORY_SSH_URL_PATTERN } from '../../../validation';
 
 interface Props {

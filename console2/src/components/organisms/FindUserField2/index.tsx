@@ -19,7 +19,7 @@
  */
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { Search } from 'semantic-ui-react';
+import { Search } from '@/components/ui';
 
 import { get as apiGet, list as apiList, UserEntry } from '../../../api/user';
 import { ConcordId, RequestError } from '../../../api/common';

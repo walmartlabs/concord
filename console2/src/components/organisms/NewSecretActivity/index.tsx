@@ -20,7 +20,9 @@
 
 import copyToClipboard from 'copy-to-clipboard';
 import * as React from 'react';
-import { Button, Message, TextArea } from 'semantic-ui-react';
+import { Message } from '@/components/ui';
+import { TextArea } from '@/components/ui';
+import { Button } from '@/components/ui';
 
 import { ConcordKey } from '../../../api/common';
 import {

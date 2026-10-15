@@ -18,7 +18,9 @@
  * =====
  */
 import React, { useCallback, useState } from 'react';
-import { Button, Popup, Grid } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
+import { Grid } from '@/components/ui';
+import { Button } from '@/components/ui';
 
 import ClassIcon from '../../../atoms/ClassIcon';
 import Truncate from '../../../atoms/Truncate';

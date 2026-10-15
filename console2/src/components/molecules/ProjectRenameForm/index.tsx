@@ -20,7 +20,8 @@
 
 import { InjectedFormikProps, withFormik } from 'formik';
 import * as React from 'react';
-import { Confirm, Form } from 'semantic-ui-react';
+import { Confirm } from '@/components/ui';
+import { Form } from '@/components/ui';
 import { ConcordKey } from '../../../api/common';
 import { isProjectExists } from '../../../api/service/console';
 import { notEmpty } from '../../../utils';

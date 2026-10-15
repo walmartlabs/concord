@@ -21,7 +21,9 @@
 import { Field, getIn } from 'formik';
 import { FieldProps } from 'formik/dist/Field';
 import * as React from 'react';
-import { Form, FormInputProps, Input, Label } from 'semantic-ui-react';
+import { Form, FormInputProps } from '@/components/ui';
+import { Input } from '@/components/ui';
+import { Label } from '@/components/ui';
 
 export default class extends React.Component<FormInputProps> {
     render() {

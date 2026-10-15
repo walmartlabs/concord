@@ -19,7 +19,9 @@
  */
 
 import * as React from 'react';
-import { Button, Form, Label } from 'semantic-ui-react';
+import { Form } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Label } from '@/components/ui';
 import type { ValidateResult } from 'react-hook-form';
 
 import { storageQuery } from '../../../validation';

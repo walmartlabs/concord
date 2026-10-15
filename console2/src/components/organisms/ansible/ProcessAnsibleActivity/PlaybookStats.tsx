@@ -18,7 +18,9 @@
  * =====
  */
 import * as React from 'react';
-import { Card, SemanticCOLORS, Statistic } from 'semantic-ui-react';
+import { Statistic } from '@/components/ui';
+import { Card } from '@/components/ui';
+import { SemanticCOLORS } from '@/components/ui';
 
 import { memo } from 'react';
 

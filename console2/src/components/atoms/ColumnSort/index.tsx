@@ -19,7 +19,7 @@
  */
 
 
-import { Button } from "semantic-ui-react";
+import { Button } from '@/components/ui';
 import * as React from "react";
 
 interface Props {

@@ -28,7 +28,8 @@ import {
     useRef,
     useState,
 } from 'react';
-import { Header, Modal } from 'semantic-ui-react';
+import { Modal } from '@/components/ui';
+import { Header } from '@/components/ui';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import { LogSegment } from '../../molecules';

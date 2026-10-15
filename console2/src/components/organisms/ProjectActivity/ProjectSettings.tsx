@@ -36,7 +36,11 @@ import { LoadingDispatch } from '../../../App';
 import { useApi } from '../../../hooks/useApi';
 import { useCallback } from 'react';
 import {get as apiGet, getCapacity as apiGetCapacity, KVCapacity, ProjectEntry} from '../../../api/org/project';
-import {Divider, Header, Icon, Progress, Segment} from 'semantic-ui-react';
+import { Progress } from '@/components/ui';
+import { Header } from '@/components/ui';
+import { Segment } from '@/components/ui';
+import { Divider } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import EntityId from '../../molecules/EntityId';
 
 interface ExternalProps {

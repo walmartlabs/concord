@@ -21,7 +21,9 @@
 import * as React from 'react';
 
 import './styles.css';
-import { Card, CardContent, CardHeader, Divider, Image } from 'semantic-ui-react';
+import { Card, CardContent, CardHeader } from '@/components/ui';
+import { Divider } from '@/components/ui';
+import { Image } from '@/components/ui';
 import { RedirectButton } from '../../organisms';
 
 export default class extends React.PureComponent {

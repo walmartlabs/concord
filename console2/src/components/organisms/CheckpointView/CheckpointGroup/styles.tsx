@@ -19,7 +19,7 @@
  */
 import styled from 'styled-components';
 import { ProcessStatus } from '../../../../api/process';
-import { SemanticCOLORS } from 'semantic-ui-react';
+import { SemanticCOLORS } from '@/components/ui'
 
 export const FlexWrapper = styled.div`
     height: 100%;

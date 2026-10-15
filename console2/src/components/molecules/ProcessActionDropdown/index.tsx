@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { Dropdown, Icon } from 'semantic-ui-react';
+import { Dropdown } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { ConcordId } from '../../../api/common';
 import { canBeCancelled, ProcessStatus } from '../../../api/process';

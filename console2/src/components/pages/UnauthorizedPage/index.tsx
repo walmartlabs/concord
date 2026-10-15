@@ -23,7 +23,9 @@ import * as React from 'react';
 import { RedirectButton } from '../../organisms';
 
 import './styles.css';
-import { Card, CardContent, CardDescription, CardHeader, Divider, Image } from 'semantic-ui-react';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui';
+import { Divider } from '@/components/ui';
+import { Image } from '@/components/ui';
 import { withRouter } from '@/router';
 
 export default withRouter((props) => {

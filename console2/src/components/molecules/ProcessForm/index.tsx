@@ -21,17 +21,14 @@
 import { format as formatDate, parseISO as parseDate } from 'date-fns';
 import * as React from 'react';
 
-import { DateInput, DateTimeInput } from 'semantic-ui-calendar-react';
-import {
-    Button,
-    Checkbox,
-    CheckboxProps, DropdownItemProps,
-    DropdownProps,
-    Form,
-    Header,
-    Input,
-    Label
-} from 'semantic-ui-react';
+import { DateInput, DateTimeInput } from '@/components/ui/calendar'
+import { Header } from '@/components/ui';
+import { Form } from '@/components/ui';
+import { DropdownItemProps, DropdownProps } from '@/components/ui';
+import { Checkbox, CheckboxProps } from '@/components/ui';
+import { Input } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Label } from '@/components/ui';
 
 import { RequestError } from '../../../api/common';
 import {

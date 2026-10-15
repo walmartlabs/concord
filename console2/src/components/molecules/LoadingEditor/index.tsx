@@ -19,7 +19,7 @@
  */
 import * as React from 'react';
 
-import { Loader } from 'semantic-ui-react';
+import { Loader } from '@/components/ui';
 import Editor from '@monaco-editor/react';
 import { useCallback } from 'react';
 

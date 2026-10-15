@@ -18,7 +18,7 @@
  * =====
  */
 import * as React from 'react';
-import { Dropdown, DropdownItemProps, DropdownProps } from 'semantic-ui-react';
+import { Dropdown, DropdownItemProps, DropdownProps } from '@/components/ui';
 
 interface State {
     stateOptions: any[];

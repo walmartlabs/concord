@@ -21,7 +21,10 @@
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { Icon, Input, List, Menu } from 'semantic-ui-react';
+import { List } from '@/components/ui';
+import { Menu } from '@/components/ui';
+import { Input } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { ConcordKey, EntityType } from '../../../api/common';
 import { checkResult as apiCheckResult } from '../../../../src/api/org';

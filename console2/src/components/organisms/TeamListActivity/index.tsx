@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { Input, Menu } from 'semantic-ui-react';
+import { Menu } from '@/components/ui';
+import { Input } from '@/components/ui';
 
 import { ConcordKey } from '../../../api/common';
 import { RedirectButton, TeamList } from '../../organisms';

@@ -19,7 +19,7 @@
  */
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { Form } from 'semantic-ui-react';
+import { Form } from '@/components/ui';
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import { createOrUpdate as apiCreateOrUpdate, RawPayloadMode } from '../../../api/org/project';
 import { RequestErrorActivity } from '../index';

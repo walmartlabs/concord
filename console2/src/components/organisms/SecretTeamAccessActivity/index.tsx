@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Loader } from 'semantic-ui-react';
+import { Loader } from '@/components/ui';
 
 import { ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
 import { ResourceAccessEntry } from '../../../api/org';

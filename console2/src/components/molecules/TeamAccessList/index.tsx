@@ -19,7 +19,11 @@
  */
 
 import * as React from 'react';
-import { Button, Container, Menu, Form, Table } from 'semantic-ui-react';
+import { Table } from '@/components/ui';
+import { Menu } from '@/components/ui';
+import { Container } from '@/components/ui';
+import { Form } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { ResourceAccessLevel, ResourceAccessEntry } from '../../../api/org';
 import { TeamAccessDropdown } from '../../molecules';
 import { FindTeamDropdown } from '../../organisms';

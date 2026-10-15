@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Divider } from 'semantic-ui-react';
+import { Divider } from '@/components/ui';
 
 import { get as apiGet, isFinal, ProcessEntry, ProcessStatus } from '../../../api/process';
 import { FormListEntry, list as apiListForms } from '../../../api/process/form';

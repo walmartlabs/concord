@@ -20,7 +20,12 @@
 
 import * as React from 'react';
 import { Link, Navigate, Route, Routes } from 'react-router';
-import { Divider, Header, Icon, Loader, Menu, Segment } from 'semantic-ui-react';
+import { Loader } from '@/components/ui';
+import { Menu } from '@/components/ui';
+import { Header } from '@/components/ui';
+import { Segment } from '@/components/ui';
+import { Divider } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { TeamEntry, get as apiGetTeam } from '../../../api/org/team';

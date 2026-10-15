@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { Search } from 'semantic-ui-react';
+import { Search } from '@/components/ui';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import {
@@ -30,7 +30,7 @@ import {
     SecretType,
     SecretVisibility
 } from '../../../api/org/secret';
-import { SearchProps } from 'semantic-ui-react/dist/commonjs/modules/Search/Search';
+import { SearchProps } from '@/components/ui';
 
 interface ExternalProps {
     fluid?: boolean;

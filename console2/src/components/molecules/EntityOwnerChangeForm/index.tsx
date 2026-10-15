@@ -20,7 +20,8 @@
 
 import * as React from 'react';
 
-import { Confirm, Form } from 'semantic-ui-react';
+import { Confirm } from '@/components/ui';
+import { Form } from '@/components/ui';
 import { FindUserField2 } from '../../organisms';
 import { UserEntry } from '../../../api/user';
 import { ConcordId } from '../../../api/common';

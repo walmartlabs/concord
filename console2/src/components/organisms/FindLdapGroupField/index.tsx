@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { Search, SearchResultData, SearchResultProps } from 'semantic-ui-react';
+import { Search, SearchResultData, SearchResultProps } from '@/components/ui';
 
 import { RequestError } from '../../../api/common';
 import {

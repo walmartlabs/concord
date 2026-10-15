@@ -20,7 +20,10 @@
 
 import { InjectedFormikProps, withFormik } from 'formik';
 import * as React from 'react';
-import { Button, Divider, Form, Segment } from 'semantic-ui-react';
+import { Segment } from '@/components/ui';
+import { Divider } from '@/components/ui';
+import { Form } from '@/components/ui';
+import { Button } from '@/components/ui';
 
 import { ConcordKey } from '../../../api/common';
 import { ProjectEntry } from '../../../api/org/project';

@@ -18,7 +18,7 @@
  * =====
  */
 import * as React from 'react';
-import { Popup } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
 
 import { formatDuration } from '../../../utils';
 

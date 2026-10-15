@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { Button, Confirm, ButtonProps } from 'semantic-ui-react';
+import { Confirm } from '@/components/ui';
+import { Button, ButtonProps } from '@/components/ui';
 
 interface State {
     showConfirm: boolean;

@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { RouteComponentProps, withRouter } from '@/router';
 import { Link } from 'react-router';
-import { Breadcrumb } from 'semantic-ui-react';
+import { Breadcrumb } from '@/components/ui';
 
 import { ConcordId } from '../../../api/common';
 import { BreadcrumbSegment } from '../../molecules';

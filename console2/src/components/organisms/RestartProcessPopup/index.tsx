@@ -25,7 +25,7 @@ import { SingleOperationPopup } from '../../molecules';
 import { memo, useCallback } from 'react';
 import { restart as apiRestart } from '../../../api/process';
 import { useState } from 'react';
-import { Message } from "semantic-ui-react";
+import { Message } from '@/components/ui';
 
 interface ExternalProps {
     instanceId: ConcordId;

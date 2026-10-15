@@ -20,7 +20,9 @@
 
 import * as React from 'react';
 import { Link } from 'react-router';
-import { Icon, Table, Popup } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
+import { Table } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { ConcordKey } from '../../../api/common';
 import { RepositoryEntry, TriggerEntry } from '../../../api/org/project/repository';

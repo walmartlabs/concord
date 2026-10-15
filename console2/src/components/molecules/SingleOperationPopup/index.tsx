@@ -19,7 +19,11 @@
  */
 
 import * as React from 'react';
-import { Button, Header, Modal, Icon, SemanticICONS, SemanticCOLORS } from 'semantic-ui-react';
+import { Modal } from '@/components/ui';
+import { Header } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Icon } from '@/components/ui';
+import { SemanticICONS, SemanticCOLORS } from '@/components/ui';
 
 import { RequestError, RequestErrorData } from '../../../api/common';
 import { RequestErrorMessage } from '../../molecules';

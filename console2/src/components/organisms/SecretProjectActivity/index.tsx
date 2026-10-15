@@ -19,7 +19,10 @@
  */
 
 import * as React from 'react';
-import { Confirm, Form, Icon, Label } from 'semantic-ui-react';
+import { Confirm } from '@/components/ui';
+import { Form } from '@/components/ui';
+import { Label } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import { useCallback, useState } from 'react';
 
 import { ConcordKey, RequestError } from '../../../api/common';

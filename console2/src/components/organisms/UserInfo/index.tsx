@@ -18,13 +18,8 @@
  * =====
  */
 import * as React from 'react';
-import {
-    List,
-    ListContent,
-    ListDescription,
-    ListItem,
-    Loader
-} from 'semantic-ui-react';
+import { Loader } from '@/components/ui';
+import { List, ListContent, ListDescription, ListItem } from '@/components/ui';
 
 import { get as apiGet, UserInfoEntry } from '../../../api/profile/user';
 import {RequestErrorMessage, WithCopyToClipboard} from '../../molecules';

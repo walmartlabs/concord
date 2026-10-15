@@ -19,7 +19,12 @@
  */
 import * as React from 'react';
 import { useCallback } from 'react';
-import { Divider, Header, Icon, Menu, Progress, Segment } from 'semantic-ui-react';
+import { Progress } from '@/components/ui';
+import { Menu } from '@/components/ui';
+import { Header } from '@/components/ui';
+import { Segment } from '@/components/ui';
+import { Divider } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { ConcordKey } from '../../../api/common';
 import {

@@ -21,7 +21,11 @@
 import * as React from 'react';
 import { useCallback, useState } from 'react';
 import { Link } from 'react-router';
-import { Form, Icon, Menu, Popup, Table } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
+import { Table } from '@/components/ui';
+import { Menu } from '@/components/ui';
+import { Form } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import {
     HostEntry,

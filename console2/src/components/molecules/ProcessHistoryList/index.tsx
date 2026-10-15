@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Table } from 'semantic-ui-react';
+import { Table } from '@/components/ui';
 
 import { isFinal, ProcessHistoryEntry } from '../../../api/process';
 import { formatDuration } from '../../../utils';

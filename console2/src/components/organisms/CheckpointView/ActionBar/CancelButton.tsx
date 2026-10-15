@@ -18,7 +18,8 @@
  * =====
  */
 import React, { SFC } from 'react';
-import { Popup, Button } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
+import { Button } from '@/components/ui';
 
 interface CancelButtonProps {
     loading: boolean;

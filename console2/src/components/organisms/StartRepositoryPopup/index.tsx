@@ -19,7 +19,9 @@
  */
 import { ReactNode, useCallback, useMemo, useState } from 'react';
 import { useHistory } from '@/router';
-import { Dropdown, DropdownItemProps, Message, Table } from 'semantic-ui-react';
+import { Table } from '@/components/ui';
+import { Message } from '@/components/ui';
+import { Dropdown, DropdownItemProps } from '@/components/ui';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import { start as apiStart, StartProcessResponse } from '../../../api/process';

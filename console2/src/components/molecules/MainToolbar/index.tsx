@@ -18,7 +18,9 @@
  * =====
  */
 import * as React from 'react';
-import { Icon, Menu, MenuItem, Sticky } from 'semantic-ui-react';
+import { Sticky } from '@/components/ui';
+import { Menu, MenuItem } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import { memo, useCallback, useState } from 'react';
 
 import './styles.css';

@@ -20,7 +20,8 @@
 
 import { InjectedFormikProps, withFormik } from 'formik';
 import * as React from 'react';
-import { Divider, Form } from 'semantic-ui-react';
+import { Divider } from '@/components/ui';
+import { Form } from '@/components/ui';
 import { ProjectVisibility, UpdateProjectEntry } from '../../../api/org/project';
 import { FormikDropdown, FormikInput } from '../../atoms';
 

@@ -20,7 +20,14 @@
 
 import * as React from 'react';
 import { Link, Navigate, Route, Routes } from 'react-router';
-import { Divider, Grid, Header, Icon, Loader, Menu, Segment, Table } from 'semantic-ui-react';
+import { Loader } from '@/components/ui';
+import { Table } from '@/components/ui';
+import { Menu } from '@/components/ui';
+import { Header } from '@/components/ui';
+import { Segment } from '@/components/ui';
+import { Grid } from '@/components/ui';
+import { Divider } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import { parseISO as parseDate } from 'date-fns';
 
 import { ConcordKey, Owner, RequestError } from '../../../api/common';

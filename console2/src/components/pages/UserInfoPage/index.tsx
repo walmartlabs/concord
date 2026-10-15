@@ -18,9 +18,7 @@
  * =====
  */
 import * as React from 'react';
-import {
-    Menu
-} from 'semantic-ui-react';
+import { Menu } from '@/components/ui';
 
 import {UserInfo} from '../../organisms/index';
 

@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import { Loader } from 'semantic-ui-react';
+import { Loader } from '@/components/ui';
 
 import { ConcordId } from '../../../api/common';
 import { RequestErrorMessage } from '../../molecules';

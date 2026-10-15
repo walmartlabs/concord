@@ -18,7 +18,8 @@
  * =====
  */
 import * as React from 'react';
-import { Dropdown, Table } from 'semantic-ui-react';
+import { Table } from '@/components/ui';
+import { Dropdown } from '@/components/ui';
 
 import { ConcordId } from '../../../../api/common';
 import { memo } from 'react';

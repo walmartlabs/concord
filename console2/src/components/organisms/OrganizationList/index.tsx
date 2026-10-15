@@ -21,7 +21,10 @@
 import * as React from 'react';
 import { useCallback, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { Input, List, Menu, Radio } from 'semantic-ui-react';
+import { List } from '@/components/ui';
+import { Menu } from '@/components/ui';
+import { Radio } from '@/components/ui';
+import { Input } from '@/components/ui';
 
 import { OrganizationVisibility, PaginatedOrganizationEntries } from '../../../api/org';
 import { list as getPaginatedOrgList } from '../../../api/org/index';

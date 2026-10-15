@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Outlet, useLocation } from 'react-router';
-import { Grid } from 'semantic-ui-react';
+import { Grid } from '@/components/ui';
 
 import { TopBar } from '../../organisms';
 

@@ -20,7 +20,10 @@
 
 import * as React from 'react';
 import { useCallback, useState } from 'react';
-import { Button, Input, List, Menu, InputOnChangeData } from 'semantic-ui-react';
+import { List } from '@/components/ui';
+import { Menu } from '@/components/ui';
+import { Input, InputOnChangeData } from '@/components/ui';
+import { Button } from '@/components/ui';
 
 import { ConcordKey } from '../../../api/common';
 import { PaginationToolBar } from '../../molecules';

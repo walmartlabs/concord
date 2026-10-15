@@ -19,7 +19,13 @@
  */
 
 import * as React from 'react';
-import { Button, Checkbox, Dropdown, Grid, Header, Input, Popup } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
+import { Header } from '@/components/ui';
+import { Grid } from '@/components/ui';
+import { Dropdown } from '@/components/ui';
+import { Checkbox } from '@/components/ui';
+import { Input } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { ColumnDefinition } from '../../../api/org';
 
 import './styles.css';

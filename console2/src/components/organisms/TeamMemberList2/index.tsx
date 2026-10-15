@@ -20,7 +20,13 @@
 import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
-import { Button, Container, Divider, Form, Loader, Menu, Table } from 'semantic-ui-react';
+import { Loader } from '@/components/ui';
+import { Table } from '@/components/ui';
+import { Menu } from '@/components/ui';
+import { Divider } from '@/components/ui';
+import { Container } from '@/components/ui';
+import { Form } from '@/components/ui';
+import { Button } from '@/components/ui';
 
 import { FindUserField2, RequestErrorActivity } from '../../organisms';
 import { UserEntry } from '../../../api/user';

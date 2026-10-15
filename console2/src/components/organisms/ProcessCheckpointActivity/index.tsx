@@ -38,7 +38,8 @@ import { CheckpointGroupName } from '../CheckpointView/shared/Labels';
 import { format as formatDate } from 'date-fns';
 import { SingleOperationPopup } from '../../molecules';
 import { isFinalStatus } from '../ProcessRestoreActivity';
-import { Button, Popup } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { restoreProcess as apiRestore } from '../../../api/process/checkpoint';
 import { ConcordId, RequestError } from '../../../api/common';
 

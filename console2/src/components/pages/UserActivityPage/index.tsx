@@ -22,7 +22,7 @@ import * as React from 'react';
 
 import { UserProcessActivity } from '../../organisms';
 import { BreadcrumbsToolbar } from '../../organisms';
-import { Breadcrumb } from 'semantic-ui-react';
+import { Breadcrumb } from '@/components/ui';
 import { useCallback, useState } from 'react';
 import { LoadingState } from '../../../App';
 

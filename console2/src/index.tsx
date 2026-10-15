@@ -22,7 +22,7 @@ import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import 'typeface-lato';
-import 'semantic-ui-css/semantic.min.css';
+import './styles/fomantic.css';
 
 import App from './App';
 import './index.css';

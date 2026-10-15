@@ -20,7 +20,9 @@
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { Dropdown, Icon, Table } from 'semantic-ui-react';
+import { Table } from '@/components/ui';
+import { Dropdown } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import {

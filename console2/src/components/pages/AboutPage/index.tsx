@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Breadcrumb } from 'semantic-ui-react';
+import { Breadcrumb } from '@/components/ui';
 
 import { BreadcrumbSegment } from '../../molecules';
 import { ServerVersion } from '../../organisms';

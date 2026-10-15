@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import {useCallback, useState} from 'react';
-import {Loader} from 'semantic-ui-react';
+import { Loader } from '@/components/ui';
 import {ConcordKey, GenericOperationResult} from '../../../api/common';
 import {ResourceAccessEntry} from '../../../api/org';
 import {getProjectAccess, updateProjectAccess} from '../../../api/org/project';

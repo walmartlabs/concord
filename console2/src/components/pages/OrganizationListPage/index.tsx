@@ -24,7 +24,7 @@ import { OrganizationList } from '../../organisms';
 import { LoadingState } from '../../../App';
 import { useCallback, useState } from 'react';
 import { BreadcrumbsToolbar } from '../../organisms';
-import { Breadcrumb } from 'semantic-ui-react';
+import { Breadcrumb } from '@/components/ui';
 
 export default () => {
     const loading = React.useContext(LoadingState);

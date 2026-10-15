@@ -19,7 +19,7 @@
  */
 
 import React, { useRef, useState } from 'react';
-import { Button } from 'semantic-ui-react';
+import { Button } from '@/components/ui';
 import _ from 'lodash';
 import './styles.css';
 import LoadingEditor from '../LoadingEditor';

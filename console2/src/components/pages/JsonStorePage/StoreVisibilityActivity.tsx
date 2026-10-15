@@ -20,7 +20,9 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { DropdownProps, Form, Icon } from 'semantic-ui-react';
+import { Form } from '@/components/ui';
+import { DropdownProps } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { ConcordKey, GenericOperationResult } from '../../../api/common';
 import {

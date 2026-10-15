@@ -18,7 +18,8 @@
  * =====
  */
 import * as React from 'react';
-import { Menu, Message } from 'semantic-ui-react';
+import { Message } from '@/components/ui';
+import { Menu } from '@/components/ui';
 
 import { APITokenList, RedirectButton } from '../../organisms/index';
 

@@ -19,7 +19,7 @@
     "noFallthroughCasesInSwitch": true,
 
     /* Existing settings to preserve */
-    "allowJs": true,
+    "allowJs": false,
     "allowSyntheticDefaultImports": true,
     "downlevelIteration": true,
     "esModuleInterop": true,

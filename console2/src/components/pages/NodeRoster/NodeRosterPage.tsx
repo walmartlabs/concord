@@ -20,7 +20,9 @@
 
 import * as React from 'react';
 import { useCallback, useRef, useState } from 'react';
-import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
+import { Menu } from '@/components/ui';
+import { Breadcrumb } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { LoadingState } from '../../../App';
 import { Link } from 'react-router';

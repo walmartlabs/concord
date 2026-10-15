@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Dropdown, DropdownItemProps, DropdownProps } from 'semantic-ui-react';
+import { Dropdown, DropdownItemProps, DropdownProps } from '@/components/ui';
 
 import { TeamRole } from '../../../api/org/team';
 

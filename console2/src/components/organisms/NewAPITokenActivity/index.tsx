@@ -21,7 +21,9 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { useHistory } from '@/router';
-import { Button, Icon, Message } from 'semantic-ui-react';
+import { Message } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { RequestError } from '../../../api/common';
 import { NewAPITokenForm, RequestErrorMessage, WithCopyToClipboard } from '../../molecules';

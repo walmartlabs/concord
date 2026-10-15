@@ -20,7 +20,11 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { Button, Form, Menu, Popup, Table } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
+import { Table } from '@/components/ui';
+import { Menu } from '@/components/ui';
+import { Form } from '@/components/ui';
+import { Button } from '@/components/ui';
 
 import {
     AuditAction,
@@ -37,7 +41,7 @@ import RequestErrorActivity from '../../organisms/RequestErrorActivity';
 import { useApi } from '../../../hooks/useApi';
 import { ConcordKey } from '../../../api/common';
 import { ReactJson } from '../../atoms';
-import { DateTimeInput } from 'semantic-ui-calendar-react';
+import { DateTimeInput } from '@/components/ui/calendar'
 import { addHours, format as formatDate } from 'date-fns';
 import {
     formatForApi,
@@ -335,7 +339,7 @@ const DateTimeField = (props: {
             label={props.label}
             dateTimeFormat={UI_DATE_TIME_FORMAT}
             closable={true}
-            animation={'none' as any}
+            animation={'none'}
             duration={0}
             disabled={props.disabled}
             onChange={(ev: {}, data: any) => {

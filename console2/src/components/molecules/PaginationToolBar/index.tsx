@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { Button, Dropdown } from 'semantic-ui-react';
+import { Dropdown } from '@/components/ui';
+import { Button } from '@/components/ui';
 
 // TODO make customizable
 const defaultDropDownValues = [50, 100, 500];

@@ -20,7 +20,9 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { Divider, Progress, Segment } from 'semantic-ui-react';
+import { Progress } from '@/components/ui';
+import { Segment } from '@/components/ui';
+import { Divider } from '@/components/ui';
 
 import {
     AnsibleEvent,

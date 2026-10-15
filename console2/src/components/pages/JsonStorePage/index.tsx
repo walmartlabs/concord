@@ -22,7 +22,9 @@ import * as React from 'react';
 import { useCallback, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { Link } from 'react-router';
-import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
+import { Menu } from '@/components/ui';
+import { Breadcrumb } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { RouteComponentProps, withRouter } from '@/router';
 import { ConcordId } from '../../../api/common';

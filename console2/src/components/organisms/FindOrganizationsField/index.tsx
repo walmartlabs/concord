@@ -20,10 +20,10 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { Search } from 'semantic-ui-react';
+import { Search } from '@/components/ui';
 
 import { list as apiFindOrganizations, get as apiGet, OrganizationEntry } from '../../../api/org';
-import { SearchProps } from 'semantic-ui-react/dist/commonjs/modules/Search/Search';
+import { SearchProps } from '@/components/ui';
 
 interface Props {
     defaultOrgName?: string;

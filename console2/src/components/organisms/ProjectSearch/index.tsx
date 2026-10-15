@@ -19,11 +19,11 @@
  */
 
 import * as React from 'react';
-import { Search } from 'semantic-ui-react';
+import { Search } from '@/components/ui';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { useCallback, useEffect, useState } from 'react';
-import { SearchProps } from 'semantic-ui-react/dist/commonjs/modules/Search/Search';
+import { SearchProps } from '@/components/ui';
 import { ProjectEntry, list as apiList, get as apiGet } from '../../../api/org/project';
 
 interface ExternalProps {

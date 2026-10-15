@@ -20,7 +20,9 @@
 
 import * as React from 'react';
 import { useCallback, useContext, useState } from 'react';
-import { Input, List, Menu } from 'semantic-ui-react';
+import { List } from '@/components/ui';
+import { Menu } from '@/components/ui';
+import { Input } from '@/components/ui';
 import { Link } from 'react-router';
 
 import { ConcordKey } from '../../../api/common';

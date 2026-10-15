@@ -18,7 +18,11 @@
  * =====
  */
 import * as React from 'react';
-import { Label, Popup, Progress, SemanticCOLORS, Table } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
+import { Progress } from '@/components/ui';
+import { Table } from '@/components/ui';
+import { Label } from '@/components/ui';
+import { SemanticCOLORS } from '@/components/ui';
 
 import {
     FAILED_COLOR,

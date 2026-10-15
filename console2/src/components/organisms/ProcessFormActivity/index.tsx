@@ -19,7 +19,8 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useHistory } from '@/router';
-import { Loader, Segment } from 'semantic-ui-react';
+import { Loader } from '@/components/ui';
+import { Segment } from '@/components/ui';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import {

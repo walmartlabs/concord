@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Button } from 'semantic-ui-react';
+import { Button } from '@/components/ui';
 
 interface Props {
     onOpenWizard: () => void;

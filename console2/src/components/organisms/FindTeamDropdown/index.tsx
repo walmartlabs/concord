@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { Dropdown, DropdownItemProps } from 'semantic-ui-react';
+import { Dropdown, DropdownItemProps } from '@/components/ui';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { comparators } from '../../../utils';

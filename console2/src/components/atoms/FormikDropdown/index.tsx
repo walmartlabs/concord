@@ -21,7 +21,9 @@
 import { Field, getIn } from 'formik';
 import { FieldProps } from 'formik/dist/Field';
 import * as React from 'react';
-import { Dropdown, DropdownProps, Form, FormDropdownProps, Label } from 'semantic-ui-react';
+import { Form, FormDropdownProps } from '@/components/ui';
+import { Dropdown, DropdownProps } from '@/components/ui';
+import { Label } from '@/components/ui';
 
 export default class extends React.PureComponent<FormDropdownProps> {
     render() {

@@ -9,7 +9,7 @@
 
 To install the necessary dependencies for the first time:
 ```bash
-$ npm ci
+$ npm ci --legacy-peer-deps
 ```
 
 To update `package-lock.json` run
@@ -18,13 +18,41 @@ $ ../mvnw clean package # only for the first run
 $ ../mvnw com.github.eirslett:frontend-maven-plugin:npm -Darguments=install
 ```
 
+### Third-party notices
+
+License notices for the retained copied UI components and helpers are kept in
+[src/licenses/semantic-ui](src/licenses/semantic-ui).
+The Maven build includes these notices under `META-INF/licenses/semantic-ui/`
+in the console JAR.
+
+### Local UI components
+
+The checked component implementations live in `src/components/ui`; Fomantic
+component styles are imported in `src/styles/fomantic.css`. Keep styles used by
+plain application markup too, including `embed.css` for custom process-card forms.
+
+Run `npm run build:check` and `npm test -- --run` when changing component contracts.
+The UI regression suites cover custom component roots and labels, overlay ordering
+and subscription cleanup, dropdown filtering/additions, and calendar formatting/locales.
+
+Component contracts are maintained in TypeScript, without duplicate runtime
+PropTypes catalogs. Keep explicit `handledProps` lists and functional defaults:
+prop forwarding and default behavior depend on them. Targeted development
+diagnostics and functional environment checks remain independent of validation.
+
+`Input`, `Button`, and `TextArea` retain class-instance refs for compatibility with
+DOM-resolving overlay wrappers. Their public `InputHandle`, `ButtonHandle`, and
+`TextAreaHandle` types expose `focus()`; `InputHandle` also exposes `select()`.
+Keep event-stack callback identities stable and unsubscribe from the original DOM
+target, not a ref that may already have been cleared during unmount.
+
 ## Running in Dev Mode
 
 In the dev mode the UI is served by running `npm start`.
 
 First time:
 ```bash
-$ npm ci
+$ npm ci --legacy-peer-deps
 $ npm run dev
 ```
 

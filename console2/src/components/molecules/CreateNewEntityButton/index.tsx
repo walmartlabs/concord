@@ -21,7 +21,7 @@
 import * as React from 'react';
 import RedirectButton from '../../organisms/RedirectButton';
 import { ConcordKey } from '../../../api/common';
-import { Popup } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
 
 interface Props {
     entity: string;

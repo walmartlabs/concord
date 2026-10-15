@@ -18,7 +18,10 @@
  * =====
  */
 
-import { Button, Form, Modal, TextArea } from 'semantic-ui-react';
+import { Modal } from '@/components/ui';
+import { Form } from '@/components/ui';
+import { TextArea } from '@/components/ui';
+import { Button } from '@/components/ui';
 import * as React from 'react';
 import { useCallback, useState } from 'react';
 

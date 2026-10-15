@@ -23,7 +23,7 @@ import {ConcordKey} from '../../../api/common';
 import { SingleOperationPopup } from '../../molecules';
 
 import './styles.css';
-import { SemanticCOLORS, SemanticICONS } from 'semantic-ui-react';
+import { SemanticCOLORS, SemanticICONS } from '@/components/ui'
 import {useCallback} from "react";
 import {RepositoryValidationResponse, validateRepository as apiValidateRepo} from "../../../api/org/project/repository";
 import {useApi} from "../../../hooks/useApi";

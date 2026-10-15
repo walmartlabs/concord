@@ -19,7 +19,12 @@
  */
 import * as React from 'react';
 import { useCallback, useState } from 'react';
-import { Button, Divider, Header, Modal, Popup, Table } from 'semantic-ui-react';
+import { Modal } from '@/components/ui';
+import { Popup } from '@/components/ui';
+import { Table } from '@/components/ui';
+import { Header } from '@/components/ui';
+import { Divider } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { add, format, parseISO, sub } from 'date-fns';
 
 import { ProcessEntry } from '../../../api/process';

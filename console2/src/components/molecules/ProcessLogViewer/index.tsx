@@ -19,7 +19,12 @@
  */
 
 import * as React from 'react';
-import { Button, Divider, Icon, Popup, Radio, Transition } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
+import { Transition } from '@/components/ui';
+import { Divider } from '@/components/ui';
+import { Radio } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { ConcordId } from '../../../api/common';
 import { ProcessStatus } from '../../../api/process';

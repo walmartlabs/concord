@@ -30,7 +30,8 @@ import {
     PaginatedRepositoryEntries,
     TriggerEntry
 } from '../../../api/org/project/repository';
-import { Input, Menu } from 'semantic-ui-react';
+import { Menu } from '@/components/ui';
+import { Input } from '@/components/ui';
 import { PaginationToolBar, RepositoryList, RequestErrorMessage } from '../../molecules';
 import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
 

@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { DropdownItemProps } from 'semantic-ui-react';
+import { DropdownItemProps } from '@/components/ui';
 import { RequestError } from '../../../api/common';
 
 import { listActiveStores as apiList, SecretStoreEntry } from '../../../api/secret/store';

@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Form } from 'semantic-ui-react';
+import { Form } from '@/components/ui';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import { SecretVisibility, updateSecretVisibility as apiUpdateSecretVisibility } from '../../../api/org/secret';

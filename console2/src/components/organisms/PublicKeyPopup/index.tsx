@@ -20,7 +20,10 @@
 
 import copyToClipboard from 'copy-to-clipboard';
 import * as React from 'react';
-import { Button, Loader, Popup, TextArea } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
+import { Loader } from '@/components/ui';
+import { TextArea } from '@/components/ui';
+import { Button } from '@/components/ui';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { getPublicKey as apiGetPublicKey } from '../../../api/org/secret';

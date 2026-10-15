@@ -19,7 +19,9 @@
  */
 
 import * as React from 'react';
-import { Icon, Popup, SemanticICONS, SemanticCOLORS } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
+import { Icon } from '@/components/ui';
+import { SemanticICONS, SemanticCOLORS } from '@/components/ui';
 
 import { ProcessEntry, ProcessStatus } from '../../../api/process';
 import { formatDistanceToNow, isAfter, parseISO as parseDate } from 'date-fns';

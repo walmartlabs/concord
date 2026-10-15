@@ -20,7 +20,7 @@
 
 import copyToClipboard from 'copy-to-clipboard';
 import * as React from 'react';
-import { Icon } from 'semantic-ui-react';
+import { Icon } from '@/components/ui';
 
 import './styles.css';
 

@@ -27,19 +27,16 @@ import {
     ProcessEntry,
     ProcessStatus
 } from '../../../api/process';
-import {
-    Breadcrumb,
-    Button,
-    Dropdown,
-    Icon,
-    Label,
-    Menu,
-    MenuItem,
-    Sticky
-} from 'semantic-ui-react';
+import { Sticky } from '@/components/ui';
+import { Menu, MenuItem } from '@/components/ui';
+import { Breadcrumb } from '@/components/ui';
+import { Dropdown } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Label } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import { Link } from 'react-router';
 import { formatDistanceToNow, isAfter, parseISO as parseDate } from 'date-fns';
-import { SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic';
+import { SemanticCOLORS } from '@/components/ui'
 
 import { ProcessLastErrorModal, WithCopyToClipboard } from '../../molecules';
 import { CancelProcessPopup, DisableProcessPopup } from '../../organisms';

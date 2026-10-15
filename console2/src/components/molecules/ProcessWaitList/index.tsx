@@ -26,7 +26,9 @@ import {
     WaitCondition,
     WaitType
 } from '../../../api/process';
-import { Accordion, Icon, Table } from 'semantic-ui-react';
+import { Accordion } from '@/components/ui';
+import { Table } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import { ConcordId } from '../../../api/common';
 import { Link } from 'react-router';
 import { LocalTimestamp } from '../index';

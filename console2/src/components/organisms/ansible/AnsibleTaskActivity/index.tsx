@@ -18,7 +18,7 @@
  * =====
  */
 import { useCallback, useEffect, useState } from 'react';
-import { Loader } from 'semantic-ui-react';
+import { Loader } from '@/components/ui';
 
 import {
     AnsibleEvent,

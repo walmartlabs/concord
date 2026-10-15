@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import { Table } from 'semantic-ui-react';
+import { Table } from '@/components/ui';
 import * as React from 'react';
 import TaskProgress, { ProgressStats } from './TaskProgress';
 import { TaskInfoEntry } from './types';

@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { Header, Table } from 'semantic-ui-react';
+import { Table } from '@/components/ui';
+import { Header } from '@/components/ui';
 
 import { AnsibleEvent, AnsibleStatus } from '../../../../api/process/ansible';
 import { ProcessEventEntry } from '../../../../api/process/event';

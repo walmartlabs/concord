@@ -20,8 +20,13 @@
 
 import * as React from 'react';
 import { memo, useCallback, useState } from 'react';
-import { Button, DropdownItemProps, Form, Menu, Popup, Table } from 'semantic-ui-react';
-import { DateTimeInput } from 'semantic-ui-calendar-react';
+import { Popup } from '@/components/ui';
+import { Table } from '@/components/ui';
+import { Menu } from '@/components/ui';
+import { Form } from '@/components/ui';
+import { DropdownItemProps } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { DateTimeInput } from '@/components/ui/calendar'
 import { addHours, format as formatDate, parse as parseDate } from 'date-fns';
 
 import {
@@ -99,7 +104,7 @@ const DateTimeField = (props: {
             label={props.label}
             dateTimeFormat={UI_DATE_TIME_FORMAT}
             closable={true}
-            animation={'none' as any} // workaround for jittery animations in Chrome
+            animation={'none'} // workaround for jittery animations in Chrome
             duration={0}
             onChange={(ev: {}, data: any) => props.onChange(data.value as string)}
         />

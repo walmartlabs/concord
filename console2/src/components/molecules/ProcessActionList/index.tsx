@@ -20,7 +20,8 @@
 
 import * as React from 'react';
 import { Link } from 'react-router';
-import { Button, Table } from 'semantic-ui-react';
+import { Table } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { ConcordId } from '../../../api/common';
 
 import { FormListEntry, FormRunAs } from '../../../api/process/form';

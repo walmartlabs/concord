@@ -21,7 +21,8 @@
 import * as React from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { Link } from 'react-router';
-import { Icon, Menu } from 'semantic-ui-react';
+import { Menu } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { ConcordKey } from '../../../api/common';
 import { AuditLogActivity, ProjectTeamAccessActivity } from '../../organisms';

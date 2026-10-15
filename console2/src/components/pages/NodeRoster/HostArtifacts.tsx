@@ -20,7 +20,11 @@
 
 import * as React from 'react';
 import { useCallback, useState } from 'react';
-import { Input, List, Menu, Popup, Table } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
+import { List } from '@/components/ui';
+import { Table } from '@/components/ui';
+import { Menu } from '@/components/ui';
+import { Input } from '@/components/ui';
 
 import { ConcordId } from '../../../api/common';
 import { PaginationToolBar } from '../../molecules';
@@ -31,7 +35,7 @@ import {
     PaginatedHostArtifacts
 } from '../../../api/noderoster';
 import { useApi } from '../../../hooks/useApi';
-import { InputOnChangeData } from 'semantic-ui-react/dist/commonjs/elements/Input/Input';
+import { InputOnChangeData } from '@/components/ui';
 import RequestErrorActivity from '../../organisms/RequestErrorActivity';
 import { LoadingDispatch } from '../../../App';
 import { Link } from 'react-router';

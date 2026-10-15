@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { RouteComponentProps, withRouter } from '@/router';
-import { Breadcrumb } from 'semantic-ui-react';
+import { Breadcrumb } from '@/components/ui';
 
 import { BreadcrumbSegment } from '../../molecules';
 

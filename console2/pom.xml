@@ -29,6 +29,11 @@
                     <roots>
                         <root>src</root>
                     </roots>
+                    <excludes combine.children="append">
+                        <exclude>**/components/ui/**</exclude>
+                        <exclude>**/lib/event-stack/**</exclude>
+                        <exclude>**/licenses/semantic-ui/**</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
             <plugin>
@@ -107,6 +112,21 @@
                                     <directory>package</directory>
                                     <includes>
                                         <include>**/*</include>
+                                    </includes>
+                                </resource>
+                                <resource>
+                                    <directory>src/licenses/semantic-ui</directory>
+                                    <targetPath>META-INF/licenses/semantic-ui</targetPath>
+                                    <filtering>false</filtering>
+                                </resource>
+                                <resource>
+                                    <directory>node_modules/fomantic-ui-css</directory>
+                                    <targetPath>META-INF/licenses/fomantic-ui</targetPath>
+                                    <filtering>false</filtering>
+                                    <includes>
+                                        <include>LICENSE.md</include>
+                                        <include>themes/default/assets/fonts/LICENSE_icons.txt</include>
+                                        <include>themes/default/assets/fonts/LICENSE_Lato.txt</include>
                                     </includes>
                                 </resource>
                             </resources>

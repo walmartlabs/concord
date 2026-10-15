@@ -20,7 +20,10 @@
 
 import * as React from 'react';
 import { useEffect } from 'react';
-import { Dropdown, Form, Input, Label } from 'semantic-ui-react';
+import { Form } from '@/components/ui';
+import { Dropdown } from '@/components/ui';
+import { Input } from '@/components/ui';
+import { Label } from '@/components/ui';
 import { useForm, type ValidateResult } from 'react-hook-form';
 
 import { ConcordKey } from '../../../api/common';

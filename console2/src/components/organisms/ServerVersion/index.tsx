@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { Icon } from 'semantic-ui-react';
+import { Icon } from '@/components/ui';
 import { version as apiVersion } from '../../../api/server';
 
 export default () => {

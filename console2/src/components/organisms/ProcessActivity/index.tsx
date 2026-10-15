@@ -22,7 +22,8 @@ import * as React from 'react';
 import { useCallback, useRef, useState, useEffect } from 'react';
 
 import { Link, Navigate, Route, Routes } from 'react-router';
-import { Icon, Menu } from 'semantic-ui-react';
+import { Menu } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { ConcordId } from '../../../api/common';
 import { get as apiGet, getRoot as apiGetRoot, isFinal, ProcessEntry } from '../../../api/process';

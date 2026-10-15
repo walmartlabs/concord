@@ -19,7 +19,11 @@
  */
 
 import * as React from 'react';
-import { Dropdown, DropdownItemProps, Grid, Input, Modal, Table } from 'semantic-ui-react';
+import { Modal } from '@/components/ui';
+import { Table } from '@/components/ui';
+import { Grid } from '@/components/ui';
+import { Dropdown, DropdownItemProps } from '@/components/ui';
+import { Input } from '@/components/ui';
 
 import { AnsibleHost, AnsibleStatus, SearchFilter, SortField, SortOrder } from '../../../../api/process/ansible';
 import { HumanizedDuration, PaginationToolBar } from '../../../molecules';

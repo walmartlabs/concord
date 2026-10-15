@@ -18,7 +18,10 @@
  * =====
  */
 import * as React from 'react';
-import { Breadcrumb, Button, Icon, Menu, MenuItem } from 'semantic-ui-react';
+import { Menu, MenuItem } from '@/components/ui';
+import { Breadcrumb } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import './styles.css';
 
 interface ExternalProps {

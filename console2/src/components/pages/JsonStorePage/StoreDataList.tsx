@@ -20,14 +20,17 @@
 
 import * as React from 'react';
 import { useCallback, useState } from 'react';
-import { Button, Input, List, Menu } from 'semantic-ui-react';
+import { List } from '@/components/ui';
+import { Menu } from '@/components/ui';
+import { Input } from '@/components/ui';
+import { Button } from '@/components/ui';
 
 import { ConcordKey } from '../../../api/common';
 import { PaginationToolBar } from '../../molecules';
 import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
 import { listStorageData as apiGet, PaginatedStorageDataEntries } from '../../../api/org/jsonstore';
 import { useApi } from '../../../hooks/useApi';
-import { InputOnChangeData } from 'semantic-ui-react/dist/commonjs/elements/Input/Input';
+import { InputOnChangeData } from '@/components/ui';
 import RequestErrorActivity from '../../organisms/RequestErrorActivity';
 import StoreDataDeleteActivity from './StoreDataDeleteActivity';
 import { LoadingDispatch } from '../../../App';

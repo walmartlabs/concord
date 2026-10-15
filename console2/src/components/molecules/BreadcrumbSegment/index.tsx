@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { Breadcrumb, Segment } from 'semantic-ui-react';
+import { Breadcrumb } from '@/components/ui';
+import { Segment } from '@/components/ui';
 
 import './styles.css';
 

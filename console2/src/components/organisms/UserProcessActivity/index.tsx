@@ -24,7 +24,13 @@ import {
     getActivity as apiGetActivity,
     listProcessCards as apiListProcessCards, ProcessCardEntry
 } from '../../../api/service/console/user';
-import {Button, Card, CardGroup, Header, Icon, Image, Modal, Popup, PopupContent} from 'semantic-ui-react';
+import { Modal } from '@/components/ui';
+import { Popup, PopupContent } from '@/components/ui';
+import { Card, CardGroup } from '@/components/ui';
+import { Header } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Image } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import { ProcessList } from '../../molecules/index';
 import { ProcessEntry } from '../../../api/process';
 import {

@@ -20,7 +20,9 @@
 import * as React from 'react';
 
 import { ConcordKey } from '../../../api/common';
-import { Divider, Header, Segment } from 'semantic-ui-react';
+import { Header } from '@/components/ui';
+import { Segment } from '@/components/ui';
+import { Divider } from '@/components/ui';
 import { OrganizationOwnerChangeActivity, RequestErrorActivity } from '../index';
 import { LoadingDispatch } from '../../../App';
 import { useApi } from '../../../hooks/useApi';

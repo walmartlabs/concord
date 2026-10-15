@@ -19,7 +19,9 @@
  */
 
 import * as React from 'react';
-import { Icon, Popup, Table } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
+import { Table } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import { ConcordId } from '../../../api/common';
 import { ProcessStatus } from '../../../api/process';
 import { ProcessElementEvent, ProcessEventEntry } from '../../../api/process/event';

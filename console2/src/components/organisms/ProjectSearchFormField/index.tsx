@@ -19,7 +19,9 @@
  */
 
 import * as React from 'react';
-import { Form, Icon, Label, LabelGroup } from 'semantic-ui-react';
+import { Form } from '@/components/ui';
+import { Label, LabelGroup } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { ConcordKey } from '../../../api/common';
 import { FieldProps } from 'formik/dist/Field';

@@ -20,7 +20,9 @@
 
 import * as React from 'react';
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router';
-import { Breadcrumb, Grid, Menu } from 'semantic-ui-react';
+import { Menu } from '@/components/ui';
+import { Breadcrumb } from '@/components/ui';
+import { Grid } from '@/components/ui';
 
 import { BreadcrumbSegment } from '../../molecules';
 import { NotFoundPage } from '../index';

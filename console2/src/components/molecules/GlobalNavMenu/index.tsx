@@ -20,7 +20,9 @@
 
 import * as React from 'react';
 import { Link } from 'react-router';
-import { Dropdown, Image, Menu } from 'semantic-ui-react';
+import { Menu } from '@/components/ui';
+import { Dropdown } from '@/components/ui';
+import { Image } from '@/components/ui';
 import { CustomResources, LinkMeta } from '../../../../cfg';
 
 export type GlobalNavTab = 'activity' | 'process' | 'org' | 'noderoster' | null;

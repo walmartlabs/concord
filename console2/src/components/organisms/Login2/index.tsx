@@ -21,16 +21,13 @@
 import * as React from 'react';
 import { RouteComponentProps, withRouter } from '@/router';
 import { useCallback, useContext, useState } from 'react';
-import {
-    Card,
-    CardContent,
-    Dimmer,
-    Divider,
-    Form,
-    Image,
-    Loader,
-    Message,
-} from 'semantic-ui-react';
+import { Dimmer } from '@/components/ui';
+import { Loader } from '@/components/ui';
+import { Card, CardContent } from '@/components/ui';
+import { Message } from '@/components/ui';
+import { Divider } from '@/components/ui';
+import { Form } from '@/components/ui';
+import { Image } from '@/components/ui';
 
 import { whoami as apiWhoami } from '../../../api/service/console';
 import { UserSessionContext } from '../../../session';

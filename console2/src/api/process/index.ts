@@ -18,7 +18,7 @@
  * =====
  */
 
-import { SemanticCOLORS, SemanticICONS } from 'semantic-ui-react';
+import { SemanticCOLORS, SemanticICONS } from '@/components/ui'
 import { ConcordId, ConcordKey, fetchJson, managedFetch, queryParams } from '../common';
 import { ColumnDefinition } from '../org';
 import 'url-search-params-polyfill';

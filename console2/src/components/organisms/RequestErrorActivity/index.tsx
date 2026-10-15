@@ -24,7 +24,8 @@ import { Navigate } from 'react-router';
 import { RequestError } from '../../../api/common';
 import { RequestErrorMessage } from '../../molecules';
 import { useLocation } from 'react-router';
-import { Dimmer, Loader } from 'semantic-ui-react';
+import { Dimmer } from '@/components/ui';
+import { Loader } from '@/components/ui';
 import { setQueryParam } from '../../../utils';
 
 interface Props {

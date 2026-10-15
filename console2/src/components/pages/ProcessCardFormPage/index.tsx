@@ -19,7 +19,11 @@
  */
 import * as React from 'react';
 import { RouteComponentProps, withRouter } from '@/router';
-import { Button, Divider, Header, Image, Loader } from 'semantic-ui-react';
+import { Loader } from '@/components/ui';
+import { Header } from '@/components/ui';
+import { Divider } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Image } from '@/components/ui';
 import {
     getProcessCard as apiGetProcessCard,
     ProcessCardEntry,

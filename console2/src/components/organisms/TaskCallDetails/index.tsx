@@ -20,7 +20,9 @@
 import { isObject } from 'formik';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { Grid, Loader, Table } from 'semantic-ui-react';
+import { Loader } from '@/components/ui';
+import { Table } from '@/components/ui';
+import { Grid } from '@/components/ui';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import {

@@ -21,7 +21,9 @@
 import { Field, getIn } from 'formik';
 import { FieldProps } from 'formik/dist/Field';
 import * as React from 'react';
-import { Checkbox, CheckboxProps, Form, FormCheckboxProps, Label } from 'semantic-ui-react';
+import { Form, FormCheckboxProps } from '@/components/ui';
+import { Checkbox, CheckboxProps } from '@/components/ui';
+import { Label } from '@/components/ui';
 
 interface Props {
     name: string;

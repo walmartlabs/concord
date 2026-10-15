@@ -25,7 +25,7 @@ import {
     SKIPPED_COLOR_HEX,
     UNREACHABLE_COLOR_HEX
 } from './types';
-import { Grid } from 'semantic-ui-react';
+import { Grid } from '@/components/ui';
 
 export interface ExternalProps {
     loading: boolean;

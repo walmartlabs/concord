@@ -18,7 +18,8 @@
  * =====
  */
 import React, { FunctionComponent } from 'react';
-import { Label, Icon } from 'semantic-ui-react';
+import { Label } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import { CancelButton } from './CancelButton';
 import { useCheckpointContext } from '../Container';
 import { Item } from './styles';

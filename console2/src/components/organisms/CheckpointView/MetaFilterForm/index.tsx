@@ -18,7 +18,11 @@
  * =====
  */
 import React, { FunctionComponent } from 'react';
-import { Grid, Header, Button, Divider, Popup } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
+import { Header } from '@/components/ui';
+import { Grid } from '@/components/ui';
+import { Divider } from '@/components/ui';
+import { Button } from '@/components/ui';
 
 import { useCheckpointContext } from '../Container';
 

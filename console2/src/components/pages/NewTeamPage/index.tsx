@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Link } from 'react-router';
-import { Breadcrumb } from 'semantic-ui-react';
+import { Breadcrumb } from '@/components/ui';
 import { NewTeamActivity } from '../../organisms';
 import { OrgActivityPage } from '../../templates';
 

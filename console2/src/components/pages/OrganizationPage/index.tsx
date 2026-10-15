@@ -26,7 +26,7 @@ import { OrganizationActivity } from '../../organisms';
 import { LoadingState } from '../../../App';
 import { useCallback, useState } from 'react';
 import { BreadcrumbsToolbar } from '../../organisms';
-import { Breadcrumb } from 'semantic-ui-react';
+import { Breadcrumb } from '@/components/ui';
 import { Link } from 'react-router';
 
 interface RouteProps {

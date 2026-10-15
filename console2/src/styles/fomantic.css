@@ -1,0 +1,51 @@
+/*-
+ * *****
+ * Concord
+ * -----
+ * Copyright (C) 2017 - 2026 Walmart Inc.
+ * -----
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =====
+ */
+@import 'fomantic-ui-css/components/reset.css';
+@import 'fomantic-ui-css/components/site.css';
+@import 'fomantic-ui-css/components/button.css';
+@import 'fomantic-ui-css/components/container.css';
+@import 'fomantic-ui-css/components/divider.css';
+@import 'fomantic-ui-css/components/header.css';
+@import 'fomantic-ui-css/components/icon.css';
+@import 'fomantic-ui-css/components/image.css';
+@import 'fomantic-ui-css/components/input.css';
+@import 'fomantic-ui-css/components/label.css';
+@import 'fomantic-ui-css/components/list.css';
+@import 'fomantic-ui-css/components/loader.css';
+@import 'fomantic-ui-css/components/segment.css';
+@import 'fomantic-ui-css/components/breadcrumb.css';
+@import 'fomantic-ui-css/components/form.css';
+@import 'fomantic-ui-css/components/grid.css';
+@import 'fomantic-ui-css/components/menu.css';
+@import 'fomantic-ui-css/components/message.css';
+@import 'fomantic-ui-css/components/table.css';
+@import 'fomantic-ui-css/components/card.css';
+@import 'fomantic-ui-css/components/statistic.css';
+@import 'fomantic-ui-css/components/accordion.css';
+@import 'fomantic-ui-css/components/checkbox.css';
+@import 'fomantic-ui-css/components/dimmer.css';
+@import 'fomantic-ui-css/components/dropdown.css';
+@import 'fomantic-ui-css/components/embed.css';
+@import 'fomantic-ui-css/components/modal.css';
+@import 'fomantic-ui-css/components/popup.css';
+@import 'fomantic-ui-css/components/progress.css';
+@import 'fomantic-ui-css/components/search.css';
+@import 'fomantic-ui-css/components/sticky.css';
+@import 'fomantic-ui-css/components/transition.css';

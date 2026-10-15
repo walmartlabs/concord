@@ -27,7 +27,12 @@ import {
     TeamRole
 } from '../../../api/org/team';
 import { ConcordKey, RequestError } from '../../../api/common';
-import { Button, Container, Form, Loader, Menu, Table } from 'semantic-ui-react';
+import { Loader } from '@/components/ui';
+import { Table } from '@/components/ui';
+import { Menu } from '@/components/ui';
+import { Container } from '@/components/ui';
+import { Form } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { FindLdapGroupField, RequestErrorActivity } from '../../organisms';
 import { LdapGroupSearchResult } from '../../../api/service/console';
 import { TeamRoleDropdown } from '../../molecules';

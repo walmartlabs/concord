@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { Icon, Modal } from 'semantic-ui-react';
+import { Modal } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { ProcessMeta } from '../../../api/process';
 import { ReactJson } from '../../atoms';

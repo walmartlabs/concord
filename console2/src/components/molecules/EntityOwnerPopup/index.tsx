@@ -20,7 +20,8 @@
 
 import * as React from 'react';
 import { EntityOwner } from '../../../api/common';
-import { Popup, Table } from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
+import { Table } from '@/components/ui';
 
 interface Props {
     data: EntityOwner;

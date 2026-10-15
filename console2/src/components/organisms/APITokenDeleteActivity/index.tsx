@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { useState } from 'react';
-import { Button } from 'semantic-ui-react';
+import { Button } from '@/components/ui';
 
 import {ConcordId, ConcordKey, GenericOperationResult, RequestError} from '../../../api/common';
 import { RequestErrorMessage, SingleOperationPopup } from '../../molecules';

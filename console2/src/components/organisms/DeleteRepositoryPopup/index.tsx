@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { useCallback, useState } from 'react';
-import { Input } from 'semantic-ui-react';
+import { Input } from '@/components/ui';
 
 import { ConcordKey, GenericOperationResult } from '../../../api/common';
 import { SingleOperationPopup } from '../../molecules';

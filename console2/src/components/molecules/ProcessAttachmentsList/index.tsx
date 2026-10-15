@@ -19,7 +19,7 @@
  */
 import * as React from 'react';
 import { ConcordId } from '../../../api/common';
-import { Table } from 'semantic-ui-react';
+import { Table } from '@/components/ui';
 
 interface ExternalProps {
     instanceId: ConcordId;

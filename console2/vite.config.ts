@@ -3,12 +3,15 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 const manualChunkGroups = [
-  ['react-vendor', ['react', 'react-dom', 'react-router']],
-  ['ui-vendor', ['semantic-ui-react']]
+  ['react-vendor', ['react', 'react-dom', 'react-router']]
 ] as const;
 
 function manualChunks(id: string) {
   const normalizedId = id.replaceAll('\\', '/');
+
+  if (normalizedId.includes('/src/components/ui/')) {
+    return 'ui';
+  }
 
   if (!normalizedId.includes('/node_modules/')) {
     return undefined;
@@ -39,7 +42,6 @@ export default defineConfig({
   build: {
     outDir: 'target/classes/META-INF/console2',
     emptyOutDir: true,
-    // Semantic UI CSS contains selectors Lightning CSS rejects in Vite 8.
     cssMinify: 'esbuild',
     sourcemap: true,
     rollupOptions: {
@@ -57,8 +59,7 @@ export default defineConfig({
     include: [
       'react',
       'react-dom',
-      'react-router',
-      'semantic-ui-react'
+      'react-router'
     ]
   }
 });

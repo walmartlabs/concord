@@ -19,7 +19,8 @@
  */
 
 import { useCallback, useContext } from 'react';
-import { Loader, Table } from 'semantic-ui-react';
+import { Loader } from '@/components/ui';
+import { Table } from '@/components/ui';
 
 import { ConcordKey } from '../../../api/common';
 import { TriggerEntry, listTriggers as apiListTriggers } from '../../../api/org/project/repository';

@@ -20,7 +20,9 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Button, Icon, SemanticCOLORS, SemanticICONS } from 'semantic-ui-react';
+import { Button } from '@/components/ui';
+import { Icon } from '@/components/ui';
+import { SemanticCOLORS, SemanticICONS } from '@/components/ui';
 import {
     formatDistance,
     formatDuration,

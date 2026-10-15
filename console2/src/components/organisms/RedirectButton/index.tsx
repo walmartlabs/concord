@@ -20,8 +20,8 @@
 
 import * as React from 'react';
 import { useHistory } from '@/router';
-import { Button } from 'semantic-ui-react';
-import { ButtonProps } from 'semantic-ui-react/dist/commonjs/elements/Button/Button';
+import { Button } from '@/components/ui';
+import { ButtonProps } from '@/components/ui';
 
 interface ExternalProps extends ButtonProps {
     location: string;

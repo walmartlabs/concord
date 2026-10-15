@@ -20,7 +20,10 @@
 
 import * as React from 'react';
 import {Link} from 'react-router';
-import {Grid, Label, Popup, Table} from 'semantic-ui-react';
+import { Popup } from '@/components/ui';
+import { Table } from '@/components/ui';
+import { Grid } from '@/components/ui';
+import { Label } from '@/components/ui';
 
 import {getStatusSemanticColor, ProcessEntry, ProcessKind, ProcessStatus} from '../../../api/process';
 import {formatDuration} from '../../../utils';

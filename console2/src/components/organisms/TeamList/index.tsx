@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { useCallback } from 'react';
 import { Link } from 'react-router';
-import { List } from 'semantic-ui-react';
+import { List } from '@/components/ui';
 
 import { ConcordKey } from '../../../api/common';
 import { list as apiList, TeamEntry } from '../../../api/org/team';

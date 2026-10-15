@@ -18,7 +18,9 @@
  * =====
  */
 import * as React from 'react';
-import { Icon, List, Loader } from 'semantic-ui-react';
+import { Loader } from '@/components/ui';
+import { List } from '@/components/ui';
+import { Icon } from '@/components/ui';
 
 import { APITokenDeleteActivity } from '../../organisms';
 import { list as apiList, TokenEntry } from '../../../api/profile/api_token';
