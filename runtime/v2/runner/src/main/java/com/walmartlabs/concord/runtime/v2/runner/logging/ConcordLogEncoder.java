@@ -45,10 +45,15 @@ public class ConcordLogEncoder extends LayoutWrappingEncoder<ILoggingEvent> {
         }
 
         SegmentStatusMarker marker = segmentMarker(event);
-        boolean isStatusEvent = marker != null;
-        String msg = null;
-        if (!isStatusEvent) {
+        String msg;
+        if (marker == null) {
             msg = layout.doLayout(event);
+        } else if (isFinalStatus(marker)) {
+            // when the status changed, epoch millis. A RUNNING marker has no body:
+            // the agent can't tell it from a log line
+            msg = String.valueOf(event.getTimeStamp());
+        } else {
+            msg = null;
         }
         return LogSegmentSerializer.serialize(header(event, marker), msg);
     }

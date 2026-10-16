@@ -102,16 +102,21 @@ public class ProcessLogsDao extends AbstractDao {
                 .execute();
     }
 
-    public void updateSegment(ProcessKey processKey, long segmentId, LogSegment.Status status, Integer warnings, Integer errors) {
-        tx(tx -> updateSegment(tx, processKey, segmentId, status, warnings, errors));
+    /**
+     * @param statusUpdatedAt when the status changed, the current time if {@code null}
+     */
+    public void updateSegment(ProcessKey processKey, long segmentId, LogSegment.Status status, Integer warnings, Integer errors,
+                              OffsetDateTime statusUpdatedAt) {
+        tx(tx -> updateSegment(tx, processKey, segmentId, status, warnings, errors, statusUpdatedAt));
     }
 
-    private void updateSegment(DSLContext tx, ProcessKey processKey, long segmentId, LogSegment.Status status, Integer warnings, Integer errors) {
+    private void updateSegment(DSLContext tx, ProcessKey processKey, long segmentId, LogSegment.Status status, Integer warnings, Integer errors,
+                               OffsetDateTime statusUpdatedAt) {
         UpdateQuery<ProcessLogSegmentsRecord> q = tx.updateQuery(PROCESS_LOG_SEGMENTS);
 
         if (status != null) {
             q.addValue(PROCESS_LOG_SEGMENTS.SEGMENT_STATUS, status.name());
-            q.addValue(PROCESS_LOG_SEGMENTS.STATUS_UPDATED_AT, currentOffsetDateTime());
+            q.addValue(PROCESS_LOG_SEGMENTS.STATUS_UPDATED_AT, statusUpdatedAt != null ? value(statusUpdatedAt) : currentOffsetDateTime());
         }
 
         if (warnings != null) {

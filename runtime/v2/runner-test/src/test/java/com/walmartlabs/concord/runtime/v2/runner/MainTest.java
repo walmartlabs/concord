@@ -1273,8 +1273,9 @@ public class MainTest  {
 
         byte[] log = run(runnerCfg);
 
-        assertLog(log, Pattern.quote("|0|1|1|0|0||70|2|0|0|0|") + ".*done!.*");
-        assertLog(log, Pattern.quote("|0|2|1|0|0|"));
+        // final statuses carry the time of the status (epoch millis)
+        assertLog(log, Pattern.quote("|13|1|1|0|0|") + "\\d{13}" + Pattern.quote("|70|2|0|0|0|") + ".*done!.*");
+        assertLog(log, Pattern.quote("|13|2|1|0|0|") + "\\d{13}");
     }
 
     @Test
