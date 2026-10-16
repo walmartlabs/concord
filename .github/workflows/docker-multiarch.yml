@@ -191,6 +191,7 @@ jobs:
             -Dmaven.repo.local="${MAVEN_REPO_LOCAL}" \
             -Djava.io.tmpdir="${WORK}" \
             -DskipTests \
+            -Dmaven.test.skip=true \
             -Pgha \
             -pl docker-images/base,docker-images/ansible,docker-images/agent,docker-images/server,docker-images/agent-operator \
             "${maven_reactor_args[@]}"
