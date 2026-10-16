@@ -43,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MigrationTest {
@@ -194,6 +195,25 @@ public class MigrationTest {
                     new ClassLoaderResourceAccessor(),
                     database);
             liquibase.update((String) null);
+
+            statement.execute("insert into process_log_segments (segment_kind) values ('STEP'), ('ITERATION'), ('ATTEMPT'), ('ERROR'), ('PARALLEL'), (null)");
+            try (var result = statement.executeQuery("""
+                    select segment_kind::text, pg_typeof(segment_kind)::text
+                    from process_log_segments order by process_log_segments.segment_kind nulls last
+                    """)) {
+                for (var kind : new String[] { "STEP", "ITERATION", "ATTEMPT", "ERROR", "PARALLEL", null }) {
+                    assertTrue(result.next());
+                    assertEquals(kind, result.getString(1));
+                    assertEquals("log_segment_kind", result.getString(2));
+                }
+                assertFalse(result.next());
+            }
+            statement.execute("insert into process_log_segments (segment_kind) values ('LOOP'), ('RETRY'), ('ITERATION_RETRY')");
+            var savepoint = conn.setSavepoint();
+            var invalidKind = assertThrows(java.sql.SQLException.class,
+                    () -> statement.execute("insert into process_log_segments (segment_kind) values ('INVALID')"));
+            assertEquals("22P02", invalidKind.getSQLState());
+            conn.rollback(savepoint);
 
             try (var result = statement.executeQuery("""
                     select count(*)

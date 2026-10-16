@@ -63,19 +63,23 @@ public class LoopIterationCommand implements Command {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
-        frame.push(new CloseSegmentCommand(LogSegmentKind.ITERATION, segment.correlationId()));
+        frame.push(new CloseSegmentCommand(segment.kind(), segment.correlationId()));
         frame.push(cmd);
-        frame.push(new OpenSegmentCommand(LogSegmentKind.ITERATION, segment.step(), segment.correlationId(), index,
+        frame.push(new OpenSegmentCommand(segment.kind(), segment.step(), segment.correlationId(), index,
                 segment.evaluateName(), false));
     }
 
     /**
      * @param correlationId the step's correlation ID
-     * @param evaluateName  evaluate the step's name for each iteration, see {@link OpenSegmentCommand}
+     * @param kind          ITERATION or ITERATION_RETRY, known before the iteration starts
      */
-    public record Segment(Step step, UUID correlationId, boolean evaluateName) implements Serializable {
+    public record Segment(Step step, UUID correlationId, LogSegmentKind kind) implements Serializable {
 
         @Serial
         private static final long serialVersionUID = 1L;
+
+        public boolean evaluateName() {
+            return kind == LogSegmentKind.ITERATION;
+        }
     }
 }

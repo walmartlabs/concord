@@ -30,6 +30,9 @@ import org.junit.jupiter.api.Test;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 public class ImmutablesTest {
 
     @Test
@@ -55,4 +58,21 @@ public class ImmutablesTest {
         ProcessEntry e2 = om.readValue(s, ProcessEntry.class);
         System.out.println(e2);
     }
+
+    @Test
+    public void repetitionKindsRoundTripThroughTheExistingApiField() throws Exception {
+        var mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        for (var kind : LogSegment.Kind.values()) {
+            var request = mapper.readValue("{\"name\":\"example\",\"kind\":\"" + kind + "\"}", LogSegmentRequest.class);
+            assertEquals(kind, request.kind());
+            assertEquals(kind, mapper.readValue(mapper.writeValueAsString(request), LogSegmentRequest.class).kind());
+            var segment = LogSegment.builder().id(1).name("example")
+                    .createdAt(OffsetDateTime.now()).kind(kind).index(3).build();
+            var result = mapper.readValue(mapper.writeValueAsString(segment), LogSegment.class);
+            assertEquals(kind, result.kind());
+            assertEquals(3, result.index());
+        }
+        assertNull(mapper.readValue("{\"name\":\"legacy\"}", LogSegmentRequest.class).kind());
+    }
+
 }

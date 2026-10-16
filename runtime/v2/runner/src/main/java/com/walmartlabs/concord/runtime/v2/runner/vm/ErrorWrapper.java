@@ -47,21 +47,21 @@ public class ErrorWrapper implements Command {
      */
     private final Step step;
     private final UUID correlationId;
-    private final boolean evaluateName;
+    private final LogSegmentKind kind;
 
     public ErrorWrapper(Command cmd, Command errorSteps) {
-        this(cmd, errorSteps, null, null, false);
+        this(cmd, errorSteps, null, null, LogSegmentKind.STEP);
     }
 
     /**
-     * @param evaluateName evaluate the step's name for the step's segment, see {@link OpenSegmentCommand}
+     * @param kind the kind of the owning step segment (STEP, LOOP or RETRY)
      */
-    public ErrorWrapper(Command cmd, Command errorSteps, Step step, UUID correlationId, boolean evaluateName) {
+    public ErrorWrapper(Command cmd, Command errorSteps, Step step, UUID correlationId, LogSegmentKind kind) {
         this.cmd = cmd;
         this.errorSteps = errorSteps;
         this.step = step;
         this.correlationId = correlationId;
-        this.evaluateName = evaluateName;
+        this.kind = kind;
     }
 
     @Override
@@ -85,9 +85,9 @@ public class ErrorWrapper implements Command {
                             errorSteps,
                             new CloseSegmentCommand(LogSegmentKind.ERROR, correlationId)))
                     // pushed in this order: the last command runs first
-                    .commands(new CloseSegmentCommand(LogSegmentKind.STEP, correlationId),
+                    .commands(new CloseSegmentCommand(kind, correlationId),
                             cmd,
-                            new OpenSegmentCommand(LogSegmentKind.STEP, step, correlationId, null, evaluateName, true));
+                            new OpenSegmentCommand(kind, step, correlationId, null, kind == LogSegmentKind.STEP, true));
         }
 
         state.pushFrame(threadId, inner.build());

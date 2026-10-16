@@ -66,7 +66,7 @@ public final class GroupOfStepsCompiler implements StepCompiler<GroupOfSteps> {
             return cmd;
         }
 
-        return StepSegments.step(cmd, step, correlationId, loop != null,
+        return StepSegments.step(cmd, step, correlationId, StepSegments.kind(loop != null, false),
                 errorSteps.isEmpty() ? null : compile(context, errorSteps));
     }
 

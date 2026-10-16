@@ -48,5 +48,14 @@ public enum LogSegmentKind {
     /**
      * The whole execution of a {@code parallel} block.
      */
-    PARALLEL
+    PARALLEL,
+
+    /** The whole execution of a step with a loop, including an empty loop. */
+    LOOP,
+
+    /** The whole execution of a step with retry, without an enclosing loop. */
+    RETRY,
+
+    /** One loop iteration owning retry attempts; index is the iteration number. */
+    ITERATION_RETRY
 }

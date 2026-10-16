@@ -1,0 +1,42 @@
+flows:
+  default:
+    - name: empty task
+      task: log
+      loop:
+        items: []
+    - name: empty call
+      call: inner
+      loop:
+        items: []
+    - name: empty script
+      script: groovy
+      body: "println('unused')"
+      loop:
+        items: []
+    - name: empty block
+      block:
+        - log: unused
+      loop:
+        items: []
+    - name: invalid loop
+      call: inner
+      loop:
+        items: "${missingItems}"
+      error:
+        - log: handled
+    - name: retry owner
+      call: inner
+      retry:
+        times: 1
+        delay: 0
+    - name: loop owner
+      call: inner
+      loop:
+        items: [a, b]
+      retry:
+        times: 1
+        delay: 0
+    - name: ordinary
+      call: inner
+  inner:
+    - log: done

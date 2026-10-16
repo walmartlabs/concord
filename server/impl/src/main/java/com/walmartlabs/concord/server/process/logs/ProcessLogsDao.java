@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.logs;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgIntRange;
+import com.walmartlabs.concord.server.jooq.enums.LogSegmentKind;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogDataRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogSegmentsRecord;
 import com.walmartlabs.concord.server.process.LogSegment;
@@ -35,7 +36,6 @@ import javax.inject.Inject;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.db.PgUtils.upperRange;
@@ -98,7 +98,7 @@ public class ProcessLogsDao extends AbstractDao {
                         createdAt != null ? value(createdAt) : currentOffsetDateTime(),
                         value(status),
                         value(request.parentId()),
-                        value(toKindId(request.kind())),
+                        value(toDbKind(request.kind())),
                         value(request.index()),
                         value(request.threadId()))
                 .returning(PROCESS_LOG_SEGMENTS.SEGMENT_ID)
@@ -299,25 +299,12 @@ public class ProcessLogsDao extends AbstractDao {
             PROCESS_LOG_SEGMENTS.SEGMENT_INDEX,
             PROCESS_LOG_SEGMENTS.SEGMENT_THREAD);
 
-    // stored IDs of the kinds, never reuse
-    private static final Map<LogSegment.Kind, Short> KIND_IDS = Map.of(
-            LogSegment.Kind.STEP, (short) 1,
-            LogSegment.Kind.ITERATION, (short) 2,
-            LogSegment.Kind.ATTEMPT, (short) 3,
-            LogSegment.Kind.ERROR, (short) 4,
-            LogSegment.Kind.PARALLEL, (short) 5);
-
-    private static Short toKindId(LogSegment.Kind kind) {
-        return kind != null ? KIND_IDS.get(kind) : null;
+    private static LogSegmentKind toDbKind(LogSegment.Kind kind) {
+        return kind != null ? LogSegmentKind.valueOf(kind.name()) : null;
     }
 
-    private static LogSegment.Kind toKind(Short id) {
-        // unknown kinds (e.g. written by a newer version) are ignored
-        return KIND_IDS.entrySet().stream()
-                .filter(e -> e.getValue().equals(id))
-                .map(Map.Entry::getKey)
-                .findFirst()
-                .orElse(null);
+    private static LogSegment.Kind toKind(LogSegmentKind kind) {
+        return kind != null ? LogSegment.Kind.valueOf(kind.getLiteral()) : null;
     }
 
     private static LogSegment toSegment(org.jooq.Record r) {

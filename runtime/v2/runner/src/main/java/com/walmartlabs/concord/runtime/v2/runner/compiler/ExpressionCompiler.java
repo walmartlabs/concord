@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
 
 import com.walmartlabs.concord.runtime.v2.model.Expression;
 import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogSegmentKind;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ExpressionCommand;
 import com.walmartlabs.concord.svm.Command;
@@ -47,6 +48,6 @@ public class ExpressionCompiler implements StepCompiler<Expression> {
             return cmd;
         }
 
-        return StepSegments.step(cmd, step, correlationId, false, null);
+        return StepSegments.step(cmd, step, correlationId, LogSegmentKind.STEP, null);
     }
 }

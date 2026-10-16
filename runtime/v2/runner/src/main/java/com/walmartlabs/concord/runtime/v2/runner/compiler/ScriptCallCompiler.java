@@ -62,7 +62,7 @@ public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
         }
 
         List<Step> errorSteps = options.errorSteps();
-        return StepSegments.step(cmd, step, correlationId, loop != null || retry != null,
+        return StepSegments.step(cmd, step, correlationId, StepSegments.kind(loop != null, retry != null),
                 errorSteps.isEmpty() ? null : CompilerUtils.compile(context, errorSteps));
     }
 

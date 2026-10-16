@@ -25,6 +25,7 @@ import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogSegmentAttributes;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogSegmentKind;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.Tasks;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import org.junit.jupiter.api.Test;
@@ -56,11 +57,11 @@ public class LogTreeTest {
     @Test
     public void complex() throws Exception {
         assertEquals("""
-                STEP call: inner RECOVERED
-                  ITERATION#0 iteration #1 OK
+                LOOP call: inner RECOVERED
+                  ITERATION_RETRY#0 iteration #1 OK
                     ATTEMPT#0 deploy a OK
                       STEP work a OK
-                  ITERATION#1 iteration #2 ERROR
+                  ITERATION_RETRY#1 iteration #2 ERROR
                     ATTEMPT#0 deploy b ERROR
                       STEP work b ERROR
                     ATTEMPT#1 deploy b ERROR
@@ -109,26 +110,26 @@ public class LogTreeTest {
     @Test
     public void loopsAndRetries() throws Exception {
         assertEquals("""
-                STEP retried OK
+                RETRY retried OK
                   ATTEMPT#0 retried ERROR
                   ATTEMPT#1 retried OK
-                STEP task: log OK
+                LOOP task: log OK
                   ITERATION#0 serial a OK
                   ITERATION#1 serial b OK
-                STEP task: log OK
+                LOOP task: log OK
                   ITERATION#0 parallel a OK
                   ITERATION#1 parallel b OK
-                STEP task: conditionallyFailTask OK
-                  ITERATION#0 iteration #1 OK
+                LOOP task: conditionallyFailTask OK
+                  ITERATION_RETRY#0 iteration #1 OK
                     ATTEMPT#0 looped retry x ERROR
                     ATTEMPT#1 looped retry x OK
-                  ITERATION#1 iteration #2 OK
+                  ITERATION_RETRY#1 iteration #2 OK
                     ATTEMPT#0 looped retry y ERROR
                     ATTEMPT#1 looped retry y OK
                 STEP caught RECOVERED
                   ERROR error OK
                     STEP handler OK
-                STEP outer OK
+                RETRY outer OK
                   ATTEMPT#0 outer OK
                     PARALLEL parallel OK
                       STEP branch OK
@@ -146,7 +147,7 @@ public class LogTreeTest {
     @Test
     public void errorHandlers() throws Exception {
         assertEquals("""
-                STEP block OK
+                LOOP block OK
                   ITERATION#0 iteration #1 OK
                     STEP loop failure a RECOVERED
                       ERROR error OK
@@ -183,7 +184,7 @@ public class LogTreeTest {
         assertEquals("""
                 STEP outer OK
                   STEP block RECOVERED
-                    STEP retried OK
+                    RETRY retried OK
                       ATTEMPT#0 retried ERROR
                       ATTEMPT#1 retried OK
                     ERROR error OK
@@ -235,7 +236,7 @@ public class LogTreeTest {
     public void retryReleasesTheError() throws Exception {
         Tasks.FailOnceTask.reset();
         assertEquals("""
-                STEP retried OK
+                RETRY retried OK
                   ATTEMPT#0 retried ERROR
                   ATTEMPT#1 retried OK
                 STEP task: stateReferencesErrorTask OK
@@ -262,7 +263,7 @@ public class LogTreeTest {
     @Test
     public void withItemsInLoop() throws Exception {
         assertEquals("""
-                STEP block OK
+                LOOP block OK
                   ITERATION#0 iteration #1 OK
                     STEP item p OK
                     STEP item q OK
@@ -272,6 +273,25 @@ public class LogTreeTest {
                 STEP parallel x OK
                 STEP parallel y OK
                 """, run("logSegments/withItemsInLoop"));
+    }
+
+    @Test
+    public void repetitionKindsExistWithoutChildrenAndBelongToTheCorrectScope() throws Exception {
+        run("logTree/groupMetadata");
+        var client = runtime.testLoggingClient();
+        for (var name : List.of("empty task", "empty call", "empty script", "empty block", "invalid loop")) {
+            var id = client.getSegmentId(name);
+            assertEquals(LogSegmentKind.LOOP, client.getSegmentAttributes(id).kind(), name);
+            assertEquals(0, client.getSegmentIds().stream()
+                    .filter(child -> Objects.equals(client.getSegmentParentId(child), id))
+                    .filter(child -> client.getSegmentAttributes(child).kind() == LogSegmentKind.ITERATION)
+                    .count(), name);
+        }
+        var attributes = client.getSegmentIds().stream().map(client::getSegmentAttributes).toList();
+        assertEquals(1, attributes.stream().filter(a -> a.kind() == LogSegmentKind.RETRY).count());
+        assertEquals(2, attributes.stream().filter(a -> a.kind() == LogSegmentKind.ITERATION_RETRY).count());
+        assertEquals(3, attributes.stream().filter(a -> a.kind() == LogSegmentKind.ATTEMPT).count());
+        assertEquals(LogSegmentKind.STEP, client.getSegmentAttributes(client.getSegmentId("ordinary")).kind());
     }
 
     private static String run(String resource) throws Exception {

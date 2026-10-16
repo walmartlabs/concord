@@ -94,7 +94,8 @@ public class OpenSegmentCommand implements Command {
         if (raw != null && evaluateName) {
             Context ctx = runtime.getService(ContextFactory.class).create(runtime, state, threadId, step, correlationId);
             name = ctx.eval(raw, String.class);
-        } else if (raw != null && kind == LogSegmentKind.STEP && !raw.contains("${")) {
+        } else if (raw != null && !raw.contains("${")
+                && (kind == LogSegmentKind.STEP || kind == LogSegmentKind.LOOP || kind == LogSegmentKind.RETRY)) {
             name = raw;
         }
 
@@ -107,11 +108,11 @@ public class OpenSegmentCommand implements Command {
 
     private String structuralName() {
         return switch (kind) {
-            case ITERATION -> "iteration #" + (index + 1);
+            case ITERATION, ITERATION_RETRY -> "iteration #" + (index + 1);
             case ATTEMPT -> "attempt #" + (index + 1);
             case ERROR -> "error";
             case PARALLEL -> "parallel";
-            case STEP -> stepName(step);
+            case STEP, LOOP, RETRY -> stepName(step);
         };
     }
 

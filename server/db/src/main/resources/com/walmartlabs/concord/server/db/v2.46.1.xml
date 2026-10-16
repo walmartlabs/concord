@@ -19,9 +19,14 @@
         <sql>
             set local lock_timeout = '5s';
 
+            create type log_segment_kind as enum (
+                'STEP', 'ITERATION', 'ATTEMPT', 'ERROR', 'PARALLEL',
+                'LOOP', 'RETRY', 'ITERATION_RETRY'
+            );
+
             alter table PROCESS_LOG_SEGMENTS
                 add column if not exists PARENT_SEGMENT_ID bigint,
-                add column if not exists SEGMENT_KIND smallint,
+                add column if not exists SEGMENT_KIND log_segment_kind,
                 add column if not exists SEGMENT_INDEX int,
                 add column if not exists SEGMENT_THREAD int;
         </sql>

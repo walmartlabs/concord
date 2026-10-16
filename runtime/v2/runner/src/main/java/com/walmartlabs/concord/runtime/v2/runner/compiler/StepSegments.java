@@ -44,25 +44,29 @@ final class StepSegments {
      * for each iteration unless the attempts have their own segments.
      */
     static LoopIterationCommand.Segment iteration(Step step, UUID correlationId, boolean hasRetry) {
-        return new LoopIterationCommand.Segment(step, correlationId, !hasRetry);
+        return new LoopIterationCommand.Segment(step, correlationId,
+                hasRetry ? LogSegmentKind.ITERATION_RETRY : LogSegmentKind.ITERATION);
     }
 
     /**
      * Wraps the (possibly looped or retried) body with the step's segment and its {@code error} block.
      *
-     * @param aggregate   the body runs more than once (loop or retry): the step's name is
-     *                    evaluated for each iteration or attempt instead
+     * @param kind        STEP, LOOP or RETRY, known before the body starts
      * @param errorSteps  the compiled {@code error} block, {@code null} if none
      */
-    static Command step(Command body, Step step, UUID correlationId, boolean aggregate, Command errorSteps) {
+    static Command step(Command body, Step step, UUID correlationId, LogSegmentKind kind, Command errorSteps) {
         if (errorSteps != null) {
-            return new ErrorWrapper(body, errorSteps, step, correlationId, !aggregate);
+            return new ErrorWrapper(body, errorSteps, step, correlationId, kind);
         }
 
         return new BlockCommand(
-                new OpenSegmentCommand(LogSegmentKind.STEP, step, correlationId, null, !aggregate, false),
+                new OpenSegmentCommand(kind, step, correlationId, null, kind == LogSegmentKind.STEP, false),
                 body,
-                new CloseSegmentCommand(LogSegmentKind.STEP, correlationId));
+                new CloseSegmentCommand(kind, correlationId));
+    }
+
+    static LogSegmentKind kind(boolean hasLoop, boolean hasRetry) {
+        return hasLoop ? LogSegmentKind.LOOP : hasRetry ? LogSegmentKind.RETRY : LogSegmentKind.STEP;
     }
 
     private StepSegments() {
