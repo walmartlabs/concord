@@ -34,7 +34,9 @@ vi.mock('../../ProcessHistoryActivity', () => ({ default: () => null }));
 vi.mock('../../ProcessLogActivity', () => ({ default: () => null }));
 vi.mock('../../ProcessLogActivityV2', () => ({ default: () => null }));
 vi.mock('../../ProcessLogTreeActivity', () => ({
-    default: () => <div>retained routed content</div>,
+    default: ({ variant }: { variant?: string }) => (
+        <div>retained routed content{variant === 'groups' ? ' v2' : ''}</div>
+    ),
 }));
 vi.mock('../../ProcessStatusActivity', () => ({ default: () => null }));
 vi.mock('../../ProcessWaitActivity', () => ({ default: () => null }));
@@ -156,4 +158,18 @@ test('schedules and cleans up a configured external login redirect', async () =>
             value: previousConcord,
         });
     }
+});
+
+test('Tree view v2 has a separate route next to the original tree', async () => {
+    vi.mocked(get).mockResolvedValue(process);
+    render(
+        <MemoryRouter initialEntries={['/log-tree-v2']}>
+            <ProcessActivity instanceId="process-id" activeTab="logTreeV2" />
+        </MemoryRouter>
+    );
+    expect(await screen.findByText('retained routed content v2')).toBeTruthy();
+    const v2 = screen.getByRole('link', { name: 'Tree view v2' });
+    expect(v2.getAttribute('href')).toContain('/log-tree-v2');
+    expect(v2.closest('.item')?.classList.contains('active')).toBe(true);
+    expect(screen.getByRole('link', { name: 'Log Tree' })).toBeTruthy();
 });

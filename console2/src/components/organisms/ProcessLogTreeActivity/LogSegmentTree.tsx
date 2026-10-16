@@ -41,7 +41,9 @@ import KindBadge from './KindBadge';
 import SegmentedFilter from './SegmentedFilter';
 import type { SegmentedOption } from './SegmentedFilter';
 
+import { groupLabel } from './groupPresentation';
 import './LogSegmentTree.css';
+import './GroupGuides.css';
 
 type StatusFilter = 'ALL' | 'FAILED' | 'WARNINGS' | 'RUNNING' | 'OK';
 
@@ -49,6 +51,7 @@ const ROW_HEIGHT = 28;
 const OVERSCAN_ROWS = 5;
 
 interface Props {
+    variant?: 'steps' | 'groups';
     tree: SegmentTree;
     processStatus?: ProcessStatus;
     selectedId?: number;
@@ -56,6 +59,7 @@ interface Props {
 }
 
 interface Row {
+    presentation?: 'heading' | 'ownLogs';
     node: SegmentNode;
     open: boolean;
     // shown only because one of the descendants matches the filter
@@ -75,19 +79,24 @@ interface SegmentTreeRowProps {
     timeRange: TreeTimeRange;
     onSelect: (segmentId: number) => void;
     onToggle: (segmentId: number, open?: boolean) => void;
+    groups?: boolean;
+    activeGroupId?: number;
 }
 
 const SegmentTreeRow = React.memo(
     ({
-        row: { node, open, dimmed },
+        row: { node, open, dimmed, presentation },
         selected,
         processStatus,
         timeRange,
         onSelect,
         onToggle,
+        groups,
+        activeGroupId,
     }: SegmentTreeRowProps) => {
         const s = node.segment;
-        const hasChildren = node.children.length > 0;
+        const ownLogs = presentation === 'ownLogs';
+        const hasChildren = !ownLogs && node.children.length > 0;
         const timing = getSegmentTiming(s, processStatus, timeRange.now);
         const { kind, name, note, badgeOnly, loop } = describeNode(node);
         const span = Math.max(timeRange.end - timeRange.start, 1);
@@ -96,19 +105,67 @@ const SegmentTreeRow = React.memo(
         const warnings = hasChildren && !open ? node.totalWarnings : s.warnings ?? 0;
         const errors = hasChildren && !open ? node.totalErrors : s.errors ?? 0;
 
+        const guides = groups ? [...getAncestors(node), ...(ownLogs ? [node] : [])] : [];
+        const guideElements = groups
+            ? guides.map((ancestor) => (
+                  <span
+                      key={ancestor.segment.id}
+                      className={`Guide${groupLabel(ancestor) ? ' GroupGuide' : ''}${
+                          ancestor.segment.id === activeGroupId ? ' ActiveGuide' : ''
+                      }`}
+                  />
+              ))
+            : Array.from({ length: node.depth }, (_, i) => <span key={i} className="Guide" />);
+
+        if (presentation === 'heading') {
+            const label = groupLabel(node);
+            return (
+                <div
+                    className="TreeRow GroupHeading"
+                    role="treeitem"
+                    aria-level={node.depth + 1}
+                    aria-expanded={open}
+                    data-group-id={s.id}
+                >
+                    {guideElements}
+                    <button
+                        type="button"
+                        className="GroupToggle"
+                        aria-label={`${open ? 'Collapse' : 'Expand'} ${label}`}
+                        aria-expanded={open}
+                        onClick={() => onToggle(s.id)}
+                    >
+                        <Icon name={open ? 'angle down' : 'angle right'} />
+                        {label}
+                    </button>
+                    {!open && node.totalErrors > 0 && (
+                        <span className="Counter Errors" title="errors in group">
+                            {node.totalErrors}
+                        </span>
+                    )}
+                    {!open && node.totalWarnings > 0 && (
+                        <span className="Counter Warnings" title="warnings in group">
+                            {node.totalWarnings}
+                        </span>
+                    )}
+                </div>
+            );
+        }
+
         return (
             <div
                 data-segment-id={s.id}
                 role="treeitem"
                 aria-selected={selected}
+                aria-level={node.depth + (ownLogs ? 2 : 1)}
                 aria-expanded={hasChildren ? open : undefined}
-                className={`TreeRow${selected ? ' Selected' : ''}${dimmed ? ' Dimmed' : ''}`}
+                className={`TreeRow${ownLogs ? ' OwnLogs' : ''}${selected ? ' Selected' : ''}${
+                    dimmed ? ' Dimmed' : ''
+                }`}
                 onClick={() => onSelect(s.id)}
                 onDoubleClick={() => hasChildren && onToggle(s.id)}
             >
-                {Array.from({ length: node.depth }, (_, i) => (
-                    <span key={i} className="Guide" />
-                ))}
+                {guideElements}
                 <span
                     className="Caret"
                     onClick={(ev) => {
@@ -120,19 +177,34 @@ const SegmentTreeRow = React.memo(
                 >
                     {hasChildren && <Icon name={open ? 'caret down' : 'caret right'} />}
                 </span>
-                <SegmentStatusIcon
-                    status={s.status}
-                    processStatus={processStatus}
-                    failedInside={!open && node.hasFailedDescendant}
-                    retried={node.retried}
-                    recovered={node.recovered}
-                />
-                {loop && <KindBadge kind="loop" />}
-                {kind && <KindBadge kind={kind} title={badgeOnly ? name : undefined} />}
-                <span className="Name" title={badgeOnly ? undefined : s.name}>
-                    {badgeOnly ? null : name}
+                {ownLogs ? (
+                    <Icon name="file alternate outline" className="StatusIcon" />
+                ) : (
+                    <SegmentStatusIcon
+                        status={s.status}
+                        processStatus={processStatus}
+                        failedInside={!open && node.hasFailedDescendant}
+                        retried={node.retried}
+                        recovered={node.recovered}
+                    />
+                )}
+                {!ownLogs && loop && <KindBadge kind="loop" />}
+                {!ownLogs && kind && <KindBadge kind={kind} title={badgeOnly ? name : undefined} />}
+                <span
+                    className="Name"
+                    title={
+                        ownLogs
+                            ? 'Only messages written to this container'
+                            : badgeOnly
+                            ? undefined
+                            : s.name
+                    }
+                >
+                    {ownLogs ? 'Container logs' : badgeOnly ? null : name}
                 </span>
-                {note && <span className={`Note${node.retried ? ' Retried' : ''}`}>{note}</span>}
+                {!ownLogs && note && (
+                    <span className={`Note${node.retried ? ' Retried' : ''}`}>{note}</span>
+                )}
                 {errors > 0 && (
                     <span className="Counter Errors" title="errors">
                         {errors}
@@ -144,10 +216,10 @@ const SegmentTreeRow = React.memo(
                     </span>
                 )}
                 <span className="Duration">
-                    {timing.known && formatDuration(timing.end - timing.start)}
+                    {!ownLogs && timing.known && formatDuration(timing.end - timing.start)}
                 </span>
                 <span className="Timeline">
-                    {timing.known && (
+                    {!ownLogs && timing.known && (
                         <i
                             className={`Bar Bar-${s.status ?? 'NONE'}`}
                             style={{
@@ -165,7 +237,20 @@ const SegmentTreeRow = React.memo(
 const matchesStatus = (n: SegmentNode, filter: StatusFilter) =>
     filter === 'ALL' || categoryOf(n) === filter;
 
-const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) => {
+const LogSegmentTree = ({
+    tree,
+    processStatus,
+    selectedId,
+    onSelect,
+    variant = 'steps',
+}: Props) => {
+    const groups = variant === 'groups';
+    const [hoveredGroupId, setHoveredGroupId] = useState<number>();
+    const selectedNode = selectedId === undefined ? undefined : tree.byId.get(selectedId);
+    const selectedGroup =
+        selectedNode &&
+        [...getAncestors(selectedNode), selectedNode].reverse().find((n) => groupLabel(n));
+    const activeGroupId = hoveredGroupId ?? selectedGroup?.segment.id;
     // loops start collapsed (they can have hundreds of iterations), the rest is expanded;
     // "toggled" keeps the nodes opened/closed by the user against that default
     const [toggled, setToggled] = useState<Set<number>>(new Set());
@@ -229,7 +314,10 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
             matchesStatus(n, statusFilter) &&
             (!q ||
                 n.segment.name.toLowerCase().includes(q) ||
-                describeNode(n).name.toLowerCase().includes(q));
+                describeNode(n).name.toLowerCase().includes(q) ||
+                (groups &&
+                    groupLabel(n) &&
+                    `Container logs ${groupLabel(n)}`.toLowerCase().includes(q)));
 
         // with an active filter keep the matching nodes and their ancestors
         const keep = new Map<SegmentNode, boolean>();
@@ -247,9 +335,13 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
                 return;
             }
 
-            const open = filterActive ? n.children.some((c) => keep.get(c)) : isOpen(n);
-
-            result.push({ node: n, open, dimmed: filterActive && !selfMatch(n) });
+            const group = groups && !!groupLabel(n);
+            const open = filterActive ? group || n.children.some((c) => keep.get(c)) : isOpen(n);
+            const dimmed = filterActive && !selfMatch(n);
+            result.push({ node: n, open, dimmed, presentation: group ? 'heading' : undefined });
+            if (group && open && (!filterActive || selfMatch(n))) {
+                result.push({ node: n, open: false, dimmed: false, presentation: 'ownLogs' });
+            }
 
             if (open) {
                 n.children.forEach(walk);
@@ -258,7 +350,7 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
         tree.roots.forEach(walk);
 
         return result;
-    }, [tree, isOpen, query, statusFilter, filterActive]);
+    }, [tree, isOpen, query, statusFilter, filterActive, groups]);
 
     const counts = useMemo(() => {
         const nodes = tree.ordered;
@@ -276,10 +368,7 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
         () =>
             tree.ordered
                 .map((n, pos) => ({ n, pos }))
-                .filter(
-                    ({ n }) =>
-                        !n.recovered && (isFailure(n) || (n.segment.errors ?? 0) > 0)
-                )
+                .filter(({ n }) => !n.recovered && (isFailure(n) || (n.segment.errors ?? 0) > 0))
                 .map(({ pos }) => pos),
         [tree]
     );
@@ -313,12 +402,12 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
             return;
         }
 
-        const ancestors = getAncestors(node);
+        const ancestors = [...getAncestors(node), ...(groups && groupLabel(node) ? [node] : [])];
         if (ancestors.some((a) => !isOpen(a))) {
             setOpen(ancestors, true);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedId, tree]);
+    }, [selectedId, tree, groups]);
 
     // scroll to the selected row once per selection. The row can appear only after its ancestors
     // are expanded, but expanding/collapsing other nodes must not move the tree back to it
@@ -347,7 +436,9 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
         if (!scrollPending.current || height <= 0) {
             return;
         }
-        const index = rows.findIndex((row) => row.node.segment.id === selectedId);
+        const index = rows.findIndex(
+            (row) => row.node.segment.id === selectedId && row.presentation !== 'heading'
+        );
         if (index < 0) {
             return;
         }
@@ -394,12 +485,19 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
 
     const collapseAll = useCallback(() => {
         const selected = selectedId !== undefined ? tree.byId.get(selectedId) : undefined;
-        const keepOpen = new Set(selected ? getAncestors(selected).map((a) => a.segment.id) : []);
+        const keepOpen = new Set(
+            selected
+                ? [
+                      ...getAncestors(selected),
+                      ...(groups && groupLabel(selected) ? [selected] : []),
+                  ].map((a) => a.segment.id)
+                : []
+        );
         setOpen(
             tree.ordered.filter((n) => n.children.length > 0 && !keepOpen.has(n.segment.id)),
             false
         );
-    }, [tree, selectedId, setOpen]);
+    }, [tree, selectedId, setOpen, groups]);
 
     // jumps to the next/previous error relative to the selected step, wrapping around
     const gotoError = useCallback(
@@ -427,19 +525,22 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
 
     const keyDownHandler = useCallback(
         (ev: React.KeyboardEvent<HTMLDivElement>) => {
-            const idx = rows.findIndex((r) => r.node.segment.id === selectedId);
-            const row = idx >= 0 ? rows[idx] : undefined;
+            // Heading buttons have their own keyboard interaction (Enter/Space).
+            if ((ev.target as HTMLElement).closest('.GroupToggle')) return;
+            const navigable = rows.filter((r) => r.presentation !== 'heading');
+            const idx = navigable.findIndex((r) => r.node.segment.id === selectedId);
+            const row = idx >= 0 ? navigable[idx] : undefined;
 
             switch (ev.key) {
                 case 'ArrowDown': {
-                    const next = rows[Math.min(idx + 1, rows.length - 1)];
+                    const next = navigable[Math.min(idx + 1, navigable.length - 1)];
                     if (next) {
                         onSelect(next.node.segment.id);
                     }
                     break;
                 }
                 case 'ArrowUp': {
-                    const prev = rows[Math.max(idx - 1, 0)];
+                    const prev = navigable[Math.max(idx - 1, 0)];
                     if (prev) {
                         onSelect(prev.node.segment.id);
                     }
@@ -449,10 +550,10 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
                     if (!row || row.node.children.length === 0) {
                         return;
                     }
-                    if (!row.open) {
+                    if (!row.open && row.presentation !== 'ownLogs') {
                         toggle(row.node.segment.id, true);
-                    } else if (rows[idx + 1]) {
-                        onSelect(rows[idx + 1].node.segment.id);
+                    } else if (navigable[idx + 1]) {
+                        onSelect(navigable[idx + 1].node.segment.id);
                     }
                     break;
                 }
@@ -496,7 +597,11 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
     }
 
     return (
-        <div className={`LogSegmentTree${showTimeline ? '' : ' NoTimeline'}`}>
+        <div
+            className={`LogSegmentTree${groups ? ' GroupGuides' : ''}${
+                showTimeline ? '' : ' NoTimeline'
+            }`}
+        >
             <div className="TreeTools">
                 <div className="ToolsRow">
                     <div className="Search">
@@ -595,6 +700,26 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
                 role="tree"
                 onKeyDown={keyDownHandler}
                 onScroll={updateViewport}
+                onMouseLeave={() => setHoveredGroupId(undefined)}
+                onMouseOver={
+                    groups
+                        ? (ev) => {
+                              const el = (ev.target as HTMLElement).closest(
+                                  '[data-segment-id], [data-group-id]'
+                              );
+                              const id =
+                                  el?.getAttribute('data-segment-id') ??
+                                  el?.getAttribute('data-group-id');
+                              const node = id == null ? undefined : tree.byId.get(Number(id));
+                              setHoveredGroupId(
+                                  node &&
+                                      [...getAncestors(node), node]
+                                          .reverse()
+                                          .find((n) => groupLabel(n))?.segment.id
+                              );
+                          }
+                        : undefined
+                }
             >
                 {rows.length === 0 && <div className="Empty">No steps match the filter.</div>}
 
@@ -605,7 +730,9 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
                 />
                 {visibleRows.map((row) => (
                     <SegmentTreeRow
-                        key={row.node.segment.id}
+                        key={`${row.node.segment.id}:${row.presentation ?? 'step'}`}
+                        groups={groups}
+                        activeGroupId={activeGroupId}
                         row={row}
                         selected={row.node.segment.id === selectedId}
                         processStatus={processStatus}

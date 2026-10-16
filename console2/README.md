@@ -76,3 +76,37 @@ scrolls only the tree's vertical viewport; horizontal scrolling remains independ
 
 Activity, tree, and row memo boundaries isolate unrelated parent updates. Fresh
 log snapshots still refresh mounted statuses, counters, and running-step timing.
+
+
+### Tree view v2
+
+The separate `/process/:instanceId/log-tree-v2` tab uses the same polling, tree model,
+filters, error navigation and virtualized viewport as Log Tree. Structural groups
+are collapsible headings with thin guides. Their **Container logs** row selects the
+existing segment and displays only its own messages; no additional segments or
+renaming are involved. Named step rows keep their existing log viewer behavior.
+Heading and content rows both occupy 28 px, so large loops remain virtualized.
+Links copied from this view retain `/log-tree-v2`.
+
+#### Backend API follow-up
+
+The new view works with the existing segment-list and segment-log endpoints.
+Two additions would remove the current presentation compromises:
+
+- **Immutable group metadata on the owner segment.** For example, optional
+  `groupType: LOOP | RETRY`, recorded when the owning scope opens, including on an
+  iteration that owns retry attempts. `kind` and `parentId` keep their existing
+  meanings. ERROR/PARALLEL already identify groups. Currently loop/retry grouping
+  is inferred from explicit child kinds, so it becomes visible only when the first
+  child arrives; an empty loop or failure before the first child stays an ordinary
+  step. Parsing names or expressions is intentionally avoided.
+- **Own-log availability in the list response.** For example, `hasOwnLogs`, counting
+  only bytes/messages belonging to that segment, updated as output arrives.
+  Currently every group has a Container logs row, including empty ones. This field
+  would allow hiding empty entries without one extra request per container. Decide
+  whether to reserve the row while running to avoid shifting the tree as logs arrive.
+
+Optionally return a planned iteration count when known, separately from the count
+of created children. The current caption reports only observed iterations/attempts,
+not a known total. No new log endpoint, parent relation, or mutable segment name is
+needed. Existing own `errors`/`warnings` counters and status fields remain in use.

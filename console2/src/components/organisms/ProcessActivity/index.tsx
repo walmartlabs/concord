@@ -53,6 +53,7 @@ export type TabLink =
     | 'ansible'
     | 'log'
     | 'logTree'
+    | 'logTreeV2'
     | 'events'
     | 'history'
     | 'wait'
@@ -223,10 +224,16 @@ const ProcessActivityView = (props: ExternalProps) => {
                 {retainedProcess &&
                     (retainedProcess.runtime === 'concord-v2' ||
                         retainedProcess.runtime === undefined) && (
-                        <Menu.Item active={activeTab === 'logTree'}>
-                            <Icon name="sitemap" />
-                            <Link to={`${baseUrl}/log-tree`}>Log Tree</Link>
-                        </Menu.Item>
+                        <>
+                            <Menu.Item active={activeTab === 'logTree'}>
+                                <Icon name="sitemap" />
+                                <Link to={`${baseUrl}/log-tree`}>Log Tree</Link>
+                            </Menu.Item>
+                            <Menu.Item active={activeTab === 'logTreeV2'}>
+                                <Icon name="sitemap" />
+                                <Link to={`${baseUrl}/log-tree-v2`}>Tree view v2</Link>
+                            </Menu.Item>
+                        </>
                     )}
                 <Menu.Item active={activeTab === 'history'}>
                     <Icon name="history" />
@@ -315,6 +322,20 @@ const ProcessActivityView = (props: ExternalProps) => {
                     path="log-tree"
                     element={
                         <ProcessLogTreeActivity
+                            instanceId={instanceId}
+                            processStatus={retainedProcess?.status}
+                            loadingHandler={loadingHandler}
+                            forceRefresh={refresh}
+                            dataFetchInterval={dataFetchInterval}
+                            onRefresh={refreshHandler}
+                        />
+                    }
+                />
+                <Route
+                    path="log-tree-v2"
+                    element={
+                        <ProcessLogTreeActivity
+                            variant="groups"
                             instanceId={instanceId}
                             processStatus={retainedProcess?.status}
                             loadingHandler={loadingHandler}

@@ -34,6 +34,7 @@ import { ProcessStatus } from '../../../../api/process';
 import { getFullSegmentLog, getSegmentLog, SegmentStatus } from '../../../../api/process/log';
 import type { LogChunk, LogSegmentEntry } from '../../../../api/process/log';
 import LogView from '../LogView';
+import { ownLogNode } from '../groupPresentation';
 import { buildSegmentTree } from '../segmentTree';
 import type { SegmentNode } from '../segmentTree';
 
@@ -92,6 +93,20 @@ describe('LogView', () => {
         vi.useRealTimers();
     });
 
+    test('container-only projection requests and copies the existing segment without fetching descendants', async () => {
+        const tree = buildSegmentTree([entry(900), entry(901, 900)]);
+        const original = tree.byId.get(900)!;
+        vi.mocked(getSegmentLog).mockResolvedValue(result('own message\n'));
+        renderView(ownLogNode(original));
+        await screen.findByText('own message');
+        expect(vi.mocked(getSegmentLog).mock.calls.map((c) => c[1])).toEqual([900]);
+        expect(original.children).toHaveLength(1);
+        fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+        await waitFor(() =>
+            expect(getFullSegmentLog).toHaveBeenCalledWith('process', 900, expect.any(Number))
+        );
+    });
+
     test('reuses same-process cached data when selection changes', async () => {
         const entries = [entry(0), entry(1, 0)];
         const tree = buildSegmentTree(entries);
@@ -140,9 +155,8 @@ describe('LogView', () => {
                     calls.push(call);
                     maxActive = Math.max(
                         maxActive,
-                        calls.filter(
-                            (current) => !current.settled && !current.signal?.aborted
-                        ).length
+                        calls.filter((current) => !current.settled && !current.signal?.aborted)
+                            .length
                     );
                 })
         );
@@ -174,22 +188,16 @@ describe('LogView', () => {
         );
         expect(calls.map((call) => call.segmentId)).toEqual([0, 1, 8, 9]);
 
-        view.rerender(
-            <LogView {...common} node={grown.byId.get(0)!} dataFetchInterval={5_000} />
-        );
+        view.rerender(<LogView {...common} node={grown.byId.get(0)!} dataFetchInterval={5_000} />);
         expect(calls).toHaveLength(4);
         expect(calls.every((call) => !call.signal?.aborted)).toBe(true);
 
-        view.rerender(
-            <LogView {...common} node={grown.byId.get(1)!} dataFetchInterval={5_000} />
-        );
+        view.rerender(<LogView {...common} node={grown.byId.get(1)!} dataFetchInterval={5_000} />);
         expect(calls.filter((call) => call.segmentId === 1)).toHaveLength(1);
         expect(calls.find((call) => call.segmentId === 1)?.signal?.aborted).toBe(false);
         expect(calls.filter((call) => !call.settled && !call.signal?.aborted)).toHaveLength(4);
 
-        view.rerender(
-            <LogView {...common} node={grown.byId.get(1)!} dataFetchInterval={1_000} />
-        );
+        view.rerender(<LogView {...common} node={grown.byId.get(1)!} dataFetchInterval={1_000} />);
         expect(calls.filter((call) => call.segmentId === 1)).toHaveLength(1);
 
         const settleAll = async () => {
@@ -224,9 +232,7 @@ describe('LogView', () => {
         });
         expect(calls).toHaveLength(suspendedCalls);
 
-        view.rerender(
-            <LogView {...common} node={grown.byId.get(1)!} dataFetchInterval={1_000} />
-        );
+        view.rerender(<LogView {...common} node={grown.byId.get(1)!} dataFetchInterval={1_000} />);
         await act(async () => {
             vi.advanceTimersByTime(1_000);
         });
@@ -383,22 +389,32 @@ describe('LogView', () => {
     });
 
     test('caps rendered rows at 2,000 and discloses earlier entries', async () => {
-        const lines = Array.from({ length: 2_500 }, (_value, index) => `line-${index + 1}`).join('\n');
+        const lines = Array.from({ length: 2_500 }, (_value, index) => `line-${index + 1}`).join(
+            '\n'
+        );
         vi.mocked(getSegmentLog).mockResolvedValue(result(`${lines}\n`));
         const view = renderView(node([entry(0)], 0));
 
-        await waitFor(() => expect(view.container.querySelectorAll('.LogLine')).toHaveLength(2_000));
+        await waitFor(() =>
+            expect(view.container.querySelectorAll('.LogLine')).toHaveLength(2_000)
+        );
         expect(screen.getByText('line-2500')).toBeTruthy();
         expect(screen.queryByText('line-1')).toBeNull();
 
-        fireEvent.click(screen.getByRole('button', { name: 'Show up to 2,000 earlier log entries' }));
-        await waitFor(() => expect(view.container.querySelectorAll('.LogLine')).toHaveLength(2_500));
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Show up to 2,000 earlier log entries' })
+        );
+        await waitFor(() =>
+            expect(view.container.querySelectorAll('.LogLine')).toHaveLength(2_500)
+        );
         expect(screen.getByText('line-1')).toBeTruthy();
     });
 
     test('bounds nested requests and reveals another budget page explicitly', async () => {
         const entries = [entry(0), ...Array.from({ length: 40 }, (_value, i) => entry(i + 1, 0))];
-        vi.mocked(getSegmentLog).mockImplementation(async (_instance, id) => result(`line-${id}\n`));
+        vi.mocked(getSegmentLog).mockImplementation(async (_instance, id) =>
+            result(`line-${id}\n`)
+        );
         renderView(node(entries, 0));
 
         await waitFor(() => expect(vi.mocked(getSegmentLog)).toHaveBeenCalledTimes(29));
@@ -410,9 +426,10 @@ describe('LogView', () => {
 
     test('keeps a child ownership header inside the 2,000-item cap', async () => {
         const entries = [entry(0), entry(1, 0)];
-        const childLines = Array.from({ length: 2_500 }, (_value, index) => `child-${index + 1}`).join(
-            '\n'
-        );
+        const childLines = Array.from(
+            { length: 2_500 },
+            (_value, index) => `child-${index + 1}`
+        ).join('\n');
         vi.mocked(getSegmentLog).mockImplementation(async (_instance, id) =>
             result(id === 0 ? '' : `${childLines}\n`)
         );

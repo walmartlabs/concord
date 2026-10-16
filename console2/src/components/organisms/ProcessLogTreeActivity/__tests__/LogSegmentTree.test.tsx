@@ -97,12 +97,21 @@ const expectSelected = (id: number) => {
     expect(top + 28).toBeLessThanOrEqual(rows.scrollTop + rows.clientHeight);
 };
 
-const Harness = ({ tree, initialId }: { tree: SegmentTree; initialId?: number }) => {
+const Harness = ({
+    tree,
+    initialId,
+    variant,
+}: {
+    tree: SegmentTree;
+    initialId?: number;
+    variant?: 'steps' | 'groups';
+}) => {
     const [selectedId, setSelectedId] = React.useState(initialId);
     const onSelect = React.useCallback((id: number) => setSelectedId(id), []);
     return (
         <LogSegmentTree
             tree={tree}
+            variant={variant}
             selectedId={selectedId}
             processStatus={ProcessStatus.FINISHED}
             onSelect={onSelect}
@@ -277,7 +286,12 @@ test('error navigation reaches unmounted failures and wraps past recovered failu
         status: SegmentStatus.FAILED,
         errors: 1,
     });
-    entries[2] = segment(3, { parentId: 1, kind: SegmentKind.ATTEMPT, index: 1, status: SegmentStatus.OK });
+    entries[2] = segment(3, {
+        parentId: 1,
+        kind: SegmentKind.ATTEMPT,
+        index: 1,
+        status: SegmentStatus.OK,
+    });
     entries[2499] = segment(2500, { status: SegmentStatus.FAILED });
     entries[4899] = segment(4900, { status: SegmentStatus.FAILED, errors: 2 });
     render(<Harness tree={buildSegmentTree(entries)} initialId={3} />);
@@ -393,4 +407,79 @@ test('fresh snapshots update mounted status, counters and sampled running timing
     expect(rowOf(1).querySelector('.Counter.Errors')?.textContent).toBe('3');
     expect(rowOf(1).querySelector('.Counter.Warnings')?.textContent).toBe('2');
     expect(rowOf(1).querySelector('.Duration')?.textContent).toBe('2.0s');
+});
+
+const groupTree = () =>
+    buildSegmentTree([
+        segment(1, { name: 'task: http', kind: SegmentKind.STEP, status: SegmentStatus.FAILED }),
+        segment(2, {
+            name: 'Deploy east',
+            parentId: 1,
+            kind: SegmentKind.ITERATION,
+            index: 0,
+            status: SegmentStatus.OK,
+        }),
+        segment(3, {
+            name: 'Deploy west',
+            parentId: 1,
+            kind: SegmentKind.ITERATION,
+            index: 1,
+            status: SegmentStatus.FAILED,
+            errors: 1,
+        }),
+        segment(4, { name: 'Publish', status: SegmentStatus.OK }),
+    ]);
+
+test('group headings toggle, own-log rows select, and keyboard navigation skips headings', () => {
+    render(<Harness tree={groupTree()} initialId={1} variant="groups" />);
+    expectSelected(1);
+    expect(rowOf(1).textContent).toBe('Container logs');
+    expect(rowOf(1).querySelector('.Timeline .Bar')).toBeNull();
+    expect(screen.queryByText('task: http')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse Loop · 2 iterations' }));
+    expect(document.querySelector('[data-segment-id="1"]')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Expand Loop · 2 iterations' }));
+    expectSelected(1);
+    fireEvent.keyDown(screen.getByRole('tree'), { key: 'ArrowDown' });
+    expectSelected(2);
+    fireEvent.keyDown(screen.getByRole('tree'), { key: 'ArrowLeft' });
+    expectSelected(1);
+});
+
+test('filtering retains group context and error navigation selects the failed iteration', () => {
+    render(<Harness tree={groupTree()} initialId={1} variant="groups" />);
+    fireEvent.change(screen.getByPlaceholderText('Filter steps...'), { target: { value: 'west' } });
+    expect(screen.getByRole('button', { name: 'Collapse Loop · 2 iterations' })).toBeTruthy();
+    expect(document.querySelector('[data-segment-id="1"]')).toBeNull();
+    expect(document.querySelector('[data-segment-id="2"]')).toBeNull();
+    expect(rowOf(3).textContent).toContain('Deploy west');
+    fireEvent.change(screen.getByPlaceholderText('Filter steps...'), { target: { value: '' } });
+    fireEvent.click(screen.getByLabelText('Next error'));
+    expectSelected(3);
+});
+
+test('group projection stays virtualized and scrolls to a deep linked iteration', () => {
+    const tree = buildSegmentTree([
+        segment(1, { kind: SegmentKind.STEP }),
+        ...Array.from({ length: 5000 }, (_, i) =>
+            segment(i + 2, { parentId: 1, kind: SegmentKind.ITERATION, index: i })
+        ),
+    ]);
+    render(<Harness tree={tree} initialId={4999} variant="groups" />);
+    expect(screen.getAllByRole('treeitem').length).toBeLessThan(25);
+    expectSelected(4999);
+    fireEvent.keyDown(screen.getByRole('tree'), { key: 'ArrowDown' });
+    expectSelected(5000);
+});
+
+test('a parallel container without children still exposes its own log', () => {
+    render(
+        <Harness
+            tree={buildSegmentTree([segment(1, { kind: SegmentKind.PARALLEL })])}
+            initialId={1}
+            variant="groups"
+        />
+    );
+    expect(screen.getByRole('button', { name: 'Collapse Parallel' })).toBeTruthy();
+    expectSelected(1);
 });

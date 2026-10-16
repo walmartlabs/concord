@@ -29,12 +29,14 @@ import { ProcessElementEvent, ProcessEventEntry } from '../../../api/process/eve
 import CallData from './CallData';
 import KindBadge from './KindBadge';
 import { SegmentStatusIcon } from './LogSegmentTree';
-import { describeNode, SegmentNode } from './segmentTree';
+import { describeNode, getAncestors, SegmentNode } from './segmentTree';
 import { useStepEvents } from './useStepEvents';
 
+import { groupLabel } from './groupPresentation';
 import './StepHeader.css';
 
 interface Props {
+    variant?: 'steps' | 'groups';
     instanceId: ConcordId;
     node: SegmentNode;
     processStatus?: ProcessStatus;
@@ -82,7 +84,13 @@ const MetaRow = ({
     </div>
 );
 
-const StepHeader = ({ instanceId, node, processStatus }: Props) => {
+const StepHeader = ({ instanceId, node, processStatus, variant = 'steps' }: Props) => {
+    const containerLogs = variant === 'groups' && !!groupLabel(node);
+    const context = containerLogs
+        ? [...getAncestors(node), node]
+              .map((n) => groupLabel(n) ?? describeNode(n).name)
+              .join(' / ')
+        : undefined;
     const s = node.segment;
     const run = stepRunOf(node)?.segment;
     const {
@@ -109,7 +117,9 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
     useEffect(() => setInfoOpen(false), [s.id]);
 
     const linkHandler = useCallback(async () => {
-        const url = `${window.location.origin}${window.location.pathname}#/process/${instanceId}/log-tree#step=${s.id}`;
+        const url = `${window.location.origin}${window.location.pathname}#/process/${instanceId}/${
+            variant === 'groups' ? 'log-tree-v2' : 'log-tree'
+        }#step=${s.id}`;
         try {
             await navigator.clipboard.writeText(url);
             setLinkCopied(true);
@@ -118,7 +128,7 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
         } catch {
             // ignore, the link is also in the address bar
         }
-    }, [instanceId, s.id]);
+    }, [instanceId, s.id, variant]);
 
     const { kind, name, note, badgeOnly, loop } = describeNode(node);
     // only task calls record the input/output ("phase" is set by the task call events only)
@@ -128,22 +138,31 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
 
     return (
         <div className="StepHeader">
+            {context && <div className="ContainerContext">{context}</div>}
             <div className="Title">
-                <SegmentStatusIcon
-                    status={s.status}
-                    processStatus={processStatus}
-                    failedInside={false}
-                    retried={node.retried}
-                    recovered={node.recovered}
-                />
-                {loop && <KindBadge kind="loop" />}
-                {kind && <KindBadge kind={kind} title={badgeOnly ? name : undefined} />}
-                {!badgeOnly && (
-                    <span className="Name" title={name}>
-                        {name}
+                {containerLogs ? (
+                    <Icon name="file alternate outline" />
+                ) : (
+                    <SegmentStatusIcon
+                        status={s.status}
+                        processStatus={processStatus}
+                        failedInside={false}
+                        retried={node.retried}
+                        recovered={node.recovered}
+                    />
+                )}
+                {!containerLogs && loop && <KindBadge kind="loop" />}
+                {!containerLogs && kind && (
+                    <KindBadge kind={kind} title={badgeOnly ? name : undefined} />
+                )}
+                {(containerLogs || !badgeOnly) && (
+                    <span className="Name" title={containerLogs ? 'Container logs' : name}>
+                        {containerLogs ? 'Container logs' : name}
                     </span>
                 )}
-                {note && <span className={`Note${node.retried ? ' Retried' : ''}`}>{note}</span>}
+                {!containerLogs && note && (
+                    <span className={`Note${node.retried ? ' Retried' : ''}`}>{note}</span>
+                )}
 
                 <div className="Actions">
                     <button

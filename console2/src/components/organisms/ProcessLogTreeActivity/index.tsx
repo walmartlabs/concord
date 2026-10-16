@@ -34,11 +34,13 @@ import LogView from './LogView';
 import StepHeader from './StepHeader';
 import { buildSegmentTree, pickDefaultSegment } from './segmentTree';
 
+import { groupLabel, ownLogNode } from './groupPresentation';
 import './styles.css';
 
 const MIN_HEIGHT = 300;
 
 interface ExternalProps {
+    variant?: 'steps' | 'groups';
     instanceId: ConcordId;
     processStatus?: ProcessStatus;
     loadingHandler: (inc: number) => void;
@@ -64,6 +66,7 @@ const ProcessLogTreeActivityView = ({
     forceRefresh,
     onRefresh,
     dataFetchInterval,
+    variant = 'steps',
 }: ExternalProps) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -142,11 +145,16 @@ const ProcessLogTreeActivityView = ({
         [navigate]
     );
 
+    const selected = selectedId !== undefined ? tree.byId.get(selectedId) : undefined;
+    const containerLogs = variant === 'groups' && selected && !!groupLabel(selected);
+    const logNode = useMemo(
+        () => (containerLogs ? ownLogNode(selected!) : selected),
+        [containerLogs, selected]
+    );
+
     if (error && !completed) {
         return <RequestErrorActivity error={error} />;
     }
-
-    const selected = selectedId !== undefined ? tree.byId.get(selectedId) : undefined;
 
     return (
         <>
@@ -161,6 +169,7 @@ const ProcessLogTreeActivityView = ({
             <div className="ProcessLogTreeActivity" ref={layoutRef} style={{ height }}>
                 <div className="TreePane">
                     <LogSegmentTree
+                        variant={variant}
                         tree={tree}
                         processStatus={processStatus}
                         selectedId={selectedId}
@@ -170,6 +179,7 @@ const ProcessLogTreeActivityView = ({
                 <div className="ContentPane">
                     {selected && (
                         <StepHeader
+                            variant={variant}
                             instanceId={instanceId}
                             node={selected}
                             processStatus={processStatus}
@@ -178,7 +188,7 @@ const ProcessLogTreeActivityView = ({
                     <div className="StepBody">
                         <LogView
                             instanceId={instanceId}
-                            node={selected}
+                            node={logNode}
                             processStatus={processStatus}
                             dataFetchInterval={dataFetchInterval}
                             forceRefresh={forceRefresh}
@@ -200,7 +210,10 @@ const ProcessLogTreeActivityView = ({
 };
 
 const ProcessLogTreeActivity = React.memo((props: ExternalProps) => (
-    <ProcessLogTreeActivityView key={props.instanceId} {...props} />
+    <ProcessLogTreeActivityView
+        key={`${props.instanceId}:${props.variant ?? 'steps'}`}
+        {...props}
+    />
 ));
 
 export default ProcessLogTreeActivity;

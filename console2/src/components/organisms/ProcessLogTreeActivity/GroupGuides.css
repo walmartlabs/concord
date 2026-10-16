@@ -1,0 +1,55 @@
+.LogSegmentTree.GroupGuides .Guide {
+    width: 12px;
+    background: none;
+}
+.LogSegmentTree.GroupGuides .Guide.GroupGuide {
+    background: linear-gradient(#e4e7ec, #e4e7ec) no-repeat 5px 0 / 1px 100%;
+}
+.LogSegmentTree.GroupGuides .Guide.ActiveGuide {
+    background-image: linear-gradient(#85b7d9, #85b7d9);
+}
+.LogSegmentTree.GroupGuides .TreeRow.GroupHeading {
+    cursor: default;
+    color: #77818e;
+    font-size: 11px;
+}
+.LogSegmentTree.GroupGuides .TreeRow.GroupHeading:hover {
+    background: transparent;
+}
+.LogSegmentTree.GroupGuides .GroupToggle {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    border: 0;
+    padding: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+.LogSegmentTree.GroupGuides .GroupToggle:hover {
+    color: #2185d0;
+}
+.LogSegmentTree.GroupGuides .GroupToggle:focus-visible {
+    outline: 2px solid #2185d0;
+    outline-offset: 2px;
+}
+.LogSegmentTree.GroupGuides .GroupToggle .icon {
+    margin: 0;
+    width: 12px;
+}
+.LogSegmentTree.GroupGuides .TreeRow.OwnLogs {
+    color: #77818e;
+}
+.LogSegmentTree.GroupGuides .TreeRow.OwnLogs .Caret {
+    display: none;
+}
+.LogSegmentTree.GroupGuides .OwnLogs .Timeline {
+    background: transparent;
+}
+.StepHeader .ContainerContext {
+    color: #77818e;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+    margin-bottom: 8px;
+}

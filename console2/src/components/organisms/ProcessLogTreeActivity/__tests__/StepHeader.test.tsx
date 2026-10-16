@@ -34,7 +34,7 @@ import {
     ProcessEventEntry,
     ProcessEventType,
 } from '../../../../api/process/event';
-import { LogSegmentEntry, SegmentStatus } from '../../../../api/process/log';
+import { LogSegmentEntry, SegmentKind, SegmentStatus } from '../../../../api/process/log';
 import StepHeader from '../StepHeader';
 import { buildSegmentTree, SegmentNode } from '../segmentTree';
 
@@ -315,4 +315,27 @@ describe('StepHeader delayed events', () => {
         expect(screen.getByText('new-flow')).toBeTruthy();
         expect(screen.queryByText('old-flow')).toBeNull();
     });
+});
+
+test('container header keeps the copied deep link on Tree view v2', async () => {
+    vi.mocked(listStepEvents).mockResolvedValue([]);
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    const tree = buildSegmentTree([
+        { ...segment(600), kind: SegmentKind.STEP },
+        { ...segment(601), kind: SegmentKind.ITERATION, parentId: 600, index: 0 },
+    ]);
+    render(
+        <StepHeader
+            instanceId="process"
+            node={tree.byId.get(600)!}
+            variant="groups"
+            processStatus={ProcessStatus.FINISHED}
+        />
+    );
+    expect(screen.getByText('Container logs')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Copy link to this step' }));
+    await flush();
+    expect(writeText).toHaveBeenCalledWith(expect.stringContaining('/log-tree-v2#step=600'));
+    cleanup();
 });
