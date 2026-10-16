@@ -14,7 +14,6 @@ github-app-installation: stop caching token-fetch failures as "no auth"
 ([#1392](https://github.com/walmartlabs/concord/pull/1392));
 - runtime-v2, agent, server: record the time of log segment statuses
 ([#1389](https://github.com/walmartlabs/concord/pull/1389)).
-  - Deploy the server before upgrading agents.
 
 ## [2.46.0] - 2026-09-18
 
