@@ -181,6 +181,21 @@ public class SegmentedLogsConsumerTest {
     }
 
     /**
+     * The last status of a segment wins.
+     */
+    @Test
+    public void lastStatus() {
+        byte[] ab = Bytes.concat(status(1, LogSegmentStatus.ERROR, "1767225600123"),
+                status(1, LogSegmentStatus.OK, "1767225601456"));
+
+        consumer.accept(toChunk(ab));
+
+        verify(logAppender, times(1)).updateSegment(any(), eq(1L), eq(new LogSegmentStats(LogSegmentStatus.OK, 0, 0,
+                OffsetDateTime.of(2026, 1, 1, 0, 0, 1, 456_000_000, ZoneOffset.UTC))));
+        verifyNoMoreInteractions(logAppender);
+    }
+
+    /**
      * Older runners: a status without the time.
      */
     @Test

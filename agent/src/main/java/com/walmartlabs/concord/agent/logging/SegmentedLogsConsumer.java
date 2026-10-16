@@ -216,7 +216,7 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
         ListIterator<Segment> it = segments.listIterator(segments.size());
         while (it.hasPrevious()) {
             Segment segment = it.previous();
-            if (isStatus(segment)) {
+            if (!done && isStatus(segment)) {
                 done = true;
                 status = segment.header().status();
                 statusUpdatedAt = statusTime(segment, ab);
