@@ -24,9 +24,18 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
 
 import javax.annotation.Nullable;
+import java.time.OffsetDateTime;
 
+/**
+ * @param statusUpdatedAt when the status changed, by the runner's clock
+ */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public record LogSegmentStats(@Nullable LogSegmentStatus status,
                               @Nullable Integer errors,
-                              @Nullable Integer warnings) {
+                              @Nullable Integer warnings,
+                              @Nullable OffsetDateTime statusUpdatedAt) {
+
+    public LogSegmentStats(LogSegmentStatus status, Integer errors, Integer warnings) {
+        this(status, errors, warnings, null);
+    }
 }
