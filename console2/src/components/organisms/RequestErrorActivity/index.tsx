@@ -19,13 +19,12 @@
  */
 
 import * as React from 'react';
-import { Navigate } from 'react-router';
-
-import { RequestError } from '../../../api/common';
-import { RequestErrorMessage } from '../../molecules';
-import { useLocation } from 'react-router';
+import { Navigate, useLocation } from 'react-router';
 import { Dimmer, Loader } from 'semantic-ui-react';
+
+import type { RequestError } from '../../../api/common';
 import { setQueryParam } from '../../../utils';
+import RequestErrorMessage from '../../molecules/RequestErrorMessage';
 
 interface Props {
     error: RequestError;
@@ -33,32 +32,30 @@ interface Props {
 
 export default ({ error }: Props) => {
     const location = useLocation();
+    const loginUrl = error.status === 401 ? window.concord?.loginUrl : undefined;
 
-    if (error && error.status === 401) {
-        const loginUrl = window.concord?.loginUrl;
+    React.useEffect(() => {
+        if (!loginUrl) {
+            return;
+        }
+
+        const requested = new URL(window.location.href).hash;
+        const timeout = window.setTimeout(() => {
+            window.location.href = setQueryParam(loginUrl, 'from', '/' + requested);
+        }, 1000);
+        return () => window.clearTimeout(timeout);
+    }, [loginUrl]);
+
+    if (error.status === 401) {
         if (loginUrl) {
-            const requested = new URL(window.location.href).hash;
-            // delay the redirect to avoid layout issues
-            setTimeout(() => {
-                window.location.href = setQueryParam(loginUrl, 'from', '/' + requested);
-            }, 1000);
-
             return (
                 <Dimmer active={true} inverted={true} page={true}>
-                    <Loader active={true} size="massive" content={'Logging in'} />
+                    <Loader active={true} size="massive" content="Logging in" />
                 </Dimmer>
             );
-        } else {
-            return (
-                <Navigate
-                    to="/login"
-                    replace={true}
-                    state={{
-                        from: location,
-                    }}
-                />
-            );
         }
+
+        return <Navigate to="/login" replace={true} state={{ from: location }} />;
     }
 
     return <RequestErrorMessage error={error} />;

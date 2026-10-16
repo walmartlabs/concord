@@ -1,0 +1,27 @@
+.KindBadge {
+    flex: none;
+    padding: 0 6px;
+    border-radius: 4px;
+    background: rgb(240, 242, 244);
+    color: rgb(87, 96, 106);
+    font-family: monospace;
+    font-size: 11px;
+    font-weight: normal;
+    line-height: 18px;
+    white-space: nowrap;
+}
+
+.KindBadge.Kind-script {
+    background: rgb(243, 238, 254);
+    color: rgb(102, 57, 186);
+}
+
+.KindBadge.Kind-system {
+    background: rgb(236, 239, 241);
+    color: rgb(68, 68, 68);
+}
+
+.KindBadge.Kind-loop {
+    background: rgb(238, 243, 255);
+    color: rgb(52, 81, 178);
+}

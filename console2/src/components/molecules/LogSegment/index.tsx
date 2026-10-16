@@ -431,6 +431,9 @@ const StatusIcon = ({ status, processStatus, warnings = 0, errors = 0 }: StatusI
     } else if (status === SegmentStatus.FAILED) {
         color = 'red';
         icon = 'close';
+    } else if (status === SegmentStatus.RECOVERED) {
+        color = 'orange';
+        icon = 'redo';
     } else if (warnings > 0) {
         color = 'orange';
         icon = 'exclamation circle';
