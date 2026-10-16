@@ -1,0 +1,60 @@
+flows:
+  default:
+    - name: "retried"
+      task: "conditionallyFailTask"
+      in:
+        fail: true
+      retry:
+        times: 2
+        delay: 1
+        in:
+          fail: false
+
+    - name: "serial ${item}"
+      task: "log"
+      in:
+        msg: "serial ${item}"
+      loop:
+        items: ["a", "b"]
+        mode: serial
+
+    - name: "parallel ${item}"
+      task: "log"
+      in:
+        msg: "parallel ${item}"
+      loop:
+        items: ["a", "b"]
+        mode: parallel
+
+    - name: "looped retry ${item}"
+      task: "conditionallyFailTask"
+      in:
+        fail: true
+      retry:
+        times: 1
+        delay: 1
+        in:
+          fail: false
+      loop:
+        items: ["x", "y"]
+
+    - name: "caught"
+      task: "faultyTask"
+      error:
+        - name: "handler"
+          task: "log"
+          in:
+            msg: "handled"
+
+    - name: "outer"
+      call: "inner"
+      retry:
+        times: 1
+        delay: 1
+
+  inner:
+    - parallel:
+        - name: "branch"
+          task: "log"
+          in:
+            msg: "in a branch"

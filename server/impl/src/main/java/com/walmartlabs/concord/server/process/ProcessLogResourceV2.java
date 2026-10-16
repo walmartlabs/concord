@@ -106,7 +106,7 @@ public class ProcessLogResourceV2 implements Resource {
                                                LogSegmentRequest request) {
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
-        long segmentId = logManager.createSegment(processKey, request.correlationId(), request.name(), request.createdAt());
+        long segmentId = logManager.createSegment(processKey, request);
         return new LogSegmentOperationResponse(segmentId, OperationResult.CREATED);
     }
 
@@ -186,9 +186,9 @@ public class ProcessLogResourceV2 implements Resource {
     public static Response toResponse(UUID instanceId, long segmentId, ProcessLog l, HttpUtils.Range range) {
         List<ProcessLogChunk> data = l.getChunks();
         if (data.isEmpty()) {
-            int actualStart = range.start() != null ? range.start() : 0;
-            int actualEnd = range.end() != null ? range.end() : actualStart;
-            return downloadableFile(instanceId, segmentId, null, actualStart, actualEnd, l.getSize());
+            int size = l.getSize();
+            int cursor = range.start() != null ? Math.min(range.start(), size) : 0;
+            return downloadableFile(instanceId, segmentId, null, cursor, cursor, size);
         }
 
         ProcessLogChunk firstChunk = data.get(0);

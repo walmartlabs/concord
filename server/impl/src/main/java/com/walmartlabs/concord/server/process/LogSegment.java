@@ -44,6 +44,21 @@ public interface LogSegment {
     String name();
 
     @Nullable
+    Long parentId();
+
+    @Nullable
+    Integer attempt();
+
+    @Nullable
+    Integer loopIndex();
+
+    @Nullable
+    Role role();
+
+    @Nullable
+    Integer threadId();
+
+    @Nullable
     Status status();
 
     @Nullable
@@ -58,6 +73,15 @@ public interface LogSegment {
 
     @Nullable
     Integer errors();
+
+    enum Role {
+
+        /**
+         * The segment is a part of an {@code error} block of a failed step.
+         * The parent segment is the failed step.
+         */
+        ERROR_HANDLER
+    }
 
     enum Status {
         OK,

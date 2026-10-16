@@ -24,12 +24,11 @@ import ch.qos.logback.classic.Level;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.UUID;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
-public interface LogContext extends Serializable {
+public interface LogContext extends LogScope {
 
    long serialVersionUID = 1L;
 

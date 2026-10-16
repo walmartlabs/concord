@@ -36,6 +36,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Wraps a command into a "retry" loop specified by {@code retry} option.
@@ -74,13 +75,6 @@ public class RetryWrapper implements Command {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
-        // wrap the command into a frame with an exception handler
-        Frame inner = Frame.builder()
-                .nonRoot()
-                .exceptionHandler(new NextRetry(cmd))
-                .commands(cmd)
-                .build();
-
         // create the context explicitly
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
         Context ctx = contextFactory.create(runtime, state, threadId, getCurrentStep());
@@ -104,6 +98,15 @@ public class RetryWrapper implements Command {
             }
         }
 
+        // wrap the command into a frame with an exception handler
+        UUID scopeId = LogSegmentUtils.openAttemptScope(threadId, state, 1);
+        Frame inner = Frame.builder()
+                .nonRoot()
+                .exceptionHandler(new NextRetry(cmd, scopeId))
+                .finallyHandler(new CloseLogScopeCommand(scopeId))
+                .commands(cmd)
+                .build();
+
         inner.setLocal(Constants.Runtime.RETRY_ATTEMPT_NUMBER, 0);
         inner.setLocal(RETRY_CFG, Retry.builder().from(retry)
                 .times(times)
@@ -126,8 +129,14 @@ public class RetryWrapper implements Command {
 
         private final Command cmd;
 
-        public NextRetry(Command cmd) {
+        /**
+         * {@code null} in retries started before the log scopes were introduced.
+         */
+        private final UUID scopeId;
+
+        public NextRetry(Command cmd, UUID scopeId) {
             this.cmd = cmd;
+            this.scopeId = scopeId;
         }
 
         @Override
@@ -161,6 +170,7 @@ public class RetryWrapper implements Command {
             frame.setExceptionHandler(this);
             // update the attempt number
             frame.setLocal(Constants.Runtime.RETRY_ATTEMPT_NUMBER, attemptNo + 1);
+            LogSegmentUtils.setAttempt(threadId, state, scopeId, attemptNo + 2);
 
             // override the task's "in" if needed
             if (retry.input() != null) {

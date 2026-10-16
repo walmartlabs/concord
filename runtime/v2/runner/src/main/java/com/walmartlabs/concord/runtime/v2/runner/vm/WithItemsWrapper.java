@@ -190,7 +190,7 @@ public abstract class WithItemsWrapper implements Command {
                 // fork will create rootFrame for forked commands
                 Command itemCmd = new ForkCommand(f.getKey(),
                         new AppendVariablesCommand(outVariables, null, targetFrame),
-                        cmd);
+                        new LoopIterationCommand(i, cmd));
                 cmdFrame.push(itemCmd);
 
                 state.pushFrame(threadId, cmdFrame);
@@ -231,7 +231,7 @@ public abstract class WithItemsWrapper implements Command {
             loop.push(new WithItemsNext(outVariables, cmd)); // next iteration
 
             Frame cmdFrame = Frame.builder()
-                    .commands(cmd)
+                    .commands(new LoopIterationCommand(0, cmd))
                     .root()
                     .build();
 
@@ -277,7 +277,7 @@ public abstract class WithItemsWrapper implements Command {
 
             // frame wrapped command
             Frame cmdFrame = Frame.builder()
-                    .commands(cmd)
+                    .commands(new LoopIterationCommand(newIndex, cmd))
                     .root()
                     .build();
 
