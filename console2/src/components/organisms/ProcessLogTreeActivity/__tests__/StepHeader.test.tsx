@@ -108,7 +108,10 @@ describe('StepHeader delayed events', () => {
     });
 
     test('moves from empty to metadata, pre-only input, and delayed post output', async () => {
-        const pre = event('pre', { fileName: 'concord.yaml', in: { input: 'current' } });
+        const pre = event('pre', {
+            fileName: 'concord.yaml',
+            in: { input: 'current' },
+        });
         const post = event('post', {
             fileName: 'concord.yaml',
             in: { input: 'current' },
@@ -287,6 +290,40 @@ describe('StepHeader delayed events', () => {
         expect(detailedCalls).toBe(2);
     });
 
+    test('resolves loop details through a retry iteration to its last attempt', async () => {
+        vi.mocked(listStepEvents).mockResolvedValue([event('pre')]);
+        const tree = buildSegmentTree([
+            { ...segment(700), kind: SegmentKind.LOOP },
+            {
+                ...segment(701, SegmentStatus.OK, 'correlation-700'),
+                kind: SegmentKind.ITERATION_RETRY,
+                parentId: 700,
+                index: 0,
+            },
+            {
+                ...segment(702, SegmentStatus.FAILED, 'correlation-700'),
+                kind: SegmentKind.ATTEMPT,
+                parentId: 701,
+                index: 0,
+            },
+            {
+                ...segment(703, SegmentStatus.OK, 'correlation-700'),
+                kind: SegmentKind.ATTEMPT,
+                parentId: 701,
+                index: 1,
+            },
+        ]);
+        render(
+            <StepHeader
+                instanceId="process"
+                node={tree.byId.get(700)!}
+                processStatus={ProcessStatus.FINISHED}
+            />
+        );
+        await flush();
+        expect(vi.mocked(listStepEvents).mock.calls[0][1].segmentId).toBe(703);
+    });
+
     test('ignores a response from the previously selected step', async () => {
         let resolveOld!: (events: ProcessEventEntry<ProcessElementEvent>[]) => void;
         const oldResponse = new Promise<ProcessEventEntry<ProcessElementEvent>[]>((resolve) => {
@@ -320,9 +357,12 @@ describe('StepHeader delayed events', () => {
 test('container header keeps the copied deep link on Tree view v2', async () => {
     vi.mocked(listStepEvents).mockResolvedValue([]);
     const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { writeText },
+    });
     const tree = buildSegmentTree([
-        { ...segment(600), kind: SegmentKind.STEP },
+        { ...segment(600), kind: SegmentKind.LOOP },
         { ...segment(601), kind: SegmentKind.ITERATION, parentId: 600, index: 0 },
     ]);
     render(

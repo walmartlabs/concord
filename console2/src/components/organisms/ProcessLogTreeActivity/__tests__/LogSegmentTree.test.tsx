@@ -245,11 +245,11 @@ test('keyboard adjacency crosses window boundaries and clamps at logical endpoin
 const iteration = (id: number, parentId: number, index: number) =>
     segment(id, { parentId, kind: SegmentKind.ITERATION, index });
 const loopSegments = () => [
-    segment(1, { kind: SegmentKind.STEP }),
+    segment(1, { kind: SegmentKind.LOOP }),
     iteration(2, 1, 0),
     ...Array.from({ length: 100 }, (_, i) => segment(i + 3, { parentId: 2 })),
     iteration(103, 1, 1),
-    segment(104, { kind: SegmentKind.STEP }),
+    segment(104, { kind: SegmentKind.LOOP }),
     iteration(105, 104, 0),
     iteration(106, 104, 1),
 ];
@@ -411,7 +411,7 @@ test('fresh snapshots update mounted status, counters and sampled running timing
 
 const groupTree = () =>
     buildSegmentTree([
-        segment(1, { name: 'task: http', kind: SegmentKind.STEP, status: SegmentStatus.FAILED }),
+        segment(1, { name: 'task: http', kind: SegmentKind.LOOP, status: SegmentStatus.FAILED }),
         segment(2, {
             name: 'Deploy east',
             parentId: 1,
@@ -460,7 +460,7 @@ test('filtering retains group context and error navigation selects the failed it
 
 test('group projection stays virtualized and scrolls to a deep linked iteration', () => {
     const tree = buildSegmentTree([
-        segment(1, { kind: SegmentKind.STEP }),
+        segment(1, { kind: SegmentKind.LOOP }),
         ...Array.from({ length: 5000 }, (_, i) =>
             segment(i + 2, { parentId: 1, kind: SegmentKind.ITERATION, index: i })
         ),
@@ -482,4 +482,29 @@ test('a parallel container without children still exposes its own log', () => {
     );
     expect(screen.getByRole('button', { name: 'Collapse Parallel' })).toBeTruthy();
     expectSelected(1);
+});
+
+test('loop and retry groups are visible before their first child, including failed setup', () => {
+    const tree = buildSegmentTree([
+        segment(1, { kind: SegmentKind.LOOP, status: SegmentStatus.FAILED, errors: 1 }),
+        segment(2, { kind: SegmentKind.RETRY, status: SegmentStatus.RUNNING }),
+    ]);
+    render(<Harness tree={tree} initialId={1} variant="groups" />);
+    expect(screen.getByRole('button', { name: 'Collapse Loop · 0 iterations' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Collapse Retry · 0 attempts' })).toBeTruthy();
+    expectSelected(1);
+    expect(rowOf(1).textContent).toContain('Container logs');
+});
+
+test('a retry iteration retains its item number while having no attempts yet', () => {
+    const tree = buildSegmentTree([
+        segment(1, { kind: SegmentKind.LOOP }),
+        segment(2, { parentId: 1, kind: SegmentKind.ITERATION_RETRY, index: 3 }),
+    ]);
+    render(<Harness tree={tree} initialId={2} variant="groups" />);
+    expect(screen.getByRole('button', { name: 'Collapse Loop · 1 iteration' })).toBeTruthy();
+    expect(
+        screen.getByRole('button', { name: 'Collapse Item #4 · Retry · 0 attempts' })
+    ).toBeTruthy();
+    expectSelected(2);
 });

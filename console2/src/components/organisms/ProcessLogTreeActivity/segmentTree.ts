@@ -27,14 +27,24 @@ const SYSTEM_SEGMENT_ID = 0;
 
 /**
  * What the segment represents, recorded by the runner:
- * - step: the whole execution of a step;
+ * - step: the whole execution of a step without loop/retry;
+ * - loop/retry: the whole execution of a repeated step;
+ * - iteration-retry: a loop iteration owning retry attempts;
  * - iteration: one iteration of a loop;
  * - attempt: one attempt of a step with "retry";
  * - error: the "error" block of a step;
  * - parallel: the whole execution of a "parallel" block.
  * The tree is rendered as recorded, the client doesn't group the segments.
  */
-export type NodeKind = 'step' | 'iteration' | 'attempt' | 'error' | 'parallel';
+export type NodeKind =
+    | 'step'
+    | 'iteration'
+    | 'attempt'
+    | 'error'
+    | 'parallel'
+    | 'loop'
+    | 'retry'
+    | 'iteration-retry';
 
 export interface SegmentNode {
     kind: NodeKind;
@@ -65,6 +75,9 @@ const KINDS: Record<SegmentKind, NodeKind> = {
     [SegmentKind.ATTEMPT]: 'attempt',
     [SegmentKind.ERROR]: 'error',
     [SegmentKind.PARALLEL]: 'parallel',
+    [SegmentKind.LOOP]: 'loop',
+    [SegmentKind.RETRY]: 'retry',
+    [SegmentKind.ITERATION_RETRY]: 'iteration-retry',
 };
 
 // segments of older runners have no kind
@@ -79,8 +92,10 @@ export const isFailure = (node: SegmentNode) =>
     node.segment.status === SegmentStatus.FAILED && !node.recovered && !node.retried;
 
 // a loop: can have hundreds of iterations
-export const startsCollapsed = (node: SegmentNode) =>
-    node.children.some((c) => c.kind === 'iteration');
+export const startsCollapsed = (node: SegmentNode) => node.kind === 'loop';
+
+export const isIteration = (node: SegmentNode) =>
+    node.kind === 'iteration' || node.kind === 'iteration-retry';
 
 const newNode = (segment: LogSegmentEntry): SegmentNode => ({
     kind: kindOf(segment),
@@ -245,6 +260,7 @@ export const describeNode = (n: SegmentNode): NodeDescription => {
                         : undefined
                     : `attempt ${(s.index ?? 0) + 1}${n.retried ? ' · retried' : ''}`,
             };
+        case 'iteration-retry':
         case 'iteration': {
             const item = `item #${(s.index ?? 0) + 1}`;
             // structural names, e.g. "iteration #2", are shown as the item's number
@@ -253,10 +269,16 @@ export const describeNode = (n: SegmentNode): NodeDescription => {
     }
 
     const { kind, name } = parseSegmentName(s.name);
-    const iterations = n.children.filter((c) => c.kind === 'iteration').length;
-    const note =
-        iterations > 0 ? `${iterations} ${iterations === 1 ? 'item' : 'items'}` : undefined;
-    return iterations > 0 ? { name, kind, note, loop: true } : { name, kind, note };
+    if (n.kind === 'loop') {
+        const iterations = n.children.filter(isIteration).length;
+        return {
+            name,
+            kind,
+            note: `${iterations} ${iterations === 1 ? 'item' : 'items'}`,
+            loop: true,
+        };
+    }
+    return { name, kind };
 };
 
 const KIND_RE = /^(task|script|call): (.+)$/;

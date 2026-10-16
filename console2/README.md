@@ -91,20 +91,17 @@ Links copied from this view retain `/log-tree-v2`.
 #### Backend API follow-up
 
 The new view works with the existing segment-list and segment-log endpoints.
-Two additions would remove the current presentation compromises:
+The runner now records LOOP, RETRY and ITERATION_RETRY in the existing `kind` field,
+so group headings exist before their first child, including for empty loops and
+failed setup. The UI does not infer group types from children. Older STEP/ITERATION
+segments retain their hierarchy and logs as ordinary rows. Names and parent IDs
+are unchanged. An ITERATION_RETRY remains an iteration and retains its item index.
 
-- **Immutable group metadata on the owner segment.** For example, optional
-  `groupType: LOOP | RETRY`, recorded when the owning scope opens, including on an
-  iteration that owns retry attempts. `kind` and `parentId` keep their existing
-  meanings. ERROR/PARALLEL already identify groups. Currently loop/retry grouping
-  is inferred from explicit child kinds, so it becomes visible only when the first
-  child arrives; an empty loop or failure before the first child stays an ordinary
-  step. Parsing names or expressions is intentionally avoided.
-- **Own-log availability in the list response.** For example, `hasOwnLogs`, counting
-  only bytes/messages belonging to that segment, updated as output arrives.
-  Currently every group has a Container logs row, including empty ones. This field
-  would allow hiding empty entries without one extra request per container. Decide
-  whether to reserve the row while running to avoid shifting the tree as logs arrive.
+One optional API addition remains: **own-log availability in the list response**,
+for example `hasOwnLogs`, counting only messages belonging to that segment. Currently
+every group has a Container logs row, including empty ones. This field would allow
+hiding empty entries without one extra request per container. Decide whether to
+reserve the row while running to avoid shifting the tree as logs arrive.
 
 Optionally return a planned iteration count when known, separately from the count
 of created children. The current caption reports only observed iterations/attempts,

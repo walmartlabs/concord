@@ -18,18 +18,30 @@
  * =====
  */
 
+import { isIteration } from './segmentTree';
 import type { SegmentNode } from './segmentTree';
 
-// Current API has no loop/retry metadata on the owner. Infer only from explicit
-// child kinds, never from user-provided names. Empty groups remain ordinary steps.
+// Children supply only the observed count, never the type of the group.
 export const groupLabel = (node: SegmentNode): string | undefined => {
-    const iterations = node.children.filter((child) => child.kind === 'iteration').length;
-    const attempts = node.children.filter((child) => child.kind === 'attempt').length;
-    if (iterations) return `Loop · ${iterations} ${iterations === 1 ? 'iteration' : 'iterations'}`;
-    if (attempts) return `Retry · ${attempts} ${attempts === 1 ? 'attempt' : 'attempts'}`;
-    if (node.kind === 'error') return 'On error';
-    if (node.kind === 'parallel') return 'Parallel';
-    return undefined;
+    switch (node.kind) {
+        case 'loop': {
+            const count = node.children.filter(isIteration).length;
+            return `Loop · ${count} ${count === 1 ? 'iteration' : 'iterations'}`;
+        }
+        case 'retry':
+        case 'iteration-retry': {
+            const count = node.children.filter((child) => child.kind === 'attempt').length;
+            const prefix =
+                node.kind === 'iteration-retry' ? `Item #${(node.segment.index ?? 0) + 1} · ` : '';
+            return `${prefix}Retry · ${count} ${count === 1 ? 'attempt' : 'attempts'}`;
+        }
+        case 'error':
+            return 'On error';
+        case 'parallel':
+            return 'Parallel';
+        default:
+            return undefined;
+    }
 };
 
 // A view projection only: messages still belong to the same segment in the API.

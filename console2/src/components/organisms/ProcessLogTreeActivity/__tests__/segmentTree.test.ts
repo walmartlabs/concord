@@ -176,7 +176,10 @@ describe('the recorded tree', () => {
         expect(isFailure(tree.byId.get(2)!)).toBe(false);
         expect(isFailure(tree.byId.get(3)!)).toBe(false);
         expect(isFailure(tree.byId.get(4)!)).toBe(true);
-        expect(describeNode(tree.byId.get(2)!)).toEqual({ name: 'deploy', note: 'attempt 1 · retried' });
+        expect(describeNode(tree.byId.get(2)!)).toEqual({
+            name: 'deploy',
+            note: 'attempt 1 · retried',
+        });
         expect(describeNode(tree.byId.get(4)!)).toEqual({ name: 'deploy', note: 'attempt 2' });
         expect(pickDefaultSegment(tree, ProcessStatus.FAILED)!.segment.id).toBe(4);
     });
@@ -216,7 +219,7 @@ describe('the recorded tree', () => {
 
     test('loops start collapsed', () => {
         const tree = buildSegmentTree([
-            seg(1, undefined, { kind: STEP, name: 'task: http' }),
+            seg(1, undefined, { kind: SegmentKind.LOOP, name: 'task: http' }),
             seg(2, 1, { kind: ITERATION, index: 0, name: 'deploy a' }),
             seg(3, 1, { kind: ITERATION, index: 1, name: 'iteration #2' }),
             seg(4, undefined, { kind: STEP }),
@@ -261,4 +264,14 @@ test('every step belongs to exactly one category', () => {
         8: 'RUNNING',
         9: 'WARNINGS',
     });
+});
+
+test('legacy STEP segments retain their hierarchy without inferring a group from children', () => {
+    const tree = buildSegmentTree([
+        seg(1, undefined, { kind: SegmentKind.STEP }),
+        seg(2, 1, { kind: SegmentKind.ITERATION, index: 0 }),
+    ]);
+    expect(tree.byId.get(1)!.kind).toBe('step');
+    expect(tree.byId.get(1)!.children[0].segment.id).toBe(2);
+    expect(startsCollapsed(tree.byId.get(1)!)).toBe(false);
 });

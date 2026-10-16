@@ -29,7 +29,7 @@ import { ProcessElementEvent, ProcessEventEntry } from '../../../api/process/eve
 import CallData from './CallData';
 import KindBadge from './KindBadge';
 import { SegmentStatusIcon } from './LogSegmentTree';
-import { describeNode, getAncestors, SegmentNode } from './segmentTree';
+import { describeNode, getAncestors, isIteration, SegmentNode } from './segmentTree';
 import { useStepEvents } from './useStepEvents';
 
 import { groupLabel } from './groupPresentation';
@@ -57,7 +57,7 @@ const stepRunOf = (node: SegmentNode): SegmentNode | undefined => {
     }
     const runs = node.children.filter(
         (c) =>
-            (c.kind === 'attempt' || c.kind === 'iteration') &&
+            (c.kind === 'attempt' || isIteration(c)) &&
             c.segment.correlationId === node.segment.correlationId
     );
     if (runs.length === 0) {

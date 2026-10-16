@@ -106,6 +106,12 @@ export enum SegmentKind {
     ERROR = 'ERROR',
     // the whole execution of a "parallel" block
     PARALLEL = 'PARALLEL',
+    // the whole loop, identifiable even before the first iteration
+    LOOP = 'LOOP',
+    // a step owning retry attempts
+    RETRY = 'RETRY',
+    // a loop iteration owning retry attempts; index is the iteration number
+    ITERATION_RETRY = 'ITERATION_RETRY',
 }
 
 export interface LogSegmentEntry {
