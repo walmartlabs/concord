@@ -64,9 +64,9 @@
                                     <groupId>com.walmartlabs.concord.server</groupId>
                                     <artifactId>concord-server</artifactId>
                                     <version>${project.version}</version>
-                                    <type>tar.gz</type>
+                                    <type>tar</type>
                                     <classifier>dist</classifier>
-                                    <destFileName>server.tar.gz</destFileName>
+                                    <destFileName>server.tar</destFileName>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>

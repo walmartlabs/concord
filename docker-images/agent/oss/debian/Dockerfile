@@ -30,7 +30,7 @@ RUN DEBIAN_FRONTEND=${DEBIAN_FRONTEND} apt-get -y install \
     && apt-get clean
 
 COPY --chown=concord:concord target/deps/ /home/concord/.m2/repository
-ADD --chown=concord:concord target/dist/agent.tar.gz /opt/concord/agent
+ADD --chown=concord:concord target/dist/agent.tar /opt/concord/agent
 
 USER concord
 CMD ["bash", "/opt/concord/agent/start.sh"]

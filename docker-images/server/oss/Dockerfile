@@ -7,7 +7,7 @@ LABEL maintainer="ibodrov@gmail.com"
 
 EXPOSE 8001
 
-ADD --chown=concord:concord target/dist/server.tar.gz /opt/concord/server/
+ADD --chown=concord:concord target/dist/server.tar /opt/concord/server/
 
 RUN mkdir -p /opt/concord/server/logs && \
     chown -R concord:concord /opt/concord/server/logs

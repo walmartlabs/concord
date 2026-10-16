@@ -84,10 +84,10 @@
                                     <groupId>com.walmartlabs.concord</groupId>
                                     <artifactId>concord-agent</artifactId>
                                     <version>${project.version}</version>
-                                    <type>tar.gz</type>
+                                    <type>tar</type>
                                     <classifier>dist</classifier>
                                     <outputDirectory>${project.build.directory}/dist</outputDirectory>
-                                    <destFileName>agent.tar.gz</destFileName>
+                                    <destFileName>agent.tar</destFileName>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>

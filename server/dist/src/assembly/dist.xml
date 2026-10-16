@@ -5,7 +5,7 @@
     <id>dist</id>
 
     <formats>
-        <format>tar.gz</format>
+        <format>tar</format>
     </formats>
 
     <includeBaseDirectory>false</includeBaseDirectory>
