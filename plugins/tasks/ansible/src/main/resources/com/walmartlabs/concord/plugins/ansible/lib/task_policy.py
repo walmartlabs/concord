@@ -12,7 +12,6 @@ import re
 import os
 import os.path
 import string
-import ansible
 
 class SafeDict(dict):
     def __missing__(self, key):
@@ -105,8 +104,6 @@ class TaskPolicy:
     def _match_values(self, patterns, value):
         display.vv("match_values: {} on {}".format(patterns, value))
 
-        if isinstance(value, ansible.parsing.yaml.objects.AnsibleUnicode):
-            value = str(value)
 
         if isinstance(value, str):
             for p in patterns:

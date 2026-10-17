@@ -415,7 +415,7 @@ public class AnsibleIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*THIS TASK CONTAINS SENSITIVE INFORMATION.*", ab);
+        assertNoLog(".*password.*", ab);
     }
 
     @Test
@@ -626,6 +626,6 @@ public class AnsibleIT extends AbstractServerIT {
 
         ab = getLog(pir.getInstanceId());
         assertNoLog(".*Hello! my_password=.*", ab);
-        assertLog(".*SENSITIVE INFORMATION.*", ab);
+        assertNoLog(".*n0N30fUr8uS1N3sS.*", ab);
     }
 }
