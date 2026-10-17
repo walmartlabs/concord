@@ -25,11 +25,13 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AnsibleLookupIT extends AbstractServerIT {
 
@@ -75,6 +77,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getInstanceId());
         assertNoLog(".*Explicit org " + secretValue + ".*", ab);
         assertNoLog(".*Implicit org " + secretValue + ".*", ab);
+        assertSensitiveLookupEvents(pir.getInstanceId(), secretValue, true);
     }
 
     @Test
@@ -119,6 +122,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getInstanceId());
         assertNoLog(".*Explicit org " + secretValue + ".*", ab);
         assertNoLog(".*Implicit org " + secretValue + ".*", ab);
+        assertSensitiveLookupEvents(pir.getInstanceId(), secretValue, true);
     }
 
     @Test
@@ -160,6 +164,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getInstanceId());
         assertNoLog(".*Explicit org " + secretValue + ".*", ab);
         assertNoLog(".*Implicit org " + secretValue + ".*", ab);
+        assertSensitiveLookupEvents(pir.getInstanceId(), secretValue, true);
     }
 
     @Test
@@ -200,8 +205,33 @@ public class AnsibleLookupIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(pir.getInstanceId());
-        assertNoLog(".*Explicit org: ssh-rsa" + ".*", ab);
-        assertNoLog(".*Implicit org: ssh-rsa" + ".*", ab);
+        assertNoLog(".*Explicit org: ssh-rsa.*", ab);
+        assertNoLog(".*Implicit org: ssh-rsa.*", ab);
+        assertSensitiveLookupEvents(pir.getInstanceId(), "ssh-rsa", true);
+    }
+
+    private void assertSensitiveLookupEvents(UUID instanceId, String sensitiveValue, boolean requireCensored)
+            throws Exception {
+        List<ProcessEventEntry> events = new ProcessEventsApi(getApiClient())
+                .listProcessEvents(instanceId, "ANSIBLE", null, null, null, "post", null, -1);
+        for (ProcessEventEntry event : events) {
+            assertFalse(event.getData().toString().contains(sensitiveValue),
+                    "Sensitive lookup value leaked into event");
+        }
+        List<ProcessEventEntry> successful = events.stream()
+                .filter(e -> e.getData() != null
+                        && "debug".equals(e.getData().get("task"))
+                        && "OK".equals(e.getData().get("status")))
+                .toList();
+        assertTrue(successful.size() >= 2, "Expected successful Ansible lookup task events");
+        for (ProcessEventEntry event : successful) {
+            String serialized = event.getData().toString();
+            assertFalse(serialized.contains(sensitiveValue), "Sensitive lookup value leaked into event");
+            if (requireCensored) {
+                assertTrue(serialized.toLowerCase().contains("censored"),
+                        "Expected sensitive Ansible result to be censored");
+            }
+        }
     }
 
     /**

@@ -81,10 +81,47 @@ public class AnsiblePolicyIT extends AbstractServerIT {
         assertFalse(failedTasks.isEmpty(), "Expected the denied copy to fail");
     }
 
+    @Test
+    public void testTemplatedConditions() throws Exception {
+        String orgName = "Default";
+        String projectName = "project_" + randomString();
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+
+        String policyName = "test_policy_" + randomString();
+        PolicyApi policyApi = new PolicyApi(getApiClient());
+        policyApi.createOrUpdatePolicy(new PolicyEntry()
+                .name(policyName)
+                .rules(readPolicy("ansiblePolicyTaskDeny/test-policy.json")));
+        policyApi.linkPolicy(policyName, new PolicyLinkEntry()
+                .orgName(orgName)
+                .projectName(projectName));
+
+        URI dir = AnsiblePolicyIT.class.getResource("ansiblePolicyTemplatedConditions").toURI();
+        StartProcessResponse spr = start(orgName, projectName, null, null, archive(dir));
+        ProcessEntry process = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, process.getStatus());
+
+        List<ProcessEventEntry> events = ansiblePostEvents(process.getInstanceId());
+        assertTrue(hasTaskStatus(events, "Conditional forbidden copy", "SKIPPED"));
+        assertTrue(hasTaskStatus(events, "Copy secret data", "FAILED"));
+        assertTrue(hasTaskStatus(events, "Verify policy effects", "OK"));
+        assertTrue(hasTaskStatus(events, "Ignored forbidden copy", "FAILED"));
+        assertTrue(events.stream()
+                .anyMatch(e -> "Ignored forbidden copy".equals(e.getData().get("task"))
+                        && Boolean.TRUE.equals(e.getData().get("ignore_errors"))));
+    }
 
     private List<ProcessEventEntry> ansiblePostEvents(UUID instanceId) throws Exception {
         return new ProcessEventsApi(getApiClient())
                 .listProcessEvents(instanceId, "ANSIBLE", null, null, null, "post", null, -1);
+    }
+    private boolean hasTaskStatus(List<ProcessEventEntry> events, String task, String status) {
+        return events.stream().anyMatch(e -> e.getData() != null
+                && task.equals(e.getData().get("task"))
+                && status.equals(e.getData().get("status")));
     }
     private Map<String, Object> readPolicy(String file) throws Exception {
         URL url = AnsiblePolicyIT.class.getResource(file);

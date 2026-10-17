@@ -1,0 +1,30 @@
+---
+- hosts: local
+  gather_facts: false
+  tasks:
+    - name: Timed task
+      command: /bin/sleep 1
+      changed_when: false
+
+    - name: Export nested output
+      debug:
+        msg:
+          message: upgrade-ok
+          count: 7
+          values: [true, null, "héllo"]
+      register: payload
+
+    - name: Skipped task
+      debug:
+        msg: should be skipped
+      when: false
+
+    - name: Ignored failure
+      command: /bin/false
+      ignore_errors: true
+      changed_when: false
+
+    - name: Private task
+      debug:
+        msg: upgrade-private-sentinel
+      no_log: true
