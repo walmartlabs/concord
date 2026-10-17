@@ -15,13 +15,11 @@
 
     <name>${project.groupId}:${project.artifactId}</name>
 
+
+
     <properties>
-        <runnerV1.path>
-            ${project.basedir}/../runtime/v1/impl/target/concord-runtime-impl-v1-${project.version}-jar-with-dependencies.jar
-        </runnerV1.path>
-        <runnerV2.path>
-            ${project.basedir}/../runtime/v2/runner/target/concord-runner-v2-${project.version}-jar-with-dependencies.jar
-        </runnerV2.path>
+        <runnerV1.path>${project.basedir}/../runtime/v1/impl/target/concord-runtime-impl-v1-${project.version}-jar-with-dependencies.jar</runnerV1.path>
+        <runnerV2.path>${project.basedir}/../runtime/v2/runner/target/concord-runner-v2-${project.version}-jar-with-dependencies.jar</runnerV2.path>
     </properties>
 
     <dependencies>
@@ -208,57 +206,6 @@
             <plugin>
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>sisu-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-runner</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.runtime.v1</groupId>
-                                    <artifactId>concord-runtime-impl-v1</artifactId>
-                                    <version>${project.version}</version>
-                                    <classifier>jar-with-dependencies</classifier>
-                                    <destFileName>runner-v1.jar</destFileName>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.runtime.v2</groupId>
-                                    <artifactId>concord-runner-v2</artifactId>
-                                    <version>${project.version}</version>
-                                    <classifier>jar-with-dependencies</classifier>
-                                    <destFileName>runner-v2.jar</destFileName>
-                                </artifactItem>
-                            </artifactItems>
-                            <outputDirectory>${project.build.directory}/runner</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>dist</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/assembly/dist.xml</descriptor>
-                            </descriptors>
-                            <tarLongFileMode>posix</tarLongFileMode>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
