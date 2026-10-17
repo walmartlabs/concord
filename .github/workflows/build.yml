@@ -81,8 +81,10 @@ jobs:
         uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: ${{ env.MAVEN_REPO_LOCAL }}
-          key: ${{ runner.os }}-maven-${{ matrix.cache_key }}-${{ hashFiles('**/pom.xml', '.github/settings.xml') }}
+          # New generation lets the cache retain historical Concord releases.
+          key: ${{ runner.os }}-maven-${{ matrix.cache_key }}-v2-${{ hashFiles('**/pom.xml', '.github/settings.xml', '.github/workflows/*.yml') }}
           restore-keys: |
+            ${{ runner.os }}-maven-${{ matrix.cache_key }}-v2-
             ${{ runner.os }}-maven-${{ matrix.cache_key }}-
             ${{ runner.os }}-maven-
 
@@ -97,7 +99,32 @@ jobs:
 
       - name: Remove local Concord artifacts from Maven cache
         if: success()
-        run: rm -rf "${MAVEN_REPO_LOCAL}/com/walmartlabs/concord"
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          import shutil
+          import xml.etree.ElementTree as ET
+
+          # Retain historical releases, not this checkout's artifacts or snapshots.
+          version = ET.parse("pom.xml").findtext("{http://maven.apache.org/POM/4.0.0}version")
+          if not version:
+              raise ValueError("Root POM must declare the project version")
+
+          concord = Path(os.environ["MAVEN_REPO_LOCAL"]) / "com/walmartlabs/concord"
+          removed = 0
+          for root, directories, files in os.walk(concord):
+              for directory in directories[:]:
+                  if directory == version or directory.endswith("-SNAPSHOT"):
+                      shutil.rmtree(Path(root) / directory)
+                      directories.remove(directory)
+                      removed += 1
+              for filename in files:
+                  if filename == "maven-metadata-local.xml" or filename.startswith("maven-metadata-local.xml."):
+                      (Path(root) / filename).unlink()
+
+          print(f"Removed {removed} Concord artifact versions; retained historical releases")
+          PY
 
       - name: Save Maven cache
         if: success() && steps.restore-maven-cache.outputs.cache-hit != 'true'
