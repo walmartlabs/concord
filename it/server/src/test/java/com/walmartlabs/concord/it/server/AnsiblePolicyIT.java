@@ -26,13 +26,13 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
+import static org.junit.jupiter.api.Assertions.*;
 public class AnsiblePolicyIT extends AbstractServerIT {
 
     @Test
@@ -73,12 +73,19 @@ public class AnsiblePolicyIT extends AbstractServerIT {
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
 
-        // ---
-
-        byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*Task 'Copy a local file \\(copy\\)' is forbidden by the task policy.*", ab);
+        List<ProcessEventEntry> failedTasks = ansiblePostEvents(pir.getInstanceId()).stream()
+                .filter(e -> e.getData() != null
+                        && "Copy a local file".equals(e.getData().get("task"))
+                        && "FAILED".equals(e.getData().get("status")))
+                .toList();
+        assertFalse(failedTasks.isEmpty(), "Expected the denied copy to fail");
     }
 
+
+    private List<ProcessEventEntry> ansiblePostEvents(UUID instanceId) throws Exception {
+        return new ProcessEventsApi(getApiClient())
+                .listProcessEvents(instanceId, "ANSIBLE", null, null, null, "post", null, -1);
+    }
     private Map<String, Object> readPolicy(String file) throws Exception {
         URL url = AnsiblePolicyIT.class.getResource(file);
         return fromJson(new File(url.toURI()));

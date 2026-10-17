@@ -70,8 +70,10 @@ Prerequisites:
 
 - Git 2.18+;
 - Docker (privileged containers are required for `it/server` with `-Pdocker`);
-- Ansible 2.6.0+ must be installed and available in `$PATH`.
-  See [the official documentation](http://docs.ansible.com/ansible/intro_installation.html);
+- `ansible-core==2.21.5` must be installed and available in `$PATH` for
+  host-local Ansible tests. The controller requires Python >=3.12; managed nodes
+  require Python >=3.9.
+  See [the official documentation](https://docs.ansible.com/ansible-core/2.21/installation_guide/intro_installation.html);
 - `requests` python module is required. It can be installed by using `pip install requests`
   or the system package manager;
 - Java must be available in `$PATH` as `java`;
@@ -80,6 +82,11 @@ Prerequisites:
 Server-mode ITs that run against a locally managed agent require a Docker
 endpoint configured for that agent. `it/server` with `-Pdocker` manages a
 privileged Docker-in-Docker daemon.
+
+The shared Docker base uses Debian 13 and system Python 3.13. The Ansible and
+agent images install core 2.21.5 in the existing Concord virtualenv; curated
+Ansible collection versions remain pinned in
+[`docker-images/ansible/galaxy_requirements.yml`](docker-images/ansible/galaxy_requirements.yml).
 
 ### Running tests
 

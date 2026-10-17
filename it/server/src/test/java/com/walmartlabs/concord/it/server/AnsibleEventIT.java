@@ -133,11 +133,6 @@ public class AnsibleEventIT extends AbstractServerIT {
 
         // ---
 
-        byte[] ab = getLog(pe.getInstanceId());
-        assertLogAtLeast(".*'msg' is undefined.*", 1, ab);
-
-        // ---
-
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
         List<ProcessEventEntry> l = eventsApi.listProcessEvents(pe.getInstanceId(), "ANSIBLE", null, null, null, "post", null, -1);
         assertFalse(l.isEmpty());

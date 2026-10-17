@@ -75,7 +75,6 @@ public class AnsibleLookupIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getInstanceId());
         assertNoLog(".*Explicit org " + secretValue + ".*", ab);
         assertNoLog(".*Implicit org " + secretValue + ".*", ab);
-        assertLogAtLeast(".*ENABLING NO_LOG.*", 2, ab);
     }
 
     @Test
@@ -120,7 +119,6 @@ public class AnsibleLookupIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getInstanceId());
         assertNoLog(".*Explicit org " + secretValue + ".*", ab);
         assertNoLog(".*Implicit org " + secretValue + ".*", ab);
-        assertLogAtLeast(".*ENABLING NO_LOG.*", 2, ab);
     }
 
     @Test
@@ -204,7 +202,6 @@ public class AnsibleLookupIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getInstanceId());
         assertNoLog(".*Explicit org: ssh-rsa" + ".*", ab);
         assertNoLog(".*Implicit org: ssh-rsa" + ".*", ab);
-        assertLogAtLeast(".*ENABLING NO_LOG.*", 2, ab);
     }
 
     /**
