@@ -311,7 +311,9 @@ public class RunnerJobExecutor implements JobExecutor {
 
         try {
             // save the process' log
-            processLog.log(proc.getInputStream());
+            try (InputStream stdout = new ProcessOutputInputStream(proc)) {
+                processLog.log(stdout);
+            }
 
             // wait for the process to finish
             int code;
