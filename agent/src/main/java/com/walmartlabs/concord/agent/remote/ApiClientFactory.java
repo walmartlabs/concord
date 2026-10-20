@@ -27,9 +27,9 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ApiClientFactory {
 
@@ -59,7 +59,7 @@ public class ApiClientFactory {
                 .setReadTimeout(Duration.of(cfg.getReadTimeout(), ChronoUnit.MILLIS))
                 .setUserAgent(cfg.getUserAgent());
 
-        Map<String, String> cookieJar = new HashMap<>();
+        Map<String, String> cookieJar = new ConcurrentHashMap<>();
         client.setResponseInterceptor(response -> {
             List<String> cookies = response.headers().allValues("Set-Cookie");
             if (cookies.isEmpty()) {
