@@ -43,10 +43,6 @@ Available Maven profiles:
 - `it` - run integration tests;
 - `jdk25-aarch64` - build Docker images for aarch64.
 
-Parallel builds with `mvnd clean install -Pdocker -DskipTests` are supported.
-Docker image modules declare their base-image modules as Maven dependencies so
-the base images are built before their consumers.
-
 Profiles can be combined, e.g.
 
 ```
