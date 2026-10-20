@@ -24,6 +24,7 @@ import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.agent.executors.JobExecutorFactory;
 import com.walmartlabs.concord.agent.guice.AgentImportManager;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
+import com.walmartlabs.concord.agent.remote.FinalizationHeartbeat;
 import com.walmartlabs.concord.agent.remote.ProcessStatusUpdater;
 
 import javax.inject.Inject;
@@ -36,6 +37,7 @@ public class WorkerFactory {
     private final StateFetcher stateFetcher;
     private final ProcessStatusUpdater statusUpdater;
     private final ProcessLog processLog;
+    private final FinalizationHeartbeat heartbeat;
 
     @Inject
     public WorkerFactory(RepositoryManager repositoryManager,
@@ -43,7 +45,8 @@ public class WorkerFactory {
                          JobExecutorFactory jobExecutorFactory,
                          StateFetcher stateFetcher,
                          ProcessStatusUpdater statusUpdater,
-                         ProcessLog processLog) {
+                         ProcessLog processLog,
+                         FinalizationHeartbeat heartbeat) {
 
         this.repositoryManager = repositoryManager;
         this.importManager = importManager;
@@ -51,11 +54,12 @@ public class WorkerFactory {
         this.stateFetcher = stateFetcher;
         this.statusUpdater = statusUpdater;
         this.processLog = processLog;
+        this.heartbeat = heartbeat;
     }
 
     public Worker create(JobRequest jobRequest, Worker.CompletionCallback completionCallback) {
         JobExecutor executor = jobExecutorFactory.create(jobRequest.getType());
 
-        return new Worker(repositoryManager, importManager, executor, completionCallback, stateFetcher, statusUpdater, processLog, jobRequest);
+        return new Worker(repositoryManager, importManager, executor, completionCallback, stateFetcher, statusUpdater, processLog, jobRequest, heartbeat);
     }
 }
