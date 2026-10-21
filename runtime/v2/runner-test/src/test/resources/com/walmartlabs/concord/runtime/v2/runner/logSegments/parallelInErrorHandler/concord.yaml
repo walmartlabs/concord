@@ -1,0 +1,14 @@
+flows:
+  default:
+    - name: "failed"
+      task: "faultyTask"
+      error:
+        - parallel:
+            - name: "branch A"
+              task: "log"
+              in:
+                msg: "branch A"
+            - name: "branch B"
+              task: "log"
+              in:
+                msg: "branch B"
