@@ -24,6 +24,7 @@ import com.codahale.metrics.Counter;
 import com.walmartlabs.concord.common.LogUtils;
 import com.walmartlabs.concord.server.Listeners;
 import com.walmartlabs.concord.server.process.LogSegment;
+import com.walmartlabs.concord.server.process.LogSegmentRequest;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.Range;
 import com.walmartlabs.concord.server.sdk.log.ProcessLogEntry;
@@ -33,7 +34,6 @@ import org.jooq.DSLContext;
 import javax.inject.Inject;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import static com.walmartlabs.concord.common.LogUtils.LogLevel;
 import static com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
@@ -86,11 +86,11 @@ public class ProcessLogManager {
         logsDao.createSegment(tx, SYSTEM_SEGMENT_ID, processKey, null, SYSTEM_SEGMENT_NAME, null);
     }
 
-    public long createSegment(ProcessKey processKey, UUID correlationId, String name, OffsetDateTime createdAt) {
-        if (SYSTEM_SEGMENT_NAME.equals(name)) {
+    public long createSegment(ProcessKey processKey, LogSegmentRequest request) {
+        if (SYSTEM_SEGMENT_NAME.equals(request.name())) {
             return SYSTEM_SEGMENT_ID;
         }
-        return logsDao.createSegment(processKey, correlationId, name, createdAt, LogSegment.Status.RUNNING.name());
+        return logsDao.createSegment(processKey, request, LogSegment.Status.RUNNING.name());
     }
 
     public void updateSegment(ProcessKey processKey, long segmentId, LogSegment.Status status, Integer warnings, Integer errors,
