@@ -2,17 +2,17 @@
 
 ## Prerequisites
 
-- Node 24 LTS, available in `$PATH`;
-- Java 25, available in `$PATH`. Necessary only to build the package.
+- Node 24 LTS in `$PATH`.
+- Java 25 in `$PATH`. Java is required only to build the package.
 
 ## Dependencies
 
-To install the necessary dependencies for the first time:
+Install the required dependencies for the first time:
 ```bash
 $ npm ci
 ```
 
-To update `package-lock.json` run
+To update `package-lock.json`, run:
 ```bash
 $ ../mvnw clean package # only for the first run
 $ ../mvnw com.github.eirslett:frontend-maven-plugin:npm -Darguments=install
@@ -20,9 +20,9 @@ $ ../mvnw com.github.eirslett:frontend-maven-plugin:npm -Darguments=install
 
 ## Running in Dev Mode
 
-In the dev mode the UI is served by running `npm start`.
+In development mode, run `npm start` to serve the UI.
 
-First time:
+For the first run, install dependencies and start the development server:
 ```bash
 $ npm ci
 $ npm run dev
@@ -30,32 +30,31 @@ $ npm run dev
 
 Open http://localhost:3000.
 
-The `ci` step can be skipped for subsequent runs.
+Skip the `ci` step on later runs.
 
-The dev mode has the following limitations:
-- file download (e.g. downloading raw logs) doesn't work;
-- [custom forms](https://concord.walmartlabs.com/docs/getting-started/forms.html#custom) don't work.
+Development mode has these limitations:
+- File downloads, such as raw logs, do not work.
+- [Custom forms](https://concord.walmartlabs.com/docs/getting-started/forms.html#custom) do not work.
 
-In order to use those features, you need to run the UI in production
-mode (see below).
+To use these features, run the UI in production mode. See below.
 
 ## Running in Production Mode
 
-In the production mode the UI is served by concord-server from the JAR file
-created during concord-console2 [build](./pom.xml).
+In production mode, Concord Server serves the UI from the JAR file that the
+concord-console2 [build](./pom.xml) creates.
 
 When running locally, it is available at http://localhost:8001.
 
 ## Configuration
 
-Specify the path to the `cfg.js` file when you start
+Set the path to the `cfg.js` file when you start
 [the Server](../server/dist):
 
 ```
 CONSOLE_CFG_FILE=/path/to/cfg.js
 ```
 
-or using concord-server.conf:
+Or, set the path in `concord-server.conf`:
 
 ```
 concord-server {
