@@ -1,0 +1,325 @@
+/*-
+ * *****
+ * Concord
+ * -----
+ * Copyright (C) 2017 - 2026 Walmart Inc.
+ * -----
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =====
+ */
+
+import type { TreeEntry } from './treeApi';
+
+import { parseISO as parseDate } from 'date-fns';
+
+import { LogSegmentEntry, SegmentKind, SegmentStatus } from '../../../api/process/log';
+import { isFinal, ProcessStatus } from '../../../api/process';
+
+const SYSTEM_SEGMENT_ID = 0;
+
+/**
+ * What the segment represents, recorded by the runner:
+ * - step: the whole execution of a step;
+ * - iteration: one iteration of a loop;
+ * - attempt: one attempt of a step with "retry";
+ * - error: the "error" block of a step;
+ * - parallel: the whole execution of a "parallel" block.
+ * The tree is rendered as recorded, the client doesn't group the segments.
+ */
+export type NodeKind = 'step' | 'iteration' | 'attempt' | 'error' | 'parallel';
+
+export interface SegmentNode {
+    kind: NodeKind;
+    remote?: TreeEntry;
+    segment: LogSegmentEntry;
+    // a failed attempt followed by another one
+    retried?: boolean;
+    // a failure handled by an ancestor (a retry or an "error" block): not a failure of the process
+    parent?: SegmentNode;
+    children: SegmentNode[];
+    depth: number;
+    // counters of the segment and all its descendants
+    totalWarnings: number;
+    totalErrors: number;
+    hasFailedDescendant: boolean;
+}
+
+export interface SegmentTree {
+    roots: SegmentNode[];
+    byId: Map<number, SegmentNode>;
+    // all nodes in the tree (pre-)order
+    ordered: SegmentNode[];
+}
+
+const KINDS: Record<SegmentKind, NodeKind> = {
+    [SegmentKind.STEP]: 'step',
+    [SegmentKind.ITERATION]: 'iteration',
+    [SegmentKind.ATTEMPT]: 'attempt',
+    [SegmentKind.ERROR]: 'error',
+    [SegmentKind.PARALLEL]: 'parallel',
+};
+
+// segments of older runners have no kind
+const kindOf = (s: LogSegmentEntry): NodeKind => (s.kind ? KINDS[s.kind] : undefined) ?? 'step';
+
+// Failure records the step outcome, even when execution later recovers.
+export const isFailure = (node: SegmentNode) => node.segment.status === SegmentStatus.FAILED;
+
+// a loop: can have hundreds of iterations
+export const startsCollapsed = (node: SegmentNode) =>
+    node.remote?.hasIterations ?? node.children.some((c) => c.kind === 'iteration');
+
+const newNode = (segment: LogSegmentEntry): SegmentNode => ({
+    kind: kindOf(segment),
+    segment,
+    children: [],
+    depth: 0,
+    totalWarnings: 0,
+    totalErrors: 0,
+    hasFailedDescendant: false,
+});
+
+export const buildSegmentTree = (
+    segments: LogSegmentEntry[],
+    metadata?: Map<number, TreeEntry>
+): SegmentTree => {
+    const nodes = new Map<number, SegmentNode>();
+    segments.forEach((s) => nodes.set(s.id, { ...newNode(s), remote: metadata?.get(s.id) }));
+
+    const roots: SegmentNode[] = [];
+    segments.forEach((s) => {
+        const node = nodes.get(s.id)!;
+        // parents are always created before their children, which also protects from cycles
+        const parent =
+            s.parentId !== undefined && s.parentId < s.id ? nodes.get(s.parentId) : undefined;
+        if (parent) {
+            parent.children.push(node);
+        } else {
+            roots.push(node);
+        }
+    });
+
+    const byId = new Map<number, SegmentNode>();
+    const ordered: SegmentNode[] = [];
+    const walk = (node: SegmentNode, parent: SegmentNode | undefined, depth: number) => {
+        node.parent = parent;
+        node.depth = depth;
+        node.retried =
+            node.kind === 'attempt' &&
+            node.segment.status === SegmentStatus.FAILED &&
+            (parent?.children ?? []).some(
+                (c) =>
+                    c.kind === 'attempt' &&
+                    c.segment.iterationIndex === node.segment.iterationIndex &&
+                    (c.segment.attemptIndex ?? 0) > (node.segment.attemptIndex ?? 0)
+            );
+        if (node.remote) {
+            node.retried = node.remote.retried;
+        }
+        byId.set(node.segment.id, node);
+        ordered.push(node);
+
+        let warnings = node.segment.warnings ?? 0;
+        let errors = node.segment.errors ?? 0;
+        let failed = false;
+        node.children.forEach((c) => {
+            walk(c, node, depth + 1);
+            warnings += c.totalWarnings;
+            errors += c.totalErrors;
+            failed = failed || c.hasFailedDescendant || isFailure(c);
+        });
+
+        node.totalWarnings = warnings;
+        node.totalErrors = errors;
+        node.hasFailedDescendant = failed;
+    };
+    roots.forEach((r) => walk(r, undefined, 0));
+
+    return { roots, byId, ordered };
+};
+
+export const getAncestors = (node: SegmentNode): SegmentNode[] => {
+    const result: SegmentNode[] = [];
+    let p = node.parent;
+    while (p) {
+        result.unshift(p);
+        p = p.parent;
+    }
+    return result;
+};
+
+/**
+ * The segment to show when the user opens the log without an explicit selection:
+ * the first failed one (the innermost, where the error actually happened), otherwise
+ * the most recent running one, otherwise the first one.
+ */
+export const pickDefaultSegment = (
+    tree: SegmentTree,
+    processStatus?: ProcessStatus
+): SegmentNode | undefined => {
+    const steps = tree.ordered.filter((n) => n.segment.id !== SYSTEM_SEGMENT_ID);
+
+    const failed = steps.find((n) => isFailure(n) && !n.hasFailedDescendant);
+    if (failed) {
+        return failed;
+    }
+
+    if (!isFinal(processStatus)) {
+        const running = steps.filter((n) => n.segment.status === SegmentStatus.RUNNING);
+        if (running.length > 0) {
+            return running[running.length - 1];
+        }
+    }
+
+    return steps[0] ?? tree.ordered[0];
+};
+
+export type StepCategory = 'FAILED' | 'RUNNING' | 'WARNINGS' | 'OK';
+
+/**
+ * Every step belongs to exactly one category, so the counters of the filters add up to "All".
+ */
+export const categoryOf = (n: SegmentNode): StepCategory => {
+    const status = n.segment.status;
+    if (isFailure(n)) {
+        return 'FAILED';
+    }
+    if (n.remote) return n.remote.category;
+    if (status === SegmentStatus.RUNNING || status === SegmentStatus.SUSPENDED) {
+        return 'RUNNING';
+    }
+    if (
+        (n.segment.warnings ?? 0) > 0 ||
+        (n.segment.errors ?? 0) > 0
+    ) {
+        return 'WARNINGS';
+    }
+    return 'OK';
+};
+
+export interface NodeDescription {
+    name: string;
+    // a badge, e.g. "task" or "retry"
+    kind?: string;
+    // a short secondary text, e.g. "3 attempts · exhausted"
+    note?: string;
+    // the tree shows the badge only, e.g. error handlers and parallel blocks
+    badgeOnly?: boolean;
+    // a step with iterations, shown with the "loop" badge before the kind
+    loop?: boolean;
+}
+
+export const describeNode = (n: SegmentNode): NodeDescription => {
+    const s = n.segment;
+    if (s.id === SYSTEM_SEGMENT_ID) {
+        return { name: 'System', kind: 'system' };
+    }
+
+    switch (n.kind) {
+        case 'error':
+            return { name: 'Error handler', kind: 'error handler', badgeOnly: true };
+        case 'parallel':
+            return { name: 'Parallel', kind: 'parallel', badgeOnly: true };
+        case 'attempt': {
+            const labels = [];
+            if (s.iterationIndex != null) labels.push(`item #${s.iterationIndex + 1}`);
+            if (!s.name.startsWith('attempt #'))
+                labels.push(`attempt ${(s.attemptIndex ?? 0) + 1}`);
+            if (n.retried) labels.push('retried');
+            return {
+                name: parseSegmentName(s.name).name,
+                note: labels.join(' · ') || undefined,
+            };
+        }
+        case 'iteration': {
+            const item = `item #${(s.iterationIndex ?? 0) + 1}`;
+            // structural names, e.g. "iteration #2", are shown as the item's number
+            return s.name.startsWith('iteration #') ? { name: item } : { name: s.name, note: item };
+        }
+    }
+
+    const { kind, name } = parseSegmentName(s.name);
+    if (n.remote) return { name, kind, loop: n.remote.hasIterations };
+    const iterations = new Set(
+        n.children
+            .filter(
+                (c) =>
+                    c.kind === 'iteration' ||
+                    (c.kind === 'attempt' && c.segment.iterationIndex != null)
+            )
+            .map((c) => c.segment.iterationIndex)
+    ).size;
+    const note =
+        iterations > 0 ? `${iterations} ${iterations === 1 ? 'item' : 'items'}` : undefined;
+    return iterations > 0 ? { name, kind, note, loop: true } : { name, kind, note };
+};
+
+const KIND_RE = /^(task|script|call): (.+)$/;
+
+/**
+ * Splits default segment names (e.g. "task: http") into the kind and the name.
+ */
+export const parseSegmentName = (name: string): { kind?: string; name: string } => {
+    const m = KIND_RE.exec(name);
+    if (!m) {
+        return { name };
+    }
+    return { kind: m[1], name: m[2] };
+};
+
+export interface SegmentTiming {
+    start: number;
+    end: number;
+    // false for segments that never report their completion (e.g. the system segment)
+    known: boolean;
+}
+
+export const getSegmentTiming = (
+    segment: LogSegmentEntry,
+    processStatus: ProcessStatus | undefined,
+    now: number
+): SegmentTiming => {
+    const start = parseDate(segment.createdAt).getTime();
+
+    if (segment.status === SegmentStatus.RUNNING && !isFinal(processStatus)) {
+        return { start, end: Math.max(start, now), known: true };
+    }
+
+    if (segment.statusUpdatedAt) {
+        return {
+            start,
+            end: Math.max(start, parseDate(segment.statusUpdatedAt).getTime()),
+            known: true,
+        };
+    }
+
+    return { start, end: start, known: false };
+};
+
+export const formatDuration = (ms: number): string => {
+    const s = ms / 1000;
+    if (s < 60) {
+        return `${s.toFixed(1)}s`;
+    }
+
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const totalSeconds = Math.round(s);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+        return `${hours}h ${pad(minutes)}m`;
+    }
+    return `${minutes}m ${pad(seconds)}s`;
+};
