@@ -41,24 +41,45 @@ public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
     @Override
     public Command compile(CompilerContext context, ScriptCall step) {
         UUID correlationId = UUID.randomUUID();
-        Command cmd = new LogSegmentScopeCommand<>(correlationId, new ScriptCallCommand(correlationId, step), step);
-
         ScriptCallOptions options = Objects.requireNonNull(step.getOptions());
+
+        WithItems withItems = options.withItems();
+        if (withItems != null) {
+            return compileWithItems(context, step, correlationId, options, withItems);
+        }
+
+        Command cmd = new ScriptCallCommand(correlationId, step);
+
+        Retry retry = options.retry();
+        if (retry != null) {
+            cmd = new RetryWrapper(cmd, retry, step, correlationId);
+        }
+
+        Loop loop = options.loop();
+        if (loop != null) {
+            cmd = LoopWrapper.of(context, cmd, loop, Collections.emptyList(), Collections.emptyMap(), null, step,
+                    StepSegments.iteration(step, correlationId, retry != null));
+        }
+
+        List<Step> errorSteps = options.errorSteps();
+        return StepSegments.step(cmd, step, correlationId, loop != null || retry != null,
+                errorSteps.isEmpty() ? null : CompilerUtils.compile(context, errorSteps));
+    }
+
+    /**
+     * The deprecated {@code withItems}: a segment for each item, no iteration segments.
+     */
+    private static Command compileWithItems(CompilerContext context, ScriptCall step, UUID correlationId,
+                                            ScriptCallOptions options, WithItems withItems) {
+
+        Command cmd = new LogSegmentScopeCommand<>(correlationId, new ScriptCallCommand(correlationId, step), step);
 
         Retry retry = options.retry();
         if (retry != null) {
             cmd = new RetryWrapper(cmd, retry, step);
         }
 
-        WithItems withItems = options.withItems();
-        if (withItems != null) {
-            cmd = WithItemsWrapper.of(cmd, withItems, Collections.emptyList(), Collections.emptyMap(), step);
-        }
-
-        Loop loop = options.loop();
-        if (loop != null) {
-            cmd = LoopWrapper.of(context, cmd, loop, Collections.emptyList(), Collections.emptyMap(), null, step);
-        }
+        cmd = WithItemsWrapper.of(cmd, withItems, Collections.emptyList(), Collections.emptyMap(), step);
 
         List<Step> errorSteps = options.errorSteps();
         if (!errorSteps.isEmpty()) {

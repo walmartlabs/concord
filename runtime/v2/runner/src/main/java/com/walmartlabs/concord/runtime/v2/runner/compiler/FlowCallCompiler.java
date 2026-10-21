@@ -21,11 +21,14 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.vm.*;
 import com.walmartlabs.concord.svm.Command;
 
 import javax.inject.Named;
+import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -40,25 +43,53 @@ public class FlowCallCompiler implements StepCompiler<FlowCall> {
     @Override
     public Command compile(CompilerContext context, FlowCall step) {
         UUID correlationId = UUID.randomUUID();
+        FlowCallOptions options = Objects.requireNonNull(step.getOptions());
+
+        Map<String, Serializable> outMapping = options.outExpr() != null && !options.outExpr().isEmpty() ? options.outExpr() : options.outMapping();
+
+        WithItems withItems = options.withItems();
+        if (withItems != null) {
+            return compileWithItems(context, step, correlationId, options, withItems, outMapping);
+        }
+
+        Command cmd = new FlowCallCommand(correlationId, step);
+
+        Retry retry = options.retry();
+        if (retry != null) {
+            cmd = new RetryWrapper(cmd, retry, step, correlationId);
+        }
+
+        Loop loop = options.loop();
+        if (loop != null) {
+            cmd = LoopWrapper.of(context, cmd, loop, options.out(), outMapping, options.outExpression(), step,
+                    StepSegments.iteration(step, correlationId, retry != null));
+        }
+
+        List<Step> errorSteps = options.errorSteps();
+
+        // an unnamed call without loop, retry or error has no segment
+        if (SegmentedLogger.getSegmentName(step) == null && loop == null && retry == null && errorSteps.isEmpty()) {
+            return cmd;
+        }
+
+        return StepSegments.step(cmd, step, correlationId, loop != null || retry != null,
+                errorSteps.isEmpty() ? null : CompilerUtils.compile(context, errorSteps));
+    }
+
+    /**
+     * The deprecated {@code withItems}: a segment for each item, no iteration segments.
+     */
+    private static Command compileWithItems(CompilerContext context, FlowCall step, UUID correlationId,
+                                            FlowCallOptions options, WithItems withItems, Map<String, Serializable> outMapping) {
 
         Command cmd = new LogSegmentScopeCommand<>(correlationId, new FlowCallCommand(correlationId, step), step);
-
-        FlowCallOptions options = Objects.requireNonNull(step.getOptions());
 
         Retry retry = options.retry();
         if (retry != null) {
             cmd = new RetryWrapper(cmd, retry, step);
         }
 
-        WithItems withItems = options.withItems();
-        if (withItems != null) {
-            cmd = WithItemsWrapper.of(cmd, withItems, options.out(), options.outExpr() != null && !options.outExpr().isEmpty() ? options.outExpr() : options.outMapping(), step);
-        }
-
-        Loop loop = options.loop();
-        if (loop != null) {
-            cmd = LoopWrapper.of(context, cmd, loop, options.out(), options.outExpr() != null && !options.outExpr().isEmpty() ? options.outExpr() : options.outMapping(), options.outExpression(), step);
-        }
+        cmd = WithItemsWrapper.of(cmd, withItems, options.out(), outMapping, step);
 
         List<Step> errorSteps = options.errorSteps();
         if (!errorSteps.isEmpty()) {

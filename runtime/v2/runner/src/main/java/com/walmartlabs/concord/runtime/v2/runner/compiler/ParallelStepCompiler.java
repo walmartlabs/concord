@@ -22,11 +22,16 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
 
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlock;
 import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogSegmentKind;
+import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.CloseSegmentCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.OpenSegmentCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelCommand;
 import com.walmartlabs.concord.svm.Command;
 
 import javax.inject.Named;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Named
@@ -43,6 +48,10 @@ public class ParallelStepCompiler implements StepCompiler<ParallelBlock> {
                 .map(s -> context.compiler().compile(context.processDefinition(), s))
                 .collect(Collectors.toList());
 
-        return new ParallelCommand(step, steps);
+        UUID correlationId = UUID.randomUUID();
+        return new BlockCommand(
+                new OpenSegmentCommand(LogSegmentKind.PARALLEL, step, correlationId, null, null, false, false),
+                new ParallelCommand(correlationId, step, steps),
+                new CloseSegmentCommand(LogSegmentKind.PARALLEL, correlationId));
     }
 }
