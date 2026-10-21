@@ -1,0 +1,11 @@
+flows:
+  default:
+    - name: parent
+      call: inner
+  inner:
+    - checkpoint: saved
+    - name: after checkpoint
+      log: continued
+    - task: conditionallyFailTask
+      in:
+        fail: "${fail}"

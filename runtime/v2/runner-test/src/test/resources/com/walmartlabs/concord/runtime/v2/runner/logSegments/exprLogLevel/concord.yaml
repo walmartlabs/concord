@@ -1,0 +1,10 @@
+flows:
+  default:
+    - expr: "${loggingExample.logLevels('system filtered')}"
+      meta: {logLevel: WARN}
+    - expr: "${loggingExample.logLevels('system after')}"
+    - name: Parent
+      block:
+        - expr: "${loggingExample.logLevels('parent filtered')}"
+          meta: {logLevel: WARN}
+        - expr: "${loggingExample.logLevels('parent after')}"

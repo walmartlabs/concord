@@ -1,0 +1,26 @@
+flows:
+  default:
+    - name: "loop ${item}"
+      task: faultyTask
+      loop:
+        items: [a]
+      retry:
+        times: 1
+        delay: 0
+      error:
+        - task: suspendTask
+          in:
+            eventName: loop-handler
+    - name: retried
+      task: faultyTask
+      retry:
+        times: 1
+        delay: 0
+      error:
+        - task: suspendTask
+          in:
+            eventName: retry-handler
+    - name: after handlers
+      task: log
+      in:
+        msg: done
