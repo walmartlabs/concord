@@ -119,6 +119,7 @@ public class ProcessModule implements Module {
         bindJaxRsResource(binder, ProcessKvResource.class);
         bindJaxRsResource(binder, ProcessLocksResource.class);
         bindJaxRsResource(binder, ProcessLogResourceV2.class);
+        bindJaxRsResource(binder, ProcessLogTreeResource.class);
         bindJaxRsResource(binder, ProcessResource.class);
         bindJaxRsResource(binder, ProcessResourceV2.class);
 
