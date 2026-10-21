@@ -21,8 +21,8 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
-import com.walmartlabs.concord.runtime.v2.runner.vm.ErrorWrapper;
 import com.walmartlabs.concord.runtime.v2.runner.vm.LoopWrapper;
 import com.walmartlabs.concord.runtime.v2.runner.vm.WithItemsWrapper;
 import com.walmartlabs.concord.svm.Command;
@@ -31,6 +31,7 @@ import javax.inject.Named;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Named
@@ -43,6 +44,7 @@ public final class GroupOfStepsCompiler implements StepCompiler<GroupOfSteps> {
 
     @Override
     public Command compile(CompilerContext context, GroupOfSteps step) {
+        UUID correlationId = UUID.randomUUID();
         Command cmd = compile(context, step.getSteps());
 
         GroupOfStepsOptions options = Objects.requireNonNull(step.getOptions());
@@ -53,15 +55,19 @@ public final class GroupOfStepsCompiler implements StepCompiler<GroupOfSteps> {
 
         Loop loop = options.loop();
         if (loop != null) {
-            cmd = LoopWrapper.of(context, cmd, loop, options.out(), Collections.emptyMap(), null, step);
+            cmd = LoopWrapper.of(context, cmd, loop, options.out(), Collections.emptyMap(), null, step,
+                    StepSegments.iteration(cmd, step, correlationId));
         }
 
         List<Step> errorSteps = options.errorSteps();
-        if (!options.errorSteps().isEmpty()) {
-            cmd = new ErrorWrapper(cmd, compile(context, errorSteps));
+
+        // an unnamed group without loop or error has no segment
+        if (SegmentedLogger.getSegmentName(step) == null && loop == null && errorSteps.isEmpty()) {
+            return cmd;
         }
 
-        return cmd;
+        return StepSegments.step(cmd, step, correlationId, loop != null,
+                errorSteps.isEmpty() ? null : compile(context, errorSteps));
     }
 
     private static BlockCommand compile(CompilerContext context, List<Step> steps) {

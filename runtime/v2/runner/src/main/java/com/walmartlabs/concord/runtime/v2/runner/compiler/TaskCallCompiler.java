@@ -38,38 +38,38 @@ public final class TaskCallCompiler implements StepCompiler<TaskCall> {
     @Override
     public Command compile(CompilerContext context, TaskCall step) {
         UUID correlationId = UUID.randomUUID();
-        Command cmd = new LogSegmentScopeCommand<>(correlationId, new TaskCallCommand(correlationId, step), step);
-
         TaskCallOptions options = Objects.requireNonNull(step.getOptions());
 
-        Retry retry = options.retry();
-        if (retry != null) {
-            cmd = new RetryWrapper(cmd, retry, step);
+        Collection<String> out = Collections.emptyList();
+        if (options.out() != null) {
+            out = Collections.singletonList(options.out());
         }
 
         WithItems withItems = options.withItems();
         if (withItems != null) {
-            Collection<String> out = Collections.emptyList();
-            if (options.out() != null) {
-                out = Collections.singletonList(options.out());
-            }
-            cmd = WithItemsWrapper.of(cmd, withItems, out, options.outExpr(), step);
+            return StepSegments.withItems(new TaskCallCommand(correlationId, step), step, correlationId,
+                    withItems, options.retry(), out, options.outExpr(),
+                    options.errorSteps().isEmpty() ? null : CompilerUtils.compile(context, options.errorSteps()));
+        }
+
+        Command cmd = new TaskCallCommand(correlationId, step);
+
+        Retry retry = options.retry();
+        RetryWrapper retryCommand = null;
+        if (retry != null) {
+            retryCommand = new RetryWrapper(cmd, retry, step, correlationId);
+            cmd = retryCommand;
         }
 
         Loop loop = options.loop();
         if (loop != null) {
-            Collection<String> out = Collections.emptyList();
-            if (options.out() != null) {
-                out = Collections.singletonList(options.out());
-            }
-            cmd = LoopWrapper.of(context, cmd, loop, out, options.outExpr(), null, step);
+            cmd = LoopWrapper.of(context, cmd, loop, out, options.outExpr(), null, step,
+                    retryCommand != null ? LoopIterationCommand.retry(retryCommand) : StepSegments.iteration(cmd, step, correlationId));
         }
 
         List<Step> errorSteps = options.errorSteps();
-        if (!errorSteps.isEmpty()) {
-            cmd = new ErrorWrapper(cmd, CompilerUtils.compile(context, errorSteps));
-        }
-
-        return cmd;
+        return StepSegments.step(cmd, step, correlationId, loop != null || retry != null,
+                errorSteps.isEmpty() ? null : CompilerUtils.compile(context, errorSteps));
     }
+
 }

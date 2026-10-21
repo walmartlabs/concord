@@ -27,7 +27,12 @@ import java.util.UUID;
 public class SimpleLogger implements RunnerLogger {
 
     @Override
-    public Long createSegment(String segmentName, UUID correlationId) {
+    public Long getSystemSegmentId() {
+        return null;
+    }
+
+    @Override
+    public Long createSegment(String segmentName, UUID correlationId, LogSegmentAttributes attributes) {
         return null;
     }
 

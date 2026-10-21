@@ -41,30 +41,33 @@ public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
     @Override
     public Command compile(CompilerContext context, ScriptCall step) {
         UUID correlationId = UUID.randomUUID();
-        Command cmd = new LogSegmentScopeCommand<>(correlationId, new ScriptCallCommand(correlationId, step), step);
-
         ScriptCallOptions options = Objects.requireNonNull(step.getOptions());
-
-        Retry retry = options.retry();
-        if (retry != null) {
-            cmd = new RetryWrapper(cmd, retry, step);
-        }
 
         WithItems withItems = options.withItems();
         if (withItems != null) {
-            cmd = WithItemsWrapper.of(cmd, withItems, Collections.emptyList(), Collections.emptyMap(), step);
+            return StepSegments.withItems(new ScriptCallCommand(correlationId, step), step, correlationId,
+                    withItems, options.retry(), Collections.emptyList(), Collections.emptyMap(),
+                    options.errorSteps().isEmpty() ? null : CompilerUtils.compile(context, options.errorSteps()));
+        }
+
+        Command cmd = new ScriptCallCommand(correlationId, step);
+
+        Retry retry = options.retry();
+        RetryWrapper retryCommand = null;
+        if (retry != null) {
+            retryCommand = new RetryWrapper(cmd, retry, step, correlationId);
+            cmd = retryCommand;
         }
 
         Loop loop = options.loop();
         if (loop != null) {
-            cmd = LoopWrapper.of(context, cmd, loop, Collections.emptyList(), Collections.emptyMap(), null, step);
+            cmd = LoopWrapper.of(context, cmd, loop, Collections.emptyList(), Collections.emptyMap(), null, step,
+                    retryCommand != null ? LoopIterationCommand.retry(retryCommand) : StepSegments.iteration(cmd, step, correlationId));
         }
 
         List<Step> errorSteps = options.errorSteps();
-        if (!errorSteps.isEmpty()) {
-            cmd = new ErrorWrapper(cmd, CompilerUtils.compile(context, errorSteps));
-        }
-
-        return cmd;
+        return StepSegments.step(cmd, step, correlationId, loop != null || retry != null,
+                errorSteps.isEmpty() ? null : CompilerUtils.compile(context, errorSteps));
     }
+
 }
