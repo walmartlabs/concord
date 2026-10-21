@@ -44,6 +44,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -106,7 +108,7 @@ public class ProcessLogResourceV2 implements Resource {
                                                LogSegmentRequest request) {
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
-        long segmentId = logManager.createSegment(processKey, request.correlationId(), request.name(), request.createdAt());
+        long segmentId = logManager.createSegment(processKey, request);
         return new LogSegmentOperationResponse(segmentId, OperationResult.CREATED);
     }
 
@@ -150,6 +152,49 @@ public class ProcessLogResourceV2 implements Resource {
         return toResponse(instanceId, segmentId, l, range);
     }
 
+    @GET
+    @Path("/{id}/log/segment/{segmentId}/data/page")
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    @Operation(description = "Read a page of raw segment log data. Byte limits round to stored blocks; cursors are scoped to the segment.", operationId = "getProcessLogSegmentPage")
+    public LogSegmentDataPage page(@PathParam("id") UUID instanceId,
+                                   @PathParam("segmentId") long segmentId,
+                                   @QueryParam("before") Integer before,
+                                   @QueryParam("after") Integer after,
+                                   @QueryParam("limit") @DefaultValue("65536") int limit) {
+        var key = logAccessManager.assertLogAccess(instanceId);
+        if (segmentId < 0 || limit < 1 || limit > 1024 * 1024 || (before != null && before < 0)
+                || (after != null && after < 0) || (before != null && after != null)) {
+            throw new ValidationErrorsException("Use one nonnegative cursor and a byte limit between 1 and 1048576");
+        }
+        Integer start = after;
+        if (before != null) {
+            start = Math.max(0, before - limit);
+        }
+        Integer end = before != null ? before : after != null ? (int) Math.min(Integer.MAX_VALUE, (long) after + limit) : limit;
+        return toPage(logManager.segmentData(key, segmentId, start, end), before, after);
+    }
+
+    static LogSegmentDataPage toPage(ProcessLog log, Integer before, Integer after) {
+        var chunks = log.getChunks();
+        if (chunks.isEmpty()) {
+            int cursor = before != null ? before : after != null ? after : 0;
+            // Size can advance between the chunk and size queries. Do not skip unseen data.
+            return new LogSegmentDataPage("", cursor, cursor, cursor > 0, false);
+        }
+        int start = chunks.getFirst().getStart();
+        var last = chunks.getLast();
+        int end = last.getStart() + last.getData().length;
+        if ((before != null && end != before) || (after != null && start != after)) {
+            throw new ValidationErrorsException("Use a cursor returned by the log page API");
+        }
+        var data = new ByteArrayOutputStream();
+        for (var chunk : chunks) {
+            data.writeBytes(chunk.getData());
+        }
+        return new LogSegmentDataPage(data.toString(StandardCharsets.UTF_8), start, end, start > 0, end < log.getSize());
+    }
+
     /**
      * Appends a process' log.
      */
@@ -186,9 +231,9 @@ public class ProcessLogResourceV2 implements Resource {
     public static Response toResponse(UUID instanceId, long segmentId, ProcessLog l, HttpUtils.Range range) {
         List<ProcessLogChunk> data = l.getChunks();
         if (data.isEmpty()) {
-            int actualStart = range.start() != null ? range.start() : 0;
-            int actualEnd = range.end() != null ? range.end() : actualStart;
-            return downloadableFile(instanceId, segmentId, null, actualStart, actualEnd, l.getSize());
+            int size = l.getSize();
+            int cursor = range.start() != null ? Math.min(range.start(), size) : 0;
+            return downloadableFile(instanceId, segmentId, null, cursor, cursor, size);
         }
 
         ProcessLogChunk firstChunk = data.get(0);
