@@ -32,3 +32,4 @@ yarn.lock
 .java-version
 .attach_pid*
 dependency-reduced-pom.xml
+.factorypath
