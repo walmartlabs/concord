@@ -20,7 +20,7 @@ This specification covers:
 - Known defects, implementation limits, and acceptance checks.
 
 The Concord workflow languages and plugin APIs are separate interfaces.
-An alternative agent can use the existing runner JARs without implementing those languages.
+An alternative agent can use the existing runner JARs. It is not necessary for that agent to implement those languages.
 A replacement workflow engine must also implement the selected runtime and plugin interfaces.
 Java-serialized process state is not a language-independent workflow format.
 
@@ -40,8 +40,8 @@ Do not copy a defect only to reproduce the Java implementation.
 ### 1.2 Writing and technical terms
 
 This document uses short sentences, active instructions, and consistent technical terms.
-It follows the writing approach of [ASD-STE100 Simplified Technical English][ste].
-Code identifiers, protocol names, and the technical terms below retain their software meanings.
+It uses the writing approach in [ASD-STE100 Simplified Technical English][ste].
+Code identifiers, protocol names, and these technical terms keep their software meanings.
 
 | Technical term | Meaning in this document |
 | --- | --- |
@@ -109,7 +109,7 @@ Use a unique, canonical UUID string for the agent ID.
 Use the same string in the WebSocket header, command request, runner configuration, and status query parameter.
 
 The configuration comment permits an arbitrary string of up to 36 characters.
-However, `CommandHandler` calls `UUID.fromString` on that string.
+But `CommandHandler` calls `UUID.fromString` on that string.
 A non-UUID ID can stop agent initialization.
 An uppercase UUID header can also disagree with the canonical string used for command selection.
 
@@ -129,7 +129,7 @@ Authorization: <agent-api-key>
 
 Do not add `Bearer`, `Basic`, or another prefix to this header.
 The WebSocket server checks Base64 syntax and looks up the complete key.
-When `websockets.requirePermission` is enabled, the key's user also needs the agent WebSocket permission.
+When `websockets.requirePermission` is enabled, the key's user must also have the agent WebSocket permission.
 
 ### 3.3 Process session token
 
@@ -141,7 +141,7 @@ X-Concord-SessionToken: <process-session-token>
 ```
 
 The Java HTTP client uses this token when it is non-null.
-Otherwise, it uses the agent API key.
+If the token is null, the Java HTTP client uses the agent API key.
 Do not assume that the API key grants all process permissions.
 
 The server also puts process credentials in `_main.json`.
@@ -151,18 +151,18 @@ The outer agent does not put the queue token into the generated runner configura
 Preserve the server-generated process configuration, including its credentials.
 
 Treat tokens as opaque secrets.
-The server creates them from an encrypted process UUID; the creator does not add an expiry field.
+The server creates tokens from an encrypted process UUID. The creator does not add an expiry field.
 This does not remove server authorization checks or guarantee access after process removal or server-key changes.
 
-The reference HTTP client retains a `JSESSIONID` response cookie for later requests.
+The reference HTTP client keeps a `JSESSIONID` response cookie for later requests.
 Its implementation copies the complete `Set-Cookie` value into a `Cookie` header.
-An alternative HTTP client should use normal cookie parsing instead.
+**Recommendation:** Use correct cookie parsing in an alternative HTTP client.
 
 ### 3.4 Transport security
 
 The reference HTTP configuration defaults `server.verifySsl` to `false`.
 The queue client separately sets `trustAll=true` for WebSocket TLS.
-Changing `server.verifySsl` does not repair the WebSocket TLS behavior.
+A change to `server.verifySsl` does not repair the WebSocket TLS behavior.
 
 **Recommendation:** Verify certificates and hostnames for both HTTPS and WSS.
 Restrict access to the maintenance listener and Docker endpoint.
@@ -206,7 +206,7 @@ Every queue message has these fields:
 
 | Field | JSON type | Rule |
 | --- | --- | --- |
-| `messageType` | String | One of the four names below. Case is significant. |
+| `messageType` | String | One of these four names. Case is significant. |
 | `correlationId` | Integer | Signed 64-bit value. A response copies its request's value. |
 
 Message names are `PROCESS_REQUEST`, `PROCESS_RESPONSE`, `COMMAND_REQUEST`, and `COMMAND_RESPONSE`.
@@ -216,7 +216,7 @@ There is no version field, process acknowledgment message, or command acknowledg
 
 The Java client starts correlation IDs at `1` and increments them across reconnects.
 An alternative must not reuse an ID while its request is pending.
-Register the pending request before sending it.
+Register the pending request before you send it.
 Unknown response IDs must not start processes.
 
 ### 4.3 Process request
@@ -237,8 +237,8 @@ The Java default is `{}`.
 There are no automatically added runtime, operating-system, CPU, or memory capabilities.
 Capability names have no built-in meaning in the queue client.
 
-Keep a process request pending only when local capacity is available.
-The reference client permits one outstanding request of each message type per connection.
+Keep a process request pending only if local capacity is available. Do not keep it pending when no capacity is available.
+The reference client permits one outstanding request of each message type for each connection.
 The agent requests one process at a time, even when several slots are free.
 
 The server holds an unmatched request.
@@ -301,12 +301,12 @@ An invalid regular expression enters the server's requirement-error path.
 | `repoBranch` | String or null | Requested branch. |
 | `commitId` | String or null | Requested commit. |
 | `repoPath` | String or null | Subdirectory to export. |
-| `secretName` | String or null | Main repository secret name. |
+| `secretName` | String or null | Name of the secret for the main repository. |
 | `imports` | Object or null | Normalized imports, as specified in section 7. |
 | `requirements` | Object or null | Server-side process requirements. |
 
-Null response fields can be omitted.
-The Java job adapter does not retain `processCreatedAt` or the response's `requirements` map.
+The server can omit null response fields.
+The Java job adapter does not keep `processCreatedAt` or the response's `requirements` map.
 It reads execution requirements later from `_main.json`.
 Do not substitute response requirements for that file.
 
@@ -355,14 +355,14 @@ The Java queue loop uses these agent defaults:
 | Setting | Default | Effect |
 | --- | --- | --- |
 | Connect timeout | 30 seconds | Maximum wait for a connection attempt. |
-| Request-loop delay | 1 second | Delay between queue loop iterations. At most one request is sent per iteration. |
+| Request-loop delay | 1 second | Delay between queue loop iterations. The client sends at most one request in each iteration. |
 | Ping threshold | 10 seconds | Send a WebSocket ping after this period without a sent data request. |
 | No-activity threshold | 30 seconds | Reconnect after this period without a text response or pong. |
 | Reconnect delay | 5 seconds | Wait before the next connection attempt. |
 
-The ping body is `ping`; the server's pong body is `pong`.
+The ping body is `ping`. The server's pong body is `pong`.
 The client does not inspect pong content.
-Sending a ping does not update its last data-request time.
+When the client sends a ping, it does not update its last data-request time.
 Thus, an idle connection can send pings every loop after the threshold.
 
 On a connection exception, the client advances to the next configured URL.
@@ -374,24 +374,24 @@ Sources: [queue client][queue], [message definitions][messages], [WebSocket chan
 
 ## 5. Process HTTP interface
 
-All paths below are relative to `server.apiBaseUrl`.
-Use the process session token, unless a deployment explicitly supplies equivalent authorization.
+All these paths are relative to `server.apiBaseUrl`.
+Unless a deployment explicitly supplies equivalent authorization, use the process session token.
 Encode UUIDs and other path or query values correctly.
 
 | Owner | Method and path | Request | Successful response |
 | --- | --- | --- | --- |
 | Agent | `GET /api/v1/process/{id}/state/snapshot` | No body. | `200`, `application/zip`. |
-| Agent or runner | `POST /api/v1/process/{id}/status?agentId={agentId}` | `text/plain`; exact status name. | No response data required. |
+| Agent or runner | `POST /api/v1/process/{id}/status?agentId={agentId}` | `text/plain` with exact status name. | No response data required. |
 | Runner | `POST /api/v1/process/{id}/ping` | No body. | No response data required. |
-| Agent | `POST /api/v1/process/{id}/log` | `application/octet-stream`; legacy log bytes. | No response data required. |
+| Agent | `POST /api/v1/process/{id}/log` | `application/octet-stream` with legacy log bytes. | No response data required. |
 | Runner v2 | `POST /api/v2/process/{id}/log/segment` | JSON segment description. | JSON with `ok`, `id`, and `result`. |
-| Agent | `POST /api/v2/process/{id}/log/segment/{segmentId}/data` | `application/octet-stream`; segment bytes. | No response data required. |
+| Agent | `POST /api/v2/process/{id}/log/segment/{segmentId}/data` | `application/octet-stream` with segment bytes. | No response data required. |
 | Agent | `POST /api/v2/process/{id}/log/segment/{segmentId}` | JSON segment status and counts. | JSON with `ok`, `id`, and `result`. |
-| Agent | `POST /api/v1/process/{id}/attachment` | `application/octet-stream`; ZIP bytes. | No response data required. |
-| Agent | `POST /api/v1/org/{org}/secret/{name}/data` | Multipart form; optional `storePassword`. | Secret bytes and `X-Concord-SecretType`. |
+| Agent | `POST /api/v1/process/{id}/attachment` | `application/octet-stream` with ZIP bytes. | No response data required. |
+| Agent | `POST /api/v1/org/{org}/secret/{name}/data` | Multipart form with optional `storePassword`. | Secret bytes and `X-Concord-SecretType`. |
 
 Status, attachment, log, and heartbeat handlers with no return value use the normal JAX-RS empty response.
-Accept successful HTTP responses without requiring a JSON body.
+A JSON body is not necessary for a successful HTTP response.
 Do not send JSON quotes around a `text/plain` status.
 
 The state endpoint checks process access and filters session-only resources.
@@ -414,7 +414,7 @@ The agent's `server.retryCount` and `server.retryInterval` configuration entries
 
 Append-log calls have no offset, request ID, or deduplication token.
 A retry after an uncertain response can duplicate log bytes.
-An alternative must account for this limit; it cannot promise exactly-once log delivery through these endpoints.
+An alternative must account for this limit. It cannot promise exactly-once log delivery through these endpoints.
 
 Sources: [process resource][process-http], [segment resource][segment-http], [retry helper][retry], [secret client][secret-client], [status updater][status-updater].
 
@@ -424,7 +424,7 @@ Sources: [process resource][process-http], [segment resource][segment-http], [re
 
 The Java agent uses `workersCount` semaphore permits.
 It reserves one permit before it waits for the next process response.
-It registers a worker by process UUID before starting that worker.
+It registers a worker by process UUID before it starts that worker.
 It releases the permit and removes the worker when the completion callback runs.
 
 The configured count limits local assignments, not CPU, memory, or Docker resource use.
@@ -436,16 +436,17 @@ There is no automatic replay of a lost local worker after agent restart.
 For each assignment, perform these operations in order:
 
 1. Create a private payload directory.
-2. Export the main repository when required.
+2. If the main repository export is necessary, export the repository.
 3. Process normalized imports in their listed order.
 4. Download and extract the server state snapshot over the payload.
 5. Read `_main.json` from the resulting payload.
-6. Select the runtime and resolve dependencies.
-7. Start a runner or acquire a suitable prefork.
-8. Collect output and wait for runner completion.
-9. Upload attachments.
-10. Report the final local result.
-11. Release capacity and remove temporary process data.
+6. Select the runtime.
+7. Resolve dependencies.
+8. Start a runner or acquire a suitable prefork.
+9. Collect output and wait for runner completion.
+10. Upload attachments.
+11. Report the final local result.
+12. Release capacity and remove temporary process data.
 
 Later state files replace earlier repository or import files.
 Do not reverse the snapshot and repository operations.
@@ -469,7 +470,7 @@ Cleanup failures produce warnings.
 
 A zero runner exit code is not sufficient for `FINISHED`.
 The successful attachment upload must also complete.
-A suspended workflow normally exits successfully; its saved marker changes the server result.
+A suspended workflow usually exits successfully. Its saved marker changes the server result.
 
 The server ignores a later `CANCELLED` update when the process is already in a terminated state.
 It does not apply the same guard to every possible status update.
@@ -516,7 +517,7 @@ Skip the main repository export when any of these conditions applies:
 The `git.skip` configuration also bypasses repository-manager export.
 This bypass applies to exports through that manager, not only one Git command.
 
-Otherwise, fetch the specified commit and branch into the repository cache.
+If the export is not skipped, fetch the specified commit and branch into the repository cache.
 Export `repoPath`, or the selected repository root, into the payload.
 The reference manager supports Git CLI and Maven repository providers.
 It uses the repository URL as the cache key and locks cache operations.
@@ -556,9 +557,9 @@ The common import serializer can omit an empty `items` list.
 
 | Type | Fields | Behavior |
 | --- | --- | --- |
-| `git` | Optional `name`, `url`, `version`, `path`, `dest`, `secret`; `exclude` defaults to `[]`. | Export through the repository manager. The server normally supplies normalized URL and version data. |
-| `mvn` | Required `url`; optional `dest`. | Resolve an artifact and extract its ZIP content. |
-| `dir` | Required `src`; optional `dest`. | Copy a local directory. Disabled by default. |
+| `git` | Optional `name`, `url`, `version`, `path`, `dest`, and `secret`. `exclude` defaults to `[]`. | Export through the repository manager. The server usually supplies normalized URL and version data. |
+| `mvn` | Required `url`. Optional `dest`. | Resolve an artifact and extract its ZIP content. |
+| `dir` | Required `src`. Optional `dest`. | Copy a local directory. Disabled by default. |
 
 An import secret has `name`, optional `org`, and optional `password`.
 The server normalizes project-specific import data before dispatch.
@@ -570,7 +571,7 @@ Git export receives `exclude` patterns.
 The common file-copy helper uses full-string Java regular expressions on relative paths, not shell globs.
 Git, directory, and Maven imports replace colliding regular files.
 Git export also excludes root `.git`, `.gitmodules`, and `.gitignore` paths.
-The shared copy helper preserves permitted symbolic links but does not copy empty directories.
+The shared copy helper keeps permitted symbolic links but does not copy empty directories.
 
 The local-directory processor checks `workDir.startsWith(src)`.
 This rejects the work directory and its ancestors, but does not reject all descendants.
@@ -614,7 +615,7 @@ The Java key-pair decoder rejects each key length outside `0..8192`.
 A `404` becomes a secret-not-found error.
 A missing secret-type header also fails retrieval.
 
-An alternative must preserve secret access checks and must not store decrypted values in a shared repository cache.
+An alternative must keep secret access checks and must not store decrypted values in a shared repository cache.
 
 ### 7.5 Snapshot extraction
 
@@ -625,8 +626,8 @@ The reference ZIP service applies these limits:
 | --- | --- |
 | Entry count | 10,000. |
 | Total uncompressed bytes | 1,073,741,824. |
-| Uncompressed bytes per entry | 268,435,456. |
-| Compression ratio per entry | 200. |
+| Uncompressed bytes for each entry | 268,435,456. |
+| Compression ratio for each entry | 200. |
 
 The extractor checks advertised sizes and actual bytes.
 It skips entries whose normalized paths escape the destination.
@@ -645,14 +646,14 @@ Sources: [repository manager][repositories], [import definitions][imports], [imp
 ### 8.1 File contract
 
 Paths in this table are relative to the work directory.
-Preserve unknown server-supplied files.
+Keep unknown server-supplied files.
 The agent must not limit a snapshot to this list.
 
 | Path | Purpose |
 | --- | --- |
 | `_main.json` | Effective process configuration. This is not named `configuration.json`. |
 | `_instanceId` | UUID text. Publication starts a waiting runner. |
-| `_agent.json` | Optional local agent parameters; currently `jvmArgs`. |
+| `_agent.json` | Optional local agent parameters. Currently, `jvmArgs`. |
 | `lib/` | Process-supplied libraries. Its existence disables prefork use. |
 | `.concord/policy.json` | Effective policy, including dependency rules. |
 | `.concord/dependencyversions.properties` | Legacy default dependency versions. |
@@ -660,14 +661,14 @@ The agent must not limit a snapshot to this list.
 | `.extraDockerVolumes` | Agent-generated extra Docker volume list, when nonempty. |
 | `_attachments/` | Root of files uploaded after execution. |
 | `_attachments/_state/instance` | Runtime-serialized process state. |
-| `_attachments/_state/_suspend` | Waiting event names, one per line. |
+| `_attachments/_state/_suspend` | Waiting event names, one for each line. |
 | `_attachments/_state/_resume` | Resume event names. |
 | `_attachments/_session_files/` | Session-only files. |
 | `_attachments/out.json` | Exported process output variables. |
 | `_checkpoints/` | Runtime checkpoint data. Checkpoint upload is separate from ordinary attachment upload. |
 
 Project YAML, resource files, flow definitions, and runtime-specific files can also be present.
-The runtime consumes them; the outer agent does not implement workflow parsing.
+The runtime consumes them. The outer agent does not implement workflow parsing.
 
 ### 8.2 Process configuration used by the agent
 
@@ -682,19 +683,19 @@ The runtime consumes them; the outer agent does not implement workflow parsing.
 The agent reads `_main.json` twice in the current path.
 An absent file produces an empty map during agent preparation.
 This does not make the file optional for authenticated workflow execution.
-The existing runners need its process configuration and session credential.
+Its process configuration and session credential are necessary for the existing runners.
 Malformed JSON fails preparation.
 
 ### 8.3 Dependency procedure
 
 1. Read the default dependency list.
 2. Read and normalize process dependency URIs.
-3. Replace process Maven `latest` versions when a default version is available.
+3. When a default version is available, replace the process Maven `latest` versions.
 4. Apply the dependency-rewrite policy.
 5. Resolve artifacts and their required dependencies.
 6. Apply dependency warning and denial rules.
-7. Fail startup if the policy denies a resolved artifact.
-8. Sort absolute artifact paths and put them in the runner configuration.
+7. If the policy denies a resolved artifact, fail startup.
+8. Sort the absolute artifact paths. Put the sorted paths in the runner configuration.
 
 The packaged default dependencies are:
 
@@ -711,12 +712,13 @@ There is no comment syntax or trimming step in this reader.
 Process dependency normalization removes duplicate URIs.
 Maven URIs use the `mvn` scheme.
 The artifact forms are `mvn://group:artifact:version` and `mvn://group:artifact:extension[:classifier]:version`.
+
 Process dependency queries support `scope`, `transitive`, and repeated `exclude` values.
 The defaults are `scope=compile` and `transitive=true`.
-Use `key=value` query pairs; a bare flag is not supported.
+Use `key=value` query pairs. A bare flag is not supported.
 Version replacement for `latest` rebuilds the URI from its authority and can discard query options.
 
-A URL ending in `.jar` passes directly to the resolver.
+A URL that ends in `.jar` passes directly to the resolver.
 Other HTTP or HTTPS URLs follow `301`, `302`, `303`, and `307` redirects during normalization.
 This normalization has no explicit redirect limit or connection timeout.
 It does not support relative `Location` values through URL resolution.
@@ -728,7 +730,7 @@ Policy rewrite then applies to the combined default and process URI list.
 
 The default dependency-resolution timeout is 10 minutes.
 It covers dependency preparation through the executor's future, not total workflow execution.
-The executor requests interruption on timeout; blocked external I/O need not stop immediately.
+The executor requests interruption on timeout. Blocked external I/O need not stop immediately.
 
 `CONCORD_MAVEN_CFG` selects a JSON Maven repository configuration with a `repositories` list.
 Without a usable file, the manager uses Maven Central with snapshots disabled.
@@ -752,18 +754,18 @@ Use runner and plugin artifacts compatible with the selected server version.
 
 The agent selects a runner from `_main.json.runtime`.
 Project-loader code also reads runtime information from project YAML.
-Preserve agreement between server-generated configuration and project files.
+Keep agreement between server-generated configuration and project files.
 
 ### 9.2 Runner configuration JSON
 
 The generated runner configuration is separate from `_main.json`.
-Start with the process's `runner` object, then apply these overrides:
+Start with the process's `runner` object. Then apply these overrides:
 
 | Field | Agent-supplied value |
 | --- | --- |
 | `agentId` | Agent UUID string. |
 | `debug` | Effective process debug flag. |
-| `api.baseUrl` | Agent's server API base URL. |
+| `api.baseUrl` | Agent's base URL for the server API. |
 | `api.maxNoHeartbeatInterval` | Agent's heartbeat-failure limit, in milliseconds. |
 | `docker.extraVolumes` | Agent's extra Docker volume list. |
 | `docker.exposeDockerDaemon` | Agent's Docker exposure setting. |
@@ -781,7 +783,7 @@ Runner API defaults are `connectTimeout=10000`, `readTimeout=60000`, `writeTimeo
 Time values are milliseconds.
 Other runner fields include `enableSisuIndex`, `logLevel`, and `securityManager`.
 The schema ignores unknown runner configuration keys.
-Runtime v2 always enables the Sisu index; `logLevel` is a legacy v1 setting.
+Runtime v2 always enables the Sisu index. `logLevel` is a legacy v1 setting.
 
 The Java agent writes pretty-printed JSON to `<cfgDir>/<sha256-of-json>.json`.
 It reuses an existing file with that name.
@@ -798,7 +800,7 @@ Select the first applicable source:
 
 An empty `_agent.json.jvmArgs` list suppresses the default JVM arguments.
 An empty `requirements.jvm.extraArgs` list does not suppress them.
-The selected list replaces defaults; it is not appended to them.
+The selected list replaces defaults. It is not appended to them.
 
 The default list is:
 
@@ -809,7 +811,7 @@ The default list is:
 -XX:HeapDumpPath=/tmp
 ```
 
-The builder adds the following arguments after the selected list:
+The builder adds these arguments after the selected list:
 
 ```text
 -client
@@ -828,7 +830,7 @@ The builder adds the following arguments after the selected list:
 It also adds `-DlogLevel=<uppercase-level>` when present.
 When extra Docker volumes exist, it adds `-Dconcord.dockerExtraVolumes=.extraDockerVolumes`.
 For Java 23 or later, it adds `--sun-misc-unsafe-memory-access=allow`.
-It obtains the target Java major version by running the configured Java command.
+It runs the configured Java command to get the target Java major version.
 
 The command ends with:
 
@@ -847,8 +849,8 @@ The reference launcher inherits the agent environment and adds:
 
 | Environment variable | Value |
 | --- | --- |
-| `CONCORD_TMP_DIR` | Absolute common temporary directory. |
-| `_CONCORD_ATTACHMENTS_DIR` | Absolute work-directory `_attachments` path. |
+| `CONCORD_TMP_DIR` | Absolute path of the common temporary directory. |
+| `_CONCORD_ATTACHMENTS_DIR` | Absolute path to the work-directory `_attachments` directory. |
 | `CONCORD_DOCKER_LOCAL_MODE` | Parent value, when present. |
 
 Runtime v2 also honors inherited `RUNNER_AGENT_ID` and `RUNNER_API_BASE_URL` overrides.
@@ -863,7 +865,7 @@ There is no agent-to-runner socket protocol in this path.
 Without prefork, the work directory is `<workDirBase>/<process-id>`.
 The Java agent creates that destination, moves the payload with `ATOMIC_MOVE`, writes `_instanceId`, and starts Java.
 There is no fallback when the atomic move is unsupported.
-Keep the payload and work-directory locations on a compatible filesystem when using the reference agent.
+When you use the reference agent, keep the payload and work-directory locations on a compatible filesystem.
 A stale nonempty destination can also prevent startup.
 
 With prefork, the agent copies the payload into the spare's temporary directory.
@@ -871,7 +873,7 @@ It writes `_instanceId` only after the copy completes.
 The file contains UUID text without a required newline.
 The reference write uses `CREATE` and `SYNC`.
 
-Both runners wait for a valid `_instanceId` before loading process input.
+Both runners wait for a valid `_instanceId` before they load process input.
 Runtime v1 polls approximately every 100 milliseconds.
 Runtime v2 polls approximately every second.
 The wait has no configured timeout.
@@ -888,7 +890,7 @@ Prefork use requires all of these conditions:
 - No nonempty process JVM argument list.
 - No `_agent.json` file.
 
-The pool key hashes the complete command argument sequence.
+The pool key hashes the complete sequence of command arguments.
 The command includes the hashed runner-configuration path.
 Thus, dependency paths and runner settings indirectly affect reuse.
 
@@ -896,14 +898,14 @@ A taken spare is not returned to the pool after execution.
 The pool starts a replacement spare asynchronously.
 A background thread checks for expired or marked entries every 30 seconds.
 
-The default maximum spare age is 30 seconds; the default count is three.
+The default maximum age of a spare is 30 seconds. The default count is three.
 The count is not a strict instantaneous bound.
 The current pool marks the oldest entry for later removal, then starts another spare.
-It does not check a spare's age, removal flag, or process liveness when taking it.
+When the pool takes a spare, it does not check its age, removal flag, or process liveness.
 
 Prefork work-directory paths are temporary and can change across resume.
-Without prefork, consistent absolute `workDirBase` values help preserve `${workDir}` across agents.
-Neither mode makes a saved local file path portable without the corresponding saved file.
+Without prefork, consistent absolute `workDirBase` values help keep `${workDir}` across agents.
+Neither mode makes a saved local file path portable without the related saved file.
 
 Sources: [runtime configuration][runtime-config], [runner configuration schema][runner-config], [runner API schema][runner-api], [command builder][command-builder], [runner executor][executor], [process pool][pool], [v1 runner][v1], [v2 configuration provider][v2-config].
 
@@ -914,10 +916,10 @@ Sources: [runtime configuration][runtime-config], [runner configuration schema][
 Agent preparation messages use the process log API directly.
 Runner output uses a local `system.log` file below `<logDir>/<process-id>`.
 A separate stream reader sends chunks of up to 8192 bytes.
-It waits up to `logMaxDelay` between short reads; the default is 2 seconds.
+It waits up to `logMaxDelay` between short reads. The default is 2 seconds.
 
 The file has no local rotation or size limit in this path.
-The executor waits up to one minute per log-stream completion wait.
+The executor waits up to one minute for each log-stream completion.
 It then removes the local log file during cleanup.
 
 `REDIRECT_PROCESS_LOGS_TO_STDOUT=true` adds an agent-stdout destination for the combined log appender.
@@ -937,7 +939,7 @@ A segmented record consists of an ASCII header followed immediately by body byte
 |<length>|<segmentId>|<status>|<warnings>|<errors>|<body>
 ```
 
-The first `|` is required.
+The header must start with `|`.
 `length` counts body bytes, not Unicode characters.
 There is no required newline between records.
 The body can contain `|` bytes because its length defines its end.
@@ -946,7 +948,7 @@ The body can contain `|` bytes because its length defines its end.
 | --- | --- |
 | `length` | Nonnegative decimal integer, parsed as Java `int`. |
 | `segmentId` | Nonnegative decimal integer, parsed as Java `long`. |
-| `status` | Numeric status from the table below. |
+| `status` | Numeric status from the table that follows. |
 | `warnings` | Nonnegative decimal integer. |
 | `errors` | Nonnegative decimal integer. |
 
@@ -967,17 +969,17 @@ A non-`RUNNING` record with a body length of at most 20 is a status-time marker.
 Its body contains an ASCII epoch-millisecond timestamp, not log text.
 A zero-length marker supports older runners without a timestamp.
 An invalid timestamp becomes an absent status time.
-A non-`RUNNING` record with a longer body retains that body as log text.
+A non-`RUNNING` record with a longer body keeps that body as log text.
 
 Headers and bodies can cross read-chunk boundaries.
-The consumer retains partial headers and partial status-time markers.
+The consumer keeps partial headers and partial status-time markers.
 It can stream part of a normal body before the complete body arrives.
 Unrecognized bytes become system-segment data with ID `0`.
 
 Within a chunk, the consumer groups records by segment ID.
 It appends each segment's body bytes and sends a separate statistics update.
 It selects the last non-running status and the latest nonzero warning and error counts.
-The counts are not summed across records in that chunk.
+The consumer does not add the counts from different records in that chunk.
 
 ### 10.4 Segment HTTP operations
 
@@ -994,7 +996,7 @@ Creation example:
 }
 ```
 
-`name` is required.
+A value for `name` is necessary.
 `correlationId` and `createdAt` are optional.
 The response has this form:
 
@@ -1016,7 +1018,7 @@ Send statistics to the segment-update endpoint:
 
 Update fields are nullable.
 The timestamp format is `yyyy-MM-dd'T'HH:mm:ss.SSSX`.
-The server uses request time when no status time is supplied.
+The server uses request time when the request has no status time.
 The update response uses `result: "UPDATED"`.
 Append and update operations do not create segment metadata.
 
@@ -1024,7 +1026,7 @@ Append and update operations do not create segment metadata.
 
 The agent enables runtime work-directory masking by default.
 Runtime log layout can replace the actual work directory with `$WORK_DIR`.
-This is not a general guarantee that all raw subprocess bytes are sanitized.
+This does not guarantee that the runtime masks all raw subprocess bytes.
 Sensitive-data handling belongs partly to the runtime logging implementation.
 
 A parser exception can stop the log-stream task and kill the runner.
@@ -1036,8 +1038,8 @@ The consumer ignores that result for both data and statistics.
 There is no persistent resend queue.
 Log delivery is best effort, not lossless.
 
-Both server append paths enforce the server process-log size limit.
-Reaching the limit can cause the server to cancel the process.
+Both server append paths enforce the server's size limit for process logs.
+If the log size reaches the limit, the server can cancel the process.
 The local buffering file does not independently enforce that limit.
 
 Sources: [log factory][log-factory], [redirected log][redirected-log], [header parser][header-parser], [segmented consumer][segmented-consumer], [remote appender][remote-log], [segment HTTP resource][segment-http].
@@ -1049,10 +1051,11 @@ Sources: [log factory][log-factory], [redirected log][redirected-log], [header p
 1. Drain the runner's stdout and stderr stream.
 2. Wait for the runner's exit status.
 3. Treat a nonzero exit status as execution failure.
-4. Finish pending log transmission within the implementation's shutdown limit.
-5. Upload `_attachments`, when it exists.
+4. Complete pending log transmission within the implementation's shutdown limit.
+5. If `_attachments` exists, upload it.
 6. Report the final result with the process session token.
-7. Remove private execution data and release the slot.
+7. Remove private execution data.
+8. Release the slot.
 
 The Java executor attempts attachment upload after execution failure too.
 It ignores a second attachment-upload error on that failure path.
@@ -1073,7 +1076,7 @@ Before import, it deletes the old `_attachments/_state` directory.
 It updates process output metadata from `out.json`.
 This is not a complete replacement of every older attachment path.
 
-Upload attachments before requesting `FINISHED`.
+Before you request `FINISHED`, upload attachments.
 The server's suspension decision depends on the uploaded `_suspend` marker.
 
 ### 11.3 Suspension and resume
@@ -1088,30 +1091,31 @@ On normal completion, shared runtime cleanup removes state and session-only file
 The agent does not deserialize workflow state or choose resume events.
 
 A later assignment for the same process can run on another agent.
-It follows the same repository, import, snapshot, dependency, and runner procedure.
+It uses the same repository, import, snapshot, dependency, and runner procedure.
 Runtime v1 and v2 state formats are not interchangeable.
 Keep serialized state compatible with the runtime and plugin versions that read it.
 
 Checkpoint upload is a runtime API operation, separate from final attachment collection.
-Using the existing runners preserves that behavior without a second outer-agent checkpoint protocol.
+The existing runners keep that behavior without a second outer-agent checkpoint protocol.
 
 ### 11.4 Cancellation
 
 The Java worker has no job handle during repository, import, snapshot, and dependency preparation.
 `Worker.cancel()` returns immediately when that handle is null.
-It does not retain a pending cancellation.
+It does not keep a pending cancellation.
 
-After a job handle exists, cancellation marks it cancelled and stops the runner process.
-The stop helper requests normal termination, waits, then repeatedly requests forced termination.
+After a job handle exists, cancellation marks it canceled and stops the runner process.
+The stop helper requests normal termination. It waits, then repeatedly requests forced termination.
 It can wait indefinitely if the operating system still reports the process alive.
-The cancellation flag affects failure reporting; a normally completed future can still produce `FINISHED`.
+The cancellation flag affects failure reporting.
+A future that completes without an exception can produce `FINISHED` after cancellation.
 
 `cleanRunnerDescendants=true` does not reliably remove all children.
 The helper collects direct children, then kills their descendants, but omits those direct children themselves.
 Section 15 records a live reproduction.
 
-**Recommendation:** Retain cancellation from assignment through cleanup.
-Stop preparation work, the runner, and the complete owned process tree.
+**Recommendation:** Keep cancellation from assignment through cleanup.
+Stop preparation work, the runner, and all processes in the owned process tree.
 Do not terminate unrelated host processes or another agent's containers.
 
 Sources: [executor][executor], [attachment uploader][attachments], [process resource][process-http], [state manager][state-manager], [process manager][process-manager], [kill helper][kill-helper].
@@ -1123,7 +1127,7 @@ Sources: [executor][executor], [attachment uploader][attachments], [process reso
 Run `com.walmartlabs.concord.agent.Main` without arguments for service mode.
 Guice and Sisu create the configured services.
 The agent starts a command handler, process-acquisition loop, maintenance listener, and optional Docker sweeper.
-The runtime configuration is loaded eagerly.
+The agent loads the runtime configuration at startup.
 
 The distributed `start.sh` supplies runner JAR paths and the agent classpath.
 It defaults `CONCORD_TMP_DIR` to `/tmp` and agent JVM options to `-Xmx256m`.
@@ -1132,11 +1136,11 @@ These agent JVM options are separate from runner JVM options.
 
 ### 12.2 One-shot mode
 
-Pass exactly one argument containing a complete `ProcessResponse` JSON object.
+Pass one argument that contains a complete `ProcessResponse` JSON object.
 Do not pass a filename or a queue message stream.
 
-One-shot mode creates a temporary payload, then uses the normal worker pipeline.
-It still needs server access, credentials, state, repositories, and runtime configuration.
+One-shot mode creates a temporary payload. Then it uses the normal worker pipeline.
+It requires server access, credentials, state, repositories, and runtime configuration.
 It is not an offline local-workflow mode.
 
 A successful worker run exits with code `0`.
@@ -1145,7 +1149,7 @@ The same final-status retry limitation applies.
 More than one argument causes an argument error.
 
 The comment in `Main` says one-shot mode uses the current directory as `${workDir}`.
-The implementation does not do that; it uses the normal payload and executor paths.
+The implementation does not use that directory. It uses the normal payload and executor paths.
 
 ### 12.3 Maintenance HTTP interface
 
@@ -1171,12 +1175,12 @@ It is not an exact count of operating-system runner processes.
 
 Maintenance stops new process acquisition but keeps existing work and command acquisition active.
 The queue client disconnects once, reconnects, and ignores later process requests.
-The state cannot be disabled through this API.
+This API cannot disable maintenance mode.
 Restart the agent to leave maintenance mode.
 
 The HTTP server uses prefix-context matching.
 A path such as `/maintenance-mode/suffix` reaches the same handler.
-A listener bind failure produces a warning; the agent can continue without the endpoint.
+A listener bind failure produces a warning. The agent can continue without the endpoint.
 
 ### 12.4 Shutdown
 
@@ -1185,7 +1189,7 @@ That method stops the queue thread and interrupts the agent executor.
 It does not perform a complete graceful runner drain.
 It does not explicitly close all worker executors, the prefork pool, or the maintenance listener.
 
-**Recommendation:** Enter maintenance, wait for local work to finish, then stop the service.
+**Recommendation:** Enter maintenance. Wait for local work to finish. Then stop the service.
 A replacement must define how forced shutdown terminates runners and preserves final output.
 Do not equate `SIGTERM` receipt with successful final-status delivery.
 
@@ -1194,7 +1198,7 @@ Do not equate `SIGTERM` receipt with successful final-status delivery.
 The optional orphan sweeper runs `docker ps -a` for containers with the `concordTxId` label.
 It removes a container when its process UUID is absent from this agent's active-worker map.
 Removal uses `docker rm -f`.
-The default period is 15 minutes; error retry delay is 30 seconds.
+The default period is 15 minutes. The error retry delay is 30 seconds.
 The first scan does not wait for the full period.
 
 The sweeper uses the Docker CLI environment.
@@ -1203,8 +1207,8 @@ The reference also does not identify container ownership by agent ID.
 Do not enable this sweeper against a daemon shared by independent agents.
 
 Its map keeps only one container ID for each process UUID in a scan.
-Its command helper waits for process exit before draining stdout.
-Large command output can therefore block the helper.
+Its command helper waits for process exit before it drains stdout.
+As a result, large command output can block the helper.
 
 Sources: [Main][main], [one-shot runner][one-shot], [maintenance listener][maintenance], [Agent][agent], [container startup][start-script], [orphan sweeper][sweeper].
 
@@ -1221,7 +1225,7 @@ The loader then resolves substitutions.
 
 Path handling is not ordinary relative-path handling:
 
-- A configured value starting with `/` is an absolute path. The agent creates the directory when absent.
+- A configured value that starts with `/` is an absolute path. The agent creates the directory when absent.
 - Another value is a temporary-directory prefix under `CONCORD_TMP_DIR`.
 - A missing directory setting also creates a temporary directory.
 - Java's temporary-directory API adds a random suffix.
@@ -1233,17 +1237,17 @@ Use absolute paths for stable shared locations.
 
 ### 13.2 Agent settings
 
-All keys below are relative to `concord-agent`.
+All these keys are relative to `concord-agent`.
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `id` | Generated UUID; `AGENT_ID` override. | Agent identity. Use a canonical UUID. |
+| `id` | Generated UUID. `AGENT_ID` can override it. | Agent identity. Use a canonical UUID. |
 | `capabilities` | `{}` | Values advertised in process requests. |
-| `workersCount` | `3`; `WORKERS_COUNT` override. | Maximum local worker slots. |
+| `workersCount` | `3`. `WORKERS_COUNT` can override it. | Maximum local worker slots. |
 | `payloadDir` | `payload` | Temporary-directory prefix. |
-| `workDirBase` | `/tmp/concord-agent/workDirs`; `WORK_DIR_BASE` override. | Base for non-prefork work directories. |
+| `workDirBase` | `/tmp/concord-agent/workDirs`. `WORK_DIR_BASE` can override it. | Base for non-prefork work directories. |
 | `dependencyCacheDir` | `dependencyCache` | Dependency-cache directory prefix. |
-| `dependencyListsDir` | `dependencyLists` | Parsed and passed to executor configuration; no list-writing operation in the current executor. |
+| `dependencyListsDir` | `dependencyLists` | The agent parses this value and passes it to executor configuration. The current executor does not write a list. |
 | `dependencyResolveTimeout` | `10 minutes` | Dependency preparation timeout. |
 | `dependencyStrictRepositories` | `false` | Restrict Maven repositories to configured repositories. |
 | `dependencyExclusions` | `[]` | Dependency exclusion patterns. |
@@ -1254,25 +1258,25 @@ All keys below are relative to `concord-agent`.
 | `workDirMasking` | `true` | Enable runtime work-directory masking. |
 | `pollInterval` | `2 seconds` | Delay after a null command result. Command exceptions instead use a fixed 5-second delay. |
 | `maintenanceModeListenerHost` | `localhost` | Maintenance bind address. |
-| `maintenanceModeListenerPort` | `8010`; `MM_PORT` override. | Maintenance port. |
+| `maintenanceModeListenerPort` | `8010`. `MM_PORT` can override it. | Maintenance port. |
 | `prefork.enabled` | `false` | Permit spare JVMs. |
 | `prefork.maxAge` | `30 seconds` | Spare age threshold. |
 | `prefork.maxCount` | `3` | Spare-count target. Not a strict bound. |
 
 ### 13.3 Server settings
 
-| Key below `server` | Default | Meaning |
+| Key for `server` | Default | Meaning |
 | --- | --- | --- |
-| `apiBaseUrl` | `http://localhost:8001`; `SERVER_API_BASE_URL` override. | HTTP API origin. |
-| `websocketUrl` | `ws://localhost:8001/websocket`; `SERVER_WEBSOCKET_URL` override. | Comma-separated queue URLs. |
+| `apiBaseUrl` | `http://localhost:8001`. `SERVER_API_BASE_URL` can override it. | HTTP API origin. |
+| `websocketUrl` | `ws://localhost:8001/websocket`. `SERVER_WEBSOCKET_URL` can override it. | Comma-separated queue URLs. |
 | `websockerUrl` | Absent. | Legacy misspelling. Takes precedence when present. |
-| `apiKey` | Empty; `SERVER_API_KEY` override. | Required agent API key. |
-| `verifySsl` | `false` | Agent HTTP certificate verification; not WebSocket verification. |
+| `apiKey` | Empty. `SERVER_API_KEY` can override it. | Required agent API key. |
+| `verifySsl` | `false` | HTTP certificate verification for the agent. Not WebSocket verification. |
 | `connectTimeout` | `30 seconds` | Agent HTTP and queue connection timeout. |
-| `readTimeout` | `1 minute` | Agent HTTP read timeout. |
+| `readTimeout` | `1 minute` | HTTP read timeout for the agent. |
 | `retryCount` | `5` | Present in defaults but not read by `ServerConfiguration`. |
 | `retryInterval` | `30 seconds` | Present in defaults but not read by `ServerConfiguration`. |
-| `userAgent` | `Concord-Agent: id=<id>`; `USER_AGENT` override. | HTTP and queue agent description. |
+| `userAgent` | `Concord-Agent: id=<id>`. `USER_AGENT` can override it. | HTTP and queue agent description. |
 | `websocketPingInterval` | `10 seconds` | Queue idle-ping threshold. |
 | `websocketMaxNoActivityPeriod` | `30 seconds` | Queue receive-inactivity threshold. |
 | `maxNoHeartbeatInterval` | `5 minutes` | Runner's local heartbeat-failure limit. |
@@ -1283,7 +1287,7 @@ All keys below are relative to `concord-agent`.
 
 | Key | Default |
 | --- | --- |
-| `docker.host` | `tcp://127.0.0.1:2375`; `DOCKER_HOST` override. The distributed image sets `DOCKER_HOST=tcp://dind:2375`. |
+| `docker.host` | `tcp://127.0.0.1:2375`. `DOCKER_HOST` can override it. The distributed image sets `DOCKER_HOST=tcp://dind:2375`. |
 | `docker.orphanSweeperEnabled` | `false`. |
 | `docker.orphanSweeperPeriod` | `15 minutes`. |
 | `docker.extraVolumes` | `[]`. |
@@ -1304,10 +1308,10 @@ Use consistent Docker configuration for the agent, runner, and task containers.
 
 ### 13.5 Git and import settings
 
-| Key below `git` | Default |
+| Key for `git` | Default |
 | --- | --- |
 | `skip` | `false`. |
-| `oauth` | Absent; legacy OAuth token. |
+| `oauth` | Absent. Legacy OAuth token. |
 | `oauthUsername` | Absent. |
 | `oauthUrlPattern` | Absent. |
 | `systemAuth` | `[]`. |
@@ -1319,10 +1323,10 @@ Use consistent Docker configuration for the agent, runner, and task containers.
 | `httpLowSpeedTime` | `10 minutes`. |
 | `sshTimeoutRetryCount` | `1`. |
 | `sshTimeout` | `10 minutes`. |
-| `maxGitCliOutputBytes` | `512` per output stream. |
+| `maxGitCliOutputBytes` | `512` for each output stream. |
 
 Each `git.systemAuth` entry requires `type`, `urlPattern`, and `token`.
-The supported type is `OAUTH_TOKEN`; case is normalized.
+The supported type is `OAUTH_TOKEN`. The parser normalizes case.
 `id` defaults to `system-oauth-token`.
 The current parser does not read the `username` shown in the configuration comment.
 
@@ -1335,8 +1339,8 @@ Each entry has a `type` and a repository `urlPattern`:
 
 | Type | Additional fields |
 | --- | --- |
-| `OAUTH_TOKEN` | Required `token`; optional `id` and `username`. |
-| `GITHUB_APP_INSTALLATION` | Required `clientId` and private-key file path `privateKey`; optional `id`, `username`, and `apiUrl`. |
+| `OAUTH_TOKEN` | Required `token`. Optional `id` and `username`. |
+| `GITHUB_APP_INSTALLATION` | Required `clientId` and private-key file path `privateKey`. Optional `id`, `username`, and `apiUrl`. |
 
 GitHub App username defaults to `x-access-token`.
 Its API URL defaults to `https://api.github.com`.
@@ -1351,16 +1355,16 @@ Additional names can select other configured runner entries.
 
 | Entry key | Default or rule |
 | --- | --- |
-| `path` | `RUNNER_V1_PATH` or `RUNNER_V2_PATH`; otherwise a build-generated properties resource supplies the path. |
+| `path` | `RUNNER_V1_PATH` for v1 or `RUNNER_V2_PATH` for v2. If the selected runtime has no configured path, use its build-generated properties resource. |
 | `propertiesFile` | `runnerV1.properties` or `runnerV2.properties`. Development fallback. |
 | `cfgDir` | Generated temporary directory. |
-| `javaCmd` | `${java.home}/bin/java`, otherwise `java`. |
+| `javaCmd` | `${java.home}/bin/java` when the Java home property is set. If the property is absent, use `java`. |
 | `jvmParams` | The four default JVM arguments in section 9.3. |
 | `mainClass` | Runtime-specific class from section 9.1. |
-| `segmentedLogs` | `false` for v1; `true` for v2. |
+| `segmentedLogs` | `false` for v1. `true` for v2. |
 | `persistentWorkDir` | Absent. Optional absolute directory for diagnostic copies. |
 | `cleanRunnerDescendants` | `false`. See the cancellation defect. |
-| `securityManagerEnabled` | `false` in common defaults; not an active isolation control. |
+| `securityManagerEnabled` | `false` in common defaults. It is not an active isolation control. |
 
 A persistent copy goes to `<persistentWorkDir>/<process-id>` after execution.
 The implementation changes directory permissions to `0755` and regular-file permissions to `0644`.
@@ -1383,7 +1387,7 @@ Sources: [agent defaults][defaults], [configuration loader][config-loader], [pat
 
 ## 14. Security and operational requirements for alternatives
 
-An alternative must preserve the server's authorization boundaries.
+An alternative must keep the server's authorization boundaries.
 A process session token must not become an agent-wide credential.
 Keep each process's input, logs, state, and temporary credentials separate.
 
@@ -1400,10 +1404,10 @@ Recommended implementation rules:
 4. Apply archive-size and dependency-policy checks before execution.
 5. Limit local disk usage for logs, caches, and diagnostic copies.
 6. Keep cancellation active during all preparation stages.
-7. Register correlation state before network sends.
-8. Keep command acquisition active while draining.
-9. Kill only process trees and containers owned by the current agent.
-10. Record failed final-status delivery without silently treating it as server success.
+7. Register correlation state before you send network requests.
+8. Keep command acquisition active while the agent drains.
+9. Kill only process trees and containers that the current agent owns.
+10. Record failed final-status delivery. Do not silently treat it as server success.
 
 These recommendations need not copy the reference agent's internal thread or cache design.
 They do not change the server's missing acknowledgment and deduplication facilities.
@@ -1417,33 +1421,33 @@ They do not change the server's missing acknowledgment and deduplication facilit
 | ID | Evidence | Finding and effect | Source |
 | --- | --- | --- | --- |
 | A01 | Smoke | `cleanRunnerDescendants=true` leaves a direct child alive. The helper kills descendants of captured children, not those children. | [Kill helper][kill-helper] |
-| A02 | Inspection | Cancellation before `jobInstance` assignment is discarded. Repository and dependency preparation can continue after cancellation. | [Worker][worker] |
-| A03 | Inspection; race risk | The queue client sends before adding its pending response entry. A fast response can be lost. | [Queue client][queue] |
+| A02 | Inspection | The worker discards cancellation before `jobInstance` assignment. Repository and dependency preparation can continue after cancellation. | [Worker][worker] |
+| A03 | Inspection, race risk | The queue client sends before it adds its pending response entry. A fast response can be lost. | [Queue client][queue] |
 | A04 | Inspection | Process acquisition has no acknowledgment. The server marks `STARTING` before response delivery. | [Dispatcher][dispatcher] |
-| A05 | Inspection | Command delivery is marked `SENT` without an execution acknowledgment, including failed delivery attempts. | [Command dispatcher][command-dispatcher] |
+| A05 | Inspection | The server marks a command `SENT` after each delivery attempt, including failed attempts. The agent sends no execution acknowledgment. | [Command dispatcher][command-dispatcher] |
 | A06 | Inspection | Queue TLS trusts all certificates. HTTP TLS verification is also disabled by default. | [Queue client][queue], [defaults][defaults] |
-| A07 | Inspection | Failed final-status updates are only logged after retries. Local completion still releases the worker slot. | [Status updater][status-updater], [Worker][worker] |
-| A08 | Inspection | Log chunks and segment updates can be discarded after retry failure. Append retries can also duplicate data. | [Remote appender][remote-log], [consumer][segmented-consumer] |
+| A07 | Inspection | After retries fail, the status updater only logs failed final-status updates. Local completion still releases the worker slot. | [Status updater][status-updater], [Worker][worker] |
+| A08 | Inspection | The agent can discard log chunks and segment updates after retry failure. Append retries can also duplicate data. | [Remote appender][remote-log], [consumer][segmented-consumer] |
 | A09 | Inspection | Numeric header overflow or invalid status can stop log handling and kill the runner. Final partial headers have no explicit EOF flush. | [Parser][header-parser], [executor][executor] |
-| A10 | Inspection | Prefork count can exceed its target. Zero count can dereference a missing oldest entry. Taken entries are not checked for liveness. | [Pool][pool] |
+| A10 | Inspection | Prefork count can exceed its target. Zero count can dereference a missing oldest entry. The pool does not check process liveness when it takes an entry. | [Pool][pool] |
 | A11 | Inspection | Non-prefork startup requires an atomic directory move. Cross-filesystem configurations can fail without fallback. | [Executor][executor] |
 | A12 | Smoke | Relative directory settings create random-suffix directories, contrary to the stable-path example in the configuration comment. | [Path configuration][path-config] |
 | A13 | Smoke | Legacy `server.websockerUrl` overrides the correctly spelled key. | [Server configuration][server-config] |
 | A14 | Smoke | Maintenance context accepts suffix paths. Unsupported methods return `404`, not `405`. | [Maintenance listener][maintenance] |
-| A15 | Inspection | Agent IDs are documented as strings, but command initialization requires a UUID. | [Command handler][commands] |
+| A15 | Inspection | The configuration describes agent IDs as strings. A UUID is necessary for command initialization. | [Command handler][commands] |
 | A16 | Inspection | One-shot mode does not use the caller's current directory as the comment claims. | [Main][main], [one-shot runner][one-shot] |
 | A17 | Inspection | Server retry settings, import source setting, and common security-manager flag do not control the advertised operations. | [Configuration classes][config-classes], [executor factory][executor-factory] |
-| A18 | Inspection | `git.systemAuth` examples omit required `type`; the parser also ignores the documented `username`. | [Git configuration][git-config], [defaults][defaults] |
+| A18 | Inspection | `git.systemAuth` examples omit required `type`. The parser also ignores the documented `username`. | [Git configuration][git-config], [defaults][defaults] |
 | A19 | Inspection | The server external-token provider is an inactive stub. | [Token providers][repo-auth] |
-| A20 | Inspection; deployment risk | Import destinations lack consistent containment checks. ZIP path checks do not resolve existing symbolic-link components. | [Import adapters][import-adapter], [ZIP code][zip] |
-| A21 | Inspection; deployment risk | The orphan sweeper can remove another agent's containers on a shared daemon. It keeps one container per process per scan. | [Sweeper][sweeper] |
-| A22 | Inspection; blocking risk | The sweeper waits before draining command output. Large output can block both processes. | [Sweeper][sweeper] |
+| A20 | Inspection, deployment risk | Import destinations lack consistent containment checks. ZIP path checks do not resolve existing symbolic-link components. | [Import adapters][import-adapter], [ZIP code][zip] |
+| A21 | Inspection, deployment risk | The orphan sweeper can remove another agent's containers on a shared daemon. It keeps one container for each process in each scan. | [Sweeper][sweeper] |
+| A22 | Inspection, blocking risk | The sweeper waits before it drains command output. Large output can block both processes. | [Sweeper][sweeper] |
 | A23 | Inspection | Diagnostic work-directory copies make files readable by all local users. | [Executor][executor] |
 | A24 | Inspection | Shutdown does not explicitly stop all worker, pool, and listener resources. It is not a complete drain. | [Agent][agent], [pool][pool] |
 | A25 | Inspection | Dependency URL normalization has unbounded redirects and no explicit network timeout. | [Dependencies][dependencies] |
-| A26 | Inspection | Runner configuration files accumulate by content hash; this executor does not remove them. | [Executor][executor] |
+| A26 | Inspection | Runner configuration files accumulate by content hash. This executor does not remove them. | [Executor][executor] |
 
-These findings are not a claim that all possible agent defects are listed.
+This investigation does not show that the list contains every possible agent defect.
 Do not treat timing-dependent risks as reproduced failures.
 
 ## 16. Acceptance checks for an alternative agent
@@ -1453,28 +1457,28 @@ These are acceptance criteria, not claims that this documentation task ran them.
 
 | Area | Scenario | Required observation |
 | --- | --- | --- |
-| Authentication | Connect with valid, missing, and invalid API keys. | Valid upgrade succeeds; invalid credentials do not acquire work. |
+| Authentication | Connect with valid, missing, and invalid API keys. | A valid upgrade succeeds. Invalid credentials do not acquire work. |
 | Identity | Use one canonical UUID across all interfaces. | The assigned agent receives its cancellation commands. |
 | Queue | Keep process and command requests pending together. | Correlated responses complete the correct requests. |
 | Queue | Leave an agent idle longer than the ping threshold. | The connection remains live without fake process responses. |
-| Reconnect | Drop the queue socket during execution. | The runner continues; command acquisition resumes after reconnect. |
+| Reconnect | Drop the queue socket during execution. | The runner continues. Command acquisition resumes after reconnect. |
 | Capabilities | Exercise regex, nested maps, lists, missing values, and empty top-level requirements. | Selection agrees with section 4.4. |
 | Capacity | Queue more processes than local slots. | Active local assignments do not exceed configured capacity. |
 | Input | Put the same file in a repository and saved state. | The runner sees the saved-state version. |
 | Imports | Use Git and Maven imports with destinations and exclusions. | The assembled files match the normalized request. |
 | Secrets | Use key-pair and username/password repository secrets. | Decoding and access checks match the server contract. |
 | Archives | Supply escaping paths and archives above configured limits. | Private-directory boundaries and configured limits remain effective. |
-| Dependencies | Use pinned versions, policy rewrite, and a denied artifact. | Correct artifacts load; denied artifacts never start a runner. |
+| Dependencies | Use pinned versions, policy rewrite, and a denied artifact. | Correct artifacts load. Denied artifacts never start a runner. |
 | Runtime | Execute one normal v1 process and one normal v2 process. | Correct runner, API status, logs, and output attachments appear. |
-| JVM options | Use empty `_agent.json.jvmArgs` and nonempty process JVM arguments. | Precedence follows section 9.3. |
-| Prefork | Start a spare before payload publication. | It waits; it executes only after complete payload and `_instanceId` publication. |
+| JVM options | Use empty `_agent.json.jvmArgs` and nonempty process JVM arguments. | Precedence agrees with section 9.3. |
+| Prefork | Start a spare before payload publication. | It waits. It executes only after the agent publishes the complete payload and `_instanceId`. |
 | Logs | Split headers, UTF-8 bodies, and status timestamps across chunk boundaries. | Segment content, status, counts, and time remain correct. |
-| Logs | Interrupt an append response after server acceptance. | The implementation handles the possible duplicate without claiming exactly-once delivery. |
-| Completion | Exit successfully, fail, and fail attachment upload. | Final status follows section 6.3. |
-| Suspension | Suspend, upload state, and resume on another agent. | The server records `SUSPENDED`; the resumed workflow preserves state. |
-| Cancellation | Cancel during preparation, execution, and completion. | The alternative's documented cancellation rule applies without leaving owned children. |
+| Logs | Interrupt an append response after server acceptance. | The implementation handles the possible duplicate. It does not claim exactly-once delivery. |
+| Completion | Exit successfully, fail, and fail attachment upload. | The final status agrees with section 6.3. |
+| Suspension | Test suspension and resume on another agent. | The server records `SUSPENDED`. The resumed workflow keeps state. |
+| Cancellation | Cancel during preparation, execution, and completion. | The alternative's documented cancellation rule applies. No owned child processes remain. |
 | Heartbeat | Remove process API connectivity. | Server and runner watchdog behavior is observable and correctly reported. |
-| Maintenance | Drain with active runners. | New assignments stop; existing work and cancellation continue. |
+| Maintenance | Drain with active runners. | New assignments stop. Existing work and cancellation continue. |
 | Cleanup | Stop or crash an agent with active work. | Owned resources have a defined recovery or termination path. |
 | Security | Connect to an untrusted TLS endpoint. | A security-hardened alternative rejects it. |
 
@@ -1486,8 +1490,8 @@ It also compiled selected, unchanged production classes with Java 25 and tempora
 Observed smoke results:
 
 - Maintenance `GET` returned `200` with `maintenanceMode=false` and the listener's worker count.
-- Maintenance `POST` enabled the state; the next `GET` returned `maintenanceMode=true`.
-- Maintenance `PUT` returned `404`; a suffix-path `GET` returned `200`.
+- Maintenance `POST` enabled the state. The next `GET` returned `maintenanceMode=true`.
+- Maintenance `PUT` returned `404`. A suffix-path `GET` returned `200`.
 - Two relative-directory resolutions produced different random-suffix paths.
 - The legacy WebSocket configuration key took precedence over the correctly spelled key.
 - The actual runner command builder launched a child JVM with the configuration argument and expected system properties.
@@ -1495,14 +1499,14 @@ Observed smoke results:
 - The actual kill helper stopped a shell parent but left its direct `sleep` child alive with descendant cleanup enabled.
 
 The probes removed their temporary files and terminated their remaining child process.
-No product source was changed.
-No full server-agent deployment, workflow integration suite, or complete v1/v2 workflow run was performed.
+This task did not change product source.
+This task did not perform a full server-agent deployment, workflow integration suite, or complete v1/v2 workflow run.
 The runner-command probe checked process launch, not Concord workflow execution.
-No automated ASD-STE100 dictionary certification was performed.
+This task did not use an automated checker for the ASD-STE100 dictionary.
 
 ## 18. Source index
 
-The links below identify the implementation used for this specification.
+These links identify the implementation used for this specification.
 They are repository-relative so that the document travels with the source.
 
 - Lifecycle: [Agent][agent], [Worker][worker], [Main][main], [one-shot runner][one-shot], [command handler][commands].
