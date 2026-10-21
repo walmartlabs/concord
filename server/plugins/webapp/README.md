@@ -1,3 +1,3 @@
 # webapp
 
-A concord-server plugin to serve SPAs.
+This Concord Server plugin serves single-page applications (SPAs).

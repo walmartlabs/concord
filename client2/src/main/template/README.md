@@ -1,1 +1,1 @@
-Check the diff between `*.mustache` and `*.orig` to see the introduced customizations.
+Compare `*.mustache` with `*.orig` to find the changes to the templates.
