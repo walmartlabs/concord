@@ -20,6 +20,9 @@ package com.walmartlabs.concord.svm;
  * =====
  */
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -27,6 +30,8 @@ import static com.walmartlabs.concord.svm.ExecutionListener.Result.BREAK;
 import static com.walmartlabs.concord.svm.ExecutionListener.Result.CONTINUE;
 
 public class ExecutionListenerHolder {
+
+    private static final Logger log = LoggerFactory.getLogger(ExecutionListenerHolder.class);
 
     private final VM vm;
     private final Collection<ExecutionListener> listeners;
@@ -123,6 +128,28 @@ public class ExecutionListenerHolder {
     public void fireOnProcessError(Runtime runtime, State state, Exception e) {
         for (ExecutionListener l : listeners) {
             l.onProcessError(runtime, state, e);
+        }
+    }
+
+    public void fireBeforeFramePop(Runtime runtime, State state, ThreadId threadId, Frame frame) {
+        for (ExecutionListener l : listeners) {
+            try {
+                l.beforeFramePop(runtime, vm, state, threadId, frame);
+            } catch (Exception e) {
+                log.warn("Execution listener {} failed in beforeFramePop for thread {} and frame {}",
+                        l.getClass().getName(), threadId, frame.id(), e);
+            }
+        }
+    }
+
+    public void fireBeforeExceptionHandler(Runtime runtime, State state, ThreadId threadId, Frame frame) {
+        for (ExecutionListener l : listeners) {
+            try {
+                l.beforeExceptionHandler(runtime, vm, state, threadId, frame);
+            } catch (Exception e) {
+                log.warn("Execution listener {} failed in beforeExceptionHandler for thread {} and frame {}",
+                        l.getClass().getName(), threadId, frame.id(), e);
+            }
         }
     }
 }

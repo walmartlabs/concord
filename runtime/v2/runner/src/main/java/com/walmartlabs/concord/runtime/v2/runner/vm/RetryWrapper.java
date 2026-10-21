@@ -36,6 +36,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Wraps a command into a "retry" loop specified by {@code retry} option.
@@ -54,10 +55,33 @@ public class RetryWrapper implements Command {
     private final Retry retry;
     private final Step step;
 
+    /**
+     * {@code null} if the attempts have no log segments or in processes started by older runners.
+     */
+    private final UUID correlationId;
+    private final Integer iterationIndex;
+
     public RetryWrapper(Command cmd, Retry retry, Step step) {
+        this(cmd, retry, step, null);
+    }
+
+    /**
+     * @param correlationId the step's correlation ID, each attempt gets a log segment with it
+     */
+    public RetryWrapper(Command cmd, Retry retry, Step step, UUID correlationId) {
+        this(cmd, retry, step, correlationId, null);
+    }
+
+    private RetryWrapper(Command cmd, Retry retry, Step step, UUID correlationId, Integer iterationIndex) {
         this.cmd = cmd;
         this.retry = retry;
         this.step = step;
+        this.correlationId = correlationId;
+        this.iterationIndex = iterationIndex;
+    }
+
+    RetryWrapper withIterationIndex(int index) {
+        return new RetryWrapper(cmd, retry, step, correlationId, index);
     }
 
     @Override
@@ -65,7 +89,7 @@ public class RetryWrapper implements Command {
         try {
             execute(runtime, state, threadId);
         } catch (Exception e) {
-            StepCommand.logException(step, state, threadId, e);
+            LogSegmentUtils.withLogContext(runtime, state, threadId, () -> StepCommand.logException(step, state, threadId, e));
             throw e;
         }
     }
@@ -77,9 +101,14 @@ public class RetryWrapper implements Command {
         // wrap the command into a frame with an exception handler
         Frame inner = Frame.builder()
                 .nonRoot()
-                .exceptionHandler(new NextRetry(cmd))
+                .exceptionHandler(new NextRetry(cmd, step, correlationId, iterationIndex))
                 .commands(cmd)
                 .build();
+
+        if (correlationId != null) {
+            // closed when the frame is removed or the exception handler starts
+            inner.push(OpenSegmentCommand.attempt(step, correlationId, iterationIndex, 0));
+        }
 
         // create the context explicitly
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
@@ -125,9 +154,23 @@ public class RetryWrapper implements Command {
         private static final long serialVersionUID = 1L;
 
         private final Command cmd;
+        private final Step step;
+        private final UUID correlationId;
+        private final Integer iterationIndex;
 
         public NextRetry(Command cmd) {
+            this(cmd, null, null);
+        }
+
+        public NextRetry(Command cmd, Step step, UUID correlationId) {
+            this(cmd, step, correlationId, null);
+        }
+
+        private NextRetry(Command cmd, Step step, UUID correlationId, Integer iterationIndex) {
             this.cmd = cmd;
+            this.step = step;
+            this.correlationId = correlationId;
+            this.iterationIndex = iterationIndex;
         }
 
         @Override
@@ -149,7 +192,8 @@ public class RetryWrapper implements Command {
             }
 
             Duration delay = retry.delay();
-            log.warn("Last error: {}. Waiting for {}ms before retry (attempt #{})", lastError, delay.toMillis(), attemptNo);
+            LogSegmentUtils.withLogContext(runtime, state, threadId,
+                    () -> log.warn("Last error: {}. Waiting for {}ms before retry (attempt #{})", lastError, delay.toMillis(), attemptNo));
 
             try {
                 Thread.sleep(delay.toMillis());
@@ -169,6 +213,10 @@ public class RetryWrapper implements Command {
             }
 
             frame.push(cmd);
+
+            if (correlationId != null) {
+                frame.push(OpenSegmentCommand.attempt(step, correlationId, iterationIndex, attemptNo + 1));
+            }
         }
     }
 }
