@@ -1,0 +1,39 @@
+flows:
+  default:
+    # parallel loop + retry + error, the second iteration fails in a called flow
+    - name: "deploy ${item}"
+      call: inner
+      in:
+        target: "${item}"
+      loop:
+        items: ["a", "b"]
+        mode: parallel
+      retry:
+        times: 1
+        delay: 0
+      error:
+        - log: "handling: ${lastError.message}"
+        - name: "cleanup"
+          task: log
+          in:
+            msg: "cleanup"
+
+    # an unnamed try around a parallel block with a failing branch
+    - try:
+        - parallel:
+            - name: "branch A"
+              task: log
+              in:
+                msg: "${throw('A failed')}"
+            - name: "branch B"
+              task: log
+              in:
+                msg: "B ok"
+      error:
+        - log: "parallel handled"
+
+  inner:
+    - name: "work ${target}"
+      task: log
+      in:
+        msg: "${target == 'b' ? throw('boom') : 'working on '.concat(target)}"
