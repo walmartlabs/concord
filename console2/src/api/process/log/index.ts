@@ -90,10 +90,34 @@ export enum SegmentStatus {
     FAILED = 'FAILED',
     RUNNING = 'RUNNING',
     SUSPENDED = 'SUSPENDED',
+    // failed, the "error" block of the step completed
+}
+
+export enum SegmentKind {
+    // the whole execution of a step
+    STEP = 'STEP',
+    // one iteration of a loop
+    ITERATION = 'ITERATION',
+    // one attempt of a step with "retry", including the first one
+    ATTEMPT = 'ATTEMPT',
+    // the "error" block of the parent step
+    ERROR = 'ERROR',
+    // the whole execution of a "parallel" block
+    PARALLEL = 'PARALLEL',
 }
 
 export interface LogSegmentEntry {
     id: number;
+    // the segment open in the runtime thread when the segment started
+    parentId?: number;
+    // undefined for segments created by older runners
+    kind?: SegmentKind;
+    // loop iteration index, starting from 0
+    iterationIndex?: number;
+    // retry attempt index, starting from 0
+    attemptIndex?: number;
+    // runtime thread, undefined for the main thread
+    threadId?: number;
     correlationId?: string;
     name: string;
     createdAt: string;
@@ -111,7 +135,8 @@ export interface PaginatedLogSegmentEntry {
 export const listLogSegments = async (
     instanceId: ConcordId,
     offset: number,
-    limit: number
+    limit: number,
+    signal?: AbortSignal
 ): Promise<PaginatedLogSegmentEntry> => {
     const limitParam = limit > 0 ? limit + 1 : limit;
 
@@ -119,7 +144,8 @@ export const listLogSegments = async (
         `/api/v2/process/${instanceId}/log/segment?${queryParams({
             offset,
             limit: limitParam,
-        })}`
+        })}`,
+        { signal }
     );
 
     const hasMoreElements: boolean = limit > 0 && data.length > limit;
@@ -137,10 +163,12 @@ export const listLogSegments = async (
 export const getSegmentLog = async (
     instanceId: ConcordId,
     segmentId: number,
-    range: LogRange
+    range: LogRange,
+    signal?: AbortSignal
 ): Promise<LogChunk> => {
-    const opts = {
+    const opts: RequestInit = {
         headers: formatRangeHeader(range),
+        signal,
     };
 
     const resp = await managedFetch(
