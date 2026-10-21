@@ -86,6 +86,21 @@ public interface ExecutionListener {
     default void onProcessError(Runtime runtime, State state, Exception e) {
     }
 
+    /**
+     * Called before the frame is removed from the thread's stack, for any reason:
+     * the frame is complete, a {@code return} or the stack is unwinding. The thread
+     * status is {@link ThreadStatus#UNWINDING} if the frame is removed because of an error.
+     */
+    default void beforeFramePop(Runtime runtime, VM vm, State state, ThreadId threadId, Frame frame) {
+    }
+
+    /**
+     * Called before the exception handler of the frame starts. The frame stays on the stack,
+     * the thread error is still set.
+     */
+    default void beforeExceptionHandler(Runtime runtime, VM vm, State state, ThreadId threadId, Frame frame) {
+    }
+
     enum Result {
         CONTINUE,
         BREAK

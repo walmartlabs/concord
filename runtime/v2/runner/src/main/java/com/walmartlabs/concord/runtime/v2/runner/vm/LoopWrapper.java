@@ -42,6 +42,18 @@ public abstract class LoopWrapper implements Command {
                                  Map<String, Serializable> outMapping,
                                  String outExpression,
                                  Step step) {
+        return of(ctx, cmd, withItems, outVariables, outMapping, outExpression, step, null);
+    }
+
+    /**
+     * @param iteration the log segment of each iteration, {@code null} if none
+     */
+    public static LoopWrapper of(CompilerContext ctx, Command cmd, Loop withItems,
+                                 Collection<String> outVariables,
+                                 Map<String, Serializable> outMapping,
+                                 String outExpression,
+                                 Step step,
+                                 LoopIterationCommand.Segment iteration) {
         Collection<String> out = Collections.emptyList();
         if (outMapping != null && !outMapping.isEmpty()) {
             // serializable
@@ -53,9 +65,9 @@ public abstract class LoopWrapper implements Command {
         Loop.Mode mode = withItems.mode();
         switch (mode) {
             case SERIAL:
-                return new SerialWithItems(cmd, withItems, out, outExpression, step);
+                return new SerialWithItems(cmd, withItems, out, outExpression, step, iteration);
             case PARALLEL:
-                return new ParallelWithItems(ctx, cmd, withItems, out, outExpression, step);
+                return new ParallelWithItems(ctx, cmd, withItems, out, outExpression, step, iteration);
             default:
                 throw new IllegalArgumentException("Unknown withItems mode: " + mode);
         }
@@ -74,12 +86,19 @@ public abstract class LoopWrapper implements Command {
     protected final String outExpression;
     private final Step step;
 
-    protected LoopWrapper(Command cmd, Serializable items, Collection<String> outVariables, String outExpression, Step step) {
+    /**
+     * {@code null} if the iterations have no log segments or in processes started by older runners.
+     */
+    protected final LoopIterationCommand.Segment iteration;
+
+    protected LoopWrapper(Command cmd, Serializable items, Collection<String> outVariables, String outExpression, Step step,
+                          LoopIterationCommand.Segment iteration) {
         this.cmd = cmd;
         this.items = items;
         this.outVariables = outVariables;
         this.outExpression = outExpression;
         this.step = step;
+        this.iteration = iteration;
     }
 
     public Step getStep() {
@@ -91,7 +110,7 @@ public abstract class LoopWrapper implements Command {
         try {
             execute(runtime, state, threadId);
         } catch (Exception e) {
-            StepCommand.logException(step, state, threadId, e);
+            LogSegmentUtils.withLogContext(runtime, state, threadId, () -> StepCommand.logException(step, state, threadId, e));
             throw e;
         }
     }
@@ -149,8 +168,9 @@ public abstract class LoopWrapper implements Command {
 
         private final Parallelism parallelism;
 
-        protected ParallelWithItems(CompilerContext ctx, Command cmd, Loop loop, Collection<String> outVariables, String outExpression, Step step) {
-            super(cmd, loop.items(), outVariables, outExpression, step);
+        protected ParallelWithItems(CompilerContext ctx, Command cmd, Loop loop, Collection<String> outVariables, String outExpression, Step step,
+                                    LoopIterationCommand.Segment iteration) {
+            super(cmd, loop.items(), outVariables, outExpression, step, iteration);
 
             this.parallelism = processParallelism(ctx, loop);
         }
@@ -178,7 +198,7 @@ public abstract class LoopWrapper implements Command {
             Map<String, List<Serializable>> outVarsAccumulator = new ConcurrentHashMap<>();
             state.pushFrame(threadId, Frame.builder()
                     .commands(new SetVariablesCommand(outVarsAccumulator, targetFrame),
-                            new ParallelLoopCommand(cmd, getStep(), items, toBatchSize(runtime, ctx, parallelism), outVariables, outVarsAccumulator))
+                            new ParallelLoopCommand(cmd, getStep(), items, toBatchSize(runtime, ctx, parallelism), outVariables, outVarsAccumulator, iteration))
                     .nonRoot()
                     .build());
         }
@@ -210,6 +230,7 @@ public abstract class LoopWrapper implements Command {
         private final int parallelism;
         private final Collection<String> outVariables;
         private final Map<String, List<Serializable>> outVarsAccumulator;
+        private final LoopIterationCommand.Segment iteration;
         private final Set<ThreadId> active = new LinkedHashSet<>();
         private final Set<ThreadId> failed = new LinkedHashSet<>();
 
@@ -220,7 +241,8 @@ public abstract class LoopWrapper implements Command {
                                     ArrayList<Serializable> items,
                                     int parallelism,
                                     Collection<String> outVariables,
-                                    Map<String, List<Serializable>> outVarsAccumulator) {
+                                    Map<String, List<Serializable>> outVarsAccumulator,
+                                    LoopIterationCommand.Segment iteration) {
             super(step);
             this.cmd = cmd;
             this.items = items;
@@ -230,6 +252,7 @@ public abstract class LoopWrapper implements Command {
             }
             this.outVariables = outVariables;
             this.outVarsAccumulator = outVarsAccumulator;
+            this.iteration = iteration;
         }
 
         @Override
@@ -309,7 +332,7 @@ public abstract class LoopWrapper implements Command {
             cmdFrame.setLocal(CURRENT_ITEMS, items);
             cmdFrame.setLocal(CURRENT_INDEX, index);
             cmdFrame.setLocal(CURRENT_ITEM, items.get(index));
-            cmdFrame.push(new ForkCommand(childThreadId, new CollectVariablesCommand(outVariables, null, outVarsAccumulator), cmd));
+            cmdFrame.push(new ForkCommand(childThreadId, new CollectVariablesCommand(outVariables, null, outVarsAccumulator), LoopIterationCommand.of(index, cmd, iteration)));
 
             active.add(childThreadId);
             state.pushFrame(threadId, cmdFrame);
@@ -348,8 +371,9 @@ public abstract class LoopWrapper implements Command {
 
         private static final long serialVersionUID = 1L;
 
-        protected SerialWithItems(Command cmd, Loop loop, Collection<String> outVariables, String outVariablesExpression, Step step) {
-            super(cmd, loop.items(), outVariables, outVariablesExpression, step);
+        protected SerialWithItems(Command cmd, Loop loop, Collection<String> outVariables, String outVariablesExpression, Step step,
+                                  LoopIterationCommand.Segment iteration) {
+            super(cmd, loop.items(), outVariables, outVariablesExpression, step, iteration);
         }
 
         @Override
@@ -367,10 +391,10 @@ public abstract class LoopWrapper implements Command {
             Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
             loop.push(new SetVariablesCommand(variablesAccumulator, targetFrame));
 
-            loop.push(new WithItemsNext(outVariables, variablesAccumulator, cmd)); // next iteration
+            loop.push(new WithItemsNext(outVariables, variablesAccumulator, cmd, iteration)); // next iteration
 
             Frame cmdFrame = Frame.builder()
-                    .commands(cmd)
+                    .commands(LoopIterationCommand.of(0, cmd, iteration))
                     .root()
                     .build();
 
@@ -388,11 +412,18 @@ public abstract class LoopWrapper implements Command {
         private final Collection<String> outVariables;
         private final Map<String, List<Serializable>> variablesAccumulator;
         private final Command cmd;
+        private final LoopIterationCommand.Segment iteration;
 
         public WithItemsNext(Collection<String> outVariables, Map<String, List<Serializable>> variablesAccumulator, Command cmd) {
+            this(outVariables, variablesAccumulator, cmd, null);
+        }
+
+        public WithItemsNext(Collection<String> outVariables, Map<String, List<Serializable>> variablesAccumulator, Command cmd,
+                             LoopIterationCommand.Segment iteration) {
             this.outVariables = outVariables;
             this.variablesAccumulator = variablesAccumulator;
             this.cmd = cmd;
+            this.iteration = iteration;
         }
 
         @Override
@@ -412,11 +443,11 @@ public abstract class LoopWrapper implements Command {
             loop.setLocal(CURRENT_INDEX, newIndex);
             loop.setLocal(CURRENT_ITEM, items.get(newIndex));
 
-            loop.push(new WithItemsNext(outVariables, variablesAccumulator, cmd)); // next iteration
+            loop.push(new WithItemsNext(outVariables, variablesAccumulator, cmd, iteration)); // next iteration
 
             // frame wrapped command
             Frame cmdFrame = Frame.builder()
-                    .commands(cmd)
+                    .commands(LoopIterationCommand.of(newIndex, cmd, iteration))
                     .root()
                     .build();
 
