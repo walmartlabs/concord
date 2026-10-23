@@ -51,7 +51,7 @@ class ProcessLogResourceV2Test {
                 new ProcessLogChunk(100, "first\n".getBytes(StandardCharsets.UTF_8)),
                 new ProcessLogChunk(106, "next\n".getBytes(StandardCharsets.UTF_8))));
         var page = ProcessLogResourceV2.toPage(log, null, null);
-        assertEquals("first\nnext\n", page.text());
+        assertEquals("first\nnext\n", new String(java.util.Base64.getDecoder().decode(page.dataBase64()), StandardCharsets.UTF_8));
         assertEquals(100, page.before());
         assertEquals(111, page.after());
         assertTrue(page.hasPrevious());
@@ -60,6 +60,29 @@ class ProcessLogResourceV2Test {
         assertEquals(page, ProcessLogResourceV2.toPage(log, null, 100));
         assertThrows(ValidationErrorsException.class, () -> ProcessLogResourceV2.toPage(log, 110, null));
         assertThrows(ValidationErrorsException.class, () -> ProcessLogResourceV2.toPage(log, null, 101));
+    }
+
+    @Test
+    void bytePagesPreserveSplitCharactersAcrossBlocksPagesAndConcurrentAppends() {
+        var bytes = "Aé€😀Z".getBytes(StandardCharsets.UTF_8);
+        var received = new java.io.ByteArrayOutputStream();
+        for (int i = 0; i < bytes.length; i++) {
+            // A stored block can split a character; the size query may see newer bytes.
+            var page = ProcessLogResourceV2.toPage(new ProcessLog(bytes.length + 1,
+                    List.of(new ProcessLogChunk(i, new byte[]{bytes[i]}))), null, i);
+            assertEquals(i, page.before());
+            assertEquals(i + 1, page.after());
+            received.writeBytes(java.util.Base64.getDecoder().decode(page.dataBase64()));
+        }
+        assertArrayEquals(bytes, received.toByteArray());
+        assertEquals("Aé€😀Z", received.toString(StandardCharsets.UTF_8));
+        var together = ProcessLogResourceV2.toPage(new ProcessLog(3, List.of(
+                new ProcessLogChunk(0, new byte[]{(byte) 0xe2}),
+                new ProcessLogChunk(1, new byte[]{(byte) 0x82, (byte) 0xac}))), null, null);
+        assertArrayEquals("€".getBytes(StandardCharsets.UTF_8), java.util.Base64.getDecoder().decode(together.dataBase64()));
+        var backwards = ProcessLogResourceV2.toPage(new ProcessLog(3,
+                List.of(new ProcessLogChunk(1, new byte[]{(byte) 0x82, (byte) 0xac}))), 3, null);
+        assertArrayEquals(new byte[]{(byte) 0x82, (byte) 0xac}, java.util.Base64.getDecoder().decode(backwards.dataBase64()));
     }
 
     @Test
