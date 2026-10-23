@@ -1,0 +1,62 @@
+configuration:
+  runtime: concord-v2
+  arguments:
+    outerItems: [x, y]
+
+flows:
+  default:
+    - name: "serial task ${item}"
+      task: log
+      in:
+        msg: "TASK_SERIAL_BODY_${item}"
+      withItems: [a, b]
+      loop:
+        items: "${outerItems}"
+
+    - name: "parallel task ${item}"
+      task: log
+      in:
+        msg: "TASK_PARALLEL_BODY_${item}"
+      withItems: [a, b]
+      loop:
+        items: "${outerItems}"
+        mode: parallel
+
+    - name: "serial flow ${item}"
+      call: inner
+      in:
+        marker: "FLOW_SERIAL_BODY_${item}"
+      withItems: [a, b]
+      loop:
+        items: "${outerItems}"
+
+    - name: "parallel flow ${item}"
+      call: inner
+      in:
+        marker: "FLOW_PARALLEL_BODY_${item}"
+      withItems: [a, b]
+      loop:
+        items: "${outerItems}"
+        mode: parallel
+
+    - name: "serial script ${item}"
+      script: groovy
+      body: |
+        log.info('SCRIPT_SERIAL_BODY_' + execution.variables().get('item'))
+      withItems: [a, b]
+      loop:
+        items: "${outerItems}"
+
+    - name: "parallel script ${item}"
+      script: groovy
+      body: |
+        log.info('SCRIPT_PARALLEL_BODY_' + execution.variables().get('item'))
+      withItems: [a, b]
+      loop:
+        items: "${outerItems}"
+        mode: parallel
+
+    - log: NESTED_DONE
+
+  inner:
+    - log: "${marker}"

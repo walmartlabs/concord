@@ -45,8 +45,8 @@ public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
 
         WithItems withItems = options.withItems();
         if (withItems != null) {
-            return StepSegments.withItems(new ScriptCallCommand(correlationId, step), step, correlationId,
-                    withItems, options.retry(), Collections.emptyList(), Collections.emptyMap(),
+            return StepSegments.withItems(context, new ScriptCallCommand(correlationId, step), step, correlationId,
+                    withItems, options.retry(), options.loop(), Collections.emptyList(), Collections.emptyMap(), null,
                     options.errorSteps().isEmpty() ? null : CompilerUtils.compile(context, options.errorSteps()));
         }
 

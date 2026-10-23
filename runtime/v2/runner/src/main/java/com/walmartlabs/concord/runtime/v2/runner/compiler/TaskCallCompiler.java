@@ -47,8 +47,8 @@ public final class TaskCallCompiler implements StepCompiler<TaskCall> {
 
         WithItems withItems = options.withItems();
         if (withItems != null) {
-            return StepSegments.withItems(new TaskCallCommand(correlationId, step), step, correlationId,
-                    withItems, options.retry(), out, options.outExpr(),
+            return StepSegments.withItems(context, new TaskCallCommand(correlationId, step), step, correlationId,
+                    withItems, options.retry(), options.loop(), out, options.outExpr(), null,
                     options.errorSteps().isEmpty() ? null : CompilerUtils.compile(context, options.errorSteps()));
         }
 

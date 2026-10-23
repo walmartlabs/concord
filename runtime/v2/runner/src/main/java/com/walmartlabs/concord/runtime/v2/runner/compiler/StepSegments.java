@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.Loop;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.Retry;
 import com.walmartlabs.concord.runtime.v2.model.WithItems;
@@ -29,6 +30,7 @@ import com.walmartlabs.concord.runtime.v2.runner.vm.CloseSegmentCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ErrorWrapper;
 import com.walmartlabs.concord.runtime.v2.runner.vm.LogSegmentUtils;
 import com.walmartlabs.concord.runtime.v2.runner.vm.LogSegmentScopeCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.LoopWrapper;
 import com.walmartlabs.concord.runtime.v2.runner.vm.RetryWrapper;
 import com.walmartlabs.concord.runtime.v2.runner.vm.WithItemsWrapper;
 import com.walmartlabs.concord.runtime.v2.runner.vm.LoopIterationCommand;
@@ -79,14 +81,21 @@ final class StepSegments {
                 new CloseSegmentCommand(kind, correlationId));
     }
 
-    /** Legacy withItems: keep per-item scopes without the new iteration or attempt segments. */
-    static Command withItems(Command body, Step step, UUID correlationId, WithItems items, Retry retry,
-                             Collection<String> out, Map<String, Serializable> outMapping, Command errorSteps) {
+    /** Legacy withItems: keep per-item scopes without new per-item iteration or attempt segments. */
+    static Command withItems(CompilerContext context, Command body, Step step, UUID correlationId,
+                             WithItems items, Retry retry, Loop loop, Collection<String> out,
+                             Map<String, Serializable> outMapping, String outExpression, Command errorSteps) {
         Command cmd = new LogSegmentScopeCommand<>(correlationId, body, step);
         if (retry != null) {
             cmd = new RetryWrapper(cmd, retry, step);
         }
         cmd = WithItemsWrapper.of(cmd, items, out, outMapping, step);
+        if (loop != null) {
+            // loop wraps the complete legacy withItems/retry body; error handles the whole loop.
+            cmd = LoopWrapper.of(context, cmd, loop, out, outMapping, outExpression, step,
+                    iteration(step, correlationId, false));
+            return step(cmd, step, correlationId, true, errorSteps);
+        }
         return errorSteps != null ? new ErrorWrapper(cmd, errorSteps) : cmd;
     }
 

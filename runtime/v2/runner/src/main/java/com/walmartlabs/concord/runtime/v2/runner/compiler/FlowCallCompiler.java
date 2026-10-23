@@ -49,8 +49,8 @@ public class FlowCallCompiler implements StepCompiler<FlowCall> {
 
         WithItems withItems = options.withItems();
         if (withItems != null) {
-            return StepSegments.withItems(new FlowCallCommand(correlationId, step), step, correlationId,
-                    withItems, options.retry(), options.out(), outMapping,
+            return StepSegments.withItems(context, new FlowCallCommand(correlationId, step), step, correlationId,
+                    withItems, options.retry(), options.loop(), options.out(), outMapping, options.outExpression(),
                     options.errorSteps().isEmpty() ? null : CompilerUtils.compile(context, options.errorSteps()));
         }
 
