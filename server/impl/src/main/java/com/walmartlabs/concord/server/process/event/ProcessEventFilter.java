@@ -47,6 +47,12 @@ public interface ProcessEventFilter {
     @Nullable
     EventPhase eventPhase();
 
+    /**
+     * ID of the log segment of the step that produced the event.
+     */
+    @Nullable
+    Long eventLogSegmentId();
+
     @Value.Default
     default int limit() {
         return -1;

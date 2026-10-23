@@ -41,30 +41,31 @@ public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
     @Override
     public Command compile(CompilerContext context, ScriptCall step) {
         UUID correlationId = UUID.randomUUID();
-        Command cmd = new LogSegmentScopeCommand<>(correlationId, new ScriptCallCommand(correlationId, step), step);
-
         ScriptCallOptions options = Objects.requireNonNull(step.getOptions());
-
-        Retry retry = options.retry();
-        if (retry != null) {
-            cmd = new RetryWrapper(cmd, retry, step);
-        }
 
         WithItems withItems = options.withItems();
         if (withItems != null) {
-            cmd = WithItemsWrapper.of(cmd, withItems, Collections.emptyList(), Collections.emptyMap(), step);
+            return StepSegments.withItems(context, new ScriptCallCommand(correlationId, step), step, correlationId,
+                    withItems, options.retry(), options.loop(), Collections.emptyList(), Collections.emptyMap(), null,
+                    options.errorSteps().isEmpty() ? null : CompilerUtils.compile(context, options.errorSteps()));
+        }
+
+        Command cmd = new ScriptCallCommand(correlationId, step);
+
+        Retry retry = options.retry();
+        if (retry != null) {
+            cmd = new RetryWrapper(cmd, retry, step, correlationId);
         }
 
         Loop loop = options.loop();
         if (loop != null) {
-            cmd = LoopWrapper.of(context, cmd, loop, Collections.emptyList(), Collections.emptyMap(), null, step);
+            cmd = LoopWrapper.of(context, cmd, loop, Collections.emptyList(), Collections.emptyMap(), null, step,
+                    StepSegments.iteration(step, correlationId, retry != null));
         }
 
         List<Step> errorSteps = options.errorSteps();
-        if (!errorSteps.isEmpty()) {
-            cmd = new ErrorWrapper(cmd, CompilerUtils.compile(context, errorSteps));
-        }
-
-        return cmd;
+        return StepSegments.step(cmd, step, correlationId, loop != null || retry != null,
+                errorSteps.isEmpty() ? null : CompilerUtils.compile(context, errorSteps));
     }
+
 }

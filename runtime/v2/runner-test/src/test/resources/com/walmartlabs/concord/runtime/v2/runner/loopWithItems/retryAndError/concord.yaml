@@ -1,0 +1,56 @@
+configuration:
+  runtime: concord-v2
+  arguments:
+    outerItems: [x, y]
+
+flows:
+  default:
+    - name: "failing task ${item}"
+      task: conditionallyFailTask
+      in:
+        fail: "${item == 'b'}"
+      withItems: [a, b]
+      retry:
+        times: 1
+        delay: 0
+      loop:
+        items: "${outerItems}"
+      error:
+        - log: TASK_HANDLED
+
+    - name: "failing flow ${item}"
+      call: failing
+      in:
+        current: "${item}"
+      withItems: [a, b]
+      retry:
+        times: 1
+        delay: 0
+      loop:
+        items: "${outerItems}"
+      error:
+        - log: FLOW_HANDLED
+
+    - name: "failing script ${item}"
+      script: groovy
+      body: |
+        log.info('SCRIPT_ATTEMPT_' + execution.variables().get('item'))
+        if (execution.variables().get('item') == 'b') {
+          throw new RuntimeException('expected failure')
+        }
+      withItems: [a, b]
+      retry:
+        times: 1
+        delay: 0
+      loop:
+        items: "${outerItems}"
+      error:
+        - log: SCRIPT_HANDLED
+
+    - log: ERRORS_DONE
+
+  failing:
+    - log: "FLOW_ATTEMPT_${current}"
+    - if: "${current == 'b'}"
+      then:
+        - throw: expected failure
