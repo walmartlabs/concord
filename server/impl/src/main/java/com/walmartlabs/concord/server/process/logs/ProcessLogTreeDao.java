@@ -48,7 +48,7 @@ import static com.walmartlabs.concord.server.jooq.enums.LogSegmentKind.ATTEMPT;
 import static com.walmartlabs.concord.server.jooq.enums.LogSegmentKind.ITERATION;
 import static org.jooq.impl.DSL.*;
 
-/** Direct-child reads are bounded. Descendant pagination still traverses the subtree. */
+/** Indexed child and subtree reads, with ancestors fetched only for page context. */
 public class ProcessLogTreeDao extends AbstractDao {
 
     @Inject
@@ -161,25 +161,15 @@ public class ProcessLogTreeDao extends AbstractDao {
     /** Latest/previous descendants in descending creation order; new descendants in ascending order.
      * Ancestors are context only and do not consume the page limit. */
     public LogSegmentTreePage descendants(ProcessKey key, long rootId, Long beforeId, Long afterId, int limit) {
-        /* SQL (following scope):
-         * , subtree(segment_id) AS (
-         *   SELECT segment_id FROM scope WHERE parent_segment_id = :rootId AND segment_id > parent_segment_id
-         *   UNION ALL
-         *   SELECT c.segment_id FROM scope c JOIN subtree p ON c.parent_segment_id = p.segment_id
-         *   WHERE c.segment_id > p.segment_id
-         * ) SELECT segment_id FROM subtree WHERE <cursor> ORDER BY segment_id ASC|DESC LIMIT :limit+1
-         * The outer cursor/LIMIT bounds the response, not the recursive traversal.
-         */
-        var c = segments("scope", "c");
-        var parent = table(name("subtree")).as("p");
-        var parentId = field(name("p", "segment_id"), Long.class);
-        var subtree = name("subtree").fields("segment_id").as(
-                select(c.columns().SEGMENT_ID).from(c.table()).where(c.columns().PARENT_SEGMENT_ID.eq(rootId)).and(c.columns().SEGMENT_ID.gt(c.columns().PARENT_SEGMENT_ID))
-                        .unionAll(select(c.columns().SEGMENT_ID).from(c.table()).join(parent).on(c.columns().PARENT_SEGMENT_ID.eq(parentId))
-                                .where(c.columns().SEGMENT_ID.gt(parentId))));
-        var id = subtree.field("segment_id", Long.class);
+        // Membership is maintained transactionally by segment insert/update/delete
+        // triggers. Cursor and LIMIT are index bounds, including on empty polls.
+        var membership = table(name("process_log_segment_membership"));
+        var id = field(name("segment_id"), Long.class);
         var cursor = beforeId != null ? id.lt(beforeId) : afterId != null ? id.gt(afterId) : trueCondition();
-        var found = dsl().withRecursive(scope(key), subtree).select(id).from(subtree).where(cursor)
+        var found = dsl().select(id).from(membership)
+                .where(field(name("instance_id"), UUID.class).eq(key.getInstanceId()))
+                .and(field(name("instance_created_at"), OffsetDateTime.class).eq(key.getCreatedAt()))
+                .and(field(name("ancestor_id"), Long.class).eq(rootId)).and(id.gt(rootId)).and(cursor)
                 .orderBy(order(id, afterId == null)).limit(limit + 1).fetch(id);
         var ids = found.subList(0, Math.min(limit, found.size()));
         var byId = nodes(key, ids).stream().collect(Collectors.toMap(n -> n.segment().id(), n -> n));

@@ -232,4 +232,8 @@
             (instance_id, instance_created_at, parent_segment_id, segment_iteration_index, segment_attempt_index, segment_id) WHERE segment_kind = 'ATTEMPT'</sql>
         <sql>RESET lock_timeout</sql>
     </changeSet>
+
+    <changeSet id="2461050" author="ibodrov@gmail.com">
+        <sqlFile path="tree-membership.sql" relativeToChangelogFile="true" splitStatements="false"/>
+    </changeSet>
 </databaseChangeLog>

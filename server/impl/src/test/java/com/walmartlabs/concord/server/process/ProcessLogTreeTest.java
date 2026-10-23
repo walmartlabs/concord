@@ -52,6 +52,12 @@ class ProcessLogTreeTest {
                         """);
                 dsl.execute("CREATE INDEX tree_parent ON process_log_segments(instance_id, instance_created_at, parent_segment_id, segment_id)");
                 dsl.execute("CREATE INDEX tree_id ON process_log_segments(instance_id, instance_created_at, segment_id)");
+                conn.setAutoCommit(false);
+                try (var in = java.util.Objects.requireNonNull(getClass().getResourceAsStream("/com/walmartlabs/concord/server/db/tree-membership.sql"))) {
+                    dsl.execute(new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
+                }
+                conn.commit();
+                conn.setAutoCommit(true);
                 var key = new ProcessKey(UUID.randomUUID(), OffsetDateTime.parse("2026-10-19T00:00:00Z"));
                 var dao = new ProcessLogTreeDao(dsl.configuration());
                 dsl.execute("INSERT INTO process_log_segments(instance_id, instance_created_at, segment_id, segment_name, segment_status) VALUES (?::uuid, ?::timestamptz, 0, 'System', NULL), (?::uuid, ?::timestamptz, 1, 'loop', 'RUNNING')",
