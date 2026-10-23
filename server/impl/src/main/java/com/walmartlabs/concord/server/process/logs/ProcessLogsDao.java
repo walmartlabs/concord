@@ -242,7 +242,7 @@ public class ProcessLogsDao extends AbstractDao {
                     .where(PROCESS_LOG_DATA.INSTANCE_ID.eq(instanceId)
                             .and(PROCESS_LOG_DATA.INSTANCE_CREATED_AT.eq(createdAt))
                             .and(PROCESS_LOG_DATA.SEGMENT_ID.eq(segmentId))
-                            .and(rangeExpr, instanceId, end))
+                            .and(rangeExpr))
                     .orderBy(PROCESS_LOG_DATA.SEGMENT_RANGE)
                     .fetch(ProcessLogsDao::toChunk);
         }
@@ -282,7 +282,7 @@ public class ProcessLogsDao extends AbstractDao {
                     .from(PROCESS_LOG_DATA)
                     .where(PROCESS_LOG_DATA.INSTANCE_ID.eq(instanceId)
                             .and(PROCESS_LOG_DATA.INSTANCE_CREATED_AT.eq(createdAt))
-                            .and(rangeExpr, instanceId, end))
+                            .and(rangeExpr))
                     .orderBy(PROCESS_LOG_DATA.LOG_RANGE)
                     .fetch(ProcessLogsDao::toChunk);
         }

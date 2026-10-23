@@ -236,4 +236,58 @@
     <changeSet id="2461050" author="ibodrov@gmail.com">
         <sqlFile path="tree-membership.sql" relativeToChangelogFile="true" splitStatements="false"/>
     </changeSet>
+
+    <!-- Required by UUID/timestamp/bigint equality columns in the GiST indexes.
+         Deployments whose migration role cannot install extensions must provision
+         btree_gist in this database before running this migration. -->
+    <changeSet id="2461070" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="createExtensionAvailable" value="true"/>
+        </preConditions>
+        <sql>CREATE EXTENSION IF NOT EXISTS btree_gist</sql>
+    </changeSet>
+
+    <changeSet id="2461071" author="ibodrov@gmail.com" runInTransaction="false">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace JOIN pg_index x ON x.indexrelid=c.oid WHERE n.nspname=current_schema() AND c.relname='idx_pld_log_upper' AND x.indisvalid</sqlCheck>
+            <sqlCheck expectedResult="1">SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relname='process_log_data' AND c.relkind='r' AND NOT EXISTS (SELECT 1 FROM pg_inherits i WHERE i.inhparent=c.oid)</sqlCheck>
+        </preConditions>
+        <sql>SET lock_timeout = '5s'</sql>
+        <sql>DROP INDEX CONCURRENTLY IF EXISTS idx_pld_log_upper</sql>
+        <sql>CREATE INDEX CONCURRENTLY idx_pld_log_upper ON PROCESS_LOG_DATA USING btree (INSTANCE_ID, INSTANCE_CREATED_AT, (upper(LOG_RANGE)))</sql>
+        <sql>RESET lock_timeout</sql>
+    </changeSet>
+
+    <changeSet id="2461072" author="ibodrov@gmail.com" runInTransaction="false">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace JOIN pg_index x ON x.indexrelid=c.oid WHERE n.nspname=current_schema() AND c.relname='idx_pld_segment_upper' AND x.indisvalid</sqlCheck>
+            <sqlCheck expectedResult="1">SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relname='process_log_data' AND c.relkind='r' AND NOT EXISTS (SELECT 1 FROM pg_inherits i WHERE i.inhparent=c.oid)</sqlCheck>
+        </preConditions>
+        <sql>SET lock_timeout = '5s'</sql>
+        <sql>DROP INDEX CONCURRENTLY IF EXISTS idx_pld_segment_upper</sql>
+        <sql>CREATE INDEX CONCURRENTLY idx_pld_segment_upper ON PROCESS_LOG_DATA USING btree (INSTANCE_ID, INSTANCE_CREATED_AT, SEGMENT_ID, (upper(SEGMENT_RANGE)))</sql>
+        <sql>RESET lock_timeout</sql>
+    </changeSet>
+
+    <changeSet id="2461073" author="ibodrov@gmail.com" runInTransaction="false">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace JOIN pg_index x ON x.indexrelid=c.oid WHERE n.nspname=current_schema() AND c.relname='idx_pld_log_overlap' AND x.indisvalid</sqlCheck>
+            <sqlCheck expectedResult="1">SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relname='process_log_data' AND c.relkind='r' AND NOT EXISTS (SELECT 1 FROM pg_inherits i WHERE i.inhparent=c.oid)</sqlCheck>
+        </preConditions>
+        <sql>SET lock_timeout = '5s'</sql>
+        <sql>DROP INDEX CONCURRENTLY IF EXISTS idx_pld_log_overlap</sql>
+        <sql>CREATE INDEX CONCURRENTLY idx_pld_log_overlap ON PROCESS_LOG_DATA USING gist (INSTANCE_ID, INSTANCE_CREATED_AT, LOG_RANGE)</sql>
+        <sql>RESET lock_timeout</sql>
+    </changeSet>
+
+    <changeSet id="2461074" author="ibodrov@gmail.com" runInTransaction="false">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace JOIN pg_index x ON x.indexrelid=c.oid WHERE n.nspname=current_schema() AND c.relname='idx_pld_segment_overlap' AND x.indisvalid</sqlCheck>
+            <sqlCheck expectedResult="1">SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relname='process_log_data' AND c.relkind='r' AND NOT EXISTS (SELECT 1 FROM pg_inherits i WHERE i.inhparent=c.oid)</sqlCheck>
+        </preConditions>
+        <sql>SET lock_timeout = '5s'</sql>
+        <sql>DROP INDEX CONCURRENTLY IF EXISTS idx_pld_segment_overlap</sql>
+        <sql>CREATE INDEX CONCURRENTLY idx_pld_segment_overlap ON PROCESS_LOG_DATA USING gist (INSTANCE_ID, INSTANCE_CREATED_AT, SEGMENT_ID, SEGMENT_RANGE)</sql>
+        <sql>RESET lock_timeout</sql>
+    </changeSet>
 </databaseChangeLog>
