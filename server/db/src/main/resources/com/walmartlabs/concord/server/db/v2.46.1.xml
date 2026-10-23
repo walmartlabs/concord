@@ -188,4 +188,48 @@
         </sql>
         <sql>RESET lock_timeout</sql>
     </changeSet>
+
+    <changeSet id="2461040" author="ibodrov@gmail.com" runInTransaction="false">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT count(*) FROM pg_catalog.pg_class c
+                JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                JOIN pg_catalog.pg_index x ON x.indexrelid = c.oid
+                WHERE n.nspname = current_schema() AND c.relname = 'idx_proc_log_segments_iteration' AND x.indisvalid
+            </sqlCheck>
+            <sqlCheck expectedResult="1">
+                SELECT count(*) FROM pg_catalog.pg_class c
+                JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                WHERE n.nspname = current_schema() AND c.relname = 'process_log_segments' AND c.relkind = 'r'
+                  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_inherits i WHERE i.inhparent = c.oid)
+            </sqlCheck>
+        </preConditions>
+        <sql>SET lock_timeout = '5s'</sql>
+        <sql>DROP INDEX CONCURRENTLY IF EXISTS idx_proc_log_segments_iteration</sql>
+        <sql>CREATE INDEX CONCURRENTLY idx_proc_log_segments_iteration ON process_log_segments
+            (instance_id, instance_created_at, parent_segment_id, segment_id) WHERE segment_kind = 'ITERATION'</sql>
+        <sql>RESET lock_timeout</sql>
+    </changeSet>
+
+    <changeSet id="2461041" author="ibodrov@gmail.com" runInTransaction="false">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT count(*) FROM pg_catalog.pg_class c
+                JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                JOIN pg_catalog.pg_index x ON x.indexrelid = c.oid
+                WHERE n.nspname = current_schema() AND c.relname = 'idx_proc_log_segments_attempt' AND x.indisvalid
+            </sqlCheck>
+            <sqlCheck expectedResult="1">
+                SELECT count(*) FROM pg_catalog.pg_class c
+                JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                WHERE n.nspname = current_schema() AND c.relname = 'process_log_segments' AND c.relkind = 'r'
+                  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_inherits i WHERE i.inhparent = c.oid)
+            </sqlCheck>
+        </preConditions>
+        <sql>SET lock_timeout = '5s'</sql>
+        <sql>DROP INDEX CONCURRENTLY IF EXISTS idx_proc_log_segments_attempt</sql>
+        <sql>CREATE INDEX CONCURRENTLY idx_proc_log_segments_attempt ON process_log_segments
+            (instance_id, instance_created_at, parent_segment_id, segment_iteration_index, segment_attempt_index, segment_id) WHERE segment_kind = 'ATTEMPT'</sql>
+        <sql>RESET lock_timeout</sql>
+    </changeSet>
 </databaseChangeLog>

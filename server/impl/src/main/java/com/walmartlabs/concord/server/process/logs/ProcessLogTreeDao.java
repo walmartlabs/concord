@@ -267,36 +267,50 @@ public class ProcessLogTreeDao extends AbstractDao {
         return result == null ? null : nodes(key, List.of(result)).getFirst().segment();
     }
 
-    /* SQL predicate, used by flags:
-     * s.segment_status = 'FAILED' AND s.segment_kind = 'ATTEMPT' AND EXISTS (
-     *   SELECT 1 FROM scope sibling WHERE sibling.parent_segment_id = s.parent_segment_id
-     *   AND sibling.segment_kind = 'ATTEMPT' AND sibling.segment_attempt_index > s.segment_attempt_index
-     *   AND sibling.segment_iteration_index IS NOT DISTINCT FROM s.segment_iteration_index
-     * )
-     */
     private static Condition retried(SegmentSource s) {
         var sibling = segments("scope", "sibling");
-        return s.columns().SEGMENT_STATUS.eq("FAILED").and(s.columns().SEGMENT_KIND.eq(ATTEMPT)).and(exists(
-                selectOne().from(sibling.table()).where(sibling.columns().PARENT_SEGMENT_ID.eq(s.columns().PARENT_SEGMENT_ID))
-                        .and(sibling.columns().SEGMENT_KIND.eq(ATTEMPT)).and(sibling.columns().SEGMENT_ATTEMPT_INDEX.gt(s.columns().SEGMENT_ATTEMPT_INDEX))
-                        .and(sibling.columns().SEGMENT_ITERATION_INDEX.isNotDistinctFrom(s.columns().SEGMENT_ITERATION_INDEX))));
+        // PostgreSQL 14 cannot use IS NOT DISTINCT FROM as an index equality.
+        var later = sibling.columns().PARENT_SEGMENT_ID.eq(s.columns().PARENT_SEGMENT_ID)
+                .and(sibling.columns().SEGMENT_KIND.eq(inline(ATTEMPT)))
+                .and(sibling.columns().SEGMENT_ATTEMPT_INDEX.gt(s.columns().SEGMENT_ATTEMPT_INDEX));
+        var sameIteration = select(sibling.columns().SEGMENT_ID).from(sibling.table()).where(later)
+                .and(sibling.columns().SEGMENT_ITERATION_INDEX.eq(s.columns().SEGMENT_ITERATION_INDEX))
+                .orderBy(sibling.columns().SEGMENT_ATTEMPT_INDEX, sibling.columns().SEGMENT_ID).limit(1).asField();
+        var noIteration = select(sibling.columns().SEGMENT_ID).from(sibling.table()).where(later)
+                .and(sibling.columns().SEGMENT_ITERATION_INDEX.isNull())
+                .orderBy(sibling.columns().SEGMENT_ATTEMPT_INDEX, sibling.columns().SEGMENT_ID).limit(1).asField();
+        return s.columns().SEGMENT_STATUS.eq("FAILED").and(s.columns().SEGMENT_KIND.eq(ATTEMPT))
+                .and(when(s.columns().SEGMENT_ITERATION_INDEX.isNull(), noIteration).otherwise(sameIteration).isNotNull());
     }
 
     private static Condition hasChildren(SegmentSource s) {
         var c = segments("scope", "c");
-        return exists(selectOne().from(c.table()).where(c.columns().PARENT_SEGMENT_ID.eq(s.columns().SEGMENT_ID)));
+        // Seek by parent, then compare the first key. Equality + ORDER BY segment_id
+        // can choose the global ID index and filter every row for a missing parent.
+        return select(c.columns().PARENT_SEGMENT_ID).from(c.table())
+                .where(c.columns().PARENT_SEGMENT_ID.ge(s.columns().SEGMENT_ID))
+                .orderBy(c.columns().PARENT_SEGMENT_ID, c.columns().SEGMENT_ID)
+                .limit(1).<Long>asField().isNotDistinctFrom(s.columns().SEGMENT_ID);
     }
 
     private static Condition hasIterations(SegmentSource s) {
         var c = segments("scope", "c");
-        return exists(selectOne().from(c.table()).where(c.columns().PARENT_SEGMENT_ID.eq(s.columns().SEGMENT_ID))
-                .and(c.columns().SEGMENT_KIND.eq(ITERATION).or(c.columns().SEGMENT_KIND.eq(ATTEMPT).and(c.columns().SEGMENT_ITERATION_INDEX.isNotNull()))));
+        var parent = c.columns().PARENT_SEGMENT_ID.eq(s.columns().SEGMENT_ID);
+        var iteration = select(c.columns().PARENT_SEGMENT_ID).from(c.table())
+                .where(c.columns().PARENT_SEGMENT_ID.ge(s.columns().SEGMENT_ID))
+                .and(c.columns().SEGMENT_KIND.eq(inline(ITERATION)))
+                .orderBy(c.columns().PARENT_SEGMENT_ID, c.columns().SEGMENT_ID).limit(1).<Long>asField();
+        var attempt = select(c.columns().SEGMENT_ID).from(c.table()).where(parent)
+                .and(c.columns().SEGMENT_KIND.eq(inline(ATTEMPT))).and(c.columns().SEGMENT_ITERATION_INDEX.isNotNull())
+                .orderBy(c.columns().SEGMENT_ITERATION_INDEX, c.columns().SEGMENT_ATTEMPT_INDEX, c.columns().SEGMENT_ID)
+                .limit(1).asField();
+        return iteration.isNotDistinctFrom(s.columns().SEGMENT_ID).or(attempt.isNotNull());
     }
 
     /* SQL:
      * flags AS (SELECT s.*, COALESCE(<retried(s)>, false) AS retried,
-     *   EXISTS(...) AS has_children,
-     *   EXISTS(...) AS has_iterations FROM scope|page s WHERE <filter>)
+     *   <ordered child probe> IS NOT NULL AS has_children,
+     *   <iteration/attempt probes> IS NOT NULL AS has_iterations FROM scope|page s WHERE <filter>)
      */
     private static CommonTableExpression<Record> flags(String source, Condition where) {
         var s = segments(source, "s");
