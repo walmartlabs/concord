@@ -60,7 +60,12 @@ public class ProcessLogsDao extends AbstractDao {
         UUID instanceId = processKey.getInstanceId();
         OffsetDateTime createdAt = processKey.getCreatedAt();
 
-        ProcessLogDataRecord r = txResult(tx -> tx.insertInto(PROCESS_LOG_DATA)
+        ProcessLogDataRecord r = txResult(tx -> {
+            // Acquire the process lock BEFORE the INSERT/routines take their
+            // READ COMMITTED snapshot, including when another writer must commit first.
+            tx.execute("select pg_advisory_xact_lock(?)",
+                    instanceId.getMostSignificantBits() ^ instanceId.getLeastSignificantBits());
+            return tx.insertInto(PROCESS_LOG_DATA)
                 .columns(PROCESS_LOG_DATA.INSTANCE_ID,
                         PROCESS_LOG_DATA.INSTANCE_CREATED_AT,
                         PROCESS_LOG_DATA.SEGMENT_ID,
@@ -74,7 +79,8 @@ public class ProcessLogsDao extends AbstractDao {
                         processLogDataNextRange2(instanceId, createdAt, data.length),
                         value(data))
                 .returning(PROCESS_LOG_DATA.LOG_RANGE)
-                .fetchOne());
+                .fetchOne();
+        });
 
         return PgIntRange.parse(r.getLogRange().toString());
     }
