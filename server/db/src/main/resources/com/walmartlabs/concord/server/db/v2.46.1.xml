@@ -155,4 +155,37 @@
         </sql>
         <sql>RESET lock_timeout</sql>
     </changeSet>
+
+    <changeSet id="2461030" author="ibodrov@gmail.com" runInTransaction="false">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT count(*)
+                FROM pg_catalog.pg_class c
+                JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                JOIN pg_catalog.pg_index x ON x.indexrelid = c.oid
+                WHERE n.nspname = current_schema()
+                  AND c.relname = 'idx_proc_log_segments_id'
+                  AND x.indisvalid
+            </sqlCheck>
+            <!-- Partitioned installations provision equivalent indexes separately. -->
+            <sqlCheck expectedResult="1">
+                SELECT count(*)
+                FROM pg_catalog.pg_class c
+                JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                WHERE n.nspname = current_schema()
+                  AND c.relname = 'process_log_segments'
+                  AND c.relkind = 'r'
+                  AND NOT EXISTS (
+                      SELECT 1 FROM pg_catalog.pg_inherits i WHERE i.inhparent = c.oid
+                  )
+            </sqlCheck>
+        </preConditions>
+        <sql>SET lock_timeout = '5s'</sql>
+        <sql>DROP INDEX CONCURRENTLY IF EXISTS IDX_PROC_LOG_SEGMENTS_ID</sql>
+        <sql>
+            CREATE INDEX CONCURRENTLY IDX_PROC_LOG_SEGMENTS_ID
+                ON PROCESS_LOG_SEGMENTS (INSTANCE_ID, INSTANCE_CREATED_AT, SEGMENT_ID)
+        </sql>
+        <sql>RESET lock_timeout</sql>
+    </changeSet>
 </databaseChangeLog>

@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ProcessLogTreeTest {
     @Test
     void pagesChildrenSearchesUnloadedBranchesAndRefreshesStatuses() throws Exception {
-        try (var db = new PostgreSQLContainer<>("postgres:17-alpine")) {
+        try (var db = new PostgreSQLContainer<>("postgres:14.21-alpine")) {
             db.start();
             try (var conn = DriverManager.getConnection(db.getJdbcUrl(), db.getUsername(), db.getPassword())) {
                 var dsl = DSL.using(conn, SQLDialect.POSTGRES);
@@ -47,11 +47,11 @@ class ProcessLogTreeTest {
                           instance_id uuid, instance_created_at timestamptz, segment_id bigint,
                           parent_segment_id bigint, segment_name text, segment_kind log_segment_kind, segment_iteration_index int, segment_attempt_index int,
                           segment_thread int, correlation_id uuid, segment_ts timestamptz DEFAULT now(),
-                          segment_status text, status_updated_at timestamptz, segment_warn int, segment_errors int,
-                          PRIMARY KEY (instance_id, instance_created_at, segment_id)
+                          segment_status text, status_updated_at timestamptz, segment_warn int, segment_errors int
                         )
                         """);
                 dsl.execute("CREATE INDEX tree_parent ON process_log_segments(instance_id, instance_created_at, parent_segment_id, segment_id)");
+                dsl.execute("CREATE INDEX tree_id ON process_log_segments(instance_id, instance_created_at, segment_id)");
                 var key = new ProcessKey(UUID.randomUUID(), OffsetDateTime.parse("2026-10-19T00:00:00Z"));
                 var dao = new ProcessLogTreeDao(dsl.configuration());
                 dsl.execute("INSERT INTO process_log_segments(instance_id, instance_created_at, segment_id, segment_name, segment_status) VALUES (?::uuid, ?::timestamptz, 0, 'System', NULL), (?::uuid, ?::timestamptz, 1, 'loop', 'RUNNING')",

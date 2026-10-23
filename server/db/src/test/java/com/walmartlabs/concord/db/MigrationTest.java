@@ -234,8 +234,10 @@ public class MigrationTest {
             try (var result = statement.executeQuery("""
                     select exectype
                     from partitioned_fixture.databasechangelog
-                    where id in ('2461002', '2461010', '2461020') order by id
+                    where id in ('2461002', '2461010', '2461020', '2461030') order by id
                     """)) {
+                assertTrue(result.next());
+                assertEquals("MARK_RAN", result.getString(1));
                 assertTrue(result.next());
                 assertEquals("MARK_RAN", result.getString(1));
                 assertTrue(result.next());
@@ -248,6 +250,7 @@ public class MigrationTest {
                     select to_regclass('partitioned_fixture.idx_proc_events_log_segment') is not null
                         or to_regclass('partitioned_fixture.idx_proc_log_segments_parent') is not null
                         or to_regclass('partitioned_fixture.idx_proc_log_segments_running') is not null
+                        or to_regclass('partitioned_fixture.idx_proc_log_segments_id') is not null
                     """)) {
                 assertTrue(result.next());
                 assertFalse(result.getBoolean(1));
