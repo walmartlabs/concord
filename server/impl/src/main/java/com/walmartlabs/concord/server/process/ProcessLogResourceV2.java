@@ -44,8 +44,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ByteArrayOutputStream;
-import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -156,7 +155,7 @@ public class ProcessLogResourceV2 implements Resource {
     @Path("/{id}/log/segment/{segmentId}/data/page")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    @Operation(description = "Read a page of raw segment log data. Byte limits round to stored blocks; cursors are scoped to the segment.", operationId = "getProcessLogSegmentPage")
+    @Operation(description = "Read lossless Base64-encoded segment bytes. Decode and concatenate bytes before UTF-8 decoding, including incomplete trailing characters while tailing. Byte limits round to stored blocks; cursors are scoped to the segment.", operationId = "getProcessLogSegmentPage")
     public LogSegmentDataPage page(@PathParam("id") UUID instanceId,
                                    @PathParam("segmentId") long segmentId,
                                    @QueryParam("before") Integer before,
@@ -188,11 +187,17 @@ public class ProcessLogResourceV2 implements Resource {
         if ((before != null && end != before) || (after != null && start != after)) {
             throw new ValidationErrorsException("Use a cursor returned by the log page API");
         }
-        var data = new ByteArrayOutputStream();
+        int length = 0;
         for (var chunk : chunks) {
-            data.writeBytes(chunk.getData());
+            length = Math.addExact(length, chunk.getData().length);
         }
-        return new LogSegmentDataPage(data.toString(StandardCharsets.UTF_8), start, end, start > 0, end < log.getSize());
+        var data = new byte[length];
+        int offset = 0;
+        for (var chunk : chunks) {
+            System.arraycopy(chunk.getData(), 0, data, offset, chunk.getData().length);
+            offset += chunk.getData().length;
+        }
+        return new LogSegmentDataPage(Base64.getEncoder().encodeToString(data), start, end, start > 0, end < log.getSize());
     }
 
     /**
