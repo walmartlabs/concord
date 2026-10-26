@@ -67,6 +67,7 @@ public final class RemoteOperations {
             synchronized (expired) {
                 timer.interrupt();
                 if (expired.get()) {
+                    // Clear the deadline-induced interrupt before reporting the timeout.
                     Thread.interrupted();
                     throw new TimeoutException("Operation deadline exceeded (" + timeout + ")");
                 }
