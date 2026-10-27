@@ -83,7 +83,6 @@ describe('managedFetch errors', () => {
 
         await expect(managedFetch('/api/test')).rejects.toEqual({
             message: 'Failed to fetch (0)',
-            details: 'Failed to fetch',
             status: 0,
         });
     });
@@ -116,11 +115,11 @@ describe('managedFetch errors', () => {
     });
 
     test.each([
-        [[{ message: 'Invalid value' }], 'Invalid value (400)', undefined],
-        [{ message: 'Invalid value', details: 'Invalid value' }, 'Invalid value (400)', undefined],
+        [[{ message: 'Invalid value' }], 'Bad Request (400)', 'Invalid value'],
+        [{ message: 'Invalid value', details: 'Invalid value' }, 'Bad Request (400)', 'Invalid value'],
         [
             { message: 'Invalid value', details: 'Field: name' },
-            'Invalid value (400)',
+            'Bad Request (400)',
             'Field: name',
         ],
         [null, 'Bad Request (400)', undefined],
@@ -202,15 +201,15 @@ describe('error contract', () => {
     ])('%s log reports missing or invalid range headers', async (_name, read) => {
         vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('log'));
         await expect(read()).rejects.toMatchObject({
-            status: 0,
-            message: 'Content-Range header is missing (0)',
+            status: 200,
+            message: 'Content-Range header is missing (200)',
         });
         vi.mocked(fetch).mockResolvedValueOnce(
-            new Response('log', { headers: { 'Content-Range': 'invalid' } })
+            new Response('log', { status: 206, headers: { 'Content-Range': 'invalid' } })
         );
         await expect(read()).rejects.toMatchObject({
-            status: 0,
-            message: 'Invalid Content-Range header (0)',
+            status: 206,
+            message: 'Invalid Content-Range header (206)',
             details: 'invalid',
         });
     });

@@ -18,7 +18,7 @@
  * =====
  */
 
-import { ConcordId, fetchJson, managedFetch, queryParams, RequestErrorData } from '../../common';
+import { ConcordId, fetchJson, managedFetch, queryParams, responseError } from '../../common';
 
 export interface LogRange {
     unit?: string;
@@ -38,15 +38,15 @@ const formatRangeHeader = (range: LogRange) => ({
     Range: `bytes=${str(range.low)}-${str(range.high)}`,
 });
 
-const parseRange = (s: string): LogRange => {
+const parseRange = (response: Response): LogRange => {
+    const header = response.headers.get('Content-Range');
+    if (!header) {
+        throw responseError(response, 'Content-Range header is missing');
+    }
     const regex = /^bytes (\d*)-(\d*)\/(\d*)$/;
-    const m = regex.exec(s);
+    const m = regex.exec(header);
     if (!m) {
-        throw {
-            status: 0,
-            message: 'Invalid Content-Range header (0)',
-            details: s,
-        } satisfies RequestErrorData;
+        throw responseError(response, 'Invalid Content-Range header', header);
     }
 
     return {
@@ -73,17 +73,9 @@ export const getLog = async (instanceId: ConcordId, range: LogRange): Promise<Lo
 
     const resp = await managedFetch(`/api/v1/process/${instanceId}/log`, opts);
 
-    const headers = resp.headers.get('Content-Range');
-    if (!headers) {
-        throw {
-            status: 0,
-            message: 'Content-Range header is missing (0)',
-            details: instanceId,
-        } satisfies RequestErrorData;
-    }
-
+    const parsedRange = parseRange(resp);
     const data = await resp.text();
-    return toChunk(data, parseRange(headers));
+    return toChunk(data, parsedRange);
 };
 
 export enum SegmentStatus {
@@ -149,17 +141,9 @@ export const getSegmentLog = async (
         opts
     );
 
-    const headers = resp.headers.get('Content-Range');
-    if (!headers) {
-        throw {
-            status: 0,
-            message: 'Content-Range header is missing (0)',
-            details: instanceId,
-        } satisfies RequestErrorData;
-    }
-
+    const parsedRange = parseRange(resp);
     const data = await resp.text();
-    return toChunk(data, parseRange(headers));
+    return toChunk(data, parsedRange);
 };
 
 export class LogTooLargeError extends Error {

@@ -44,93 +44,66 @@ const statusMessage = (message: unknown, resp: Pick<Response, 'status' | 'status
     return `${value} (${resp.status})`;
 };
 
+const textValue = (value: unknown): string | undefined =>
+    typeof value === 'string' ? value : undefined;
+
+// Keep the actual HTTP status even when an otherwise successful response is invalid.
+export const responseError = (
+    response: Pick<Response, 'status' | 'statusText'>,
+    message?: string,
+    details?: string
+): RequestErrorData => ({
+    status: response.status,
+    message: statusMessage(message, response),
+    details,
+});
+
+const isAbortError = (error: unknown): boolean =>
+    (error instanceof Error || error instanceof DOMException) && error.name === 'AbortError';
+
 export const toRequestError = (error: unknown): RequestErrorData => {
     if (typeof error === 'object' && error !== null) {
         const value = error as Partial<RequestErrorData>;
-        if (typeof value.status === 'number') {
+        if (typeof value.status === 'number' && Number.isFinite(value.status)) {
             return {
                 status: value.status,
-                ...(typeof value.message === 'string' ? { message: value.message } : {}),
-                ...(typeof value.details === 'string' ? { details: value.details } : {}),
-                ...(typeof value.instanceId === 'string' ? { instanceId: value.instanceId } : {}),
-                ...(typeof value.level === 'string' ? { level: value.level } : {}),
+                message: textValue(value.message)?.trim()
+                    ? value.message
+                    : statusMessage(undefined, { status: value.status, statusText: '' }),
+                details: textValue(value.details),
+                instanceId: textValue(value.instanceId),
+                level: textValue(value.level),
             };
         }
     }
 
-    if (error instanceof Error) {
-        const message = error.message.trim() || error.name || 'Request failed';
-        return {
-            status: 0,
-            message: `${message} (0)`,
-            details: message,
-        };
-    }
-
-    let details: string;
-    if (typeof error === 'string') {
-        details = error;
-    } else if (
-        error === null ||
-        typeof error === 'number' ||
-        typeof error === 'boolean' ||
-        typeof error === 'bigint' ||
-        typeof error === 'undefined'
-    ) {
-        details = `${error}`;
-    } else {
-        try {
-            const value = JSON.stringify(error);
-            details = value === undefined ? 'Unknown error' : value;
-        } catch {
-            details = 'Unknown error';
-        }
-    }
-    return {
-        status: 0,
-        message: 'Request failed (0)',
-        details,
-    };
+    // Zero means no HTTP status is available; the caller may supply a non-HTTP exception.
+    return responseError({ status: 0, statusText: '' }, error instanceof Error ? error.message : undefined);
 };
 
 export const parseSiestaError = async (resp: Response): Promise<RequestErrorData> => {
     const json = await resp.json();
-    const bodyMessage =
-        (typeof json?.message === 'string' && json.message) ||
-        (Array.isArray(json) && typeof json[0]?.message === 'string' && json[0].message);
-
+    // Retry predicates inspect details. Preserve that contract and include every validation error.
+    const details = Array.isArray(json)
+        ? json.map((entry) => textValue(entry?.message)).filter(Boolean).join('\n') || undefined
+        : textValue(json?.details) ?? textValue(json?.message);
     return {
-        message: statusMessage(bodyMessage, resp),
-        instanceId: json?.instanceId,
-        details:
-            typeof json?.details === 'string' && json.details.trim() !== (bodyMessage || '').trim()
-                ? json.details
-                : undefined,
-        status: resp.status,
+        ...responseError(resp, undefined, details),
+        instanceId: textValue(json?.instanceId),
     };
 };
 
 export const parseJsonError = async (resp: Response): Promise<RequestErrorData> => {
     const json = await resp.json();
-
     return {
-        message: statusMessage(json?.message, resp),
-        instanceId: json?.instanceId,
-        details: json?.details,
-        level: json?.level || 'ERROR',
-        status: resp.status,
+        ...responseError(resp, textValue(json?.message), textValue(json?.details)),
+        instanceId: textValue(json?.instanceId),
+        level: textValue(json?.level) || 'ERROR',
     };
 };
 
-export const parseTextError = async (resp: Response): Promise<RequestErrorData> => {
-    const text = await resp.text();
-
-    return {
-        message: statusMessage(undefined, resp),
-        details: text,
-        status: resp.status,
-    };
-};
+export const parseTextError = async (resp: Response): Promise<RequestErrorData> =>
+    responseError(resp, undefined, await resp.text());
 
 export const makeError = async (resp: Response): Promise<RequestErrorData> => {
     const contentLength = resp.headers.get('Content-Length');
@@ -145,15 +118,13 @@ export const makeError = async (resp: Response): Promise<RequestErrorData> => {
                 return await parseTextError(resp);
             }
         } catch (e) {
+            if (isAbortError(e)) throw e;
             console.warn('makeError -> error while parsing the response: %o', e);
             // fall back to the default error handling
         }
     }
 
-    return {
-        message: statusMessage(undefined, resp),
-        status: resp.status,
-    };
+    return responseError(resp);
 };
 
 export const managedFetch = async (input: RequestInfo, init?: RequestInit): Promise<Response> => {
@@ -178,10 +149,7 @@ export const managedFetch = async (input: RequestInfo, init?: RequestInit): Prom
     try {
         response = await fetch(input, init);
     } catch (err) {
-        if (
-            (err instanceof Error || err instanceof DOMException) &&
-            err.name === 'AbortError'
-        ) {
+        if (isAbortError(err)) {
             throw err;
         }
 
@@ -336,7 +304,12 @@ export const parseNestedQueryParams = (params: QueryParams, keys: string[]): Que
 
 export const fetchJson = async <T>(uri: string, init?: RequestInit): Promise<T> => {
     const response = await managedFetch(uri, init);
-    return response.json();
+    try {
+        return await response.json();
+    } catch (error) {
+        if (isAbortError(error)) throw error;
+        throw responseError(response, 'Invalid JSON response');
+    }
 };
 
 const wait = (delayMs: number) =>
