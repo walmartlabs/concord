@@ -26,22 +26,39 @@ vi.mock('../../../../api/process', async (importOriginal) => {
     const actual = await importOriginal<Record<string, unknown>>();
     return { ...actual, get: vi.fn(), getRoot: vi.fn() };
 });
-vi.mock('../../index', () => ({
-    ProcessStatusActivity: () => (
-        <div>
-            retained routed content
-            <input aria-label="Tab state" defaultValue="" />
-        </div>
-    ),
-    ProcessAnsibleActivity: () => null,
-    ProcessAttachmentsActivity: () => null,
-    ProcessChildrenActivity: () => null,
-    ProcessEventsActivity: () => null,
-    ProcessHistoryActivity: () => null,
-    ProcessLogActivity: () => null,
-    ProcessLogActivityV2: () => null,
-    ProcessWaitActivity: () => null,
-}));
+const eventsRequest = vi.hoisted(() => vi.fn<() => Promise<boolean>>());
+
+vi.mock('../../index', async () => {
+    const { isBlockingPollingError, usePolling } = await import('../../../../api/usePolling');
+    const ProcessEventsActivity = ({
+        loadingHandler,
+        forceRefresh,
+        dataFetchInterval,
+    }: {
+        loadingHandler: (inc: number) => void;
+        forceRefresh: boolean;
+        dataFetchInterval: number;
+    }) => {
+        const error = usePolling(eventsRequest, dataFetchInterval, loadingHandler, forceRefresh);
+        return <div>{isBlockingPollingError(error) ? 'events error page' : 'events content'}</div>;
+    };
+    return {
+        ProcessStatusActivity: () => (
+            <div>
+                retained routed content
+                <input aria-label="Tab state" defaultValue="" />
+            </div>
+        ),
+        ProcessAnsibleActivity: () => null,
+        ProcessAttachmentsActivity: () => null,
+        ProcessChildrenActivity: () => null,
+        ProcessEventsActivity,
+        ProcessHistoryActivity: () => null,
+        ProcessLogActivity: () => null,
+        ProcessLogActivityV2: () => null,
+        ProcessWaitActivity: () => null,
+    };
+});
 vi.mock('../../../pages', () => ({ NotFoundPage: () => null }));
 vi.mock('../../../molecules', async () => ({
     RequestErrorMessage: (await import('../../../molecules/RequestErrorMessage')).default,
@@ -234,4 +251,75 @@ test('removes the banner after automatic polling recovers without remounting the
     expect(screen.queryByText('Temporary failure')).toBeNull();
     expect((screen.getByLabelText('Tab state') as HTMLInputElement).value).toBe('keep me');
     expect(vi.mocked(get)).toHaveBeenCalledTimes(3);
+});
+
+test('shows a tab polling error in the page banner while the process request succeeds', async () => {
+    vi.useFakeTimers();
+    vi.mocked(get).mockResolvedValue(process);
+    eventsRequest
+        .mockResolvedValueOnce(true)
+        .mockRejectedValueOnce({ status: 503, message: 'Service Unavailable (503)' })
+        .mockResolvedValue(true);
+    render(
+        <MemoryRouter initialEntries={['/events']}>
+            <ProcessActivity instanceId="process-id" activeTab="events" />
+        </MemoryRouter>
+    );
+    await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(screen.getByText('events content')).toBeTruthy();
+    expect(screen.queryByText('Service Unavailable (503)')).toBeNull();
+
+    await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000);
+    });
+    expect(screen.getByText('Service Unavailable (503)')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeTruthy();
+    expect(screen.getByText('events content')).toBeTruthy();
+
+    await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000);
+    });
+    expect(screen.queryByText('Service Unavailable (503)')).toBeNull();
+    expect(screen.getByText('events content')).toBeTruthy();
+});
+
+test('shows a single banner when both the process and the tab fail', async () => {
+    vi.useFakeTimers();
+    vi.mocked(get)
+        .mockResolvedValueOnce(process)
+        .mockRejectedValueOnce({ status: 502, message: 'Process poll failed (502)' })
+        .mockResolvedValue(process);
+    eventsRequest
+        .mockResolvedValueOnce(true)
+        .mockRejectedValueOnce({ status: 502, message: 'Events poll failed (502)' })
+        .mockResolvedValue(true);
+    render(
+        <MemoryRouter initialEntries={['/events']}>
+            <ProcessActivity instanceId="process-id" activeTab="events" />
+        </MemoryRouter>
+    );
+    await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+    });
+    await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000);
+    });
+    expect(screen.getByText('Process poll failed (502)')).toBeTruthy();
+    expect(screen.queryByText('Events poll failed (502)')).toBeNull();
+    expect(screen.getAllByRole('button', { name: 'Retry' })).toHaveLength(1);
+});
+
+test('does not report a blocking tab error to the page banner', async () => {
+    vi.mocked(get).mockResolvedValue(process);
+    eventsRequest.mockRejectedValue({ status: 503, message: 'Initial events failure' });
+    render(
+        <MemoryRouter initialEntries={['/events']}>
+            <ProcessActivity instanceId="process-id" activeTab="events" />
+        </MemoryRouter>
+    );
+    expect(await screen.findByText('events error page')).toBeTruthy();
+    expect(screen.queryByText('Initial events failure')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
 });
