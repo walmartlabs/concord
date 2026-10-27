@@ -25,7 +25,7 @@ import { ProcessWaitList } from '../../molecules';
 import { useState } from 'react';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { useCallback } from 'react';
-import { usePolling } from '../../../api/usePolling';
+import { isBlockingPollingError, usePolling } from '../../../api/usePolling';
 import { ConcordId } from '../../../api/common';
 
 interface ExternalProps {
@@ -54,7 +54,7 @@ const ProcessWaitActivity = ({
 
     const error = usePolling(fetchData, dataFetchInterval, loadingHandler, forceRefresh);
 
-    if (error) {
+    if (isBlockingPollingError(error)) {
         return <RequestErrorActivity error={error} />;
     }
 
