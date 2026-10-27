@@ -19,12 +19,12 @@
  */
 
 import { ProcessWaitEntry } from '../';
-import { ConcordId, managedFetch } from '../../common';
+import { ConcordId, managedFetch, readBody } from '../../common';
 
 export const get = async (instanceId: ConcordId): Promise<ProcessWaitEntry | undefined> => {
     const response = await managedFetch(`/api/v1/process/${instanceId}/waits`);
     if (response.status === 204) {
         return undefined;
     }
-    return response.json();
+    return readBody(response, (r) => r.json());
 };

@@ -316,14 +316,28 @@ export const parseNestedQueryParams = (params: QueryParams, keys: string[]): Que
     return result;
 };
 
-export const fetchJson = async <T>(uri: string, init?: RequestInit): Promise<T> => {
-    const response = await managedFetch(uri, init);
+/**
+ * Reads a successful response body. Malformed JSON keeps the HTTP status; a body that cannot be
+ * read at all, e.g. because the connection dropped mid-response, is a network failure (status 0).
+ */
+export const readBody = async <T>(
+    response: Response,
+    read: (response: Response) => Promise<T>
+): Promise<T> => {
     try {
-        return await response.json();
+        return await read(response);
     } catch (error) {
         if (isAbortError(error)) throw error;
-        throw responseError(response, 'Invalid JSON response');
+        if (error instanceof SyntaxError) {
+            throw responseError(response, 'Invalid JSON response');
+        }
+        throw toRequestError(error);
     }
+};
+
+export const fetchJson = async <T>(uri: string, init?: RequestInit): Promise<T> => {
+    const response = await managedFetch(uri, init);
+    return readBody(response, (r) => r.json());
 };
 
 const wait = (delayMs: number) =>
