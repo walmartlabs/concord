@@ -20,7 +20,7 @@
 import * as React from 'react';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { usePolling } from '../usePolling';
+import { isBlockingPollingError, PollingError, usePolling } from '../usePolling';
 
 const loading = vi.fn();
 const Harness = ({
@@ -68,10 +68,10 @@ test.each([0, 408, 429, 500, 502, 503, 504])(
     }
 );
 
-test('recovers from a network exception on the initial request', async () => {
+test('recovers from a network failure on the initial request', async () => {
     const request = vi
         .fn()
-        .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+        .mockRejectedValueOnce({ status: 0, message: 'Failed to fetch (0)' })
         .mockResolvedValueOnce(false);
     render(<Harness request={request} />);
     await advance();
@@ -80,7 +80,39 @@ test('recovers from a network exception on the initial request', async () => {
     expect(screen.getByText('healthy')).toBeTruthy();
 });
 
-test.each([400, 401, 403, 404])('does not automatically retry status %s', async (status) => {
+test('reports whether the failed request is being retried', async () => {
+    let error: PollingError | undefined;
+    const Probe = ({ request }: { request: () => Promise<boolean> }) => {
+        error = usePolling(request, 1000, loading, false);
+        return null;
+    };
+    const view = render(<Probe request={vi.fn().mockRejectedValue({ status: 502 })} />);
+    await advance();
+    expect(error).toMatchObject({ status: 502, retrying: true, loaded: false });
+    expect(isBlockingPollingError(error)).toBe(true);
+
+    const request = vi.fn().mockResolvedValueOnce(true).mockRejectedValue({ status: 503 });
+    view.rerender(<Probe request={request} />);
+    await advance();
+    await advance(1000);
+    expect(error).toMatchObject({ status: 503, retrying: true, loaded: true });
+    expect(isBlockingPollingError(error)).toBe(false);
+
+    view.rerender(<Probe request={vi.fn().mockRejectedValue({ status: 404 })} />);
+    await advance();
+    expect(error).toMatchObject({ status: 404, retrying: false, loaded: true });
+    expect(isBlockingPollingError(error)).toBe(true);
+});
+
+test('does not retry an unexpected client-side exception', async () => {
+    const request = vi.fn().mockRejectedValue(new TypeError('Cannot read properties'));
+    render(<Harness request={request} />);
+    await advance(5000);
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('Cannot read properties (0)')).toBeTruthy();
+});
+
+test.each([400, 401, 403, 404, 501])('does not automatically retry status %s', async (status) => {
     const request = vi.fn().mockRejectedValue({ status, message: 'rejected' });
     render(<Harness request={request} />);
     await advance(5000);

@@ -61,6 +61,20 @@ export const responseError = (
 const isAbortError = (error: unknown): boolean =>
     (error instanceof Error || error instanceof DOMException) && error.name === 'AbortError';
 
+const TRANSIENT_STATUSES = new Set([0, 408, 429, 500, 502, 503, 504]);
+
+/**
+ * Whether a thrown value is an API error worth retrying. Only errors produced by the API layer
+ * qualify: a plain Error is a client-side bug and would be retried forever.
+ */
+export const isTransientRequestError = (error: unknown): boolean => {
+    if (typeof error !== 'object' || error === null || error instanceof Error) {
+        return false;
+    }
+    const status = (error as Partial<RequestErrorData>).status;
+    return typeof status === 'number' && TRANSIENT_STATUSES.has(status);
+};
+
 export const toRequestError = (error: unknown): RequestErrorData => {
     if (typeof error === 'object' && error !== null) {
         const value = error as Partial<RequestErrorData>;

@@ -18,16 +18,28 @@
  * =====
  */
 import { useEffect, useRef, useState } from 'react';
-import { RequestError, toRequestError } from './common';
+import { isTransientRequestError, RequestErrorData, toRequestError } from './common';
+
+export interface PollingError extends RequestErrorData {
+    /** The hook keeps polling after this error. */
+    retrying: boolean;
+    /** An earlier request succeeded, so the caller has data to keep showing. */
+    loaded: boolean;
+}
+
+/** Whether the error should replace loaded content rather than wait for the next poll. */
+export const isBlockingPollingError = (error?: PollingError): error is PollingError =>
+    !!error && !(error.retrying && error.loaded);
 
 export const usePolling = (
     request: () => Promise<boolean>,
     interval: number,
     loadingHandler: (inc: number) => void,
     refresh: boolean
-): RequestError | undefined => {
+): PollingError | undefined => {
     const poll = useRef<number | undefined>(undefined);
-    const [error, setError] = useState<RequestError>();
+    const loaded = useRef(false);
+    const [error, setError] = useState<PollingError>();
 
     useEffect(() => {
         let cancelled = false;
@@ -39,21 +51,15 @@ export const usePolling = (
             try {
                 result = await request();
 
-                if (!cancelled) setError(undefined);
+                if (!cancelled) {
+                    loaded.current = true;
+                    setError(undefined);
+                }
             } catch (e) {
                 if (!cancelled) {
-                    const error = toRequestError(e);
-                    setError(error);
-                    const aborted =
-                        (e instanceof Error || e instanceof DOMException) &&
-                        e.name === 'AbortError';
                     // Retry transient failures using the configured polling interval.
-                    result =
-                        !aborted &&
-                        (error.status === 0 ||
-                            error.status === 408 ||
-                            error.status === 429 ||
-                            (error.status >= 500 && error.status < 600));
+                    result = isTransientRequestError(e);
+                    setError({ ...toRequestError(e), retrying: result, loaded: loaded.current });
                 }
             } finally {
                 if (!cancelled) {
