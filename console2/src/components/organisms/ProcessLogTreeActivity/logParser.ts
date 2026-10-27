@@ -42,14 +42,18 @@ const parseTimestamp = (s: string): number | undefined => {
     return Number.isNaN(t) ? undefined : t;
 };
 
-export const parseLog = (text: string, firstLineNumber = 1): LogLine[] => {
+export const parseLog = (
+    text: string,
+    firstLineNumber = 1,
+    initialLevel?: LogLevel
+): LogLine[] => {
     if (text.length === 0) {
         return [];
     }
 
     const raw = text.endsWith('\n') ? text.substring(0, text.length - 1) : text;
     const result: LogLine[] = [];
-    let level: LogLevel | undefined;
+    let level = initialLevel;
     raw.split('\n').forEach((l, idx) => {
         const line = l.endsWith('\r') ? l.substring(0, l.length - 1) : l;
         const m = LINE_RE.exec(line);
@@ -61,6 +65,70 @@ export const parseLog = (text: string, firstLineNumber = 1): LogLine[] => {
         }
     });
     return result;
+};
+
+export interface ParsedLog {
+    before: number;
+    after: number;
+    textLength: number;
+    // Raw characters of the last, unterminated line, including a possible trailing CR.
+    partialLength: number;
+    nextOffset: number;
+    lines: LogLine[];
+}
+
+/**
+ * The loader only prepends or appends immutable log pages. An unchanged start cursor lets us
+ * reuse complete lines on append; loading earlier history rebuilds their numbers and levels.
+ */
+export const parseLogWindow = (
+    text: string,
+    before: number,
+    after: number,
+    previous?: ParsedLog
+): ParsedLog => {
+    if (
+        previous &&
+        before === previous.before &&
+        after === previous.after &&
+        text.length === previous.textLength
+    ) {
+        return previous;
+    }
+
+    const appended =
+        previous &&
+        before === previous.before &&
+        after > previous.after &&
+        text.length >= previous.textLength
+            ? previous
+            : undefined;
+    const kept = appended ? appended.lines.length - (appended.partialLength > 0 ? 1 : 0) : 0;
+    const suffix = text.substring(appended ? appended.textLength - appended.partialLength : 0);
+    // Detach the suffix before caching line substrings, so they don't retain old full-log buffers.
+    const tail = (' ' + suffix).slice(1);
+    let offset = appended
+        ? appended.partialLength > 0
+            ? appended.lines[kept].offset!
+            : appended.nextOffset
+        : before;
+    const level = appended && kept > 0 ? appended.lines[kept - 1].level : undefined;
+    const rawLines = tail.split('\n');
+    const encoder = new TextEncoder();
+    const added = parseLog(tail, kept + 1, level).map((line, i) => {
+        const result = { ...line, offset };
+        offset += encoder.encode(rawLines[i] + (i < rawLines.length - 1 ? '\n' : '')).length;
+        return result;
+    });
+
+    return {
+        before,
+        after,
+        textLength: text.length,
+        partialLength: tail.length - tail.lastIndexOf('\n') - 1,
+        nextOffset: offset,
+        lines: appended ? appended.lines.slice(0, kept).concat(added) : added,
+    };
 };
 
 export type LogItem<T> = { line: LogLine } | { marker: T };

@@ -30,8 +30,8 @@ import type { ProcessStatus } from '../../../api/process';
 import { getFullSegmentLog, LogTooLargeError, SegmentStatus } from '../../../api/process/log';
 import RequestErrorMessage from '../../molecules/RequestErrorMessage';
 import { SegmentStatusIcon } from './LogSegmentTree';
-import { buildLogFlow, parseLog, splitLinks } from './logParser';
-import type { FlowItem, FlowSegment, LogLine } from './logParser';
+import { buildLogFlow, parseLogWindow, splitLinks } from './logParser';
+import type { FlowItem, FlowSegment, LogLine, ParsedLog } from './logParser';
 import { describeNode } from './segmentTree';
 import type { SegmentNode } from './segmentTree';
 
@@ -216,7 +216,7 @@ const SelectedLogView = ({
     const [copyState, setCopyState] = useState<CopyState>('idle');
     const bottomRef = useRef<HTMLDivElement>(null);
     const parsed = useRef(
-        new Map<number, { text: string; after: number; loaded: boolean; lines: LogLine[] }>()
+        new Map<number, { parsed: ParsedLog; loaded: boolean }>()
     );
     const appendedWhileReading = useRef(new Map<number, number>());
     if (opts.follow) appendedWhileReading.current.clear();
@@ -278,35 +278,25 @@ const SelectedLogView = ({
 
     const linesOf = (id: number): LogLine[] => {
         const log = logs.get(id);
-        const text = log.text;
         const cached = parsed.current.get(id);
-        if (cached && cached.text === text && cached.loaded === log.loaded) {
-            return cached.lines;
+        const next = parseLogWindow(log.text, log.before, log.after, cached?.parsed);
+        if (cached && cached.parsed === next && cached.loaded === log.loaded) {
+            return next.lines;
         }
-        let offset = logs.get(id).before;
-        const rawLines = text.split('\n');
-        const encoder = new TextEncoder();
-        const lines = parseLog(text).map((line, i) => {
-            const result = { ...line, offset };
-            offset += encoder.encode(rawLines[i] + '\n').length;
-            return result;
-        });
         // Keep the start of the visible window fixed while the user reads history.
         // An append adds rows at the bottom; it must not evict earlier visible rows.
-        if (!opts.follow && cached?.loaded && log.after > cached.after) {
+        if (!opts.follow && cached?.loaded && log.after > cached.parsed.after) {
             appendedWhileReading.current.set(
                 id,
                 (appendedWhileReading.current.get(id) ?? 0) +
-                    Math.max(0, lines.length - cached.lines.length)
+                    Math.max(0, next.lines.length - cached.parsed.lines.length)
             );
         }
         parsed.current.set(id, {
-            text,
-            after: log.after,
+            parsed: next,
             loaded: log.loaded,
-            lines,
         });
-        return lines;
+        return next.lines;
     };
 
     const toFlow = (current: FlowTreeNode): FlowSegment<SegmentNode> => ({

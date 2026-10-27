@@ -80,6 +80,26 @@ afterEach(() => {
 });
 
 describe('independent log history', () => {
+    test('completes an appended partial line and keeps byte anchors and levels', async () => {
+        const first = '2026-09-26T01:37:31.071+0000 [ERROR] ошибка';
+        const appended = '\r\n\tat run()\n2026-09-26T01:37:32.000+0000 DOCKER: done\n';
+        const bytes = (text: string) => new TextEncoder().encode(text).length;
+        vi.mocked(getSegmentLogPage)
+            .mockResolvedValueOnce(result(first, 0, bytes(first)))
+            .mockResolvedValueOnce(result(appended, bytes(first), bytes(first + appended)));
+        const selected = root();
+        const view = render(viewOf(selected));
+        await screen.findByText('ошибка');
+        view.rerender(<LogView {...props} node={selected} forceRefresh={true} />);
+        await screen.findByText('DOCKER: done');
+
+        const lines = view.container.querySelectorAll('.LogLine');
+        expect(lines).toHaveLength(3);
+        expect(lines[0].getAttribute('data-anchor')).toBe('l1:0');
+        expect(lines[1].getAttribute('data-anchor')).toBe(`l1:${bytes(first + '\r\n')}`);
+        expect(lines[1].classList.contains('Level-ERROR')).toBe(true);
+        expect(lines[2].classList.contains('Level-ERROR')).toBe(false);
+    });
     test('polls the system log until completion and reads its final output', async () => {
         vi.useFakeTimers();
         localStorage.setItem('logTree.logOpts', JSON.stringify({ follow: false }));
