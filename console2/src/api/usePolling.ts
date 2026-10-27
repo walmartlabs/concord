@@ -18,7 +18,7 @@
  * =====
  */
 import { useEffect, useRef, useState } from 'react';
-import { RequestError } from './common';
+import { RequestError, toRequestError } from './common';
 
 export const usePolling = (
     request: () => Promise<boolean>,
@@ -39,16 +39,29 @@ export const usePolling = (
             try {
                 result = await request();
 
-                setError(undefined);
+                if (!cancelled) setError(undefined);
             } catch (e) {
-                setError(e);
+                if (!cancelled) {
+                    const error = toRequestError(e);
+                    setError(error);
+                    const aborted =
+                        (e instanceof Error || e instanceof DOMException) &&
+                        e.name === 'AbortError';
+                    // Retry transient failures using the configured polling interval.
+                    result =
+                        !aborted &&
+                        (error.status === 0 ||
+                            error.status === 408 ||
+                            error.status === 429 ||
+                            (error.status >= 500 && error.status < 600));
+                }
             } finally {
-                if (result) {
-                    if (!cancelled) {
+                if (!cancelled) {
+                    if (result) {
                         poll.current = window.setTimeout(() => fetchData(), interval);
+                    } else {
+                        stopPolling();
                     }
-                } else {
-                    stopPolling();
                 }
 
                 loadingHandler(-1);
