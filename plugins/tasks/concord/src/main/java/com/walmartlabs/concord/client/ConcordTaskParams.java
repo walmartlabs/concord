@@ -24,8 +24,6 @@ import com.walmartlabs.concord.client2.CreateApiKeyRequest;
 import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -194,9 +192,9 @@ public class ConcordTaskParams {
             } else if (v instanceof Date) {
                 Calendar c = Calendar.getInstance();
                 c.setTime((Date) v);
-                return toIsoString(c);
+                return CalendarFormat.format(c);
             } else if (v instanceof Calendar) {
-                return toIsoString((Calendar) v);
+                return CalendarFormat.format((Calendar) v);
             } else {
                 throw new IllegalArgumentException("'" + START_AT_KEY + "' must be a string, java.util.Date or java.util.Calendar value. Got: " + v);
             }
@@ -528,10 +526,6 @@ public class ConcordTaskParams {
         } else {
             throw new IllegalArgumentException("'" + key + "' must a single string value or an array of strings: " + v);
         }
-    }
-
-    private static String toIsoString(Calendar c) {
-        return DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(OffsetDateTime.ofInstant(c.toInstant(), c.getTimeZone().toZoneId()));
     }
 
     public enum Action {
