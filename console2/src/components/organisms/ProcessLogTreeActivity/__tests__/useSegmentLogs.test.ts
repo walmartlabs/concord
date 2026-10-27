@@ -62,6 +62,45 @@ const flush = async () => {
 };
 
 describe('SegmentLogLoader pages', () => {
+    test.each(['initial', 'previous', 'append'] as const)(
+        'accounts for %s pages and evictions while keeping cached logs within the limit',
+        async (mode) => {
+            const { calls, fetch } = controlledFetch();
+            const loader = new SegmentLogLoader('p', vi.fn(), fetch);
+            const chunk = 'x'.repeat(4 * 1024 * 1024);
+            loader.reconcile([request(1)]);
+            calls[0].resolve(page(chunk));
+            await flush();
+
+            loader.reconcile([request(2)]);
+            calls[1].resolve(page(mode === 'initial' ? chunk + 'x' : chunk, 1));
+            await flush();
+            if (mode !== 'initial') {
+                // Exactly 8 Mi characters: the old log must still be cached.
+                expect(loader.get(1).loaded).toBe(true);
+                if (mode === 'previous') loader.previous(2);
+                else loader.refresh();
+                const cursor = mode === 'previous' ? 0 : chunk.length + 1;
+                calls[2].resolve(page('x', cursor));
+                await flush();
+            }
+            expect(loader.get(1).loaded).toBe(false);
+            expect(loader.get(2).text.length).toBe(chunk.length + 1);
+
+            // Evicted text no longer counts against subsequent cached logs.
+            loader.reconcile([request(2), request(3)]);
+            calls[calls.length - 1].resolve(page('y'.repeat(3 * 1024 * 1024)));
+            await flush();
+            loader.reconcile([request(2)]);
+            expect(loader.get(3).loaded).toBe(true);
+            const count = calls.length;
+            loader.reconcile([request(3)]);
+            expect(calls).toHaveLength(count);
+            expect(loader.get(2).loaded).toBe(true);
+            loader.dispose();
+        }
+    );
+
     test('resumes polling a cached completed segment after checkpoint restore', async () => {
         const { calls, fetch } = controlledFetch();
         const loader = new SegmentLogLoader('p', vi.fn(), fetch);

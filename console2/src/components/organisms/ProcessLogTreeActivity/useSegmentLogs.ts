@@ -75,6 +75,7 @@ export class SegmentLogLoader {
     private active = new Map<number, ActiveRequest>();
     private disposed = false;
     private clock = 0;
+    private cacheChars = 0;
 
     constructor(
         private readonly instanceId: ConcordId,
@@ -198,6 +199,7 @@ export class SegmentLogLoader {
         this.fetchPage(this.instanceId, id, query, active.controller.signal)
             .then((page) => {
                 if (active.controller.signal.aborted || this.disposed) return;
+                const previousLength = entry.text.length;
                 if (mode === 'initial') {
                     entry.text = page.text;
                     entry.before = page.before;
@@ -213,6 +215,7 @@ export class SegmentLogLoader {
                     entry.text += page.text;
                     entry.after = page.after;
                 }
+                this.cacheChars += entry.text.length - previousLength;
                 entry.loaded = true;
                 entry.error = undefined;
                 if (page.text) entry.revision++;
@@ -238,14 +241,14 @@ export class SegmentLogLoader {
             });
     }
     private trim() {
-        let size = [...this.entries.values()].reduce((sum, e) => sum + e.text.length, 0);
+        if (this.cacheChars <= MAX_CACHE_CHARS) return;
         const candidates = [...this.entries]
             .filter(([id]) => !this.desired.has(id) && !this.active.has(id))
             .sort((a, b) => a[1].lastUsed - b[1].lastUsed);
         for (const [id, entry] of candidates) {
-            if (size <= MAX_CACHE_CHARS) break;
+            if (this.cacheChars <= MAX_CACHE_CHARS) break;
             this.entries.delete(id);
-            size -= entry.text.length;
+            this.cacheChars -= entry.text.length;
         }
     }
 }
