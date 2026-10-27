@@ -41,9 +41,13 @@ import {
 import ProcessToolbar from './Toolbar';
 import { usePolling } from '../../../api/usePolling';
 import RequestErrorActivity from '../RequestErrorActivity';
+import RequestErrorMessage from '../../molecules/RequestErrorMessage';
+
 import { useStatusFavicon } from './favicon';
 import { gitUrlParse } from '../../molecules/GitHubLink';
 import { useIdleTimer } from 'react-idle-timer';
+
+import './styles.css';
 
 export type TabLink =
     | 'status'
@@ -106,7 +110,7 @@ const buildDefinitionLinkBase = (process?: ProcessEntry) => {
     }
 };
 
-const ProcessActivity = (props: ExternalProps) => {
+const ProcessActivityView = (props: ExternalProps) => {
     const stickyRef = useRef(null);
 
     const [loading, setLoading] = useState<boolean>(false);
@@ -167,7 +171,10 @@ const ProcessActivity = (props: ExternalProps) => {
 
     const error = usePolling(fetchData, dataFetchInterval, loadingHandler, refresh);
 
-    if (error) {
+    const transientError =
+        error &&
+        (error.status === 0 || error.status === 408 || error.status === 429 || error.status >= 500);
+    if (error && (!process || !transientError)) {
         return <RequestErrorActivity error={error} />;
     }
 
@@ -185,6 +192,15 @@ const ProcessActivity = (props: ExternalProps) => {
                 refresh={refreshHandler}
                 stickyRef={stickyRef}
             />
+
+            {error && (
+                <div className="ProcessPollError">
+                    <RequestErrorMessage error={error} />
+                    <button type="button" onClick={refreshHandler}>
+                        Retry
+                    </button>
+                </div>
+            )}
 
             <Menu tabular={true} style={{ marginTop: 0 }}>
                 <Menu.Item active={activeTab === 'status'}>
@@ -340,5 +356,9 @@ const ProcessActivity = (props: ExternalProps) => {
         </div>
     );
 };
+
+const ProcessActivity = (props: ExternalProps) => (
+    <ProcessActivityView key={props.instanceId} {...props} />
+);
 
 export default ProcessActivity;
