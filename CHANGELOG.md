@@ -24,7 +24,9 @@ github-app-installation: stop caching token-fetch failures as "no auth"
 - docker-images: stage artifacts directly, omit .tar.gz
 ([#1397](https://github.com/walmartlabs/concord/pull/1397));
 - concord-repository: fix askpass handling after redirects
-([#1405](https://github.com/walmartlabs/concord/pull/1405)).
+([#1405](https://github.com/walmartlabs/concord/pull/1405));
+- console2: preserve API error messages and HTTP status
+([#1406](https://github.com/walmartlabs/concord/pull/1406)).
 
 
 
