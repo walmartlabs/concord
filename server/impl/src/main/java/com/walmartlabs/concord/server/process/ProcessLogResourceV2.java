@@ -155,7 +155,7 @@ public class ProcessLogResourceV2 implements Resource {
     @Path("/{id}/log/segment/{segmentId}/data/page")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    @Operation(description = "Read lossless Base64-encoded segment bytes. Decode and concatenate bytes before UTF-8 decoding, including incomplete trailing characters while tailing. Byte limits round to stored blocks; cursors are scoped to the segment.", operationId = "getProcessLogSegmentPage")
+    @Operation(description = "Read Base64-encoded segment bytes. Decode and concatenate bytes before UTF-8 decoding, including incomplete trailing characters while tailing. Byte limits round to stored blocks; cursors are scoped to the segment.", operationId = "getProcessLogSegmentPage")
     public LogSegmentDataPage page(@PathParam("id") UUID instanceId,
                                    @PathParam("segmentId") long segmentId,
                                    @QueryParam("before") Integer before,
