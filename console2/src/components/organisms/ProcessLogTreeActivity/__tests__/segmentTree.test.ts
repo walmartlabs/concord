@@ -237,7 +237,7 @@ describe('the recorded tree', () => {
     test('a failure inside a failed step stays failed', () => {
         const tree = buildSegmentTree([
             seg(1, undefined, { kind: STEP, status: FAILED }),
-            seg(2, 1, { kind: PARALLEL, status: FAILED }),
+            seg(2, 1, { kind: PARALLEL, status: FAILED, name: 'parallel' }),
             seg(3, 2, { kind: STEP, status: FAILED }),
         ]);
         expect(isFailure(tree.byId.get(3)!)).toBe(true);
@@ -325,4 +325,14 @@ test('flattened loop retries retain independent iteration and attempt indices', 
         note: 'item #1 · attempt 1',
     });
     expect(describeNode(tree.byId.get(1)!)).toMatchObject({ loop: true });
+});
+
+test('preserves the custom name of a parallel block beside its badge', () => {
+    const tree = buildSegmentTree([
+        seg(1, undefined, { kind: PARALLEL, name: 'Deploy us-west-2' }),
+    ]);
+    expect(describeNode(tree.byId.get(1)!)).toEqual({
+        name: 'Deploy us-west-2',
+        kind: 'parallel',
+    });
 });

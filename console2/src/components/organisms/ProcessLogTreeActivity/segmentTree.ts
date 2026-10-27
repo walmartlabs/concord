@@ -218,7 +218,9 @@ export const describeNode = (n: SegmentNode): NodeDescription => {
         case 'error':
             return { name: 'Error handler', kind: 'error handler', badgeOnly: true };
         case 'parallel':
-            return { name: 'Parallel', kind: 'parallel', badgeOnly: true };
+            return s.name === 'parallel'
+                ? { name: 'Parallel', kind: 'parallel', badgeOnly: true }
+                : { name: s.name, kind: 'parallel' };
         case 'attempt': {
             const labels = [];
             if (s.iterationIndex != null) labels.push(`item #${s.iterationIndex + 1}`);
