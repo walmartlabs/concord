@@ -43,17 +43,28 @@
     color: #888888;
 }
 
-.ProcessPollError {
-    position: relative;
-}
-
-.ProcessPollError .ui.message {
+.ProcessPollError.ui.message {
+    margin-top: 0;
     margin-bottom: 1rem;
-    padding-right: 72px;
 }
 
-.ProcessPollError > .ui.button {
-    position: absolute;
-    top: 12px;
-    right: 14px;
+.ProcessPollError .ProcessPollErrorCause {
+    margin-top: 0.25em;
+    color: #888888;
+    font-size: 0.9em;
+}
+
+.ProcessPollError .ProcessPollErrorRetry {
+    padding: 0;
+    border: none;
+    background: none;
+    color: #4183c4;
+    font: inherit;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.ProcessPollError .ProcessPollErrorRetry:hover {
+    color: #1e70bf;
+    text-decoration: underline;
 }

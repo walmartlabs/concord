@@ -127,13 +127,16 @@ test.each([0, 408, 429, 500, 502, 503])(
         expect(screen.getByText('retained routed content')).toBeTruthy();
 
         fireEvent.click(screen.getByRole('button', { name: 'Toolbar refresh' }));
-        expect(await screen.findByText('Bad Gateway (502)')).toBeTruthy();
-        expect(screen.getByText('Temporarily unavailable')).toBeTruthy();
+        expect(await screen.findByText('Unable to refresh the process status')).toBeTruthy();
+        expect(screen.getByText('Last error: Bad Gateway (502)')).toBeTruthy();
+        expect(screen.getByText(/Retrying automatically every 5 seconds/)).toBeTruthy();
+        // Details can be an arbitrarily long proxy body.
+        expect(screen.queryByText('Temporarily unavailable')).toBeNull();
         expect(screen.getByText('retained routed content')).toBeTruthy();
 
-        fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+        fireEvent.click(screen.getByRole('button', { name: 'retry now' }));
         await waitFor(() => expect(vi.mocked(get)).toHaveBeenCalledTimes(3));
-        expect(screen.queryByText('Bad Gateway (502)')).toBeNull();
+        expect(screen.queryByText('Last error: Bad Gateway (502)')).toBeNull();
         expect(screen.getByText('retained routed content')).toBeTruthy();
     }
 );
@@ -174,7 +177,7 @@ test('redirects an expired session to login after process content was loaded', a
 
     expect(await screen.findByText('/login')).toBeTruthy();
     expect(screen.queryByText('retained routed content')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'retry now' })).toBeNull();
 });
 
 test.each([403, 404])('replaces loaded content after status %s', async (status) => {
@@ -190,7 +193,7 @@ test.each([403, 404])('replaces loaded content after status %s', async (status) 
     fireEvent.click(screen.getByRole('button', { name: 'Toolbar refresh' }));
     expect(await screen.findByText('Access unavailable')).toBeTruthy();
     expect(screen.queryByText('retained routed content')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'retry now' })).toBeNull();
 });
 
 test('does not retain the previous process when navigating to another instance', async () => {
@@ -222,7 +225,7 @@ test('shows an error page when the initial request fails', async () => {
     );
     expect(await screen.findByText('Initial failure')).toBeTruthy();
     expect(screen.queryByText('retained routed content')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'retry now' })).toBeNull();
 });
 
 test('removes the banner after automatic polling recovers without remounting the tab', async () => {
@@ -243,12 +246,12 @@ test('removes the banner after automatic polling recovers without remounting the
     await act(async () => {
         await vi.advanceTimersByTimeAsync(5000);
     });
-    expect(screen.getByText('Temporary failure')).toBeTruthy();
+    expect(screen.getByText('Last error: Temporary failure')).toBeTruthy();
     expect((screen.getByLabelText('Tab state') as HTMLInputElement).value).toBe('keep me');
     await act(async () => {
         await vi.advanceTimersByTimeAsync(5000);
     });
-    expect(screen.queryByText('Temporary failure')).toBeNull();
+    expect(screen.queryByText('Last error: Temporary failure')).toBeNull();
     expect((screen.getByLabelText('Tab state') as HTMLInputElement).value).toBe('keep me');
     expect(vi.mocked(get)).toHaveBeenCalledTimes(3);
 });
@@ -269,19 +272,20 @@ test('shows a tab polling error in the page banner while the process request suc
         await vi.advanceTimersByTimeAsync(0);
     });
     expect(screen.getByText('events content')).toBeTruthy();
-    expect(screen.queryByText('Service Unavailable (503)')).toBeNull();
+    expect(screen.queryByText('Last error: Service Unavailable (503)')).toBeNull();
 
     await act(async () => {
         await vi.advanceTimersByTimeAsync(5000);
     });
-    expect(screen.getByText('Service Unavailable (503)')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Retry' })).toBeTruthy();
+    expect(screen.getByText('Unable to refresh the Events tab')).toBeTruthy();
+    expect(screen.getByText('Last error: Service Unavailable (503)')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'retry now' })).toBeTruthy();
     expect(screen.getByText('events content')).toBeTruthy();
 
     await act(async () => {
         await vi.advanceTimersByTimeAsync(5000);
     });
-    expect(screen.queryByText('Service Unavailable (503)')).toBeNull();
+    expect(screen.queryByText('Last error: Service Unavailable (503)')).toBeNull();
     expect(screen.getByText('events content')).toBeTruthy();
 });
 
@@ -306,9 +310,11 @@ test('shows a single banner when both the process and the tab fail', async () =>
     await act(async () => {
         await vi.advanceTimersByTimeAsync(5000);
     });
-    expect(screen.getByText('Process poll failed (502)')).toBeTruthy();
-    expect(screen.queryByText('Events poll failed (502)')).toBeNull();
-    expect(screen.getAllByRole('button', { name: 'Retry' })).toHaveLength(1);
+    expect(screen.getByText('Unable to refresh the process')).toBeTruthy();
+    expect(screen.getByText(/The data on this page may be out of date/)).toBeTruthy();
+    expect(screen.getByText('Last error: Process poll failed (502)')).toBeTruthy();
+    expect(screen.queryByText(/Events poll failed/)).toBeNull();
+    expect(screen.getAllByRole('button', { name: 'retry now' })).toHaveLength(1);
 });
 
 test('does not report a blocking tab error to the page banner', async () => {
@@ -321,5 +327,5 @@ test('does not report a blocking tab error to the page banner', async () => {
     );
     expect(await screen.findByText('events error page')).toBeTruthy();
     expect(screen.queryByText('Initial events failure')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'retry now' })).toBeNull();
 });

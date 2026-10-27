@@ -22,7 +22,7 @@ import * as React from 'react';
 import { useCallback, useRef, useState, useEffect } from 'react';
 
 import { Link, Navigate, Route, Routes } from 'react-router';
-import { Button, Icon, Menu } from 'semantic-ui-react';
+import { Icon, Menu } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
 import { get as apiGet, getRoot as apiGetRoot, isFinal, ProcessEntry } from '../../../api/process';
@@ -46,7 +46,7 @@ import {
     usePolling,
 } from '../../../api/usePolling';
 import RequestErrorActivity from '../RequestErrorActivity';
-import RequestErrorMessage from '../../molecules/RequestErrorMessage';
+import PollErrorBanner from './PollErrorBanner';
 
 import { useStatusFavicon } from './favicon';
 import { gitUrlParse } from '../../molecules/GitHubLink';
@@ -69,6 +69,17 @@ interface ExternalProps {
     instanceId: ConcordId;
     activeTab: TabLink;
 }
+
+const TAB_LABELS: Record<NonNullable<TabLink>, string> = {
+    status: 'Status',
+    ansible: 'Ansible',
+    log: 'Logs',
+    events: 'Events',
+    history: 'History',
+    wait: 'Wait Conditions',
+    children: 'Child Processes',
+    attachments: 'Attachments',
+};
 
 const DATA_FETCH_INTERVAL_ACTIVE = 5_000;
 const DATA_FETCH_INTERVAL_IDLE = 60_000;
@@ -191,8 +202,7 @@ const ProcessActivityView = (props: ExternalProps) => {
             return next;
         });
     }, []);
-    // During an outage every poll fails; show the process error rather than one per tab.
-    const bannerError = error ?? Array.from(tabErrors.values())[0];
+    const tabError = Array.from(tabErrors.values())[0];
 
     if (isBlockingPollingError(error)) {
         return <RequestErrorActivity error={error} />;
@@ -213,14 +223,14 @@ const ProcessActivityView = (props: ExternalProps) => {
                 stickyRef={stickyRef}
             />
 
-            {bannerError && (
-                <div className="ProcessPollError">
-                    <RequestErrorMessage error={bannerError} />
-                    <Button basic={true} compact={true} size="small" onClick={refreshHandler}>
-                        Retry
-                    </Button>
-                </div>
-            )}
+            <PollErrorBanner
+                processError={error}
+                tabError={tabError}
+                // Only the active tab is mounted, so a tab error always belongs to it.
+                tabLabel={activeTab ? TAB_LABELS[activeTab] : 'current'}
+                retryInterval={dataFetchInterval}
+                onRetry={refreshHandler}
+            />
 
             <Menu tabular={true} style={{ marginTop: 0 }}>
                 <Menu.Item active={activeTab === 'status'}>
