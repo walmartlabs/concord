@@ -22,7 +22,7 @@ import * as React from 'react';
 import { useCallback, useRef, useState, useEffect } from 'react';
 
 import { Link, Navigate, Route, Routes } from 'react-router';
-import { Icon, Menu } from 'semantic-ui-react';
+import { Button, Icon, Menu } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
 import { get as apiGet, getRoot as apiGetRoot, isFinal, ProcessEntry } from '../../../api/process';
@@ -39,7 +39,7 @@ import {
     ProcessWaitActivity,
 } from '../index';
 import ProcessToolbar from './Toolbar';
-import { usePolling } from '../../../api/usePolling';
+import { isBlockingPollingError, usePolling } from '../../../api/usePolling';
 import RequestErrorActivity from '../RequestErrorActivity';
 import RequestErrorMessage from '../../molecules/RequestErrorMessage';
 
@@ -171,10 +171,7 @@ const ProcessActivityView = (props: ExternalProps) => {
 
     const error = usePolling(fetchData, dataFetchInterval, loadingHandler, refresh);
 
-    const transientError =
-        error &&
-        (error.status === 0 || error.status === 408 || error.status === 429 || error.status >= 500);
-    if (error && (!process || !transientError)) {
+    if (isBlockingPollingError(error)) {
         return <RequestErrorActivity error={error} />;
     }
 
@@ -196,9 +193,9 @@ const ProcessActivityView = (props: ExternalProps) => {
             {error && (
                 <div className="ProcessPollError">
                     <RequestErrorMessage error={error} />
-                    <button type="button" onClick={refreshHandler}>
+                    <Button basic={true} compact={true} size="small" onClick={refreshHandler}>
                         Retry
-                    </button>
+                    </Button>
                 </div>
             )}
 

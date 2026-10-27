@@ -44,7 +44,7 @@ import { PlayInfoEntry, TaskInfoEntry } from './types';
 import TaskProgressLegend from './TaskProgressLegend';
 import PlayInfoList from './PlayInfoList';
 import { get as apiGet, isFinal, ProcessEntry } from '../../../../api/process';
-import { usePolling } from '../../../../api/usePolling';
+import { isBlockingPollingError, usePolling } from '../../../../api/usePolling';
 import { ConcordId } from '../../../../api/common';
 
 import './styles.css';
@@ -221,7 +221,7 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
 
     const error = usePolling(fetchData, dataFetchInterval, loadingHandler, forceRefresh);
 
-    if (error) {
+    if (isBlockingPollingError(error)) {
         return <RequestErrorActivity error={error} />;
     }
 
