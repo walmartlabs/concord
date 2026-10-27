@@ -30,12 +30,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
@@ -918,12 +919,16 @@ public class ConcordTask extends AbstractConcordTask {
         } else if (v instanceof Date) {
             Calendar c = Calendar.getInstance();
             c.setTime((Date) v);
-            return DatatypeConverter.printDateTime(c);
+            return toIsoString(c);
         } else if (v instanceof Calendar) {
-            return DatatypeConverter.printDateTime((Calendar) v);
+            return toIsoString((Calendar) v);
         } else {
             throw new IllegalArgumentException("'" + START_AT_KEY + "' must be a string, java.util.Date or java.util.Calendar value. Got: " + v);
         }
+    }
+
+    private static String toIsoString(Calendar c) {
+        return DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(OffsetDateTime.ofInstant(c.toInstant(), c.getTimeZone().toZoneId()));
     }
 
     private static boolean isFinalStatus(ProcessEntry.StatusEnum s) {
