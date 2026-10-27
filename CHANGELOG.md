@@ -26,8 +26,9 @@ github-app-installation: stop caching token-fetch failures as "no auth"
 - concord-repository: fix askpass handling after redirects
 ([#1405](https://github.com/walmartlabs/concord/pull/1405));
 - console2: preserve API error messages and HTTP status
-([#1406](https://github.com/walmartlabs/concord/pull/1406)).
-
+([#1406](https://github.com/walmartlabs/concord/pull/1406));
+- console2: recover polling after transient API failures
+([#1407](https://github.com/walmartlabs/concord/pull/1407)).
 
 
 ## [2.46.0] - 2026-09-18
