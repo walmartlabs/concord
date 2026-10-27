@@ -90,7 +90,6 @@ export enum SegmentStatus {
     FAILED = 'FAILED',
     RUNNING = 'RUNNING',
     SUSPENDED = 'SUSPENDED',
-    // failed, the "error" block of the step completed
 }
 
 export enum SegmentKind {
