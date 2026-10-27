@@ -20,5 +20,9 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-/** Raw byte cursors scoped to one segment. */
-public record LogSegmentDataPage(String text, int before, int after, boolean hasPrevious, boolean hasNext) {}
+/**
+ * Lossless segment bytes encoded as Base64. Concatenate decoded bytes or use a
+ * streaming UTF-8 decoder: stored blocks and pages can end inside a character.
+ * Cursors are byte offsets scoped to one segment.
+ */
+public record LogSegmentDataPage(String dataBase64, int before, int after, boolean hasPrevious, boolean hasNext) {}
