@@ -138,7 +138,6 @@ const ProcessLogTreeActivityView = ({
     useEffect(() => {
         if (selectedId !== undefined) navigate({ hash: `step=${selectedId}` }, { replace: true });
     }, [selectedId, navigate]);
-    const selectHandler = setSelectedId;
 
     if (error && !segments) {
         return <RequestErrorActivity error={error} />;
@@ -167,7 +166,7 @@ const ProcessLogTreeActivityView = ({
                         tree={tree}
                         processStatus={processStatus}
                         selectedId={selectedId}
-                        onSelect={selectHandler}
+                        onSelect={setSelectedId}
                     />
                 </div>
                 <div className="ContentPane">
@@ -188,7 +187,7 @@ const ProcessLogTreeActivityView = ({
                             pollingEnabled={
                                 !isFinal(processStatus) && processStatus !== ProcessStatus.SUSPENDED
                             }
-                            onSelect={selectHandler}
+                            onSelect={setSelectedId}
                         />
                         {!selected && (
                             <div className="Placeholder">

@@ -642,7 +642,6 @@ const SegmentHeader = ({
                     status={node.segment.status}
                     processStatus={processStatus}
                     failedInside={node.hasFailedDescendant}
-                    retried={node.retried}
                 />
                 {loop && <KindBadge kind="loop" />}
                 {kind && <KindBadge kind={kind} title={badgeOnly ? name : undefined} />}

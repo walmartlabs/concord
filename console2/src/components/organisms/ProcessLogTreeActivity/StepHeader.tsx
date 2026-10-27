@@ -99,10 +99,6 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
         processStatus,
     });
     const event = events ? pickEvent(events) : undefined;
-    const detailsError = eventError;
-    const refreshDetails = () => {
-        refreshEvents();
-    };
     const [linkCopied, setLinkCopied] = useState<boolean>(false);
     const linkTimeout = useRef<number | undefined>(undefined);
 
@@ -138,7 +134,6 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
                     status={s.status}
                     processStatus={processStatus}
                     failedInside={false}
-                    retried={node.retried}
                 />
                 {loop && <KindBadge kind="loop" />}
                 {kind && <KindBadge kind={kind} title={badgeOnly ? name : undefined} />}
@@ -158,7 +153,7 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
                         data-position="bottom right"
                         data-inverted=""
                         onClick={() => {
-                            refreshDetails();
+                            refreshEvents();
                             setInfoOpen(true);
                         }}
                     >
@@ -184,7 +179,6 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
                         status={s.status}
                         processStatus={processStatus}
                         failedInside={false}
-                        retried={node.retried}
                     />
                     <div className="HeaderText">
                         <div className="HeaderTitle">
@@ -212,13 +206,13 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
                             </MetaRow>
                         )}
                     </div>
-                    {detailsError && (
+                    {eventError && (
                         <div className="EventState" role="alert">
-                            Step details are not available: {detailsError.message}
-                            {detailsError.details && (
-                                <span className="Details"> {detailsError.details}</span>
+                            Step details are not available: {eventError.message}
+                            {eventError.details && (
+                                <span className="Details"> {eventError.details}</span>
                             )}
-                            <button type="button" onClick={refreshDetails}>
+                            <button type="button" onClick={refreshEvents}>
                                 Retry
                             </button>
                         </div>
@@ -226,7 +220,7 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
                     {eventsExhausted && !event && (
                         <div className="EventState">
                             Step details have not arrived yet.
-                            <button type="button" onClick={refreshDetails}>
+                            <button type="button" onClick={refreshEvents}>
                                 Refresh details
                             </button>
                         </div>

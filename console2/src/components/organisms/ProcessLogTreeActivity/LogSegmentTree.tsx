@@ -126,7 +126,6 @@ const SegmentTreeRow = React.memo(
                     status={s.status}
                     processStatus={processStatus}
                     failedInside={!open && node.hasFailedDescendant}
-                    retried={node.retried}
                 />
                 {loop && <KindBadge kind="loop" />}
                 {kind && <KindBadge kind={kind} title={badgeOnly ? name : undefined} />}
@@ -473,20 +472,19 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
 
     const keyDownHandler = useCallback(
         (ev: React.KeyboardEvent<HTMLDivElement>) => {
-            const navigationRows = rows;
-            const idx = navigationRows.findIndex((r) => r.node.segment.id === selectedId);
-            const row = idx >= 0 ? navigationRows[idx] : undefined;
+            const idx = rows.findIndex((r) => r.node.segment.id === selectedId);
+            const row = idx >= 0 ? rows[idx] : undefined;
 
             switch (ev.key) {
                 case 'ArrowDown': {
-                    const next = navigationRows[Math.min(idx + 1, navigationRows.length - 1)];
+                    const next = rows[Math.min(idx + 1, rows.length - 1)];
                     if (next) {
                         onSelect(next.node.segment.id);
                     }
                     break;
                 }
                 case 'ArrowUp': {
-                    const prev = navigationRows[Math.max(idx - 1, 0)];
+                    const prev = rows[Math.max(idx - 1, 0)];
                     if (prev) {
                         onSelect(prev.node.segment.id);
                     }
@@ -498,8 +496,8 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
                     }
                     if (!row.open) {
                         toggle(row.node.segment.id, true);
-                    } else if (navigationRows[idx + 1]) {
-                        onSelect(navigationRows[idx + 1].node.segment.id);
+                    } else if (rows[idx + 1]) {
+                        onSelect(rows[idx + 1].node.segment.id);
                     }
                     break;
                 }
@@ -675,7 +673,6 @@ interface SegmentStatusIconProps {
     status?: SegmentStatus;
     processStatus?: ProcessStatus;
     failedInside: boolean;
-    retried?: boolean;
 }
 
 export const SegmentStatusIcon = ({
