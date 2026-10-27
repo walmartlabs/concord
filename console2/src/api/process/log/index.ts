@@ -18,7 +18,14 @@
  * =====
  */
 
-import { ConcordId, fetchJson, managedFetch, queryParams, responseError } from '../../common';
+import {
+    ConcordId,
+    fetchJson,
+    managedFetch,
+    queryParams,
+    readBody,
+    responseError,
+} from '../../common';
 
 export interface LogRange {
     unit?: string;
@@ -74,7 +81,7 @@ export const getLog = async (instanceId: ConcordId, range: LogRange): Promise<Lo
     const resp = await managedFetch(`/api/v1/process/${instanceId}/log`, opts);
 
     const parsedRange = parseRange(resp);
-    const data = await resp.text();
+    const data = await readBody(resp, (r) => r.text());
     return toChunk(data, parsedRange);
 };
 
@@ -142,7 +149,7 @@ export const getSegmentLog = async (
     );
 
     const parsedRange = parseRange(resp);
-    const data = await resp.text();
+    const data = await readBody(resp, (r) => r.text());
     return toChunk(data, parsedRange);
 };
 
