@@ -23,7 +23,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toRequestError } from '../../../api/common';
 import type { ConcordId, RequestErrorData } from '../../../api/common';
 import { ProcessStatus } from '../../../api/process';
-import { listStepEvents, ProcessElementEvent, ProcessEventEntry } from '../../../api/process/event';
+import { listSegmentEvents, ProcessElementEvent, ProcessEventEntry } from '../../../api/process/event';
 import { LogSegmentEntry } from '../../../api/process/log';
 
 const RETRY_INTERVAL = 2_000;
@@ -107,13 +107,9 @@ export const useStepEvents = (
         const load = async () => {
             attempt += 1;
             try {
-                const events = await listStepEvents<ProcessElementEvent>(
+                const events = await listSegmentEvents<ProcessElementEvent>(
                     instanceId,
-                    {
-                        segmentId: run.id,
-                        correlationId: run.correlationId!,
-                        repeated: run.iterationIndex != null || run.attemptIndex != null,
-                    },
+                    run.id,
                     includeAll
                 );
                 if (cancelled || generation.current !== currentGeneration) {

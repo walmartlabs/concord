@@ -24,12 +24,12 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 vi.mock('../../../../api/process/event', async (importOriginal) => {
     const actual = await importOriginal<Record<string, unknown>>();
-    return { ...actual, listStepEvents: vi.fn() };
+    return { ...actual, listSegmentEvents: vi.fn() };
 });
 
 import { ProcessStatus } from '../../../../api/process';
 import {
-    listStepEvents,
+    listSegmentEvents,
     ProcessElementEvent,
     ProcessEventEntry,
     ProcessEventType,
@@ -98,7 +98,7 @@ const openDetails = async () => {
 describe('StepHeader delayed events', () => {
     beforeEach(() => {
         vi.useFakeTimers();
-        vi.mocked(listStepEvents).mockReset();
+        vi.mocked(listSegmentEvents).mockReset();
         eventSequence = 0;
     });
 
@@ -116,7 +116,7 @@ describe('StepHeader delayed events', () => {
             attemptIndex: 3,
         };
         const tree = buildSegmentTree([owner, run]);
-        vi.mocked(listStepEvents).mockResolvedValue([event('post', { fileName: 'local.yaml' })]);
+        vi.mocked(listSegmentEvents).mockResolvedValue([event('post', { fileName: 'local.yaml' })]);
         render(
             <StepHeader
                 instanceId="process"
@@ -125,7 +125,7 @@ describe('StepHeader delayed events', () => {
             />
         );
         await openDetails();
-        expect(vi.mocked(listStepEvents).mock.calls[0][1].segmentId).toBe(9999);
+        expect(vi.mocked(listSegmentEvents).mock.calls[0][1]).toBe(9999);
         expect(screen.getByText('local.yaml:7')).toBeTruthy();
     });
 
@@ -143,7 +143,7 @@ describe('StepHeader delayed events', () => {
         const oldPost = event('post', { out: { output: 'old' } });
         let basicCalls = 0;
         let detailedCalls = 0;
-        vi.mocked(listStepEvents).mockImplementation(async (_instanceId, _step, includeAll) => {
+        vi.mocked(listSegmentEvents).mockImplementation(async (_instanceId, _segmentId, includeAll) => {
             if (includeAll) {
                 detailedCalls += 1;
                 return detailedCalls === 1 ? [pre] : [oldPre, oldPost, pre, post];
@@ -156,7 +156,7 @@ describe('StepHeader delayed events', () => {
             <StepHeader instanceId="process" node={node(1)} processStatus={ProcessStatus.RUNNING} />
         );
         await flush();
-        expect(vi.mocked(listStepEvents)).toHaveBeenCalledTimes(1);
+        expect(vi.mocked(listSegmentEvents)).toHaveBeenCalledTimes(1);
 
         await advance(2_000);
         await openDetails();
@@ -191,7 +191,7 @@ describe('StepHeader delayed events', () => {
                 },
             ],
         });
-        vi.mocked(listStepEvents).mockResolvedValue([pre, post]);
+        vi.mocked(listSegmentEvents).mockResolvedValue([pre, post]);
 
         render(
             <StepHeader
@@ -213,7 +213,7 @@ describe('StepHeader delayed events', () => {
         const pre = event('pre', { in: { input: true } });
         const post = event('post', { in: { input: true }, out: { output: true } });
         let detailedCalls = 0;
-        vi.mocked(listStepEvents).mockImplementation(async (_instanceId, _step, includeAll) => {
+        vi.mocked(listSegmentEvents).mockImplementation(async (_instanceId, _segmentId, includeAll) => {
             if (!includeAll) {
                 return [pre];
             }
@@ -249,25 +249,25 @@ describe('StepHeader delayed events', () => {
     });
 
     test('does not reset attempts for an equivalent replacement run object', async () => {
-        vi.mocked(listStepEvents).mockResolvedValue([]);
+        vi.mocked(listSegmentEvents).mockResolvedValue([]);
         const view = render(
             <StepHeader instanceId="process" node={node(1)} processStatus={ProcessStatus.RUNNING} />
         );
         await flush();
-        expect(vi.mocked(listStepEvents)).toHaveBeenCalledTimes(1);
+        expect(vi.mocked(listSegmentEvents)).toHaveBeenCalledTimes(1);
 
         view.rerender(
             <StepHeader instanceId="process" node={node(1)} processStatus={ProcessStatus.RUNNING} />
         );
         await flush();
-        expect(vi.mocked(listStepEvents)).toHaveBeenCalledTimes(1);
+        expect(vi.mocked(listSegmentEvents)).toHaveBeenCalledTimes(1);
 
         await advance(2_000);
-        expect(vi.mocked(listStepEvents)).toHaveBeenCalledTimes(2);
+        expect(vi.mocked(listSegmentEvents)).toHaveBeenCalledTimes(2);
     });
 
     test('opening details and explicit retry each start a request generation', async () => {
-        vi.mocked(listStepEvents).mockRejectedValue({
+        vi.mocked(listSegmentEvents).mockRejectedValue({
             status: 403,
             message: 'Forbidden (403)',
             details: 'Access denied',
@@ -279,20 +279,20 @@ describe('StepHeader delayed events', () => {
         expect(screen.getByText('step-1')).toBeTruthy();
 
         await openDetails();
-        expect(vi.mocked(listStepEvents)).toHaveBeenCalledTimes(2);
+        expect(vi.mocked(listSegmentEvents)).toHaveBeenCalledTimes(2);
         expect(screen.getByRole('alert').textContent).toContain('Forbidden (403)');
         expect(screen.getByText('Access denied')).toBeTruthy();
 
         fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
         await flush();
-        expect(vi.mocked(listStepEvents)).toHaveBeenCalledTimes(3);
+        expect(vi.mocked(listSegmentEvents)).toHaveBeenCalledTimes(3);
         expect(screen.getAllByText('step-1')).toHaveLength(2);
     });
 
     test('shows and retries an initial detailed-event authorization failure', async () => {
         const pre = event('pre');
         let detailedCalls = 0;
-        vi.mocked(listStepEvents).mockImplementation(async (_instanceId, _step, includeAll) => {
+        vi.mocked(listSegmentEvents).mockImplementation(async (_instanceId, _segmentId, includeAll) => {
             if (!includeAll) {
                 return [pre];
             }
@@ -313,7 +313,7 @@ describe('StepHeader delayed events', () => {
     });
 
     test('resolves loop details through a retry iteration to its last attempt', async () => {
-        vi.mocked(listStepEvents).mockResolvedValue([event('pre')]);
+        vi.mocked(listSegmentEvents).mockResolvedValue([event('pre')]);
         const tree = buildSegmentTree([
             { ...segment(700), kind: SegmentKind.STEP },
             {
@@ -343,7 +343,7 @@ describe('StepHeader delayed events', () => {
             />
         );
         await flush();
-        expect(vi.mocked(listStepEvents).mock.calls[0][1].segmentId).toBe(703);
+        expect(vi.mocked(listSegmentEvents).mock.calls[0][1]).toBe(703);
     });
 
     test('ignores a response from the previously selected step', async () => {
@@ -351,8 +351,8 @@ describe('StepHeader delayed events', () => {
         const oldResponse = new Promise<ProcessEventEntry<ProcessElementEvent>[]>((resolve) => {
             resolveOld = resolve;
         });
-        vi.mocked(listStepEvents).mockImplementation(async (_instanceId, step) => {
-            if (step.segmentId === 1) {
+        vi.mocked(listSegmentEvents).mockImplementation(async (_instanceId, segmentId) => {
+            if (segmentId === 1) {
                 return oldResponse;
             }
             return [event('pre', { processDefinitionId: 'new-flow' })];

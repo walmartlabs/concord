@@ -32,9 +32,9 @@ export interface LogLine {
     text: string;
 }
 
-// "2026-09-26T01:37:31.071+0000 [ERROR] message"
+// processLog omits the level: "2026-09-26T01:37:31.071+0000 message"
 const LINE_RE =
-    /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}(?:Z|[+-]\d{2}:?\d{2}))\s+\[(TRACE|DEBUG|INFO|WARN|ERROR)\s*\]\s?(.*)$/;
+    /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}(?:Z|[+-]\d{2}:?\d{2}))\s+(?:\[(TRACE|DEBUG|INFO|WARN|ERROR)\s*\]\s?)?(.*)$/;
 
 // "+0000" is not a valid ISO offset for Date.parse
 const parseTimestamp = (s: string): number | undefined => {

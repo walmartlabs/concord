@@ -86,39 +86,6 @@ export const listSegmentEvents = <T extends ProcessEventData>(
         `/api/v1/process/${instanceId}/event/segment/${segmentId}?${queryParams({ includeAll })}`
     );
 
-export interface StepRef {
-    segmentId?: number;
-    correlationId: string;
-    // a loop iteration or a retry attempt: the correlation ID is shared with other runs
-    repeated: boolean;
-}
-
-/**
- * ELEMENT events of a step run. Processes started before the events were linked to log segments
- * have none: for them the events are looked up by the correlation ID, which is unambiguous only
- * for steps that ran once.
- */
-export const listStepEvents = async <T extends ProcessEventData>(
-    instanceId: ConcordId,
-    step: StepRef,
-    includeAll = false
-): Promise<ProcessEventEntry<T>[]> => {
-    if (step.segmentId !== undefined) {
-        const events = await listSegmentEvents<T>(instanceId, step.segmentId, includeAll);
-        if (events.length > 0 || step.repeated) {
-            return events;
-        }
-    }
-
-    return listEvents<T>({
-        instanceId,
-        type: 'ELEMENT',
-        eventCorrelationId: step.correlationId,
-        includeAll,
-        limit: 2,
-    });
-};
-
 export const listEvents = <T extends ProcessEventData>(
     filter: ProcessEventFilter
 ): Promise<ProcessEventEntry<T>[]> =>

@@ -23,6 +23,35 @@ import { describe, expect, test } from 'vitest';
 import { buildLogFlow, FlowSegment, mergeByTime, parseLog, splitLinks } from '../logParser';
 
 describe('parseLog', () => {
+    test.each(['DOCKER', 'ANSIBLE'])('parses %s output without a log level', (prefix) => {
+        const message = `${prefix}: [ERROR] is part of the process output`;
+        const lines = parseLog(
+            '2026-09-26T01:37:30.000+0000 [ERROR] previous error\n' +
+                `2026-09-26T01:37:31.071+0000 ${message}\r\n` +
+                '    continued process output\n' +
+                '2026-09-26T01:37:32.000+0000 [WARN ] next warning\n'
+        );
+
+        expect(lines).toHaveLength(4);
+        expect(lines[1]).toEqual({
+            n: 2,
+            ts: Date.parse('2026-09-26T01:37:31.071Z'),
+            level: undefined,
+            text: message,
+        });
+        expect(lines[2]).toEqual({
+            n: 3,
+            level: undefined,
+            text: '    continued process output',
+        });
+        expect(lines[3]).toEqual({
+            n: 4,
+            ts: Date.parse('2026-09-26T01:37:32.000Z'),
+            level: 'WARN',
+            text: 'next warning',
+        });
+    });
+
     test('timestamps, levels and continuation lines', () => {
         const lines = parseLog(
             '2026-09-26T01:37:31.071+0000 [INFO ] started\n' +
@@ -136,4 +165,42 @@ test('buildLogFlow flattens nested segments with headers', () => {
         '[parent continued]',
         'parent:p2',
     ]);
+});
+
+test('timestamped processLog lines reset the level inherited by continuation lines', () => {
+    const lines = parseLog(
+        '2026-09-26T00:00:01.000+0000 [ERROR] failed\n' +
+            '2026-09-26T00:00:02.000+0000 process output\n' +
+            'continued\n'
+    );
+    expect(lines[1]).toEqual({
+        n: 2,
+        ts: Date.parse('2026-09-26T00:00:02.000Z'),
+        level: undefined,
+        text: 'process output',
+    });
+    expect(lines[2]).toEqual({ n: 3, level: undefined, text: 'continued' });
+});
+
+test('buildLogFlow interleaves processLog output with nested steps', () => {
+    const flow = buildLogFlow({
+        segment: 'parent',
+        start: Date.parse('2026-09-26T00:00:00.000Z'),
+        lines: parseLog(
+            '2026-09-26T00:00:01.000+0000 before\n' + '2026-09-26T00:00:03.000+0000 after\n'
+        ),
+        children: [
+            {
+                segment: 'child',
+                start: Date.parse('2026-09-26T00:00:02.000Z'),
+                lines: parseLog('2026-09-26T00:00:02.000+0000 child\n'),
+                children: [],
+            },
+        ],
+    });
+    expect(
+        flow
+            .filter((item) => item.kind === 'line')
+            .map((item) => item.kind === 'line' && item.line.text)
+    ).toEqual(['before', 'child', 'after']);
 });

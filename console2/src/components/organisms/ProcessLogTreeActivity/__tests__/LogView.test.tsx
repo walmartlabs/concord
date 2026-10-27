@@ -18,7 +18,7 @@
  * =====
  */
 import * as React from 'react';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 vi.mock('../logApi', () => ({
     getSegmentLogPage: vi.fn(),
@@ -74,11 +74,55 @@ beforeEach(() => {
 });
 afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
 });
 
 describe('independent log history', () => {
+    test('polls the system log until completion and reads its final output', async () => {
+        vi.useFakeTimers();
+        localStorage.setItem('logTree.logOpts', JSON.stringify({ follow: false }));
+        vi.mocked(getSegmentLogPage).mockImplementation(async (_p, _id, query) => {
+            if (query.after === undefined) return result('first\n');
+            if (query.after === 6) return result('next\n', 6);
+            if (query.after === 11) return result('done\n', 11);
+            return result('', query.after);
+        });
+        const selected = buildSegmentTree([
+            { id: 0, name: 'system', createdAt: new Date(0).toISOString() },
+        ]).byId.get(0)!;
+        const view = render(
+            <LogView
+                {...props}
+                node={selected}
+                processStatus={ProcessStatus.RUNNING}
+                pollingEnabled={true}
+            />
+        );
+        await act(async () => {});
+        expect(screen.getByText('first')).toBeTruthy();
+        const autoScroll = screen.getByRole('checkbox', {
+            name: 'Auto-scroll',
+        }) as HTMLInputElement;
+        expect(autoScroll.disabled).toBe(false);
+
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(props.dataFetchInterval);
+        });
+        expect(screen.getByText('next')).toBeTruthy();
+        expect(getSegmentLogPage).toHaveBeenCalledTimes(2);
+
+        view.rerender(viewOf(selected));
+        await act(async () => {});
+        expect(screen.getByText('done')).toBeTruthy();
+        expect(autoScroll.disabled).toBe(true);
+        const callsAtCompletion = vi.mocked(getSegmentLogPage).mock.calls.length;
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(props.dataFetchInterval * 2);
+        });
+        expect(getSegmentLogPage).toHaveBeenCalledTimes(callsAtCompletion);
+    });
     test('shows the latest 100 descendants and reveals history without losing visible logs', async () => {
         const children = Array.from({ length: 101 }, (_, i) => entry(i + 2, 1));
         render(viewOf(root(children)));

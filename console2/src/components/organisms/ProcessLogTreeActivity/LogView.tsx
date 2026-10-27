@@ -98,7 +98,9 @@ const COPY_ICONS: Record<CopyState, SemanticICONS> = {
 };
 
 const isLive = (node: SegmentNode, processStatus?: ProcessStatus) =>
-    node.segment.status === SegmentStatus.RUNNING && !isFinal(processStatus);
+    // The system segment has no status of its own.
+    (node.segment.id === 0 || node.segment.status === SegmentStatus.RUNNING) &&
+    !isFinal(processStatus);
 
 const LogView = ({
     instanceId,
