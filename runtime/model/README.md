@@ -1,11 +1,11 @@
 # concord-runtime-model
 
-Common interfaces for Concord runtimes. Declares top-level entities such as "process configuration", "profiles", etc.
-Used in situations when support for multiple different but similarly structured runtimes is required (e.g.
-`concord-v1` and `concord-v2` situations).
+This module defines common interfaces for Concord runtimes.
+It defines top-level entities such as process configuration and profiles.
+Use these interfaces when a system must support multiple runtimes with similar structures.
+For example, the system can support `concord-v1` and `concord-v2`.
 
-The `concord-v1` and `concord-v2` runtimes implements concord-runtime-model interfaces in
-`com.walmartlabs.concord.runtime.*.wrapper` packages. Those implementations wrap the original model classes, mostly
-due to some structural differences and us not wanting to change the base model classes in the runtimes too much.
-
-Future runtimes can implement those interfaces directly in their respective model classes.
+The `concord-v1` and `concord-v2` runtimes implement these interfaces in the `com.walmartlabs.concord.runtime.*.wrapper` packages.
+These implementations wrap the original model classes because their structures are different.
+This design prevents major changes to the base model classes in each runtime.
+Future runtimes can implement these interfaces directly in their model classes.
