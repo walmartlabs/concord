@@ -23,6 +23,7 @@ package com.walmartlabs.concord.client;
 import org.junit.jupiter.api.Test;
 
 import java.util.Calendar;
+import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,6 +42,34 @@ public class CalendarFormatTest {
         assertEquals("2026-10-27T12:37:00-04:00", format("America/New_York", 0));
         assertEquals("2026-10-27T12:37:00.120-04:00", format("America/New_York", 120));
         assertEquals("2026-10-27T22:07:00.120+05:30", format("Asia/Kolkata", 120));
+    }
+
+    @Test
+    public void formatsCustomTimeZone() {
+        Calendar c = Calendar.getInstance(new SimpleTimeZone(5 * 60 * 60 * 1000 + 30 * 60 * 1000, "custom"));
+        c.clear();
+        c.set(2030, Calendar.JANUARY, 1, 12, 0, 0);
+        c.set(Calendar.MILLISECOND, 120);
+        assertEquals("2030-01-01T12:00:00.120+05:30", CalendarFormat.format(c));
+    }
+
+    @Test
+    public void respectsModifiedTimeZoneOffset() {
+        TimeZone zone = TimeZone.getTimeZone("UTC");
+        zone.setRawOffset(60 * 60 * 1000);
+        Calendar c = Calendar.getInstance(zone);
+        c.clear();
+        c.set(2030, Calendar.JANUARY, 1, 12, 0, 0);
+        assertEquals("2030-01-01T12:00:00+01:00", CalendarFormat.format(c));
+    }
+
+    @Test
+    public void preservesCalendarDaylightSavingOffset() {
+        Calendar c = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"));
+        c.clear();
+        c.set(2030, Calendar.JULY, 1, 12, 0, 0);
+        c.set(Calendar.MILLISECOND, 5);
+        assertEquals("2030-07-01T12:00:00.005-04:00", CalendarFormat.format(c));
     }
 
     private static String format(String tz, int millis) {

@@ -130,7 +130,8 @@ public class SecretServiceImpl implements SecretService {
         byte[] input;
 
         try {
-            input = Base64.getMimeDecoder().decode(s);
+            // The MIME decoder rejects whitespace between padding characters.
+            input = Base64.getMimeDecoder().decode(s.replaceAll("\\s+", ""));
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid encrypted string value, please verify that it was specified/copied correctly: " + e.getMessage());
         }

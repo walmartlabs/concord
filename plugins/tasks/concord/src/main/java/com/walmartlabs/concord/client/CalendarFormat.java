@@ -21,6 +21,7 @@ package com.walmartlabs.concord.client;
  */
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 
@@ -35,7 +36,10 @@ final class CalendarFormat {
     private static final DateTimeFormatter WITH_MILLIS = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     static String format(Calendar c) {
-        OffsetDateTime t = OffsetDateTime.ofInstant(c.toInstant(), c.getTimeZone().toZoneId());
+        // Calendar can use custom TimeZone IDs or rules that ZoneId cannot represent.
+        int offsetMillis = c.get(Calendar.ZONE_OFFSET) + c.get(Calendar.DST_OFFSET);
+        ZoneOffset offset = ZoneOffset.ofTotalSeconds(offsetMillis / 1000);
+        OffsetDateTime t = OffsetDateTime.ofInstant(c.toInstant(), offset);
         return (c.get(Calendar.MILLISECOND) == 0 ? WITHOUT_MILLIS : WITH_MILLIS).format(t);
     }
 
