@@ -20,232 +20,232 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.javers.core.Javers;
-import org.javers.core.JaversBuilder;
-import org.javers.core.changelog.ChangeProcessor;
-import org.javers.core.commit.CommitMetadata;
-import org.javers.core.diff.Change;
-import org.javers.core.diff.Diff;
-import org.javers.core.diff.changetype.*;
-import org.javers.core.diff.changetype.container.ArrayChange;
-import org.javers.core.diff.changetype.container.ContainerChange;
-import org.javers.core.diff.changetype.container.ListChange;
-import org.javers.core.diff.changetype.container.SetChange;
-import org.javers.core.diff.changetype.map.MapChange;
-import org.javers.core.metamodel.object.GlobalId;
-import org.javers.core.metamodel.object.ValueObjectId;
-
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.time.temporal.TemporalAccessor;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 
 public class DiffUtils {
 
-    private static final String KEY_PREVIOUS = "prev";
-    private static final String KEY_NEW = "new";
+    private static final Map<Class<?>, Object> PRIMITIVE_DEFAULTS = Map.of(
+            boolean.class, false, byte.class, (byte) 0, short.class, (short) 0,
+            int.class, 0, long.class, 0L, float.class, 0F, double.class, 0D, char.class, '\0');
 
     public static Map<String, Object> compare(Object left, Object right) {
-        Javers javers = JaversBuilder.javers().build();
+        Map<String, Object> previous = new HashMap<>();
+        Map<String, Object> next = new HashMap<>();
+        compareObject(left, right, previous, next, new IdentityHashMap<>(), new IdentityHashMap<>());
 
-        Diff diff = javers.compare(left, right);
-
-        CustomChangeProcessor changeProcessor = new CustomChangeProcessor();
-        javers.processChangeList(diff.getChanges(), changeProcessor);
-
-        Map<String, Object> m = changeProcessor.result();
-        removeIfEmpty(m, KEY_PREVIOUS);
-        removeIfEmpty(m, KEY_NEW);
-        return m;
+        Map<String, Object> result = new HashMap<>();
+        if (!previous.isEmpty()) {
+            result.put("prev", previous);
+        }
+        if (!next.isEmpty()) {
+            result.put("new", next);
+        }
+        return result;
     }
 
-    private static void removeIfEmpty(Map<String, Object> m, String k) {
-        Object v = m.get(k);
-        if (v == null) {
+    private static void compareObject(Object left, Object right, Map<String, Object> previous,
+                                      Map<String, Object> next, IdentityHashMap<Object, Boolean> leftPath,
+                                      IdentityHashMap<Object, Boolean> rightPath) {
+        if (left == null && right == null) {
             return;
         }
-
-        if (v instanceof Map) {
-            Map mv = (Map) v;
-            if (mv.isEmpty()) {
-                m.remove(k);
+        // Graphs can share objects or contain cycles. Only suppress a visit on the current
+        // path, not another occurrence of the same object at a different audit path.
+        if ((left != null && leftPath.containsKey(left)) || (right != null && rightPath.containsKey(right))) {
+            return;
+        }
+        if (left != null) {
+            leftPath.put(left, Boolean.TRUE);
+        }
+        if (right != null) {
+            rightPath.put(right, Boolean.TRUE);
+        }
+        try {
+            Class<?> type = left != null ? left.getClass() : right.getClass();
+            for (Class<?> c = type; c != null && c != Object.class; c = c.getSuperclass()) {
+                for (Field field : c.getDeclaredFields()) {
+                    if (Modifier.isStatic(field.getModifiers()) || Modifier.isTransient(field.getModifiers()) || field.isSynthetic()) {
+                        continue;
+                    }
+                    field.setAccessible(true);
+                    Object oldValue = left == null ? null : fieldValue(field, left);
+                    Object newValue = right == null ? null : fieldValue(field, right);
+                    if (field.getType().isPrimitive() && (left == null || right == null)
+                            && Objects.equals(left == null ? newValue : oldValue, PRIMITIVE_DEFAULTS.get(field.getType()))) {
+                        continue;
+                    }
+                    compareProperty(field.getName(), oldValue, newValue, previous, next, leftPath, rightPath);
+                }
+            }
+        } finally {
+            if (left != null) {
+                leftPath.remove(left);
+            }
+            if (right != null) {
+                rightPath.remove(right);
             }
         }
     }
 
-    private static class CustomChangeProcessor implements ChangeProcessor<Map<String, Object>> {
-        private final Map<String, Object> result = new HashMap<>();
-
-        private CustomChangeProcessor() {
-            result.put(KEY_PREVIOUS, new HashMap<String, Object>());
-            result.put(KEY_NEW, new HashMap<String, Object>());
+    private static Object fieldValue(Field field, Object object) {
+        try {
+            return field.get(object);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException("Cannot read audit property " + field, e);
         }
+    }
 
-        @Override
-        @SuppressWarnings("unchecked")
-        public void onValueChange(ValueChange valueChange) {
-            GlobalId id = valueChange.getAffectedGlobalId();
-            Map<String, Object> prevO = getPrevious();
-            Map<String, Object> nextO = getNew();
-
-            if (id instanceof ValueObjectId) {
-                ValueObjectId idV = (ValueObjectId) id;
-                String[] path = idV.getFragment().split("/");
-
-
-                for (String p : path) {
-                    if (valueChange.getLeft() != null) {
-                        prevO.putIfAbsent(p, new HashMap<String, Object>());
-                        prevO = (Map<String, Object>) prevO.get(p);
-                    }
-
-                    if (valueChange.getRight() != null) {
-                        nextO.putIfAbsent(p, new HashMap<String, Object>());
-                        nextO = (Map<String, Object>) nextO.get(p);
-                    }
+    private static void compareProperty(String name, Object left, Object right, Map<String, Object> previous,
+                                        Map<String, Object> next, IdentityHashMap<Object, Boolean> leftPath,
+                                        IdentityHashMap<Object, Boolean> rightPath) {
+        Object value = left != null ? left : right;
+        if (value == null) {
+            return;
+        }
+        if (value instanceof Map<?, ?>) {
+            compareMap(name, (Map<?, ?>) left, (Map<?, ?>) right, previous, next, leftPath, rightPath);
+        } else if (value instanceof List<?> || value.getClass().isArray()) {
+            compareIndexed(name, left, right, previous, next, leftPath, rightPath);
+        } else if (value instanceof Set<?>) {
+            compareSet(name, (Set<?>) left, (Set<?>) right, previous, next, leftPath, rightPath);
+        } else if (value instanceof Collection<?>) {
+            // Collection membership changes themselves were not included in the audit map.
+        } else if (isValue(value)) {
+            if (!Objects.equals(left, right)) {
+                if (left != null) {
+                    previous.put(name, left);
+                }
+                if (right != null) {
+                    next.put(name, right);
                 }
             }
-
-            if (valueChange.getLeft() != null) {
-                prevO.put(valueChange.getPropertyName(), valueChange.getLeft());
-            }
-
-            if (valueChange.getRight() != null) {
-                nextO.put(valueChange.getPropertyName(), valueChange.getRight());
-            }
+        } else {
+            Map<String, Object> oldChild = new HashMap<>();
+            Map<String, Object> newChild = new HashMap<>();
+            compareObject(left, right, oldChild, newChild, leftPath, rightPath);
+            mergeChild(previous, name, oldChild);
+            mergeChild(next, name, newChild);
         }
+    }
 
-        @Override
-        @SuppressWarnings("unchecked")
-        public void onNewObject(NewObject newObject) {
-            GlobalId id = newObject.getAffectedGlobalId();
+    private static void compareIndexed(String name, Object left, Object right,
+                                       Map<String, Object> previous, Map<String, Object> next,
+                                       IdentityHashMap<Object, Boolean> leftPath, IdentityHashMap<Object, Boolean> rightPath) {
+        Map<String, Object> oldEntries = new HashMap<>();
+        Map<String, Object> newEntries = new HashMap<>();
+        int oldSize = size(left);
+        int newSize = size(right);
+        for (int i = 0; i < Math.max(oldSize, newSize); i++) {
+            Object oldItem = i < oldSize ? item(left, i) : null;
+            Object newItem = i < newSize ? item(right, i) : null;
+            compareMapEntry(i, oldItem, newItem, oldEntries, newEntries, leftPath, rightPath);
+        }
+        mergeChild(previous, name, oldEntries);
+        mergeChild(next, name, newEntries);
+    }
 
-            Map<String, Object> newObject2 = (new ObjectMapper()).convertValue(
-                    newObject.getAffectedObject().orElse(null),
-                    new TypeReference<Map<String, Object>>() {
-                    });
+    private static void compareSet(String name, Set<?> left, Set<?> right,
+                                   Map<String, Object> previous, Map<String, Object> next,
+                                   IdentityHashMap<Object, Boolean> leftPath, IdentityHashMap<Object, Boolean> rightPath) {
+        compareMap(name, setObjects(left), setObjects(right), previous, next, leftPath, rightPath);
+    }
 
-            if (id instanceof ValueObjectId) {
-                ValueObjectId idV = (ValueObjectId) id;
-                String[] path = idV.getFragment().split("/");
-
-                Map<String, Object> nextO = getNew();
-                for (int n = 0; n < path.length - 1; n++) {
-                    nextO.putIfAbsent(path[n], new HashMap<String, Object>());
-
-                    Object o = nextO.get(path[n]);
-                    if (!(o instanceof Map)) {
-                        continue;
-                    }
-
-                    nextO = (Map<String, Object>) o;
+    private static Map<String, Object> setObjects(Set<?> values) {
+        Map<String, Object> result = new HashMap<>();
+        if (values != null) {
+            for (Object value : values) {
+                if (isObjectReference(value)) {
+                    result.put(AuditObjectHash.hash(value), value);
                 }
-
-                nextO.put(path[path.length - 1], newObject2);
-            } else {
-                result.put(KEY_NEW, newObject2);
             }
         }
+        return result;
+    }
 
-        @Override
-        @SuppressWarnings("unchecked")
-        public void onObjectRemoved(ObjectRemoved objectRemoved) {
-            GlobalId id = objectRemoved.getAffectedGlobalId();
+    private static boolean isObjectReference(Object value) {
+        return value != null && !isValue(value) && !(value instanceof Map<?, ?>)
+                && !(value instanceof Collection<?>) && !value.getClass().isArray();
+    }
 
-            Map<String, Object> newObject2 = (new ObjectMapper()).convertValue(
-                    objectRemoved.getAffectedObject().orElse(null),
-                    new TypeReference<Map<String, Object>>() {
-                    });
+    private static int size(Object value) {
+        if (value == null) {
+            return 0;
+        }
+        return value instanceof List<?> list ? list.size() : Array.getLength(value);
+    }
 
-            if (id instanceof ValueObjectId) {
-                ValueObjectId idV = (ValueObjectId) id;
-                String[] path = idV.getFragment().split("/");
+    private static Object item(Object value, int index) {
+        return value instanceof List<?> list ? list.get(index) : Array.get(value, index);
+    }
 
-                Map<String, Object> prevO = getPrevious();
-                for (int n = 0; n < path.length - 1; n++) {
-                    prevO.putIfAbsent(path[n], new HashMap<String, Object>());
-
-                    Object o = prevO.get(path[n]);
-                    if (!(o instanceof Map)) {
-                        continue;
-                    }
-
-                    prevO = (Map<String, Object>) o;
+    private static void compareMap(String name, Map<?, ?> left, Map<?, ?> right,
+                                   Map<String, Object> previous, Map<String, Object> next,
+                                   IdentityHashMap<Object, Boolean> leftPath, IdentityHashMap<Object, Boolean> rightPath) {
+        Map<String, Object> oldEntries = new HashMap<>();
+        Map<String, Object> newEntries = new HashMap<>();
+        if (left != null) {
+            for (Map.Entry<?, ?> entry : left.entrySet()) {
+                compareMapEntry(entry.getKey(), entry.getValue(), right == null ? null : right.get(entry.getKey()),
+                        oldEntries, newEntries, leftPath, rightPath);
+            }
+        }
+        if (right != null) {
+            for (Map.Entry<?, ?> entry : right.entrySet()) {
+                if (left == null || !left.containsKey(entry.getKey())) {
+                    compareMapEntry(entry.getKey(), null, entry.getValue(), oldEntries, newEntries, leftPath, rightPath);
                 }
-
-                prevO.put(path[path.length - 1], newObject2);
-            } else {
-                result.put(KEY_PREVIOUS, newObject2);
             }
         }
+        mergeChild(previous, name, oldEntries);
+        mergeChild(next, name, newEntries);
+    }
 
-        @Override
-        public Map<String, Object> result() {
-            return result;
+    @SuppressWarnings("unchecked")
+    private static void mergeChild(Map<String, Object> target, String name, Map<String, Object> changes) {
+        if (changes.isEmpty()) {
+            return;
         }
-
-
-        @SuppressWarnings("unchecked")
-        private Map<String, Object> getPrevious() {
-            return (Map<String, Object>) result.get(KEY_PREVIOUS);
+        Object existing = target.get(name);
+        if (existing instanceof Map<?, ?>) {
+            Map<String, Object> existingMap = (Map<String, Object>) existing;
+            changes.forEach((key, value) -> {
+                if (value instanceof Map<?, ?>) {
+                    mergeChild(existingMap, key, (Map<String, Object>) value);
+                } else {
+                    existingMap.put(key, value);
+                }
+            });
+        } else {
+            target.put(name, changes);
         }
+    }
 
-        @SuppressWarnings("unchecked")
-        private Map<String, Object> getNew() {
-            return (Map<String, Object>) result.get(KEY_NEW);
+    private static void compareMapEntry(Object key, Object left, Object right,
+                                        Map<String, Object> previous, Map<String, Object> next,
+                                        IdentityHashMap<Object, Boolean> leftPath, IdentityHashMap<Object, Boolean> rightPath) {
+        Object value = left != null ? left : right;
+        if (value == null || isValue(value) || value instanceof Map<?, ?>
+                || value instanceof Collection<?> || value.getClass().isArray()) {
+            return;
         }
+        compareProperty(String.valueOf(key), left, right, previous, next, leftPath, rightPath);
+    }
 
-        @Override
-        public void onCommit(CommitMetadata commitMetadata) {
-        }
-
-        @Override
-        public void onAffectedObject(GlobalId globalId) {
-        }
-
-        @Override
-        public void beforeChangeList() {
-        }
-
-        @Override
-        public void afterChangeList() {
-        }
-
-        @Override
-        public void beforeChange(Change change) {
-        }
-
-        @Override
-        public void afterChange(Change change) {
-        }
-
-        @Override
-        public void onPropertyChange(PropertyChange propertyChange) {
-        }
-
-        @Override
-        public void onReferenceChange(ReferenceChange referenceChange) {
-        }
-
-        @Override
-        public void onContainerChange(ContainerChange containerChange) {
-        }
-
-        @Override
-        public void onSetChange(SetChange setChange) {
-        }
-
-        @Override
-        public void onArrayChange(ArrayChange arrayChange) {
-        }
-
-        @Override
-        public void onListChange(ListChange listChange) {
-        }
-
-        @Override
-        public void onMapChange(MapChange mapChange) {
-        }
+    private static boolean isValue(Object value) {
+        return value instanceof String || value instanceof Number || value instanceof Boolean
+                || value instanceof Character || value instanceof UUID || value instanceof Enum<?>
+                || value instanceof TemporalAccessor || value instanceof java.util.Date;
     }
 }
 
