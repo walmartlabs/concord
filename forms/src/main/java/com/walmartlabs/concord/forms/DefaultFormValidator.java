@@ -20,7 +20,7 @@ package com.walmartlabs.concord.forms;
  * =====
  */
 
-import org.apache.commons.validator.routines.EmailValidator;
+import com.walmartlabs.concord.common.email.EmailValidator;
 
 import java.util.*;
 
@@ -561,7 +561,7 @@ public class DefaultFormValidator implements FormValidator {
 
             String inputType = f.getOption(StringField.INPUT_TYPE);
             if ("email".equalsIgnoreCase(inputType)) {
-                boolean valid = EmailValidator.getInstance().isValid((String)v);
+                boolean valid = EmailValidator.isValid((String)v);
                 if (!valid) {
                     return ValidationError.of(f.name(), "Invalid email address");
                 }

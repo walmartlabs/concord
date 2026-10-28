@@ -20,10 +20,9 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
  * =====
  */
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.*;
 import com.walmartlabs.concord.server.plugins.pfedsso.encryption.EncryptionConfiguration;
@@ -45,6 +44,8 @@ import java.util.List;
 public class JwtAuthenticator {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticator.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+            .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
 
     private final EncryptionConfiguration encryptionConfiguration;
     private final SignatureConfiguration signatureConfiguration;
@@ -200,25 +201,35 @@ public class JwtAuthenticator {
         return signatureConfiguration.verify(signedJWT) ? signedJWT : null;
     }
 
-    private String getMatchedSigningKey(String tokenSigningKeys, String kid, String alg) {
-        if (tokenSigningKeys == null)
+    static String getMatchedSigningKey(String tokenSigningKeys, String kid, String alg) throws IOException {
+        if (tokenSigningKeys == null) {
             return null;
-        JsonObject mapping = JsonParser.parseString(tokenSigningKeys).getAsJsonObject();
-        JsonElement keysJson = mapping.get("keys");
-        JsonArray keysArray = keysJson.getAsJsonArray();
-        for (JsonElement jsonElement : keysArray) {
+        }
+        JsonNode mapping = OBJECT_MAPPER.readTree(tokenSigningKeys);
+        if (mapping == null || !mapping.isObject() || !mapping.path("keys").isArray()) {
+            throw new IOException("Invalid signing key set");
+        }
+        for (JsonNode key : mapping.get("keys")) {
+            if (!key.isObject()) {
+                throw new IOException("Invalid signing key");
+            }
+            JsonNode kidNode = key.get("kid");
+            JsonNode typeNode = key.get("kty");
+            if (kidNode == null || kidNode.isNull() || !kidNode.isValueNode()
+                    || typeNode == null || typeNode.isNull() || !typeNode.isValueNode()) {
+                throw new IOException("Invalid signing key identifier or type");
+            }
+            String jsonKid = kidNode.asText();
+            String algoType = typeNode.asText();
             String algorithm;
-            String jsonKid = jsonElement.getAsJsonObject().get("kid").getAsString();
-            String algoType = jsonElement.getAsJsonObject().get("kty").getAsString();
             try {
                 algorithm = ALGOTYPE.valueOf(algoType).getAlgorithm();
             } catch (IllegalArgumentException e) {
                 log.warn("Algorithm for type: {} not found...", algoType);
                 continue;
             }
-            if (alg.equals(algorithm)
-                    && jsonKid.equals(kid)) {
-                return jsonElement.toString();
+            if (alg.equals(algorithm) && jsonKid.equals(kid)) {
+                return key.toString();
             }
         }
         return null;
