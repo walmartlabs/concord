@@ -13,3 +13,7 @@ the process queue. Used by the Agent;
 The SDK's `security` package defines independent identity-directory,
 provisioning, and authorization-provider contracts. Provider IDs are stable,
 open strings; external identity authorities and subjects are case-sensitive.
+
+The security migration snapshots existing legacy accounts and backfills local
+and canonical LDAP identities without changing account UUIDs. Canonical LDAP
+collisions abort the backfill; resolve the conflicting accounts before retrying.

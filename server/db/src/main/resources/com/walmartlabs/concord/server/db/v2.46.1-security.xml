@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+    <changeSet id="2461000" author="concord">
+        <sql splitStatements="true"><![CDATA[
+            CREATE TABLE USER_IDENTITIES (
+                IDENTITY_ID uuid PRIMARY KEY,
+                USER_ID uuid REFERENCES USERS(USER_ID) ON DELETE SET NULL,
+                PROVIDER_ID text NOT NULL,
+                AUTHORITY text NOT NULL,
+                SUBJECT text NOT NULL CHECK (SUBJECT <> ''),
+                IS_ACTIVE boolean NOT NULL,
+                UNIQUE (PROVIDER_ID, AUTHORITY, SUBJECT),
+                CHECK (NOT IS_ACTIVE OR USER_ID IS NOT NULL)
+            );
+            CREATE UNIQUE INDEX IDX_USER_IDENTITIES_ACTIVE_NAMESPACE
+                ON USER_IDENTITIES (USER_ID, PROVIDER_ID, AUTHORITY) WHERE IS_ACTIVE;
+            CREATE TABLE LEGACY_USER_ENROLLMENT (
+                USER_ID uuid PRIMARY KEY REFERENCES USERS(USER_ID) ON DELETE CASCADE,
+                USERNAME text NOT NULL, DOMAIN text, USER_TYPE text NOT NULL
+            );
+            CREATE TABLE LEGACY_IDENTITY_ADOPTIONS (
+                USER_ID uuid NOT NULL REFERENCES USERS(USER_ID) ON DELETE CASCADE,
+                PROVIDER_ID text NOT NULL, AUTHORITY text NOT NULL, SUBJECT text NOT NULL,
+                ADOPTED_AT timestamptz NOT NULL,
+                PRIMARY KEY (USER_ID, PROVIDER_ID, AUTHORITY),
+                UNIQUE (PROVIDER_ID, AUTHORITY, SUBJECT)
+            );
+            CREATE TABLE AUTHORIZATION_SOURCES (SOURCE_ID text PRIMARY KEY, IS_ACTIVE boolean NOT NULL);
+            CREATE TABLE USER_AUTHORIZATION_BINDINGS (
+                BINDING_ID uuid PRIMARY KEY,
+                USER_ID uuid NOT NULL REFERENCES USERS(USER_ID) ON DELETE CASCADE,
+                SOURCE_ID text NOT NULL REFERENCES AUTHORIZATION_SOURCES(SOURCE_ID),
+                IDENTITY_ID uuid REFERENCES USER_IDENTITIES(IDENTITY_ID),
+                IS_REQUIRED boolean NOT NULL,
+                ORIGIN text NOT NULL CHECK (ORIGIN IN ('DEFAULT', 'ADMIN')),
+                REFRESH_VERSION bigint NOT NULL,
+                UNIQUE (USER_ID, SOURCE_ID),
+                UNIQUE (USER_ID, SOURCE_ID, BINDING_ID)
+            );
+            CREATE TABLE USER_AUTHORIZATION_STATE (
+                USER_ID uuid NOT NULL, SOURCE_ID text NOT NULL, BINDING_ID uuid NOT NULL,
+                STATUS text NOT NULL CHECK (STATUS IN ('VALID', 'NOT_FOUND', 'UNAVAILABLE', 'STALE')),
+                OBSERVED_AT timestamptz, VALID_UNTIL timestamptz, VERIFIED_ATTRIBUTES jsonb,
+                ATTRIBUTES_OBSERVED_AT timestamptz, ATTRIBUTES_EXPIRE_AT timestamptz,
+                PRIMARY KEY (USER_ID, SOURCE_ID),
+                FOREIGN KEY (USER_ID, SOURCE_ID, BINDING_ID)
+                    REFERENCES USER_AUTHORIZATION_BINDINGS(USER_ID, SOURCE_ID, BINDING_ID) ON DELETE CASCADE,
+                CHECK (ATTRIBUTES_EXPIRE_AT IS NULL OR VALID_UNTIL IS NULL OR VALID_UNTIL <= ATTRIBUTES_EXPIRE_AT)
+            );
+            CREATE TABLE USER_SOURCE_GROUPS (
+                USER_ID uuid NOT NULL, SOURCE_ID text NOT NULL, GROUP_ID text NOT NULL,
+                PRIMARY KEY (USER_ID, SOURCE_ID, GROUP_ID),
+                FOREIGN KEY (USER_ID, SOURCE_ID) REFERENCES USER_AUTHORIZATION_BINDINGS(USER_ID, SOURCE_ID) ON DELETE CASCADE
+            );
+            CREATE TABLE ROLE_SOURCE_GROUPS (
+                ROLE_ID uuid NOT NULL REFERENCES ROLES(ROLE_ID) ON DELETE CASCADE,
+                SOURCE_ID text NOT NULL REFERENCES AUTHORIZATION_SOURCES(SOURCE_ID), GROUP_ID text NOT NULL,
+                PRIMARY KEY (ROLE_ID, SOURCE_ID, GROUP_ID)
+            );
+            CREATE TABLE TEAM_SOURCE_GROUPS (
+                TEAM_ID uuid NOT NULL REFERENCES TEAMS(TEAM_ID) ON DELETE CASCADE,
+                SOURCE_ID text NOT NULL REFERENCES AUTHORIZATION_SOURCES(SOURCE_ID), GROUP_ID text NOT NULL,
+                TEAM_ROLE varchar(128) NOT NULL, PRIMARY KEY (TEAM_ID, SOURCE_ID, GROUP_ID)
+            );
+            CREATE TABLE USER_SOURCE_ROLES (
+                USER_ID uuid NOT NULL, SOURCE_ID text NOT NULL,
+                ROLE_ID uuid NOT NULL REFERENCES ROLES(ROLE_ID) ON DELETE CASCADE,
+                PRIMARY KEY (USER_ID, SOURCE_ID, ROLE_ID),
+                FOREIGN KEY (USER_ID, SOURCE_ID) REFERENCES USER_AUTHORIZATION_BINDINGS(USER_ID, SOURCE_ID) ON DELETE CASCADE
+            );
+            CREATE TABLE USER_SOURCE_TEAMS (
+                USER_ID uuid NOT NULL, SOURCE_ID text NOT NULL,
+                TEAM_ID uuid NOT NULL REFERENCES TEAMS(TEAM_ID) ON DELETE CASCADE, TEAM_ROLE varchar(128) NOT NULL,
+                PRIMARY KEY (USER_ID, SOURCE_ID, TEAM_ID),
+                FOREIGN KEY (USER_ID, SOURCE_ID) REFERENCES USER_AUTHORIZATION_BINDINGS(USER_ID, SOURCE_ID) ON DELETE CASCADE
+            );
+            ALTER TABLE USERS ADD COLUMN PROFILE_PROVIDER_ID text;
+            ALTER TABLE USERS ALTER COLUMN PROFILE_PROVIDER_ID SET DEFAULT 'local';
+            ALTER TABLE USERS ADD COLUMN PROFILE_IDENTITY_ID uuid REFERENCES USER_IDENTITIES(IDENTITY_ID) ON DELETE SET NULL;
+        ]]></sql>
+        <sql splitStatements="false"><![CDATA[
+            CREATE FUNCTION retire_user_identities_before_delete() RETURNS trigger AS $$
+            BEGIN
+                UPDATE USER_IDENTITIES SET IS_ACTIVE = false WHERE USER_ID = OLD.USER_ID AND IS_ACTIVE;
+                RETURN OLD;
+            END;
+            $$ LANGUAGE plpgsql
+        ]]></sql>
+        <sql>
+            CREATE TRIGGER retire_user_identities BEFORE DELETE ON USERS
+            FOR EACH ROW EXECUTE FUNCTION retire_user_identities_before_delete()
+        </sql>
+    </changeSet>
+    <changeSet id="2461010" author="concord">
+        <customChange class="com.walmartlabs.concord.server.liquibase.ext.migration.LegacySecurityMigration"/>
+        <sql>ALTER TABLE USERS ALTER COLUMN PROFILE_PROVIDER_ID SET NOT NULL</sql>
+    </changeSet>
+</databaseChangeLog>
