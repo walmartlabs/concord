@@ -448,6 +448,28 @@ test('filtered branches can collapse and stay collapsed across refreshed results
     expect(mountedIds()).toEqual([1, 2, 3]);
 });
 
+test('a node whose children are all filtered out has no caret', () => {
+    const entries = [
+        segment(1, { status: SegmentStatus.FAILED }),
+        segment(2, { parentId: 1, status: SegmentStatus.OK }),
+        segment(3, { parentId: 1, status: SegmentStatus.OK }),
+    ];
+    render(<Harness tree={buildSegmentTree(entries)} initialId={1} />);
+    fireEvent.click(screen.getByText('Failed'));
+    expect(mountedIds()).toEqual([1]);
+    expect(rowOf(1).getAttribute('aria-expanded')).toBeNull();
+    expect(rowOf(1).querySelector('.Caret i')).toBeNull();
+
+    fireEvent.keyDown(screen.getByRole('tree'), { key: 'ArrowRight' });
+    fireEvent.click(screen.getByLabelText('Expand all'));
+    expect(mountedIds()).toEqual([1]);
+    expect(rowOf(1).getAttribute('aria-expanded')).toBeNull();
+
+    fireEvent.click(screen.getByText('All'));
+    expect(mountedIds()).toEqual([1, 2, 3]);
+    expect(rowOf(1).getAttribute('aria-expanded')).toBe('true');
+});
+
 test('metadata refresh preserves a manually collapsed ancestor of the selected step', () => {
     const entries = [segment(1), segment(2, { parentId: 1 })];
     const view = render(<Harness tree={buildSegmentTree(entries)} initialId={2} />);

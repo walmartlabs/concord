@@ -60,6 +60,8 @@ interface Props {
 interface Row {
     node: SegmentNode;
     open: boolean;
+    // has children that pass the filter
+    expandable: boolean;
     // shown only because one of the descendants matches the filter
     dimmed: boolean;
 }
@@ -81,7 +83,7 @@ interface SegmentTreeRowProps {
 
 const SegmentTreeRow = React.memo(
     ({
-        row: { node, open, dimmed },
+        row: { node, open, expandable, dimmed },
         selected,
         processStatus,
         timeRange,
@@ -103,10 +105,10 @@ const SegmentTreeRow = React.memo(
                 data-segment-id={s.id}
                 role="treeitem"
                 aria-selected={selected}
-                aria-expanded={hasChildren ? open : undefined}
+                aria-expanded={expandable ? open : undefined}
                 className={`TreeRow${selected ? ' Selected' : ''}${dimmed ? ' Dimmed' : ''}`}
                 onClick={() => onSelect(s.id)}
-                onDoubleClick={() => hasChildren && onToggle(s.id)}
+                onDoubleClick={() => expandable && onToggle(s.id)}
             >
                 {Array.from({ length: node.depth }, (_, i) => (
                     <span key={i} className="Guide" />
@@ -114,13 +116,13 @@ const SegmentTreeRow = React.memo(
                 <span
                     className="Caret"
                     onClick={(ev) => {
-                        if (hasChildren) {
+                        if (expandable) {
                             ev.stopPropagation();
                             onToggle(s.id);
                         }
                     }}
                 >
-                    {hasChildren && <Icon name={open ? 'caret down' : 'caret right'} />}
+                    {expandable && <Icon name={open ? 'caret down' : 'caret right'} />}
                 </span>
                 <SegmentStatusIcon
                     status={s.status}
@@ -263,9 +265,12 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
                 return;
             }
 
-            const open = isOpen(n) && (!filterActive || n.children.some((c) => keep.get(c)));
+            const expandable = filterActive
+                ? n.children.some((c) => keep.get(c))
+                : n.children.length > 0;
+            const open = expandable && isOpen(n);
 
-            result.push({ node: n, open, dimmed: filterActive && !selfMatch(n) });
+            result.push({ node: n, open, expandable, dimmed: filterActive && !selfMatch(n) });
 
             if (open) {
                 n.children.forEach(walk);
@@ -513,7 +518,7 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
                     break;
                 }
                 case 'ArrowRight': {
-                    if (!row || !(row.node.children.length > 0)) {
+                    if (!row || !row.expandable) {
                         return;
                     }
                     if (!row.open) {
@@ -527,7 +532,7 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
                     if (!row) {
                         return;
                     }
-                    if (row.open && row.node.children.length > 0) {
+                    if (row.open) {
                         toggle(row.node.segment.id, false);
                     } else if (row.node.parent) {
                         onSelect(row.node.parent.segment.id);
