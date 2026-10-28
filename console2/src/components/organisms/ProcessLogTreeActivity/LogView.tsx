@@ -20,11 +20,12 @@
 
 import SegmentName from './SegmentName';
 import * as React from 'react';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Icon, SemanticICONS } from 'semantic-ui-react';
 import { format as formatDate, parseISO as parseDate } from 'date-fns';
 
 import type { ConcordId } from '../../../api/common';
+import { PollingErrorContext } from '../../../api/usePolling';
 import { isFinal } from '../../../api/process';
 import type { ProcessStatus } from '../../../api/process';
 import { getFullSegmentLog, LogTooLargeError, SegmentStatus } from '../../../api/process/log';
@@ -162,6 +163,7 @@ const SelectedLogView = ({
     onSelect,
 }: SelectedLogViewProps) => {
     const segment = node.segment;
+    const reportPollingError = useContext(PollingErrorContext);
     const [historyPaused, setHistoryPaused] = useState(false);
     const follow = opts.follow && !historyPaused;
     const [lineLimits, setLineLimits] = useState<Record<number, number>>({});
@@ -423,7 +425,12 @@ const SelectedLogView = ({
                 </button>
             </div>
 
-            {rootLog.error && (
+            {logs.pollingError && !reportPollingError && (
+                <div className="LogError">
+                    <RequestErrorMessage error={logs.pollingError} />
+                </div>
+            )}
+            {rootLog.error && !rootLog.error.retrying && (
                 <div className="LogError">
                     <RequestErrorMessage error={rootLog.error} />
                     <button type="button" onClick={() => logs.retry(segment.id)}>
@@ -659,7 +666,7 @@ const SegmentHeader = ({
                 {!log.loaded && !log.error && <span className="Hint">loading...</span>}
                 {empty && <span className="Hint">{empty}</span>}
             </div>
-            {log.error && (
+            {log.error && !log.error.retrying && (
                 <div className="LogError">
                     <RequestErrorMessage error={log.error} />
                     <button type="button" onClick={() => onRetry(node.segment.id)}>

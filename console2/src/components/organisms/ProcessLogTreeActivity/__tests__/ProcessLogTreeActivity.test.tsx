@@ -49,6 +49,7 @@ vi.mock('../LogView', () => ({
 }));
 
 import { ProcessStatus } from '../../../../api/process';
+import { PollingErrorContext } from '../../../../api/usePolling';
 import { SegmentStatus } from '../../../../api/process/log';
 import type { LogSegmentEntry } from '../../../../api/process/log';
 import ProcessLogTreeActivity from '../index';
@@ -140,7 +141,6 @@ test('retains the tree and selected viewer after a segment-list error', async ()
     expect(viewMounts.count).toBe(1);
 });
 
-
 test('keeps the tree for identical responses and rebuilds when metadata changes', async () => {
     let items = [segment];
     vi.mocked(listLogSegments).mockImplementation(async () => ({
@@ -174,4 +174,37 @@ test('keeps the tree for identical responses and rebuilds when metadata changes'
         status: SegmentStatus.FAILED,
         errors: 1,
     });
+});
+
+test('reports transient metadata errors to the page without a duplicate local banner', async () => {
+    const report = vi.fn();
+    vi.mocked(listLogSegments)
+        .mockResolvedValueOnce({ items: [segment], next: false })
+        .mockRejectedValueOnce({ status: 502, message: 'Metadata unavailable' })
+        .mockResolvedValue({ items: [segment], next: false });
+    const view = render(
+        <PollingErrorContext.Provider value={report}>
+            <MemoryRouter initialEntries={['/log-tree']}>
+                <Harness />
+            </MemoryRouter>
+        </PollingErrorContext.Provider>
+    );
+    await screen.findByText('retained log 0');
+    await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Trigger refresh' }));
+    });
+    expect(report).toHaveBeenLastCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+            status: 502,
+            retrying: true,
+            loaded: true,
+        })
+    );
+    expect(view.container.querySelector('.ProcessLogTreeError')).toBeNull();
+    expect(screen.getByText('retained log 0')).toBeTruthy();
+    await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Trigger refresh' }));
+    });
+    expect(report).toHaveBeenLastCalledWith(expect.any(Object), undefined);
 });

@@ -98,6 +98,11 @@ Live refresh appends new log pages and includes newly discovered descendants.
 Previously displayed history remains available until selection changes.
 Copy is a separate full-log request with a 5 MiB limit.
 
+Log pages use the shared polling and process-page error banner. Temporary network/server
+failures retry from the same cursor, including history and final reads after process completion.
+Loaded text stays visible. Permanent failures retain a segment-level Retry action and do not
+stop updates for other segments.
+
 ### Log pages
 
 `GET /api/v2/process/{id}/log/segment/{segmentId}/data/page?limit=65536&before=&after=`

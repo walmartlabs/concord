@@ -28,6 +28,8 @@ vi.mock('../../../../api/process/log', async (original) => ({
     getFullSegmentLog: vi.fn(),
 }));
 import { ProcessStatus } from '../../../../api/process';
+import { PollingError, PollingErrorContext } from '../../../../api/usePolling';
+import PollErrorBanner from '../../ProcessActivity/PollErrorBanner';
 import { getFullSegmentLog, SegmentStatus } from '../../../../api/process/log';
 import { getSegmentLogPage } from '../logApi';
 import LogView from '../LogView';
@@ -221,11 +223,11 @@ describe('independent log history', () => {
         });
         expect(getFullSegmentLog).not.toHaveBeenCalled();
     });
-    test('a failed previous page preserves text and can be retried', async () => {
+    test('a forbidden previous page preserves text and can be retried', async () => {
         vi.mocked(getSegmentLogPage)
             .mockResolvedValueOnce(result('kept\n', 100, 105))
             .mockRejectedValueOnce({
-                status: 500,
+                status: 403,
                 message: 'Page failed',
                 details: 'retry me',
             })
@@ -357,5 +359,246 @@ describe('auto-scroll preference and history pause', () => {
         await screen.findByText('output-2');
         expect(checkbox().checked).toBe(false);
         expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+    });
+});
+
+const PollingPage = ({ node, finished = false }: { node: SegmentNode; finished?: boolean }) => {
+    const [errors, setErrors] = React.useState<Map<object, PollingError>>(() => new Map());
+    const [refresh, setRefresh] = React.useState(false);
+    const report = React.useCallback((id: object, error?: PollingError) => {
+        setErrors((previous) => {
+            const next = new Map(previous);
+            if (error) next.set(id, error);
+            else next.delete(id);
+            return next;
+        });
+    }, []);
+    return (
+        <PollingErrorContext.Provider value={report}>
+            <PollErrorBanner
+                tabError={[...errors.values()][0]}
+                tabLabel="Log Tree"
+                retryInterval={1000}
+                onRetry={() => setRefresh((value) => !value)}
+            />
+            <LogView
+                {...props}
+                node={node}
+                dataFetchInterval={1000}
+                processStatus={finished ? ProcessStatus.FINISHED : ProcessStatus.RUNNING}
+                pollingEnabled={!finished}
+                forceRefresh={refresh}
+            />
+        </PollingErrorContext.Provider>
+    );
+};
+
+// Exercise the real common poller and page banner around the real log viewer.
+describe('shared log polling and page errors', () => {
+    const advance = async (ms = 0) => {
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(ms);
+        });
+    };
+    const running = (count = 1) =>
+        buildSegmentTree(
+            Array.from({ length: count }, (_, i) => ({
+                ...entry(i + 1, i === 0 ? undefined : 1),
+                status: SegmentStatus.RUNNING,
+            }))
+        ).byId.get(1)!;
+    beforeEach(() => {
+        vi.useFakeTimers();
+        localStorage.setItem('logTree.logOpts', JSON.stringify({ follow: false }));
+    });
+
+    test.each([0, 502])(
+        'reports one banner for an initial batch failure (%s) and retries it',
+        async (status) => {
+            let failing = true;
+            vi.mocked(getSegmentLogPage).mockImplementation(async (_p, id) => {
+                if (failing) throw { status, message: 'Unavailable' };
+                return result(`output-${id}\n`);
+            });
+            const view = render(<PollingPage node={running(6)} />);
+            await advance();
+            expect(getSegmentLogPage).toHaveBeenCalledTimes(6);
+            expect(view.container.querySelectorAll('.ProcessPollError')).toHaveLength(1);
+            expect(view.container.querySelectorAll('.LogError')).toHaveLength(0);
+            await advance(999);
+            expect(getSegmentLogPage).toHaveBeenCalledTimes(6);
+            failing = false;
+            await advance(1);
+            expect(getSegmentLogPage).toHaveBeenCalledTimes(12);
+            expect(screen.getByText('output-6')).toBeTruthy();
+            expect(view.container.querySelector('.ProcessPollError')).toBeNull();
+            expect(
+                vi.mocked(getSegmentLogPage).mock.calls.every((call) => call[2].after === undefined)
+            ).toBe(true);
+        }
+    );
+
+    test('retains logs and the shared banner until every transient failure recovers', async () => {
+        const failing = new Set<number>();
+        vi.mocked(getSegmentLogPage).mockImplementation(async (_p, id, query) => {
+            if (failing.has(id)) throw { status: 503, message: 'Unavailable' };
+            if (query.after === undefined) return result(`old-${id}\n`);
+            return result(query.after === 6 ? `new-${id}\n` : '', query.after);
+        });
+        const view = render(<PollingPage node={running(3)} />);
+        await advance();
+        [1, 2, 3].forEach((id) => failing.add(id));
+        await advance(1000);
+        expect(view.container.querySelectorAll('.ProcessPollError')).toHaveLength(1);
+        expect(view.container.querySelectorAll('.LogError')).toHaveLength(0);
+        expect(screen.getByText('old-1')).toBeTruthy();
+        expect(screen.getByText('old-3')).toBeTruthy();
+        failing.delete(1);
+        failing.delete(2);
+        await advance(1000);
+        expect(screen.getByText('new-1')).toBeTruthy();
+        expect(view.container.querySelectorAll('.ProcessPollError')).toHaveLength(1);
+        failing.clear();
+        fireEvent.click(screen.getByRole('button', { name: 'retry now' }));
+        await advance();
+        expect(screen.getByText('new-3')).toBeTruthy();
+        expect(screen.getAllByText('old-1')).toHaveLength(1);
+        expect(view.container.querySelector('.ProcessPollError')).toBeNull();
+        const third = vi.mocked(getSegmentLogPage).mock.calls.filter((call) => call[1] === 3);
+        expect(third.slice(1).map((call) => call[2].after)).toEqual([6, 6, 6]);
+    });
+
+    test('keeps retrying the final read after the process finishes, then stops', async () => {
+        vi.mocked(getSegmentLogPage)
+            .mockResolvedValueOnce(result('old\n'))
+            .mockRejectedValueOnce({ status: 502, message: 'Final read failed' })
+            .mockResolvedValueOnce(result('done\n', 4));
+        const view = render(<PollingPage node={running()} />);
+        await advance();
+        view.rerender(<PollingPage node={root()} finished={true} />);
+        await advance();
+        expect(view.container.querySelectorAll('.ProcessPollError')).toHaveLength(1);
+        expect(screen.getByText('old')).toBeTruthy();
+        await advance(1000);
+        expect(screen.getByText('done')).toBeTruthy();
+        expect(getSegmentLogPage).toHaveBeenCalledTimes(3);
+        expect(
+            vi
+                .mocked(getSegmentLogPage)
+                .mock.calls.slice(1)
+                .map((call) => call[2].after)
+        ).toEqual([4, 4]);
+        expect(view.container.querySelector('.ProcessPollError')).toBeNull();
+        await advance(5000);
+        expect(getSegmentLogPage).toHaveBeenCalledTimes(3);
+    });
+
+    test('retries history in the same direction even on a completed process', async () => {
+        vi.mocked(getSegmentLogPage)
+            .mockResolvedValueOnce(result('tail\n', 100, 105))
+            .mockRejectedValueOnce({ status: 502, message: 'History read failed' })
+            .mockResolvedValueOnce(result('prefix\n', 93, 100));
+        const view = render(<PollingPage node={root()} finished={true} />);
+        await advance();
+        fireEvent.click(screen.getByRole('button', { name: 'Load earlier lines' }));
+        await advance();
+        expect(view.container.querySelectorAll('.ProcessPollError')).toHaveLength(1);
+        expect(screen.getByText('tail')).toBeTruthy();
+        await advance(1000);
+        expect(screen.getByText('prefix')).toBeTruthy();
+        expect(
+            vi
+                .mocked(getSegmentLogPage)
+                .mock.calls.slice(1)
+                .map((call) => call[2])
+        ).toEqual([
+            { before: 100, limit: 256 * 1024 },
+            { before: 100, limit: 256 * 1024 },
+        ]);
+        expect(view.container.querySelector('.ProcessPollError')).toBeNull();
+        await advance(5000);
+        expect(getSegmentLogPage).toHaveBeenCalledTimes(3);
+    });
+
+    test.each([403, 'client bug'] as const)(
+        'does not retry %s or stop healthy segments',
+        async (failure) => {
+            let failing = true;
+            vi.mocked(getSegmentLogPage).mockImplementation(async (_p, id, query) => {
+                if (id === 2 && failing) {
+                    if (failure === 'client bug') throw new TypeError('Client bug');
+                    throw { status: failure, message: 'Forbidden' };
+                }
+                return result(`output-${id}\n`, query.after ?? 0);
+            });
+            const view = render(<PollingPage node={running(2)} />);
+            await advance();
+            expect(view.container.querySelectorAll('.LogError')).toHaveLength(1);
+            expect(view.container.querySelector('.ProcessPollError')).toBeNull();
+            await advance(2000);
+            const calls = vi.mocked(getSegmentLogPage).mock.calls;
+            expect(calls.filter((call) => call[1] === 2)).toHaveLength(1);
+            expect(calls.filter((call) => call[1] === 1).length).toBeGreaterThan(1);
+            failing = false;
+            fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+            await advance();
+            expect(screen.getByText('output-2')).toBeTruthy();
+            expect(view.container.querySelector('.LogError')).toBeNull();
+        }
+    );
+
+    test('waits for pending requests without starting overlapping polls', async () => {
+        let finish!: (page: ReturnType<typeof result>) => void;
+        vi.mocked(getSegmentLogPage).mockImplementationOnce(
+            () =>
+                new Promise((resolve) => {
+                    finish = resolve;
+                })
+        );
+        const view = render(<PollingPage node={running()} />);
+        await advance(5000);
+        expect(getSegmentLogPage).toHaveBeenCalledTimes(1);
+        await act(async () => {
+            finish(result('slow\n'));
+        });
+        await advance(999);
+        expect(getSegmentLogPage).toHaveBeenCalledTimes(1);
+        await advance(1);
+        expect(getSegmentLogPage).toHaveBeenCalledTimes(2);
+        view.unmount();
+    });
+
+    test('clears the banner on selection change and cancels retries on unmount', async () => {
+        vi.mocked(getSegmentLogPage).mockImplementation(async (_p, id) => {
+            if (id === 1) throw { status: 502, message: 'Unavailable' };
+            return result('other\n');
+        });
+        const report = vi.fn();
+        const renderLog = (selected: SegmentNode) => (
+            <PollingErrorContext.Provider value={report}>
+                <LogView {...props} node={selected} dataFetchInterval={1000} />
+            </PollingErrorContext.Provider>
+        );
+        const view = render(renderLog(root()));
+        await advance();
+        expect(report).toHaveBeenLastCalledWith(
+            expect.any(Object),
+            expect.objectContaining({ retrying: true })
+        );
+        view.rerender(renderLog(buildSegmentTree([entry(2)]).byId.get(2)!));
+        await advance();
+        expect(screen.getByText('other')).toBeTruthy();
+        expect(report).toHaveBeenLastCalledWith(expect.any(Object), undefined);
+        view.rerender(renderLog(root()));
+        await advance();
+        expect(report).toHaveBeenLastCalledWith(
+            expect.any(Object),
+            expect.objectContaining({ retrying: true })
+        );
+        view.unmount();
+        const calls = vi.mocked(getSegmentLogPage).mock.calls.length;
+        expect(report).toHaveBeenLastCalledWith(expect.any(Object), undefined);
+        await advance(5000);
+        expect(getSegmentLogPage).toHaveBeenCalledTimes(calls);
     });
 });

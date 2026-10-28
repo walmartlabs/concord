@@ -18,10 +18,12 @@
  * =====
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { toRequestError, ConcordId, RequestErrorData } from '../../../api/common';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { isTransientRequestError, toRequestError, ConcordId } from '../../../api/common';
+import { PollingError, usePolling } from '../../../api/usePolling';
 import { getSegmentLogPage, SegmentLogPage, SegmentLogPageQuery } from './logApi';
 
+const ignoreLoading = () => {};
 const CONCURRENCY = 4;
 const MAX_CACHE_CHARS = 8 * 1024 * 1024;
 
@@ -33,7 +35,7 @@ export interface SegmentLog {
     revision: number;
     loaded: boolean;
     loadingPrevious: boolean;
-    error?: RequestErrorData;
+    error?: PollingError;
 }
 export interface SegmentLogRequest {
     id: number;
@@ -76,15 +78,23 @@ export class SegmentLogLoader {
     private disposed = false;
     private clock = 0;
     private cacheChars = 0;
+    private idleWaiters = new Set<() => void>();
 
     constructor(
         private readonly instanceId: ConcordId,
         private readonly changed: () => void,
-        private readonly fetchPage: FetchPage = getSegmentLogPage
+        private readonly fetchPage: FetchPage = getSegmentLogPage,
+        private readonly requested: () => void = ignoreLoading
     ) {}
 
     reconcile = (requests: SegmentLogRequest[]) => {
         if (this.disposed) return;
+        const selectionChanged =
+            requests.length !== this.desired.size ||
+            requests.some((r) => {
+                const previous = this.desired.get(r.id);
+                return !previous || previous.live !== r.live || previous.tailBytes !== r.tailBytes;
+            });
         this.desired = new Map(requests.map((r) => [r.id, r]));
         this.queue.forEach((id) => {
             if (!this.desired.has(id)) this.queue.delete(id);
@@ -117,6 +127,7 @@ export class SegmentLogLoader {
             }
         });
         this.pump();
+        if (selectionChanged) this.requested();
     };
     get = (id: number): SegmentLog => {
         const entry = this.entries.get(id);
@@ -133,6 +144,7 @@ export class SegmentLogLoader {
         this.queue.add(id);
         this.changed();
         this.pump();
+        this.requested();
     };
     retry = (id: number) => {
         if (!this.desired.has(id) || this.disposed) return;
@@ -140,24 +152,51 @@ export class SegmentLogLoader {
         this.queue.add(id);
         this.changed();
         this.pump();
+        this.requested();
     };
-    poll = () => {
+    poll = (live = true) => {
         this.desired.forEach((r) => {
-            if (r.live && !this.entry(r.id).error && !this.active.has(r.id)) this.queue.add(r.id);
+            const entry = this.entry(r.id);
+            if (entry.error && !entry.error.retrying) return;
+            if (
+                ((live && r.live) || entry.error?.retrying || entry.finalPending) &&
+                !this.active.has(r.id)
+            ) {
+                this.queue.add(r.id);
+            }
         });
         this.pump();
     };
+    waitForIdle = (): Promise<void> => {
+        if (this.disposed || (this.active.size === 0 && this.queue.size === 0)) {
+            return Promise.resolve();
+        }
+        return new Promise((resolve) => this.idleWaiters.add(resolve));
+    };
+    getTransientError = (): PollingError | undefined => {
+        for (const id of this.desired.keys()) {
+            const error = this.entry(id).error;
+            if (error?.retrying) return error;
+        }
+        return undefined;
+    };
+    hasLiveRequests = () =>
+        [...this.desired.values()].some(
+            (r) => r.live && (!this.entry(r.id).error || this.entry(r.id).error?.retrying)
+        );
     refresh = () => {
         this.desired.forEach((r) => {
             if (!this.active.has(r.id)) this.queue.add(r.id);
         });
         this.pump();
+        this.requested();
     };
     dispose = () => {
         this.disposed = true;
         this.active.forEach((a) => a.controller.abort());
         this.active.clear();
         this.queue.clear();
+        this.resolveIdle();
     };
     private entry(id: number): Entry {
         let entry = this.entries.get(id);
@@ -182,6 +221,11 @@ export class SegmentLogLoader {
             if (desired) this.dispatch(desired);
         }
         this.trim();
+        if (this.active.size === 0 && this.queue.size === 0) this.resolveIdle();
+    }
+    private resolveIdle() {
+        this.idleWaiters.forEach((resolve) => resolve());
+        this.idleWaiters.clear();
     }
     private dispatch(desired: SegmentLogRequest) {
         const id = desired.id;
@@ -230,7 +274,11 @@ export class SegmentLogLoader {
             })
             .catch((error) => {
                 if (!active.controller.signal.aborted && !this.disposed) {
-                    entry.error = toRequestError(error);
+                    entry.error = {
+                        ...toRequestError(error),
+                        retrying: isTransientRequestError(error),
+                        loaded: entry.loaded,
+                    };
                     this.queue.delete(id);
                     this.changed();
                 }
@@ -254,6 +302,7 @@ export class SegmentLogLoader {
 }
 
 export interface SegmentLogs {
+    pollingError?: PollingError;
     reconcile: (requests: SegmentLogRequest[]) => void;
     get: (segmentId: number) => SegmentLog;
     retry: (segmentId: number) => void;
@@ -271,12 +320,14 @@ export const useSegmentLogs = (
     { pollInterval, pollingEnabled, refreshToken }: UseSegmentLogsOptions
 ): SegmentLogs => {
     const [, setVersion] = useState(0);
+    const [workVersion, setWorkVersion] = useState(0);
     const loader = useMemo(
         () =>
             new SegmentLogLoader(
                 instanceId,
                 () => setVersion((value) => value + 1),
-                getSegmentLogPage
+                getSegmentLogPage,
+                () => setWorkVersion((value) => value + 1)
             ),
         [instanceId]
     );
@@ -284,13 +335,17 @@ export const useSegmentLogs = (
 
     useEffect(() => () => loader.dispose(), [loader]);
 
-    useEffect(() => {
-        if (!pollingEnabled || pollInterval <= 0) {
-            return;
-        }
-        const timer = window.setInterval(loader.poll, pollInterval);
-        return () => window.clearInterval(timer);
-    }, [loader, pollInterval, pollingEnabled]);
+    const request = useCallback(async () => {
+        const live = pollingEnabled && pollInterval > 0;
+        loader.poll(live);
+        await loader.waitForIdle();
+        const error = loader.getTransientError();
+        if (error) throw error;
+        return live && loader.hasLiveRequests();
+    }, [loader, pollingEnabled, pollInterval, workVersion]);
+    const pollingError = usePolling(request, pollInterval, ignoreLoading, false, {
+        reportInitialErrors: true,
+    });
 
     useEffect(() => {
         const previous = refreshState.current;
@@ -302,11 +357,12 @@ export const useSegmentLogs = (
 
     return useMemo(
         () => ({
+            pollingError,
             reconcile: loader.reconcile,
             get: loader.get,
             retry: loader.retry,
             previous: loader.previous,
         }),
-        [loader]
+        [loader, pollingError]
     );
 };

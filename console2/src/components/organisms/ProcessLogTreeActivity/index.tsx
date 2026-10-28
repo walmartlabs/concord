@@ -19,13 +19,13 @@
  */
 
 import * as React from 'react';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
 import type { ConcordId } from '../../../api/common';
 import { isFinal, ProcessStatus } from '../../../api/process';
 import { listLogSegments, LogSegmentEntry } from '../../../api/process/log';
-import { usePolling } from '../../../api/usePolling';
+import { isBlockingPollingError, PollingErrorContext, usePolling } from '../../../api/usePolling';
 import RequestErrorActivity from '../RequestErrorActivity';
 import RequestErrorMessage from '../../molecules/RequestErrorMessage';
 import LogSegmentTree from './LogSegmentTree';
@@ -64,6 +64,7 @@ const ProcessLogTreeActivityView = ({
     onRefresh,
     dataFetchInterval,
 }: ExternalProps) => {
+    const reportPollingError = useContext(PollingErrorContext);
     const navigate = useNavigate();
     const location = useLocation();
     const [segments, setSegments] = useState<LogSegmentEntry[]>();
@@ -149,7 +150,7 @@ const ProcessLogTreeActivityView = ({
 
     return (
         <>
-            {error && (
+            {error && (isBlockingPollingError(error) || !reportPollingError) && (
                 <div className="ProcessLogTreeError">
                     <RequestErrorMessage error={error} />
                     <button
