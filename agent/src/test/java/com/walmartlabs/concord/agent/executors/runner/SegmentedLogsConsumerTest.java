@@ -228,6 +228,45 @@ public class SegmentedLogsConsumerTest {
         verifyNoMoreInteractions(logAppender);
     }
 
+    @Test
+    public void resumeMarkerChangesStatusWithoutResettingCounters() {
+        consumer.accept(toChunk(status(1, LogSegmentStatus.RUNNING, "")));
+        verify(logAppender).updateSegment(any(), eq(1L),
+                eq(new LogSegmentStats(LogSegmentStatus.RUNNING, null, null)));
+        verifyNoMoreInteractions(logAppender);
+    }
+
+    @Test
+    public void splitResumeMarkerAndLogPreserveStatus() {
+        byte[] marker = status(1, LogSegmentStatus.RUNNING, "");
+        for (byte b : marker) {
+            consumer.accept(toChunk(new byte[]{b}));
+        }
+        consumer.accept(toChunk(bb(1, "continued", 0, 0)));
+        verify(logAppender).updateSegment(any(), eq(1L),
+                eq(new LogSegmentStats(LogSegmentStatus.RUNNING, null, null)));
+        verify(logAppender).appendLog(any(), eq(1L), eq("continued".getBytes()));
+        verifyNoMoreInteractions(logAppender);
+    }
+
+    @Test
+    public void lastLifecycleMarkerWinsWithoutResettingCounters() {
+        consumer.accept(toChunk(Bytes.concat(status(1, LogSegmentStatus.SUSPENDED, ""),
+                status(1, LogSegmentStatus.RUNNING, ""), bb(1, "continued", 0, 0))));
+        verify(logAppender).updateSegment(any(), eq(1L),
+                eq(new LogSegmentStats(LogSegmentStatus.RUNNING, null, null)));
+        verify(logAppender).appendLog(any(), eq(1L), eq("continued".getBytes()));
+        verifyNoMoreInteractions(logAppender);
+    }
+
+    @Test
+    public void repeatedSuspendDoesNotEraseCounters() {
+        consumer.accept(toChunk(status(1, LogSegmentStatus.SUSPENDED, "")));
+        verify(logAppender).updateSegment(any(), eq(1L),
+                eq(new LogSegmentStats(LogSegmentStatus.SUSPENDED, null, null)));
+        verifyNoMoreInteractions(logAppender);
+    }
+
     private static byte[] status(int segmentId, LogSegmentStatus status, String time) {
         return LogSegmentSerializer.serialize(LogSegmentHeader.builder()
                 .segmentId(segmentId)
