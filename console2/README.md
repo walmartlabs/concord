@@ -91,7 +91,9 @@ Log text is fetched separately, on demand. Each segment initially shows at most
 200 lines. `Load earlier lines` reveals 200 more cached lines, then requests another
 log page when needed. The selected step's initial page targets 256 KiB; other pages
 target 64 KiB, rounded to whole stored blocks. Up to four log requests run concurrently.
-Reading history disables automatic scrolling and preserves the visible line.
+Reading history temporarily pauses automatic scrolling and preserves the visible line.
+The pause ends when selecting another step or explicitly enabling Auto-scroll. Only manual
+changes to the Auto-scroll checkbox update the saved preference.
 Live refresh appends new log pages and includes newly discovered descendants.
 Previously displayed history remains available until selection changes.
 Copy is a separate full-log request with a 5 MiB limit.

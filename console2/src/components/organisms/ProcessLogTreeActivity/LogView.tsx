@@ -162,6 +162,8 @@ const SelectedLogView = ({
     onSelect,
 }: SelectedLogViewProps) => {
     const segment = node.segment;
+    const [historyPaused, setHistoryPaused] = useState(false);
+    const follow = opts.follow && !historyPaused;
     const [lineLimits, setLineLimits] = useState<Record<number, number>>({});
     const descendants = useMemo(() => {
         const result: SegmentNode[] = [];
@@ -200,7 +202,7 @@ const SelectedLogView = ({
     }, []);
     useLayoutEffect(() => {
         const container = scrollRef.current;
-        if (container && anchor.current && !opts.follow) {
+        if (container && anchor.current && !follow) {
             const saved = anchor.current;
             const row = [...container.querySelectorAll<HTMLElement>('.LogLine[data-anchor]')].find(
                 (el) => el.dataset.anchor === saved.key
@@ -219,7 +221,7 @@ const SelectedLogView = ({
         new Map<number, { parsed: ParsedLog; loaded: boolean }>()
     );
     const appendedWhileReading = useRef(new Map<number, number>());
-    if (opts.follow) appendedWhileReading.current.clear();
+    if (follow) appendedWhileReading.current.clear();
     const lineLimit = (id: number) =>
         (lineLimits[id] ?? LINES_PAGE) + (appendedWhileReading.current.get(id) ?? 0);
     const copyGeneration = useRef(0);
@@ -285,7 +287,7 @@ const SelectedLogView = ({
         }
         // Keep the start of the visible window fixed while the user reads history.
         // An append adds rows at the bottom; it must not evict earlier visible rows.
-        if (!opts.follow && cached?.loaded && log.after > cached.parsed.after) {
+        if (!follow && cached?.loaded && log.after > cached.parsed.after) {
             appendedWhileReading.current.set(
                 id,
                 (appendedWhileReading.current.get(id) ?? 0) +
@@ -333,7 +335,7 @@ const SelectedLogView = ({
         logs.get(id).truncated || linesOf(id).length > lineLimit(id);
     const loadPreviousLines = (id: number) => {
         rememberPosition();
-        setOpts((previous) => ({ ...previous, follow: false }));
+        setHistoryPaused(true);
         const limit = lineLimit(id);
         setLineLimits((previous) => ({
             ...previous,
@@ -348,10 +350,10 @@ const SelectedLogView = ({
     );
 
     useEffect(() => {
-        if (live && opts.follow && bottomRef.current) {
+        if (live && follow && bottomRef.current) {
             bottomRef.current.scrollIntoView({ block: 'end' });
         }
-    }, [live, opts.follow, contentRevision]);
+    }, [live, follow, contentRevision]);
 
     const copyHandler = useCallback(async () => {
         const generation = ++copyGeneration.current;
@@ -397,14 +399,15 @@ const SelectedLogView = ({
                 >
                     <input
                         type="checkbox"
-                        checked={opts.follow}
+                        checked={follow}
                         disabled={!live}
-                        onChange={(event) =>
+                        onChange={(event) => {
+                            setHistoryPaused(false);
                             setOpts((previous) => ({
                                 ...previous,
                                 follow: event.target.checked,
-                            }))
-                        }
+                            }));
+                        }}
                     />
                     Auto-scroll
                 </label>
@@ -442,7 +445,7 @@ const SelectedLogView = ({
                                         type="button"
                                         onClick={() => {
                                             rememberPosition();
-                                            setOpts((prev) => ({ ...prev, follow: false }));
+                                            setHistoryPaused(true);
                                             previous();
                                         }}
                                     >

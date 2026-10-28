@@ -57,7 +57,12 @@ const props = {
     onSelect: vi.fn(),
 };
 const viewOf = (node: SegmentNode) => <LogView {...props} node={node} />;
+const originalScrollIntoView = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollIntoView');
 beforeEach(() => {
+    Object.defineProperty(Element.prototype, 'scrollIntoView', {
+        configurable: true,
+        value: vi.fn(),
+    });
     const values = new Map<string, string>();
     vi.stubGlobal('localStorage', {
         getItem: (k: string) => values.get(k) ?? null,
@@ -74,6 +79,11 @@ beforeEach(() => {
 });
 afterEach(() => {
     cleanup();
+    if (originalScrollIntoView) {
+        Object.defineProperty(Element.prototype, 'scrollIntoView', originalScrollIntoView);
+    } else {
+        Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
+    }
     vi.useRealTimers();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -252,4 +262,100 @@ test('log viewer has no level filters, including with saved legacy options', asy
         expect.not.objectContaining({ level: 'error' }),
         expect.any(AbortSignal)
     );
+});
+
+describe('auto-scroll preference and history pause', () => {
+    const checkbox = () => screen.getByLabelText('Auto-scroll') as HTMLInputElement;
+    const savedFollow = () => JSON.parse(localStorage.getItem('logTree.logOpts')!).follow;
+    const liveNode = (id: number) =>
+        buildSegmentTree([{ ...entry(id), status: SegmentStatus.RUNNING }]).byId.get(id)!;
+    const liveView = (node: SegmentNode, forceRefresh = false) => (
+        <LogView
+            {...props}
+            node={node}
+            processStatus={ProcessStatus.RUNNING}
+            forceRefresh={forceRefresh}
+        />
+    );
+
+    test.each(['lines', 'steps'] as const)(
+        'loading earlier %s on a completed step does not change the preference',
+        async (history) => {
+            const text = Array.from({ length: 300 }, (_, i) => `line-${i + 1}`).join('\n') + '\n';
+            vi.mocked(getSegmentLogPage).mockImplementation(async (_p, id) =>
+                result(history === 'lines' && id === 1 ? text : `output-${id}\n`)
+            );
+            const selected = root(
+                history === 'steps' ? Array.from({ length: 101 }, (_, i) => entry(i + 2, 1)) : []
+            );
+            const view = render(viewOf(selected));
+            await screen.findByText(history === 'lines' ? 'line-300' : 'output-102');
+            expect(checkbox().disabled).toBe(true);
+            expect(checkbox().checked).toBe(true);
+            fireEvent.click(screen.getByRole('button', { name: `Load earlier ${history}` }));
+            await screen.findByText(history === 'lines' ? 'line-1' : 'output-2');
+            expect(checkbox().checked).toBe(false);
+            expect(savedFollow()).toBe(true);
+
+            // Saving another option while paused must not persist the temporary pause.
+            fireEvent.click(screen.getByRole('checkbox', { name: 'Wrap' }));
+            expect(savedFollow()).toBe(true);
+            const next = liveNode(1000);
+            view.rerender(liveView(next));
+            await screen.findByText('output-1000');
+            expect(checkbox().checked).toBe(true);
+            expect(checkbox().disabled).toBe(false);
+            expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+
+            view.unmount();
+            render(liveView(next));
+            await screen.findByText('output-1000');
+            expect(checkbox().checked).toBe(true);
+        }
+    );
+
+    test('pauses live appends while reading history and resumes on explicit enable', async () => {
+        const initial = Array.from({ length: 500 }, (_, i) => `line-${i + 1}`).join('\n') + '\n';
+        const appended = Array.from({ length: 20 }, (_, i) => `line-${i + 501}`).join('\n') + '\n';
+        vi.mocked(getSegmentLogPage)
+            .mockResolvedValueOnce(result(initial))
+            .mockResolvedValueOnce(result(appended, initial.length));
+        const selected = liveNode(1);
+        const view = render(liveView(selected));
+        await screen.findByText('line-500');
+        vi.mocked(Element.prototype.scrollIntoView).mockClear();
+        fireEvent.click(screen.getByRole('button', { name: 'Load earlier lines' }));
+        expect(checkbox().checked).toBe(false);
+        expect(savedFollow()).toBe(true);
+        expect(screen.getByText('line-101')).toBeTruthy();
+
+        view.rerender(liveView(selected, true));
+        await screen.findByText('line-520');
+        expect(screen.getByText('line-101')).toBeTruthy();
+        expect(view.container.querySelectorAll('.LogLine')).toHaveLength(420);
+        expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+
+        fireEvent.click(checkbox());
+        expect(checkbox().checked).toBe(true);
+        expect(savedFollow()).toBe(true);
+        expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+    });
+
+    test('an explicit disable remains disabled across steps and remounts', async () => {
+        const view = render(liveView(liveNode(1)));
+        await screen.findByText('output-1');
+        fireEvent.click(checkbox());
+        expect(savedFollow()).toBe(false);
+        vi.mocked(Element.prototype.scrollIntoView).mockClear();
+        const next = liveNode(2);
+        view.rerender(liveView(next));
+        await screen.findByText('output-2');
+        expect(checkbox().checked).toBe(false);
+        expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+        view.unmount();
+        render(liveView(next));
+        await screen.findByText('output-2');
+        expect(checkbox().checked).toBe(false);
+        expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+    });
 });
