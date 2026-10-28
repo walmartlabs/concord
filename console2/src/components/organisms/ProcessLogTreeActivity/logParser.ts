@@ -23,8 +23,6 @@ export type LogLevel = 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
 export interface LogLine {
     // Stable byte position for preserving the viewport when earlier pages are inserted.
     offset?: number;
-    // 1-based number of the line in the segment log
-    n: number;
     // epoch ms, undefined for lines without a timestamp (e.g. stack traces)
     ts?: number;
     // continuation lines inherit the level of the line above
@@ -42,11 +40,7 @@ const parseTimestamp = (s: string): number | undefined => {
     return Number.isNaN(t) ? undefined : t;
 };
 
-export const parseLog = (
-    text: string,
-    firstLineNumber = 1,
-    initialLevel?: LogLevel
-): LogLine[] => {
+export const parseLog = (text: string, initialLevel?: LogLevel): LogLine[] => {
     if (text.length === 0) {
         return [];
     }
@@ -54,14 +48,14 @@ export const parseLog = (
     const raw = text.endsWith('\n') ? text.substring(0, text.length - 1) : text;
     const result: LogLine[] = [];
     let level = initialLevel;
-    raw.split('\n').forEach((l, idx) => {
+    raw.split('\n').forEach((l) => {
         const line = l.endsWith('\r') ? l.substring(0, l.length - 1) : l;
         const m = LINE_RE.exec(line);
         if (m) {
             level = m[2] as LogLevel;
-            result.push({ n: firstLineNumber + idx, ts: parseTimestamp(m[1]), level, text: m[3] });
+            result.push({ ts: parseTimestamp(m[1]), level, text: m[3] });
         } else {
-            result.push({ n: firstLineNumber + idx, level, text: line });
+            result.push({ level, text: line });
         }
     });
     return result;
@@ -79,7 +73,7 @@ export interface ParsedLog {
 
 /**
  * The loader only prepends or appends immutable log pages. An unchanged start cursor lets us
- * reuse complete lines on append; loading earlier history rebuilds their numbers and levels.
+ * reuse complete lines on append; loading earlier history rebuilds their offsets and levels.
  */
 export const parseLogWindow = (
     text: string,
@@ -115,7 +109,7 @@ export const parseLogWindow = (
     const level = appended && kept > 0 ? appended.lines[kept - 1].level : undefined;
     const rawLines = tail.split('\n');
     const encoder = new TextEncoder();
-    const added = parseLog(tail, kept + 1, level).map((line, i) => {
+    const added = parseLog(tail, level).map((line, i) => {
         const result = { ...line, offset };
         offset += encoder.encode(rawLines[i] + (i < rawLines.length - 1 ? '\n' : '')).length;
         return result;

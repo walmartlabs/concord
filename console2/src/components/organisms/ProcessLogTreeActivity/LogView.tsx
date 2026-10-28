@@ -520,10 +520,8 @@ const LogLineRow = React.memo(({ line, segmentId }: { line: LogLine; segmentId: 
     <div
         className={`LogLine${line.level ? ` Level-${line.level}` : ''}`}
         data-segment={segmentId}
-        data-line={line.n}
         data-anchor={`l${segmentId}:${line.offset}`}
     >
-        <span className="No">{line.n}</span>
         <span className="Ts">{line.ts !== undefined ? formatDate(line.ts, 'HH:mm:ss') : ''}</span>
         <span className="Lvl">{line.ts !== undefined ? line.level : ''}</span>
         <span className="Msg">

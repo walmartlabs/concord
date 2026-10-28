@@ -93,7 +93,7 @@ describe('incremental log parsing', () => {
         }
     });
 
-    test('rebuilds offsets, numbers and inherited levels when history is prepended', () => {
+    test('rebuilds offsets and inherited levels when history is prepended', () => {
         const prefix = '2026-09-26T01:37:31.071+0000 [ERROR] ошибка\n';
         const tail = '\tat run()\nunfinished';
         const initial = parseLogWindow(tail, bytes(prefix), bytes(prefix + tail));
@@ -128,18 +128,15 @@ describe('parseLog', () => {
 
         expect(lines).toHaveLength(4);
         expect(lines[1]).toEqual({
-            n: 2,
             ts: Date.parse('2026-09-26T01:37:31.071Z'),
             level: undefined,
             text: message,
         });
         expect(lines[2]).toEqual({
-            n: 3,
             level: undefined,
             text: '    continued process output',
         });
         expect(lines[3]).toEqual({
-            n: 4,
             ts: Date.parse('2026-09-26T01:37:32.000Z'),
             level: 'WARN',
             text: 'next warning',
@@ -155,7 +152,6 @@ describe('parseLog', () => {
 
         expect(lines).toHaveLength(3);
         expect(lines[0]).toEqual({
-            n: 1,
             ts: Date.parse('2026-09-26T01:37:31.071Z'),
             level: 'INFO',
             text: 'started',
@@ -163,7 +159,6 @@ describe('parseLog', () => {
         expect(lines[1].level).toBe('ERROR');
         // a stack trace line: no timestamp, the level of the line above
         expect(lines[2]).toEqual({
-            n: 3,
             level: 'ERROR',
             text: '\tat com.example.Foo.bar(Foo.java:42)',
         });
@@ -171,9 +166,9 @@ describe('parseLog', () => {
 
     test('plain lines', () => {
         expect(parseLog('')).toEqual([]);
-        expect(parseLog('hello\r\nworld', 10)).toEqual([
-            { n: 10, level: undefined, text: 'hello' },
-            { n: 11, level: undefined, text: 'world' },
+        expect(parseLog('hello\r\nworld')).toEqual([
+            { level: undefined, text: 'hello' },
+            { level: undefined, text: 'world' },
         ]);
     });
 });
@@ -268,12 +263,11 @@ test('timestamped processLog lines reset the level inherited by continuation lin
             'continued\n'
     );
     expect(lines[1]).toEqual({
-        n: 2,
         ts: Date.parse('2026-09-26T00:00:02.000Z'),
         level: undefined,
         text: 'process output',
     });
-    expect(lines[2]).toEqual({ n: 3, level: undefined, text: 'continued' });
+    expect(lines[2]).toEqual({ level: undefined, text: 'continued' });
 });
 
 test('buildLogFlow interleaves processLog output with nested steps', () => {

@@ -95,20 +95,11 @@
 
 .LogView .LogLine {
     display: flex;
-    padding-right: 16px;
+    padding: 0 16px 0 12px;
 }
 
 .LogView .LogLine:hover {
     background: rgb(240, 243, 246);
-}
-
-.LogView .LogLine .No {
-    flex: none;
-    width: 56px;
-    padding-right: 12px;
-    text-align: right;
-    color: rgb(140, 149, 159);
-    user-select: none;
 }
 
 .LogView .LogLine .Ts {
