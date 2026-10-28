@@ -74,6 +74,7 @@ beforeEach(() => {
         .mockReset()
         .mockImplementation(async (_p, id) => result(`output-${id}\n`));
     vi.mocked(getFullSegmentLog).mockReset().mockResolvedValue('copy');
+    vi.stubGlobal('isSecureContext', true);
     Object.defineProperty(navigator, 'clipboard', {
         configurable: true,
         value: { writeText: vi.fn().mockResolvedValue(undefined) },
@@ -240,12 +241,36 @@ describe('independent log history', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
         await screen.findByText('prefix');
     });
+    test.each(['unavailable', 'insecure', 'denied'])(
+        'reports copy failure without opening a prompt when clipboard is %s',
+        async (reason) => {
+            const prompt = vi.spyOn(window, 'prompt');
+            const writeText = vi.mocked(navigator.clipboard.writeText);
+            if (reason === 'unavailable') {
+                Object.defineProperty(navigator, 'clipboard', {
+                    configurable: true,
+                    value: undefined,
+                });
+            } else if (reason === 'insecure') {
+                vi.stubGlobal('isSecureContext', false);
+            } else {
+                writeText.mockRejectedValue(new Error('Permission denied'));
+            }
+            render(viewOf(root()));
+            await screen.findByText('output-1');
+            fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+            await screen.findByRole('button', { name: 'Copy failed' });
+            expect(prompt).not.toHaveBeenCalled();
+            if (reason !== 'denied') expect(writeText).not.toHaveBeenCalled();
+        }
+    );
     test('copy stays a separate full-log action', async () => {
         render(viewOf(root()));
         await screen.findByText('output-1');
         fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
         await screen.findByRole('button', { name: 'Copied' });
         expect(getFullSegmentLog).toHaveBeenCalledWith('p', 1, 5 * 1024 * 1024);
+        expect(navigator.clipboard.writeText).toHaveBeenCalledWith('copy');
     });
 });
 

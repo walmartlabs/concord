@@ -25,6 +25,7 @@ import { Icon, SemanticICONS } from 'semantic-ui-react';
 import { format as formatDate, parseISO as parseDate } from 'date-fns';
 
 import type { ConcordId } from '../../../api/common';
+import { copyTextToClipboard } from '../../../utils';
 import { PollingErrorContext } from '../../../api/usePolling';
 import { isFinal } from '../../../api/process';
 import type { ProcessStatus } from '../../../api/process';
@@ -363,8 +364,7 @@ const SelectedLogView = ({
         let result: CopyState;
         try {
             const text = await getFullSegmentLog(instanceId, segment.id, MAX_COPY_SIZE_BYTES);
-            await navigator.clipboard.writeText(text);
-            result = 'copied';
+            result = (await copyTextToClipboard(text)) ? 'copied' : 'failed';
         } catch (error) {
             result = error instanceof LogTooLargeError ? 'tooLarge' : 'failed';
         }

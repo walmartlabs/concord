@@ -22,6 +22,7 @@ import SegmentName from './SegmentName';
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Icon, Modal } from 'semantic-ui-react';
+import copyToClipboard from 'copy-to-clipboard';
 import { format as formatDate, parseISO as parseDate } from 'date-fns';
 
 import { ConcordId } from '../../../api/common';
@@ -107,10 +108,12 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
     // another step is selected
     useEffect(() => setInfoOpen(false), [s.id]);
 
-    const linkHandler = useCallback(async () => {
+    const linkHandler = useCallback(() => {
         const url = `${window.location.origin}${window.location.pathname}#/process/${instanceId}/log-tree#step=${s.id}`;
         try {
-            await navigator.clipboard.writeText(url);
+            if (!copyToClipboard(url)) {
+                return;
+            }
             setLinkCopied(true);
             window.clearTimeout(linkTimeout.current);
             linkTimeout.current = window.setTimeout(() => setLinkCopied(false), 1500);

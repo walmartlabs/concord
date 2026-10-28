@@ -43,6 +43,7 @@ import RequestErrorActivity from '../RequestErrorActivity';
 import { LogProcessorOptions, processText } from '../../../state/data/processes/logs/processors';
 import { isFinal, ProcessStatus } from '../../../api/process';
 import { TaskCallDetails } from '../index';
+import { copyTextToClipboard } from '../../../utils';
 
 import './styles.css';
 
@@ -70,24 +71,6 @@ interface FetchResponse {
     data: string;
     range: LogRange;
 }
-
-const copyTextToClipboard = async (text: string): Promise<boolean> => {
-    // deliberately no execCommand()/prompt() fallback here: this call happens after an
-    // await (the log fetch), so by the time we get here the browser may have already
-    // revoked "user activation" — falling back to the execCommand-based library in that
-    // state doesn't help (it needs activation too) and its own failure path is a
-    // window.prompt() containing the entire (possibly multi-MB) log text, which is worse
-    // than just reporting the copy as failed
-    if (!navigator.clipboard || !window.isSecureContext) {
-        return false;
-    }
-    try {
-        await navigator.clipboard.writeText(text);
-        return true;
-    } catch {
-        return false;
-    }
-};
 
 const LogSegmentActivity = ({
     instanceId,

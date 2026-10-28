@@ -19,8 +19,11 @@
  */
 
 import * as React from 'react';
+import copyToClipboard from 'copy-to-clipboard';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
+vi.mock('copy-to-clipboard', () => ({ default: vi.fn() }));
 
 vi.mock('../../../../api/process/event', async (importOriginal) => {
     const actual = await importOriginal<Record<string, unknown>>();
@@ -469,4 +472,50 @@ describe('StepHeader delayed events', () => {
         expect(screen.getByText('new-flow')).toBeTruthy();
         expect(screen.queryByText('old-flow')).toBeNull();
     });
+});
+
+describe('StepHeader copy link', () => {
+    const originalClipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+
+    beforeEach(() => {
+        vi.useFakeTimers();
+        vi.mocked(listSegmentEvents).mockReset().mockResolvedValue([]);
+        vi.mocked(copyToClipboard).mockReset();
+        Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined });
+    });
+
+    afterEach(() => {
+        cleanup();
+        vi.useRealTimers();
+        if (originalClipboard) {
+            Object.defineProperty(navigator, 'clipboard', originalClipboard);
+        } else {
+            Reflect.deleteProperty(navigator, 'clipboard');
+        }
+    });
+
+    test.each([true, false])(
+        'reports the library copy result (%s) without Clipboard API',
+        async (ok) => {
+            vi.mocked(copyToClipboard).mockReturnValue(ok);
+            render(
+                <StepHeader
+                    instanceId="process"
+                    node={node(7)}
+                    processStatus={ProcessStatus.FINISHED}
+                />
+            );
+            await flush();
+            const button = screen.getByRole('button', { name: 'Copy link to this step' });
+            fireEvent.click(button);
+            expect(copyToClipboard).toHaveBeenCalledWith(
+                `${window.location.origin}${window.location.pathname}#/process/process/log-tree#step=7`
+            );
+            expect(button.getAttribute('data-tooltip')).toBe(
+                ok ? 'Copied!' : 'Copy link to this step'
+            );
+            await advance(1500);
+            expect(button.getAttribute('data-tooltip')).toBe('Copy link to this step');
+        }
+    );
 });
