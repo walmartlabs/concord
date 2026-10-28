@@ -451,7 +451,7 @@ public class SecretDao extends AbstractDao {
                 .username(r.get(USERS.USERNAME))
                 .userDomain(r.get(USERS.DOMAIN))
                 .displayName(r.get(USERS.DISPLAY_NAME))
-                .userType(UserType.valueOf(r.get(USERS.USER_TYPE)))
+                .userType(UserType.fromNullable(r.get(USERS.USER_TYPE)))
                 .build();
     }
 

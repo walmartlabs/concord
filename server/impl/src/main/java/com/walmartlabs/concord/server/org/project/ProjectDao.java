@@ -493,7 +493,7 @@ public class ProjectDao extends AbstractDao {
                 .username(username)
                 .userDomain(domain)
                 .displayName(displayName)
-                .userType(UserType.valueOf(userType))
+                .userType(UserType.fromNullable(userType))
                 .build();
     }
 }

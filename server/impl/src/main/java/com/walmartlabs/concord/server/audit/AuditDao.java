@@ -159,7 +159,7 @@ public class AuditDao extends AbstractDao {
                     .id(r.get(4, UUID.class))
                     .username(r.get(5, String.class))
                     .userDomain(r.get(6, String.class))
-                    .userType(UserType.valueOf(r.get(7, String.class)))
+                    .userType(UserType.fromNullable(r.get(7, String.class)))
                     .displayName(r.get(8, String.class))
                     .build());
         }

@@ -107,10 +107,28 @@ public class MigrationTest {
             var before = snapshot(db);
             applyMigrations(db);
             assertEquals(before, snapshot(db));
-            assertEquals(List.of("2461000", "2461010"), rows(db,
-                    "select id from server_db_log where id in ('2461000','2461010') order by id"));
+            assertEquals(List.of("2461000", "2461010", "2461020"), rows(db,
+                    "select id from server_db_log where id in ('2461000','2461010','2461020') order by id"));
             execute(db, "delete from users where user_id='" + LDAP + "'");
             assertEquals(List.of("<null>|false"), rows(db, "select user_id,is_active from user_identities where provider_id='ldap' and authority='' and subject='[\"shared\",\"example\"]'"));
+        }
+    }
+
+    @Test
+    @Timeout(value = 2, unit = TimeUnit.MINUTES)
+    public void identityPersistenceAllowsDuplicateLegacyNamesAndNullType() throws Exception {
+        try (var db = createDbContainer()) {
+            db.start();
+            applyMigrations(db);
+            UUID first = UUID.randomUUID();
+            UUID second = UUID.randomUUID();
+            execute(db, "insert into users (user_id, username, user_type) values ('" + first + "', 'identity-test', null), ('" + second + "', 'identity-test', null)");
+            assertEquals(List.of("2"), rows(db, "select count(*) from users where username='identity-test' and user_type is null"));
+            UUID third = UUID.randomUUID();
+            UUID fourth = UUID.randomUUID();
+            execute(db, "insert into users (user_id, username, domain, user_type) values ('" + third + "', 'identity-legacy', 'example', 'LOCAL'), ('" + fourth + "', 'identity-legacy', 'example', 'LOCAL')");
+            assertEquals(List.of("2"), rows(db, "select count(*) from users where username='identity-legacy'"));
+            assertEquals(List.of("YES|<null>"), rows(db, "select is_nullable,column_default from information_schema.columns where table_name='users' and column_name='user_type'"));
         }
     }
 

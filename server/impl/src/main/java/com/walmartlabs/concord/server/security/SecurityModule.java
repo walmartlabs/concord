@@ -24,12 +24,17 @@ import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.walmartlabs.concord.server.boot.filters.AuthenticationHandler;
 import com.walmartlabs.concord.server.sdk.security.AuthorizationProvider;
+import com.walmartlabs.concord.server.sdk.security.IdentityService;
 import com.walmartlabs.concord.server.sdk.security.LegacyIdentityMatcher;
 import com.walmartlabs.concord.server.sdk.security.ProvisioningPolicy;
 import com.walmartlabs.concord.server.sdk.security.UserDirectory;
+import com.walmartlabs.concord.server.sdk.security.UserProfileService;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyAuthenticationHandler;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyRealm;
 import com.walmartlabs.concord.server.security.github.GithubRealm;
+import com.walmartlabs.concord.server.security.identity.LocalUserDirectory;
+import com.walmartlabs.concord.server.security.identity.IdentityServiceImpl;
+import com.walmartlabs.concord.server.security.identity.UserProfileServiceImpl;
 import com.walmartlabs.concord.server.security.internal.InternalRealm;
 import com.walmartlabs.concord.server.security.internal.LocalUserInfoProvider;
 import com.walmartlabs.concord.server.security.ldap.*;
@@ -48,7 +53,10 @@ public class SecurityModule implements Module {
     @Override
     public void configure(Binder binder) {
         binder.bind(UserSecurityContext.class);
-        newSetBinder(binder, UserDirectory.class);
+        newSetBinder(binder, UserDirectory.class).addBinding().to(LocalUserDirectory.class);
+        newSetBinder(binder, UserDirectory.class).addBinding().to(LdapUserDirectory.class);
+        binder.bind(UserProfileService.class).to(UserProfileServiceImpl.class);
+        binder.bind(IdentityService.class).to(IdentityServiceImpl.class);
         newSetBinder(binder, AuthorizationProvider.class);
         newSetBinder(binder, ProvisioningPolicy.class);
         newSetBinder(binder, LegacyIdentityMatcher.class);

@@ -27,10 +27,16 @@ import com.walmartlabs.concord.server.jooq.Tables;
 import com.walmartlabs.concord.server.jooq.tables.records.UsersRecord;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.team.TeamRole;
+import com.walmartlabs.concord.server.org.team.TeamManager;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.security.UserProfile;
+import com.walmartlabs.concord.server.sdk.security.ExternalIdentityKey;
+import com.walmartlabs.concord.server.security.ldap.LdapUserDirectory;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import org.jooq.*;
 
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -64,31 +70,118 @@ public class UserDao extends AbstractDao {
      * Note that {@code username} and {@code domain} are case-insensitive and forced to lower case.
      */
     public UUID insertOrUpdate(String username, String domain, String displayName, String email, UserType type, Set<String> roles) {
-        UUID userId = uuidGenerator.generate();
         return txResult(tx -> {
-            UUID effectiveUserId = tx.insertInto(USERS)
-                    .columns(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.USER_TYPE)
-                    .values(userId, toLowerCase(username), toLowerCase(domain), displayName, email, type.toString())
-                    .onConflict(lower(USERS.USERNAME), lower(USERS.DOMAIN), field(USERS.USER_TYPE))
-                    .doUpdate()
-                    .set(USERS.DISPLAY_NAME, displayName)
-                    .set(USERS.USER_EMAIL, email)
-                    .returning(USERS.USER_ID)
-                    .fetchOne()
-                    .getUserId();
-
-            if (roles != null) {
-                updateRoles(tx, effectiveUserId, roles);
+            tx.execute("select pg_advisory_xact_lock(2461020)");
+            UUID id = legacyId(tx, username, domain, type);
+            if (id == null) {
+                id = insertLegacy(tx, username, domain, displayName, email, type);
+            } else {
+                tx.update(USERS).set(USERS.DISPLAY_NAME, displayName).set(USERS.USER_EMAIL, email)
+                        .where(USERS.USER_ID.eq(id)).execute();
             }
-
-            return effectiveUserId;
+            if (roles != null) {
+                updateRoles(tx, id, roles);
+            }
+            return id;
         });
     }
 
+    private UUID legacyId(DSLContext tx, String username, String domain, UserType type) {
+        List<UUID> matches = tx.select(USERS.USER_ID).from(USERS)
+                .where(USERS.USERNAME.eq(toLowerCase(username)))
+                .and(USERS.DOMAIN.isNotDistinctFrom(toLowerCase(domain)))
+                .and(USERS.USER_TYPE.eq(type.name())).fetch(USERS.USER_ID);
+        if (matches.size() > 1) {
+            throw new ConcordApplicationException("Ambiguous legacy account: " + username, Response.Status.CONFLICT);
+        }
+        return matches.isEmpty() ? null : matches.get(0);
+    }
+
+    public UUID getLegacyId(String username, String domain, UserType type) {
+        return legacyId(dsl(), username, domain, type);
+    }
+
+    private UUID insertLegacy(DSLContext tx, String username, String domain, String displayName, String email, UserType type) {
+        UUID id = uuidGenerator.generate();
+        tx.insertInto(USERS)
+                .columns(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.USER_TYPE)
+                .values(id, toLowerCase(username), toLowerCase(domain), displayName, email, type.name()).execute();
+        if (type == UserType.LOCAL || type == UserType.LDAP) {
+            ExternalIdentityKey key = type == UserType.LOCAL
+                    ? new ExternalIdentityKey("local", "", id.toString()) : LdapUserDirectory.key(username, domain);
+            UUID identityId = uuidGenerator.generate();
+            tx.execute("insert into user_identities (identity_id, user_id, provider_id, authority, subject, is_active) values (?, ?, ?, ?, ?, true)",
+                    identityId, id, key.providerId(), key.authority(), key.subject());
+            if (type == UserType.LDAP) {
+                tx.execute("update users set profile_provider_id = 'ldap', profile_identity_id = ? where user_id = ?", identityId, id);
+            }
+        }
+        return id;
+    }
+
+    public record LegacyUpsert(UUID id, boolean created, UserEntry previous) {}
+
+    public LegacyUpsert upsertLegacyAccount(String username, String domain, UserType type, String displayName,
+                                            String email, boolean disabled, Set<String> roles, UserInfoProvider.UserInfo creationInfo) {
+        return txResult(tx -> {
+            tx.execute("select pg_advisory_xact_lock(2461020)");
+            UUID id = legacyId(tx, username, domain, type);
+            if (id == null && creationInfo != null) {
+                id = legacyId(tx, creationInfo.username(), creationInfo.userDomain(), type);
+            }
+            boolean created = id == null;
+            UserEntry previous = null;
+            if (created) {
+                if (creationInfo != null) {
+                    id = insertLegacy(tx, creationInfo.username(), creationInfo.userDomain(), creationInfo.displayName(), creationInfo.email(), type);
+                } else {
+                    id = insertLegacy(tx, username, domain, displayName, email, type);
+                }
+                tx.insertInto(USER_TEAMS).columns(USER_TEAMS.TEAM_ID, USER_TEAMS.USER_ID, USER_TEAMS.TEAM_ROLE)
+                        .values(TeamManager.DEFAULT_ORG_TEAM_ID, id, TeamRole.MEMBER.name()).onConflictDoNothing().execute();
+            } else {
+                var row = tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME,
+                                USERS.USER_EMAIL, USERS.IS_DISABLED, USERS.IS_PERMANENTLY_DISABLED, USERS.DISABLED_DATE)
+                        .from(USERS).where(USERS.USER_ID.eq(id)).forUpdate().fetchOne();
+                if (Boolean.TRUE.equals(row.get(USERS.IS_PERMANENTLY_DISABLED))) {
+                    throw new ConcordApplicationException("User is permanently disabled");
+                }
+                previous = getUserInfo(tx, row);
+                var update = tx.update(USERS).set(USERS.IS_DISABLED, disabled);
+                if (disabled) {
+                    update.set(USERS.DISABLED_DATE, currentOffsetDateTime());
+                } else {
+                    update.setNull(USERS.DISABLED_DATE);
+                }
+                if (displayName != null) update.set(USERS.DISPLAY_NAME, displayName);
+                if (email != null) update.set(USERS.USER_EMAIL, email);
+                update.where(USERS.USER_ID.eq(id)).execute();
+            }
+            if (roles != null) updateRoles(tx, id, roles);
+            return new LegacyUpsert(id, created, previous);
+        });
+    }
+
+    /** Creates an identity-owned account and its default team membership in the caller's transaction. */
+    public void createIdentityAccount(DSLContext tx, UUID userId, UserProfile profile, String legacyType) {
+        if (legacyType != null) {
+            UserType.valueOf(legacyType);
+        }
+        tx.insertInto(USERS)
+                .columns(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.USER_TYPE)
+                .values(userId, profile.username(), profile.domain(), profile.displayName(), profile.email(), legacyType)
+                .execute();
+        tx.insertInto(USER_TEAMS)
+                .columns(USER_TEAMS.TEAM_ID, USER_TEAMS.USER_ID, USER_TEAMS.TEAM_ROLE)
+                .values(TeamManager.DEFAULT_ORG_TEAM_ID, userId, TeamRole.MEMBER.name())
+                .onConflictDoNothing().execute();
+    }
+
     public void delete(UUID id) {
-        tx(tx -> tx.deleteFrom(USERS)
-                .where(USERS.USER_ID.eq(id))
-                .execute());
+        tx(tx -> {
+            tx.execute("update user_identities set is_active = false where user_id = ?", id);
+            tx.deleteFrom(USERS).where(USERS.USER_ID.eq(id)).execute();
+        });
     }
 
     public void enable(UUID id) {
@@ -219,8 +312,8 @@ public class UserDao extends AbstractDao {
         if (result.isEmpty()) {
             return null;
         } else if (result.size() > 1) {
-            throw new IllegalArgumentException("Non unique results found for username: '" + username + "', domain: '" + domain + "', type: " + type +
-                    ". Note that user and domain names are case-insensitive.");
+            throw new ConcordApplicationException("Non unique results found for username: '" + username + "', domain: '" + domain + "', type: " + type +
+                    ". Note that user and domain names are case-insensitive.", Response.Status.CONFLICT);
         }
 
         return result.get(0);
@@ -310,7 +403,7 @@ public class UserDao extends AbstractDao {
                         r.get(USERS.DOMAIN),
                         r.get(USERS.DISPLAY_NAME),
                         null,
-                        UserType.valueOf(r.get(USERS.USER_TYPE)),
+                        UserType.fromNullable(r.get(USERS.USER_TYPE)),
                         r.get(USERS.USER_EMAIL),
                         null,
                         r.get(USERS.IS_DISABLED),
@@ -383,7 +476,7 @@ public class UserDao extends AbstractDao {
                 r.get(USERS.DOMAIN),
                 r.get(USERS.DISPLAY_NAME),
                 new HashSet<>(orgs),
-                UserType.valueOf(r.get(USERS.USER_TYPE)),
+                UserType.fromNullable(r.get(USERS.USER_TYPE)),
                 r.get(USERS.USER_EMAIL),
                 new HashSet<>(roles),
                 r.get(USERS.IS_DISABLED),
@@ -396,6 +489,6 @@ public class UserDao extends AbstractDao {
             return null;
         }
 
-        return s.toLowerCase();
+        return s.toLowerCase(Locale.ROOT);
     }
 }

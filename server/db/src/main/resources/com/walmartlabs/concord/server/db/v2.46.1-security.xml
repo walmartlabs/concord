@@ -97,4 +97,12 @@
         <customChange class="com.walmartlabs.concord.server.liquibase.ext.migration.LegacySecurityMigration"/>
         <sql>ALTER TABLE USERS ALTER COLUMN PROFILE_PROVIDER_ID SET NOT NULL</sql>
     </changeSet>
+    <changeSet id="2461020" author="concord">
+        <sql splitStatements="true"><![CDATA[
+            ALTER TABLE USERS ALTER COLUMN USER_TYPE DROP NOT NULL;
+            ALTER TABLE USERS ALTER COLUMN USER_TYPE DROP DEFAULT;
+            DROP INDEX IDX_USERS_UNIQ;
+            CREATE INDEX IDX_USERS_LEGACY_LOOKUP ON USERS (lower(USERNAME), lower(DOMAIN), USER_TYPE);
+        ]]></sql>
+    </changeSet>
 </databaseChangeLog>

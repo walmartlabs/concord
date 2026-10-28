@@ -181,7 +181,7 @@ public class TeamDao extends AbstractDao {
                                 r.value2(),
                                 r.value3(),
                                 r.value4(),
-                                UserType.valueOf(r.value5()),
+                                UserType.fromNullable(r.value5()),
                                 TeamRole.valueOf(r.value6()),
                                 TeamMemberType.SINGLE,
                                 null));
@@ -200,7 +200,7 @@ public class TeamDao extends AbstractDao {
                                 r.value2(),
                                 r.value3(),
                                 r.value4(),
-                                UserType.valueOf(r.value5()),
+                                UserType.fromNullable(r.value5()),
                                 TeamRole.valueOf(r.value6()),
                                 TeamMemberType.LDAP_GROUP,
                                 r.value7()));

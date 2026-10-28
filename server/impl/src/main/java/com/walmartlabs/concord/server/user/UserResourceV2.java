@@ -22,10 +22,13 @@ package com.walmartlabs.concord.server.user;
 
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.security.ExternalIdentityKey;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.identity.IdentityDao;
+import com.walmartlabs.concord.server.security.identity.IdentityDao.IdentityRecord;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -40,10 +43,12 @@ import java.util.UUID;
 public class UserResourceV2 implements Resource {
 
     private final UserDao userDao;
+    private final IdentityDao identityDao;
 
     @Inject
-    public UserResourceV2(UserDao userDao) {
+    public UserResourceV2(UserDao userDao, IdentityDao identityDao) {
         this.userDao = userDao;
+        this.identityDao = identityDao;
     }
 
     @GET
@@ -81,5 +86,55 @@ public class UserResourceV2 implements Resource {
         }
 
         throw new UnauthorizedException("Users can only view their own information or must have admin privileges.");
+    }
+
+    @GET
+    @Path("/{id}/identities")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(operationId = "listUserIdentities")
+    public List<IdentityRecord> identities(@PathParam("id") UUID id) {
+        assertCanRead(id);
+        return identityDao.list(id);
+    }
+
+    @POST
+    @Path("/{id}/identities")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(operationId = "linkUserIdentity")
+    public IdentityRecord linkIdentity(@PathParam("id") UUID id, ExternalIdentityKey identity) {
+        assertAdmin();
+        return identityDao.link(id, identity);
+    }
+
+    @DELETE
+    @Path("/{id}/identities/{identityId}")
+    @Operation(operationId = "unlinkUserIdentity")
+    public void unlinkIdentity(@PathParam("id") UUID id, @PathParam("identityId") UUID identityId) {
+        assertAdmin();
+        identityDao.unlink(id, identityId);
+    }
+
+    public record ProfileProviderRequest(String providerId, UUID identityId) {}
+
+    @PUT
+    @Path("/{id}/profileProvider")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(operationId = "setUserProfileProvider")
+    public void setProfileProvider(@PathParam("id") UUID id, ProfileProviderRequest request) {
+        assertAdmin();
+        identityDao.setProfile(id, request.providerId(), request.identityId());
+    }
+
+    private static void assertCanRead(UUID id) {
+        if (!UserPrincipal.assertCurrent().getId().equals(id) && !Roles.isAdmin() && !Roles.isGlobalReader()) {
+            throw new UnauthorizedException("Users can only view their own information or must have admin privileges.");
+        }
+    }
+
+    private static void assertAdmin() {
+        if (!Roles.isAdmin()) {
+            throw new UnauthorizedException("Only admins can do that");
+        }
     }
 }

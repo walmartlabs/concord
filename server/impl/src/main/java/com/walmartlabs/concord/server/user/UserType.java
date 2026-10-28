@@ -25,5 +25,9 @@ public enum UserType {
 
     LOCAL,
     LDAP,
-    SSO
+    SSO;
+
+    public static UserType fromNullable(String value) {
+        return value == null ? null : valueOf(value);
+    }
 }

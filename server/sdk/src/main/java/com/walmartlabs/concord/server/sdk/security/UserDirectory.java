@@ -29,8 +29,13 @@ public interface UserDirectory {
     /** Checks the identity namespace without I/O. */
     boolean acceptsIdentity(ExternalIdentityKey identity);
 
-    /** Unsupported attributes are invalid; missing entries return empty and ambiguous matches fail. */
+    /**
+     * Unsupported attributes are invalid and missing entries return empty.
+     * Throws {@link DirectoryAmbiguousException} for multiple matches and
+     * {@link DirectoryUnavailableException} when no authoritative answer is available.
+     */
     Optional<DirectoryEntry> find(DirectoryQuery query);
 
+    /** Missing entries return empty; unavailable directories throw {@link DirectoryUnavailableException}. */
     Optional<UserProfile> get(ExternalIdentityKey identity);
 }

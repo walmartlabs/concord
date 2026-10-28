@@ -17,3 +17,8 @@ open strings; external identity authorities and subjects are case-sensitive.
 The security migration snapshots existing legacy accounts and backfills local
 and canonical LDAP identities without changing account UUIDs. Canonical LDAP
 collisions abort the backfill; resolve the conflicting accounts before retrying.
+
+User identity links can be inspected at `GET /api/v2/user/{id}/identities`;
+administrators can link or retire identities and select an account's profile
+provider through the corresponding v2 user endpoints. Retired identity keys
+remain reserved and require explicit administrative recovery.

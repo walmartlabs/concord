@@ -180,6 +180,43 @@ public class UserManager {
         return e;
     }
 
+    /** Records the existing account-creation audit after the identity transaction commits. */
+    public void auditIdentityCreation(UUID id) {
+        UserEntry e = userDao.get(id);
+        auditLog.add(AuditObject.USER, AuditAction.CREATE)
+                .field("userId", id)
+                .field("username", e.getName())
+                .changes(null, e)
+                .log();
+    }
+
+    public CreateUserResponse upsertLegacy(CreateUserRequest request, UserType type) {
+        String username = request.getUsername();
+        String domain = request.getUserDomain();
+        UUID previousId = userDao.getLegacyId(username, domain, type);
+        UserInfo creationInfo = null;
+        if (previousId == null && type == UserType.LDAP) {
+            creationInfo = assertProvider(type).getInfo(null, username, domain);
+            if (creationInfo == null) {
+                throw new ConcordApplicationException("User '" + username + "' with domain '" + domain + "' not found in LDAP");
+            }
+        }
+        UserDao.LegacyUpsert result = userDao.upsertLegacyAccount(username, domain, type, request.getDisplayName(),
+                request.getEmail(), request.isDisabled(), request.getRoles(), creationInfo);
+        UserEntry entry = userDao.get(result.id());
+        if (result.created()) {
+            auditIdentityCreation(result.id());
+        } else if (result.previous() != null) {
+            Map<String, Object> changes = DiffUtils.compare(result.previous(), entry);
+            if (!changes.isEmpty()) {
+                auditLog.add(AuditObject.USER, AuditAction.UPDATE)
+                        .field("userId", result.id()).field("username", entry.getName()).field("changes", changes).log();
+            }
+        }
+        return new CreateUserResponse(result.id(), entry.getName(),
+                result.created() ? com.walmartlabs.concord.server.OperationResult.CREATED : com.walmartlabs.concord.server.OperationResult.UPDATED);
+    }
+
     public boolean isInOrganization(UUID orgId) {
         return userDao.txResult(tx -> isInOrganization(tx, orgId));
     }
