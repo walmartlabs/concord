@@ -252,7 +252,7 @@ describe('the recorded tree', () => {
 
     test('loops start collapsed', () => {
         const tree = buildSegmentTree([
-            seg(1, undefined, { kind: STEP, name: 'task: http' }),
+            seg(1, undefined, { kind: SegmentKind.LOOP, name: 'task: http' }),
             seg(2, 1, { kind: ITERATION, iterationIndex: 0, name: 'deploy a' }),
             seg(3, 1, { kind: ITERATION, iterationIndex: 1, name: 'iteration #2' }),
             seg(4, undefined, { kind: STEP }),
@@ -264,7 +264,7 @@ describe('the recorded tree', () => {
             name: 'http',
             kind: 'task',
             note: '2 items',
-            loop: true,
+            groupKind: 'loop',
         });
         expect(describeNode(tree.byId.get(2)!)).toEqual({
             name: 'deploy a',
@@ -304,7 +304,7 @@ test('every step belongs to exactly one category', () => {
 
 test('flattened loop retries retain independent iteration and attempt indices', () => {
     const tree = buildSegmentTree([
-        seg(1, undefined, { kind: STEP, status: OK }),
+        seg(1, undefined, { kind: SegmentKind.LOOP, status: OK }),
         seg(2, 1, {
             kind: ATTEMPT,
             iterationIndex: 0,
@@ -325,7 +325,7 @@ test('flattened loop retries retain independent iteration and attempt indices', 
         name: 'Deploy a',
         note: 'item #1 · attempt 1',
     });
-    expect(describeNode(tree.byId.get(1)!)).toMatchObject({ loop: true });
+    expect(describeNode(tree.byId.get(1)!)).toMatchObject({ groupKind: 'loop' });
 });
 
 test('preserves the custom name of a parallel block beside its badge', () => {
@@ -377,4 +377,30 @@ describe('segment list equality', () => {
         expect(equalSegmentLists(list, list.slice(0, 1))).toBe(false);
         expect(equalSegmentLists(list, [...list].reverse())).toBe(false);
     });
+});
+
+
+test.each([SegmentKind.LOOP, SegmentKind.RETRY])(
+    'recognizes an empty %s parent from its kind',
+    (kind) => {
+        const tree = buildSegmentTree([seg(1, undefined, { kind, name: 'task: http' })]);
+        const node = tree.byId.get(1)!;
+        expect(node.kind).toBe(kind.toLowerCase());
+        expect(startsCollapsed(node)).toBe(kind === SegmentKind.LOOP);
+        expect(describeNode(node)).toMatchObject({
+            name: 'http',
+            kind: 'task',
+            groupKind: kind.toLowerCase(),
+        });
+    }
+);
+
+test('does not infer a parent kind from children of an old STEP', () => {
+    const tree = buildSegmentTree([
+        seg(1, undefined, { kind: STEP, name: 'task: http' }),
+        seg(2, 1, { kind: ITERATION, iterationIndex: 0 }),
+        seg(3, 1, { kind: ATTEMPT, iterationIndex: 1, attemptIndex: 0 }),
+    ]);
+    expect(startsCollapsed(tree.byId.get(1)!)).toBe(false);
+    expect(describeNode(tree.byId.get(1)!)).toEqual({ name: 'http', kind: 'task' });
 });

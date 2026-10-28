@@ -236,11 +236,11 @@ test('keyboard adjacency crosses window boundaries and clamps at logical endpoin
 const iteration = (id: number, parentId: number, index: number) =>
     segment(id, { parentId, kind: SegmentKind.ITERATION, iterationIndex: index });
 const loopSegments = () => [
-    segment(1, { kind: SegmentKind.STEP }),
+    segment(1, { kind: SegmentKind.LOOP }),
     iteration(2, 1, 0),
     ...Array.from({ length: 100 }, (_, i) => segment(i + 3, { parentId: 2 })),
     iteration(103, 1, 1),
-    segment(104, { kind: SegmentKind.STEP }),
+    segment(104, { kind: SegmentKind.LOOP }),
     iteration(105, 104, 0),
     iteration(106, 104, 1),
 ];
@@ -407,7 +407,7 @@ test('fresh snapshots update mounted status, counters and sampled running timing
 
 test('loops use ordinary selectable rows with gray expressions', () => {
     const tree = buildSegmentTree([
-        segment(1, { kind: SegmentKind.STEP, name: 'Deploy ${item}' }),
+        segment(1, { kind: SegmentKind.LOOP, name: 'Deploy ${item}' }),
         segment(2, {
             parentId: 1,
             kind: SegmentKind.ITERATION,

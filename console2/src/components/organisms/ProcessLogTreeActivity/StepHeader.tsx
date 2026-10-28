@@ -46,24 +46,6 @@ interface Props {
 const pickEvent = (events: ProcessEventEntry<ProcessElementEvent>[]) =>
     (events.find((e) => e.data.phase === 'post') ?? events[0])?.data;
 
-/**
- * The segment whose events describe the node: events are linked to the innermost segment
- * of the step, i.e. the last attempt of a retry or the first iteration of a loop
- * (all iterations are the same step). System and "error" segments have no step events.
- */
-const stepRunOf = (node: SegmentNode): SegmentNode | undefined => {
-    if (node.segment.id === 0 || node.kind === 'error') {
-        return undefined;
-    }
-    const runs = node.children.filter(
-        (c) => c.kind === 'attempt' || c.kind === 'iteration'
-    );
-    if (runs.length === 0) {
-        return node;
-    }
-    return stepRunOf(runs[0].kind === 'attempt' ? runs[runs.length - 1] : runs[0]);
-};
-
 const threadOf = (node: SegmentNode): string =>
     node.segment.threadId === undefined ? 'main' : String(node.segment.threadId);
 
@@ -85,7 +67,11 @@ const MetaRow = ({
 const StepHeader = ({ instanceId, node, processStatus }: Props) => {
     const s = node.segment;
     const [infoOpen, setInfoOpen] = useState<boolean>(false);
-    const run = stepRunOf(node)?.segment;
+    // Loop/retry parents have no step events; each iteration/attempt owns its events.
+    const run =
+        s.id === 0 || node.kind === 'error' || node.kind === 'loop' || node.kind === 'retry'
+            ? undefined
+            : s;
     const {
         events,
         error: eventError,
@@ -122,7 +108,7 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
         }
     }, [instanceId, s.id]);
 
-    const { kind, name, note, badgeOnly, loop } = describeNode(node);
+    const { kind, name, note, badgeOnly, groupKind } = describeNode(node);
     // only task calls record the input/output ("phase" is set by the task call events only)
     const taskCall = event?.phase !== undefined;
 
@@ -136,7 +122,7 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
                     processStatus={processStatus}
                     failedInside={false}
                 />
-                {loop && <KindBadge kind="loop" />}
+                {groupKind && <KindBadge kind={groupKind} />}
                 {kind && <KindBadge kind={kind} title={badgeOnly ? name : undefined} />}
                 {!badgeOnly && (
                     <span className="Name" title={name}>
@@ -183,7 +169,7 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
                     />
                     <div className="HeaderText">
                         <div className="HeaderTitle">
-                            {loop && <KindBadge kind="loop" />}
+                            {groupKind && <KindBadge kind={groupKind} />}
                             {kind && <KindBadge kind={kind} />}
                             <SegmentName name={name} />
                             {note && <span className="Note">{note}</span>}

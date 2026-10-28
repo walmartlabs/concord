@@ -127,8 +127,12 @@ replace the iteration containers and evaluate the name in the attempt context.
 Segments expose separate zero-based `iterationIndex` and `attemptIndex` fields;
 attempts inside a loop carry both, plain iterations carry only `iterationIndex`,
 and retries outside a loop carry only `attemptIndex`. Names are
-never changed after creation. The API uses STEP, ITERATION, ATTEMPT, ERROR and PARALLEL;
-there are no separate loop/retry group kinds.
+never changed after creation. The API uses STEP, LOOP, RETRY, ITERATION, ATTEMPT, ERROR and PARALLEL.
+LOOP and RETRY identify the parent from creation, including empty loops. A loop with
+retry has kind LOOP and direct ATTEMPT children carrying both indices. Its ERROR
+handler, if executed, is another child of the parent. The UI uses these explicit
+kinds for badges, initial collapsing and skipping step-event requests; it does not
+infer parent kinds from children. Old segments without a kind remain ordinary steps.
 
 
 The right-hand log viewer displays all levels with ordinary byte-range pagination.

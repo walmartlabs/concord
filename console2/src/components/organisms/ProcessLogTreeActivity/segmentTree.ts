@@ -28,13 +28,14 @@ const SYSTEM_SEGMENT_ID = 0;
 /**
  * What the segment represents, recorded by the runner:
  * - step: the whole execution of a step;
+ * - loop/retry: the whole execution of a repeated step, including its error handler;
  * - iteration: one iteration of a loop;
  * - attempt: one attempt of a step with "retry";
  * - error: the "error" block of a step;
  * - parallel: the whole execution of a "parallel" block.
  * The tree is rendered as recorded, the client doesn't group the segments.
  */
-export type NodeKind = 'step' | 'iteration' | 'attempt' | 'error' | 'parallel';
+export type NodeKind = 'step' | 'loop' | 'retry' | 'iteration' | 'attempt' | 'error' | 'parallel';
 
 export interface SegmentNode {
     kind: NodeKind;
@@ -59,6 +60,8 @@ export interface SegmentTree {
 
 const KINDS: Record<SegmentKind, NodeKind> = {
     [SegmentKind.STEP]: 'step',
+    [SegmentKind.LOOP]: 'loop',
+    [SegmentKind.RETRY]: 'retry',
     [SegmentKind.ITERATION]: 'iteration',
     [SegmentKind.ATTEMPT]: 'attempt',
     [SegmentKind.ERROR]: 'error',
@@ -72,10 +75,7 @@ const kindOf = (s: LogSegmentEntry): NodeKind => (s.kind ? KINDS[s.kind] : undef
 export const isFailure = (node: SegmentNode) => node.segment.status === SegmentStatus.FAILED;
 
 // a loop: can have hundreds of iterations
-export const startsCollapsed = (node: SegmentNode) =>
-    node.children.some(
-        (c) => c.kind === 'iteration' || (c.kind === 'attempt' && c.segment.iterationIndex != null)
-    );
+export const startsCollapsed = (node: SegmentNode) => node.kind === 'loop';
 
 const newNode = (segment: LogSegmentEntry): SegmentNode => ({
     kind: kindOf(segment),
@@ -231,8 +231,8 @@ export interface NodeDescription {
     note?: string;
     // the tree shows the badge only, e.g. error handlers and parallel blocks
     badgeOnly?: boolean;
-    // a step with iterations, shown with the "loop" badge before the kind
-    loop?: boolean;
+    // explicit parent kind, shown before the task/script/call badge
+    groupKind?: 'loop' | 'retry';
 }
 
 export const describeNode = (n: SegmentNode): NodeDescription => {
@@ -267,18 +267,18 @@ export const describeNode = (n: SegmentNode): NodeDescription => {
     }
 
     const { kind, name } = parseSegmentName(s.name);
-    const iterations = new Set(
-        n.children
-            .filter(
-                (c) =>
-                    c.kind === 'iteration' ||
-                    (c.kind === 'attempt' && c.segment.iterationIndex != null)
-            )
-            .map((c) => c.segment.iterationIndex)
-    ).size;
-    const note =
-        iterations > 0 ? `${iterations} ${iterations === 1 ? 'item' : 'items'}` : undefined;
-    return iterations > 0 ? { name, kind, note, loop: true } : { name, kind, note };
+    if (n.kind === 'loop') {
+        const iterations = new Set(
+            n.children.map((c) => c.segment.iterationIndex).filter((index) => index != null)
+        ).size;
+        return {
+            name,
+            kind,
+            note: `${iterations} ${iterations === 1 ? 'item' : 'items'}`,
+            groupKind: 'loop',
+        };
+    }
+    return n.kind === 'retry' ? { name, kind, groupKind: 'retry' } : { name, kind };
 };
 
 const KIND_RE = /^(task|script|call): (.+)$/;

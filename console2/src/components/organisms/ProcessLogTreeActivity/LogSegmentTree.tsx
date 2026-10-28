@@ -91,7 +91,7 @@ const SegmentTreeRow = React.memo(
         const s = node.segment;
         const hasChildren = node.children.length > 0;
         const timing = getSegmentTiming(s, processStatus, timeRange.now);
-        const { kind, name, note, badgeOnly, loop } = describeNode(node);
+        const { kind, name, note, badgeOnly, groupKind } = describeNode(node);
         const span = Math.max(timeRange.end - timeRange.start, 1);
 
         // collapsed nodes show counters of all their descendants
@@ -127,7 +127,7 @@ const SegmentTreeRow = React.memo(
                     processStatus={processStatus}
                     failedInside={!open && node.hasFailedDescendant}
                 />
-                {loop && <KindBadge kind="loop" />}
+                {groupKind && <KindBadge kind={groupKind} />}
                 {kind && <KindBadge kind={kind} title={badgeOnly ? name : undefined} />}
                 <span className="Name" title={badgeOnly ? undefined : s.name}>
                     {badgeOnly ? null : <SegmentName name={name} />}

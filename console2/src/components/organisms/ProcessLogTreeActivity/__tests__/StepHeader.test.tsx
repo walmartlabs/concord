@@ -177,10 +177,14 @@ describe('StepHeader delayed events', () => {
         [SegmentKind.ITERATION, 'parent-only', undefined],
         [SegmentKind.ITERATION, undefined, 'child-only'],
     ] as const)(
-        'resolves a child %s by parentId with correlation IDs %s / %s',
+        'does not request details for a %s parent with correlation IDs %s / %s',
         async (kind, parentCorrelationId, childCorrelationId) => {
             const tree = buildSegmentTree([
-                { ...segment(1), correlationId: parentCorrelationId },
+                {
+                    ...segment(1),
+                    kind: kind === SegmentKind.ATTEMPT ? SegmentKind.RETRY : SegmentKind.LOOP,
+                    correlationId: parentCorrelationId,
+                },
                 {
                     ...segment(2),
                     parentId: 1,
@@ -199,14 +203,15 @@ describe('StepHeader delayed events', () => {
                 />
             );
             await openDetails();
-            expect(listSegmentEvents).toHaveBeenCalledWith('process', 2, false);
-            expect(screen.getByText('child.yaml:7')).toBeTruthy();
-            expect(vi.mocked(listSegmentEvents).mock.calls.every((call) => call[1] === 2)).toBe(true);
+            await advance(20_000);
+            expect(listSegmentEvents).not.toHaveBeenCalled();
+            expect(screen.queryByText('child.yaml:7')).toBeNull();
+            expect(screen.queryByText('Step details have not arrived yet.')).toBeNull();
         }
     );
 
-    test('resolves retry details from the local tree', async () => {
-        const owner = segment(1);
+    test('loads details for the selected attempt', async () => {
+        const owner = { ...segment(1), kind: SegmentKind.RETRY };
         const run = {
             ...segment(9999, SegmentStatus.OK, owner.correlationId),
             parentId: 1,
@@ -218,7 +223,7 @@ describe('StepHeader delayed events', () => {
         render(
             <StepHeader
                 instanceId="process"
-                node={tree.byId.get(1)!}
+                node={tree.byId.get(9999)!}
                 processStatus={ProcessStatus.FINISHED}
             />
         );
@@ -226,6 +231,69 @@ describe('StepHeader delayed events', () => {
         expect(vi.mocked(listSegmentEvents).mock.calls[0][1]).toBe(9999);
         expect(screen.getByText('local.yaml:7')).toBeTruthy();
     });
+
+    test('shows input/output of the selected iteration and clears it for the parent', async () => {
+        const tree = buildSegmentTree([
+            { ...segment(1), kind: SegmentKind.LOOP },
+            { ...segment(2), parentId: 1, kind: SegmentKind.ITERATION, iterationIndex: 0 },
+            { ...segment(3), parentId: 1, kind: SegmentKind.ITERATION, iterationIndex: 1 },
+        ]);
+        vi.mocked(listSegmentEvents).mockImplementation(async (_id, segmentId) => [
+            event('pre', { in: { input: `input-${segmentId}` } }),
+            event('post', { out: { output: `output-${segmentId}` } }),
+        ]);
+        const view = render(
+            <StepHeader
+                instanceId="process"
+                node={tree.byId.get(3)!}
+                processStatus={ProcessStatus.FINISHED}
+            />
+        );
+        await openDetails();
+        expect(screen.getByText('input-3')).toBeTruthy();
+        expect(screen.getByText('output-3')).toBeTruthy();
+        expect(vi.mocked(listSegmentEvents).mock.calls.every((call) => call[1] === 3)).toBe(true);
+
+        vi.mocked(listSegmentEvents).mockClear();
+        view.rerender(
+            <StepHeader
+                instanceId="process"
+                node={tree.byId.get(1)!}
+                processStatus={ProcessStatus.FINISHED}
+            />
+        );
+        await openDetails();
+        await advance(20_000);
+        expect(listSegmentEvents).not.toHaveBeenCalled();
+        expect(screen.queryByText('input-3')).toBeNull();
+        expect(screen.queryByText('output-3')).toBeNull();
+    });
+
+    test.each([SegmentKind.LOOP, SegmentKind.RETRY])(
+        'never requests events for an empty %s parent',
+        async (kind) => {
+            const tree = buildSegmentTree([{ ...segment(1), kind }]);
+            const view = render(
+                <StepHeader
+                    instanceId="process"
+                    node={tree.byId.get(1)!}
+                    processStatus={ProcessStatus.RUNNING}
+                />
+            );
+            await openDetails();
+            await advance(20_000);
+            view.rerender(
+                <StepHeader
+                    instanceId="process"
+                    node={tree.byId.get(1)!}
+                    processStatus={ProcessStatus.FINISHED}
+                />
+            );
+            await advance(20_000);
+            expect(listSegmentEvents).not.toHaveBeenCalled();
+            expect(screen.queryByText('Step details have not arrived yet.')).toBeNull();
+        }
+    );
 
     test('moves from empty to metadata, pre-only input, and delayed post output', async () => {
         const pre = event('pre', {
@@ -410,28 +478,18 @@ describe('StepHeader delayed events', () => {
         expect(detailedCalls).toBe(2);
     });
 
-    test('resolves loop details through a retry iteration to its last attempt', async () => {
-        vi.mocked(listSegmentEvents).mockResolvedValue([event('pre')]);
+    test('does not substitute a loop attempt for its parent, including with an error handler', async () => {
         const tree = buildSegmentTree([
-            { ...segment(700), kind: SegmentKind.STEP },
+            { ...segment(700), kind: SegmentKind.LOOP },
             {
-                ...segment(701, SegmentStatus.OK, 'correlation-700'),
-                kind: SegmentKind.ITERATION,
-                parentId: 700,
-                iterationIndex: 0,
+                ...segment(701), kind: SegmentKind.ATTEMPT, parentId: 700,
+                iterationIndex: 0, attemptIndex: 0,
             },
             {
-                ...segment(702, SegmentStatus.FAILED, 'correlation-700'),
-                kind: SegmentKind.ATTEMPT,
-                parentId: 701,
-                attemptIndex: 0,
+                ...segment(702), kind: SegmentKind.ATTEMPT, parentId: 700,
+                iterationIndex: 0, attemptIndex: 1,
             },
-            {
-                ...segment(703, SegmentStatus.OK, 'correlation-700'),
-                kind: SegmentKind.ATTEMPT,
-                parentId: 701,
-                attemptIndex: 1,
-            },
+            { ...segment(703), kind: SegmentKind.ERROR, parentId: 700 },
         ]);
         render(
             <StepHeader
@@ -440,8 +498,8 @@ describe('StepHeader delayed events', () => {
                 processStatus={ProcessStatus.FINISHED}
             />
         );
-        await flush();
-        expect(vi.mocked(listSegmentEvents).mock.calls[0][1]).toBe(703);
+        await openDetails();
+        expect(listSegmentEvents).not.toHaveBeenCalled();
     });
 
     test('ignores a response from the previously selected step', async () => {

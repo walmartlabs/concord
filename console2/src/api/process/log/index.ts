@@ -95,6 +95,10 @@ export enum SegmentStatus {
 export enum SegmentKind {
     // the whole execution of a step
     STEP = 'STEP',
+    // the whole loop, including retries and its error handler
+    LOOP = 'LOOP',
+    // a retried step without a loop, including its error handler
+    RETRY = 'RETRY',
     // one iteration of a loop
     ITERATION = 'ITERATION',
     // one attempt of a step with "retry", including the first one

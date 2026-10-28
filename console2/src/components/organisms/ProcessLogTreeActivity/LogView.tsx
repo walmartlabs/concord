@@ -581,7 +581,7 @@ const SegmentHeader = ({
     hasPrevious,
     onRetry,
 }: SegmentHeaderProps) => {
-    const { kind, name, note, badgeOnly, loop } = describeNode(node);
+    const { kind, name, note, badgeOnly, groupKind } = describeNode(node);
 
     // the parent's lines resume after a nested step: just the parent's name
     if (continued) {
@@ -651,7 +651,7 @@ const SegmentHeader = ({
                     processStatus={processStatus}
                     failedInside={node.hasFailedDescendant}
                 />
-                {loop && <KindBadge kind="loop" />}
+                {groupKind && <KindBadge kind={groupKind} />}
                 {kind && <KindBadge kind={kind} title={badgeOnly ? name : undefined} />}
                 {!badgeOnly && (
                     <span className="Name" title={name}>
