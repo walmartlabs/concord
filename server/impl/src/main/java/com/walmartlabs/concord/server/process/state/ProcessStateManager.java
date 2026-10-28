@@ -106,6 +106,77 @@ public class ProcessStateManager extends AbstractDao {
         super.tx(t);
     }
 
+    /** Identifies a state row independently of the process key cache. */
+    public record StateRow(OffsetDateTime createdAt, UUID instanceId, String path) {}
+
+    public enum StateTable {
+        INITIAL, CURRENT
+    }
+
+    private static ProcessStateTable stateTable(StateTable table) {
+        return table == StateTable.INITIAL ? InitialProcessStateTable.INSTANCE : CurrentProcessStateTable.INSTANCE;
+    }
+
+    /**
+     * Enumerates a stable keyset page. The caller supplies the last row from the
+     * previous page, rather than an offset that can shift as rows are changed.
+     */
+    public List<StateRow> enumerateState(DSLContext tx, StateTable kind, String path, StateRow after, int limit) {
+        ProcessStateTable table = stateTable(kind);
+        var condition = table.ITEM_PATH().eq(path);
+        if (after != null) {
+            condition = condition.and(row(table.INSTANCE_CREATED_AT(), table.INSTANCE_ID(), table.ITEM_PATH())
+                    .gt(row(stateTimestamp(after.createdAt()), val(after.instanceId()), val(after.path()))));
+        }
+        // Read the instant explicitly in UTC: the jOOQ timestamp conversion can
+        // otherwise reinterpret the local wall time as UTC on non-UTC hosts.
+        Field<String> timestamp = field("to_char({0} at time zone 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS.US') || 'Z'",
+                String.class, table.INSTANCE_CREATED_AT());
+        return tx.select(timestamp, table.INSTANCE_ID(), table.ITEM_PATH())
+                .from(table.table())
+                .where(condition)
+                .orderBy(table.INSTANCE_CREATED_AT(), table.INSTANCE_ID(), table.ITEM_PATH())
+                .limit(limit)
+                .fetch(r -> new StateRow(OffsetDateTime.parse(r.value1()), r.value2(), r.value3()));
+    }
+
+    private static Field<OffsetDateTime> stateTimestamp(OffsetDateTime timestamp) {
+        // jOOQ can bind OffsetDateTime as varchar; make the PostgreSQL type
+        // explicit so comparisons also work inside keyset row expressions.
+        return field("cast({0} as timestamptz)", OffsetDateTime.class, val(timestamp.toString()));
+    }
+
+    /**
+     * Locks and transforms one row in the caller's transaction. Only ITEM_DATA
+     * is updated; encryption and mode belong to the existing row.
+     * A null transform result leaves the row untouched.
+     */
+    public void updateStateData(DSLContext tx, StateTable kind, StateRow key, Function<byte[], byte[]> transform) {
+        ProcessStateTable table = stateTable(kind);
+        var condition = table.INSTANCE_CREATED_AT().eq(stateTimestamp(key.createdAt()))
+                .and(table.INSTANCE_ID().eq(key.instanceId()))
+                .and(table.ITEM_PATH().eq(key.path()));
+        var record = tx.select(table.IS_ENCRYPTED(), table.ITEM_DATA())
+                .from(table.table()).where(condition).forUpdate().fetchOne();
+        if (record == null) {
+            return;
+        }
+        boolean encrypted = Boolean.TRUE.equals(record.value1());
+        byte[] data = record.value2();
+        if (encrypted) {
+            try (InputStream in = decrypt(new java.io.ByteArrayInputStream(data))) {
+                data = in.readAllBytes();
+            } catch (IOException e) {
+                throw new IllegalStateException("Unable to decrypt state row " + key, e);
+            }
+        }
+        byte[] replacement = transform.apply(data);
+        if (replacement != null) {
+            tx.update(table.table()).set(table.ITEM_DATA(), encrypted ? encrypt(replacement) : replacement)
+                    .where(condition).execute();
+        }
+    }
+
     public <T> Optional<T> get(PartialProcessKey partialProcessKey, String path, Function<InputStream, Optional<T>> converter) {
         ProcessKey processKey = processKeyCache.get(partialProcessKey.getInstanceId());
         if (processKey == null) {

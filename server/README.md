@@ -27,3 +27,7 @@ Authorization group mappings are qualified by source. LDAP refreshes replace
 only LDAP-owned observations; direct role and team grants remain independent.
 `security.authorization.sources.<id>.required` controls whether an unavailable
 or missing source prevents access, and `.maxAge` controls its observation lease.
+
+Execution identity conversion supports versioned JSON and legacy serialized
+principals. The migrator uses an advisory lock and commits each state row
+independently, preserving encryption and file mode; it is not yet run at startup.
