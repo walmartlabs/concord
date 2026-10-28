@@ -77,6 +77,7 @@ afterEach(() => {
     observers.clear();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+    vi.useRealTimers();
 });
 
 const flatSegments = () => Array.from({ length: 5000 }, (_, i) => segment(i + 1));
@@ -456,4 +457,107 @@ test('metadata refresh preserves a manually collapsed ancestor of the selected s
     view.rerender(<Harness tree={buildSegmentTree([...entries, segment(3)])} initialId={2} />);
     expect(mountedIds()).not.toContain(2);
     expect(mountedIds()).toContain(3);
+});
+
+test('running duration and timeline advance without a new tree snapshot', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(6000);
+    const tree = buildSegmentTree([
+        segment(1, {
+            createdAt: new Date(1000).toISOString(),
+            status: SegmentStatus.OK,
+            statusUpdatedAt: new Date(3000).toISOString(),
+        }),
+        segment(2, {
+            createdAt: new Date(3000).toISOString(),
+            status: SegmentStatus.RUNNING,
+        }),
+    ]);
+    const view = render(
+        <LogSegmentTree tree={tree} processStatus={ProcessStatus.RUNNING} onSelect={vi.fn()} />
+    );
+    const duration = (id: number) => rowOf(id).querySelector('.Duration')?.textContent;
+    const bar = (id: number) => rowOf(id).querySelector('.Bar') as HTMLElement;
+    expect(duration(1)).toBe('2.0s');
+    expect(duration(2)).toBe('3.0s');
+    expect(parseFloat(bar(2).style.left)).toBeCloseTo(40);
+    expect(parseFloat(bar(2).style.width)).toBeCloseTo(60);
+
+    act(() => {
+        vi.advanceTimersByTime(4000);
+    });
+    expect(duration(1)).toBe('2.0s');
+    expect(duration(2)).toBe('7.0s');
+    expect(parseFloat(bar(2).style.left)).toBeCloseTo((2 / 9) * 100);
+    expect(parseFloat(bar(2).style.width)).toBeCloseTo((7 / 9) * 100);
+    expect(parseFloat(bar(1).style.width)).toBeCloseTo((2 / 9) * 100);
+    expect(view.container.querySelector('.HeaderTimeline')?.textContent).toBe('0s9.0s');
+    expect(vi.getTimerCount()).toBe(1);
+    view.unmount();
+    expect(vi.getTimerCount()).toBe(0);
+});
+
+test('starts the clock for running segments and stops when none remain', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(6000);
+    const finished = segment(1, {
+        createdAt: new Date(1000).toISOString(),
+        status: SegmentStatus.OK,
+        statusUpdatedAt: new Date(3000).toISOString(),
+    });
+    const onSelect = vi.fn();
+    const view = render(
+        <LogSegmentTree
+            tree={buildSegmentTree([finished])}
+            processStatus={ProcessStatus.RUNNING}
+            onSelect={onSelect}
+        />
+    );
+    expect(vi.getTimerCount()).toBe(0);
+    act(() => {
+        vi.advanceTimersByTime(4000);
+    });
+    view.rerender(
+        <LogSegmentTree
+            tree={buildSegmentTree([{ ...finished, status: SegmentStatus.RUNNING }])}
+            processStatus={ProcessStatus.RUNNING}
+            onSelect={onSelect}
+        />
+    );
+    expect(rowOf(1).querySelector('.Duration')?.textContent).toBe('9.0s');
+    expect(vi.getTimerCount()).toBe(1);
+    view.rerender(
+        <LogSegmentTree
+            tree={buildSegmentTree([finished])}
+            processStatus={ProcessStatus.RUNNING}
+            onSelect={onSelect}
+        />
+    );
+    expect(vi.getTimerCount()).toBe(0);
+    act(() => {
+        vi.advanceTimersByTime(4000);
+    });
+    expect(rowOf(1).querySelector('.Duration')?.textContent).toBe('2.0s');
+});
+
+test('stops the clock when the process finishes even if segment metadata still says running', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(6000);
+    const tree = buildSegmentTree([
+        segment(1, { createdAt: new Date(1000).toISOString(), status: SegmentStatus.RUNNING }),
+    ]);
+    const onSelect = vi.fn();
+    const view = render(
+        <LogSegmentTree tree={tree} processStatus={ProcessStatus.RUNNING} onSelect={onSelect} />
+    );
+    expect(vi.getTimerCount()).toBe(1);
+    view.rerender(
+        <LogSegmentTree tree={tree} processStatus={ProcessStatus.FINISHED} onSelect={onSelect} />
+    );
+    expect(vi.getTimerCount()).toBe(0);
+    const content = view.container.innerHTML;
+    act(() => {
+        vi.advanceTimersByTime(4000);
+    });
+    expect(view.container.innerHTML).toBe(content);
 });

@@ -297,11 +297,25 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
         [tree]
     );
 
-    const selectedPos =
-        selectedId !== undefined ? tree.ordered.findIndex((n) => n.segment.id === selectedId) : -1;
+    const selectedPos = useMemo(
+        () =>
+            selectedId !== undefined
+                ? tree.ordered.findIndex((n) => n.segment.id === selectedId)
+                : -1,
+        [tree, selectedId]
+    );
     const selectedErrorIdx = errorPositions.indexOf(selectedPos);
 
-    const timeRange = useMemo(() => {
+    const running = counts.RUNNING > 0 && !isFinal(processStatus);
+    const [clock, setClock] = useState(Date.now);
+    useEffect(() => {
+        if (!running) return;
+        const timer = window.setInterval(() => setClock(Date.now()), 1000);
+        return () => window.clearInterval(timer);
+    }, [running]);
+
+    // Scan metadata only when it changes; clock ticks update the live endpoint below.
+    const sampledRange = useMemo(() => {
         const now = Date.now();
         let start = Number.MAX_SAFE_INTEGER;
         let end = 0;
@@ -314,6 +328,14 @@ const LogSegmentTree = ({ tree, processStatus, selectedId, onSelect }: Props) =>
         });
         return { start, end, now };
     }, [tree, processStatus]);
+    const timeRange = useMemo(() => {
+        const now = Math.max(clock, sampledRange.now);
+        return {
+            start: sampledRange.start,
+            end: running ? Math.max(sampledRange.end, now) : sampledRange.end,
+            now,
+        };
+    }, [sampledRange, clock, running]);
 
     // Reveal ancestors once per selection, not on every metadata refresh.
     const revealedSelection = useRef<number>();
