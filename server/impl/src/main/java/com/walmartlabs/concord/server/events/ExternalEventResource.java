@@ -29,7 +29,6 @@ import com.walmartlabs.concord.server.events.externalevent.ExternalEventTriggerP
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
-import com.walmartlabs.concord.server.user.UserManager;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -60,7 +59,7 @@ public class ExternalEventResource implements Resource {
 
     private final ExternalEventsConfiguration cfg;
     private final TriggerProcessExecutor executor;
-    private final UserManager userManager;
+    private final EventDirectoryResolver directories;
     private final TriggerEventInitiatorResolver initiatorResolver;
     private final Set<ExternalEventTriggerProcessor> processors;
     private final AuditLog auditLog;
@@ -69,7 +68,7 @@ public class ExternalEventResource implements Resource {
     @Inject
     public ExternalEventResource(ExternalEventsConfiguration cfg,
                                  TriggerProcessExecutor executor,
-                                 UserManager userManager,
+                                 EventDirectoryResolver directories,
                                  TriggerEventInitiatorResolver initiatorResolver,
                                  Set<ExternalEventTriggerProcessor> processors,
                                  AuditLog auditLog,
@@ -77,7 +76,7 @@ public class ExternalEventResource implements Resource {
 
         this.cfg = requireNonNull(cfg);
         this.executor = requireNonNull(executor);
-        this.userManager = requireNonNull(userManager);
+        this.directories = requireNonNull(directories);
         this.initiatorResolver = requireNonNull(initiatorResolver);
         this.processors = requireNonNull(processors);
         this.auditLog = requireNonNull(auditLog);
@@ -117,7 +116,7 @@ public class ExternalEventResource implements Resource {
                     .id(eventId)
                     .name(eventName)
                     .attributes(r.event())
-                    .initiator(memo(new EventInitiatorSupplier("author", userManager, r.event())))
+                    .initiator(memo(new EventInitiatorSupplier("author", directories, cfg.getUserDirectory(), r.event())))
                     .build();
 
             List<PartialProcessKey> processKeys = executor.execute(e, initiatorResolver, r.triggers());

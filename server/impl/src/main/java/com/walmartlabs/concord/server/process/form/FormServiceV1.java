@@ -33,7 +33,7 @@ import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKeyCache;
-import com.walmartlabs.concord.server.user.UserInfoProvider.UserInfo;
+import com.walmartlabs.concord.server.user.UserInfo;
 import com.walmartlabs.concord.server.user.UserManager;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.DefaultFormService;

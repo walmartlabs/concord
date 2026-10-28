@@ -23,6 +23,10 @@ package com.walmartlabs.concord.server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ObjectMapperProvider;
 import org.junit.jupiter.api.Test;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.walmartlabs.concord.server.user.UserInfo;
 
 import java.util.Map;
 
@@ -55,6 +59,20 @@ class ConcordObjectMapperTest {
         var jsonB = concordObjectMapper.toJSONB(Map.of("notNul", ">\\u0000<"));
 
         assertEquals("{\"notNul\":\">\\\\u0000<\"}", jsonB.toString());
+    }
+
+    @Test
+    void restoresLegacyClassTaggedUserInfo() throws Exception {
+        var mapper = new ObjectMapper().enableDefaultTyping(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT)
+                .registerModule(new GuavaModule()).registerModule(new Jdk8Module()).registerModule(new JavaTimeModule());
+        String payload = "{\"initiator\":[\"com.walmartlabs.concord.server.user.ImmutableUserInfo\","
+                + "{\"id\":\"a8cc79a5-2fc5-4971-985e-389e36687370\",\"username\":\"alice\","
+                + "\"usernameSignature\":\"signed\"}]}";
+        Map<String, Object> restored = mapper.readValue(payload, ConcordObjectMapper.MAP_TYPE);
+        UserInfo info = (UserInfo) restored.get("initiator");
+        assertEquals("alice", info.username());
+        assertEquals("signed", info.usernameSignature());
+        assertEquals("a8cc79a5-2fc5-4971-985e-389e36687370", info.id().toString());
     }
 
 }

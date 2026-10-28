@@ -31,31 +31,45 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
 import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
+import com.walmartlabs.concord.server.sdk.security.UserProfileService;
+import com.walmartlabs.concord.server.sdk.security.UserProfile;
+import com.walmartlabs.concord.server.sdk.security.DirectoryQuery;
+import com.walmartlabs.concord.server.security.provider.ProviderRegistry;
+import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
+import com.walmartlabs.concord.server.security.identity.IdentityDao;
+import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.cfg.LdapConfiguration;
+import java.util.stream.Collectors;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 import java.util.*;
 
-import static com.walmartlabs.concord.server.user.UserInfoProvider.UserInfo;
 
 public class UserManager {
 
     private final UserDao userDao;
     private final TeamDao teamDao;
     private final AuditLog auditLog;
-    private final Map<UserType, UserInfoProvider> userInfoProviders;
-
-    private static final String SSO_REALM_NAME = "sso";
+    private final UserProfileService profiles;
+    private final AuthorizationService authorization;
+    private final ProviderRegistry registry;
+    private final IdentityDao identities;
+    private final LdapConfiguration ldapConfiguration;
 
     @Inject
-    public UserManager(UserDao userDao, TeamDao teamDao, AuditLog auditLog, Set<UserInfoProvider> providers) {
+    public UserManager(UserDao userDao, TeamDao teamDao, AuditLog auditLog, UserProfileService profiles,
+                       AuthorizationService authorization, ProviderRegistry registry, IdentityDao identities,
+                       LdapConfiguration ldapConfiguration) {
         this.userDao = userDao;
         this.teamDao = teamDao;
         this.auditLog = auditLog;
-
-        this.userInfoProviders = new HashMap<>();
-        providers.forEach(p -> this.userInfoProviders.put(p.getUserType(), p));
+        this.profiles = profiles;
+        this.authorization = authorization;
+        this.registry = registry;
+        this.identities = identities;
+        this.ldapConfiguration = ldapConfiguration;
     }
 
     public Optional<UserEntry> get(String username, String domain, UserType type) {
@@ -85,17 +99,15 @@ public class UserManager {
             type = currentLegacyType();
         }
 
-        UserInfoProvider provider = assertProvider(type);
-        UserInfo info = provider.getInfo(null, username, userDomain);
-        if (info != null) {
+        if (type == UserType.LDAP) {
+            UserProfile info = ldapProfile(username, userDomain);
+            if (info == null) return Optional.empty();
             username = info.username();
-            userDomain = info.userDomain();
+            userDomain = info.domain();
             displayName = info.displayName();
             email = info.email();
             result = get(username, userDomain, type);
-            if (result.isPresent()) {
-                return result;
-            }
+            if (result.isPresent()) return result;
         }
 
         return Optional.of(create(username, userDomain, displayName, email, type, roles));
@@ -184,8 +196,10 @@ public class UserManager {
             type = currentLegacyType();
         }
 
-        UserInfoProvider provider = assertProvider(type);
-        UUID id = provider.create(username, domain, displayName, email, roles);
+        if (type == UserType.LDAP && !Roles.isAdmin() && !ldapConfiguration.isAutoCreateUsers()) {
+            throw new ConcordApplicationException("Automatic creation of users is disabled.");
+        }
+        UUID id = userDao.insertOrUpdate(username, domain, displayName, email, type, roles);
 
         // add the new user to the default org/team
         UUID teamId = TeamManager.DEFAULT_ORG_TEAM_ID;
@@ -217,10 +231,12 @@ public class UserManager {
         UUID previousId = userDao.getLegacyId(username, domain, type);
         UserInfo creationInfo = null;
         if (previousId == null && type == UserType.LDAP) {
-            creationInfo = assertProvider(type).getInfo(null, username, domain);
-            if (creationInfo == null) {
+            UserProfile profile = ldapProfile(username, domain);
+            if (profile == null) {
                 throw new ConcordApplicationException("User '" + username + "' with domain '" + domain + "' not found in LDAP");
             }
+            creationInfo = UserInfo.builder().username(profile.username()).userDomain(profile.domain())
+                    .displayName(profile.displayName()).email(profile.email()).build();
         }
         UserDao.LegacyUpsert result = userDao.upsertLegacyAccount(username, domain, type, request.getDisplayName(),
                 request.getEmail(), request.isDisabled(), request.getRoles(), creationInfo);
@@ -251,19 +267,31 @@ public class UserManager {
         if (u == null) {
             return null;
         }
-        UserEntry account = get(u.userId()).orElseThrow(() -> new ConcordApplicationException("User not found: " + u.userId()));
-        UserType type = assertSsoUserType(u, account.getType());
-        UserInfoProvider p = assertProvider(type);
-        return p.getInfo(u.userId(), u.username(), u.domain());
+        return getInfo(u.userId());
     }
 
     public List<LdapGroupSearchResult> searchLdapGroups(String filter) {
         return userDao.searchLdapGroups(filter);
     }
 
-    public UserInfo getInfo(String username, String domain, UserType type) {
-        UserInfoProvider p = assertProvider(assertUserType(username, domain, type));
-        return p.getInfo(null, username, domain);
+    public UserInfo getInfo(UUID userId) {
+        UserProfile profile = profiles.get(userId);
+        var groups = authorization.getGroups(userId);
+        return UserInfo.builder().id(userId).username(profile.username()).userDomain(profile.domain())
+                .displayName(profile.displayName()).email(profile.email()).attributes(profile.attributes())
+                .groups(groups.stream().filter(g -> "ldap".equals(g.sourceId()))
+                        .map(g -> g.groupId()).collect(Collectors.toSet()))
+                .authorizationGroups(groups).build();
+    }
+
+    public IdentityDao.ProfileSelection profileSelection(UUID userId) {
+        return identities.profile(userId).orElseThrow(() -> new ConcordApplicationException("User not found: " + userId));
+    }
+
+    private UserProfile ldapProfile(String username, String domain) {
+        var directory = registry.directories().get("ldap");
+        if (directory == null) throw new ConcordApplicationException("LDAP directory is unavailable");
+        return directory.find(new DirectoryQuery("username", username, domain)).map(e -> e.profile()).orElse(null);
     }
 
     public void enable(UUID userId) {
@@ -348,38 +376,6 @@ public class UserManager {
         return get(id).orElseThrow(() -> new ConcordApplicationException("User not found: " + id)).getType();
     }
 
-    private UserInfoProvider assertProvider(UserType type) {
-        UserInfoProvider p = userInfoProviders.get(type);
-        if (p == null) {
-            throw new ConcordApplicationException("Unknown user account type: " + type);
-        }
-        return p;
-    }
-
-    private UserType assertUserType(String username, String domain, UserType type) {
-        /* Override LDAP to SSO type if current user loggedIn via SSO */
-        /*
-        1. LoggedIn via internal user realm -> domain = null
-        2. LoggedIn via ldap realm -> realm != SSO_REALM_NAME
-        3. LoggedIn via SSO -> @return UserType.SSO
-         */
-        if (username != null && domain != null) {
-            SubjectPrincipal u = PrincipalNormalization.getCurrent();
-            if (u != null && u.username().equalsIgnoreCase(username) && u.domain() != null && u.domain().equalsIgnoreCase(domain)) {
-                return assertSsoUserType(u, type);
-            }
-        }
-        return type;
-    }
-
-    private UserType assertSsoUserType(SubjectPrincipal u, UserType type) {
-        if (u.authentication().providerId().equals(SSO_REALM_NAME)) {
-            if (userInfoProviders.get(UserType.SSO) != null) {
-                return UserType.SSO;
-            }
-        }
-        return type;
-    }
 
     /**
      * {@link DiffUtils#compare(Object, Object)}

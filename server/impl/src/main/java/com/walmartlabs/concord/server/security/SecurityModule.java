@@ -37,11 +37,9 @@ import com.walmartlabs.concord.server.security.identity.LocalUserDirectory;
 import com.walmartlabs.concord.server.security.identity.IdentityServiceImpl;
 import com.walmartlabs.concord.server.security.identity.UserProfileServiceImpl;
 import com.walmartlabs.concord.server.security.internal.InternalRealm;
-import com.walmartlabs.concord.server.security.internal.LocalUserInfoProvider;
 import com.walmartlabs.concord.server.security.ldap.*;
 import com.walmartlabs.concord.server.security.provider.ProviderRegistry;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyRealm;
-import com.walmartlabs.concord.server.user.UserInfoProvider;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.realm.ldap.LdapContextFactory;
 
@@ -80,11 +78,6 @@ public class SecurityModule implements Module {
 
         bindSingletonScheduledTask(binder, UserLdapGroupSynchronizer.class);
 
-        binder.bind(LocalUserInfoProvider.class).in(SINGLETON);
-        newSetBinder(binder, UserInfoProvider.class).addBinding().to(LocalUserInfoProvider.class);
-
-        binder.bind(LdapUserInfoProvider.class).in(SINGLETON);
-        newSetBinder(binder, UserInfoProvider.class).addBinding().to(LdapUserInfoProvider.class);
 
         bindExceptionMapper(binder, UnauthorizedExceptionMapper.class);
         bindExceptionMapper(binder, UnauthenticatedExceptionMapper.class);

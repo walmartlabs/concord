@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.pipelines.processors.signing.Signing;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.user.UserInfoProvider;
+import com.walmartlabs.concord.server.user.UserInfo;
 import com.walmartlabs.concord.server.user.UserManager;
 
 import java.util.HashMap;
@@ -67,13 +67,13 @@ public abstract class UserInfoProcessor implements PayloadProcessor {
             var signature = Optional.ofNullable(info.username())
                     .map(this::sign);
 
-            info = signature.isEmpty() ? info : UserInfoProvider.UserInfo.builder()
+            info = signature.isEmpty() ? info : UserInfo.builder()
                     .from(info)
                     .usernameSignature(signature.get())
                     .build();
         }
 
-        Map<String, UserInfoProvider.UserInfo> m = new HashMap<>();
+        Map<String, UserInfo> m = new HashMap<>();
         m.put(key, info);
 
         payload = payload.mergeValues(Payload.CONFIGURATION, m);

@@ -150,6 +150,14 @@ public class TriggerProcessExecutor {
         UserEntry initiator;
         try {
             initiator = initiatorResolver.resolve(t, event);
+        } catch (ConcordApplicationException e) {
+            if (e.getResponse().getStatus() == Response.Status.SERVICE_UNAVAILABLE.getStatusCode()) {
+                throw e;
+            }
+            log.error("process ['{}', '{}', '{}'] -> error", event.id(), event.name(), t.getId(), e);
+            SettableFuture<PartialProcessKey> f = SettableFuture.create();
+            f.set(null);
+            return f;
         } catch (Exception e) {
             log.error("process ['{}', '{}', '{}'] -> error", event.id(), event.name(), t.getId(), e);
             SettableFuture<PartialProcessKey> f = SettableFuture.create();

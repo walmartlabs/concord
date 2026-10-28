@@ -132,7 +132,7 @@ public class UserDao extends AbstractDao {
     public record LegacyUpsert(UUID id, boolean created, UserEntry previous) {}
 
     public LegacyUpsert upsertLegacyAccount(String username, String domain, UserType type, String displayName,
-                                            String email, boolean disabled, Set<String> roles, UserInfoProvider.UserInfo creationInfo) {
+                                            String email, boolean disabled, Set<String> roles, UserInfo creationInfo) {
         return txResult(tx -> {
             tx.execute("select pg_advisory_xact_lock(2461020)");
             UUID id = legacyId(tx, username, domain, type);

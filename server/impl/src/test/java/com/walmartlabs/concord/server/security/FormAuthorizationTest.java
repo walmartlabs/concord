@@ -35,8 +35,11 @@ import org.apache.shiro.util.ThreadContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import javax.ws.rs.BadRequestException;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -71,5 +74,67 @@ class FormAuthorizationTest {
         assertThrows(UnauthorizedException.class, () -> forms.assertFormAccess("approval", rule));
         assertDoesNotThrow(() -> forms.assertFormAccess("approval", rule));
         assertThrows(UnauthorizedException.class, () -> forms.assertFormAccess("approval", rule));
+    }
+
+    @Test
+    void sourceQualifiedGroupsMatchExactlyAndUseCurrentAccountName() {
+        UUID id = UUID.randomUUID();
+        UserManager users = mock(UserManager.class);
+        AuthorizationService authorization = mock(AuthorizationService.class);
+        when(users.get(id)).thenReturn(Optional.of(new UserEntry(id, "alice", null, null, null, null, null, null, false, null, false)));
+        bind(id);
+        FormAccessManager forms = new FormAccessManager(mock(ProcessStateManager.class), users, authorization);
+        Map<String, Serializable> rule = new HashMap<>();
+        rule.put("username", "alice");
+        rule.put("groups", new ArrayList<>(List.of(Map.of("sourceId", "ldap", "groupId", "operators"))));
+        when(authorization.getGroups(id)).thenReturn(
+                Set.of(new GroupRef("other", "operators")),
+                Set.of(new GroupRef("ldap", "Operators")),
+                Set.of(new GroupRef("ldap", "CN=operators,OU=Groups")),
+                Set.of(new GroupRef("ldap", "operators")));
+        assertThrows(UnauthorizedException.class, () -> forms.assertFormAccess("approval", rule));
+        assertThrows(UnauthorizedException.class, () -> forms.assertFormAccess("approval", rule));
+        assertThrows(UnauthorizedException.class, () -> forms.assertFormAccess("approval", rule));
+        assertDoesNotThrow(() -> forms.assertFormAccess("approval", rule));
+        rule.put("username", "old-name");
+        assertThrows(UnauthorizedException.class, () -> forms.assertFormAccess("approval", rule));
+    }
+
+    @Test
+    void legacyLdapVariantsAndRegexMatchOnlyLdapSource() {
+        UUID id = UUID.randomUUID();
+        UserManager users = mock(UserManager.class);
+        AuthorizationService authorization = mock(AuthorizationService.class);
+        when(users.get(id)).thenReturn(Optional.of(new UserEntry(id, "alice", null, null, null, null, null, null, false, null, false)));
+        bind(id);
+        FormAccessManager forms = new FormAccessManager(mock(ProcessStateManager.class), users, authorization);
+        when(authorization.getGroups(id)).thenReturn(Set.of(new GroupRef("ldap", "CN=Operators,OU=Groups")));
+        Map<String, Serializable> rule = new HashMap<>();
+        rule.put("ldap", new HashMap<>(Map.of("group", new ArrayList<>(List.of("missing", "operators")))));
+        assertDoesNotThrow(() -> forms.assertFormAccess("approval", rule));
+        rule.put("ldap", new ArrayList<>(List.of(Map.of("group", "missing"), Map.of("group", "operators"))));
+        assertDoesNotThrow(() -> forms.assertFormAccess("approval", rule));
+        rule.put("ldap", new HashMap<>(Map.of("group", "CN=oper.*,OU=Groups")));
+        assertDoesNotThrow(() -> forms.assertFormAccess("approval", rule));
+    }
+
+    @Test
+    void combinedOrMalformedGroupRulesAreBadRequests() {
+        FormAccessManager forms = new FormAccessManager(mock(ProcessStateManager.class), mock(UserManager.class), mock(AuthorizationService.class));
+        Map<String, Serializable> rule = new HashMap<>();
+        rule.put("groups", new ArrayList<>());
+        rule.put("ldap", new HashMap<>());
+        assertThrows(BadRequestException.class, () -> forms.assertFormAccess("approval", rule));
+        rule.remove("ldap");
+        rule.put("groups", new ArrayList<>(List.of(Map.of("sourceId", "ldap"))));
+        assertThrows(BadRequestException.class, () -> forms.assertFormAccess("approval", rule));
+    }
+
+    private static void bind(UUID id) {
+        SubjectPrincipal principal = new SubjectPrincipal(id, "old-name", null, new AuthenticationContext("test", null, null));
+        DefaultSecurityManager manager = new DefaultSecurityManager();
+        ThreadContext.bind(manager);
+        ThreadContext.bind(new Subject.Builder(manager).authenticated(true)
+                .principals(new SimplePrincipalCollection(principal, "test")).buildSubject());
     }
 }

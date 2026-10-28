@@ -37,6 +37,10 @@ public class GithubConfiguration implements GitHubAppInstallationConfig {
     private String secret;
 
     @Inject
+    @Config("github.userDirectory")
+    private String userDirectory;
+
+    @Inject
     @Config("github.useSenderLdapDn")
     private boolean useSenderLdapDn;
 
@@ -78,6 +82,10 @@ public class GithubConfiguration implements GitHubAppInstallationConfig {
 
     public String getSecret() {
         return secret;
+    }
+
+    public String getUserDirectory() {
+        return userDirectory;
     }
 
     public boolean isUseSenderLdapDn() {

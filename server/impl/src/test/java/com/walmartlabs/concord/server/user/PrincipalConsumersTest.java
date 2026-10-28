@@ -66,6 +66,7 @@ class PrincipalConsumersTest {
     void consoleUsesCurrentGrantsForSdkPrincipal() {
         bind(new SubjectPrincipal(id, "old-name", "example", new AuthenticationContext("plugin", null, null)));
         when(users.get(id)).thenReturn(Optional.of(account));
+        when(users.getInfo(id)).thenReturn(UserInfo.builder().id(id).username("alice").displayName("Current name").build());
         when(authorization.getGroups(id)).thenReturn(Set.of(new GroupRef("ldap", "current"), new GroupRef("other", "hidden")));
         when(authorization.prepare(id)).thenReturn(new AuthorizationService.EffectiveAuthorization(Set.of("current-role"), Set.of()));
         var dao = mock(ConsoleService.ConsoleServiceDao.class);

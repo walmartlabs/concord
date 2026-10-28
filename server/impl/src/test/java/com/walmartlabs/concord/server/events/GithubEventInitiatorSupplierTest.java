@@ -27,7 +27,7 @@ import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.events.GithubEventResource.GithubEventInitiatorSupplier;
 import com.walmartlabs.concord.server.events.github.Payload;
-import com.walmartlabs.concord.server.security.ldap.LdapManager;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
@@ -46,6 +46,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
@@ -61,7 +62,7 @@ class GithubEventInitiatorSupplierTest {
     private UserManager userManager;
 
     @Mock
-    private LdapManager ldapManager;
+    private EventDirectoryResolver directories;
 
     @Mock
     private LoadingCache<GithubEventResource.EmailCacheKey, Optional<String>> ghUserEmailCache;
@@ -94,10 +95,10 @@ class GithubEventInitiatorSupplierTest {
         when(ghUserEmailCache.get(any(GithubEventResource.EmailCacheKey.class)))
                 .thenReturn(Optional.empty());
 
-        when(userManager.getOrCreate("mock-login", null, UserType.LDAP))
+        when(directories.find(null, "username", "mock-login"))
                 .thenReturn(Optional.of(userEntry));
 
-        var initiatorSupplier = new GithubEventInitiatorSupplier(githubCfg, userManager, ldapManager, payload, ghUserEmailCache);
+        var initiatorSupplier = new GithubEventInitiatorSupplier(githubCfg, userManager, directories, payload, ghUserEmailCache);
 
 
         // when: get call finds user in fallback
@@ -108,7 +109,7 @@ class GithubEventInitiatorSupplierTest {
         // then: user found via fallback and user is added to cache
 
         verify(userManager, times(1)).getUserFromExternalMapping(anyString());
-        verify(userManager, times(1)).getOrCreate("mock-login", null, UserType.LDAP);
+        verify(directories).find(null, "username", "mock-login");
         verify(userManager, times(1)).createExternalUserMapping(any(), any());
         verifyNoMoreInteractions(userManager);
     }
@@ -124,13 +125,13 @@ class GithubEventInitiatorSupplierTest {
         when(authTokenProvider.getToken(any(), any()))
                 .thenThrow(new RuntimeException("Error sending request"));
 
-        when(userManager.getOrCreate("mock-login", null, UserType.LDAP))
+        when(directories.find(null, "username", "mock-login"))
                 .thenReturn(Optional.of(userEntry));
 
         var emailCache = CacheBuilder.newBuilder()
                 .build(new GithubEventResource.EmailCacheLoader(githubCfg, new HashMap<>(), authTokenProvider, new ObjectMapper()));
 
-        var initiatorSupplier = new GithubEventInitiatorSupplier(githubCfg, userManager, ldapManager, payload, emailCache);
+        var initiatorSupplier = new GithubEventInitiatorSupplier(githubCfg, userManager, directories, payload, emailCache);
 
 
         // when: get call fails to look up the sender's email
@@ -141,8 +142,7 @@ class GithubEventInitiatorSupplierTest {
         // then: the error doesn't propagate, user is resolved via fallback
 
         assertEquals(userEntry, result);
-        verify(userManager, times(1)).getOrCreate("mock-login", null, UserType.LDAP);
-        verifyNoInteractions(ldapManager);
+        verify(directories).find(null, "username", "mock-login");
     }
 
     @Test
@@ -153,7 +153,7 @@ class GithubEventInitiatorSupplierTest {
         when(githubCfg.isEnableExternalUserIdMappingCache()).thenReturn(true);
         when(userManager.getUserFromExternalMapping(any())).thenReturn(Optional.of(userEntry));
 
-        var initiatorSupplier = new GithubEventInitiatorSupplier(githubCfg, userManager, ldapManager, payload, ghUserEmailCache);
+        var initiatorSupplier = new GithubEventInitiatorSupplier(githubCfg, userManager, directories, payload, ghUserEmailCache);
 
 
         // when: get call finds user in db mapping cache
@@ -166,6 +166,36 @@ class GithubEventInitiatorSupplierTest {
         verify(userManager, times(1)).getUserFromExternalMapping(any());
         verify(userManager, times(0)).createExternalUserMapping(any(), any());
         verifyNoMoreInteractions(userManager);
+    }
+
+    @Test
+    void resolvesInDnEmailLoginOrder() throws Exception {
+        Payload withDn = Payload.from("push", Map.of(
+                "repository", Map.of("full_name", "mock-org/mock-repo", "clone_url", "https://mock.local/mock-org/mock-repo.git"),
+                "sender", Map.of("login", "mock-login", "ldap_dn", "opaque-dn", "node_id", "123", "url", "https://mock.local/mock-login")));
+        when(githubCfg.getUserDirectory()).thenReturn("custom");
+        when(githubCfg.isUseSenderLdapDn()).thenReturn(true);
+        when(githubCfg.isUseSenderEmail()).thenReturn(true);
+        when(ghUserEmailCache.get(any())).thenReturn(Optional.of("person@example.org"));
+        when(directories.find("custom", "distinguishedName", "opaque-dn")).thenReturn(Optional.empty());
+        when(directories.find("custom", "email", "person@example.org")).thenReturn(Optional.empty());
+        when(directories.find("custom", "username", "mock-login")).thenReturn(Optional.of(userEntry));
+
+        assertEquals(userEntry, new GithubEventInitiatorSupplier(githubCfg, userManager, directories, withDn, ghUserEmailCache).get());
+        var order = inOrder(directories);
+        order.verify(directories).find("custom", "distinguishedName", "opaque-dn");
+        order.verify(directories).find("custom", "email", "person@example.org");
+        order.verify(directories).find("custom", "username", "mock-login");
+    }
+
+    @Test
+    void unavailableDirectoryDoesNotFallBack() {
+        when(githubCfg.getUserDirectory()).thenReturn("custom");
+        when(directories.find("custom", "username", "mock-login"))
+                .thenThrow(new ConcordApplicationException("directory unavailable", javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE));
+        var supplier = new GithubEventInitiatorSupplier(githubCfg, userManager, directories, payload, ghUserEmailCache);
+        assertEquals(503, assertThrows(ConcordApplicationException.class, supplier::get).getResponse().getStatus());
+        verifyNoInteractions(userManager);
     }
 
 }

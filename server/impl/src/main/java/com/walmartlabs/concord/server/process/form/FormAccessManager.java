@@ -31,6 +31,7 @@ import com.walmartlabs.concord.server.security.authorization.AuthorizationServic
 import com.walmartlabs.concord.server.user.UserManager;
 import io.takari.bpm.form.Form;
 
+import javax.ws.rs.BadRequestException;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,16 +67,16 @@ public class FormAccessManager {
             return null;
         }
 
-        if (Roles.isAdmin()) {
-            return f;
-        }
-
         Map<String, Object> opts = f.getOptions();
         if (opts == null) {
             return f;
         }
 
         Map<String, Serializable> runAsParams = (Map<String, Serializable>) opts.get(Constants.Forms.RUN_AS_KEY);
+        if (Roles.isAdmin()) {
+            parseRunAsGroups(formName, runAsParams);
+            return f;
+        }
 
         assertFormAccess(formName, runAsParams);
 
@@ -87,6 +88,8 @@ public class FormAccessManager {
             return;
         }
 
+        Set<Map<String, String>> expectedGroups = parseRunAsGroups(formName, runAsParams);
+
         SubjectPrincipal p = PrincipalNormalization.assertCurrent();
         String username = userManager.get(p.userId()).orElseThrow(() ->
                 new UnauthorizedException("Current user not found")).getName();
@@ -95,6 +98,13 @@ public class FormAccessManager {
         if (!expectedUsers.isEmpty() && !expectedUsers.contains(username)) {
             throw new UnauthorizedException("The current user (" + username + ") doesn't have " +
                     "the necessary permissions to access the form.");
+        }
+
+        if (!expectedGroups.isEmpty() && authorizationService.getGroups(p.userId()).stream()
+                .noneMatch(g -> expectedGroups.stream().anyMatch(expected ->
+                        expected.get("sourceId").equals(g.sourceId()) && expected.get("groupId").equals(g.groupId())))) {
+            throw new UnauthorizedException("The current user (" + username + ") doesn't have " +
+                    "the necessary permissions to resume process. Expected group(s) '" + expectedGroups + "'");
         }
 
         Set<String> formRunAsGroups = com.walmartlabs.concord.forms.FormUtils.getRunAsLdapGroups(formName, runAsParams);
@@ -111,6 +121,14 @@ public class FormAccessManager {
                 throw new UnauthorizedException("The current user (" + username + ") doesn't have " +
                         "the necessary permissions to resume process. Expected LDAP group(s) '" + formRunAsGroups + "'");
             }
+        }
+    }
+
+    private static Set<Map<String, String>> parseRunAsGroups(String formName, Map<String, Serializable> runAsParams) {
+        try {
+            return com.walmartlabs.concord.forms.FormUtils.getRunAsGroups(formName, runAsParams);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException(e.getMessage(), e);
         }
     }
 

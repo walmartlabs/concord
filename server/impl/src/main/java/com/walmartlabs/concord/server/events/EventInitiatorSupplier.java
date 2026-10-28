@@ -22,8 +22,6 @@ package com.walmartlabs.concord.server.events;
 
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.user.UserEntry;
-import com.walmartlabs.concord.server.user.UserManager;
-import com.walmartlabs.concord.server.user.UserType;
 
 import java.util.Map;
 import java.util.function.Supplier;
@@ -31,12 +29,14 @@ import java.util.function.Supplier;
 public class EventInitiatorSupplier implements Supplier<UserEntry> {
 
     private final String initiatorAttr;
-    private final UserManager userManager;
+    private final EventDirectoryResolver directories;
+    private final String directoryId;
     private final Map<String, Object> eventAttributes;
 
-    public EventInitiatorSupplier(String initiatorAttr, UserManager userManager, Map<String, Object> eventAttributes) {
+    public EventInitiatorSupplier(String initiatorAttr, EventDirectoryResolver directories, String directoryId, Map<String, Object> eventAttributes) {
         this.initiatorAttr = initiatorAttr;
-        this.userManager = userManager;
+        this.directories = directories;
+        this.directoryId = directoryId;
         this.eventAttributes = eventAttributes;
     }
 
@@ -47,7 +47,7 @@ public class EventInitiatorSupplier implements Supplier<UserEntry> {
             return null;
         }
 
-        return userManager.getOrCreate(author.toString(), null, UserType.LDAP)
+        return directories.find(directoryId, "username", author.toString())
                 .orElseThrow(() -> new ConcordApplicationException("User not found: " + author));
     }
 }

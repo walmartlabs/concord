@@ -81,6 +81,44 @@ public final class FormUtils {
     }
 
     /**
+     * Parses exact, source-qualified authorization groups.
+     */
+    public static Set<Map<String, String>> getRunAsGroups(String formName, Map<String, Serializable> runAsParams) {
+        if (runAsParams == null) {
+            return Collections.emptySet();
+        }
+        if (runAsParams.containsKey("groups") && runAsParams.containsKey(Constants.RUN_AS_LDAP_KEY)) {
+            throw new IllegalArgumentException("Invalid form definition: " + formName +
+                    ". runAs.groups and runAs.ldap cannot be combined");
+        }
+        Object groups = runAsParams.get("groups");
+        if (groups == null && !runAsParams.containsKey("groups")) {
+            return Collections.emptySet();
+        }
+        if (!(groups instanceof Collection)) {
+            throw new IllegalArgumentException("Invalid runAs.groups in form " + formName + ": expected a list");
+        }
+        Set<Map<String, String>> result = new HashSet<>();
+        for (Object group : (Collection<?>) groups) {
+            if (!(group instanceof Map)) {
+                throw new IllegalArgumentException("Invalid runAs.groups entry in form " + formName + ": " + group);
+            }
+            Map<?, ?> entry = (Map<?, ?>) group;
+            Object sourceId = entry.get("sourceId");
+            Object groupId = entry.get("groupId");
+            if (!(sourceId instanceof String) || ((String) sourceId).isEmpty() ||
+                    !(groupId instanceof String) || ((String) groupId).isEmpty()) {
+                throw new IllegalArgumentException("Invalid runAs.groups entry in form " + formName + ": " + group);
+            }
+            Map<String, String> ref = new HashMap<>();
+            ref.put("sourceId", (String) sourceId);
+            ref.put("groupId", (String) groupId);
+            result.add(ref);
+        }
+        return result;
+    }
+
+    /**
      * Returns a collection of LDAP groups that can submit the form or an empty collection if no restrictions are
      * specified.
      * <p>

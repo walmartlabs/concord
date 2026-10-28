@@ -49,11 +49,8 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
-import com.walmartlabs.concord.server.security.ldap.LdapManager;
-import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
-import com.walmartlabs.concord.server.user.UserType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -109,7 +106,7 @@ public class GithubEventResource implements Resource {
     private final AuditLog auditLog;
     private final GithubTriggerProcessor processor;
     private final UserManager userManager;
-    private final LdapManager ldapManager;
+    private final EventDirectoryResolver directories;
     private final TriggerEventInitiatorResolver initiatorResolver;
     private final Histogram startedProcessesPerEvent;
     private final Map<String, Long> rateLimitGauges;
@@ -121,7 +118,7 @@ public class GithubEventResource implements Resource {
                                AuditLog auditLog,
                                GithubTriggerProcessor processor,
                                UserManager userManager,
-                               LdapManager ldapManager,
+                               EventDirectoryResolver directories,
                                TriggerEventInitiatorResolver initiatorResolver,
                                MetricRegistry metricRegistry,
                                AuthTokenProvider authTokenProvider,
@@ -132,7 +129,7 @@ public class GithubEventResource implements Resource {
         this.auditLog = auditLog;
         this.processor = processor;
         this.userManager = userManager;
-        this.ldapManager = ldapManager;
+        this.directories = directories;
         this.initiatorResolver = initiatorResolver;
         this.startedProcessesPerEvent = metricRegistry.histogram("started-processes-per-github-event");
         this.rateLimitGauges = new ConcurrentHashMap<>(githubCfg.getAuthConfigs().size());
@@ -192,7 +189,7 @@ public class GithubEventResource implements Resource {
         List<GithubTriggerProcessor.Result> results = new ArrayList<>();
         processor.process(eventName, payload, uriInfo, results);
 
-        Supplier<UserEntry> initiatorSupplier = memo(new GithubEventInitiatorSupplier(githubCfg, userManager, ldapManager, payload, ghUserEmailCache));
+        Supplier<UserEntry> initiatorSupplier = memo(new GithubEventInitiatorSupplier(githubCfg, userManager, directories, payload, ghUserEmailCache));
 
         int startedProcesses = 0;
         for (GithubTriggerProcessor.Result r : results) {
@@ -280,20 +277,20 @@ public class GithubEventResource implements Resource {
 
         private final GithubConfiguration githubCfg;
         private final UserManager userManager;
-        private final LdapManager ldapManager;
+        private final EventDirectoryResolver directories;
         private final LoadingCache<EmailCacheKey, Optional<String>> ghUserEmailCache;
         private final Payload payload;
         private final Supplier<UserEntry> fallback;
 
         public GithubEventInitiatorSupplier(GithubConfiguration githubCfg,
                                             UserManager userManager,
-                                            LdapManager ldapManager,
+                                            EventDirectoryResolver directories,
                                             Payload payload,
                                             LoadingCache<EmailCacheKey, Optional<String>> ghUserEmailCache) {
 
             this.githubCfg = githubCfg;
             this.userManager = userManager;
-            this.ldapManager = ldapManager;
+            this.directories = directories;
             this.ghUserEmailCache = ghUserEmailCache;
             this.payload = payload;
             this.fallback = () -> {
@@ -302,11 +299,10 @@ public class GithubEventResource implements Resource {
                     throw new ConcordApplicationException("Can't determine initiator: " + payload);
                 }
 
-                UserEntry userEntry = userManager.getOrCreate(initiator, null, UserType.LDAP)
+                UserEntry userEntry = directories.find(githubCfg.getUserDirectory(), "username", initiator)
                         .orElseThrow(() -> new ConcordApplicationException("User not found: " + initiator));
 
-                // add to DB mapping cache (if enabled) so that next time we can
-                // find the user without LDAP lookup
+                // Preserve the opaque GitHub-to-account mapping for future events.
                 addUserDbMapping(userEntry);
 
                 return userEntry;
@@ -327,10 +323,9 @@ public class GithubEventResource implements Resource {
                 return fallback.get();
             }
 
-            // only LDAP users are supported in GitHub triggers
-            // ideally, match against exact LDAP DN (requires GitHub to be integrated with LDAP)
+            // Prefer the exact distinguished name, then email, then login.
             if (githubCfg.isUseSenderLdapDn()) {
-                UserEntry fromDn = findSenderDnInLdap();
+                UserEntry fromDn = findSenderDn();
                 if (fromDn != null) {
                     addUserDbMapping(fromDn);
                     return fromDn;
@@ -339,7 +334,7 @@ public class GithubEventResource implements Resource {
 
             // alternatively, user email may work (e.g. from SSO provider which has upstream LDAP source)
             if (githubCfg.isUseSenderEmail()) {
-                UserEntry fromEmail = findSenderEmailInLdap();
+                UserEntry fromEmail = findSenderEmail();
                 if (fromEmail != null) {
                     addUserDbMapping(fromEmail);
                     return fromEmail;
@@ -393,46 +388,20 @@ public class GithubEventResource implements Resource {
             return String.format("github_%s=%s,%s=%s", URL_KEY, url, NODE_ID_KEY, userId);
         }
 
-        private UserEntry findSenderDnInLdap() {
-            String ldapDn = payload.getSenderLdapDn();
-            if (ldapDn == null || ldapDn.isBlank()) {
+        private UserEntry findSenderDn() {
+            String dn = payload.getSenderLdapDn();
+            if (dn == null || dn.isBlank()) {
                 return null;
             }
-
-            try {
-                LdapPrincipal p = ldapManager.getPrincipalByDn(ldapDn);
-
-                if (p == null) {
-                    log.warn("getOrCreateUserEntry ['{}'] -> can't find user by ldap DN ({})", payload, ldapDn);
-                    return null;
-                }
-
-                return userManager.getOrCreate(p.getUsername(), p.getDomain(), UserType.LDAP)
-                        .orElseThrow(() -> new ConcordApplicationException("User not found: " + p.getUsername()));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            return directories.find(githubCfg.getUserDirectory(), "distinguishedName", dn).orElse(null);
         }
 
-        private UserEntry findSenderEmailInLdap() {
+        private UserEntry findSenderEmail() {
             String email = getEmail();
             if (email == null || email.isBlank()) {
                 return null;
             }
-
-            try {
-                LdapPrincipal p = ldapManager.getPrincipalByMail(email);
-
-                if (p == null) {
-                    log.warn("getOrCreateUserEntry ['{}'] -> can't find user by ldap mail ({})", payload, email);
-                    return null;
-                }
-
-                return userManager.getOrCreate(p.getUsername(), p.getDomain(), UserType.LDAP)
-                        .orElseThrow(() -> new ConcordApplicationException("User not found: " + p.getUsername()));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            return directories.find(githubCfg.getUserDirectory(), "email", email).orElse(null);
         }
 
         private String getEmail() {

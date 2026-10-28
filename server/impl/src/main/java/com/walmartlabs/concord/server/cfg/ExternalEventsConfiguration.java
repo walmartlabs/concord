@@ -37,6 +37,10 @@ public class ExternalEventsConfiguration implements Serializable {
     private Map<String, String> requiredRoles;
 
     @Inject
+    @Config("externalEvents.userDirectory")
+    private String userDirectory;
+
+    @Inject
     @Config("externalEvents.workerThreads")
     private int workerThreads;
 
@@ -46,6 +50,10 @@ public class ExternalEventsConfiguration implements Serializable {
 
     public Map<String, String> getRequiredRoles() {
         return requiredRoles;
+    }
+
+    public String getUserDirectory() {
+        return userDirectory;
     }
 
     public int getWorkerThreads() {

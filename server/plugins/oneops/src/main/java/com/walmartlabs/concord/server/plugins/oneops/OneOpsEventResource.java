@@ -24,6 +24,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
+import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
+import com.walmartlabs.concord.server.events.EventDirectoryResolver;
 import com.walmartlabs.concord.server.events.Event;
 import com.walmartlabs.concord.server.events.EventInitiatorSupplier;
 import com.walmartlabs.concord.server.events.TriggerEventInitiatorResolver;
@@ -32,7 +34,6 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
-import com.walmartlabs.concord.server.user.UserManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +70,8 @@ public class OneOpsEventResource implements Resource {
 
     private final ObjectMapper objectMapper;
     private final TriggerProcessExecutor executor;
-    private final UserManager userManager;
+    private final EventDirectoryResolver directories;
+    private final ExternalEventsConfiguration externalEvents;
     private final TriggerEventInitiatorResolver initiatorResolver;
     private final List<OneOpsTriggerProcessor> processors;
     private final AuditLog auditLog;
@@ -78,14 +80,16 @@ public class OneOpsEventResource implements Resource {
     @Inject
     public OneOpsEventResource(ObjectMapper objectMapper,
                                TriggerProcessExecutor executor,
-                               UserManager userManager,
+                               EventDirectoryResolver directories,
+                               ExternalEventsConfiguration externalEvents,
                                TriggerEventInitiatorResolver initiatorResolver,
                                List<OneOpsTriggerProcessor> processors,
                                AuditLog auditLog,
                                OneOpsConfiguration cfg) {
         this.objectMapper = objectMapper;
         this.executor = executor;
-        this.userManager = userManager;
+        this.directories = directories;
+        this.externalEvents = externalEvents;
         this.initiatorResolver = initiatorResolver;
         this.processors = processors;
         this.auditLog = auditLog;
@@ -124,7 +128,7 @@ public class OneOpsEventResource implements Resource {
                     .attributes(result.event())
                     // "author" property is set by OneOpsTriggerProcessor
                     // TODO replace with a custom Supplier<UserEntry> that directly looks at the event's "createdBy"
-                    .initiator(memo(new EventInitiatorSupplier("author", userManager, result.event())))
+                    .initiator(memo(new EventInitiatorSupplier("author", directories, externalEvents.getUserDirectory(), result.event())))
                     .build();
 
             List<PartialProcessKey> processKeys = executor.execute(e, initiatorResolver, result.triggers());

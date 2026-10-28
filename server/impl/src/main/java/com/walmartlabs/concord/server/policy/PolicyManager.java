@@ -29,7 +29,7 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
-import com.walmartlabs.concord.server.user.UserInfoProvider;
+import com.walmartlabs.concord.server.user.UserInfo;
 import com.walmartlabs.concord.server.user.UserManager;
 
 import javax.inject.Inject;
@@ -121,26 +121,26 @@ public class PolicyManager {
         return get(payload.getHeader(Payload.ORGANIZATION_ID), payload.getHeader(Payload.PROJECT_ID), payload.getHeader(Payload.INITIATOR_ID));
     }
 
-    private Map<String, Object> getOwnerAttrs(UserEntry owner) {
+    Map<String, Object> getOwnerAttrs(UserEntry owner) {
         if (owner == null) {
             return Collections.emptyMap();
         }
 
+        UserInfo userInfo = userManager.getInfo(owner.getId());
         Map<String, Object> attrs = new HashMap<>();
-        attrs.put("id", owner.getId());
-        attrs.put("username", owner.getName());
-        attrs.put("userType", owner.getType().name());
-
-        UserInfoProvider.UserInfo userInfo = userManager.getInfo(owner.getName(), owner.getDomain(), owner.getType());
-        if (userInfo == null) {
-            throw new ValidationErrorsException("User not found: " + owner.getId());
+        if (userInfo.attributes() != null) {
+            attrs.putAll(userInfo.attributes());
         }
-
+        var selection = userManager.profileSelection(owner.getId());
+        attrs.put("id", owner.getId());
+        attrs.put("username", userInfo.username());
+        attrs.put("userDomain", userInfo.userDomain());
+        attrs.put("userType", owner.getType() == null ? null : owner.getType().name());
+        attrs.put("profileProviderId", selection.providerId());
+        attrs.put("profileIdentityId", selection.identityId());
+        attrs.put("identity", selection.identity());
         attrs.put("email", userInfo.email());
         attrs.put("displayName", userInfo.displayName());
-        if (userInfo.attributes() != null) {
-            attrs.putAll(Objects.requireNonNull(userInfo.attributes()));
-        }
 
         return attrs;
     }

@@ -53,7 +53,6 @@ import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
-import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.security.legacy.LegacyApiGuard;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -158,7 +157,7 @@ public class ConsoleService implements Resource {
 
         return UserInfoResponse.builder()
                 .id(u.getId())
-                .displayName(displayName(u, p))
+                .displayName(Objects.requireNonNullElse(userManager.getInfo(p.userId()).displayName(), u.getName()))
                 .teams(consoleServiceDao.listTeams(p.userId()))
                 .roles(authorizationService.prepare(p.userId()).roles().stream().toList())
                 .ldapGroups(userLdapGroups)
@@ -182,7 +181,9 @@ public class ConsoleService implements Resource {
             throw new UnauthorizedException("User is disabled: " + p.userId());
         }
 
-        return new UserResponse(p.authentication().providerId(), user.getName(), user.getDomain(), displayName(user, p), user.getOrgs());
+        var profile = userManager.getInfo(p.userId());
+        return new UserResponse(p.authentication().providerId(), profile.username(), profile.userDomain(),
+                Objects.requireNonNullElse(profile.displayName(), profile.username()), user.getOrgs());
     }
 
     @POST
@@ -371,22 +372,6 @@ public class ConsoleService implements Resource {
         return true;
     }
 
-    private static String displayName(UserEntry u, SubjectPrincipal p) {
-        String displayName = u.getDisplayName();
-
-        if (displayName == null) {
-            LdapPrincipal l = LdapPrincipal.getCurrent();
-            if (l != null) {
-                displayName = l.getDisplayName();
-            }
-        }
-
-        if (displayName == null) {
-            displayName = p.username();
-        }
-
-        return displayName;
-    }
 
     public static class ConsoleServiceDao extends AbstractDao {
 
