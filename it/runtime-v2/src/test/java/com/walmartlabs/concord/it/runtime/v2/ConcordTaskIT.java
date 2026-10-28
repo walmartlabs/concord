@@ -295,4 +295,29 @@ public class ConcordTaskIT extends AbstractTest {
         List<ApiKeyEntry> apiKeys = apiKeysApi.listUserApiKeys(null);
         assertEquals(1, apiKeys.size());
     }
+
+    @Test
+    public void testApiKeyIdentitySelector() throws Exception {
+        String username = "user_" + randomString();
+        UsersApi users = new UsersApi(concord.apiClient());
+        users.createOrUpdateUser(new CreateUserRequest().username(username).type(CreateUserRequest.TypeEnum.LOCAL));
+        UUID userId = users.findByUsername(username).getId();
+        String keyName = "identity_" + randomString();
+        String keyValue = Base64.getEncoder().encodeToString(("foo_" + randomString()).getBytes(UTF_8));
+
+        Payload payload = new Payload()
+                .archive(resource("concord/apiKeyIdentity"))
+                .arg("userId", userId.toString())
+                .arg("keyName", keyName)
+                .arg("keyValue", keyValue);
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+        proc.assertLog(".*created=.*");
+        proc.assertLog(".*existing=.*");
+        proc.assertLog(".*updated=.*");
+
+        ApiKeysApi keys = new ApiKeysApi(concord.apiClient().setApiKey(keyValue));
+        List<ApiKeyEntry> entries = keys.listUserApiKeys(null);
+        assertTrue(entries.stream().anyMatch(k -> k.getName().equals(keyName)));
+    }
 }

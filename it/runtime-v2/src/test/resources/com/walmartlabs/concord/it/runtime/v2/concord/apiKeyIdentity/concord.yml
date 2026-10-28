@@ -1,0 +1,37 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - task: concord
+      in:
+        action: createApiKey
+        identity:
+          providerId: local
+          authority: ""
+          subject: ${userId}
+        name: ${keyName}
+      out: created
+    - log: "created=${created}"
+    - task: concord
+      in:
+        action: createApiKey
+        identity:
+          providerId: local
+          authority: ""
+          subject: ${userId}
+        name: ${keyName}
+        ignoreExisting: true
+      out: existing
+    - log: "existing=${existing}"
+    - task: concord
+      in:
+        action: createOrUpdateApiKey
+        identity:
+          providerId: local
+          authority: ""
+          subject: ${userId}
+        name: ${keyName}
+        key: ${keyValue}
+      out: updated
+    - log: "updated=${updated}"

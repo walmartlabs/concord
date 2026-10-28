@@ -72,6 +72,22 @@
         </dependency>
 
         <dependency>
+            <groupId>com.walmartlabs.concord.server.plugins</groupId>
+            <artifactId>pfed-sso</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.server.plugins</groupId>
+            <artifactId>oidc</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.server.plugins</groupId>
+            <artifactId>ldap</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-client2</artifactId>
             <scope>test</scope>
