@@ -57,7 +57,7 @@ public class ProcessCheckpointManager {
     private final ProcessStateManager stateManager;
     private final ProjectAccessManager projectAccessManager;
     private final ZipService zipService;
-    private final Set<String> ignoreRestorePaths = Set.of(".concord/current_user");
+    private final Set<String> ignoreRestorePaths = Set.of(ProcessStateManager.CURRENT_USER_PATH);
 
     @Inject
     protected ProcessCheckpointManager(ProcessCheckpointDao checkpointDao,
@@ -110,7 +110,7 @@ public class ProcessCheckpointManager {
                     stateManager.deleteDirectory(tx, processKey, Constants.Files.CONCORD_SYSTEM_DIR_NAME, ignoreRestorePaths);
                     stateManager.deleteDirectory(tx, processKey, Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
                     stateManager.importPath(tx, processKey, null, extractedDir.path(),
-                            (p, attrs) -> !ignoreRestorePaths.contains(p.getFileName().toString()));
+                            (p, attrs) -> !ignoreRestorePaths.contains(extractedDir.path().relativize(p).normalize().toString()));
                 });
 
                 Map<String, Object> out = OutVariablesUtils.read(extractedDir.path().resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));

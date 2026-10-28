@@ -28,7 +28,7 @@ import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
-import com.walmartlabs.concord.server.security.PrincipalNormalization;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAccount;
@@ -82,11 +82,6 @@ public class SessionKeyRealm extends AuthenticatingRealm {
                 return null;
             }
 
-            if (p.initiatorId() == null) {
-                log.warn("doGetAuthenticationInfo -> initiator not found: {}", t.getInstanceId());
-                return null;
-            }
-
             if (isFinished(p)) {
                 log.warn("doGetAuthenticationInfo -> process is finished: {}", t.getInstanceId());
                 return null;
@@ -101,8 +96,8 @@ public class SessionKeyRealm extends AuthenticatingRealm {
     }
 
     private PrincipalCollection getPrincipals(PartialProcessKey processKey) {
-        PrincipalCollection principals = PrincipalNormalization.normalize(processSecurityContext.getPrincipals(processKey));
-        if (principals == null || PrincipalNormalization.find(principals) == null) {
+        PrincipalCollection principals = processSecurityContext.getPrincipals(processKey);
+        if (principals == null || principals.oneByType(SubjectPrincipal.class) == null) {
             throw new AuthenticationException("Process has no user principal: " + processKey);
         }
 

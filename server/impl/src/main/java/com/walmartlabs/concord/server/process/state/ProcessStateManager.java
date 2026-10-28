@@ -77,6 +77,8 @@ public class ProcessStateManager extends AbstractDao {
 
     private static final String PATH_SEPARATOR = "/";
     private static final int INSERT_BATCH_SIZE = 10;
+    static final String CURRENT_USER_PATH = ".concord/current_user";
+    private static final String INITIATOR_PATH = "initiator";
 
     private final SecretStoreConfiguration secretCfg;
     private final PolicyManager policyManager;
@@ -395,11 +397,12 @@ public class ProcessStateManager extends AbstractDao {
      * If the filter function returns {@code false}, the matching file will be skipped.
      */
     public void replacePath(ProcessKey processKey, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {
-        UUID instanceId = processKey.getInstanceId();
-        OffsetDateTime instanceCreatedAt = processKey.getCreatedAt();
-
         tx(tx -> {
-            delete(tx, instanceId, instanceCreatedAt);
+            tx.deleteFrom(PROCESS_STATE)
+                    .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
+                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                            .and(PROCESS_STATE.ITEM_PATH.ne(CURRENT_USER_PATH)))
+                    .execute();
             importPath(tx, processKey, null, src, filter);
         });
     }
@@ -423,7 +426,10 @@ public class ProcessStateManager extends AbstractDao {
     }
 
     private void doImportPath(DSLContext tx, ProcessStateTable table, ProcessKey processKey, String path, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {
-        PolicyEngine policyEngine = assertPolicy(tx, processKey, src, filter);
+        BiFunction<Path, BasicFileAttributes, Boolean> importFilter = (file, attrs) ->
+                !isExecutionIdentityPath(table == InitialProcessStateTable.INSTANCE, path, src.relativize(file))
+                        && filter.apply(file, attrs);
+        PolicyEngine policyEngine = assertPolicy(tx, processKey, src, importFilter);
 
         String prefix = fixPath(path);
 
@@ -432,7 +438,7 @@ public class ProcessStateManager extends AbstractDao {
             Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    if (!filter.apply(file, attrs)) {
+                    if (!importFilter.apply(file, attrs)) {
                         return FileVisitResult.CONTINUE;
                     }
 
@@ -445,10 +451,7 @@ public class ProcessStateManager extends AbstractDao {
                                 " This is most likely a bug.");
                     }
 
-                    String n = p.toString();
-                    if (prefix != null) {
-                        n = prefix + n;
-                    }
+                    String n = Paths.get(prefix == null ? "" : prefix).resolve(p).normalize().toString();
 
                     Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(file);
                     int unixMode = Posix.unixMode(permissions);
@@ -477,6 +480,11 @@ public class ProcessStateManager extends AbstractDao {
         }
 
         assertPolicy(tx, processKey, policyEngine);
+    }
+
+    static boolean isExecutionIdentityPath(boolean initial, String prefix, Path relativePath) {
+        String target = Paths.get(prefix == null ? "" : prefix).resolve(relativePath).normalize().toString();
+        return target.equals(initial ? INITIATOR_PATH : CURRENT_USER_PATH);
     }
 
     /**

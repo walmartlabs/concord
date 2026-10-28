@@ -20,18 +20,16 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
-import com.walmartlabs.concord.server.security.SecurityUtils;
+import com.walmartlabs.concord.server.sdk.security.AuthenticationContext;
+import com.walmartlabs.concord.server.sdk.security.IdentityService;
 import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
 import com.walmartlabs.concord.server.security.AuthorizationScope;
-import com.walmartlabs.concord.server.security.PrincipalNormalization;
+import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
-import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
@@ -39,11 +37,12 @@ import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.ThreadContext;
 
 import javax.inject.Inject;
-import java.util.Collection;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 public class ProcessSecurityContext {
 
@@ -52,33 +51,31 @@ public class ProcessSecurityContext {
     private final SecurityManager securityManager;
     private final ProcessStateManager stateManager;
     private final AuthorizationService authorizationService;
-    private final Cache<PartialProcessKey, PrincipalCollection> principalCache;
+    private final IdentityService identityService;
 
     @Inject
     public ProcessSecurityContext(SecurityManager securityManager, ProcessStateManager stateManager,
-                                  AuthorizationService authorizationService) {
+                                  AuthorizationService authorizationService, IdentityService identityService) {
         this.securityManager = securityManager;
         this.stateManager = stateManager;
         this.authorizationService = authorizationService;
-        this.principalCache = CacheBuilder.newBuilder()
-                .expireAfterAccess(1, TimeUnit.MINUTES)
-                .build();
+        this.identityService = identityService;
     }
 
     public byte[] serializePrincipals(PrincipalCollection src) {
-        // filter out transient principals
-        SimplePrincipalCollection dst = new SimplePrincipalCollection();
-        for (String realm : src.getRealmNames()) {
-            Collection<?> ps = src.fromRealm(realm);
-            for (Object p : ps) {
-                if (p instanceof SessionKeyPrincipal) {
-                    continue;
-                }
-
-                dst.add(p, realm);
-            }
+        SubjectPrincipal principal = src != null ? src.oneByType(SubjectPrincipal.class) : null;
+        if (principal == null) {
+            throw new UnauthorizedException("Process has no user identity");
         }
-        return SecurityUtils.serialize(dst);
+        return ExecutionIdentityCodec.encode(new ExecutionIdentity(principal.userId(), principal.authentication().providerId()));
+    }
+
+    public static Optional<ExecutionIdentity> readIdentity(InputStream input) {
+        try {
+            return Optional.of(ExecutionIdentityCodec.decode(input.readAllBytes()));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     /**
@@ -86,8 +83,9 @@ public class ProcessSecurityContext {
      * specified process. If they are different, it means that the user has changed.
      */
     public boolean hasChanged(ProcessKey processKey) {
-        SubjectPrincipal current = PrincipalNormalization.find(SecurityUtils.getSubject().getPrincipals());
-        SubjectPrincipal previous = PrincipalNormalization.find(getPrincipals(processKey));
+        SubjectPrincipal current = SecurityUtils.getSubject().getPrincipals().oneByType(SubjectPrincipal.class);
+        PrincipalCollection previousPrincipals = getPrincipals(processKey);
+        SubjectPrincipal previous = previousPrincipals != null ? previousPrincipals.oneByType(SubjectPrincipal.class) : null;
 
         if (current == null || previous == null) {
             return true; // something's funky if either is null. should we throw an exception?
@@ -107,21 +105,18 @@ public class ProcessSecurityContext {
 
     public void storeSubject(ProcessKey processKey, PrincipalCollection src) {
         stateManager.replace(processKey, PRINCIPAL_FILE_PATH, serializePrincipals(src));
-        principalCache.invalidate(processKey);
-        principalCache.invalidate(PartialProcessKey.from(processKey.getInstanceId()));
+    }
+
+    public void storeIdentity(ProcessKey processKey, ExecutionIdentity identity) {
+        stateManager.replace(processKey, PRINCIPAL_FILE_PATH, ExecutionIdentityCodec.encode(identity));
     }
 
     public PrincipalCollection getPrincipals(PartialProcessKey processKey) {
-        try {
-            return principalCache.get(processKey, () -> doGetPrincipals(processKey));
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private PrincipalCollection doGetPrincipals(PartialProcessKey processKey) {
-        return stateManager.get(processKey, PRINCIPAL_FILE_PATH, SecurityUtils::deserialize)
-                .orElse(null);
+        ExecutionIdentity identity = stateManager.get(processKey, PRINCIPAL_FILE_PATH, ProcessSecurityContext::readIdentity)
+                .orElseThrow(() -> new UnauthorizedException("Process has no current user: " + processKey));
+        SubjectPrincipal principal = identityService.forUser(identity.userId(),
+                new AuthenticationContext(identity.authenticationProviderId(), null, null));
+        return new SimplePrincipalCollection(principal, identity.authenticationProviderId());
     }
 
     /**
@@ -129,8 +124,8 @@ public class ProcessSecurityContext {
      * of the specified process.
      */
     public <T> T runAsCurrentUser(ProcessKey processKey, Callable<T> c) throws Exception {
-        PrincipalCollection principals = PrincipalNormalization.normalize(getPrincipals(processKey));
-        SubjectPrincipal principal = PrincipalNormalization.find(principals);
+        PrincipalCollection principals = getPrincipals(processKey);
+        SubjectPrincipal principal = principals != null ? principals.oneByType(SubjectPrincipal.class) : null;
         if (principal == null) {
             throw new UnauthorizedException("Process has no current user: " + processKey);
         }

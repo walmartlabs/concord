@@ -98,6 +98,9 @@ class SecurityStateMigratorIntegrationTest {
     void convertsBothTablesInBatchesPreservesMetadataAndResumesAfterFailure() throws Exception {
         UUID userId = UUID.randomUUID();
         UserEntry user = new UserEntry(userId, "user", null, "User", Set.of(), UserType.LOCAL, null, Set.of(), false, null, false);
+        UUID currentUserId = UUID.randomUUID();
+        UserEntry currentUser = new UserEntry(currentUserId, "actor", null, "Actor", Set.of(), UserType.LOCAL, null, Set.of(), false, null, false);
+        byte[] currentLegacy = SecurityUtils.serialize(new SimplePrincipalCollection(new UserPrincipal("local", currentUser), "local"));
         byte[] legacy = SecurityUtils.serialize(new SimplePrincipalCollection(new UserPrincipal("local", user), "local"));
         OffsetDateTime start = OffsetDateTime.parse("2020-01-01T00:00:00Z");
         UUID encryptedId = UUID.randomUUID();
@@ -109,12 +112,15 @@ class SecurityStateMigratorIntegrationTest {
         byte[] invalid = "not an identity".getBytes(UTF_8);
         insert("process_initial_state", broken, start.plusSeconds(101), "initiator", invalid, false, 448);
         UUID currentId = UUID.randomUUID();
-        insert("process_state", currentId, start, ".concord/current_user", legacy, false, 416);
+        insert("process_state", currentId, start, ".concord/current_user", SecretUtils.encrypt(currentLegacy, PASSWORD, SALT), true, 416);
         insert("process_state", UUID.randomUUID(), start, "unrelated", invalid, false, 420);
 
         assertThrows(IllegalStateException.class, migrator::migrate);
         assertArrayEquals(invalid, data("process_initial_state", broken));
-        assertArrayEquals(legacy, data("process_state", currentId));
+        byte[] currentEncrypted = data("process_state", currentId);
+        try (var plaintext = SecretUtils.decrypt(new java.io.ByteArrayInputStream(currentEncrypted), PASSWORD, SALT)) {
+            assertArrayEquals(currentLegacy, plaintext.readAllBytes());
+        }
         byte[] encrypted = data("process_initial_state", encryptedId);
         assertFalse(Arrays.equals(legacy, encrypted));
         var metadata = sql.fetchOne("select is_encrypted, unix_mode from process_initial_state where instance_id = ?", encryptedId);
@@ -127,11 +133,43 @@ class SecurityStateMigratorIntegrationTest {
         sql.transaction(cfg -> DSL.using(cfg).execute("update process_initial_state set item_data = ? where instance_id = ?", legacy, broken));
         migrator.migrate();
         byte[] converted = data("process_state", currentId);
-        assertEquals(userId, ExecutionIdentityCodec.decode(converted).userId());
-        assertFalse(ExecutionIdentityCodec.isLegacy(converted));
+        try (var plaintext = SecretUtils.decrypt(new java.io.ByteArrayInputStream(converted), PASSWORD, SALT)) {
+            byte[] decoded = plaintext.readAllBytes();
+            assertEquals(currentUserId, ExecutionIdentityCodec.decode(decoded).userId());
+            assertFalse(ExecutionIdentityCodec.isLegacy(decoded));
+        }
+        var currentMetadata = sql.fetchOne("select is_encrypted, unix_mode from process_state where instance_id = ?", currentId);
+        assertEquals(true, currentMetadata.get(0));
+        assertEquals(416, ((Number) currentMetadata.get(1)).intValue());
         migrator.migrate();
         assertArrayEquals(encrypted, data("process_initial_state", encryptedId));
         assertArrayEquals(converted, data("process_state", currentId));
+    }
+
+    @Test
+    void missingLegacyClassLeavesOriginalRowUntouched() {
+        UUID id = UUID.randomUUID();
+        UserEntry user = new UserEntry(UUID.randomUUID(), "user", null, "User", Set.of(), UserType.LOCAL, null, Set.of(), false, null, false);
+        byte[] bytes = SecurityUtils.serialize(new SimplePrincipalCollection(new UserPrincipal("local", user), "local"));
+        byte[] className = UserPrincipal.class.getName().getBytes(UTF_8);
+        int index = -1;
+        for (int i = 0; i <= bytes.length - className.length; i++) {
+            if (Arrays.equals(bytes, i, i + className.length, className, 0, className.length)) {
+                index = i;
+                break;
+            }
+        }
+        assertTrue(index >= 0);
+        bytes[index] = (byte) (bytes[index] == 'x' ? 'y' : 'x');
+        insert("process_state", id, OffsetDateTime.parse("2019-01-01T00:00:00Z"), ".concord/current_user", bytes, false, 384);
+        try {
+            IllegalStateException error = assertThrows(IllegalStateException.class, migrator::migrate);
+            assertTrue(java.util.stream.Stream.iterate((Throwable) error, Objects::nonNull, Throwable::getCause)
+                    .anyMatch(cause -> cause.getMessage() != null && cause.getMessage().contains("Missing class")));
+            assertArrayEquals(bytes, data("process_state", id));
+        } finally {
+            sql.transaction(cfg -> DSL.using(cfg).execute("delete from process_state where instance_id = ?", id));
+        }
     }
 
     @Test

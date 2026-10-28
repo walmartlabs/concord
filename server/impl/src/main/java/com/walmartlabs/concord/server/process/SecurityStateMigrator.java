@@ -33,7 +33,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-/** Converts persisted process identities before versioned identity readers are activated. */
+/** Converts persisted process identities before background tasks and HTTP start. */
 public class SecurityStateMigrator {
     private static final long LOCK_KEY = 0x436f6e636f726453L;
     private static final int BATCH_SIZE = 100;

@@ -25,14 +25,13 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.process.ExecutionIdentity;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import com.walmartlabs.concord.server.security.SecurityUtils;
-import org.apache.shiro.subject.PrincipalCollection;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
@@ -83,10 +82,10 @@ public class PayloadRestoreProcessor implements PayloadProcessor {
         });
         payload = payload.putAttachments(attachments);
 
-        PrincipalCollection principals = stateManager.getInitial(processKey, "initiator", SecurityUtils::deserialize)
+        ExecutionIdentity identity = stateManager.getInitial(processKey, "initiator", ProcessSecurityContext::readIdentity)
                 .orElseThrow(() -> new ConcordApplicationException("Process initiator not found", Response.Status.INTERNAL_SERVER_ERROR));
 
-        securityContext.storeSubject(processKey, principals);
+        securityContext.storeIdentity(processKey, identity);
 
         return chain.process(payload);
     }
