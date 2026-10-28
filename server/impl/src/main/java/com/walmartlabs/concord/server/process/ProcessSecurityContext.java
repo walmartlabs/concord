@@ -26,7 +26,11 @@ import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.security.SecurityUtils;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.AuthorizationScope;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
+import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.PrincipalCollection;
@@ -47,12 +51,15 @@ public class ProcessSecurityContext {
 
     private final SecurityManager securityManager;
     private final ProcessStateManager stateManager;
+    private final AuthorizationService authorizationService;
     private final Cache<PartialProcessKey, PrincipalCollection> principalCache;
 
     @Inject
-    public ProcessSecurityContext(SecurityManager securityManager, ProcessStateManager stateManager) {
+    public ProcessSecurityContext(SecurityManager securityManager, ProcessStateManager stateManager,
+                                  AuthorizationService authorizationService) {
         this.securityManager = securityManager;
         this.stateManager = stateManager;
+        this.authorizationService = authorizationService;
         this.principalCache = CacheBuilder.newBuilder()
                 .expireAfterAccess(1, TimeUnit.MINUTES)
                 .build();
@@ -79,29 +86,29 @@ public class ProcessSecurityContext {
      * specified process. If they are different, it means that the user has changed.
      */
     public boolean hasChanged(ProcessKey processKey) {
-        UserPrincipal current = SecurityUtils.getSubject().getPrincipals().oneByType(UserPrincipal.class);
-        UserPrincipal previous = getPrincipals(processKey).oneByType(UserPrincipal.class);
+        SubjectPrincipal current = PrincipalNormalization.find(SecurityUtils.getSubject().getPrincipals());
+        SubjectPrincipal previous = PrincipalNormalization.find(getPrincipals(processKey));
 
         if (current == null || previous == null) {
             return true; // something's funky if either is null. should we throw an exception?
         }
 
-        UUID currentUserId = current.getUser().getId();
-        UUID previousUserId = previous.getUser().getId();
+        UUID currentUserId = current.userId();
+        UUID previousUserId = previous.userId();
 
         return !previousUserId.equals(currentUserId);
     }
 
-    // TODO: invalidate cache for processKey?
     public void storeCurrentSubject(ProcessKey processKey) {
         Subject s = SecurityUtils.getSubject();
         PrincipalCollection src = s.getPrincipals();
         storeSubject(processKey, src);
     }
 
-    // TODO: invalidate cache for processKey?
     public void storeSubject(ProcessKey processKey, PrincipalCollection src) {
         stateManager.replace(processKey, PRINCIPAL_FILE_PATH, serializePrincipals(src));
+        principalCache.invalidate(processKey);
+        principalCache.invalidate(PartialProcessKey.from(processKey.getInstanceId()));
     }
 
     public PrincipalCollection getPrincipals(PartialProcessKey processKey) {
@@ -122,23 +129,34 @@ public class ProcessSecurityContext {
      * of the specified process.
      */
     public <T> T runAsCurrentUser(ProcessKey processKey, Callable<T> c) throws Exception {
-        PrincipalCollection principals = getPrincipals(processKey);
+        PrincipalCollection principals = PrincipalNormalization.normalize(getPrincipals(processKey));
+        SubjectPrincipal principal = PrincipalNormalization.find(principals);
+        if (principal == null) {
+            throw new UnauthorizedException("Process has no current user: " + processKey);
+        }
 
-        ThreadContext.bind(securityManager);
-
-        Subject subject = new Subject.Builder()
-                .sessionCreationEnabled(false)
-                .authenticated(true)
-                .principals(principals)
-                .buildSubject();
-
-        try {
+        Subject previousSubject = ThreadContext.getSubject();
+        SecurityManager previousManager = ThreadContext.getSecurityManager();
+        try (AuthorizationScope ignored = AuthorizationScope.open(authorizationService, principal, false)) {
+            ThreadContext.bind(securityManager);
+            Subject subject = new Subject.Builder()
+                    .sessionCreationEnabled(false)
+                    .authenticated(true)
+                    .principals(principals)
+                    .buildSubject();
             ThreadContext.bind(subject);
-
             return c.call();
         } finally {
-            ThreadContext.unbindSubject();
-            ThreadContext.unbindSecurityManager();
+            if (previousSubject == null) {
+                ThreadContext.unbindSubject();
+            } else {
+                ThreadContext.bind(previousSubject);
+            }
+            if (previousManager == null) {
+                ThreadContext.unbindSecurityManager();
+            } else {
+                ThreadContext.bind(previousManager);
+            }
         }
     }
 }

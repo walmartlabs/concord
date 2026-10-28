@@ -24,23 +24,22 @@ import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.security.AuthenticationContext;
 import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
-import com.walmartlabs.concord.server.security.SecurityUtils;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAccount;
-import org.apache.shiro.authz.AuthorizationInfo;
-import org.apache.shiro.realm.AuthorizingRealm;
-import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.realm.AuthenticatingRealm;
 
 import javax.inject.Inject;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ApiKeyRealm extends AuthorizingRealm {
+public class ApiKeyRealm extends AuthenticatingRealm {
 
     private static final String REALM_NAME = "apikey";
 
@@ -83,19 +82,11 @@ public class ApiKeyRealm extends AuthorizingRealm {
 
         List<Object> principals = new ArrayList<>();
         if (u != null) {
-            principals.add(new UserPrincipal(REALM_NAME, u));
+            principals.add(new SubjectPrincipal(u.getId(), u.getName(), u.getDomain(),
+                    new AuthenticationContext(REALM_NAME, Instant.now(), t.getKeyId() != null ? t.getKeyId().toString() : null)));
         }
         principals.add(t);
 
         return new SimpleAccount(principals, t.getKey(), getName());
-    }
-
-    @Override
-    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        ApiKey principal = principals.oneByType(ApiKey.class);
-        if (principal == null) {
-            return null;
-        }
-        return SecurityUtils.toAuthorizationInfo(principals);
     }
 }

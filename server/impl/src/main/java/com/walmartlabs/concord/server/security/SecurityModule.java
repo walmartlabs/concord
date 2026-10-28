@@ -67,6 +67,8 @@ public class SecurityModule implements Module {
         newSetBinder(binder, AuthenticationHandler.class).addBinding().to(ApiKeyAuthenticationHandler.class).in(SINGLETON);
         newSetBinder(binder, AuthenticationHandler.class).addBinding().to(SessionTokenAuthenticationHandler.class).in(SINGLETON);
 
+        binder.bind(ConcordAuthorizationRealm.class).in(SINGLETON);
+        newSetBinder(binder, Realm.class).addBinding().to(ConcordAuthorizationRealm.class);
         newSetBinder(binder, Realm.class).addBinding().to(ApiKeyRealm.class);
         newSetBinder(binder, Realm.class).addBinding().to(GithubRealm.class);
         newSetBinder(binder, Realm.class).addBinding().to(InternalRealm.class);

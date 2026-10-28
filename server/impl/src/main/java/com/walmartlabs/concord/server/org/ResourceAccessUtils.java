@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.org;
  */
 
 import com.walmartlabs.concord.server.org.team.TeamDao;
-import com.walmartlabs.concord.server.security.UserPrincipal;
 
 import java.util.UUID;
 
@@ -54,14 +53,8 @@ public final class ResourceAccessUtils {
         return teamId;
     }
 
-    public static boolean isSame(UserPrincipal p, EntityOwner owner) {
-        if (p == null || owner == null) {
-            return false;
-        }
-
-        UUID userId = p.getId();
-        UUID ownerId = owner.id();
-        return userId.equals(ownerId);
+    public static boolean isSame(UUID userId, EntityOwner owner) {
+        return userId != null && owner != null && userId.equals(owner.id());
     }
 
     private ResourceAccessUtils() {

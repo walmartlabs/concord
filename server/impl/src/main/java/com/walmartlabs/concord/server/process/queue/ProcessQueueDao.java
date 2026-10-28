@@ -715,6 +715,10 @@ public class ProcessQueueDao extends AbstractDao {
             query.addConditions(USERS.USERNAME.startsWith(filter.initiator()));
         }
 
+        if (filter.initiatorId() != null) {
+            query.addConditions(PROCESS_QUEUE.INITIATOR_ID.eq(filter.initiatorId()));
+        }
+
         if (filter.afterCreatedAt() != null) {
             query.addConditions(PROCESS_QUEUE.CREATED_AT.greaterThan(filter.afterCreatedAt()));
         }

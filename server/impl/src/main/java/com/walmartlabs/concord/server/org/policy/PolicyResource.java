@@ -38,7 +38,6 @@ import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import io.swagger.v3.oas.annotations.Operation;
@@ -166,7 +165,7 @@ public class PolicyResource implements Resource {
         assertAdmin();
 
         // TODO: add user type into request
-        UserType userType = UserPrincipal.assertCurrent().getType();
+        UserType userType = userManager.currentLegacyType();
         PolicyLink l = assertLink(policyName, entry.getOrgName(), entry.getProjectName(), entry.getUserName(), entry.getUserDomain(), userType);
         policyManager.link(l.policyId, l.orgId, l.projectId, l.userId);
 
@@ -194,7 +193,7 @@ public class PolicyResource implements Resource {
         assertAdmin();
 
         if (userType == null) {
-            userType = UserPrincipal.assertCurrent().getType();
+            userType = userManager.currentLegacyType();
         }
         PolicyLink l = assertLink(policyName, orgName, projectName, userName, domain, userType);
         policyManager.unlink(l.policyId, l.orgId, l.projectId, l.userId);
@@ -248,7 +247,7 @@ public class PolicyResource implements Resource {
         UUID userId = null;
         if (userName != null) {
             if (userType == null) {
-                userType = UserPrincipal.assertCurrent().getType();
+                userType = userManager.currentLegacyType();
             }
             userId = assertUser(userName, userDomain, userType);
         }

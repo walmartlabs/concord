@@ -28,6 +28,10 @@ only LDAP-owned observations; direct role and team grants remain independent.
 `security.authorization.sources.<id>.required` controls whether an unavailable
 or missing source prevents access, and `.maxAge` controls its observation lease.
 
+Protected requests and internal run-as scopes prepare authorization against
+the current account and source observations. An unavailable required source
+denies access rather than reusing its last successful grants.
+
 Execution identity conversion supports versioned JSON and legacy serialized
 principals. The migrator uses an advisory lock and commits each state row
 independently, preserving encryption and file mode; it is not yet run at startup.

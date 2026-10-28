@@ -39,7 +39,8 @@ import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Permission;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
@@ -149,7 +150,9 @@ public class OrganizationManager {
     private UUID create(DSLContext tx, OrganizationEntry entry) {
         assertPermission(Permission.CREATE_ORG);
 
-        UserEntry owner = getOwner(entry.getOwner(), UserPrincipal.assertCurrent().getUser());
+        UUID currentUserId = PrincipalNormalization.assertCurrent().userId();
+        UserEntry owner = getOwner(entry.getOwner(), userManager.get(currentUserId)
+                .orElseThrow(() -> new ConcordApplicationException("User not found: " + currentUserId)));
 
         policyManager.checkEntity(null, null, EntityType.ORGANIZATION, EntityAction.CREATE, owner, PolicyUtils.orgToMap(entry));
 
@@ -256,17 +259,17 @@ public class OrganizationManager {
             return e;
         }
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
+        SubjectPrincipal p = PrincipalNormalization.assertCurrent();
 
         EntityOwner owner = e.getOwner();
-        if (ResourceAccessUtils.isSame(p, owner)) {
+        if (ResourceAccessUtils.isSame(p.userId(), owner)) {
             // the owner can do anything with his organization
             return e;
         }
 
         if (orgMembersOnly) {
             if (!userManager.isInOrganization(tx, e.getId())) {
-                throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't belong to the specified organization: " + e.getName());
+                throw new UnauthorizedException("The current user (" + p.username() + ") doesn't belong to the specified organization: " + e.getName());
             }
         }
 
@@ -278,8 +281,8 @@ public class OrganizationManager {
 
         UserEntry owner = getOwner(entry.getOwner(), null);
         UUID ownerId = owner != null ? owner.getId() : null;
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        if (p.getId().equals(ownerId)) {
+        SubjectPrincipal p = PrincipalNormalization.assertCurrent();
+        if (p.userId().equals(ownerId)) {
             return entry;
         }
 
@@ -315,7 +318,7 @@ public class OrganizationManager {
         }
 
         if (owner.username() != null) {
-            UserType t = owner.userType() != null ? owner.userType() : UserPrincipal.assertCurrent().getType();
+            UserType t = owner.userType() != null ? owner.userType() : userManager.currentLegacyType();
             return userManager.get(owner.username(), owner.userDomain(), t)
                     .orElseThrow(() -> new ConcordApplicationException("User not found: " + owner.username()));
         }

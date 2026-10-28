@@ -29,7 +29,8 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.jooq.DSLContext;
 
@@ -89,8 +90,8 @@ public class ProjectAccessManager {
         }
 
         if (!hasAccess(project, level, orgMembersOnly)) {
-            UserPrincipal p = UserPrincipal.getCurrent();
-            throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
+            SubjectPrincipal p = PrincipalNormalization.assertCurrent();
+            throw new UnauthorizedException("The current user (" + p.username() + ") doesn't have " +
                     "the necessary access level (" + level + ") to the project: " + project.getName());
         }
 
@@ -104,7 +105,7 @@ public class ProjectAccessManager {
             return true;
         }
 
-        UserPrincipal principal = UserPrincipal.assertCurrent();
+        SubjectPrincipal principal = PrincipalNormalization.assertCurrent();
 
         if (level == ResourceAccessLevel.READER && (Roles.isGlobalReader() || Roles.isGlobalWriter())) {
             return true;
@@ -113,20 +114,20 @@ public class ProjectAccessManager {
         }
 
         EntityOwner owner = project.getOwner();
-        if (ResourceAccessUtils.isSame(principal, owner)) {
+        if (ResourceAccessUtils.isSame(principal.userId(), owner)) {
             // the owner can do anything with his projects
             return true;
         }
 
         if (orgMembersOnly && project.getVisibility() == ProjectVisibility.PUBLIC
                 && level == ResourceAccessLevel.READER
-                && userDao.isInOrganization(principal.getId(), project.getOrgId())) {
+                && userDao.isInOrganization(principal.userId(), project.getOrgId())) {
             // organization members can READ any public project in the same organization
             return true;
         }
 
         OrganizationEntry org = orgManager.assertAccess(project.getOrgId(), false);
-        if (ResourceAccessUtils.isSame(principal, org.getOwner())) {
+        if (ResourceAccessUtils.isSame(principal.userId(), org.getOwner())) {
             // the org owner can do anything with the org's projects
             return true;
         }
@@ -134,8 +135,8 @@ public class ProjectAccessManager {
         if (orgMembersOnly || project.getVisibility() != ProjectVisibility.PUBLIC) {
             // we need to check the resource's access level if the access is limited to
             // the organization's members or the project is not public
-            if (!projectDao.hasAccessLevel(project.getId(), principal.getId(), ResourceAccessLevel.atLeast(level))) {
-                throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
+            if (!projectDao.hasAccessLevel(project.getId(), principal.userId(), ResourceAccessLevel.atLeast(level))) {
+                throw new UnauthorizedException("The current user (" + principal.username() + ") doesn't have " +
                         "the necessary access level (" + level + ") to the project: " + project.getName());
             }
         }
@@ -169,8 +170,8 @@ public class ProjectAccessManager {
      * access to the specified project.
      */
     public boolean isTeamMember(UUID projectId) {
-        UserPrincipal principal = UserPrincipal.assertCurrent();
-        return projectDao.hasAccessLevel(projectId, principal.getId(), ResourceAccessLevel.atLeast(ResourceAccessLevel.READER));
+        SubjectPrincipal principal = PrincipalNormalization.assertCurrent();
+        return projectDao.hasAccessLevel(projectId, principal.userId(), ResourceAccessLevel.atLeast(ResourceAccessLevel.READER));
     }
 
     private void addAuditLog(UUID projectId, Collection<ResourceAccessEntry> entries, boolean isReplace) {

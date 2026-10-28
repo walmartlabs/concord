@@ -37,7 +37,7 @@ import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.policy.PolicyUtils;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 
 import javax.inject.Inject;
 import java.text.MessageFormat;
@@ -123,7 +123,7 @@ public class JsonStoreDataManager {
     }
 
     private void assertStorageDataPolicy(UUID orgId, UUID storeId, long currentItemSize, String jsonData) {
-        PolicyEngine policy = policyManager.get(orgId, null, UserPrincipal.assertCurrent().getUser().getId());
+        PolicyEngine policy = policyManager.get(orgId, null, PrincipalNormalization.assertCurrent().userId());
         if (policy == null) {
             return;
         }

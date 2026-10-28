@@ -27,7 +27,8 @@ import com.walmartlabs.concord.server.org.ResourceAccessUtils;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.user.UserManager;
 
 import javax.inject.Inject;
@@ -61,8 +62,8 @@ public class JsonStoreAccessManager {
         }
 
         if (!hasAccess(store, accessLevel, orgMembersOnly)) {
-            UserPrincipal p = UserPrincipal.getCurrent();
-            throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
+            SubjectPrincipal p = PrincipalNormalization.assertCurrent();
+            throw new UnauthorizedException("The current user (" + p.username() + ") doesn't have " +
                     "the necessary access level (" + accessLevel + ") to the JSON store: " + store.name());
         }
 
@@ -81,9 +82,9 @@ public class JsonStoreAccessManager {
             return true;
         }
 
-        UserPrincipal principal = UserPrincipal.assertCurrent();
+        SubjectPrincipal principal = PrincipalNormalization.assertCurrent();
 
-        if (ResourceAccessUtils.isSame(principal, store.owner())) {
+        if (ResourceAccessUtils.isSame(principal.userId(), store.owner())) {
             // the owner can do anything with his store
             return true;
         }
@@ -96,14 +97,14 @@ public class JsonStoreAccessManager {
         }
 
         OrganizationEntry org = orgManager.assertAccess(store.orgId(), false);
-        if (ResourceAccessUtils.isSame(principal, org.getOwner())) {
+        if (ResourceAccessUtils.isSame(principal.userId(), org.getOwner())) {
             // the org owner can do anything with the org's store
             return true;
         }
 
         if (orgMembersOnly || store.visibility() != JsonStoreVisibility.PUBLIC) {
-            if (!storeDao.hasAccessLevel(store.id(), principal.getId(), ResourceAccessLevel.atLeast(accessLevel))) {
-                throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
+            if (!storeDao.hasAccessLevel(store.id(), principal.userId(), ResourceAccessLevel.atLeast(accessLevel))) {
+                throw new UnauthorizedException("The current user (" + principal.username() + ") doesn't have " +
                         "the necessary access level (" + accessLevel + ") to the JSON store: " + store.name());
             }
         }

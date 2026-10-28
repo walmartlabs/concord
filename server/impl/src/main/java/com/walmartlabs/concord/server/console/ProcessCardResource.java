@@ -31,7 +31,8 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -83,9 +84,9 @@ public class ProcessCardResource implements Resource {
     @Operation(description = "List user process cards", operationId = "listUserProcessCards")
     public List<ProcessCardEntry> list() {
 
-        UserPrincipal user = UserPrincipal.assertCurrent();
+        SubjectPrincipal user = PrincipalNormalization.assertCurrent();
 
-        return processCardManager.listUserCards(user.getId());
+        return processCardManager.listUserCards(user.userId());
     }
 
     @GET

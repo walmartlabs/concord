@@ -44,6 +44,9 @@ public interface ProcessFilter {
     String initiator();
 
     @Nullable
+    UUID initiatorId();
+
+    @Nullable
     Set<UUID> orgIds();
 
     @Nullable

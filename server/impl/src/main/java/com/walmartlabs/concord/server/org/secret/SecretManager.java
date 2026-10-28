@@ -48,7 +48,8 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyEntry;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
@@ -149,23 +150,23 @@ public class SecretManager {
             return e;
         }
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
+        SubjectPrincipal p = PrincipalNormalization.assertCurrent();
 
         EntityOwner owner = e.getOwner();
-        if (owner != null && p.getId().equals(owner.id())) {
+        if (owner != null && p.userId().equals(owner.id())) {
             // the owner can do anything with his secrets
             return e;
         }
 
         if (orgMembersOnly && e.getVisibility() == SecretVisibility.PUBLIC
                 && level == ResourceAccessLevel.READER
-                && userDao.isInOrganization(p.getId(), e.getOrgId())) {
+                && userDao.isInOrganization(p.userId(), e.getOrgId())) {
             // organization members can access any public secret in the same organization
             return e;
         }
 
         OrganizationEntry org = orgManager.assertAccess(e.getOrgId(), false);
-        if (ResourceAccessUtils.isSame(p, org.getOwner())) {
+        if (ResourceAccessUtils.isSame(p.userId(), org.getOwner())) {
             // the org owner can do anything with the org's secrets
             return e;
         }
@@ -173,7 +174,7 @@ public class SecretManager {
         if (orgMembersOnly || e.getVisibility() != SecretVisibility.PUBLIC) {
             // we need to check the resource's access level if the access is limited to
             // the organization's members or the secret is not public
-            if (!secretDao.hasAccessLevel(e.getId(), p.getId(), ResourceAccessLevel.atLeast(level))) {
+            if (!secretDao.hasAccessLevel(e.getId(), p.userId(), ResourceAccessLevel.atLeast(level))) {
                 throw new UnauthorizedException("The current user doesn't have " +
                         "the necessary access level (" + level + ") to the secret: " + e.getName());
             }
@@ -517,8 +518,7 @@ public class SecretManager {
      * Returns a list of secrets for the specified organization.
      */
     public List<SecretEntryV2> list(UUID orgId, int offset, int limit, String filter) {
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        UUID userId = p.getId();
+        UUID userId = PrincipalNormalization.assertCurrent().userId();
         if (Roles.isAdmin() || Roles.isGlobalReader() || Roles.isGlobalWriter()) {
             userId = null;
         }
@@ -566,7 +566,9 @@ public class SecretManager {
 
         storeType = storeType.toLowerCase();
 
-        UserEntry owner = UserPrincipal.assertCurrent().getUser();
+        UUID currentUserId = PrincipalNormalization.assertCurrent().userId();
+        UserEntry owner = userManager.get(currentUserId)
+                .orElseThrow(() -> new ConcordApplicationException("User not found: " + currentUserId));
         if(projectIds != null) {
             for(UUID projectId: projectIds) {
                 policyManager.checkEntity(orgId, projectId, EntityType.SECRET, EntityAction.CREATE, owner,
@@ -641,7 +643,7 @@ public class SecretManager {
         // the agent uses its own API key which is typically a "globalReader". That is why we need to check both
         // "globalReaders" and the current session token
         // TODO create a separate role or move the repository cloning into the runner and use session tokens?
-        UserPrincipal u = UserPrincipal.getCurrent();
+        SubjectPrincipal u = PrincipalNormalization.getCurrent();
         if (u != null && Roles.isGlobalReader()) {
             return;
         }

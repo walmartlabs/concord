@@ -25,7 +25,7 @@ import com.walmartlabs.concord.policyengine.KvRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 
 import javax.inject.Inject;
 import java.text.MessageFormat;
@@ -93,7 +93,7 @@ public class KvManager {
             return;
         }
 
-        PolicyEngine policyEngine = policyManager.get(orgId, projectId, UserPrincipal.assertCurrent().getUser().getId());
+        PolicyEngine policyEngine = policyManager.get(orgId, projectId, PrincipalNormalization.assertCurrent().userId());
         if (policyEngine == null) {
             return;
         }

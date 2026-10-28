@@ -39,7 +39,7 @@ import com.walmartlabs.concord.server.policy.PolicyUtils;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
@@ -153,7 +153,7 @@ public class ProjectManager {
 
         long currentSize = kvDao.count(project.getId());
 
-        PolicyEngine policy = policyManager.get(org.getId(), project.getId(), UserPrincipal.assertCurrent().getId());
+        PolicyEngine policy = policyManager.get(org.getId(), project.getId(), PrincipalNormalization.assertCurrent().userId());
         Integer maxEntries = null;
         if (policy != null) {
             maxEntries = policy.getKvPolicy().getMaxEntries();
@@ -166,7 +166,9 @@ public class ProjectManager {
     }
 
     private UUID insert(UUID orgId, String orgName, ProjectEntry entry) {
-        UserEntry owner = getOwner(entry.getOwner(), UserPrincipal.assertCurrent().getUser());
+        UUID currentUserId = PrincipalNormalization.assertCurrent().userId();
+        UserEntry owner = getOwner(entry.getOwner(), userManager.get(currentUserId)
+                .orElseThrow(() -> new ConcordApplicationException("User not found: " + currentUserId)));
         policyManager.checkEntity(orgId, null, EntityType.PROJECT, EntityAction.CREATE, owner, PolicyUtils.projectToMap(orgId, orgName, entry));
 
         byte[] encryptedKey = encryptedValueManager.createEncryptedSecretKey();
@@ -296,8 +298,7 @@ public class ProjectManager {
     }
 
     public List<ProjectEntry> list(UUID orgId, int offset, int limit, String filter) {
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        UUID userId = p.getId();
+        UUID userId = PrincipalNormalization.assertCurrent().userId();
         if (Roles.isAdmin() || Roles.isGlobalReader() || Roles.isGlobalWriter()) {
             // admins or "global readers" can see any project, so we shouldn't filter projects by user
             userId = null;

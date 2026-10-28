@@ -37,7 +37,8 @@ import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -153,14 +154,14 @@ public class ProjectProcessResource implements Resource {
         PartialProcessKey processKey = PartialProcessKey.create();
 
         try {
-            UserPrincipal initiator = UserPrincipal.assertCurrent();
+            SubjectPrincipal initiator = PrincipalNormalization.assertCurrent();
 
             Payload payload = PayloadBuilder.start(processKey)
                     .organization(orgId)
                     .project(projectId)
                     .repository(repoId)
                     .entryPoint(entryPoint)
-                    .initiator(initiator.getId(), initiator.getUsername())
+                    .initiator(initiator.userId(), initiator.username())
                     .configuration(cfg)
                     .request(request)
                     .build();

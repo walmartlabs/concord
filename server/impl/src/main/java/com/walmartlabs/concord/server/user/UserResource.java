@@ -28,7 +28,6 @@ import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -148,7 +147,7 @@ public class UserResource implements Resource {
         assertAdmin();
 
         // TODO: type from request
-        UserType type = UserPrincipal.assertCurrent().getType();
+        UserType type = userManager.currentLegacyType();
         // TODO: userDomain from request
         String userDomain = null;
         UUID id = userManager.getId(username, userDomain, type)
@@ -164,7 +163,7 @@ public class UserResource implements Resource {
         }
     }
 
-    private static UserType assertUserType(UserType type) {
+    private UserType assertUserType(UserType type) {
         if (type != null && type.equals(UserType.SSO)) {
             throw new ConcordApplicationException("User of type "+type.name()+" cannot be created", Status.BAD_REQUEST);
         }
@@ -172,6 +171,6 @@ public class UserResource implements Resource {
         if (type != null) {
             return type;
         }
-        return UserPrincipal.assertCurrent().getType();
+        return userManager.currentLegacyType();
     }
 }

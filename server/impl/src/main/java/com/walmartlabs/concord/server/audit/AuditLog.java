@@ -26,7 +26,8 @@ import com.walmartlabs.concord.server.cfg.AuditConfiguration;
 import com.walmartlabs.concord.server.org.project.DiffUtils;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.audit.AuditEvent;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,9 +137,9 @@ public class AuditLog {
 
         private void doLog() {
             if (userId == null) {
-                UserPrincipal user = UserPrincipal.getCurrent();
+                SubjectPrincipal user = PrincipalNormalization.getCurrent();
                 if (user != null) {
-                    userId = user.getId();
+                    userId = user.userId();
                 }
             }
 

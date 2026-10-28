@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server.org.secret;
  */
 
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.AuthenticationContext;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.SecurityManager;
@@ -59,6 +61,7 @@ public class PasswordCheckerTest {
     @AfterEach
     public void unbindUser() {
         ThreadContext.unbindSubject();
+        ThreadContext.unbindSecurityManager();
     }
 
     @Test
@@ -116,6 +119,23 @@ public class PasswordCheckerTest {
 
         try {
             PasswordChecker.check(password);
+            fail("exception expected");
+        } catch (PasswordChecker.CheckerException e) {
+            assertTrue(e.getMessage().contains("consecutive characters from your user account name"));
+        }
+    }
+
+    @Test
+    public void sdkPrincipalUsernameIsChecked() {
+        SubjectPrincipal principal = new SubjectPrincipal(UUID.randomUUID(), USERNAME, null,
+                new AuthenticationContext("test", null, null));
+        SubjectContext ctx = new DefaultSubjectContext();
+        ctx.setAuthenticated(true);
+        ctx.setPrincipals(new SimplePrincipalCollection(principal, "test"));
+        ThreadContext.bind(ThreadContext.getSecurityManager().createSubject(ctx));
+
+        try {
+            PasswordChecker.check("Aa345678asi");
             fail("exception expected");
         } catch (PasswordChecker.CheckerException e) {
             assertTrue(e.getMessage().contains("consecutive characters from your user account name"));

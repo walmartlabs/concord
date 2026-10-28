@@ -22,10 +22,17 @@ package com.walmartlabs.concord.server.events;
 
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggerUtils;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.user.UserEntry;
+import com.walmartlabs.concord.server.user.UserManager;
+
+import javax.inject.Inject;
 
 public class TriggerEventInitiatorResolver {
+
+    @Inject
+    private UserManager userManager;
 
     public UserEntry resolve(TriggerEntry trigger, Event event) {
         boolean useInitiator = TriggerUtils.isUseInitiator(trigger);
@@ -36,6 +43,7 @@ public class TriggerEventInitiatorResolver {
             }
         }
 
-        return UserPrincipal.assertCurrent().getUser();
+        var id = PrincipalNormalization.assertCurrent().userId();
+        return userManager.get(id).orElseThrow(() -> new ConcordApplicationException("User not found: " + id));
     }
 }

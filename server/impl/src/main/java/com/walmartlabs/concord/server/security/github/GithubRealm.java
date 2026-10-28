@@ -20,25 +20,23 @@ package com.walmartlabs.concord.server.security.github;
  * =====
  */
 
-import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.security.AuthenticationContext;
 import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
-import com.walmartlabs.concord.server.security.SecurityUtils;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAccount;
-import org.apache.shiro.authz.AuthorizationInfo;
-import org.apache.shiro.realm.AuthorizingRealm;
-import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.realm.AuthenticatingRealm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.UUID;
 
-public class GithubRealm extends AuthorizingRealm {
+public class GithubRealm extends AuthenticatingRealm {
 
     private static final Logger log = LoggerFactory.getLogger(GithubRealm.class);
 
@@ -64,7 +62,8 @@ public class GithubRealm extends AuthorizingRealm {
         try {
             return userManager.get(USER_ID)
                     .map(u -> {
-                        UserPrincipal p = new UserPrincipal(REALM_NAME, u);
+                        SubjectPrincipal p = new SubjectPrincipal(u.getId(), u.getName(), u.getDomain(),
+                                new AuthenticationContext(REALM_NAME, Instant.now(), null));
                         return new SimpleAccount(Arrays.asList(p, t), t.getCredentials(), getName());
                     })
                     .orElse(null);
@@ -72,16 +71,5 @@ public class GithubRealm extends AuthorizingRealm {
             log.error("doGetAuthenticationInfo -> error", e);
             throw e;
         }
-    }
-
-    @Override
-    @WithTimer
-    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        UserPrincipal p = principals.oneByType(UserPrincipal.class);
-        if (p == null || !REALM_NAME.equals(p.getRealm())) {
-            return null;
-        }
-
-        return SecurityUtils.toAuthorizationInfo(principals);
     }
 }

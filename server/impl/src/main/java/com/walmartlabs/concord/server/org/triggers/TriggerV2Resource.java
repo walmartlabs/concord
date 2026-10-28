@@ -28,7 +28,7 @@ import com.walmartlabs.concord.server.org.project.*;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -119,7 +119,7 @@ public class TriggerV2Resource implements Resource {
         // Admins and global readers/writers pass null to skip per-user filtering.
         UUID currentUserId = null;
         if (projectId == null && !(Roles.isAdmin() || Roles.isGlobalReader())) {
-            currentUserId = UserPrincipal.assertCurrent().getId();
+            currentUserId = PrincipalNormalization.assertCurrent().userId();
         }
 
         return triggersDao.list(orgId, projectId, repoId, type, currentUserId);

@@ -32,7 +32,7 @@ import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Permission;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.exception.DataAccessException;
@@ -77,7 +77,7 @@ public class ApiKeyManager {
         }
 
         if (userId == null) {
-            userId = UserPrincipal.assertCurrent().getId();
+            userId = PrincipalNormalization.assertCurrent().userId();
         }
 
         assertOwner(userId);
@@ -108,7 +108,7 @@ public class ApiKeyManager {
         }
 
         if (userId == null) {
-            userId = UserPrincipal.assertCurrent().getId();
+            userId = PrincipalNormalization.assertCurrent().userId();
         }
 
         assertOwner(userId);
@@ -199,7 +199,7 @@ public class ApiKeyManager {
     public List<ApiKeyEntry> list(@Nullable UUID userId) {
         UUID effectiveUserId = userId;
         if (effectiveUserId == null) {
-            effectiveUserId = UserPrincipal.assertCurrent().getId();
+            effectiveUserId = PrincipalNormalization.assertCurrent().userId();
         }
 
         assertOwner(effectiveUserId);
@@ -213,7 +213,8 @@ public class ApiKeyManager {
         }
 
         if (type == null) {
-            type = UserPrincipal.assertCurrent().getType();
+            type = userManager.get(PrincipalNormalization.assertCurrent().userId())
+                    .orElseThrow(() -> new ConcordApplicationException("Current user not found")).getType();
         }
 
         return userManager.getId(username, domain, type)
@@ -248,8 +249,7 @@ public class ApiKeyManager {
             return;
         }
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        if (!userId.equals(p.getId())) {
+        if (!userId.equals(PrincipalNormalization.assertCurrent().userId())) {
             throw new UnauthorizedException("Operation is not permitted");
         }
     }

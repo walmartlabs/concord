@@ -20,7 +20,8 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,11 +38,11 @@ public final class PasswordChecker {
         DIGIT("Password must contain a numeric character", p -> p.chars().anyMatch(Character::isDigit)),
         USERNAME("Passwords may NOT contain three (" + CONSECUTIVE_CHARS_IN_USERNAME + ") consecutive characters from your user account name",
                 p -> {
-                    UserPrincipal currentUser = UserPrincipal.getCurrent();
+                    SubjectPrincipal currentUser = PrincipalNormalization.getCurrent();
                     if (currentUser == null) {
                         return true;
                     }
-                    return split(currentUser.getUsername(), CONSECUTIVE_CHARS_IN_USERNAME).stream()
+                    return split(currentUser.username(), CONSECUTIVE_CHARS_IN_USERNAME).stream()
                         .noneMatch(p::contains);
         });
 

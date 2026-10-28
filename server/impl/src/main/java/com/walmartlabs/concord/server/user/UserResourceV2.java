@@ -26,7 +26,7 @@ import com.walmartlabs.concord.server.sdk.security.ExternalIdentityKey;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.security.AuthorizationSubjectNotFoundException;
@@ -87,9 +87,7 @@ public class UserResourceV2 implements Resource {
     @Operation(description = "Get an existing user", operationId = "getUser")
     public UserEntry get(@PathParam("id") UUID id) {
 
-        UserPrincipal loggedIn = UserPrincipal.assertCurrent();
-
-        UUID authenticatedId = loggedIn.getId();
+        UUID authenticatedId = PrincipalNormalization.assertCurrent().userId();
 
         if (authenticatedId.equals(id) || Roles.isAdmin() || Roles.isGlobalReader()) {
             return userDao.get(id);
@@ -190,7 +188,7 @@ public class UserResourceV2 implements Resource {
     }
 
     private static void assertCanRead(UUID id) {
-        if (!UserPrincipal.assertCurrent().getId().equals(id) && !Roles.isAdmin() && !Roles.isGlobalReader()) {
+        if (!PrincipalNormalization.assertCurrent().userId().equals(id) && !Roles.isAdmin() && !Roles.isGlobalReader()) {
             throw new UnauthorizedException("Users can only view their own information or must have admin privileges.");
         }
     }

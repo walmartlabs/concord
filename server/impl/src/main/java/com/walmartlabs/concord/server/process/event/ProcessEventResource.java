@@ -33,7 +33,8 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -172,7 +173,7 @@ public class ProcessEventResource implements Resource {
             return;
         }
 
-        UserPrincipal p = UserPrincipal.getCurrent();
+        SubjectPrincipal p = PrincipalNormalization.getCurrent();
         if (p == null) {
             return;
         }
@@ -186,7 +187,7 @@ public class ProcessEventResource implements Resource {
             }
         }
 
-        if (p.getId().equals(ids.getInitiatorId())) {
+        if (p.userId().equals(ids.getInitiatorId())) {
             // if it is a standalone process, only the initator can access extended event data
             return;
         }

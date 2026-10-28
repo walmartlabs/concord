@@ -21,17 +21,18 @@ package com.walmartlabs.concord.server.security.internal;
  */
 
 import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
-import com.walmartlabs.concord.server.security.SecurityUtils;
-import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authz.AuthorizationInfo;
-import org.apache.shiro.realm.AuthorizingRealm;
-import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.realm.AuthenticatingRealm;
 
-public class InternalRealm extends AuthorizingRealm {
+public class InternalRealm extends AuthenticatingRealm {
 
     public static final String REALM_NAME = "internal";
+
+    @Override
+    public boolean supports(AuthenticationToken token) {
+        return false;
+    }
 
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
@@ -39,13 +40,4 @@ public class InternalRealm extends AuthorizingRealm {
         throw new IllegalStateException("Not implemented");
     }
 
-    @Override
-    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        UserPrincipal p = principals.oneByType(UserPrincipal.class);
-        if (p == null || !REALM_NAME.equals(p.getRealm())) {
-            return null;
-        }
-
-        return SecurityUtils.toAuthorizationInfo(principals);
-    }
 }

@@ -47,12 +47,14 @@ import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.sdk.security.GroupRef;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
+import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.security.legacy.LegacyApiGuard;
-import com.walmartlabs.concord.server.user.RoleEntry;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.jooq.Configuration;
@@ -70,7 +72,7 @@ import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
-import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
+import static com.walmartlabs.concord.server.jooq.tables.VUserTeams.V_USER_TEAMS;
 
 @Path("/api/service/console")
 public class ConsoleService implements Resource {
@@ -90,6 +92,7 @@ public class ConsoleService implements Resource {
     private final ConsoleServiceDao consoleServiceDao;
     private final ConsoleConfiguration consoleCfg;
     private final LegacyApiGuard legacyApi;
+    private final AuthorizationService authorizationService;
 
     @Inject
     public ConsoleService(ProjectDao projectDao,
@@ -105,7 +108,8 @@ public class ConsoleService implements Resource {
                           JsonStoreQueryDao storageQueryDao,
                           JsonStoreAccessManager jsonStoreAccessManager,
                           ConsoleServiceDao consoleServiceDao,
-                          ConsoleConfiguration consoleCfg, LegacyApiGuard legacyApi) {
+                          ConsoleConfiguration consoleCfg, LegacyApiGuard legacyApi,
+                          AuthorizationService authorizationService) {
 
         this.projectDao = projectDao;
         this.repositoryManager = repositoryManager;
@@ -122,6 +126,7 @@ public class ConsoleService implements Resource {
         this.consoleServiceDao = consoleServiceDao;
         this.consoleCfg = consoleCfg;
         this.legacyApi = legacyApi;
+        this.authorizationService = authorizationService;
     }
 
     @GET
@@ -138,27 +143,24 @@ public class ConsoleService implements Resource {
     @Path("/userInfo")
     @Produces(MediaType.APPLICATION_JSON)
     public UserInfoResponse getUserInfo() {
-        UserPrincipal p = UserPrincipal.getCurrent();
+        SubjectPrincipal p = PrincipalNormalization.getCurrent();
         if (p == null) {
             throw new ConcordApplicationException("Can't determine current user: principal not found",
                     Status.INTERNAL_SERVER_ERROR);
         }
 
-        UserEntry u = p.getUser();
-        if (u == null) {
-            throw new ConcordApplicationException("Can't determine current user: user entry not found",
-                    Status.INTERNAL_SERVER_ERROR);
-        }
-
-        Set<String> userLdapGroups = Optional.ofNullable(LdapPrincipal.getCurrent())
-                .map(LdapPrincipal::getGroups)
-                .orElse(Set.of());
+        UserEntry u = userManager.get(p.userId())
+                .orElseThrow(() -> new ConcordApplicationException("Unknown user: " + p.userId()));
+        Set<String> userLdapGroups = authorizationService.getGroups(p.userId()).stream()
+                .filter(g -> "ldap".equals(g.sourceId()))
+                .map(GroupRef::groupId)
+                .collect(java.util.stream.Collectors.toSet());
 
         return UserInfoResponse.builder()
                 .id(u.getId())
                 .displayName(displayName(u, p))
-                .teams(consoleServiceDao.listTeams(p.getId()))
-                .roles(u.getRoles().stream().map(RoleEntry::getName).toList())
+                .teams(consoleServiceDao.listTeams(p.userId()))
+                .roles(authorizationService.prepare(p.userId()).roles().stream().toList())
                 .ldapGroups(userLdapGroups)
                 .build();
     }
@@ -167,26 +169,20 @@ public class ConsoleService implements Resource {
     @Path("/whoami")
     @Produces(MediaType.APPLICATION_JSON)
     public UserResponse whoami() {
-        UserPrincipal p = UserPrincipal.getCurrent();
+        SubjectPrincipal p = PrincipalNormalization.getCurrent();
         if (p == null) {
             throw new ConcordApplicationException("Can't determine current user: principal not found",
                     Status.INTERNAL_SERVER_ERROR);
         }
 
-        UserEntry u = p.getUser();
-        if (u == null) {
-            throw new ConcordApplicationException("Can't determine current user: user entry not found",
-                    Status.INTERNAL_SERVER_ERROR);
-        }
-
-        UserEntry user = userManager.get(p.getId())
-                .orElseThrow(() -> new ConcordApplicationException("Unknown user: " + p.getId()));
+        UserEntry user = userManager.get(p.userId())
+                .orElseThrow(() -> new ConcordApplicationException("Unknown user: " + p.userId()));
 
         if (user.isDisabled()) {
-            throw new UnauthorizedException("User is disabled: " + p.getId());
+            throw new UnauthorizedException("User is disabled: " + p.userId());
         }
 
-        return new UserResponse(p.getRealm(), user.getName(), user.getDomain(), displayName(u, p), user.getOrgs());
+        return new UserResponse(p.authentication().providerId(), user.getName(), user.getDomain(), displayName(user, p), user.getOrgs());
     }
 
     @POST
@@ -286,12 +282,12 @@ public class ConsoleService implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public boolean isApiTokenExists(@PathParam("name") @ConcordKey String tokenName) {
-        UserPrincipal currentUser = UserPrincipal.getCurrent();
+        SubjectPrincipal currentUser = PrincipalNormalization.getCurrent();
         if (currentUser == null) {
             return false;
         }
 
-        UUID userId = currentUser.getId();
+        UUID userId = currentUser.userId();
         return apiKeyDao.getId(userId, tokenName) != null;
     }
 
@@ -375,7 +371,7 @@ public class ConsoleService implements Resource {
         return true;
     }
 
-    private static String displayName(UserEntry u, UserPrincipal p) {
+    private static String displayName(UserEntry u, SubjectPrincipal p) {
         String displayName = u.getDisplayName();
 
         if (displayName == null) {
@@ -386,7 +382,7 @@ public class ConsoleService implements Resource {
         }
 
         if (displayName == null) {
-            displayName = p.getUsername();
+            displayName = p.username();
         }
 
         return displayName;
@@ -405,12 +401,12 @@ public class ConsoleService implements Resource {
         }
 
         public List<UserInfoResponse.UserTeamInfo> listTeams(UUID userId) {
-            return txResult(tx -> tx.select(ORGANIZATIONS.ORG_NAME, TEAMS.TEAM_NAME, USER_TEAMS.TEAM_ROLE)
-                    .from(USER_TEAMS)
-                    .join(TEAMS).on(TEAMS.TEAM_ID.eq(USER_TEAMS.TEAM_ID))
+            return txResult(tx -> tx.select(ORGANIZATIONS.ORG_NAME, TEAMS.TEAM_NAME, V_USER_TEAMS.TEAM_ROLE)
+                    .from(V_USER_TEAMS)
+                    .join(TEAMS).on(TEAMS.TEAM_ID.eq(V_USER_TEAMS.TEAM_ID))
                     .join(ORGANIZATIONS).on(ORGANIZATIONS.ORG_ID.eq(TEAMS.ORG_ID))
-                    .where(USER_TEAMS.USER_ID.eq(userId))
-                    .fetch(r -> UserInfoResponse.UserTeamInfo.of(r.get(ORGANIZATIONS.ORG_NAME), r.get(TEAMS.TEAM_NAME), TeamRole.valueOf(r.get(USER_TEAMS.TEAM_ROLE)))));
+                    .where(V_USER_TEAMS.USER_ID.eq(userId))
+                    .fetch(r -> UserInfoResponse.UserTeamInfo.of(r.get(ORGANIZATIONS.ORG_NAME), r.get(TEAMS.TEAM_NAME), TeamRole.valueOf(r.get(V_USER_TEAMS.TEAM_ROLE)))));
         }
     }
 }

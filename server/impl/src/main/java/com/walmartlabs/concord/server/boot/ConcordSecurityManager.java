@@ -21,18 +21,28 @@ package com.walmartlabs.concord.server.boot;
  */
 
 import com.walmartlabs.concord.server.security.rememberme.ConcordRememberMeManager;
+import com.walmartlabs.concord.server.security.ConcordAuthenticationStrategy;
+import com.walmartlabs.concord.server.security.ConcordAuthorizationRealm;
+import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
+import org.apache.shiro.authz.ModularRealmAuthorizer;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.session.mgt.ServletContainerSessionManager;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Set;
 
 public class ConcordSecurityManager extends DefaultWebSecurityManager {
 
     @Inject
-    public ConcordSecurityManager(Set<Realm> realms, ConcordRememberMeManager rememberMeManager) {
+    public ConcordSecurityManager(Set<Realm> realms, ConcordRememberMeManager rememberMeManager,
+                                  ConcordAuthorizationRealm authorizationRealm) {
         super(realms);
+        ((ModularRealmAuthenticator) getAuthenticator()).setAuthenticationStrategy(new ConcordAuthenticationStrategy());
+        ModularRealmAuthorizer authorizer = new ModularRealmAuthorizer();
+        authorizer.setRealms(List.of(authorizationRealm));
+        setAuthorizer(authorizer);
         setSessionManager(new ServletContainerSessionManager());
         setRememberMeManager(rememberMeManager);
     }

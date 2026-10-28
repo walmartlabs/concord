@@ -21,6 +21,9 @@ package com.walmartlabs.concord.server.security;
  */
 
 import com.walmartlabs.concord.server.security.internal.InternalRealm;
+import com.walmartlabs.concord.server.sdk.security.AuthenticationContext;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.mgt.SecurityManager;
@@ -36,11 +39,13 @@ public class UserSecurityContext {
 
     private final SecurityManager securityManager;
     private final UserManager userManager;
+    private final AuthorizationService authorizationService;
 
     @Inject
-    public UserSecurityContext(SecurityManager securityManager, UserManager userManager) {
+    public UserSecurityContext(SecurityManager securityManager, UserManager userManager, AuthorizationService authorizationService) {
         this.securityManager = securityManager;
         this.userManager = userManager;
+        this.authorizationService = authorizationService;
     }
 
     /**
@@ -52,11 +57,14 @@ public class UserSecurityContext {
             throw new UnauthorizedException("User '" + userID + "'not found");
         }
 
-        try {
+        Subject previousSubject = ThreadContext.getSubject();
+        SecurityManager previousManager = ThreadContext.getSecurityManager();
+        SubjectPrincipal principal = principal(u);
+        try (AuthorizationScope ignored = AuthorizationScope.open(authorizationService, principal, false)) {
             ThreadContext.bind(securityManager);
 
             SimplePrincipalCollection principals = new SimplePrincipalCollection();
-            principals.add(new UserPrincipal(InternalRealm.REALM_NAME, u), InternalRealm.REALM_NAME);
+            principals.add(principal, InternalRealm.REALM_NAME);
 
             Subject subject = new Subject.Builder()
                     .sessionCreationEnabled(false)
@@ -68,8 +76,16 @@ public class UserSecurityContext {
 
             return c.call();
         } finally {
-            ThreadContext.unbindSubject();
-            ThreadContext.unbindSecurityManager();
+            if (previousSubject == null) {
+                ThreadContext.unbindSubject();
+            } else {
+                ThreadContext.bind(previousSubject);
+            }
+            if (previousManager == null) {
+                ThreadContext.unbindSecurityManager();
+            } else {
+                ThreadContext.bind(previousManager);
+            }
         }
     }
 
@@ -79,9 +95,16 @@ public class UserSecurityContext {
             return false;
         }
 
-        var principal = new UserPrincipal(InternalRealm.REALM_NAME, user);
+        var principal = principal(user);
         var principals = new SimplePrincipalCollection(principal, InternalRealm.REALM_NAME);
 
-        return securityManager.isPermitted(principals, permission.getKey());
+        try (AuthorizationScope ignored = AuthorizationScope.open(authorizationService, principal, false)) {
+            return securityManager.isPermitted(principals, permission.getKey());
+        }
+    }
+
+    private static SubjectPrincipal principal(UserEntry user) {
+        return new SubjectPrincipal(user.getId(), user.getName(), user.getDomain(),
+                new AuthenticationContext(InternalRealm.REALM_NAME, null, null));
     }
 }

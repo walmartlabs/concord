@@ -24,6 +24,7 @@ import com.codahale.metrics.Meter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.RequestUtils;
 import com.walmartlabs.concord.server.sdk.metrics.InjectMeter;
+import com.walmartlabs.concord.server.security.AuthorizationFailure;
 import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import org.apache.shiro.authc.AuthenticationException;
@@ -110,6 +111,12 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
                 return true;
             }
 
+            Integer failureStatus = (Integer) request.getAttribute(ConcordAuthorizationFilter.AUTHORIZATION_FAILURE);
+            if (failureStatus != null) {
+                resp.setStatus(failureStatus);
+                return false;
+            }
+
             boolean handled = false;
             for (AuthenticationHandler handler : authenticationHandlers) {
                 handled = handler.onAccessDenied(request, response);
@@ -125,7 +132,12 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             sendUnauthorized(resp);
             reportAuthSchemes(request, response);
         } catch (Exception e) {
-            sendUnauthorized(resp, e);
+            int status = AuthorizationFailure.status(e);
+            if (status != 0) {
+                resp.setStatus(status);
+            } else {
+                sendUnauthorized(resp, e);
+            }
         }
 
         return false;
@@ -133,6 +145,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     @Override
     protected boolean onLoginSuccess(AuthenticationToken token, Subject subject, ServletRequest request, ServletResponse response) throws Exception {
+        request.setAttribute(ConcordAuthorizationFilter.NEW_AUTHENTICATION, true);
         successAuths.mark();
         return super.onLoginSuccess(token, subject, request, response);
     }
@@ -141,6 +154,10 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     protected boolean onLoginFailure(AuthenticationToken token, AuthenticationException e, ServletRequest request, ServletResponse response) {
         log.debug("onLoginFailure ['{}'] -> login failed ({}): {}", token, request.getRemoteAddr(), e.getMessage());
         failedAuths.mark();
+        int status = AuthorizationFailure.status(e);
+        if (status != 0) {
+            request.setAttribute(ConcordAuthorizationFilter.AUTHORIZATION_FAILURE, status);
+        }
 
         Subject s = ThreadContext.getSubject();
         if (s != null && (s.isRemembered() || s.isAuthenticated())) {

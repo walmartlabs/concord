@@ -32,7 +32,8 @@ import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.inject.Inject;
@@ -89,7 +90,7 @@ public class PayloadManager {
 
         String entryPoint = MultipartUtils.getString(input, Constants.Multipart.ENTRY_POINT);
 
-        UserPrincipal initiator = UserPrincipal.assertCurrent();
+        SubjectPrincipal initiator = PrincipalNormalization.assertCurrent();
 
         String[] out = getOutExpressions(input);
 
@@ -106,7 +107,7 @@ public class PayloadManager {
                 .repository(repoId)
                 .entryPoint(entryPoint)
                 .outExpressions(out)
-                .initiator(initiator.getId(), initiator.getUsername())
+                .initiator(initiator.userId(), initiator.username())
                 .meta(meta)
                 .request(request)
                 .build();

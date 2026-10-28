@@ -36,7 +36,8 @@ import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Permission;
 import com.walmartlabs.concord.server.security.Roles;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.user.UserDao;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -299,7 +300,7 @@ public class ProcessResourceV2 implements Resource {
     }
 
     private Set<UUID> getCurrentUserOrgIds() {
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        return userDao.getOrgIds(p.getId());
+        SubjectPrincipal p = PrincipalNormalization.assertCurrent();
+        return userDao.getOrgIds(p.userId());
     }
 }

@@ -31,7 +31,9 @@ import com.walmartlabs.concord.server.policy.PolicyUtils;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
+import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserEntry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -48,15 +50,17 @@ public class PolicyCheckResource implements Resource {
     private final OrganizationManager orgManager;
     private final ProjectManager projectManager;
     private final PolicyManager policyManager;
+    private final UserManager userManager;
 
     @Inject
     public PolicyCheckResource(OrganizationManager orgManager,
                                ProjectManager projectManager,
-                               PolicyManager policyManager) {
+                               PolicyManager policyManager, UserManager userManager) {
 
         this.orgManager = orgManager;
         this.projectManager = projectManager;
         this.policyManager = policyManager;
+        this.userManager = userManager;
     }
 
     @GET
@@ -76,12 +80,16 @@ public class PolicyCheckResource implements Resource {
             switch (entity) {
                 case PROJECT: {
                     ProjectEntry entry = new ProjectEntry(entity.toString());
-                    UserEntry owner = projectManager.getOwner(entry.getOwner(), UserPrincipal.assertCurrent().getUser());
+                    UUID currentUserId = PrincipalNormalization.assertCurrent().userId();
+                    UserEntry owner = projectManager.getOwner(entry.getOwner(), userManager.get(currentUserId)
+                            .orElseThrow(() -> new ConcordApplicationException("User not found: " + currentUserId)));
                     policyManager.checkEntity(orgId, null, EntityType.PROJECT, EntityAction.CREATE, owner, PolicyUtils.projectToMap(orgId, orgName, entry));
                     break;
                 }
                 case SECRET: {
-                    UserEntry owner = UserPrincipal.assertCurrent().getUser();
+                    UUID currentUserId = PrincipalNormalization.assertCurrent().userId();
+                    UserEntry owner = userManager.get(currentUserId)
+                            .orElseThrow(() -> new ConcordApplicationException("User not found: " + currentUserId));
                     policyManager.checkEntity(orgId, null, EntityType.SECRET, EntityAction.CREATE, owner, PolicyUtils.secretToMap(orgId, null, null, null, null));
                 }
                 default: {

@@ -37,7 +37,7 @@ import com.walmartlabs.concord.server.policy.PolicyUtils;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
@@ -87,8 +87,7 @@ public class JsonStoreManager {
     public List<JsonStoreEntry> list(String orgName, int offset, int limit, String filter) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        UUID userId = p.getId();
+        UUID userId = PrincipalNormalization.assertCurrent().userId();
         if (Roles.isAdmin() || Roles.isGlobalReader() || Roles.isGlobalWriter()) {
             // admins or "global readers" can see any stores, so we shouldn't filter stores by user
             userId = null;
@@ -108,7 +107,7 @@ public class JsonStoreManager {
 
         long currentSize = storeDataDao.getSize(store.id());
 
-        PolicyEngine policy = policyManager.get(store.id(), null, UserPrincipal.assertCurrent().getId());
+        PolicyEngine policy = policyManager.get(store.id(), null, PrincipalNormalization.assertCurrent().userId());
         Long maxSize = null;
         if (policy != null) {
             maxSize = policy.getJsonStoragePolicy().getMaxSize();
@@ -157,7 +156,9 @@ public class JsonStoreManager {
     public UUID insert(String orgName, String storeName, JsonStoreVisibility visibility, EntityOwner entityOwner) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
-        UserEntry owner = getOwner(entityOwner, UserPrincipal.assertCurrent().getUser());
+        UUID currentUserId = PrincipalNormalization.assertCurrent().userId();
+        UserEntry owner = getOwner(entityOwner, userManager.get(currentUserId)
+                .orElseThrow(() -> new ConcordApplicationException("User not found: " + currentUserId)));
 
         policyManager.checkEntity(org.getId(), null, EntityType.JSON_STORE, EntityAction.CREATE, owner, PolicyUtils.jsonStoreToMap(org.getId(), storeName, visibility, owner));
 
@@ -265,7 +266,7 @@ public class JsonStoreManager {
     }
 
     private void assertStoragePolicy(UUID orgId) {
-        PolicyEngine policy = policyManager.get(orgId, null, UserPrincipal.assertCurrent().getUser().getId());
+        PolicyEngine policy = policyManager.get(orgId, null, PrincipalNormalization.assertCurrent().userId());
         if (policy == null) {
             return;
         }

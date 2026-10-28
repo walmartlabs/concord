@@ -23,13 +23,16 @@ package com.walmartlabs.concord.server.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.boot.filters.ConcordAuthorizationFilter;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
 import com.walmartlabs.concord.server.security.github.GithubKey;
+import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.lang.codec.Hex;
 import org.apache.shiro.lang.util.StringUtils;
+import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -175,15 +178,39 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
     }
 
     @Override
+    protected boolean isAccessAllowed(ServletRequest request, ServletResponse response, Object mappedValue) {
+        // Authenticate every webhook, even if a browser session is also present.
+        return false;
+    }
+
+    @Override
     protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
-        boolean loggedId = executeLogin(request, response);
-
-        if (!loggedId) {
-            HttpServletResponse resp = (HttpServletResponse) response;
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        try {
+            boolean loggedIn = executeLogin(request, response);
+            if (!loggedIn) {
+                Integer status = (Integer) request.getAttribute(ConcordAuthorizationFilter.AUTHORIZATION_FAILURE);
+                ((HttpServletResponse) response).setStatus(status != null ? status : HttpServletResponse.SC_UNAUTHORIZED);
+            }
+            return loggedIn;
+        } catch (Exception e) {
+            int status = AuthorizationFailure.status(e);
+            if (status == 0) throw e;
+            ((HttpServletResponse) response).setStatus(status);
+            return false;
         }
+    }
 
-        return loggedId;
+    @Override
+    protected boolean onLoginSuccess(AuthenticationToken token, Subject subject, ServletRequest request, ServletResponse response) throws Exception {
+        request.setAttribute(ConcordAuthorizationFilter.NEW_AUTHENTICATION, true);
+        return super.onLoginSuccess(token, subject, request, response);
+    }
+
+    @Override
+    protected boolean onLoginFailure(AuthenticationToken token, AuthenticationException e, ServletRequest request, ServletResponse response) {
+        int status = AuthorizationFailure.status(e);
+        if (status != 0) request.setAttribute(ConcordAuthorizationFilter.AUTHORIZATION_FAILURE, status);
+        return false;
     }
 
     private static String getString(HttpServletRequest req, String k) {

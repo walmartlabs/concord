@@ -33,7 +33,8 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
@@ -138,10 +139,10 @@ public class ProcessCheckpointManager {
     }
 
     public void assertProcessAccess(ProcessEntry e) {
-        UserPrincipal p = UserPrincipal.assertCurrent();
+        SubjectPrincipal p = PrincipalNormalization.assertCurrent();
 
         UUID initiatorId = e.initiatorId();
-        if (p.getId().equals(initiatorId)) {
+        if (p.userId().equals(initiatorId)) {
             // process owners should be able to restore the process from a checkpoint
             return;
         }
@@ -156,7 +157,7 @@ public class ProcessCheckpointManager {
             return;
         }
 
-        throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
+        throw new UnauthorizedException("The current user (" + p.username() + ") doesn't have " +
                 "the necessary permissions to restore the process using a checkpoint: " + e.instanceId());
     }
 

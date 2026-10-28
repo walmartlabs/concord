@@ -210,7 +210,7 @@ public class IdentityDao extends AbstractDao {
             if (consumed != null) throw new AuthenticationException("Identity has already been consumed");
             UUID userId = null;
             if (selector != null) {
-                var candidates = tx.fetch("select user_id from legacy_user_enrollment where username=? and domain is not distinct from ? and user_type=?", selector.username(), selector.domain(), selector.userType());
+                var candidates = tx.fetch("select user_id from legacy_user_enrollment where username=? and (cast(? as text) is null or domain=?) and user_type=?", selector.username(), selector.domain(), selector.domain(), selector.userType());
                 if (candidates.size() > 1) throw conflict("Ambiguous legacy account");
                 if (!candidates.isEmpty()) {
                     userId = candidates.get(0).get(0, UUID.class);

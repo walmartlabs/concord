@@ -34,7 +34,8 @@ import com.walmartlabs.concord.server.org.ResourceAccessUtils;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 
@@ -74,14 +75,14 @@ public class ProcessCardManager {
             return;
         }
 
-        UserPrincipal principal = UserPrincipal.assertCurrent();
+        SubjectPrincipal principal = PrincipalNormalization.assertCurrent();
 
         EntityOwner owner = dao.getOwner(cardId);
-        if (ResourceAccessUtils.isSame(principal, owner)) {
+        if (ResourceAccessUtils.isSame(principal.userId(), owner)) {
             return;
         }
 
-        throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
+        throw new UnauthorizedException("The current user (" + principal.username() + ") doesn't have " +
                                         "access to the process card: " + cardId);
     }
 
@@ -196,7 +197,7 @@ public class ProcessCardManager {
                         ps.setBinaryStream(7, icon);
                         ps.setBinaryStream(8, form);
                         ps.setObject(9, data != null ? objectMapper.toJSONB(data).data() : null);
-                        ps.setObject(10, UserPrincipal.assertCurrent().getId());
+                        ps.setObject(10, PrincipalNormalization.assertCurrent().userId());
                         ps.setObject(11, orderId);
 
                         try (ResultSet rs = ps.executeQuery()) {

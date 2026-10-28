@@ -94,7 +94,7 @@ public class IdentityServiceImpl implements IdentityService {
             }
             for (String source : lookup.authorizationSources()) {
                 AuthorizationProvider provider = registry.authorizationSources().get(source);
-                if (!provider.acceptsIdentity(identity)) throw new AuthenticationException("Directory identity is not accepted by source");
+                if (!provider.acceptsIdentity(identity)) continue;
                 ExternalIdentityKey old = bySource.putIfAbsent(source, identity);
                 if (old != null && !old.equals(identity)) throw new AuthenticationException("Ambiguous source identity");
             }

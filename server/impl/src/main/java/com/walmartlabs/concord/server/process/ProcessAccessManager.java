@@ -28,7 +28,7 @@ import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 
 import javax.inject.Inject;
@@ -60,8 +60,8 @@ public class ProcessAccessManager {
             return entry;
         }
 
-        var current = UserPrincipal.assertCurrent();
-        if (current.getId().equals(entry.initiatorId())) {
+        var current = PrincipalNormalization.assertCurrent();
+        if (current.userId().equals(entry.initiatorId())) {
             return entry;
         }
 
@@ -78,7 +78,7 @@ public class ProcessAccessManager {
             return entry;
         }
 
-        throw new UnauthorizedException("The current user (" + current.getUsername() + ") doesn't have " +
+        throw new UnauthorizedException("The current user (" + current.username() + ") doesn't have " +
                                         "the necessary permissions to access process: " + entry.instanceId());
     }
 }

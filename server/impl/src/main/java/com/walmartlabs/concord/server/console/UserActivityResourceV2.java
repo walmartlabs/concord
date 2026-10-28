@@ -25,7 +25,8 @@ import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -48,10 +49,10 @@ public class UserActivityResourceV2 implements Resource {
     @WithTimer
     public UserActivityResponse activity(@QueryParam("maxOwnProcesses") @DefaultValue("5") int maxOwnProcesses) {
 
-        UserPrincipal user = UserPrincipal.assertCurrent();
+        SubjectPrincipal user = PrincipalNormalization.assertCurrent();
 
         ProcessFilter filter = ProcessFilter.builder()
-                .initiator(user.getUsername())
+                .initiatorId(user.userId())
                 .includeWithoutProject(true)
                 .limit(maxOwnProcesses)
                 .build();

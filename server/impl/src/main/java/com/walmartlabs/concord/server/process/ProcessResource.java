@@ -60,7 +60,8 @@ import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -378,14 +379,14 @@ public class ProcessResource implements Resource {
         ProcessKey parentProcessKey = new ProcessKey(parent.instanceId(), parent.createdAt());
 
         UUID projectId = parent.projectId();
-        UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
+        SubjectPrincipal userPrincipal = PrincipalNormalization.assertCurrent();
         Set<String> handlers = parent.handlers();
         Imports imports = queueDao.getImports(parentProcessKey);
 
         Payload payload;
         try {
             payload = payloadManager.createFork(processKey, parentProcessKey, ProcessKind.DEFAULT,
-                    userPrincipal.getId(), userPrincipal.getUsername(), projectId, req, out, handlers, imports);
+                    userPrincipal.userId(), userPrincipal.username(), projectId, req, out, handlers, imports);
         } catch (IOException e) {
             log.error("fork ['{}', '{}'] -> error creating a payload: {}", processKey, parentProcessKey, e.getMessage());
             throw new ConcordApplicationException("Error creating a payload", e);
@@ -970,10 +971,10 @@ public class ProcessResource implements Resource {
     }
 
     private void assertProcessAccess(ProcessEntry pe, ResourceAccessLevel accessLevel, String entity) {
-        UserPrincipal principal = UserPrincipal.assertCurrent();
+        SubjectPrincipal principal = PrincipalNormalization.assertCurrent();
 
         UUID initiatorId = pe.initiatorId();
-        if (principal.getId().equals(initiatorId)) {
+        if (principal.userId().equals(initiatorId)) {
             // process owners should be able to download the process' state
             return;
         }
@@ -987,7 +988,7 @@ public class ProcessResource implements Resource {
             return;
         }
 
-        throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
+        throw new UnauthorizedException("The current user (" + principal.username() + ") doesn't have " +
                 "the necessary permissions to download " + entity + " : " + pe.instanceId());
     }
 
@@ -1055,7 +1056,7 @@ public class ProcessResource implements Resource {
     }
 
     private void assertAttachmentsPolicy(Path tmpDir, ProcessEntry entry) throws IOException {
-        PolicyEngine policy = policyManager.get(entry.orgId(), entry.projectId(), UserPrincipal.assertCurrent().getUser().getId());
+        PolicyEngine policy = policyManager.get(entry.orgId(), entry.projectId(), PrincipalNormalization.assertCurrent().userId());
         if (policy == null) {
             return;
         }

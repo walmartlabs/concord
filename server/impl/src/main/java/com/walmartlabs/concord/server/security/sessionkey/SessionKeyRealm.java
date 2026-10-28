@@ -28,12 +28,11 @@ import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAccount;
-import org.apache.shiro.authz.AuthorizationInfo;
-import org.apache.shiro.authz.SimpleAuthorizationInfo;
-import org.apache.shiro.realm.AuthorizingRealm;
+import org.apache.shiro.realm.AuthenticatingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.slf4j.Logger;
@@ -42,7 +41,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.Set;
 
-public class SessionKeyRealm extends AuthorizingRealm {
+public class SessionKeyRealm extends AuthenticatingRealm {
 
     private static final Logger log = LoggerFactory.getLogger(SessionKeyRealm.class);
 
@@ -102,7 +101,10 @@ public class SessionKeyRealm extends AuthorizingRealm {
     }
 
     private PrincipalCollection getPrincipals(PartialProcessKey processKey) {
-        PrincipalCollection principals = processSecurityContext.getPrincipals(processKey);
+        PrincipalCollection principals = PrincipalNormalization.normalize(processSecurityContext.getPrincipals(processKey));
+        if (principals == null || PrincipalNormalization.find(principals) == null) {
+            throw new AuthenticationException("Process has no user principal: " + processKey);
+        }
 
         SessionKeyPrincipal p = principals.oneByType(SessionKeyPrincipal.class);
         if (p != null) {
@@ -114,15 +116,6 @@ public class SessionKeyRealm extends AuthorizingRealm {
         SimplePrincipalCollection c = new SimplePrincipalCollection(principals);
         c.add(new SessionKeyPrincipal(processKey), REALM_NAME);
         return c;
-    }
-
-    @Override
-    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        SessionKeyPrincipal p = principals.oneByType(SessionKeyPrincipal.class);
-        if (p == null) {
-            return null;
-        }
-        return new SimpleAuthorizationInfo();
     }
 
     private boolean isFinished(ProcessInitiatorEntry process) {

@@ -154,6 +154,23 @@ class IdentityDaoIntegrationTest {
     }
 
     @Test
+    void nullDomainLegacySelectorUsesHistoricalWildcardAndRejectsAmbiguity() {
+        String name = UUID.randomUUID().toString();
+        UUID first = legacy(name, false);
+        sql.transaction(cfg -> DSL.using(cfg).execute("update legacy_user_enrollment set domain='example' where user_id=?", first));
+        ExternalIdentityKey key = new ExternalIdentityKey("oauth", "issuer", UUID.randomUUID().toString());
+        assertEquals(first, resolve(key, name).userId());
+
+        String ambiguous = UUID.randomUUID().toString();
+        legacy(ambiguous, false);
+        UUID other = legacy(ambiguous, false);
+        sql.transaction(cfg -> DSL.using(cfg).execute("update legacy_user_enrollment set domain='example' where user_id=?", other));
+        ExternalIdentityKey secondKey = new ExternalIdentityKey("oauth", "issuer", UUID.randomUUID().toString());
+        assertThrows(ClientErrorException.class, () -> resolve(secondKey, ambiguous));
+        assertTrue(dao.find(secondKey).isEmpty());
+    }
+
+    @Test
     void concurrentLinksHaveOneOwnerAndSameNameAccountsStaySeparate() throws Exception {
         UUID first = legacy(UUID.randomUUID().toString(), false);
         UUID second = legacy(UUID.randomUUID().toString(), false);

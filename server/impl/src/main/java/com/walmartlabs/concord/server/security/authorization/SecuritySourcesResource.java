@@ -24,7 +24,7 @@ import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.security.GroupRef;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import io.swagger.v3.oas.annotations.Operation;
 
 import javax.inject.Inject;
@@ -52,7 +52,7 @@ public class SecuritySourcesResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(operationId = "listAuthorizationSources")
     public List<Source> sources() {
-        UserPrincipal.assertCurrent();
+        PrincipalNormalization.assertCurrent();
         return authorization.sources().entrySet().stream().map(e -> new Source(e.getKey(), e.getValue())).toList();
     }
 
@@ -63,7 +63,7 @@ public class SecuritySourcesResource implements Resource {
     @Operation(operationId = "searchAuthorizationGroups")
     public Set<GroupRef> groups(@QueryParam("sourceId") String sourceId,
                                 @QueryParam("filter") @Size(min = 5, max = 256) String filter) {
-        UserPrincipal.assertCurrent();
+        PrincipalNormalization.assertCurrent();
         if (sourceId == null || !authorization.sources().containsKey(sourceId)) {
             throw new ValidationErrorsException("Unknown authorization source: " + sourceId);
         }

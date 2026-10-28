@@ -31,13 +31,16 @@ public class ConcordFilterChainConfigurator implements FilterChainConfigurator {
 
     private final ConcordAuthenticatingFilter concordAuthenticatingFilter;
     private final GithubAuthenticatingFilter githubAuthenticatingFilter;
+    private final ConcordAuthorizationFilter authorizationFilter;
 
     @Inject
     public ConcordFilterChainConfigurator(ConcordAuthenticatingFilter concordAuthenticatingFilter,
-                                          GithubAuthenticatingFilter githubAuthenticatingFilter) {
+                                          GithubAuthenticatingFilter githubAuthenticatingFilter,
+                                          ConcordAuthorizationFilter authorizationFilter) {
 
         this.concordAuthenticatingFilter = concordAuthenticatingFilter;
         this.githubAuthenticatingFilter = githubAuthenticatingFilter;
+        this.authorizationFilter = authorizationFilter;
     }
 
     @Override
@@ -54,13 +57,14 @@ public class ConcordFilterChainConfigurator implements FilterChainConfigurator {
 
         // regular auth
         manager.addFilter("concord", concordAuthenticatingFilter);
-        manager.createChain("/api/**", "concord");
-        manager.createChain("/forms/**", "concord");
+        manager.addFilter("currentAuthorization", authorizationFilter);
+        manager.createChain("/api/**", "concord,currentAuthorization");
+        manager.createChain("/forms/**", "concord,currentAuthorization");
 
         // special auth for GitHub, only enabled if secret is configured
         if (githubAuthenticatingFilter.isReady()) {
             manager.addFilter("github", githubAuthenticatingFilter);
-            manager.createChain("/events/github/**", "github");
+            manager.createChain("/events/github/**", "github,currentAuthorization");
         }
     }
 

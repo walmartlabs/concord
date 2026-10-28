@@ -31,7 +31,8 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
 import com.walmartlabs.concord.server.user.User;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
@@ -84,7 +85,7 @@ public class TeamManager {
             UUID tId = teamDao.insert(tx, orgId, teamName, description);
 
             // add the current user as a team maintainer
-            UUID userId = UserPrincipal.assertCurrent().getId();
+            UUID userId = PrincipalNormalization.assertCurrent().userId();
             teamDao.upsertUser(tx, tId, userId, TeamRole.MAINTAINER);
 
             return tId;
@@ -133,7 +134,7 @@ public class TeamManager {
         for (TeamUserEntry u : users) {
             UserType type = u.getUserType();
             if (type == null) {
-                type = UserPrincipal.assertCurrent().getType();
+                type = userManager.currentLegacyType();
             }
 
             UUID id = u.getUserId();
@@ -264,16 +265,16 @@ public class TeamManager {
             return;
         }
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
+        SubjectPrincipal p = PrincipalNormalization.assertCurrent();
 
         OrganizationEntry org = orgManager.assertAccess(orgId, false);
-        if (ResourceAccessUtils.isSame(p, org.getOwner())) {
+        if (ResourceAccessUtils.isSame(p.userId(), org.getOwner())) {
             // the org owner can do anything with the org's teams
             return;
         }
 
-        if (!teamDao.isInAnyTeam(orgId, p.getId(), TeamRole.atLeast(requiredRole))) {
-            throw new UnauthorizedException("The current user (" + p.getUsername() + ") does not have the required role: " + requiredRole);
+        if (!teamDao.isInAnyTeam(orgId, p.userId(), TeamRole.atLeast(requiredRole))) {
+            throw new UnauthorizedException("The current user (" + p.username() + ") does not have the required role: " + requiredRole);
         }
     }
 
@@ -288,17 +289,17 @@ public class TeamManager {
             return e;
         }
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
+        SubjectPrincipal p = PrincipalNormalization.assertCurrent();
 
         OrganizationEntry org = orgManager.assertAccess(e.getOrgId(), false);
-        if (ResourceAccessUtils.isSame(p, org.getOwner())) {
+        if (ResourceAccessUtils.isSame(p.userId(), org.getOwner())) {
             // the org owner can do anything with the org's inventories
             return e;
         }
 
         if (requiredRole != null && teamMembersOnly) {
-            if (!teamDao.hasUser(e.getId(), p.getId(), TeamRole.atLeast(requiredRole))) {
-                throw new UnauthorizedException("The current user (" + p.getUsername() + ") does not have the required role: " + requiredRole);
+            if (!teamDao.hasUser(e.getId(), p.userId(), TeamRole.atLeast(requiredRole))) {
+                throw new UnauthorizedException("The current user (" + p.username() + ") does not have the required role: " + requiredRole);
             }
         }
 

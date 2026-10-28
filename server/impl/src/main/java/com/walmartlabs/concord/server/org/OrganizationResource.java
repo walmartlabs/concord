@@ -27,7 +27,7 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.security.Roles;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -78,8 +78,7 @@ public class OrganizationResource implements Resource {
                                         @QueryParam("limit") int limit,
                                         @QueryParam("filter") String filter) {
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        UUID userId = p.getId();
+        UUID userId = PrincipalNormalization.assertCurrent().userId();
 
         if (Roles.isAdmin() || Roles.isGlobalReader() || Roles.isGlobalWriter()) {
             // admins and global readers/writers see all orgs regardless of the onlyCurrent value

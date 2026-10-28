@@ -28,7 +28,8 @@ import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamManager;
 import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import org.jooq.DSLContext;
 
@@ -59,7 +60,7 @@ public class UserManager {
 
     public Optional<UserEntry> get(String username, String domain, UserType type) {
         if (type == null) {
-            type = UserPrincipal.assertCurrent().getType();
+            type = currentLegacyType();
         }
 
         UUID id = userDao.getId(username, domain, type);
@@ -81,7 +82,7 @@ public class UserManager {
         }
 
         if (type == null) {
-            type = UserPrincipal.assertCurrent().getType();
+            type = currentLegacyType();
         }
 
         UserInfoProvider provider = assertProvider(type);
@@ -180,7 +181,7 @@ public class UserManager {
 
     public UserEntry create(String username, String domain, String displayName, String email, UserType type, Set<String> roles) {
         if (type == null) {
-            type = UserPrincipal.assertCurrent().getType();
+            type = currentLegacyType();
         }
 
         UserInfoProvider provider = assertProvider(type);
@@ -242,19 +243,18 @@ public class UserManager {
     }
 
     public boolean isInOrganization(DSLContext tx, UUID orgId) {
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        UUID userId = p.getId();
-        return userDao.isInOrganization(tx, userId, orgId);
+        return userDao.isInOrganization(tx, PrincipalNormalization.assertCurrent().userId(), orgId);
     }
 
     public UserInfo getCurrentUserInfo() {
-        UserPrincipal u = UserPrincipal.getCurrent();
+        SubjectPrincipal u = PrincipalNormalization.getCurrent();
         if (u == null) {
             return null;
         }
-        UserType type = assertSsoUserType(u, u.getType());
+        UserEntry account = get(u.userId()).orElseThrow(() -> new ConcordApplicationException("User not found: " + u.userId()));
+        UserType type = assertSsoUserType(u, account.getType());
         UserInfoProvider p = assertProvider(type);
-        return p.getInfo(u.getId(), u.getUsername(), u.getDomain());
+        return p.getInfo(u.userId(), u.username(), u.domain());
     }
 
     public List<LdapGroupSearchResult> searchLdapGroups(String filter) {
@@ -342,6 +342,12 @@ public class UserManager {
                 .log();
     }
 
+    /** Temporary default for legacy username/type selectors. */
+    public UserType currentLegacyType() {
+        UUID id = PrincipalNormalization.assertCurrent().userId();
+        return get(id).orElseThrow(() -> new ConcordApplicationException("User not found: " + id)).getType();
+    }
+
     private UserInfoProvider assertProvider(UserType type) {
         UserInfoProvider p = userInfoProviders.get(type);
         if (p == null) {
@@ -358,16 +364,16 @@ public class UserManager {
         3. LoggedIn via SSO -> @return UserType.SSO
          */
         if (username != null && domain != null) {
-            UserPrincipal u = UserPrincipal.getCurrent();
-            if (u != null && u.getUsername().equalsIgnoreCase(username) && u.getDomain().equalsIgnoreCase(domain)) {
+            SubjectPrincipal u = PrincipalNormalization.getCurrent();
+            if (u != null && u.username().equalsIgnoreCase(username) && u.domain() != null && u.domain().equalsIgnoreCase(domain)) {
                 return assertSsoUserType(u, type);
             }
         }
         return type;
     }
 
-    private UserType assertSsoUserType(UserPrincipal u, UserType type) {
-        if (u.getRealm().equals(SSO_REALM_NAME)) {
+    private UserType assertSsoUserType(SubjectPrincipal u, UserType type) {
+        if (u.authentication().providerId().equals(SSO_REALM_NAME)) {
             if (userInfoProviders.get(UserType.SSO) != null) {
                 return UserType.SSO;
             }

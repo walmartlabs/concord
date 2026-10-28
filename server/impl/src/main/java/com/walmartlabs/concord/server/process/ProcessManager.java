@@ -45,7 +45,8 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;
@@ -423,8 +424,8 @@ public class ProcessManager {
             return;
         }
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        if (p.getId().equals(e.initiatorId())) {
+        SubjectPrincipal p = PrincipalNormalization.assertCurrent();
+        if (p.userId().equals(e.initiatorId())) {
             // process owners can kill or disable their own processes
             return;
         }
@@ -436,7 +437,7 @@ public class ProcessManager {
             return;
         }
 
-        throw new UnauthorizedException("The current user (" + p.getUsername() + ") does not have permissions " +
+        throw new UnauthorizedException("The current user (" + p.username() + ") does not have permissions " +
                 "to kill or disable the process: " + e.instanceId());
     }
 
@@ -445,7 +446,7 @@ public class ProcessManager {
             return;
         }
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
+        SubjectPrincipal p = PrincipalNormalization.assertCurrent();
 
         SessionKeyPrincipal s = SessionKeyPrincipal.getCurrent();
         if (s != null && processKey.partOf(s.getProcessKey())) {
@@ -453,7 +454,7 @@ public class ProcessManager {
             return;
         }
 
-        throw new UnauthorizedException("The current user (" + p.getUsername() + ") does not have permissions " +
+        throw new UnauthorizedException("The current user (" + p.username() + ") does not have permissions " +
                 "to update the process status: " + processKey);
     }
 

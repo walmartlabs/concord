@@ -25,8 +25,9 @@ import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.user.UserInfoProvider;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
+import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
 import com.walmartlabs.concord.server.user.UserManager;
 import io.takari.bpm.form.Form;
 
@@ -49,11 +50,13 @@ public class FormAccessManager {
 
     private final ProcessStateManager stateManager;
     private final UserManager userManager;
+    private final AuthorizationService authorizationService;
 
     @Inject
-    public FormAccessManager(ProcessStateManager stateManager, UserManager userManager) {
+    public FormAccessManager(ProcessStateManager stateManager, UserManager userManager, AuthorizationService authorizationService) {
         this.stateManager = stateManager;
         this.userManager = userManager;
+        this.authorizationService = authorizationService;
     }
 
     @SuppressWarnings("unchecked")
@@ -84,25 +87,28 @@ public class FormAccessManager {
             return;
         }
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
+        SubjectPrincipal p = PrincipalNormalization.assertCurrent();
+        String username = userManager.get(p.userId()).orElseThrow(() ->
+                new UnauthorizedException("Current user not found")).getName();
 
         Set<String> expectedUsers = com.walmartlabs.concord.forms.FormUtils.getRunAsUsers(formName, runAsParams);
-        if (!expectedUsers.isEmpty() && !expectedUsers.contains(p.getUsername())) {
-            throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
+        if (!expectedUsers.isEmpty() && !expectedUsers.contains(username)) {
+            throw new UnauthorizedException("The current user (" + username + ") doesn't have " +
                     "the necessary permissions to access the form.");
         }
 
         Set<String> formRunAsGroups = com.walmartlabs.concord.forms.FormUtils.getRunAsLdapGroups(formName, runAsParams);
         if (!formRunAsGroups.isEmpty()) {
-            Set<String> userLdapGroups = Optional.ofNullable(userManager.getCurrentUserInfo())
-                    .map(UserInfoProvider.UserInfo::groups)
-                    .orElseGet(Set::of);
+            Set<String> userLdapGroups = authorizationService.getGroups(p.userId()).stream()
+                    .filter(g -> "ldap".equals(g.sourceId()))
+                    .map(g -> g.groupId())
+                    .collect(java.util.stream.Collectors.toSet());
 
             boolean isGroupMatched = formRunAsGroups.stream()
                     .anyMatch(group -> matchesLdapGroup(group, userLdapGroups));
 
             if (!isGroupMatched) {
-                throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
+                throw new UnauthorizedException("The current user (" + username + ") doesn't have " +
                         "the necessary permissions to resume process. Expected LDAP group(s) '" + formRunAsGroups + "'");
             }
         }

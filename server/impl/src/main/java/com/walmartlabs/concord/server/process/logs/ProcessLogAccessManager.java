@@ -28,7 +28,8 @@ import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 
 import javax.inject.Inject;
@@ -62,10 +63,10 @@ public class ProcessLogAccessManager {
             return pk;
         }
 
-        UserPrincipal principal = UserPrincipal.assertCurrent();
+        SubjectPrincipal principal = PrincipalNormalization.assertCurrent();
 
         UUID initiatorId = pe.initiatorId();
-        if (principal.getId().equals(initiatorId)) {
+        if (principal.userId().equals(initiatorId)) {
             // process owners should be able to view the process' logs
             return pk;
         }
@@ -81,7 +82,7 @@ public class ProcessLogAccessManager {
             return pk;
         }
 
-        throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
+        throw new UnauthorizedException("The current user (" + principal.username() + ") doesn't have " +
                 "the necessary permissions to view the process log: " + instanceId);
     }
 }
