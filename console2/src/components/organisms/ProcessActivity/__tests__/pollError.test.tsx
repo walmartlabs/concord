@@ -56,6 +56,7 @@ vi.mock('../../index', async () => {
         ProcessHistoryActivity: () => null,
         ProcessLogActivity: () => null,
         ProcessLogActivityV2: () => null,
+        ProcessLogTreeActivity: () => null,
         ProcessWaitActivity: () => null,
     };
 });

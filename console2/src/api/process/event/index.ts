@@ -47,6 +47,8 @@ export interface ProcessElementEvent {
     in?: VariableMapping[] | {};
     out?: VariableMapping[] | {};
     correlationId?: string;
+    // the log segment of the step run (missing in events of older processes)
+    logSegmentId?: number;
     duration?: number;
     error?: string;
 }
@@ -70,6 +72,19 @@ export interface ProcessEventEntry<T extends ProcessEventData> {
     eventDate: string;
     data: T;
 }
+
+/**
+ * ELEMENT events of the step run that produced the log segment. Unlike the correlation ID,
+ * distinguishes loop iterations and retry attempts of the same step.
+ */
+export const listSegmentEvents = <T extends ProcessEventData>(
+    instanceId: ConcordId,
+    segmentId: number,
+    includeAll = false
+): Promise<ProcessEventEntry<T>[]> =>
+    fetchJson(
+        `/api/v1/process/${instanceId}/event/segment/${segmentId}?${queryParams({ includeAll })}`
+    );
 
 export const listEvents = <T extends ProcessEventData>(
     filter: ProcessEventFilter
