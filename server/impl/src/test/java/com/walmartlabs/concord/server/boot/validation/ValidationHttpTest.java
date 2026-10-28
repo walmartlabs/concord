@@ -42,6 +42,8 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 
 import javax.validation.ValidatorFactory;
 import javax.validation.constraints.NotNull;
@@ -56,6 +58,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -65,6 +68,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /** Uses the real HTTP bootstrap, UserResource, validation interceptor and exception mappers. */
+@ResourceLock(Resources.LOCALE)
 class ValidationHttpTest {
 
     private static final String ERRORS = "application/vnd.concord-validation-errors-v1+json";
@@ -77,11 +81,14 @@ class ValidationHttpTest {
     private final HttpClient client = HttpClient.newHttpClient();
     private HttpServer server;
     private DefaultWebSecurityManager security;
+    private Locale previousLocale;
     private ValidatorFactory factory;
     private URI base;
 
     @BeforeEach
     void start() throws Exception {
+        previousLocale = Locale.getDefault();
+        Locale.setDefault(Locale.ENGLISH);
         var injector = Guice.createInjector(new ResteasyModule(), new ValidationModule(), binder -> {
             binder.bind(UserManager.class).toInstance(users);
             binder.bind(UserDao.class).toInstance(userDao);
@@ -108,29 +115,35 @@ class ValidationHttpTest {
 
     @AfterEach
     void stop() throws Exception {
-        client.close();
-        if (server != null) {
-            server.stop();
-        }
-        if (factory != null) {
-            factory.close();
-        }
-        if (security != null) {
-            security.destroy();
+        try {
+            client.close();
+            if (server != null) {
+                server.stop();
+            }
+            if (factory != null) {
+                factory.close();
+            }
+            if (security != null) {
+                security.destroy();
+            }
+        } finally {
+            Locale.setDefault(previousLocale);
         }
     }
 
     @Test
     void rejectsOversizedDtoBeforeCallingUserManager() throws Exception {
         var response = post(json.writeValueAsString(Map.of("username", "a".repeat(129), "userType", "LOCAL")), ACCEPT);
-        assertValidationError(response, 400, "CreateUserRequest.createOrUpdate.arg0.username");
+        assertValidationError(response, 400, "CreateUserRequest.createOrUpdate.arg0.username",
+                "size must be between 0 and 128");
         verifyNoInteractions(users, userDao);
     }
 
     @Test
     void rejectsMissingAndNullUsername() throws Exception {
         for (var body : new String[]{"{\"userType\":\"LOCAL\"}", "{\"username\":null,\"userType\":\"LOCAL\"}"}) {
-            assertValidationError(post(body, ACCEPT), 400, "CreateUserRequest.createOrUpdate.arg0.username");
+            assertValidationError(post(body, ACCEPT), 400, "CreateUserRequest.createOrUpdate.arg0.username",
+                    "must not be null");
         }
         verifyNoInteractions(users, userDao);
     }
@@ -152,7 +165,8 @@ class ValidationHttpTest {
 
     @Test
     void validatesPathParameterAndAllowsItsBoundary() throws Exception {
-        assertValidationError(get("/api/v1/user/" + "a".repeat(129)), 400, "UserResource.findByUsername.arg0");
+        assertValidationError(get("/api/v1/user/" + "a".repeat(129)), 400, "UserResource.findByUsername.arg0",
+                "size must be between 0 and 128");
         verifyNoInteractions(users, userDao);
 
         var username = "a".repeat(128);
@@ -175,7 +189,7 @@ class ValidationHttpTest {
     @Test
     void mapsInvalidReturnValueToServerError() throws Exception {
         assertValidationError(get("/api/validation-contract/result"), 500,
-                "ValidationHttpTest$InvalidResultResource.result.<return value>");
+                "ValidationHttpTest$InvalidResultResource.result.<return value>", "must not be null");
     }
 
     private HttpResponse<String> post(String body, String accept) throws Exception {
@@ -193,7 +207,7 @@ class ValidationHttpTest {
                 .header("Authorization", "Basic " + credentials).header("Accept", accept);
     }
 
-    private void assertValidationError(HttpResponse<String> response, int status, String id) throws Exception {
+    private void assertValidationError(HttpResponse<String> response, int status, String id, String message) throws Exception {
         assertEquals(status, response.statusCode(), response.body());
         assertEquals(ERRORS, response.headers().firstValue("Content-Type").orElseThrow().split(";")[0]);
         var errors = json.readTree(response.body());
@@ -203,7 +217,7 @@ class ValidationHttpTest {
         assertEquals(2, error.size(), response.body());
         assertEquals(id, error.required("id").asText());
         assertTrue(error.required("message").isTextual());
-        assertFalse(error.required("message").asText().isBlank());
+        assertEquals(message, error.required("message").asText());
     }
 
     private static UserEntry user(String username) {

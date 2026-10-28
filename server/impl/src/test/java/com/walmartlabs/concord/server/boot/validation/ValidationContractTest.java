@@ -29,6 +29,8 @@ import com.walmartlabs.concord.server.sdk.validation.Validate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -36,6 +38,7 @@ import javax.validation.Valid;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import javax.validation.constraints.NotNull;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -43,14 +46,18 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ResourceLock(Resources.LOCALE)
 class ValidationContractTest {
 
+    private Locale previousLocale;
     private ValidatorFactory factory;
     private Validator validator;
     private ValidatedService service;
 
     @BeforeEach
     void setUp() {
+        previousLocale = Locale.getDefault();
+        Locale.setDefault(Locale.ENGLISH);
         var injector = Guice.createInjector(new ValidationModule());
         factory = injector.getInstance(ValidatorFactory.class);
         validator = injector.getInstance(Validator.class);
@@ -59,7 +66,13 @@ class ValidationContractTest {
 
     @AfterEach
     void tearDown() {
-        factory.close();
+        try {
+            if (factory != null) {
+                factory.close();
+            }
+        } finally {
+            Locale.setDefault(previousLocale);
+        }
     }
 
     @Test
@@ -67,8 +80,10 @@ class ValidationContractTest {
         for (var url : new String[]{"", "https://example.org/repo.git", "x".repeat(2048)}) {
             assertTrue(validator.validate(new RepositoryEntry("repo", url)).isEmpty());
         }
-        assertEquals(Set.of("url"), paths(validator.validate(new RepositoryEntry("repo", "x".repeat(2049)))));
-        assertEquals(Set.of("url"), paths(validator.validate(new RepositoryEntry("repo", (String) null))));
+        assertEquals(Map.of("url", "size must be between 0 and 2048"),
+                errors(validator.validate(new RepositoryEntry("repo", "x".repeat(2049)))));
+        assertEquals(Map.of("url", "must not be null"),
+                errors(validator.validate(new RepositoryEntry("repo", (String) null))));
     }
 
     @Test
@@ -77,12 +92,16 @@ class ValidationContractTest {
             assertTrue(validator.validate(new RepositoryEntry(name, "url")).isEmpty());
         }
         for (var name : new String[]{"", "ab", "@repo", "a".repeat(129)}) {
-            assertEquals(Set.of("name"), paths(validator.validate(new RepositoryEntry(name, "url"))));
+            // ConcordKey is composed without @ReportAsSingleViolation: the nested Pattern message is exposed.
+            assertEquals(Map.of("name", "must match \"^[0-9a-zA-Z][0-9a-zA-Z_@.\\-~]{2,127}$\""),
+                    errors(validator.validate(new RepositoryEntry(name, "url"))));
         }
         var valid = new RepositoryEntry(new RepositoryEntry("repo", "url"), "feature/test", "a01f");
         assertTrue(validator.validate(valid).isEmpty());
         var invalid = new RepositoryEntry(valid, "bad branch", "xyz");
-        assertEquals(Set.of("branch", "commitId"), paths(validator.validate(invalid)));
+        assertEquals(Map.of(
+                "branch", "Branch must be a valid git ref name (no whitespace or special characters ~^:?*[\\)",
+                "commitId", "Commit ID must be a hexadecimal SHA value"), errors(validator.validate(invalid)));
     }
 
     @Test
@@ -98,7 +117,7 @@ class ValidationContractTest {
         var valid = ProcessCardEntry.builder().id(UUID.randomUUID()).name("a".repeat(128)).isCustomForm(false).build();
         assertTrue(validator.validate(valid).isEmpty());
         var invalid = ProcessCardEntry.builder().from(valid).name("a".repeat(129)).build();
-        assertEquals(Set.of("name"), paths(validator.validate(invalid)));
+        assertEquals(Map.of("name", "size must be between 0 and 128"), errors(validator.validate(invalid)));
         assertEquals(Set.of("name"), paths(validator.validateProperty(invalid, "name")));
     }
 
@@ -134,6 +153,10 @@ class ValidationContractTest {
                 () -> service.grouped("value", null, true));
         assertEquals(Set.of("grouped.<return value>"), paths(invalidResult.getConstraintViolations()));
         assertEquals(2, service.calls, "Return values are validated after the method executes");
+    }
+
+    private static Map<String, String> errors(Set<? extends ConstraintViolation<?>> violations) {
+        return violations.stream().collect(Collectors.toMap(v -> v.getPropertyPath().toString(), ConstraintViolation::getMessage));
     }
 
     private static Set<String> paths(Set<? extends ConstraintViolation<?>> violations) {
