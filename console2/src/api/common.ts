@@ -21,9 +21,26 @@
 export type ConcordId = string;
 export type ConcordKey = string;
 
+export interface GroupRef {
+    sourceId: string;
+    groupId: string;
+}
+
+export interface ExternalIdentityKey {
+    providerId: string;
+    authority: string;
+    subject: string;
+}
+
 export interface Owner {
     username: string;
-    userDomain?: string;
+    id?: ConcordId;
+    userDomain?: string | null;
+    displayName?: string | null;
+    userType?: string | null;
+    profileProviderId?: string | null;
+    profileIdentityId?: ConcordId | null;
+    identity?: ExternalIdentityKey | null;
 }
 
 export interface RequestErrorData {

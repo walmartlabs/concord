@@ -101,15 +101,27 @@ export default () => {
                     ))}
             </List>
 
-            {data.ldapGroups && data.ldapGroups.length > 0 && (
+            {data.authorizationGroups && data.authorizationGroups.length > 0 && (
+                <>
+                    <h5>Authorization Groups</h5>
+                    <List divided={true} relaxed={true}>
+                        {data.authorizationGroups.map((group) => (
+                            <ListItem key={JSON.stringify([group.sourceId, group.groupId])}>
+                                <ListContent>
+                                    <ListDescription>{group.sourceId}: {group.groupId}</ListDescription>
+                                </ListContent>
+                            </ListItem>
+                        ))}
+                    </List>
+                </>
+            )}
+            {data.authorizationGroups == null && data.ldapGroups && data.ldapGroups.length > 0 && (
                 <>
                     <h5>LDAP Groups</h5>
                     <List divided={true} relaxed={true}>
-                        {data.ldapGroups.map((group, index) => (
-                            <ListItem key={index}>
-                                <ListContent>
-                                    <ListDescription>{group}</ListDescription>
-                                </ListContent>
+                        {data.ldapGroups.map((group) => (
+                            <ListItem key={group}>
+                                <ListContent><ListDescription>{group}</ListDescription></ListContent>
                             </ListItem>
                         ))}
                     </List>

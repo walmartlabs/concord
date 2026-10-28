@@ -28,7 +28,7 @@ import {
     RequestError,
     retryRequest
 } from '../../common';
-import { UserType } from '../../user';
+import { ExternalIdentity, UserType } from '../../user';
 
 export interface TeamEntry {
     id: ConcordId;
@@ -119,16 +119,25 @@ export enum TeamRole {
 export interface TeamUserEntry {
     userId: ConcordId;
     username: string;
-    userDomain?: string;
-    displayName?: string;
-    userType?: UserType;
+    userDomain?: string | null;
+    displayName?: string | null;
+    userType?: UserType | null;
     role: TeamRole;
-    memberType: MemberType;
-    ldapGroupSource?: string;
+    memberType?: MemberType | null;
+    ldapGroupSource?: string | null;
+    membershipKind?: 'DIRECT' | 'SOURCE' | null;
+    grantSources?: TeamGrantSource[] | null;
+    identity?: ExternalIdentity | null;
 }
 
-export interface TeamLdapGroupEntry {
-    group: string;
+export interface TeamGrantSource {
+    sourceId: string;
+    groupId?: string | null;
+    role: TeamRole;
+}
+
+export interface TeamGroupEntry {
+    groupId: string;
     role: TeamRole;
 }
 
@@ -140,16 +149,13 @@ export enum MemberType {
 export interface NewTeamUserEntry {
     userId?: ConcordId;
     username?: string;
-    userDomain?: string;
-    displayName?: string;
-    userType?: UserType;
+    userDomain?: string | null;
+    displayName?: string | null;
+    userType?: UserType | null;
+    identity?: ExternalIdentity | null;
     role: TeamRole;
 }
 
-export interface NewTeamLdapGroupEntry {
-    group: string;
-    role: TeamRole;
-}
 
 export const listUsers = (orgName: ConcordKey, teamName: ConcordKey): Promise<TeamUserEntry[]> =>
     retryRequest(
@@ -157,12 +163,13 @@ export const listUsers = (orgName: ConcordKey, teamName: ConcordKey): Promise<Te
         shouldRetryTeamRequest
     );
 
-export const listLdapGroups = (
+export const listGroups = (
     orgName: ConcordKey,
-    teamName: ConcordKey
-): Promise<TeamLdapGroupEntry[]> =>
+    teamName: ConcordKey,
+    sourceId: string
+): Promise<TeamGroupEntry[]> =>
     retryRequest(
-        () => fetchJson(`/api/v1/org/${orgName}/team/${teamName}/ldapGroups`),
+        () => fetchJson(`/api/v2/org/${orgName}/team/${teamName}/groups/${encodeURIComponent(sourceId)}`),
         shouldRetryTeamRequest
     );
 
@@ -190,11 +197,28 @@ export const addUsers = (
     );
 };
 
-export const addLdapGroups = (
+export const removeUsersById = (
     orgName: ConcordKey,
     teamName: ConcordKey,
+    userIds: ConcordId[]
+): Promise<{}> => {
+    const opts = {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userIds)
+    };
+    return retryRequest(
+        () => fetchJson(`/api/v2/org/${orgName}/team/${teamName}/users`, opts),
+        shouldRetryTeamRequest
+    );
+};
+
+export const addGroups = (
+    orgName: ConcordKey,
+    teamName: ConcordKey,
+    sourceId: string,
     replace: boolean,
-    groups: NewTeamLdapGroupEntry[]
+    groups: TeamGroupEntry[]
 ): Promise<{}> => {
     const opts = {
         method: 'PUT',
@@ -207,7 +231,7 @@ export const addLdapGroups = (
     return retryRequest(
         () =>
             fetchJson(
-                `/api/v1/org/${orgName}/team/${teamName}/ldapGroups?${queryParams({ replace })}`,
+                `/api/v2/org/${orgName}/team/${teamName}/groups/${encodeURIComponent(sourceId)}?${queryParams({ replace })}`,
                 opts
             ),
         shouldRetryTeamRequest

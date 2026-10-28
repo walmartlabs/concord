@@ -19,7 +19,7 @@
  */
 
 import { throttle } from 'lodash';
-import { ConcordKey, fetchJson, managedFetch, queryParams } from '../../common';
+import { ConcordKey, fetchJson, GroupRef, managedFetch, queryParams } from '../../common';
 import { Organizations } from '../../../state/data/orgs/types';
 
 export interface UserResponse {
@@ -172,13 +172,18 @@ export const testRepository = async (req: RepositoryTestRequest): Promise<void> 
     }
 };
 
-export interface LdapGroupSearchResult {
-    groupName: string;
-    displayName: string;
+export type { GroupRef } from '../../common';
+
+export interface AuthorizationSource {
+    sourceId: string;
+    active: boolean;
 }
 
-export const findLdapGroups = (filter: string): Promise<LdapGroupSearchResult[]> =>
-    fetchJson(`/api/service/console/search/ldapGroups?${queryParams({ filter })}`);
+export const listAuthorizationSources = (): Promise<AuthorizationSource[]> =>
+    fetchJson('/api/v2/security/sources');
+
+export const findGroups = (sourceId: string, filter: string): Promise<GroupRef[]> =>
+    fetchJson(`/api/v2/security/groups?${queryParams({ sourceId, filter })}`);
 
 export const validatePassword = throttle(
     async (pwd: string): Promise<boolean> => {

@@ -18,11 +18,12 @@
  * =====
  */
 
-import { ConcordId, fetchJson } from '../../common';
+import { ConcordId, fetchJson, GroupRef } from '../../common';
 
 export interface FormRunAs {
     username?: string;
     ldap?: { group: string[] | string } | [{ group: string }];
+    groups?: GroupRef[];
     keep?: boolean;
 }
 

@@ -38,6 +38,7 @@ interface State {
     dirty: boolean;
     showConfirm: boolean;
     value?: ConcordId;
+    selectedUser?: UserEntry;
 }
 
 class EntityOwnerChangeForm extends React.PureComponent<Props, State> {
@@ -49,7 +50,7 @@ class EntityOwnerChangeForm extends React.PureComponent<Props, State> {
 
     onSelect(i: UserEntry) {
         const dirty = this.props.originalOwnerId !== i.id;
-        this.setState({ dirty, value: i.id });
+        this.setState({ dirty, value: i.id, selectedUser: i });
     }
 
     handleShowConfirm(ev: React.SyntheticEvent<{}>) {
@@ -109,7 +110,25 @@ class EntityOwnerChangeForm extends React.PureComponent<Props, State> {
                     <Confirm
                         open={this.state.showConfirm}
                         header={confirmationHeader}
-                        content={confirmationContent}
+                        content={
+                            <>
+                                <p>{confirmationContent}</p>
+                                {this.state.selectedUser && (
+                                    <p>
+                                        {this.state.selectedUser.displayName || this.state.selectedUser.name}
+                                        {' — '}
+                                        {this.state.selectedUser.name}
+                                        {this.state.selectedUser.domain && `@${this.state.selectedUser.domain}`}
+                                        {this.state.selectedUser.identityProviderIds?.length
+                                            ? ` (${this.state.selectedUser.identityProviderIds.join(', ')})`
+                                            : this.state.selectedUser.profileProviderId &&
+                                              ` (${this.state.selectedUser.profileProviderId})`}
+                                        {' — '}
+                                        {this.state.selectedUser.id}
+                                    </p>
+                                )}
+                            </>
+                        }
                         onConfirm={() => this.handleConfirm()}
                         onCancel={() => this.handleCancel()}
                     />

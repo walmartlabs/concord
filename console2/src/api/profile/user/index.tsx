@@ -20,6 +20,7 @@
 
 import {ConcordId, fetchJson} from '../../common';
 import {TeamRole} from "../../org/team";
+import {GroupRef} from '../../service/console';
 
 export interface UserInfoTeam {
     orgName: string;
@@ -33,6 +34,7 @@ export interface UserInfoEntry {
     teams?: UserInfoTeam[];
     roles?: string[];
     ldapGroups?: string[];
+    authorizationGroups?: GroupRef[] | null;
 }
 
 export const get = (): Promise<UserInfoEntry> => fetchJson(`/api/service/console/userInfo`);

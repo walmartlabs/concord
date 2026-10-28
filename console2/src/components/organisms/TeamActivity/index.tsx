@@ -86,7 +86,7 @@ const TeamActivity = ({ orgName, teamName, activeTab }: ExternalProps) => {
                 </Menu.Item>
                 <Menu.Item active={activeTab === 'ldapGroups'} data-testid="team-tab-ldapGroups">
                     <Icon name="users" />
-                    <Link to={`/org/${orgName}/team/${teamName}/ldapGroups`}>LDAP Groups</Link>
+                    <Link to={`/org/${orgName}/team/${teamName}/ldapGroups`}>Groups</Link>
                 </Menu.Item>
                 <Menu.Item active={activeTab === 'settings'} data-testid="team-tab-settings">
                     <Icon name="setting" />

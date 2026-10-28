@@ -18,20 +18,32 @@
  * =====
  */
 
-import { ConcordId, fetchJson, queryParams } from '../common';
+import { ConcordId, ExternalIdentityKey, fetchJson, queryParams } from '../common';
 
 export enum UserType {
     LDAP = 'LDAP',
-    LOCAL = 'LOCAL'
+    LOCAL = 'LOCAL',
+    SSO = 'SSO'
 }
 
 export interface UserEntry {
     id: ConcordId;
     name: string;
-    domain?: string;
-    type: UserType;
+    domain?: string | null;
+    type?: UserType | null;
+    profileProviderId?: string | null;
+    identityProviderIds?: string[] | null;
     displayName?: string;
     email?: string;
+}
+
+export type ExternalIdentity = ExternalIdentityKey;
+
+export interface UserIdentity {
+    identityId: ConcordId;
+    userId?: ConcordId | null;
+    identity: ExternalIdentity;
+    active: boolean;
 }
 
 export interface PaginatedUserEntries {

@@ -21,18 +21,18 @@ import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 import {
-    addLdapGroups as apiAddGroups,
-    listLdapGroups as apiListGroups,
-    NewTeamLdapGroupEntry,
+    addGroups as apiAddGroups,
+    listGroups as apiListGroups,
+    TeamGroupEntry,
     TeamRole
 } from '../../../api/org/team';
 import { ConcordKey, RequestError } from '../../../api/common';
-import { Button, Container, Form, Loader, Menu, Table } from 'semantic-ui-react';
+import { Button, Container, Dropdown, Form, Loader, Menu, Table } from 'semantic-ui-react';
 import { FindLdapGroupField, RequestErrorActivity } from '../../organisms';
-import { LdapGroupSearchResult } from '../../../api/service/console';
+import { AuthorizationSource, GroupRef, listAuthorizationSources } from '../../../api/service/console';
 import { TeamRoleDropdown } from '../../molecules';
 
-interface Entry extends NewTeamLdapGroupEntry {
+interface Entry extends TeamGroupEntry {
     added?: boolean;
     deleted?: boolean;
     updated?: boolean;
@@ -44,6 +44,38 @@ interface Props {
 }
 
 export default ({ orgName, teamName }: Props) => {
+    const [sources, setSources] = useState<AuthorizationSource[]>([]);
+    const [sourceId, setSourceId] = useState<string>();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<RequestError>();
+
+    useEffect(() => {
+        listAuthorizationSources().then((result) => {
+            setSources(result);
+            setSourceId(result.find((s) => s.sourceId === 'ldap')?.sourceId || result[0]?.sourceId);
+        }).catch(setError).finally(() => setLoading(false));
+    }, []);
+
+    if (loading) {
+        return <Loader active={true} />;
+    }
+    return (
+        <>
+            {error && <RequestErrorActivity error={error} />}
+            {sources.length === 0 && !error && <p>No authorization sources available.</p>}
+            {sourceId && (
+                <TeamGroups key={sourceId} orgName={orgName} teamName={teamName}
+                    sourceId={sourceId} sources={sources} onSourceChange={setSourceId} />
+            )}
+        </>
+    );
+};
+
+const TeamGroups = ({ orgName, teamName, sourceId, sources, onSourceChange }: Props & {
+    sourceId: string;
+    sources: AuthorizationSource[];
+    onSourceChange: (sourceId: string) => void;
+}) => {
     const [loading, setLoading] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -56,7 +88,7 @@ export default ({ orgName, teamName }: Props) => {
             setLoading(true);
             setError(undefined);
 
-            let result = (await apiListGroups(orgName, teamName)).map((r) => ({ ...r }));
+            let result = (await apiListGroups(orgName, teamName, sourceId)).map((r) => ({ ...r }));
             setData(result.map((r) => ({ ...r })));
         } catch (e) {
             setError(e);
@@ -64,7 +96,7 @@ export default ({ orgName, teamName }: Props) => {
             setLoading(false);
             setDirty(false);
         }
-    }, [orgName, teamName]);
+    }, [orgName, teamName, sourceId]);
 
     // initial load
     useEffect(() => {
@@ -81,12 +113,15 @@ export default ({ orgName, teamName }: Props) => {
         load();
     };
 
-    const addGroup = (r: LdapGroupSearchResult) => {
+    const addGroup = (r: GroupRef) => {
         setData((prev) => {
+            if (prev.some((entry) => entry.groupId === r.groupId)) {
+                return prev.map((entry) => entry.groupId === r.groupId ? { ...entry, deleted: false } : entry);
+            }
             const e: Entry = {
                 added: true,
                 role: TeamRole.MEMBER,
-                group: r.groupName
+                groupId: r.groupId
             };
             return [e, ...prev];
         });
@@ -129,11 +164,11 @@ export default ({ orgName, teamName }: Props) => {
     const save = useCallback(async () => {
         const sanitizedData = data
             .filter((e) => !e.deleted)
-            .map((e) => ({ group: e.group, role: e.role }));
+            .map((e) => ({ groupId: e.groupId, role: e.role }));
 
         try {
             setSubmitting(true);
-            await apiAddGroups(orgName, teamName, true, sanitizedData);
+            await apiAddGroups(orgName, teamName, sourceId, true, sanitizedData);
         } catch (e) {
             setError(e);
             return;
@@ -142,7 +177,7 @@ export default ({ orgName, teamName }: Props) => {
         }
 
         load();
-    }, [orgName, teamName, data, load]);
+    }, [orgName, teamName, sourceId, data, load]);
 
     if (loading) {
         return <Loader active={true} />;
@@ -151,6 +186,17 @@ export default ({ orgName, teamName }: Props) => {
     return (
         <>
             {error && <RequestErrorActivity error={error} />}
+            <Form>
+                <Form.Field>
+                    <label>Authorization source</label>
+                    <Dropdown selection={true} value={sourceId} disabled={editMode || submitting}
+                        options={sources.map((s) => ({
+                            key: s.sourceId, value: s.sourceId,
+                            text: s.active ? s.sourceId : `${s.sourceId} (inactive)`
+                        }))}
+                        onChange={(e, d) => onSourceChange(d.value as string)} />
+                </Form.Field>
+            </Form>
             <Menu secondary={true} widths={3}>
                 {editMode && (
                     <Menu.Item disabled={submitting}>
@@ -158,8 +204,9 @@ export default ({ orgName, teamName }: Props) => {
                             <Form>
                                 <Form.Field>
                                     <FindLdapGroupField
-                                        placeholder="Add a team LDAP group"
-                                        onSelect={(r: LdapGroupSearchResult) => addGroup(r)}
+                                        sourceId={sourceId}
+                                        placeholder="Add a team group"
+                                        onSelect={addGroup}
                                     />
                                 </Form.Field>
                             </Form>
@@ -189,19 +236,21 @@ export default ({ orgName, teamName }: Props) => {
                         )}
 
                         {!editMode && (
-                            <Button icon="edit" content="Edit" onClick={() => setEditMode(true)} />
+                            <Button icon="edit" content="Edit"
+                                disabled={!sources.find((s) => s.sourceId === sourceId)?.active}
+                                onClick={() => setEditMode(true)} />
                         )}
                     </Container>
                 </Menu.Item>
             </Menu>
 
-            {data.length === 0 && <h3>No team LDAP groups.</h3>}
+            {data.length === 0 && <h3>No team groups for this source.</h3>}
 
             {data.length > 0 && (
                 <Table>
                     <Table.Header>
                         <Table.Row>
-                            <Table.HeaderCell>LDAP Group</Table.HeaderCell>
+                            <Table.HeaderCell>Group</Table.HeaderCell>
                             <Table.HeaderCell collapsing={true}>Role</Table.HeaderCell>
                             {editMode && <Table.HeaderCell collapsing={true} />}
                         </Table.Row>
@@ -213,7 +262,7 @@ export default ({ orgName, teamName }: Props) => {
                                 negative={e.deleted}
                                 positive={e.added}
                                 warning={e.updated}>
-                                <Table.Cell>{e.group}</Table.Cell>
+                                <Table.Cell>{e.groupId}</Table.Cell>
                                 <Table.Cell>
                                     {editMode ? (
                                         <TeamRoleDropdown

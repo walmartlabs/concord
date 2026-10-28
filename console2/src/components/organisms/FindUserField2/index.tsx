@@ -35,7 +35,13 @@ interface Result {
     description: string;
 }
 
-const renderDescription = (e: UserEntry): string => (e.email ? `${e.name} - ${e.email}` : e.name);
+const renderDescription = (e: UserEntry): string => {
+    const providers = (e.identityProviderIds || []).join(', ') ||
+        e.profileProviderId || e.type || 'unknown provider';
+    return [e.name, e.domain || 'no domain', providers, e.email, e.id]
+        .filter(Boolean)
+        .join(' · ');
+};
 
 const renderTitle = (e: UserEntry) => (e.displayName ? e.displayName : e.name);
 
@@ -89,7 +95,7 @@ export default ({ defaultUserId, placeholder, onSelect }: Props) => {
             setLoading(true);
             try {
                 const result = await apiGet(defaultUserId);
-                setValue(result ? renderTitle(result) : undefined);
+                setValue(result ? `${renderTitle(result)} (${renderDescription(result)})` : undefined);
             } catch (e) {
                 setError(e);
             } finally {
@@ -112,10 +118,10 @@ export default ({ defaultUserId, placeholder, onSelect }: Props) => {
             results={results}
             onSearchChange={(ev, data) => setValue(data.value)}
             onResultSelect={(ev, data) => {
-                setValue(data.result.title);
+                const item = items.find((i) => i.id === data.result.key);
+                setValue(item ? `${renderTitle(item)} (${renderDescription(item)})` : data.result.title);
 
                 if (onSelect) {
-                    const item = items.find((i) => i.id === data.result.key);
                     if (item) {
                         onSelect(item);
                     }

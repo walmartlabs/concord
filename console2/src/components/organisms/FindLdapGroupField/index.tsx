@@ -23,34 +23,32 @@ import { useCallback, useEffect, useState } from 'react';
 import { Search, SearchResultData, SearchResultProps } from 'semantic-ui-react';
 
 import { RequestError } from '../../../api/common';
-import {
-    findLdapGroups as apiFindLdapGroups,
-    LdapGroupSearchResult
-} from '../../../api/service/console';
+import { findGroups as apiFindGroups, GroupRef } from '../../../api/service/console';
 import { useThrottle } from '../../../hooks/useThrottle';
 
 interface Props {
-    onSelect: (value: LdapGroupSearchResult) => void;
+    sourceId: string;
+    onSelect: (value: GroupRef) => void;
     onChange?: (value?: string) => void;
     placeholder?: string;
 }
 
 // TODO remove when the Search component will support custom result types
-const toResults = (items: LdapGroupSearchResult[]) =>
+const toResults = (items: GroupRef[]) =>
     items.map((i) => ({
-        title: i.displayName,
-        description: i.groupName
+        title: i.groupId,
+        description: i.sourceId
     }));
 
 // TODO remove when the Search component will support custom result types
-const resultToItem = (result: SearchResultProps, items: LdapGroupSearchResult[]) =>
-    items.find((i) => i.groupName === result.description)!;
+const resultToItem = (result: SearchResultProps, items: GroupRef[]) =>
+    items.find((i) => i.groupId === result.title && i.sourceId === result.description);
 
-const FindLdapGroupField = ({ onSelect, onChange, placeholder }: Props) => {
+const FindLdapGroupField = ({ sourceId, onSelect, onChange, placeholder }: Props) => {
     const [filter, setFilter] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<RequestError>();
-    const [items, setItems] = useState<LdapGroupSearchResult[]>([]);
+    const [items, setItems] = useState<GroupRef[]>([]);
 
     const performSearch = useCallback(async (searchFilter: string) => {
         if (searchFilter.length < 5) {
@@ -61,7 +59,7 @@ const FindLdapGroupField = ({ onSelect, onChange, placeholder }: Props) => {
         try {
             setLoading(true);
             setError(undefined);
-            const result = await apiFindLdapGroups(searchFilter);
+            const result = await apiFindGroups(sourceId, searchFilter);
             setItems(result || []);
         } catch (e) {
             setError(e);
@@ -69,7 +67,7 @@ const FindLdapGroupField = ({ onSelect, onChange, placeholder }: Props) => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [sourceId]);
 
     const throttledSearch = useThrottle(performSearch, 2000);
 
@@ -97,7 +95,7 @@ const FindLdapGroupField = ({ onSelect, onChange, placeholder }: Props) => {
         <Search
             input={{
                 fluid: true,
-                placeholder: placeholder ? placeholder : 'Search for a user...',
+                placeholder: placeholder ? placeholder : 'Search for a group...',
                 error: !!error
             }}
             fluid={true}
