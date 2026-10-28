@@ -33,6 +33,8 @@ github-app-installation: stop caching token-fetch failures as "no auth"
 ([#1409](https://github.com/walmartlabs/concord/pull/1409));
 - project: drop unused resteasy-jaxb-provider, jetty javax websocket and siesta.version
 ([#1413](https://github.com/walmartlabs/concord/pull/1413));
+- project: replace javax.xml.bind.DatatypeConverter with java.util/java.time
+([#1414](https://github.com/walmartlabs/concord/pull/14014));
 - http-tasks: drop the JAX-RS API dependency
 ([#1415](https://github.com/walmartlabs/concord/pull/14015)).
 
