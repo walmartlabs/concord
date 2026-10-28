@@ -36,7 +36,9 @@ github-app-installation: stop caching token-fetch failures as "no auth"
 - project: replace javax.xml.bind.DatatypeConverter with java.util/java.time
 ([#1414](https://github.com/walmartlabs/concord/pull/14014));
 - http-tasks: drop the JAX-RS API dependency
-([#1415](https://github.com/walmartlabs/concord/pull/14015)).
+([#1415](https://github.com/walmartlabs/concord/pull/14015));
+- queue-client: switch to the Jetty core websocket client, drop JAX-RS
+([#1416](https://github.com/walmartlabs/concord/pull/14016)).
 
 ## [2.46.0] - 2026-09-18
 
