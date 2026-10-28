@@ -27,11 +27,12 @@ github-app-installation: stop caching token-fetch failures as "no auth"
 ([#1405](https://github.com/walmartlabs/concord/pull/1405));
 - console2: preserve API error messages and HTTP status
 ([#1406](https://github.com/walmartlabs/concord/pull/1406));
-- console2: recover polling after transient API failures;
-([#1407](https://github.com/walmartlabs/concord/pull/1407))
+- console2: recover polling after transient API failures
+([#1407](https://github.com/walmartlabs/concord/pull/1407));
 - console2: retain process page during transient polling errors
-([#1409](https://github.com/walmartlabs/concord/pull/1409)).
-
+([#1409](https://github.com/walmartlabs/concord/pull/1409));
+- http-tasks: drop the JAX-RS API dependency
+([#1415](https://github.com/walmartlabs/concord/pull/14015)).
 
 ## [2.46.0] - 2026-09-18
 
