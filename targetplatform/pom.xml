@@ -127,7 +127,6 @@
         <selenium.version>4.27.0</selenium.version>
         <servlet.version>4.0.1</servlet.version>
         <shiro.version>2.2.1</shiro.version>
-        <siesta.version>2.3.2</siesta.version>
         <sisu.version>1.0.0</sisu.version>
         <slf4j.version>2.0.18</slf4j.version>
         <snakeyaml.version>2.7</snakeyaml.version>
@@ -859,11 +858,6 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty.ee8.websocket</groupId>
-                <artifactId>jetty-ee8-websocket-javax-server</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty.ee8.websocket</groupId>
                 <artifactId>jetty-ee8-websocket-jetty-server</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
@@ -905,11 +899,6 @@
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>resteasy-multipart-provider</artifactId>
-                <version>${resteasy.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jboss.resteasy</groupId>
-                <artifactId>resteasy-jaxb-provider</artifactId>
                 <version>${resteasy.version}</version>
             </dependency>
             <dependency>
