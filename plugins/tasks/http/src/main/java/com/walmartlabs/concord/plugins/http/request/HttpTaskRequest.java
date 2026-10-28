@@ -26,8 +26,8 @@ import com.walmartlabs.concord.plugins.http.Version;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.*;
+import org.apache.http.entity.ContentType;
 
-import javax.ws.rs.core.MediaType;
 import java.util.Map;
 
 /**
@@ -151,17 +151,17 @@ public class HttpTaskRequest implements Request {
      * Method to get the Content-Type header using the given request type
      *
      * @param requestType type of request
-     * @return Specific {@link MediaType} or null in case of invalid {@link RequestType}
+     * @return Specific MIME type or null in case of invalid {@link RequestType}
      */
     private String getContentType(RequestType requestType) {
         if (RequestType.JSON == requestType) {
-            return MediaType.APPLICATION_JSON;
+            return ContentType.APPLICATION_JSON.getMimeType();
         } else if (RequestType.FILE == requestType) {
-            return MediaType.APPLICATION_OCTET_STREAM;
+            return ContentType.APPLICATION_OCTET_STREAM.getMimeType();
         } else if (RequestType.STRING == requestType) {
-            return MediaType.TEXT_PLAIN;
+            return ContentType.TEXT_PLAIN.getMimeType();
         } else if (RequestType.FORM == requestType) {
-            return MediaType.APPLICATION_FORM_URLENCODED;
+            return ContentType.APPLICATION_FORM_URLENCODED.getMimeType();
         }
 
         return null;
@@ -171,11 +171,11 @@ public class HttpTaskRequest implements Request {
      * Method to get the Accept header using the given response type
      *
      * @param responseType type of response
-     * @return Specific {@link MediaType} or null in case of invalid {@link ResponseType}
+     * @return Specific MIME type or null in case of invalid {@link ResponseType}
      */
     private String getAcceptType(ResponseType responseType) {
         if (ResponseType.ANY == responseType) {
-            return MediaType.WILDCARD;
+            return ContentType.WILDCARD.getMimeType();
         }
 
         return null;

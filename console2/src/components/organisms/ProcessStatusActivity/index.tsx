@@ -26,7 +26,7 @@ import { Divider } from 'semantic-ui-react';
 import { get as apiGet, isFinal, ProcessEntry, ProcessStatus } from '../../../api/process';
 import { FormListEntry, list as apiListForms } from '../../../api/process/form';
 
-import { usePolling } from '../../../api/usePolling';
+import { isBlockingPollingError, usePolling } from '../../../api/usePolling';
 import { ProcessActionList, ProcessStatusTable } from '../../molecules';
 import { ProcessCheckpointActivity } from '../../organisms';
 import RequestErrorActivity from '../RequestErrorActivity';
@@ -65,7 +65,7 @@ const ProcessStatusActivity = ({
 
     const error = usePolling(fetchData, dataFetchInterval, loadingHandler, forceRefresh);
 
-    if (error) {
+    if (isBlockingPollingError(error)) {
         return <RequestErrorActivity error={error} />;
     }
 
