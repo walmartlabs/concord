@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.plugins.pfedsso.SsoToken;
 import com.walmartlabs.concord.server.process.ExecutionIdentity;
 import com.walmartlabs.concord.server.process.ExecutionIdentityCodec;
 import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.process.SessionTokenCreator;
 import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
@@ -70,6 +71,68 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class SecurityProcessIdentityIT {
     @TempDir Path temp;
+
+    @Test
+    @Timeout(180)
+    void forkStoresCurrentActorForSessionAuthentication() throws Exception {
+        try (var db = new PostgreSQLContainer<>("postgres:15-alpine")) {
+            db.start();
+            int port;
+            try (var socket = new ServerSocket(0)) { port = socket.getLocalPort(); }
+            var extra = Map.<String, Object>of(
+                    "websockets.requirePermission", false,
+                    "secretStore.serverPassword", secret(),
+                    "secretStore.secretStoreSalt", secret(),
+                    "secretStore.projectSecretSalt", secret());
+            try (var server = new TestingConcordServer(db, port, extra, List.of())) {
+                server.start();
+                var client = new DefaultApiClientFactory(server.getApiBaseUrl()).create(
+                        ApiClientConfiguration.builder().apiKey(server.getAdminApiKey()).build());
+                var parent = new ProcessApi(client).startProcess(Map.of(
+                        "startAt", OffsetDateTime.now().plusDays(1).toString(),
+                        "concord.yml", """
+                        configuration:
+                          runtime: concord-v2
+                        flows:
+                          default:
+                            - log: hello
+                        """.getBytes(StandardCharsets.UTF_8)));
+                var injector = server.getServer().getInjector();
+                var processes = injector.getInstance(ProcessManager.class);
+                var entry = processes.assertProcess(parent.getInstanceId());
+                long deadline = System.nanoTime() + Duration.ofSeconds(60).toNanos();
+                while (entry.status() != ProcessStatus.ENQUEUED && System.nanoTime() < deadline) {
+                    assertNotEquals(ProcessStatus.FAILED, entry.status());
+                    Thread.sleep(200);
+                    entry = processes.assertProcess(parent.getInstanceId());
+                }
+                assertEquals(ProcessStatus.ENQUEUED, entry.status());
+                var parentKey = new ProcessKey(entry.instanceId(), entry.createdAt());
+                var states = injector.getInstance(ProcessStateManager.class);
+                var actor = states.get(parentKey, ".concord/current_user", SecurityProcessIdentityIT::json).orElseThrow();
+
+                var http = HttpClient.newHttpClient();
+                var fork = http.send(HttpRequest.newBuilder(URI.create(server.getApiBaseUrl()
+                                + "/api/v1/process/" + parent.getInstanceId() + "/fork"))
+                        .header("Authorization", server.getAdminApiKey())
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString("{}")).build(), HttpResponse.BodyHandlers.ofString());
+                assertEquals(200, fork.statusCode(), fork.body());
+                UUID childId = UUID.fromString(new com.fasterxml.jackson.databind.ObjectMapper()
+                        .readTree(fork.body()).get("instanceId").asText());
+                var child = processes.assertProcess(childId);
+                var childKey = new ProcessKey(child.instanceId(), child.createdAt());
+                assertEquals(actor, states.get(childKey, ".concord/current_user", SecurityProcessIdentityIT::json).orElseThrow());
+
+                String token = injector.getInstance(SessionTokenCreator.class).create(childKey);
+                var response = http.send(HttpRequest.newBuilder(URI.create(server.getApiBaseUrl()
+                                + "/api/v1/process/" + childId))
+                        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString((token + ":").getBytes(StandardCharsets.UTF_8)))
+                        .GET().build(), HttpResponse.BodyHandlers.ofString());
+                assertEquals(200, response.statusCode(), response.body());
+            }
+        }
+    }
 
     @Test
     @Timeout(180)

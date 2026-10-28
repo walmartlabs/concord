@@ -50,6 +50,10 @@ persisted initial and current execution identities to versioned JSON. Conversion
 uses an advisory lock and commits each row independently, preserving encryption
 and file mode.
 
+Forked processes receive their own server-written current execution identity.
+A process session key can read that process's state during execution; ordinary
+user credentials still require the applicable project or process access.
+
 Stop all old server nodes before upgrading and retain a database backup for
 rollback; mixed old and new servers sharing a database are not supported. Keep
 all previously used authenticator plugin JARs installed for the first upgraded

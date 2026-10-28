@@ -753,7 +753,7 @@ public class ProcessResource implements Resource {
         ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
-        assertProcessAccessOwner(entry, "state");
+        assertStateAccess(entry);
 
         StreamingOutput out = output -> {
             try (ZipArchiveOutputStream dst = new ZipArchiveOutputStream(output)) {
@@ -789,7 +789,7 @@ public class ProcessResource implements Resource {
         ProcessEntry p = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = new ProcessKey(p.instanceId(), p.createdAt());
 
-        assertProcessAccessOwner(p, "state");
+        assertStateAccess(p);
         assertResourceAccess(p, fileName);
 
         StreamingOutput out = output -> {
@@ -964,6 +964,14 @@ public class ProcessResource implements Resource {
             throw new ConcordApplicationException("Process instance not found: " + instanceId, Status.NOT_FOUND);
         }
         return processKey;
+    }
+
+    private void assertStateAccess(ProcessEntry pe) {
+        // The worker needs its own process state to resume, even after a form
+        // changes the current user to someone who is not a project owner.
+        if (!isSessionKeyAccess(pe.instanceId())) {
+            assertProcessAccessOwner(pe, "state");
+        }
     }
 
     private void assertProcessAccessOwner(ProcessEntry pe, String downloadEntity) {

@@ -265,6 +265,14 @@ public class RunAsIT extends AbstractServerIT {
         pe = waitForCompletion(getApiClient(), p.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
+        // The worker's session can resume the process, but user B's ordinary
+        // credentials must not gain access to the process state.
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ApiException snapshotError = assertThrows(ApiException.class, () -> processApi.downloadState(p.getInstanceId()));
+        assertEquals(403, snapshotError.getCode());
+        ApiException fileError = assertThrows(ApiException.class, () -> processApi.downloadStateFile(p.getInstanceId(), "concord.yml"));
+        assertEquals(403, fileError.getCode());
+
         // starting from 1.39.0 the log endpoint performs additional RBAC checks
         // in this case user B doesn't have permissions to access the log
         try {
