@@ -66,7 +66,9 @@ const MetaRow = ({
 
 const StepHeader = ({ instanceId, node, processStatus }: Props) => {
     const s = node.segment;
-    const [infoOpen, setInfoOpen] = useState<boolean>(false);
+    const stepKey = `${instanceId}:${s.id}`;
+    const [infoOpenFor, setInfoOpenFor] = useState<string>();
+    const infoOpen = infoOpenFor === stepKey;
     // Loop/retry parents have no step events; each iteration/attempt owns its events.
     const run =
         s.id === 0 || node.kind === 'error' || node.kind === 'loop' || node.kind === 'retry'
@@ -79,7 +81,7 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
         refresh: refreshEvents,
     } = useStepEvents(instanceId, run, {
         includeAll: false,
-        enabled: true,
+        enabled: infoOpen,
         waitForPost: false,
         processStatus,
     });
@@ -92,7 +94,7 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
     useEffect(() => () => window.clearTimeout(linkTimeout.current), []);
 
     // another step is selected
-    useEffect(() => setInfoOpen(false), [s.id]);
+    useEffect(() => setInfoOpenFor(undefined), [stepKey]);
 
     const linkHandler = useCallback(() => {
         const url = `${window.location.origin}${window.location.pathname}#/process/${instanceId}/log-tree#step=${s.id}`;
@@ -139,10 +141,7 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
                         data-tooltip="Step details"
                         data-position="bottom right"
                         data-inverted=""
-                        onClick={() => {
-                            refreshEvents();
-                            setInfoOpen(true);
-                        }}
+                        onClick={() => setInfoOpenFor(stepKey)}
                     >
                         <Icon name="info circle" />
                     </button>
@@ -160,7 +159,7 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
                 </div>
             </div>
 
-            <Modal open={infoOpen} onClose={() => setInfoOpen(false)} size="small">
+            <Modal open={infoOpen} onClose={() => setInfoOpenFor(undefined)} size="small">
                 <Modal.Header className="StepInfoHeader">
                     <SegmentStatusIcon
                         status={s.status}
@@ -212,7 +211,7 @@ const StepHeader = ({ instanceId, node, processStatus }: Props) => {
                             </button>
                         </div>
                     )}
-                    {taskCall && run && (
+                    {infoOpen && taskCall && run && (
                         <CallData instanceId={instanceId} run={run} processStatus={processStatus} />
                     )}
                 </Modal.Content>

@@ -110,6 +110,67 @@ describe('StepHeader delayed events', () => {
         vi.useRealTimers();
     });
 
+    test('does not load events while details are closed, including status and selection changes', async () => {
+        vi.mocked(listSegmentEvents).mockResolvedValue([]);
+        const view = render(
+            <StepHeader instanceId="process" node={node(1)} processStatus={ProcessStatus.RUNNING} />
+        );
+        await advance(20_000);
+        view.rerender(
+            <StepHeader instanceId="process" node={node(2)} processStatus={ProcessStatus.RUNNING} />
+        );
+        await advance(20_000);
+        view.rerender(
+            <StepHeader
+                instanceId="process"
+                node={node(2, SegmentStatus.OK)}
+                processStatus={ProcessStatus.FINISHED}
+            />
+        );
+        await advance(20_000);
+        expect(listSegmentEvents).not.toHaveBeenCalled();
+        await openDetails();
+        expect(vi.mocked(listSegmentEvents).mock.calls).toEqual([['process', 2, false]]);
+    });
+
+    test.each([false, true])(
+        'closing details stops event retries (includeAll=%s)',
+        async (includeAll) => {
+            vi.mocked(listSegmentEvents).mockResolvedValue(includeAll ? [event('pre')] : []);
+            render(
+                <StepHeader
+                    instanceId="process"
+                    node={node(1)}
+                    processStatus={ProcessStatus.RUNNING}
+                />
+            );
+            await openDetails();
+            const calls = includeAll ? 2 : 1;
+            expect(listSegmentEvents).toHaveBeenCalledTimes(calls);
+            fireEvent.keyDown(document, { key: 'Escape', keyCode: 27 });
+            await advance(20_000);
+            expect(listSegmentEvents).toHaveBeenCalledTimes(calls);
+            await openDetails();
+            expect(listSegmentEvents).toHaveBeenCalledTimes(calls * 2);
+        }
+    );
+
+    test('ignores an in-flight response after details close', async () => {
+        let resolve!: (events: ProcessEventEntry<ProcessElementEvent>[]) => void;
+        vi.mocked(listSegmentEvents).mockReturnValue(new Promise((r) => {
+            resolve = r;
+        }));
+        render(
+            <StepHeader instanceId="process" node={node(1)} processStatus={ProcessStatus.RUNNING} />
+        );
+        await openDetails();
+        fireEvent.keyDown(document, { key: 'Escape', keyCode: 27 });
+        resolve([event('pre')]);
+        await flush();
+        await advance(20_000);
+        expect(listSegmentEvents).toHaveBeenCalledTimes(1);
+    });
+
     test('loads metadata and input/output without a correlation ID', async () => {
         const selected = buildSegmentTree([{ ...segment(1), correlationId: undefined }]).byId.get(
             1
@@ -126,8 +187,9 @@ describe('StepHeader delayed events', () => {
             />
         );
         await flush();
-        expect(listSegmentEvents).toHaveBeenCalledWith('process', 1, false);
+        expect(listSegmentEvents).not.toHaveBeenCalled();
         await openDetails();
+        expect(listSegmentEvents).toHaveBeenCalledWith('process', 1, false);
         expect(listSegmentEvents).toHaveBeenCalledWith('process', 1, true);
         expect(screen.getByText('without-correlation.yaml:7')).toBeTruthy();
         expect(screen.getByText('current')).toBeTruthy();
@@ -321,11 +383,10 @@ describe('StepHeader delayed events', () => {
         render(
             <StepHeader instanceId="process" node={node(1)} processStatus={ProcessStatus.RUNNING} />
         );
-        await flush();
+        await openDetails();
         expect(vi.mocked(listSegmentEvents)).toHaveBeenCalledTimes(1);
 
         await advance(2_000);
-        await openDetails();
         expect(screen.getAllByText('main')).toHaveLength(2);
         expect(screen.getByText('concord.yaml:7')).toBeTruthy();
         expect(screen.getByText('input')).toBeTruthy();
@@ -419,7 +480,7 @@ describe('StepHeader delayed events', () => {
         const view = render(
             <StepHeader instanceId="process" node={node(1)} processStatus={ProcessStatus.RUNNING} />
         );
-        await flush();
+        await openDetails();
         expect(vi.mocked(listSegmentEvents)).toHaveBeenCalledTimes(1);
 
         view.rerender(
@@ -445,13 +506,13 @@ describe('StepHeader delayed events', () => {
         expect(screen.getByText('step-1')).toBeTruthy();
 
         await openDetails();
-        expect(vi.mocked(listSegmentEvents)).toHaveBeenCalledTimes(2);
+        expect(vi.mocked(listSegmentEvents)).toHaveBeenCalledTimes(1);
         expect(screen.getByRole('alert').textContent).toContain('Forbidden (403)');
         expect(screen.getByText('Access denied')).toBeTruthy();
 
         fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
         await flush();
-        expect(vi.mocked(listSegmentEvents)).toHaveBeenCalledTimes(3);
+        expect(vi.mocked(listSegmentEvents)).toHaveBeenCalledTimes(2);
         expect(screen.getAllByText('step-1')).toHaveLength(2);
     });
 
@@ -517,11 +578,12 @@ describe('StepHeader delayed events', () => {
         const view = render(
             <StepHeader instanceId="process" node={node(1)} processStatus={ProcessStatus.RUNNING} />
         );
-        await flush();
+        await openDetails();
         view.rerender(
             <StepHeader instanceId="process" node={node(2)} processStatus={ProcessStatus.RUNNING} />
         );
         await flush();
+        expect(listSegmentEvents).toHaveBeenCalledTimes(1);
         await openDetails();
         expect(screen.getByText('new-flow')).toBeTruthy();
 
