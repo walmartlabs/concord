@@ -9,3 +9,7 @@ module, the default cfg file and core plugins;
 - [queue-client](./queue-client) - WebSocket based client for
 the process queue. Used by the Agent;
 - [sdk](./sdk) - set of APIs for server plugins.
+
+The SDK's `security` package defines independent identity-directory,
+provisioning, and authorization-provider contracts. Provider IDs are stable,
+open strings; external identity authorities and subjects are case-sensitive.

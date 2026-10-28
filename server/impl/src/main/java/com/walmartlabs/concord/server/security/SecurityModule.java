@@ -23,12 +23,17 @@ package com.walmartlabs.concord.server.security;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.walmartlabs.concord.server.boot.filters.AuthenticationHandler;
+import com.walmartlabs.concord.server.sdk.security.AuthorizationProvider;
+import com.walmartlabs.concord.server.sdk.security.LegacyIdentityMatcher;
+import com.walmartlabs.concord.server.sdk.security.ProvisioningPolicy;
+import com.walmartlabs.concord.server.sdk.security.UserDirectory;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyAuthenticationHandler;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyRealm;
 import com.walmartlabs.concord.server.security.github.GithubRealm;
 import com.walmartlabs.concord.server.security.internal.InternalRealm;
 import com.walmartlabs.concord.server.security.internal.LocalUserInfoProvider;
 import com.walmartlabs.concord.server.security.ldap.*;
+import com.walmartlabs.concord.server.security.provider.ProviderRegistry;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyRealm;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import org.apache.shiro.realm.Realm;
@@ -43,6 +48,11 @@ public class SecurityModule implements Module {
     @Override
     public void configure(Binder binder) {
         binder.bind(UserSecurityContext.class);
+        newSetBinder(binder, UserDirectory.class);
+        newSetBinder(binder, AuthorizationProvider.class);
+        newSetBinder(binder, ProvisioningPolicy.class);
+        newSetBinder(binder, LegacyIdentityMatcher.class);
+        binder.bind(ProviderRegistry.class).in(SINGLETON);
 
         newSetBinder(binder, AuthenticationHandler.class).addBinding().to(BasicAuthenticationHandler.class).in(SINGLETON);
         newSetBinder(binder, AuthenticationHandler.class).addBinding().to(ApiKeyAuthenticationHandler.class).in(SINGLETON);
