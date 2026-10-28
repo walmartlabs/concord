@@ -107,7 +107,7 @@ class ValidationHttpTest {
         server = new HttpServer(cfg, Set.of(),
                 Set.of(injector.getInstance(ResteasyBootstrapListener.class), shiro),
                 Set.of(new ConcordApiDescriptor()), Set.of(), Set.of(), Set.of(),
-                Set.of(new ShiroFilterHolder()), Set.of());
+                Set.of(new ShiroFilterHolder()), Set.of(), Set.of());
         server.start();
         var connector = (ServerConnector) server.getStatisticsHandler().getServer().getConnectors()[0];
         base = URI.create("http://localhost:" + connector.getLocalPort());
