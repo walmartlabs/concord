@@ -42,3 +42,29 @@
 .ProcessMainToolbar .startAt {
     color: #888888;
 }
+
+.ProcessPollError.ui.message {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.ProcessPollError .ProcessPollErrorCause {
+    margin-top: 0.25em;
+    color: #888888;
+    font-size: 0.9em;
+}
+
+.ProcessPollError .ProcessPollErrorRetry {
+    padding: 0;
+    border: none;
+    background: none;
+    color: #4183c4;
+    font: inherit;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.ProcessPollError .ProcessPollErrorRetry:hover {
+    color: #1e70bf;
+    text-decoration: underline;
+}

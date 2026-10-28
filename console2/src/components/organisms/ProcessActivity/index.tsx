@@ -39,11 +39,20 @@ import {
     ProcessWaitActivity,
 } from '../index';
 import ProcessToolbar from './Toolbar';
-import { usePolling } from '../../../api/usePolling';
+import {
+    isBlockingPollingError,
+    PollingError,
+    PollingErrorContext,
+    usePolling,
+} from '../../../api/usePolling';
 import RequestErrorActivity from '../RequestErrorActivity';
+import PollErrorBanner from './PollErrorBanner';
+
 import { useStatusFavicon } from './favicon';
 import { gitUrlParse } from '../../molecules/GitHubLink';
 import { useIdleTimer } from 'react-idle-timer';
+
+import './styles.css';
 
 export type TabLink =
     | 'status'
@@ -60,6 +69,17 @@ interface ExternalProps {
     instanceId: ConcordId;
     activeTab: TabLink;
 }
+
+const TAB_LABELS: Record<NonNullable<TabLink>, string> = {
+    status: 'Status',
+    ansible: 'Ansible',
+    log: 'Logs',
+    events: 'Events',
+    history: 'History',
+    wait: 'Wait Conditions',
+    children: 'Child Processes',
+    attachments: 'Attachments',
+};
 
 const DATA_FETCH_INTERVAL_ACTIVE = 5_000;
 const DATA_FETCH_INTERVAL_IDLE = 60_000;
@@ -106,7 +126,7 @@ const buildDefinitionLinkBase = (process?: ProcessEntry) => {
     }
 };
 
-const ProcessActivity = (props: ExternalProps) => {
+const ProcessActivityView = (props: ExternalProps) => {
     const stickyRef = useRef(null);
 
     const [loading, setLoading] = useState<boolean>(false);
@@ -167,7 +187,24 @@ const ProcessActivity = (props: ExternalProps) => {
 
     const error = usePolling(fetchData, dataFetchInterval, loadingHandler, refresh);
 
-    if (error) {
+    const [tabErrors, setTabErrors] = useState<Map<object, PollingError>>(() => new Map());
+    const reportTabError = useCallback((id: object, tabError?: PollingError) => {
+        setTabErrors((prev) => {
+            if (!tabError && !prev.has(id)) {
+                return prev;
+            }
+            const next = new Map(prev);
+            if (tabError) {
+                next.set(id, tabError);
+            } else {
+                next.delete(id);
+            }
+            return next;
+        });
+    }, []);
+    const tabError = Array.from(tabErrors.values())[0];
+
+    if (isBlockingPollingError(error)) {
         return <RequestErrorActivity error={error} />;
     }
 
@@ -184,6 +221,15 @@ const ProcessActivity = (props: ExternalProps) => {
                 rootInstanceId={rootProcessRef.current?.instanceId}
                 refresh={refreshHandler}
                 stickyRef={stickyRef}
+            />
+
+            <PollErrorBanner
+                processError={error}
+                tabError={tabError}
+                // Only the active tab is mounted, so a tab error always belongs to it.
+                tabLabel={activeTab ? TAB_LABELS[activeTab] : 'current'}
+                retryInterval={dataFetchInterval}
+                onRetry={refreshHandler}
             />
 
             <Menu tabular={true} style={{ marginTop: 0 }}>
@@ -221,61 +267,51 @@ const ProcessActivity = (props: ExternalProps) => {
                 </Menu.Item>
             </Menu>
 
-            <Routes>
-                <Route index={true} element={<Navigate to="status" replace={true} />} />
-                <Route
-                    path="status"
-                    element={
-                        <ProcessStatusActivity
-                            instanceId={instanceId}
-                            loadingHandler={loadingHandler}
-                            forceRefresh={refresh}
-                            refreshHandler={refreshHandler}
-                            dataFetchInterval={dataFetchInterval}
-                        />
-                    }
-                />
-                <Route
-                    path="events"
-                    element={
-                        <ProcessEventsActivity
-                            instanceId={instanceId}
-                            processStatus={process ? process.status : undefined}
-                            loadingHandler={loadingHandler}
-                            forceRefresh={refresh}
-                            definitionLinkBase={buildDefinitionLinkBase(process)}
-                            dataFetchInterval={dataFetchInterval}
-                        />
-                    }
-                />
-                <Route
-                    path="ansible"
-                    element={
-                        <ProcessAnsibleActivity
-                            instanceId={instanceId}
-                            loadingHandler={loadingHandler}
-                            forceRefresh={refresh}
-                            dataFetchInterval={dataFetchInterval}
-                        />
-                    }
-                />
-                <Route
-                    path="log"
-                    element={
-                        <>
-                            {process && process.runtime === 'concord-v1' && (
-                                <ProcessLogActivity
-                                    instanceId={instanceId}
-                                    processStatus={process ? process.status : undefined}
-                                    loadingHandler={loadingHandler}
-                                    forceRefresh={refresh}
-                                    dataFetchInterval={dataFetchInterval}
-                                />
-                            )}
-                            {process &&
-                                (process.runtime === 'concord-v2' ||
-                                    process.runtime === undefined) && (
-                                    <ProcessLogActivityV2
+            <PollingErrorContext.Provider value={reportTabError}>
+                <Routes>
+                    <Route index={true} element={<Navigate to="status" replace={true} />} />
+                    <Route
+                        path="status"
+                        element={
+                            <ProcessStatusActivity
+                                instanceId={instanceId}
+                                loadingHandler={loadingHandler}
+                                forceRefresh={refresh}
+                                refreshHandler={refreshHandler}
+                                dataFetchInterval={dataFetchInterval}
+                            />
+                        }
+                    />
+                    <Route
+                        path="events"
+                        element={
+                            <ProcessEventsActivity
+                                instanceId={instanceId}
+                                processStatus={process ? process.status : undefined}
+                                loadingHandler={loadingHandler}
+                                forceRefresh={refresh}
+                                definitionLinkBase={buildDefinitionLinkBase(process)}
+                                dataFetchInterval={dataFetchInterval}
+                            />
+                        }
+                    />
+                    <Route
+                        path="ansible"
+                        element={
+                            <ProcessAnsibleActivity
+                                instanceId={instanceId}
+                                loadingHandler={loadingHandler}
+                                forceRefresh={refresh}
+                                dataFetchInterval={dataFetchInterval}
+                            />
+                        }
+                    />
+                    <Route
+                        path="log"
+                        element={
+                            <>
+                                {process && process.runtime === 'concord-v1' && (
+                                    <ProcessLogActivity
                                         instanceId={instanceId}
                                         processStatus={process ? process.status : undefined}
                                         loadingHandler={loadingHandler}
@@ -283,62 +319,78 @@ const ProcessActivity = (props: ExternalProps) => {
                                         dataFetchInterval={dataFetchInterval}
                                     />
                                 )}
-                        </>
-                    }
-                />
-                <Route
-                    path="history"
-                    element={
-                        <ProcessHistoryActivity
-                            instanceId={instanceId}
-                            loadingHandler={loadingHandler}
-                            forceRefresh={refresh}
-                            dataFetchInterval={dataFetchInterval}
-                        />
-                    }
-                />
-                <Route
-                    path="wait"
-                    element={
-                        <ProcessWaitActivity
-                            instanceId={instanceId}
-                            processStatus={process ? process.status : undefined}
-                            loadingHandler={loadingHandler}
-                            forceRefresh={refresh}
-                            dataFetchInterval={dataFetchInterval}
-                        />
-                    }
-                />
-                <Route
-                    path="children"
-                    element={
-                        <ProcessChildrenActivity
-                            instanceId={instanceId}
-                            processStatus={process ? process.status : undefined}
-                            processOrgName={process ? process.orgName : undefined}
-                            processProjectName={process ? process.projectName : undefined}
-                            loadingHandler={loadingHandler}
-                            forceRefresh={refresh}
-                            dataFetchInterval={dataFetchInterval}
-                        />
-                    }
-                />
-                <Route
-                    path="attachments"
-                    element={
-                        <ProcessAttachmentsActivity
-                            instanceId={instanceId}
-                            processStatus={process ? process.status : undefined}
-                            loadingHandler={loadingHandler}
-                            forceRefresh={refresh}
-                            dataFetchInterval={dataFetchInterval}
-                        />
-                    }
-                />
-                <Route path="*" element={<NotFoundPage />} />
-            </Routes>
+                                {process &&
+                                    (process.runtime === 'concord-v2' ||
+                                        process.runtime === undefined) && (
+                                        <ProcessLogActivityV2
+                                            instanceId={instanceId}
+                                            processStatus={process ? process.status : undefined}
+                                            loadingHandler={loadingHandler}
+                                            forceRefresh={refresh}
+                                            dataFetchInterval={dataFetchInterval}
+                                        />
+                                    )}
+                            </>
+                        }
+                    />
+                    <Route
+                        path="history"
+                        element={
+                            <ProcessHistoryActivity
+                                instanceId={instanceId}
+                                loadingHandler={loadingHandler}
+                                forceRefresh={refresh}
+                                dataFetchInterval={dataFetchInterval}
+                            />
+                        }
+                    />
+                    <Route
+                        path="wait"
+                        element={
+                            <ProcessWaitActivity
+                                instanceId={instanceId}
+                                processStatus={process ? process.status : undefined}
+                                loadingHandler={loadingHandler}
+                                forceRefresh={refresh}
+                                dataFetchInterval={dataFetchInterval}
+                            />
+                        }
+                    />
+                    <Route
+                        path="children"
+                        element={
+                            <ProcessChildrenActivity
+                                instanceId={instanceId}
+                                processStatus={process ? process.status : undefined}
+                                processOrgName={process ? process.orgName : undefined}
+                                processProjectName={process ? process.projectName : undefined}
+                                loadingHandler={loadingHandler}
+                                forceRefresh={refresh}
+                                dataFetchInterval={dataFetchInterval}
+                            />
+                        }
+                    />
+                    <Route
+                        path="attachments"
+                        element={
+                            <ProcessAttachmentsActivity
+                                instanceId={instanceId}
+                                processStatus={process ? process.status : undefined}
+                                loadingHandler={loadingHandler}
+                                forceRefresh={refresh}
+                                dataFetchInterval={dataFetchInterval}
+                            />
+                        }
+                    />
+                    <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+            </PollingErrorContext.Provider>
         </div>
     );
 };
+
+const ProcessActivity = (props: ExternalProps) => (
+    <ProcessActivityView key={props.instanceId} {...props} />
+);
 
 export default ProcessActivity;
