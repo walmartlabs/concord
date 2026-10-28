@@ -31,6 +31,8 @@ github-app-installation: stop caching token-fetch failures as "no auth"
 ([#1407](https://github.com/walmartlabs/concord/pull/1407));
 - console2: retain process page during transient polling errors
 ([#1409](https://github.com/walmartlabs/concord/pull/1409));
+- project: drop unused resteasy-jaxb-provider, jetty javax websocket and siesta.version
+([#1413](https://github.com/walmartlabs/concord/pull/1413));
 - http-tasks: drop the JAX-RS API dependency
 ([#1415](https://github.com/walmartlabs/concord/pull/14015)).
 
