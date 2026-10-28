@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.openapi;
+package com.walmartlabs.concord.client2;
 
 /*-
  * *****
@@ -23,7 +23,8 @@ package com.walmartlabs.concord.server.openapi;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,29 +37,37 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OpenApiContractTest {
 
-    @Test
-    void preservesPublishedContract() throws Exception {
-        try (var baseline = getClass().getResourceAsStream("/openapi/server-api.yaml");
-             var generated = getClass().getResourceAsStream("/com/walmartlabs/concord/server/swagger/swagger.yaml")) {
-            assertNotNull(baseline, "Missing OpenAPI baseline");
-            assertNotNull(generated, "Run the compile phase to generate the published OpenAPI document");
+    @ParameterizedTest(name = "{0}")
+    @CsvSource({
+            "server, ../server/impl/target/classes/com/walmartlabs/concord/server/swagger/swagger.yaml",
+            "ansible, ../server/plugins/ansible/impl/target/classes/com/walmartlabs/concord/server/plugins/ansible/swagger/swagger.yaml",
+            "noderoster, ../server/plugins/noderoster/impl/target/classes/com/walmartlabs/concord/server/plugins/noderoster/swagger/swagger.yaml"
+    })
+    void preservesPublishedContract(String api, String inputSpec) throws Exception {
+        // Read the same files as the client generators, never fall back to an installed server/plugin JAR.
+        var generated = Path.of(inputSpec);
+        assertTrue(Files.isRegularFile(generated),
+                () -> "Missing " + inputSpec + "; run the corresponding server/plugin compile phase first");
+        var baselineResource = "/openapi/" + api + "-api.yaml";
+        try (var baseline = getClass().getResourceAsStream(baselineResource)) {
+            assertNotNull(baseline, "Missing OpenAPI baseline: " + baselineResource);
 
             var yaml = new ObjectMapper(new YAMLFactory());
             var expected = yaml.readTree(baseline);
-            var actualBytes = generated.readAllBytes();
+            var actualBytes = Files.readAllBytes(generated);
             var actual = yaml.readTree(actualBytes);
             var differences = new ArrayList<String>();
             compare("", expected, actual, differences);
 
-            var output = Path.of("target", "openapi-contract");
+            var output = Path.of("target", "openapi-contract", api);
             Files.createDirectories(output);
             Files.write(output.resolve("actual.yaml"), actualBytes);
             Files.write(output.resolve("diff.txt"), differences);
 
-            assertTrue(differences.isEmpty(), () -> "Published OpenAPI contract changed:\n"
+            assertTrue(differences.isEmpty(), () -> api + " OpenAPI contract changed:\n"
                     + String.join("\n", differences)
-                    + "\nSee target/openapi-contract/{actual.yaml,diff.txt}. "
-                    + "Review changes before updating src/test/resources/openapi/server-api.yaml.");
+                    + "\nSee " + output + "/{actual.yaml,diff.txt}. "
+                    + "Review changes before updating src/test/resources" + baselineResource + ".");
         }
     }
 
