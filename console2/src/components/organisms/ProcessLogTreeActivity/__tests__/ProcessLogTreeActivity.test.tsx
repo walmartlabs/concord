@@ -19,7 +19,7 @@
  */
 import * as React from 'react';
 import { useState } from 'react';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
@@ -30,6 +30,10 @@ vi.mock('../../../../api/process/log', async (original) => ({
 vi.mock('../../../molecules', async () => ({
     RequestErrorMessage: (await import('../../../molecules/RequestErrorMessage')).default,
 }));
+vi.mock('../segmentTree', async (original) => {
+    const actual = await original<typeof import('../segmentTree')>();
+    return { ...actual, buildSegmentTree: vi.fn(actual.buildSegmentTree) };
+});
 vi.mock('../LogSegmentTree', () => ({
     default: () => <div>retained tree</div>,
 }));
@@ -48,6 +52,7 @@ import { ProcessStatus } from '../../../../api/process';
 import { SegmentStatus } from '../../../../api/process/log';
 import type { LogSegmentEntry } from '../../../../api/process/log';
 import ProcessLogTreeActivity from '../index';
+import { buildSegmentTree } from '../segmentTree';
 import { listLogSegments } from '../../../../api/process/log';
 
 const segment: LogSegmentEntry = {
@@ -78,6 +83,7 @@ const Harness = () => {
 
 beforeEach(() => {
     viewMounts.count = 0;
+    vi.mocked(buildSegmentTree).mockClear();
     vi.stubGlobal(
         'ResizeObserver',
         class {
@@ -132,4 +138,40 @@ test('retains the tree and selected viewer after a segment-list error', async ()
     expect(screen.queryByText('Authentication required (401)')).toBeNull();
     expect(screen.getByText('retained log 0')).toBeTruthy();
     expect(viewMounts.count).toBe(1);
+});
+
+
+test('keeps the tree for identical responses and rebuilds when metadata changes', async () => {
+    let items = [segment];
+    vi.mocked(listLogSegments).mockImplementation(async () => ({
+        items: JSON.parse(JSON.stringify(items)),
+        next: false,
+    }));
+    render(
+        <MemoryRouter initialEntries={['/log-tree']}>
+            <Harness />
+        </MemoryRouter>
+    );
+    await screen.findByText('retained log 0');
+    const builds = vi.mocked(buildSegmentTree).mock.calls.length;
+    const requests = vi.mocked(listLogSegments).mock.calls.length;
+    const tree = vi.mocked(buildSegmentTree).mock.results[builds - 1].value;
+
+    await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Trigger refresh' }));
+    });
+    expect(listLogSegments).toHaveBeenCalledTimes(requests + 1);
+    expect(buildSegmentTree).toHaveBeenCalledTimes(builds);
+
+    items = [{ ...segment, status: SegmentStatus.FAILED, errors: 1 }];
+    await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Trigger refresh' }));
+    });
+    expect(buildSegmentTree).toHaveBeenCalledTimes(builds + 1);
+    const updated = vi.mocked(buildSegmentTree).mock.results[builds].value;
+    expect(updated).not.toBe(tree);
+    expect(updated.byId.get(0).segment).toMatchObject({
+        status: SegmentStatus.FAILED,
+        errors: 1,
+    });
 });

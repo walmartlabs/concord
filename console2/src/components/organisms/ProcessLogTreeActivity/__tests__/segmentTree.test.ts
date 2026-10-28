@@ -27,6 +27,7 @@ import {
     buildSegmentTree,
     categoryOf,
     describeNode,
+    equalSegmentLists,
     formatDuration,
     getAncestors,
     isFailure,
@@ -334,5 +335,46 @@ test('preserves the custom name of a parallel block beside its badge', () => {
     expect(describeNode(tree.byId.get(1)!)).toEqual({
         name: 'Deploy us-west-2',
         kind: 'parallel',
+    });
+});
+
+
+describe('segment list equality', () => {
+    // Required keeps this regression coverage exhaustive when the API adds fields.
+    const changes: Required<LogSegmentEntry> = {
+        id: 2,
+        parentId: 0,
+        kind: SegmentKind.ATTEMPT,
+        iterationIndex: 0,
+        attemptIndex: 0,
+        threadId: 1,
+        correlationId: 'new-correlation',
+        name: 'new name',
+        createdAt: '2026-09-25T10:00:01.000Z',
+        status: SegmentStatus.FAILED,
+        statusUpdatedAt: '2026-09-25T10:00:02.000Z',
+        warnings: 1,
+        errors: 1,
+    };
+
+    test('accepts separately decoded identical responses', () => {
+        const list = [seg(1), seg(2, 1, changes)];
+        expect(equalSegmentLists(list, JSON.parse(JSON.stringify(list)))).toBe(true);
+        expect(equalSegmentLists([], [])).toBe(true);
+        expect(equalSegmentLists(undefined, [])).toBe(false);
+    });
+
+    test.each(Object.entries(changes))('detects a change to %s', (key, value) => {
+        const original = [seg(1)];
+        const changed = [{ ...original[0], [key]: value }];
+        expect(equalSegmentLists(original, changed)).toBe(false);
+        expect(equalSegmentLists(changed, original)).toBe(false);
+    });
+
+    test('detects additions, removals and reordering', () => {
+        const list = [seg(1), seg(2, 1)];
+        expect(equalSegmentLists(list, [...list, seg(3, 1)])).toBe(false);
+        expect(equalSegmentLists(list, list.slice(0, 1))).toBe(false);
+        expect(equalSegmentLists(list, [...list].reverse())).toBe(false);
     });
 });

@@ -87,6 +87,33 @@ const newNode = (segment: LogSegmentEntry): SegmentNode => ({
     hasFailedDescendant: false,
 });
 
+// Keep the existing tree when polling returns unchanged metadata.
+export const equalSegmentLists = (
+    previous: LogSegmentEntry[] | undefined,
+    next: LogSegmentEntry[]
+): boolean =>
+    previous === next ||
+    (previous !== undefined &&
+        previous.length === next.length &&
+        previous.every((a, i) => {
+            const b = next[i];
+            return (
+                a.id === b.id &&
+                a.parentId === b.parentId &&
+                a.kind === b.kind &&
+                a.iterationIndex === b.iterationIndex &&
+                a.attemptIndex === b.attemptIndex &&
+                a.threadId === b.threadId &&
+                a.correlationId === b.correlationId &&
+                a.name === b.name &&
+                a.createdAt === b.createdAt &&
+                a.status === b.status &&
+                a.statusUpdatedAt === b.statusUpdatedAt &&
+                a.warnings === b.warnings &&
+                a.errors === b.errors
+            );
+        }));
+
 export const buildSegmentTree = (segments: LogSegmentEntry[]): SegmentTree => {
     const nodes = new Map<number, SegmentNode>();
     segments = [...segments].sort((a, b) => a.id - b.id);

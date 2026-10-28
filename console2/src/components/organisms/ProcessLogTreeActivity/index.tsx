@@ -31,7 +31,7 @@ import RequestErrorMessage from '../../molecules/RequestErrorMessage';
 import LogSegmentTree from './LogSegmentTree';
 import LogView from './LogView';
 import StepHeader from './StepHeader';
-import { buildSegmentTree, pickDefaultSegment } from './segmentTree';
+import { buildSegmentTree, equalSegmentLists, pickDefaultSegment } from './segmentTree';
 
 import './styles.css';
 
@@ -119,7 +119,9 @@ const ProcessLogTreeActivityView = ({
         try {
             const result = await listLogSegments(instanceId, 0, -1, controller.signal);
             if (controller.signal.aborted) return false;
-            setSegments(result.items);
+            setSegments((previous) =>
+                equalSegmentLists(previous, result.items) ? previous : result.items
+            );
         } catch (error) {
             if (controller.signal.aborted) return false;
             throw error;
