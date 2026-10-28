@@ -107,6 +107,67 @@ describe('StepHeader delayed events', () => {
         vi.useRealTimers();
     });
 
+    test('loads metadata and input/output without a correlation ID', async () => {
+        const selected = buildSegmentTree([{ ...segment(1), correlationId: undefined }]).byId.get(
+            1
+        )!;
+        vi.mocked(listSegmentEvents).mockResolvedValue([
+            event('pre', { fileName: 'without-correlation.yaml', in: { input: 'current' } }),
+            event('post', { fileName: 'without-correlation.yaml', out: { output: 'done' } }),
+        ]);
+        render(
+            <StepHeader
+                instanceId="process"
+                node={selected}
+                processStatus={ProcessStatus.RUNNING}
+            />
+        );
+        await flush();
+        expect(listSegmentEvents).toHaveBeenCalledWith('process', 1, false);
+        await openDetails();
+        expect(listSegmentEvents).toHaveBeenCalledWith('process', 1, true);
+        expect(screen.getByText('without-correlation.yaml:7')).toBeTruthy();
+        expect(screen.getByText('current')).toBeTruthy();
+        expect(screen.getByText('done')).toBeTruthy();
+    });
+
+    test.each([
+        { ...segment(0), kind: SegmentKind.STEP },
+        { ...segment(1), kind: SegmentKind.ERROR },
+    ])('does not request step events for a system or error segment ($id, $kind)', async (s) => {
+        const selected = buildSegmentTree([s]).byId.get(s.id)!;
+        render(
+            <StepHeader
+                instanceId="process"
+                node={selected}
+                processStatus={ProcessStatus.RUNNING}
+            />
+        );
+        await openDetails();
+        await advance(20_000);
+        expect(listSegmentEvents).not.toHaveBeenCalled();
+        expect(screen.queryByText('Step details have not arrived yet.')).toBeNull();
+    });
+
+    test('loads parallel block events without a correlation ID', async () => {
+        const selected = buildSegmentTree([
+            { ...segment(1), kind: SegmentKind.PARALLEL, correlationId: undefined },
+        ]).byId.get(1)!;
+        vi.mocked(listSegmentEvents).mockResolvedValue([
+            event('post', { fileName: 'parallel.yaml', elementId: 'parallel' }),
+        ]);
+        render(
+            <StepHeader
+                instanceId="process"
+                node={selected}
+                processStatus={ProcessStatus.RUNNING}
+            />
+        );
+        await openDetails();
+        expect(listSegmentEvents).toHaveBeenCalledWith('process', 1, false);
+        expect(screen.getByText('parallel.yaml:7')).toBeTruthy();
+    });
+
     test('resolves retry details from the local tree', async () => {
         const owner = segment(1);
         const run = {

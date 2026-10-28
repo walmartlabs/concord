@@ -48,10 +48,10 @@ const pickEvent = (events: ProcessEventEntry<ProcessElementEvent>[]) =>
 /**
  * The segment whose events describe the node: events are linked to the innermost segment
  * of the step, i.e. the last attempt of a retry or the first iteration of a loop
- * (all iterations are the same step). An "error" block is not a step.
+ * (all iterations are the same step). System and "error" segments have no step events.
  */
 const stepRunOf = (node: SegmentNode): SegmentNode | undefined => {
-    if (node.kind === 'error') {
+    if (node.segment.id === 0 || node.kind === 'error') {
         return undefined;
     }
     const runs = node.children.filter(

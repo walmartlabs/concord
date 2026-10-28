@@ -18,12 +18,16 @@
  * =====
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { toRequestError } from '../../../api/common';
 import type { ConcordId, RequestErrorData } from '../../../api/common';
 import { ProcessStatus } from '../../../api/process';
-import { listSegmentEvents, ProcessElementEvent, ProcessEventEntry } from '../../../api/process/event';
+import {
+    listSegmentEvents,
+    ProcessElementEvent,
+    ProcessEventEntry,
+} from '../../../api/process/event';
 import { LogSegmentEntry } from '../../../api/process/log';
 
 const RETRY_INTERVAL = 2_000;
@@ -59,27 +63,8 @@ export const useStepEvents = (
     run: LogSegmentEntry | undefined,
     { includeAll, enabled, waitForPost, processStatus }: Options
 ): StepEventsResult => {
-    const identity = useMemo(
-        () =>
-            JSON.stringify([
-                instanceId,
-                run?.id,
-                run?.correlationId,
-                run?.kind,
-                run?.iterationIndex,
-                run?.attemptIndex,
-                includeAll,
-            ]),
-        [
-            instanceId,
-            run?.id,
-            run?.correlationId,
-            run?.kind,
-            run?.iterationIndex,
-            run?.attemptIndex,
-            includeAll,
-        ]
-    );
+    const segmentId = run?.id;
+    const identity = JSON.stringify([instanceId, segmentId, includeAll]);
     const [state, setState] = useState<State>({ identity, exhausted: false });
     const [refreshCounter, setRefreshCounter] = useState(0);
     const generation = useRef(0);
@@ -98,7 +83,7 @@ export const useStepEvents = (
                 : { identity, exhausted: false }
         );
 
-        if (!enabled || !run?.correlationId) {
+        if (!enabled || segmentId === undefined) {
             return () => {
                 cancelled = true;
             };
@@ -109,7 +94,7 @@ export const useStepEvents = (
             try {
                 const events = await listSegmentEvents<ProcessElementEvent>(
                     instanceId,
-                    run.id,
+                    segmentId,
                     includeAll
                 );
                 if (cancelled || generation.current !== currentGeneration) {
@@ -150,11 +135,7 @@ export const useStepEvents = (
         instanceId,
         processStatus,
         refreshCounter,
-        run?.correlationId,
-        run?.id,
-        run?.iterationIndex,
-        run?.attemptIndex,
-        run?.kind,
+        segmentId,
         run?.status,
         waitForPost,
     ]);
