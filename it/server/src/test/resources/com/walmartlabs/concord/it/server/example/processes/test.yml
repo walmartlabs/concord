@@ -1,3 +1,4 @@
-main:
-- expr: ${log.info("test", "Hello, ".concat(myName))}
-- expr: ${log.info("test", resource.asString(workDir.concat("/something.txt")))}
+flows:
+  main:
+  - log: "Hello, ${myName}"
+  - log: "${resource.asString(workDir.concat('/something.txt'))}"

@@ -64,8 +64,7 @@ public class TaskRetryIT extends AbstractServerIT {
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
-        input.put("arguments.retryCount", "1");
-        input.put("arguments.retryDelay", "2");
+        input.put("request", Map.of("arguments", Map.of("retryCount", 1, "retryDelay", 2)));
         StartProcessResponse spr = start(input);
 
         // wait for completion

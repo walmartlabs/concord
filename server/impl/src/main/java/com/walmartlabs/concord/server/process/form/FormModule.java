@@ -32,10 +32,7 @@ public class FormModule implements Module {
     public void configure(Binder binder) {
         binder.bind(FormAccessManager.class).in(SINGLETON);
         binder.bind(FormManager.class).in(SINGLETON);
-        binder.bind(FormResourceV1.class).in(SINGLETON);
         binder.bind(FormResourceV2.class).in(SINGLETON);
-        binder.bind(FormServiceV1.class).in(SINGLETON);
-        binder.bind(FormServiceV1.class).in(SINGLETON);
         binder.bind(FormServiceV2.class).in(SINGLETON);
 
         bindJaxRsResource(binder, FormResource.class);

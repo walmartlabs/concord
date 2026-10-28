@@ -6,13 +6,13 @@ flows:
   default:
     - script: groovy
       body: |
-        def myForm = [
-          "fields": [
-            ["firstName": ["type": "string"]],
-            ["lastName": ["type": "string"]]
-          ]
+        def fields = [
+          ["firstName": ["type": "string"]],
+          ["lastName": ["type": "string"]]
         ]
+        execution.variables().set("myFields", fields)
 
-        execution.form('myForm', myForm);
+    - form: myForm
+      fields: "${myFields}"
 
     - log: "${myForm}"

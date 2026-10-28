@@ -1,9 +1,10 @@
 flows:
   main:
-  - ${misc.throwBpmnError("boom!")}
+  - throw: "boom!"
 
   onFailure:
-  - ${misc.throwBpmnError("kapow!")}
+  - throw: "kapow!"
 
-variables:
+configuration:
+  runtime: concord-v2
   entryPoint: main

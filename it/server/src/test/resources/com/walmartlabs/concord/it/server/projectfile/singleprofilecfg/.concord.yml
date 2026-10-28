@@ -4,6 +4,7 @@ flows:
   - log: ${nested.val}
 
 configuration:
+  runtime: concord-v2
   arguments:
     name: "stranger"
     nested:

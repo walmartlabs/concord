@@ -2,12 +2,13 @@ flows:
   main:
   - log: Hello, ${name}
 
-variables:
+configuration:
+  runtime: concord-v2
   arguments:
     myName: "world"
 
 profiles:
   test:
-    variables:
+    configuration:
       arguments:
         name: "${myName}"

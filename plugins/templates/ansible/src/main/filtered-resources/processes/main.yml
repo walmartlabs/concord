@@ -1,2 +1,0 @@
-main:
-- expr: ${ansible.run(ansibleParams, workDir)}

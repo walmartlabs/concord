@@ -1,9 +1,0 @@
-main:
-  - ${testBean.toString("a")}
-
-  - ::
-    - ${testBean.toString("b")}
-    - ${testBean.toString("c")}
-
-  - ${testBean.toString("d")}
-

@@ -1,4 +1,5 @@
 configuration:
+  runtime: "concord-v2"
   dependencies:
     - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:2.40.0"
 
@@ -15,3 +16,4 @@ flows:
         myHosts:
           hosts:
             - "testhost"
+    out: ansibleResult

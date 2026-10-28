@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   arguments:
     myName: "Concord"
 
@@ -20,7 +21,7 @@ flows:
 
       # out variable "myJobs" will contain a list of process IDs
       out:
-        myJobs: ${jobs}
+        myJobs: ${result.ids}
 
     - log: "Done! Status of the jobs: ${concord.waitForCompletion(myJobs)}"
 

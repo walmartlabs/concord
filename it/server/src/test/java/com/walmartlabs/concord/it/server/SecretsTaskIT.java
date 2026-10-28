@@ -29,6 +29,7 @@ import java.util.Map;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class
@@ -63,6 +64,7 @@ SecretsTaskIT extends AbstractServerIT {
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
         assertNotNull(pir.getLogFileName());
 
         byte[] bytes = getLog(pir.getInstanceId());

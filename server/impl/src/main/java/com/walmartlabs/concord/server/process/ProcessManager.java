@@ -303,7 +303,7 @@ public class ProcessManager {
 
         Payload payload;
         try {
-            payload = payloadManager.createResumePayload(processKey, checkpointInfo.eventName(), null);
+            payload = payloadManager.createResumePayload(processKey, (String) null, null);
         } catch (IOException e) {
             log.error("restore ['{}', '{}'] -> error creating a payload", processKey, checkpointInfo.name(), e);
             throw new ConcordApplicationException("Error creating a payload", e);

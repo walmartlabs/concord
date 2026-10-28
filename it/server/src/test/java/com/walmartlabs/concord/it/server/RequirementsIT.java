@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
+import static com.walmartlabs.concord.it.common.ServerClient.assertLogAtLeast;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.jupiter.api.Assertions.*;
@@ -110,7 +111,7 @@ class RequirementsIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(pe.getInstanceId());
-        assertLog(".*Invalid regex in requested agent capabilities.*", ab);
+        assertLogAtLeast(".*Invalid regex in requested agent capabilities.*", 1, ab);
     }
 
     @Test

@@ -25,7 +25,6 @@ import com.walmartlabs.concord.plugins.slack.SlackConfigurationParams;
 import com.walmartlabs.concord.plugins.slack.SlackTaskCommon;
 import com.walmartlabs.concord.plugins.slack.SlackTaskParams;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.sdk.InjectVariable;
 import com.walmartlabs.concord.sdk.MapUtils;
 
 import javax.inject.Inject;
@@ -56,7 +55,7 @@ public class SlackTaskV2 implements Task {
         return toResult(result);
     }
 
-    public TaskResult sendJson(@InjectVariable("context") com.walmartlabs.concord.sdk.Context ctx, SlackConfiguration slackCfg, String json, boolean ignoreErrors) {
+    public TaskResult sendJson(SlackConfiguration slackCfg, String json, boolean ignoreErrors) {
         Map<String, Object> result = delegate.sendJsonMessage(cfg(), json, ignoreErrors, false);
         return toResult(result);
     }

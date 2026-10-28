@@ -1,11 +1,13 @@
-flows:
-  main:
-  - docker: ${image}
-    debug: true
-    forcePull: false
-    cmd: echo "Hello, ${name}"
-
-variables:
+configuration:
   entryPoint: main
   arguments:
     name: "world"
+
+flows:
+  main:
+  - task: docker
+    in:
+      image: ${image}
+      debug: true
+      forcePull: false
+      cmd: echo "Hello, ${name}"

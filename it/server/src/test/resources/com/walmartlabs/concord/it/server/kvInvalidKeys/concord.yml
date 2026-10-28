@@ -1,6 +1,6 @@
 configuration:
   arguments:
-    myKey: null
+    myKey: ""
     myValue: "Hello!"
 
 flows:

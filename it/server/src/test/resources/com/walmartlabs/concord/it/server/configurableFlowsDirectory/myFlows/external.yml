@@ -1,2 +1,3 @@
-externalFlow:
-- log: "External flow!"
+flows:
+  externalFlow:
+  - log: "External flow!"

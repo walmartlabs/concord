@@ -127,6 +127,6 @@ public class JobExecutorFactory {
     }
 
     private static String getRuntimeName(ConfiguredJobRequest req) {
-        return MapUtils.getString(req.getProcessCfg(), Constants.Request.RUNTIME_KEY, "concord-v1");
+        return MapUtils.getString(req.getProcessCfg(), Constants.Request.RUNTIME_KEY, "concord-v2");
     }
 }

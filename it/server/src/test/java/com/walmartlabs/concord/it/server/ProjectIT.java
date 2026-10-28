@@ -29,6 +29,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -119,6 +120,7 @@ public class ProjectIT extends AbstractServerIT {
 
             // commit-1
             PathUtils.deleteRecursively(tmpDir.resolve("processes"));
+            Files.deleteIfExists(tmpDir.resolve("concord.yml"));
             src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
             PathUtils.copy(src.toPath().resolve("1"), tmpDir);
             Ref result = repo.checkout().setName("test-branch").setCreateBranch(true).call();
@@ -131,6 +133,7 @@ public class ProjectIT extends AbstractServerIT {
             // commit-2
             result = repo.checkout().setName("master").call();
             PathUtils.deleteRecursively(tmpDir.resolve("processes"));
+            Files.deleteIfExists(tmpDir.resolve("concord.yml"));
             src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
             PathUtils.copy(src.toPath().resolve("2"), tmpDir);
             assertNotNull(result);
@@ -174,6 +177,7 @@ public class ProjectIT extends AbstractServerIT {
 
             // commit-1
             PathUtils.deleteRecursively(tmpDir.resolve("processes"));
+            Files.deleteIfExists(tmpDir.resolve("concord.yml"));
             src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
             PathUtils.copy(src.toPath().resolve("1"), tmpDir);
             repo.add().addFilepattern(".").call();
@@ -183,6 +187,7 @@ public class ProjectIT extends AbstractServerIT {
 
             // commit-2
             PathUtils.deleteRecursively(tmpDir.resolve("processes"));
+            Files.deleteIfExists(tmpDir.resolve("concord.yml"));
             src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
             PathUtils.copy(src.toPath().resolve("2"), tmpDir);
             repo.add().addFilepattern(".").call();

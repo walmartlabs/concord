@@ -1,3 +1,6 @@
+configuration:
+  runtime: concord-v2
+
 flows:
   default:
     # empty list to store fork IDs
@@ -14,9 +17,10 @@ flows:
           - x
           - y
           - z
+      out: firstFork
 
     # save the first fork's ID
-    - ${children.addAll(jobs)}
+    - ${children.addAll(firstFork.ids)}
 
     # start the second fork
     - task: concord
@@ -28,9 +32,10 @@ flows:
           - a
           - b
           - c
+      out: secondFork
 
     # save the second fork's ID
-    - ${children.addAll(jobs)}
+    - ${children.addAll(secondFork.ids)}
 
     # grab out vars of the forks
     - expr: ${concord.getOutVars(children)}

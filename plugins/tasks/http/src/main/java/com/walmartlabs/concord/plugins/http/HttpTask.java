@@ -20,78 +20,9 @@ package com.walmartlabs.concord.plugins.http;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+public final class HttpTask {
 
-import javax.inject.Named;
-import java.io.IOException;
-import java.util.Map;
-
-import static com.walmartlabs.concord.plugins.http.HttpTask.HttpTaskConstant.*;
-
-/**
- * Http task to support the direct http calls from concord.yml file. It uses the Apache HttpClient to
- * call the restful endpoints. This task is capable of storing the response in temporary file and returning the
- * response in string or JSON format.
- */
-@Named("http")
-public class HttpTask implements Task {
-
-    private static final Logger log = LoggerFactory.getLogger(HttpTask.class);
-
-    private static final String DEFAULT_OUT_VAR = "response";
-
-    @Override
-    public void execute(Context ctx) throws Exception {
-        Configuration config = Configuration.custom().build(ctx);
-
-        setOutVariable(ctx, executeRequest(config));
-    }
-
-    /**
-     * Method to get the resource from the given URL as a String.
-     *
-     * @param url resource URL
-     * @return Response as {@link String}
-     * @throws IOException exception
-     */
-    public String asString(String url) throws Exception {
-        Configuration config = Configuration.custom().withUrl(url).build();
-
-        return (String) executeRequest(config).get(CONTENT_KEY);
-    }
-
-    /**
-     * Method to execute the request from the given configuration
-     *
-     * @param config {@link Configuration}
-     * @return Map
-     * @throws Exception exception
-     */
-    Map<String, Object> executeRequest(Configuration config) throws Exception {
-        log.info("Request method: {}", config.getMethodType());
-
-        Map<String, Object> response = SimpleHttpClient.create(config, false).execute().getResponse();
-        log.info("Response status code: {}", response.get(STATUS_CODE_PARAM));
-        log.info("Success response: {}", response.get(SUCCESS_PARAM));
-
-        return response;
-    }
-
-    /**
-     * Method to set the response in the output variable
-     *
-     * @param ctx            {@link Context}
-     * @param returnResponse response returned from endpoint
-     */
-    private void setOutVariable(Context ctx, Map<String, Object> returnResponse) {
-        String key = (String) ctx.getVariable(OUT_KEY);
-        if (key == null) {
-            key = DEFAULT_OUT_VAR;
-        }
-        ctx.setVariable(key, returnResponse);
+    private HttpTask() {
     }
 
     public enum RequestMethodType {

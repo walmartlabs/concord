@@ -8,5 +8,8 @@ configuration:
 flows:
   default:
   - script: example.py
+    out:
+      y: ${result.y}
+      y2: ${result.y2}
   - log: "The result: ${y}"
   - log: "The result2: ${y2}"

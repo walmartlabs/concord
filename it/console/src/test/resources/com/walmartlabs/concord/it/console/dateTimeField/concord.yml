@@ -4,4 +4,4 @@ flows:
       fields:
         - dateField: { type: "date" }
         - dateTimeField: { type: "dateTime" }
-    - log: "myForm: ${myForm}"
+    - log: "dateField: ${myForm.dateField}, dateTimeField: ${myForm.dateTimeField}"

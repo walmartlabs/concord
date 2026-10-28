@@ -52,11 +52,6 @@
             <artifactId>javax.inject</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>io.takari.bpm</groupId>
-            <artifactId>bpm-engine-api</artifactId>
-        </dependency>
-
         <!-- Immutables -->
         <dependency>
             <groupId>org.immutables</groupId>

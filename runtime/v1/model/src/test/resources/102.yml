@@ -1,6 +1,0 @@
-main:
-  - form: myForm
-  - ${testBean.toString(myForm.favouriteNumbers)}
-
-form (myForm):
-  - favouriteNumbers: { type: "int+", min: 0, max: 100 }

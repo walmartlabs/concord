@@ -1,3 +1,0 @@
-flows:
-  default:
-  - ${misc.throwRuntimeException("BOOOM")}

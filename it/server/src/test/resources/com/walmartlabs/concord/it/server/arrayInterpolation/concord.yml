@@ -4,4 +4,6 @@ configuration:
 
 flows:
   default:
-  - example: ['${varA}', '${varB}']
+  - set:
+      values: ['${varA}', '${varB}']
+  - "${example.call(values[0], values[1])}"

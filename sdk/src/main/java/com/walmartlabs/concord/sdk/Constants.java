@@ -47,42 +47,9 @@ public class Constants {
         public static final String TX_ID_KEY = "txId";
 
         /**
-         * List of OUT variables of a process.
-         */
-        public static final String OUT_EXPRESSIONS_KEY = "_out";
-
-        /**
          * Stores the last caught exception.
          */
         public static final String LAST_ERROR_KEY = "lastError";
-
-        /**
-         * Execution context.
-         *
-         * @deprecated use {@link Constants.Context#CONTEXT_KEY}
-         */
-        @Deprecated
-        public static final String EXECUTION_CONTEXT_KEY = "execution";
-
-        /**
-         * Correlation ID of process events. Can be used to create "pre-" and "post-action" event records.
-         */
-        public static final String EVENT_CORRELATION_KEY = "__eventCorrelationId";
-
-        /**
-         * "pre-" event creation time. Can be used to calculate event durations.
-         */
-        public static final String EVENT_CREATED_AT_KEY = "__eventCreatedAt";
-
-        /**
-         * The maximum number of retries of the current `retry` block.
-         */
-        public static final String RETRY_COUNTER = "__retryCount";
-
-        /**
-         * The current number of retries of the current `retry` block.
-         */
-        public static final String CURRENT_RETRY_COUNTER = "__currentRetryCount";
     }
 
     /**
@@ -445,11 +412,6 @@ public class Constants {
         public static final String LAST_KNOWN_VARIABLES_FILE_NAME = "_lastVariables";
 
         /**
-         * The last unhandled error of the process, serialized to a file.
-         */
-        public static final String LAST_ERROR_FILE_NAME = "_lastError";
-
-        /**
          * Concord system files.
          */
         public static final String CONCORD_SYSTEM_DIR_NAME = ".concord";
@@ -470,11 +432,6 @@ public class Constants {
          * File which contains custom error messages for forms.
          */
         public static final String ERROR_MESSAGES_FILE_NAME = "locale.properties";
-
-        /**
-         * File which contains checkpoint metadata.
-         */
-        public static final String CHECKPOINT_META_FILE_NAME = ".checkpoint";
 
         /**
          * Policy file.

@@ -1,5 +1,7 @@
 triggers:
   - test:
+      version: 2
+      conditions: {}
       entryPoint: onTrigger
       arguments:
         name: "Concord"

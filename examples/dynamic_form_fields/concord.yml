@@ -23,9 +23,10 @@ flows:
         ["lastName": ["type": "string", "label": "Last Name"]]
       ]
 
-      execution.setVariable('myForm4Fields', myFields)
+      result.set('fields', myFields)
+    out: formDefinition
   - form: myForm4
-    fields: ${myForm4Fields}
+    fields: ${formDefinition.fields}
   - log: "${myForm4}"
 
 forms:
@@ -33,6 +34,7 @@ forms:
   - firstName: {type: "string", label: "First Name"}
 
 configuration:
+  runtime: concord-v2
   dependencies:
     - "mvn://org.apache.groovy:groovy-all:pom:5.0.4"
   arguments:

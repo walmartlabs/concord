@@ -20,7 +20,7 @@ package com.walmartlabs.concord.agent.docker;
  * =====
  */
 
-import com.walmartlabs.concord.common.DockerProcessBuilder;
+import com.walmartlabs.concord.agent.AgentConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,8 +38,8 @@ public class OrphanSweeper implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(OrphanSweeper.class);
 
     private static final String[] PS_CMD = {"docker", "ps", "-a",
-            "--filter", "label=" + DockerProcessBuilder.CONCORD_TX_ID_LABEL,
-            "--format", "{{.Label \"" + DockerProcessBuilder.CONCORD_TX_ID_LABEL + "\"}} {{.ID}}"};
+            "--filter", "label=" + AgentConstants.CONCORD_TX_ID_LABEL,
+            "--format", "{{.Label \"" + AgentConstants.CONCORD_TX_ID_LABEL + "\"}} {{.ID}}"};
 
     private static final long RETRY_DELAY = TimeUnit.SECONDS.toMillis(30);
 

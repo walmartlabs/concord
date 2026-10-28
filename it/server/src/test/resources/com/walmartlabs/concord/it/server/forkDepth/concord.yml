@@ -1,3 +1,6 @@
+configuration:
+  runtime: concord-v2
+
 flows:
   default:
   - task: concord
@@ -5,6 +8,8 @@ flows:
       action: fork
       entryPoint: fork1
       sync: true
+    out:
+      jobs: ${result.ids}
 
   - log: "Done! ${jobs} is completed"
 

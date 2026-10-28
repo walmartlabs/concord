@@ -52,24 +52,11 @@ public interface RunnerConfiguration {
         return false;
     }
 
-    /**
-     * Enable or disable the Sisu index for Guice bindings.
-     * Speeds up the startup, but requires the dependencies to use "sisu-maven-plugin".
-     *
-     * @apiNote for the runtime v2 this option is always {@code true}.
-     */
-    @Value.Default
-    default boolean enableSisuIndex() {
-        return false;
-    }
 
     /**
      * Default logging level.
-     *
-     * @deprecated used only in the runtime v1.
      */
     @Value.Default
-    @Deprecated
     default String logLevel() {
         return "INFO";
     }

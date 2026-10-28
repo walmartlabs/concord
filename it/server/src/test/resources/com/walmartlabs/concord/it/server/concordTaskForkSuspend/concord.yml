@@ -1,3 +1,6 @@
+configuration:
+  runtime: concord-v2
+
 flows:
   default:
     - task: concord
@@ -14,6 +17,7 @@ flows:
         suspend: true
         outVars:
           - varFromFork
+      out: jobOut
 
     - log: "${jobOut}"
 

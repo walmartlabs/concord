@@ -1,4 +1,6 @@
-test:
-  variables:
-    arguments:
-      name: "world"
+profiles:
+  test:
+    configuration:
+      entryPoint: main
+      arguments:
+        name: "world"

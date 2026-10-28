@@ -7,14 +7,10 @@ profiles:
     configuration:
       arguments:
         msg: "AAA"
-      tags:
-        - "AAA"
   bbb:
     configuration:
       arguments:
         msg: "BBB"
-      tags:
-        - "BBB"
 
 triggers:
 - cron:

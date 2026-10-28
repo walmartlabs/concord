@@ -20,6 +20,10 @@
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>javax.inject</groupId>

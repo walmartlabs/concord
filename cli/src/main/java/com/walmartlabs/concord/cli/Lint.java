@@ -28,7 +28,6 @@ import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.process.loader.DelegatingProjectLoader;
 import com.walmartlabs.concord.runtime.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.model.SourceMap;
-import com.walmartlabs.concord.runtime.v1.ProjectLoaderV1;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import org.fusesource.jansi.Ansi;
 import picocli.CommandLine.Command;
@@ -72,9 +71,8 @@ public class Lint implements Callable<Integer> {
         }
 
         ImportManager importManager = new NoopImportManager();
-        ProjectLoaderV1 v1 = new ProjectLoaderV1(importManager);
         ProjectLoaderV2 v2 = new ProjectLoaderV2(importManager);
-        DelegatingProjectLoader loader = new DelegatingProjectLoader(Set.of(v1, v2));
+        DelegatingProjectLoader loader = new DelegatingProjectLoader(Set.of(v2));
         ProcessDefinition pd = loader.loadProject(targetDir, new DummyImportsNormalizer(), verbose ? new CliImportsListener() : null).projectDefinition();
 
         List<LintResult> lintResults = new ArrayList<>();

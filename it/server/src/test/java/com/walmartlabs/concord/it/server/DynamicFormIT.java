@@ -62,6 +62,11 @@ public class DynamicFormIT extends AbstractServerIT {
         assertFalse(f0.getCustom());
 
         String formName = f0.getName();
+        FormInstanceEntry form = formsApi.getProcessForm(spr.getInstanceId(), formName);
+        assertEquals(2, form.getFields().size());
+        assertEquals("firstName", form.getFields().get(0).getName());
+        assertEquals("lastName", form.getFields().get(1).getName());
+
 
         Map<String, Object> data = new HashMap<>();
         data.put("firstName", firstName);
@@ -77,6 +82,7 @@ public class DynamicFormIT extends AbstractServerIT {
         // --
 
         byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*firstName.*", ab);
+        assertLog(".*" + firstName + ".*", ab);
+        assertLog(".*" + lastName + ".*", ab);
     }
 }

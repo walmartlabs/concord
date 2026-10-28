@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,7 +47,7 @@ public class TemplateIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        final String processYml = "main:\n- expr: ${log.info(\"test\", greeting)}";
+        final String processYml = "flows:\n  main:\n  - log: \"${greeting}\"";
 
         String templateAlias = "template_" + randomString();
         Path templatePath = createTemplate(processYml, MAIN_JS);
@@ -75,6 +76,7 @@ public class TemplateIT extends AbstractServerIT {
         // ---
 
         Map<String, Object> input = new HashMap<>();
+        input.put("archive", archive(TemplateIT.class.getResource("templateBootstrap").toURI()));
         input.put("org", orgName);
         input.put("project", projectName);
         input.put("name", myName);
@@ -93,7 +95,7 @@ public class TemplateIT extends AbstractServerIT {
 
     @Test
     public void testInputVariablesStillPresent() throws Exception {
-        final String processYml = "main:\n- expr: ${log.info(\"test\", xxx)}";
+        final String processYml = "flows:\n  main:\n  - log: \"${xxx}\"";
 
         String templateAlias = "template_" + randomString();
         Path templatePath = createTemplate(processYml, MAIN_JS);
@@ -124,6 +126,7 @@ public class TemplateIT extends AbstractServerIT {
                 Collections.singletonMap("xxx", "BOO"));
 
         Map<String, Object> input = new HashMap<>();
+        input.put("archive", archive(TemplateIT.class.getResource("templateBootstrap").toURI()));
         input.put("org", orgName);
         input.put("project", projectName);
         input.put("name", myName);
@@ -144,6 +147,7 @@ public class TemplateIT extends AbstractServerIT {
     @Test
     void testInvalidScheme() throws Exception {
         Map<String, Object> input = new HashMap<>();
+        input.put("archive", archive(TemplateIT.class.getResource("templateBootstrap").toURI()));
         input.put("template", "http://example.local/insecure.yml");
         StartProcessResponse spr = start(input);
 
@@ -160,7 +164,7 @@ public class TemplateIT extends AbstractServerIT {
 
     @Test
     public void testEntryPointReference() throws Exception {
-        final String processYml = "fromTemplate:\n- log: \"hello!\"";
+        final String processYml = "flows:\n  fromTemplate:\n  - log: \"hello!\"";
         Path templatePath = createTemplate(processYml, null);
 
         Path tmpDir = createTempDir();
@@ -213,6 +217,9 @@ public class TemplateIT extends AbstractServerIT {
             Path metaPath = tmpDir.resolve("_main.js");
             Files.write(metaPath, mainJs.getBytes());
         }
+
+        Files.write(tmpDir.resolve("concord.yml"), ("configuration:\n  runtime: concord-v2\n\n" +
+                "resources:\n  concord:\n  - \"glob:flows/*.yml\"\n").getBytes());
 
         Path processesPath = tmpDir.resolve("flows");
         Files.createDirectories(processesPath);

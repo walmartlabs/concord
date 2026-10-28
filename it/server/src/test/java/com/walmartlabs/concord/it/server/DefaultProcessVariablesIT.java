@@ -41,14 +41,17 @@ public class DefaultProcessVariablesIT extends AbstractServerIT {
     @BeforeEach
     public void precondition() throws Exception {
         Map<String, Object> defVars = new HashMap<>();
-        defVars.put("var1", "value1");
-        defVars.put("var2", "value2");
+        defVars.put("action", "start");
+        defVars.put("payload", "child");
+        defVars.put("sync", true);
+        defVars.put("arguments", Collections.singletonMap("var1", "value1"));
+        defVars.put("outVars", Collections.singletonList("value"));
 
         PolicyApi policyApi = new PolicyApi(getApiClient());
         PolicyEntry policy = new PolicyEntry();
         policy.setName(POLICY_NAME);
         policy.setRules(Collections.singletonMap("defaultProcessCfg", Collections.singletonMap("defaultTaskVariables",
-                Collections.singletonMap("testDefaultVars", defVars))));
+                Collections.singletonMap("concord", defVars))));
 
         policyApi.createOrUpdatePolicy(policy);
         PolicyLinkEntry link = new PolicyLinkEntry();

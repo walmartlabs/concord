@@ -20,12 +20,14 @@ package com.walmartlabs.concord.plugins.example;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.InjectVariable;
-import com.walmartlabs.concord.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 @Named("example")
@@ -33,27 +35,30 @@ public class ExampleTask implements Task {
 
     private static final Logger log = LoggerFactory.getLogger(ExampleTask.class);
 
-    @InjectVariable("context")
-    private Context context;
+    private final Context context;
+
+    @Inject
+    public ExampleTask(Context context) {
+        this.context = context;
+    }
 
     public void hello() {
         log.info("Hello!");
     }
 
     public void hello(String k) {
-        Object o = context.getVariable(k);
+        Object o = context.variables().get(k);
         log.info("Hello, {}!", o);
     }
 
-    public void helloButLouder(@InjectVariable("myName") String name) {
+    public void helloButLouder(String name) {
         log.info("Hello, {}!!!", name);
     }
 
     @Override
-    public void execute(Context ctx) throws Exception {
-        log.info("Hello, {}. (from method param)", ctx.getVariable("myName"));
-        log.info("Hello, {}. (from injected var)", context.getVariable("myName"));
-        ctx.setVariable("exampleOutput", "Hello!");
+    public TaskResult execute(Variables input) {
+        log.info("Hello, {}. (from method param)", input.get("myName"));
+        return TaskResult.success().value("exampleOutput", "Hello!");
     }
 
     public void call(String a, String b) {

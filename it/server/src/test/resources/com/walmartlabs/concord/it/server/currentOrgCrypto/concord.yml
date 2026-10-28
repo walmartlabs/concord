@@ -1,7 +1,7 @@
 flows:
   default:
-    - log: "Before form: ${crypto.exportAsString(mySecretName, null)}"
+    - log: "Before form matches: ${crypto.exportAsString(projectInfo.orgName, mySecretName, null) == 'org value'}"
     - form: myForm
       fields:
         - x: { type: "string" }
-    - log: "After form: ${crypto.exportAsString(mySecretName, null)}"
+    - log: "After form matches: ${crypto.exportAsString(projectInfo.orgName, mySecretName, null) == 'org value'}"

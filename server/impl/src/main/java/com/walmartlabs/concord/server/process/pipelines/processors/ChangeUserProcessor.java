@@ -24,7 +24,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
-import com.walmartlabs.concord.server.process.form.FormServiceV1;
+import com.walmartlabs.concord.server.process.form.FormServiceV2;
 import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 
 import javax.inject.Inject;
@@ -56,7 +56,7 @@ public class ChangeUserProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        Map<String, Object> runAsParams = MapUtils.getMap(cfg, FormServiceV1.INTERNAL_RUN_AS_KEY, null);
+        Map<String, Object> runAsParams = MapUtils.getMap(cfg, FormServiceV2.INTERNAL_RUN_AS_KEY, null);
         if (runAsParams == null) {
             return chain.process(payload);
         }

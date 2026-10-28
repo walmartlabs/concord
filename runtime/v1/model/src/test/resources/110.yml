@@ -1,5 +1,0 @@
-main:
-  - form: myForm
-    fields:
-    - myField: {type: "string"}
-  - ${testBean.toString(myForm.myField)}

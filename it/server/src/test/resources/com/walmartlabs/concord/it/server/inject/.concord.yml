@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   dependencies:
     - mvn://com.walmartlabs.concord.plugins.basic:example-tasks:PROJECT_VERSION
   entryPoint: main
@@ -11,6 +12,8 @@ flows:
 
   - set:
       myName: "world"
-  - ${example.helloButLouder()}
+  - ${example.helloButLouder(myName)}
 
   - task: example
+    in:
+      myName: ${myName}

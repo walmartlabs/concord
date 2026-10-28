@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   arguments:
     myForm:
       lastName: Smith

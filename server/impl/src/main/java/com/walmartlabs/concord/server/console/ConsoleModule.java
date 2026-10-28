@@ -31,7 +31,6 @@ public class ConsoleModule implements Module {
 
     @Override
     public void configure(Binder binder) {
-        binder.bind(CustomFormServiceV1.class).in(SINGLETON);
         binder.bind(CustomFormServiceV2.class).in(SINGLETON);
 
         bindJaxRsResource(binder, ConsoleService.class);

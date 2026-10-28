@@ -30,6 +30,7 @@ import java.util.Map;
 import static com.walmartlabs.concord.runtime.v2.parser.ConfigurationGrammar.processCfgVal;
 import static com.walmartlabs.concord.runtime.v2.parser.FlowsGrammar.flowsVal;
 import static com.walmartlabs.concord.runtime.v2.parser.FormsGrammar.formsVal;
+import static com.walmartlabs.concord.runtime.v2.parser.PublicFlowsGrammar.publicFlowsVal;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
@@ -43,6 +44,7 @@ public final class ProfilesGrammar {
                             o -> options(
                                     optional("configuration", processCfgVal.map(o::configuration)),
                                     optional("flows", flowsVal.map(o::flows)),
+                                    optional("publicFlows", publicFlowsVal.map(o::publicFlows)),
                                     optional("forms", formsVal.map(o::forms))))
                             .map(ImmutableProfile.Builder::build));
 

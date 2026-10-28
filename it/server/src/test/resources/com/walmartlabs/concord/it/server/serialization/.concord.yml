@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   dependencies:
     - "mvn://org.apache.groovy:groovy-all:pom:5.0.4"
     - "mvn://com.walmartlabs.concord.plugins.basic:example-tasks:PROJECT_VERSION"
@@ -8,7 +9,7 @@ flows:
     - script: groovy
       body: |
         import com.walmartlabs.concord.plugins.example.ExampleBean
-        execution.setVariable("x", new ExampleBean("hello"))
+        execution.variables().set("x", new ExampleBean("hello"))
 
     - form: myForm
 

@@ -1,5 +1,5 @@
 flows:
   default:
   - set:
-      result: ${inventory.query(inventoryName, queryName, null)}
+      result: ${jsonStore.executeQuery(inventoryName, queryName)}
   - log: "Inventory Item_data: ${result.get(0).data}"

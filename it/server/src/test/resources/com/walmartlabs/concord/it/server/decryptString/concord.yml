@@ -1,7 +1,7 @@
 flows:
   default:
   - log: "${encryptedValue}"
-  - log: "We got ${crypto.decryptString(encryptedValue)}"
+  - log: "value matches: ${crypto.decryptString(encryptedValue) == expectedValue}"
 
   waitForever:
   - task: sleep

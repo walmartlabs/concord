@@ -16,8 +16,6 @@
     <name>${project.groupId}:${project.artifactId}</name>
 
     <modules>
-        <module>tasks/broken-deps</module>
-        <module>tasks/dependency-manager-test</module>
         <module>tasks/schema-test</module>
         <module>tasks/serialization-test</module>
         <module>tasks/suspend-test</module>
@@ -25,8 +23,6 @@
         <module>common</module>
         <module>server</module>
         <module>console</module>
-        <module>runtime-v1</module>
-        <module>runtime-v2</module>
         <module>compat</module>
         <module>agent-operator</module>
 

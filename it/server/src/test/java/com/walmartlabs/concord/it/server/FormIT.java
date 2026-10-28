@@ -178,13 +178,15 @@ public class FormIT extends AbstractServerIT {
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
-        waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.SUSPENDED);
+        assertEquals(StatusEnum.SUSPENDED, waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.SUSPENDED).getStatus());
 
         // ---
 
         ProcessFormsApi formResource = new ProcessFormsApi(getApiClient());
 
         List<FormListEntry> forms = formResource.listProcessForms(spr.getInstanceId());
+        assertEquals(1, forms.size());
+
 
         FormListEntry f0 = forms.get(0);
         String formName = f0.getName();
@@ -217,6 +219,7 @@ public class FormIT extends AbstractServerIT {
         ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
 
         List<FormListEntry> forms = formsApi.listProcessForms(spr.getInstanceId());
+        assertEquals(1, forms.size());
         FormListEntry f0 = forms.get(0);
         String formName = f0.getName();
 

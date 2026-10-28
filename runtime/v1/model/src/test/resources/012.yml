@@ -1,8 +1,0 @@
-main:
-  - ::
-    - ${testBean.throwBpmnError("boom")}
-    - ${testBean.toString("a")}
-    error:
-      - ${testBean.toString("b")}
-
-  - ${testBean.toString("c")}

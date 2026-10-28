@@ -14,15 +14,20 @@ triggers:
       entryPoint: onCronEvent
 
   - github:
-      project: "myProject"
-      repository: "myRepository"
+      version: 2
+      conditions:
+        type: "push"
+        githubOrg: "myProject"
+        githubRepo: "myRepository"
       entryPoint: onGitEvent
 
   - eventSource:
-      spec: "specs"
-      param1: ".*123.*"
-      param2: false
-      param3: 123
+      version: 2
+      conditions:
+        spec: "specs"
+        param1: ".*123.*"
+        param2: false
+        param3: 123
       entryPoint: default
       arguments:
          array:

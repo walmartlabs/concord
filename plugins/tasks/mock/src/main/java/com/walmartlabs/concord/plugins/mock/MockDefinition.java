@@ -21,7 +21,7 @@ package com.walmartlabs.concord.plugins.mock;
  */
 
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.sdk.UserDefinedException;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 
 import java.io.Serializable;
 import java.util.List;

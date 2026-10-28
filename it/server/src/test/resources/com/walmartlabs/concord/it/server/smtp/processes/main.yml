@@ -1,2 +1,3 @@
-main:
-  - smtp: [ "${smtpParams}", "${mailParams}" ]
+flows:
+  main:
+    - task: smtp

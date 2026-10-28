@@ -1,3 +1,6 @@
+configuration:
+  runtime: concord-v2
+
 flows:
   default:
   - set:
@@ -7,15 +10,17 @@ flows:
     in:
       action: start
       payload: payload
+    out: firstChild
 
-  - ${children.addAll(jobs)}
+  - ${children.add(firstChild.id)}
 
   - task: concord
     in:
       action: start
       payload: payload
+    out: secondChild
 
-  - ${children.addAll(jobs)}
+  - ${children.add(secondChild.id)}
 
   - log: "children: ${children}"
 

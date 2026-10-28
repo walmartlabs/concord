@@ -3,6 +3,7 @@ flows:
     - task: docker
       in:
         image: "localhost:12345/non-existing"
+        redirectErrorStream: true
         pullRetryInterval: 1000
         pullRetryCount: 2
         cmd: |

@@ -10,6 +10,8 @@ flows:
 
 triggers:
   - testTrigger:
+      version: 2
+      conditions: {}
       entryPoint: onTrigger
       activeProfiles:
       - testProfile

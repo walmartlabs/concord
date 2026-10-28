@@ -1,4 +1,5 @@
 configuration:
+  runtime: "concord-v2"
   dependencies:
   - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:2.40.0"
 
@@ -18,8 +19,9 @@ flows:
       debug: true
       outVars:
         - "_stats"    # register variable for concord ansible stats
+    out: ansibleResult
 
-  - log: "${ _stats }" # will print {failures=[], skipped=[], changed=[], ok=[127.0.0.1], unreachable=[]}
+  - log: "${ansibleResult._stats}" # will print {failures=[], skipped=[], changed=[], ok=[127.0.0.1], unreachable=[]}
 
 
 

@@ -13,7 +13,8 @@ flows:
             - "127.0.0.1"
           vars:
             ansible_connection: "local"
-      outVars: "message,message2"
+      outVars: ["message", "message2"]
+    out: result
 
-  - log: ${message.get("127.0.0.1").get("msg")}
-  - log: ${message2.get("127.0.0.1").get("msg")}
+  - log: ${result.message.get("127.0.0.1").get("msg")}
+  - log: ${result.message2.get("127.0.0.1").get("msg")}

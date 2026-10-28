@@ -1,8 +1,13 @@
+configuration:
+  runtime: "concord-v2"
+
 flows:
   default:
-  - script: javascript
+  - script: js
     body: |
-      execution.setVariable("name", "Concord");
+      result.set("name", "Concord");
+    out:
+      name: ${result.name}
 
   # call another flow
   - sayHello

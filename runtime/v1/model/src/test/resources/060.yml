@@ -1,5 +1,0 @@
-main:
-  - task: myLogger
-    in:
-       message: "hello ${item}"
-    withItems: ${nullVariable}

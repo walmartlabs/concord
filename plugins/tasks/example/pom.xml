@@ -16,8 +16,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-sdk</artifactId>
+            <groupId>com.walmartlabs.concord.runtime.v2</groupId>
+            <artifactId>concord-runtime-sdk-v2</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -28,13 +28,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- deprecated -->
-        <dependency>
-            <groupId>io.takari.bpm</groupId>
-            <artifactId>bpm-engine-api</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>

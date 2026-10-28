@@ -114,11 +114,6 @@ public class CheckpointsIT extends AbstractServerIT {
     }
 
     @Test
-    public void testRestoreCheckpointWithEventNameV1() throws Exception {
-        testRestoreCheckpointWithEventName("checkpointsWithEventName");
-    }
-
-    @Test
     public void testRestoreCheckpointWithEventNameV2() throws Exception {
         testRestoreCheckpointWithEventName("checkpointsWithEventNameV2");
     }
@@ -145,7 +140,7 @@ public class CheckpointsIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getInstanceId());
 
-        assertLog(".*Event Name: first*", ab);
+        assertLog(".*Event Name: first.*", ab);
 
         // restore from second checkpoint
         checkpointV2Api.processCheckpoint(pir.getInstanceId(), "second", "restore");
@@ -229,7 +224,8 @@ public class CheckpointsIT extends AbstractServerIT {
                 "org", orgName,
                 "project", projectName,
                 "archive", payload,
-                "arguments.encrypted", evr.getData()));
+                "arguments.encrypted", evr.getData(),
+                "arguments.expected", value));
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
@@ -237,8 +233,16 @@ public class CheckpointsIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*hello, World.*", 2, ab);
-        assertLog(".*" + value + ".*", 4, ab);
-        assertLog(".*checkpoint pointA.*", ab);
+        assertLog(".*varB matches: true.*", 2, ab);
+        assertLog(".*keyVar matches: true.*", 2, ab);
+        assertLog(".*Checkpoint 'pointA' created.*", ab);
+
+        restoreFromCheckpoint(pir.getInstanceId(), "pointA");
+        waitForCompletion(getApiClient(), spr.getInstanceId());
+        ab = getLog(pir.getInstanceId());
+        assertLog(".*hello, World.*", 3, ab);
+        assertLog(".*varB matches: true.*", 3, ab);
+        assertLog(".*keyVar matches: true.*", 3, ab);
     }
 
     @Test
@@ -258,14 +262,16 @@ public class CheckpointsIT extends AbstractServerIT {
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*checkpoint test " + xValue + ".*", 1, ab);
+        assertLog(".*Checkpoint 'test " + xValue + "' created.*", 1, ab);
+        restoreFromCheckpoint(pir.getInstanceId(), "test " + xValue);
+        waitForCompletion(getApiClient(), spr.getInstanceId());
+        ab = getLog(pir.getInstanceId());
+        assertLog(".*before the checkpoint.*", 1, ab);
+        assertLog(".*after the checkpoint.*", 2, ab);
     }
 
-    /**
-     * Verifies the {@code LogTagMetadataProvider} feature.
-     */
     @Test
-    public void testTags() throws Exception {
+    public void testCheckpointEvents() throws Exception {
         byte[] payload = archive(CheckpointsIT.class.getResource("checkpoints").toURI());
 
         // ---
@@ -277,31 +283,20 @@ public class CheckpointsIT extends AbstractServerIT {
 
         // ---
 
-        byte[] ab = getLog(pir.getInstanceId());
-
-        assertLog(".*__logTag.*phase.*pre.*meta.*checkpointName.*ONE.*", ab);
-        assertLog(".*__logTag.*phase.*post.*meta.*checkpointName.*ONE.*", ab);
-        assertLog(".*__logTag.*phase.*pre.*meta.*checkpointName.*TWO.*", ab);
-        assertLog(".*__logTag.*phase.*post.*meta.*checkpointName.*TWO.*", ab);
+        assertCheckpointEvent(pir.getInstanceId(), "ONE", "Checkpoint: ONE");
+        assertCheckpointEvent(pir.getInstanceId(), "TWO", "Checkpoint: TWO");
     }
 
     private void restoreFromCheckpoint(UUID instanceId, String name) throws ApiException {
         CheckpointApi checkpointApi = new CheckpointApi(getApiClient());
-        CheckpointV3Api checkpointV3Api = new CheckpointV3Api(getApiClient());
-        ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> processEvents = eventsApi.listProcessEvents(instanceId, null, null, null, null, null, true, null);
-        assertNotNull(processEvents);
-
-        // restore from ONE checkpoint
-        String checkpointId = assertCheckpoint(name, processEvents);
-
-        checkpointV3Api.pageCheckpoints(instanceId, 0, 10).stream()
-                .filter(c -> c.getId().toString().equals(checkpointId))
+        UUID checkpointId = new CheckpointV3Api(getApiClient()).pageCheckpoints(instanceId, 0, 10).stream()
+                .filter(c -> name.equals(c.getName()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("can't find checkpoint with id: " + checkpointId));
+                .orElseThrow(() -> new IllegalStateException("can't find checkpoint: " + name))
+                .getId();
 
         ResumeProcessResponse resp = checkpointApi.restore(instanceId,
-                new RestoreCheckpointRequest().id(UUID.fromString(checkpointId)));
+                new RestoreCheckpointRequest().id(checkpointId));
 
         assertNotNull(resp);
     }
@@ -317,37 +312,20 @@ public class CheckpointsIT extends AbstractServerIT {
         assertTrue(fsr.getOk());
     }
 
-    @SuppressWarnings("unchecked")
-    private static String assertCheckpoint(String name, List<ProcessEventEntry> processEvents) {
-        String checkpointDescription = "Checkpoint: " + name;
+    private void assertCheckpointEvent(UUID instanceId, String name, String description) throws ApiException {
+        var checkpoint = new CheckpointV3Api(getApiClient()).pageCheckpoints(instanceId, 0, 10).stream()
+                .filter(c -> name.equals(c.getName()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("can't find checkpoint: " + name));
+        assertNotNull(checkpoint.getCorrelationId());
 
-        for (ProcessEventEntry e : processEvents) {
-            Map<String, Object> data = e.getData();
-            if (data == null) {
-                continue;
-            }
-            if ("post".equals(data.get("phase")) && checkpointDescription.equals(data.get("description"))) {
-                List<Map<String, Object>> out = (List<Map<String, Object>>) data.get("out");
-                if (out == null || out.size() < 2) {
-                    continue;
-                }
-
-                String checkpointId = assertParam("checkpointId", out.get(0));
-                String checkpointName = assertParam("checkpointName", out.get(1));
-                if (name.equals(checkpointName)) {
-                    return checkpointId;
-                }
-            }
-        }
-
-        throw new IllegalStateException("can't find " + name + " checkpoint");
-    }
-
-    private static String assertParam(String paramName, Map<String, Object> params) {
-        assertEquals(paramName, params.get("source"));
-        assertEquals(paramName, params.get("target"));
-        assertNotNull(params.get("resolved"));
-        return (String) params.get("resolved");
+        List<ProcessEventEntry> events = new ProcessEventsApi(getApiClient())
+                .listProcessEvents(instanceId, "ELEMENT", null, null, null, null, true, null);
+        assertTrue(events.stream().map(ProcessEventEntry::getData)
+                .filter(data -> data != null)
+                .anyMatch(data -> description.equals(data.get("description"))
+                        && checkpoint.getCorrelationId().toString().equals(String.valueOf(data.get("correlationId")))),
+                "missing checkpoint event for " + name);
     }
 
     @SuppressWarnings("unchecked")

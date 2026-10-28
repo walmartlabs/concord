@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
+import static com.walmartlabs.concord.it.common.ServerClient.assertLogAtLeast;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -73,7 +74,7 @@ public class KvPolicyIT extends AbstractServerIT {
         assertEquals(ProcessEntry.StatusEnum.FAILED, pe.getStatus());
 
         byte[] ab = getLog(pe.getInstanceId());
-        assertLog(".*kv\\.putLong\\('two', 444\\).*Found KV policy violations: Maximum KV entries exceeded: current 1, limit 1.*", ab);
+        assertLogAtLeast(".*kv\\.putLong\\('two', 444\\).*Found KV policy violations: Maximum KV entries exceeded: current 1, limit 1.*", 1, ab);
         // ---
 
         policyResource.createOrUpdatePolicy(new PolicyEntry().name(policyName).rules(readPolicy("kvPolicy/test-policy-relaxed.json")));

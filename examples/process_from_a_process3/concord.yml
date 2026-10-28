@@ -1,3 +1,6 @@
+configuration:
+  runtime: "concord-v2"
+
 flows:
   default:
   # uses the specified directory as the process payload
@@ -8,4 +11,5 @@ flows:
       arguments:
         name: "Concord"
       sync: true
-  - log: "Done! ${jobs[0]} is completed"
+    out: startResult
+  - log: "Done! ${startResult.id} is completed"

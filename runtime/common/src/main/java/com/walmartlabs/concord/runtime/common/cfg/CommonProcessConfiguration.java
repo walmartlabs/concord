@@ -21,7 +21,7 @@ package com.walmartlabs.concord.runtime.common.cfg;
  */
 
 /**
- * Common process configuration parameters (for both runtime v1 and v2).
+ * Common process configuration parameters.
  * <p/>
  * Typically used by the server to create the process input data (aka _main.json).
  */

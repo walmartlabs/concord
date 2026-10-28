@@ -1,3 +1,0 @@
-flows:
-  default:
-  - log: "${resource.asString('target/file1')}"

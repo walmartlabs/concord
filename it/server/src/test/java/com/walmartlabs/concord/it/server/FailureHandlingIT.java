@@ -68,6 +68,7 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getInstanceId());
         assertLogAtLeast(".*boom!.*", 1, ab);
+        assertProcessErrorContains(pir, "boom!");
 
         // find the child processes
 
@@ -76,10 +77,9 @@ public class FailureHandlingIT extends AbstractServerIT {
         // check the logs for the successful message
 
         ab = getLog(child.getInstanceId());
-        assertLog(".*lastError:.*boom.*", ab);
-        assertLog(".*projectInfo: \\{.*orgName=Default.*\\}.*", ab);
-        assertLog(".*processInfo: \\{.*sessionKey=.*\\}.*", ab);
-        assertLog(".*initiator: \\{.*username=.*\\}.*", ab);
+        assertLog(".*projectInfo orgName: Default.*", ab);
+        assertLog(".*processInfo sessionToken present: true.*", ab);
+        assertLog(".*initiator username: admin.*", ab);
     }
 
     @Test
@@ -134,6 +134,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.RUNNING);
+        waitForLog(spr.getInstanceId(), 15, ".*Ready to cancel.*");
 
         // cancel the running process
 
@@ -249,6 +250,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         // ---
 
         ProcessEntry onFailureProc = waitForChild(processApi, childWithOnFailure.getInstanceId(), ProcessEntry.KindEnum.FAILURE_HANDLER, StatusEnum.FINISHED);
+        assertProcessErrorContains(childWithOnFailure, "aFork!");
         byte[] ab = getLog(onFailureProc.getInstanceId());
         assertLog(".*Got.*aFork!.*", ab);
 
@@ -281,6 +283,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         byte[] payload = archive(ProcessIT.class.getResource("cancelHandling").toURI());
         StartProcessResponse spr = start(payload);
         waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.RUNNING);
+        waitForLog(spr.getInstanceId(), 15, ".*Ready to cancel.*");
 
         // back to admin api token, disable the user
 
@@ -295,5 +298,11 @@ public class FailureHandlingIT extends AbstractServerIT {
         // expect error starting child process, may take 3+ seconds for the watchdog to do it's work
 
         waitForLog(spr.getInstanceId(), 15, ".*Error while starting onCancel handler: initiator is disabled.*");
+    }
+
+    private static void assertProcessErrorContains(ProcessEntry process, String message) {
+        Map<?, ?> out = (Map<?, ?>) process.getMeta().get("out");
+        Map<?, ?> error = (Map<?, ?>) out.get("lastError");
+        assertTrue(((String) error.get("message")).contains(message));
     }
 }

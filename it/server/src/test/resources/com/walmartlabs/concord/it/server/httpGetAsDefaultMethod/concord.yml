@@ -5,8 +5,10 @@ flows:
       in:
         url: ${url}
         response: json
-        out: rsp
-    - log: "Out Response: ${rsp.success}"
+        debug: true
+      out: rsp
+    - log: "Success response: ${rsp.ok}"
+    - log: "Out Response: ${rsp.ok}"
     error:
     - log: "Gotcha! ${lastError}"
 

@@ -31,7 +31,7 @@ import static com.walmartlabs.concord.plugins.slack.SlackTaskParams.*;
 
 public class SlackTaskCommon {
 
-    private static final Logger log = LoggerFactory.getLogger(SlackTask.class);
+    private static final Logger log = LoggerFactory.getLogger(SlackTaskCommon.class);
 
     public Map<String, Object> execute(SlackTaskParams in) {
         Action action = in.action();

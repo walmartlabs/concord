@@ -20,20 +20,12 @@ package com.walmartlabs.concord.server.process.form;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.process.state.ProcessStateManager;
-import com.walmartlabs.concord.server.sdk.ProcessKey;
-import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import com.walmartlabs.concord.server.user.UserManager;
-import io.takari.bpm.form.Form;
 
 import javax.inject.Inject;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
@@ -41,42 +33,15 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
-
 public class FormAccessManager {
 
     private static final Pattern GROUP_PATTERN = Pattern.compile("CN=(.*?),", Pattern.CASE_INSENSITIVE);
 
-    private final ProcessStateManager stateManager;
     private final UserManager userManager;
 
     @Inject
-    public FormAccessManager(ProcessStateManager stateManager, UserManager userManager) {
-        this.stateManager = stateManager;
+    public FormAccessManager(UserManager userManager) {
         this.userManager = userManager;
-    }
-
-    @SuppressWarnings("unchecked")
-    public Form assertFormAccess(ProcessKey processKey, String formName) {
-        Form f = getForm(processKey, formName);
-        if (f == null) {
-            return null;
-        }
-
-        if (Roles.isAdmin()) {
-            return f;
-        }
-
-        Map<String, Object> opts = f.getOptions();
-        if (opts == null) {
-            return f;
-        }
-
-        Map<String, Serializable> runAsParams = (Map<String, Serializable>) opts.get(Constants.Forms.RUN_AS_KEY);
-
-        assertFormAccess(formName, runAsParams);
-
-        return f;
     }
 
     public void assertFormAccess(String formName, Map<String, Serializable> runAsParams) {
@@ -105,25 +70,6 @@ public class FormAccessManager {
                 throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
                         "the necessary permissions to resume process. Expected LDAP group(s) '" + formRunAsGroups + "'");
             }
-        }
-    }
-
-    // TODO: move to the formManager
-    private Form getForm(ProcessKey processKey, String formName) {
-        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
-                Constants.Files.JOB_STATE_DIR_NAME,
-                Constants.Files.JOB_FORMS_DIR_NAME,
-                formName);
-
-        Optional<Form> o = stateManager.get(processKey, resource, FormAccessManager::deserialize);
-        return o.orElse(null);
-    }
-
-    private static Optional<Form> deserialize(InputStream data) {
-        try (ObjectInputStream in = new ObjectInputStream(data)) {
-            return Optional.ofNullable((Form) in.readObject());
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException("Error while deserializing a form", e);
         }
     }
 

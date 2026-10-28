@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
 ## DEFAULT VARIABLES
   arguments:
     myForm:
@@ -8,6 +9,7 @@ flows:
   default:
   # call a form using the current (default) value of ${myForm}
   - form: myForm
+    values: ${myForm}
   - log: "Value: ${myForm.myField}"
 
   # call a form and override a value
@@ -21,11 +23,13 @@ flows:
     in:
       myForm:
         myField: "CCC"
+    out: myForm
   - log: "Value: ${myForm.myField}"
 
   myFlow:
   # call a form using the current value of ${myForm}
   - form: myForm
+    values: ${myForm}
 
 ## FORMS
 

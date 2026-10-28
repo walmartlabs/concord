@@ -8,5 +8,6 @@ flows:
     in:
       action: hostsWithArtifacts
       artifactPattern: "${artifactUrl}"
+    out: roster
 
-  - log: "${result}"
+  - log: "${roster}"

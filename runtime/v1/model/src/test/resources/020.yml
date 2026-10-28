@@ -1,3 +1,0 @@
-main:
-  - script: externalscript/test.js
-  - ${testBean.toString(x)}

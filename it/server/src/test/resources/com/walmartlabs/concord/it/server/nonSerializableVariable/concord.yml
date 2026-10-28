@@ -1,0 +1,10 @@
+configuration:
+  runtime: concord-v2
+  dependencies:
+    - "mvn://org.apache.groovy:groovy-all:pom:5.0.4"
+
+flows:
+  default:
+    - script: groovy
+      body: |
+        execution.variables().set('test', new java.util.zip.ZipEntry('Hello!'))

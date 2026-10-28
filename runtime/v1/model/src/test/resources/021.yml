@@ -1,9 +1,0 @@
-main:
-  - if: ${aInt > 0}
-    then:
-      - ${testBean.toString("a")}
-    else:
-      - ${testBean.toString("b")}
-      - return: error-code-2
-
-  - ${testBean.toString("c")}

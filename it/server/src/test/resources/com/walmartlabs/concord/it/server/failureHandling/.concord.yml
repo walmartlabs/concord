@@ -1,18 +1,18 @@
 flows:
   main:
   - form: myForm1
-  - ${misc.throwBpmnError("boom!")}
+  - throw: "boom!"
 
   onFailure:
-  - log: "lastError: ${lastError}"
   - log: "txId: ${txId}"
-  - log: "projectInfo: ${projectInfo}"
-  - log: "processInfo: ${processInfo}"
-  - log: "initiator: ${initiator}"
+  - log: "projectInfo orgName: ${projectInfo.orgName}"
+  - log: "processInfo sessionToken present: ${processInfo.sessionToken != null}"
+  - log: "initiator username: ${initiator.username}"
 
 forms:
   myForm1:
   - firstName: { label: "First Name", type: "string" }
 
-variables:
+configuration:
+  runtime: concord-v2
   entryPoint: main

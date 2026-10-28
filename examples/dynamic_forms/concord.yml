@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   dependencies:
     - "mvn://org.apache.groovy:groovy-all:pom:5.0.4"
 
@@ -21,8 +22,12 @@ flows:
           ]
         ]
 
-        // create the form, the process will be suspended after the script is done
-        execution.form('myForm', myForm);
+        result.set('definition', myForm)
+      out: formDefinition
+
+    - form: myForm
+      fields: ${formDefinition.definition.fields}
+      values: ${formDefinition.definition.values}
 
     - log: "${myForm}"
 
@@ -36,6 +41,8 @@ flows:
             firstName: "John"
             lastName: "Smith"
 
-    - ${execution.form('myForm', myForm)}
+    - form: myForm
+      fields: ${myForm.fields}
+      values: ${myForm.values}
 
     - log: "${myForm}"

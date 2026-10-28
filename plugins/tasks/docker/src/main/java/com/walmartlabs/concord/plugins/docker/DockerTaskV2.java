@@ -37,7 +37,7 @@ import static com.walmartlabs.concord.plugins.docker.DockerConstants.SUCCESS_EXI
 @Named("docker")
 public class DockerTaskV2 implements Task {
 
-    private static final Logger log = LoggerFactory.getLogger(DockerTask.class);
+    private static final Logger log = LoggerFactory.getLogger(DockerTaskV2.class);
     private static final Logger processLog = LoggerFactory.getLogger("processLog");
 
     private static final String REDIRECT_ERROR_STREAM_KEY = "redirectErrorStream";

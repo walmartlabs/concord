@@ -1,0 +1,5 @@
+configuration:
+  runtime: unsupported-runtime
+flows:
+  default:
+    - log: "This workflow must not load."

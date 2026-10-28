@@ -1,4 +1,5 @@
 configuration:
+  runtime: "concord-v2"
   dependencies:
   - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:2.40.0"
 
@@ -15,6 +16,7 @@ flows:
           hosts: ${myForm.ips.split(",")}
       extraVars:
         greetings: "Hi there!"
+    out: ansibleResult
 
 forms:
   myForm:

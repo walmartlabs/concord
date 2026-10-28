@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   dependencies:
   - "mvn://com.walmartlabs.concord.plugins:ldap-task:2.12.1"
 
@@ -12,5 +13,7 @@ flows:
       bindPassword: "myBindPwd"
       searchBase: "DC=MyOrg,DC=com"
       user: "myUser"
+    out:
+      ldapResult: ${result.result}
 
   - log: "${ldapResult}"

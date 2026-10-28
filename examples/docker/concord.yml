@@ -1,6 +1,14 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:docker-tasks:2.40.0"
+
 flows:
   default:
-  - docker: "walmartlabs/concord-ansible"
-    env:
-      ANSIBLE_CONFIG: ansible.cfg
-    cmd: ansible-playbook playbook/hello.yml -i inventory.ini -e greetings=Hi
+  - task: docker
+    in:
+      image: "walmartlabs/concord-ansible"
+      env:
+        ANSIBLE_CONFIG: ansible.cfg
+      cmd: ansible-playbook playbook/hello.yml -i inventory.ini -e greetings=Hi
+    out: dockerResult

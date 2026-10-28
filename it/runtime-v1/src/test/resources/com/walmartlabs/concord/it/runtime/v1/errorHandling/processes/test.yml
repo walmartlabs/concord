@@ -1,7 +1,0 @@
-main:
-- expr: ${misc.throwBpmnError('boom')}
-  error:
-  - log: "Ka${lastError.errorRef}"
-- expr: ${misc.throwRuntimeException('DEAD')}
-  error:
-  - log: "We got: ${lastError.cause}"

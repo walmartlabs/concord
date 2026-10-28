@@ -1,6 +1,9 @@
+configuration:
+  entryPoint: main
+
 flows:
   main:
-  - sub
+  - call: sub
 
   sub:
   - set:
@@ -12,5 +15,3 @@ forms:
   myForm:
   - name: {type: "string"}
 
-variables:
-  entryPoint: main

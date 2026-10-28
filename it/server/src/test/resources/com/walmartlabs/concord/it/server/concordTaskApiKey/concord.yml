@@ -1,6 +1,10 @@
+configuration:
+  runtime: concord-v2
+
 flows:
   default:
     - task: concord
+      out: jobOut
       in:
         apiKey: "${myApiKey}"
         action: startExternal

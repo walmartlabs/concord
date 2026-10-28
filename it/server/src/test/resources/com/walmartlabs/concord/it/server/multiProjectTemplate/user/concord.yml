@@ -1,3 +1,8 @@
 configuration:
+  runtime: concord-v2
   arguments:
     name: "${resource.asString('test.txt')}"
+
+resources:
+  concord:
+    - "glob:concord/*.yml"

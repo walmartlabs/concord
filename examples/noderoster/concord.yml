@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   dependencies:
   - "mvn://com.walmartlabs.concord.plugins.basic:noderoster-tasks:2.40.0"
 
@@ -9,22 +10,28 @@ flows:
     - call: findDeployedOnHosts
 
   findHostsWithArtifacts:
-  - task: noderoster
+  - task: nodeRoster
     in:
       action: "hostsWithArtifacts"
       artifactPattern: "storesystems"
+    out:
+      result: ${result.hosts}
   - log: "${result}"
 
   findFacts:
-  - task: noderoster
+  - task: nodeRoster
     in:
       action: "facts"
       hostName: "host.example.com"
+    out:
+      result: ${result.facts}
   - log: "${result}"
 
   findDeployedOnHosts:
-  - task: noderoster
+  - task: nodeRoster
     in:
       action: "deployedOnHost"
       hostName: "host.example.com"
+    out:
+      result: ${result.artifacts}
   - log: "${result}"

@@ -115,6 +115,7 @@ public class HttpTaskIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Success response.*", ab);
+        assertLog(".*\\{\"ok\":true\\}.*", ab);
     }
 
     @Test
@@ -151,7 +152,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*Request method: GET*", ab);
+        assertLog(".*\"method\"\\s*:\\s*\"GET\".*", ab);
         assertLog(".*Success response.*", ab);
         assertLog(".*Out Response: true*", ab);
     }

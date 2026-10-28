@@ -21,7 +21,6 @@ package com.walmartlabs.concord.policyengine;
  */
 
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
-import com.walmartlabs.concord.sdk.Context;
 
 import java.io.Serializable;
 import java.util.*;
@@ -137,15 +136,6 @@ public class TaskPolicy {
             String name = names[nameIndex];
             nameIndex += 1;
             return paramMatches(names, nameIndex, values, m.get(name), isProtected);
-        } else if (param instanceof Context) {
-            if (names == null) {
-                return false;
-            }
-            Context ctx = (Context) param;
-            String name = names[nameIndex];
-            nameIndex += 1;
-            Object v = isProtected ? ctx.getProtectedVariable(name) : ctx.getVariable(name);
-            return paramMatches(names, nameIndex, values, v, isProtected);
         } else if (param instanceof Variables) {
             Variables vars = (Variables) param;
             String name = names[nameIndex];

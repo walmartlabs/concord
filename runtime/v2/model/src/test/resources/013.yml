@@ -1,6 +1,11 @@
 publicFlows:
   - publicFlow
 
+profiles:
+  extra:
+    publicFlows:
+      - privateFlow
+
 flows:
   publicFlow:
     - log: "This is the public flow"

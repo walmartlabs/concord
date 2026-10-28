@@ -23,6 +23,7 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,11 +64,16 @@ public class PrincipalPermissionIT extends AbstractServerIT {
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
-
         List<ProcessEntry> processEntryList = processApi.listSubprocesses(spr.getInstanceId(), null);
+        StringBuilder logs = new StringBuilder(new String(getLog(pir.getInstanceId()), StandardCharsets.UTF_8));
         for (ProcessEntry pe : processEntryList) {
-            assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+            logs.append("\nChild ").append(pe.getInstanceId()).append(":\n")
+                    .append(new String(getLog(pe.getInstanceId()), StandardCharsets.UTF_8));
+        }
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(), logs.toString());
+        assertEquals(1, processEntryList.size(), logs.toString());
+        for (ProcessEntry pe : processEntryList) {
+            assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus(), logs.toString());
         }
 
         byte[] ab = getLog(pir.getInstanceId());

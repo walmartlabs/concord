@@ -14,7 +14,9 @@ flows:
 triggers:
   - testTrigger:
       entryPoint: onTestTrigger
-      key1: "value1"
+      version: 2
+      conditions:
+        key1: "value1"
       exclusive:
         group: "TRIGGER"
 

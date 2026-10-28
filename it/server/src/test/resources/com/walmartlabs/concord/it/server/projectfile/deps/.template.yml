@@ -2,5 +2,6 @@ flows:
   main:
   - ${example.hello()}
 
-variables:
+configuration:
+  runtime: concord-v2
   dependencies: ["WILL_BE_REPLACED"]

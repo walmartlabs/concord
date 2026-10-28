@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client2.ProcessApi;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.client2.StartProcessResponse;
 import org.junit.jupiter.api.Test;
@@ -28,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class DynamicTaskIT extends AbstractServerIT {
@@ -40,13 +40,13 @@ public class DynamicTaskIT extends AbstractServerIT {
 
         // start the process
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
         // ---
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 

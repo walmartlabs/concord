@@ -25,6 +25,8 @@ flows:
         projects:
           - "${projectName1}"
           - "${projectName2}"
+      out:
+        result: ${result}
     - log: "Create Result: ${result}"
 
   get-secret:
@@ -33,6 +35,8 @@ flows:
       in:
         name: ${secretName}
         storePassword: Dingo1234
+      out:
+        result: ${result}
     - log: "Get Result: ${result}"
     - if: ${result.data != "anders-test-value"}
       then:
@@ -45,6 +49,8 @@ flows:
         action: getAsString
         name: ${secretName}
         storePassword: Dingo1234
+      out:
+        result: ${result}
     - log: "Validate Result: ${result}"
     - if: ${result.status != "OK"}
       then:
@@ -57,6 +63,8 @@ flows:
         action: getAsString
         name: anders-NOT_FOUND-secret
         ignoreErrors: true
+      out:
+        result: ${result}
     - log: "Validate Result: ${result}"
     - if: ${result.status != "NOT_FOUND"}
       then:
@@ -70,6 +78,8 @@ flows:
         name: ${secretName}
         storePassword: wrong
         ignoreErrors: true
+      out:
+        result: ${result}
     - log: "Validate Result: ${result}"
     - if: ${result.status != "INVALID_REQUEST"}
       then:
@@ -99,6 +109,8 @@ flows:
       in:
         name: ${secretName}
         storePassword: Tapir1234
+      out:
+        result: ${result}
     - log: "Get Result: ${result}"
     - if: ${result.data != "anders-test-elephant"}
       then:

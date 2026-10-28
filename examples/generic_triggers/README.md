@@ -1,6 +1,6 @@
 # Example: Using Generic Event Trigger
 
-The example shows how to subscribe to generic events.
+The example shows how to subscribe to generic events using the `concord-v2` runtime.
 
 ## Usage
 
@@ -12,10 +12,7 @@ curl -v -u username -H 'Content-Type: application/json' \
 http://localhost:8001/api/v1/events/mySystem
 ```
 
-The process log should contain a record similar to this:
-```
-[INFO ] c.w.concord.plugins.log.LoggingTask - Received {myVar=abc, otherStuff=[1, 2, 3]}
-```
+The process log should contain `Received {myVar=abc, otherStuff=[1, 2, 3]}`.
 
 Send another request to test the second trigger:
 ```

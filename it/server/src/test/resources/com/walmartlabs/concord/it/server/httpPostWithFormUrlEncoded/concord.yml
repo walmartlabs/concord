@@ -9,5 +9,6 @@ flows:
       body:
         message: "Hello Concord!"
       response: json
-      out: rsp
-  - log: "Out Response: ${rsp.success}"
+    out: rsp
+  - log: "Success response: ${rsp.ok}"
+  - log: "Out Response: ${rsp.ok}"

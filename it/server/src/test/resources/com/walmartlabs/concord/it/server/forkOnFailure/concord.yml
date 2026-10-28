@@ -24,4 +24,4 @@ flows:
     - throw: "${msg}!"
 
   onFailure:
-    - log: "Got ${lastError}"
+    - log: "Got ${msg}"

@@ -1,4 +1,5 @@
-another:
-  variables:
-    arguments:
-      name: "loser"
+profiles:
+  another:
+    configuration:
+      arguments:
+        name: "loser"

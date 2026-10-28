@@ -1,8 +1,0 @@
-flows:
-  default:
-  - log: "hello!"
-
-configuration:
-  arguments:
-    nested:
-      value: "234"

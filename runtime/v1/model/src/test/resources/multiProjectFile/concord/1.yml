@@ -1,5 +1,0 @@
-configuration:
-  arguments:
-    abc: "ttt"
-    nested:
-      value: "123"

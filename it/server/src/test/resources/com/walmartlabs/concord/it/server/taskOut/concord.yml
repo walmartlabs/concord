@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   dependencies:
     - mvn://com.walmartlabs.concord.plugins.basic:example-tasks:PROJECT_VERSION
   entryPoint: main
@@ -6,6 +7,7 @@ configuration:
 flows:
   main:
   - task: example
-    out:
-      msg: ${exampleOutput}
-  - log: "I said: ${msg}"
+    in:
+      myName: "world"
+    out: result
+  - log: "I said: ${result.exampleOutput}"

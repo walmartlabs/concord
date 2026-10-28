@@ -1,7 +1,7 @@
 configuration:
-  runner:
-    events:
-      recordTaskInVars: true
+  runtime: concord-v2
+  events:
+    recordTaskInVars: true
 
 flows:
   default:

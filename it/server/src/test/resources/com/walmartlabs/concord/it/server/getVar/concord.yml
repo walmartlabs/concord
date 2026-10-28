@@ -4,6 +4,6 @@ flows:
       cfg:
         param1: 1
 
-  - log: "param1: ${vars.get('cfg.param1', 100)}"
-  - log: "defaultValue: ${vars.get('cfg.param2', 101)}"
-  - log: "defaultValueFromUnknown: ${vars.get('xxx.yyy', 102)}"
+  - log: "param1: ${orDefault('cfg.param1', 100)}"
+  - log: "defaultValue: ${orDefault('cfg.param2', 101)}"
+  - log: "defaultValueFromUnknown: ${orDefault('xxx.yyy', 102)}"

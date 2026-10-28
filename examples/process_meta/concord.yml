@@ -9,6 +9,7 @@ forms:
   - action: {label: "Action", type: "string?", allow: ["Approve", "Reject"]}
 
 configuration:
+  runtime: "concord-v2"
   arguments:
     name: "Concord"
   meta:

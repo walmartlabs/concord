@@ -103,6 +103,7 @@ public final class TriggersGrammar {
                                 optional("status", regexpVal.map(v -> o.put("status", v))),
                                 optional("repositoryInfo", githubTriggerRepositoryInfoVal.map(v -> o.put("repositoryInfo", v))),
                                 optional("files", githubTriggerFilesVal.map(v -> o.put("files", v))),
+                                optional("queryParams", mapVal.map(v -> o.put("queryParams", v))),
                                 optional("payload", mapVal.map(v -> o.put("payload", v)))))
                             .map(Collections::unmodifiableMap));
 

@@ -1,4 +1,0 @@
-flows:
-  aJob:
-    - log: "FORK (${color}) starting..."
-    - log: "...done!"

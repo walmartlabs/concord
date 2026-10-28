@@ -47,7 +47,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static com.walmartlabs.concord.process.loader.StandardRuntimeTypes.CONCORD_V1_RUNTIME_TYPE;
+import static com.walmartlabs.concord.process.loader.StandardRuntimeTypes.CONCORD_V2_RUNTIME_TYPE;
 
 /**
  * Loads the process definition using the working directory and configured {@code imports}.
@@ -144,7 +144,7 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
         }
 
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
-        return ProjectLoaderUtils.getRuntimeType(workDir).orElse(CONCORD_V1_RUNTIME_TYPE);
+        return ProjectLoaderUtils.getRuntimeType(workDir).orElse(CONCORD_V2_RUNTIME_TYPE);
     }
 
     class ProcessImportsListener implements ImportsListener {

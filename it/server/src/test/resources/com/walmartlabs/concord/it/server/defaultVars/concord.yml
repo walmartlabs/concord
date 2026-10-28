@@ -1,3 +1,8 @@
+configuration:
+  runtime: concord-v2
+
 flows:
   default:
-  - log: "Default vars: ${testDefaultVars.var1}"
+  - task: concord
+    out: childResult
+  - log: "Default vars: ${childResult.value}"

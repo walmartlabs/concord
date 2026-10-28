@@ -1,8 +1,5 @@
 flows:
-  main:
+  default:
   - set:
-      value: ${crypto.exportCredentials(secretName, pwd)}
-  - log: "${value.username} ${value.password}"
-
-variables:
-  entryPoint: main
+      value: ${crypto.exportCredentials('Default', secretName, pwd)}
+  - log: "credentials match: ${value.username == expectedUsername && value.password == expectedPassword}"

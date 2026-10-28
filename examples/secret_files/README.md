@@ -1,6 +1,7 @@
 # Secrets
 
-Example of exporting "secrets" as files.
+Example of exporting "secrets" as files in a runtime v2 process. The workflow
+exports secrets from the `Default` organization used by the commands below.
 
 ## Running
 

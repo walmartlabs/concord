@@ -3,7 +3,7 @@
 SERVER_ADDR="$1"
 
 rm -rf target && mkdir target
-cp -R concord.yml tasks target/
+cp -R runtime-v2/concord.yml runtime-v2/tasks target/
 
 cd target && zip -r payload.zip ./* > /dev/null && cd ..
 

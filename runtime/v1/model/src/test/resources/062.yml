@@ -1,5 +1,0 @@
-main:
-  - call: ${calledFlow}
-
-myFlow1:
-  - ${testBean.toString('from MyFlow1')}

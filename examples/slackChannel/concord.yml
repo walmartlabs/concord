@@ -1,3 +1,6 @@
+configuration:
+  runtime: concord-v2
+
 flows:
   default:
 
@@ -7,6 +10,8 @@ flows:
       action: create
       channelName: myChannelName
       apiToken: mySlackApiToken
+    out:
+      slackChannelId: ${result.slackChannelId}
 
   # the channel ID is stored as `slackChannelId`
   - log: "Channel ID: ${slackChannelId}"
@@ -24,6 +29,8 @@ flows:
       action: createGroup
       channelName: myGroupName
       apiToken: mySlackApiToken
+    out:
+      slackChannelId: ${result.slackChannelId}
 
   # the channel ID is stored as `slackChannelId`
   - log: "Channel ID: ${slackChannelId}"

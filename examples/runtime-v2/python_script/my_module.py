@@ -1,6 +1,6 @@
-def test(ctx, x):
+def test(result, x):
     print 'Hello from another module!'
-    ctx.variables().set('y', x + 3)
+    result.set('y', x + 3)
     return
 
 def test2(x):

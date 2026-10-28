@@ -20,8 +20,9 @@ package com.walmartlabs.concord.it.tasks.serializationtest;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +34,8 @@ public class SerializationTestTask implements Task {
     private static final Logger log = LoggerFactory.getLogger(SerializationTestTask.class);
 
     @Override
-    public void execute(Context ctx) {
+    public TaskResult execute(Variables input) {
         log.info("Setting a variable...");
-        ctx.setVariable("test", new NonSerializableThingy("Hello!"));
+        return TaskResult.success().value("test", new NonSerializableThingy("Hello!"));
     }
 }

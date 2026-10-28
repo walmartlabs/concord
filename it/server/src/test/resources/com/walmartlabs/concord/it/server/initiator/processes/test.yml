@@ -1,2 +1,3 @@
-main:
-- log: Hello, ${initiator.username}
+flows:
+  main:
+  - log: Hello, ${initiator.username}

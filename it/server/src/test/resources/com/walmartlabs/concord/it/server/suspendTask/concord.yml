@@ -1,4 +1,9 @@
+configuration:
+  runtime: concord-v2
+
 flows:
   default:
   - task: suspendTest
+    in:
+      eventName: ${eventName}
   - log: "Whoa!"

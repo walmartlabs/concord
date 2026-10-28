@@ -1,9 +1,12 @@
+configuration:
+  runtime: concord-v2
+
 flows:
   default:
   - task: concord
     in:
       action: start
       project: ${projectInfo.projectName}
-      archive: test.zip
+      payload: test.zip
       sync: true
   - log: "Done!"

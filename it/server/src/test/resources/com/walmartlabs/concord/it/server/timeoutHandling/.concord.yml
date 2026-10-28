@@ -1,6 +1,6 @@
 configuration:
+  runtime: concord-v2
   processTimeout: "PT1S"
-  handlerProcessTimeout: "PT1M"
   entryPoint: main
 
 flows:

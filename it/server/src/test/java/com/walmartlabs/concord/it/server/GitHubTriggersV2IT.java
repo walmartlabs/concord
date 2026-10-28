@@ -53,8 +53,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         String orgXName = "orgX_" + randomString();
         orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgXName));
 
-        // project A uses a default trigger without conditions
-        // should trigger on any event for the matching "known" repository
+        // project A accepts push events for its known repository
         // i.e. the event must come from a GitHub URL that is added to a Concord project
         String projectAName = "projectA_" + randomString();
         String repoAName = "repoA_" + randomString();
@@ -110,6 +109,9 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
      * # a default onPush trigger for the default branch
      * triggers:
      *   - github:
+     *       version: 2
+     *       conditions:
+     *         type: push
      *       entryPoint: onPush
      * </pre>
      */

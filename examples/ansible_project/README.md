@@ -39,7 +39,7 @@ Use `mySecret` as a name of the key pair, it will be used on the next step.
 ### 2. Create a new Concord project
 
 We are going to create a new project using the `ansible` project template. The `ansible` template
-will automatically add the necessary boilerplate - a workflow process definition to run our playbook
+will automatically add the necessary boilerplate - a runtime-v2 workflow process definition to run our playbook
 and necessary runtime dependencies.
 
 ```

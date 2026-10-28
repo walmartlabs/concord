@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   entryPoint: main
   arguments:
     name: "stranger"
@@ -9,5 +10,6 @@ flows:
 
 
 resources:
-  profiles: myProfiles
+  concord:
+    - "glob:myProfiles/*.yml"
 

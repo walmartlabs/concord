@@ -1,4 +1,4 @@
 # Process Loader
 
-A common `ProcessDefinition` loader for both runtime v1 and v2.
+A common `ProcessDefinition` loader for Concord runtime projects.
 

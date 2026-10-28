@@ -36,10 +36,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class LintTest extends AbstractTest {
 
     @Test
-    void lintV1Test() throws Exception {
-        int exitCode = lint("lintV1");
+    void lintWithoutRuntimeUsesV2() throws Exception {
+        int exitCode = lint("lintMissingRuntime");
         assertEquals(0, exitCode);
-        assertLog(".*flows: 2.*");
+        assertLog(".*flows: 1.*");
+    }
+
+    @Test
+    void rejectsUnsupportedRuntime() throws Exception {
+        int exitCode = lint("unsupportedRuntime");
+        assertEquals(1, exitCode);
     }
 
     @Test

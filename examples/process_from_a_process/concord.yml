@@ -1,3 +1,6 @@
+configuration:
+  runtime: "concord-v2"
+
 flows:
   default:
   # executes the provided payload archive as a child process
@@ -7,4 +10,5 @@ flows:
       archive: example.zip
       # wait for completion
       sync: true
-  - log: "Done! ${jobs[0]} is completed"
+    out: startResult
+  - log: "Done! ${startResult.id} is completed"

@@ -378,6 +378,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         Trigger t = triggers.get(0);
         assertEquals("github", t.name());
         assertFalse((Boolean) t.configuration().get("ignoreEmptyPush"));
+        assertEquals(Collections.singletonMap("param1", "value1"), t.conditions().get("queryParams"));
 
         t = triggers.get(1);
         assertEquals("github", t.name());
@@ -437,6 +438,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertEquals(1, publicFlows.size());
         assertTrue(publicFlows.contains("publicFlow"));
         assertTrue(flowNames.contains(publicFlows.iterator().next()));
+        assertEquals(Collections.singleton("privateFlow"), pd.profiles().get("extra").publicFlows());
     }
 
     // script definition

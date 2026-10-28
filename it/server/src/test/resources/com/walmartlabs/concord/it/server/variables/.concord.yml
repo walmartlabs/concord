@@ -12,7 +12,7 @@ flows:
   - log: "var1=${var1}"
   - log: "Hello, ${name}"
 
-variables:
+configuration:
   arguments:
     nested:
       z: false

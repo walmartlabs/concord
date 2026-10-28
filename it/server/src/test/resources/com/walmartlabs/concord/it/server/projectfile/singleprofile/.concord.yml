@@ -3,7 +3,8 @@ flows:
   - log: Hello, ${name}
   - log: ${nested.val}
 
-variables:
+configuration:
+  runtime: concord-v2
   arguments:
     name: "stranger"
     nested:
@@ -11,7 +12,7 @@ variables:
 
 profiles:
   test:
-    variables:
+    configuration:
       arguments:
         name: "world"
         nested:

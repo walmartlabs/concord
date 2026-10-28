@@ -9,6 +9,8 @@ triggers:
         githubOrg: ".*"
         githubRepo: ".*"
         branch: ".*"
+        queryParams:
+          param1: "value1"
         repositoryInfo:
           - repository: ".*"
             enabled: true

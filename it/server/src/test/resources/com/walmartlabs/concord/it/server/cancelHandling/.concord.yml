@@ -1,9 +1,11 @@
 flows:
   main:
+  - log: "Ready to cancel"
   - ${sleep.ms(30000)}
 
   onCancel:
   - log: "initiator is ${initiator.username}"
 
-variables:
+configuration:
+  runtime: concord-v2
   entryPoint: main

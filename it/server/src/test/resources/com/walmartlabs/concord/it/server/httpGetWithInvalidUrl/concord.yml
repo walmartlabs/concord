@@ -5,7 +5,8 @@ flows:
      method: GET
      url: "http://dummy/server/get/request"
      response: "json"
-     out: rsp
+    out: rsp
     error:
       - ${log.error("server not exists")}
-  - log: "Out Response: ${rsp.success}"
+      - throw: ${lastError}
+  - log: "Out Response: ${rsp.ok}"

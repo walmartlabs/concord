@@ -1,5 +1,10 @@
+configuration:
+  runtime: concord-v2
+
 flows:
   default:
   - script: example.js
+    out:
+      x: ${result.x}
   - log: Hello, ${x}
 

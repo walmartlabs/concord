@@ -52,7 +52,7 @@ public class TimeoutHandlingIT extends AbstractServerIT {
 
         byte[] ab = getLog(child.getInstanceId());
         assertLog(".*projectInfo: \\{.*orgName=Default.*\\}.*", ab);
-        assertLog(".*processInfo: \\{.*sessionKey=.*\\}.*", ab);
+        assertLog(".*processInfo: \\{.*sessionToken=.*\\}.*", ab);
         assertLog(".*initiator: \\{.*username=.*\\}.*", ab);
     }
 }

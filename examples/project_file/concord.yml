@@ -1,4 +1,5 @@
 configuration:
+  runtime: "concord-v2"
   arguments:
     name: stranger
 

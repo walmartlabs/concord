@@ -1,0 +1,5 @@
+flows:
+  main:
+    - task: ansible
+      in: ${ansibleParams}
+      out: ansibleResult

@@ -1,6 +1,3 @@
 flows:
-  main:
-  - log: "value=${crypto.exportAsString(secretName, pwd)}"
-
-variables:
-  entryPoint: main
+  default:
+  - log: "value matches: ${crypto.exportAsString('Default', secretName, pwd) == expectedValue}"

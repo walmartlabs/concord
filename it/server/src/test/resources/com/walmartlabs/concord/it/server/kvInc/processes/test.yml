@@ -1,29 +1,30 @@
-main:
-  - expr: ${kv.inc("x")}
-    out: x
-  - log: "x=${x}"
+flows:
+  main:
+    - expr: ${kv.inc("x")}
+      out: x
+    - log: "x=${x}"
 
-  - if: ${kv.getString(testKey) == null}
-    then:
-      - log: "abc123"
+    - if: ${kv.getString(testKey) == null}
+      then:
+        - log: "abc123"
 
-  - ${kv.putString(testKey, "world")}
-  - log: "Hello, ${kv.getString(testKey)}"
+    - ${kv.putString(testKey, "world")}
+    - log: "Hello, ${kv.getString(testKey)}"
 
-verify:
-  - log: "Hello again, ${kv.getString(testKey)}"
-  - ${kv.remove(testKey)}
+  verify:
+    - log: "Hello again, ${kv.getString(testKey)}"
+    - ${kv.remove(testKey)}
 
-verify2:
-  - if: ${kv.getString(testKey) == null}
-    then:
-      - log: "xyz"
+  verify2:
+    - if: ${kv.getString(testKey) == null}
+      then:
+        - log: "xyz"
 
-testLong:
-  - log: "x=${kv.incLong(testKey)}"
-  - log: "y=${kv.getLong(testKey)}"
-  - log: "a=${kv.inc(testKey)}"
-  - log: "b=${kv.getLong(testKey)}"
-  - ${kv.putLong(testKey, 234)}
-  - log: "c=${kv.getLong(testKey)}"
-  - log: "d=${kv.inc(testKey)}"
+  testLong:
+    - log: "x=${kv.incLong(testKey)}"
+    - log: "y=${kv.getLong(testKey)}"
+    - log: "a=${kv.inc(testKey)}"
+    - log: "b=${kv.getLong(testKey)}"
+    - ${kv.putLong(testKey, 234)}
+    - log: "c=${kv.getLong(testKey)}"
+    - log: "d=${kv.inc(testKey)}"

@@ -1,4 +1,0 @@
-main:
-  - testTask: |
-      multiline test with
-      string ${interpolation}

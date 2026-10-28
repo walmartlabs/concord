@@ -1,3 +1,8 @@
+configuration:
+  entryPoint: main
+  arguments:
+    name: "world"
+
 flows:
   main:
   - task: docker
@@ -6,8 +11,3 @@ flows:
       debug: true
       forcePull: false
       cmd: echo "Hello, ${name}" && (>&2 echo "STDERR WORKS")
-
-variables:
-  entryPoint: main
-  arguments:
-    name: "world"

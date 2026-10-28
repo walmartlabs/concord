@@ -1,2 +1,7 @@
-main:
-- expr: ${ansible.run(ansibleParams, workDir)}
+flows:
+  main:
+  - task: ansible
+    in:
+      playbook: "${ansibleParams.playbook}"
+      inventory: "${ansibleParams.inventory}"
+      extraVars: "${ansibleParams.extraVars}"

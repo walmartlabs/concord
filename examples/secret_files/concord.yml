@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   arguments:
     # alternatively, a form, an encrypted value or an external
     # service can be used to retrieve the password
@@ -9,8 +10,8 @@ flows:
 
   # exporting secrets as files
   - set:
-      myFileA: ${crypto.exportAsFile('myFileA', pwd)}
-      myFileB: ${crypto.exportAsFile('myFileB', pwd)}
+      myFileA: ${crypto.exportAsFile('Default', 'myFileA', pwd)}
+      myFileB: ${crypto.exportAsFile('Default', 'myFileB', pwd)}
 
   # the resulting variables will contain the path of the exported files
   - log: "My file A: ${myFileA}"

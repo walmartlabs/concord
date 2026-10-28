@@ -1,10 +1,20 @@
+configuration:
+  runtime: concord-v2
+
 flows:
   default:
-  - log: "${http.asString('http://localhost:8001/api/v1/server/ping')}"
+  - task: http
+    in:
+      method: GET
+      url: http://localhost:8001/api/v1/server/ping
+      response: string
+    out: ping
+  - log: "${ping.content}"
 
   - task: http
     in:
       method: GET
       url: http://localhost:8001/api/v1/server/ping
       response: json
+    out: response
   - log: "Response received: ${response}"

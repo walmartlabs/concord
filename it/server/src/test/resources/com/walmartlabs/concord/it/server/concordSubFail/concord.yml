@@ -1,3 +1,6 @@
+configuration:
+  runtime: concord-v2
+
 flows:
   default:
     - try:
@@ -6,7 +9,6 @@ flows:
           action: start
           payload: myPayload
           sync: true
+      - log: "Done!"
       error:
       - log: "Fail!"
-      - return
-    - log: "Done!"

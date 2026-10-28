@@ -20,8 +20,6 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.plugins.ansible.v1.RunPlaybookTask2;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -40,7 +38,7 @@ public final class Resources {
     }
 
     private static void copyResourceToFile(String resourceName, Path dest) throws IOException {
-        try (InputStream is = RunPlaybookTask2.class.getResourceAsStream(resourceName)) {
+        try (InputStream is = Resources.class.getResourceAsStream(resourceName)) {
             Files.copy(is, dest, StandardCopyOption.REPLACE_EXISTING);
         }
     }

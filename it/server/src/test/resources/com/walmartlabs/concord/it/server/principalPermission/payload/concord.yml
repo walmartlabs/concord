@@ -1,5 +1,10 @@
+configuration:
+  runtime: concord-v2
+
 flows:
   default:
   - log: "Executing Inventory Query for Principal Permission Integration Test"
-  - log: "${inventory.query(inventoryName, queryName, null)}"
+  - set:
+      result: ${jsonStore.executeQuery(inventoryName, queryName)}
+  - log: "Inventory query result: ${result}"
 

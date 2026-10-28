@@ -1,18 +1,18 @@
 configuration:
+  runtime: concord-v2
   arguments:
     name: "Concord"
 
 flows:
   default:
-  # override "name" variable
+  # Override "name" only in the called flow.
   - call: sayHello
     in:
       name: "${initiator.username}"
 
-  # the set value will be kept after the call is ended
-
-  # will log "Bye, admin"
-  - sayBye
+  # The caller's name remains "Concord" after the call.
+  # This logs "Bye, Concord".
+  - call: sayBye
 
   sayHello:
   - log: "Hello, ${name}"

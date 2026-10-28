@@ -1,6 +1,9 @@
+configuration:
+  runtime: "concord-v2"
+
 flows:
   default:
-  - ${misc.throwBpmnError('kaboom!')}
+  - throw: "kaboom!"
 
   onFailure:
   - log: "Phew! That was close"

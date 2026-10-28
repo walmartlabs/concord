@@ -3,4 +3,6 @@ configuration:
 
 triggers:
   - test:
+      version: 2
+      conditions: {}
       entryPoint: "fromTemplate"

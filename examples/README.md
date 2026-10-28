@@ -7,6 +7,8 @@ Generally, examples can be executed using
 require a running concord-server. Some examples may require external
 dependencies such as Ansible, Jira and others to be installed:
 
+The workflow examples use Concord runtime v2.
+
 ```
 $ cd ansible
 $ concord run
@@ -83,23 +85,21 @@ Starting...
 * [ansible_out_vars](ansible_out_vars) - saving Ansible variables as Concord flow variables;
 * [ansible_roles](ansible_roles) - how to use external Ansible roles;
 * [approval](approval) - using forms and `runAs` to implement an approval process;
-* [context_injection](context_injection) - how to use automatic variable injection with custom tasks written in Groovy;
 * [custom_task](custom_task) - how to create a custom Concord task (plugin);
 * [dynamic_form_values](dynamic_form_values) - using custom forms with values added/removed dynamically;
 * [dynamic_tasks](dynamic_tasks) - using custom tasks provided with the process;
 * [form_l10n](form_l10n) - how to use custom validation error messages in forms;
 * [forms_multi_group](forms_multi_group) - how to restrict a form to a set of LDAP groups;
 * [forms_wizard](forms_wizard) - multi-step forms;
-* [inventory](inventory) - using Concord Inventory to retrieve Ansible's inventory data;
 * [inventory_lookup](inventory_lookup) - using the inventory lookup plugin for Ansible;
 * [process_meta](process_meta) - exporting process variables as process metadata;
 * [secret_files](secret_files) - how to store and export secrets as files;
 * [secrets](secrets) - working with Concord's Secrets storage;
 * [secret_lookup](secret_lookup) - using the secret lookup plugin for Ansible;
 
-## Runtime V2
+## Runtime v2 examples
 
-* [runtime-v2](runtime-v2) - examples using the runtime-v2 DSL and task SDK;
+* [runtime-v2](runtime-v2) - additional examples using the runtime v2 DSL and task SDK;
 
 ## Expert
 

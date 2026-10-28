@@ -1,6 +1,10 @@
+configuration:
+  runtime: concord-v2
+
 flows:
   default:
   - call: externalFlow
 
 resources:
-  flows: myFlows
+  concord:
+    - "glob:myFlows/*.yml"

@@ -1,4 +1,5 @@
 configuration:
+  runtime: "concord-v2"
   arguments:
     myName: "Concord"
 
@@ -18,8 +19,9 @@ flows:
       # additional arguments
       arguments:
         otherName: "${initiator.username}"
+    out: forkResult
 
-  - log: "Done! ${jobs} is completed"
+  - log: "Done! ${forkResult.id} is completed"
 
   sayHello:
   # forked processes can access the latest snapshot of the parent's

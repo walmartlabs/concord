@@ -20,25 +20,31 @@ package com.walmartlabs.concord.server.console;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.forms.FormField;
+import com.walmartlabs.concord.forms.FormField.Cardinality;
 import com.walmartlabs.concord.forms.FormUtils;
 import com.walmartlabs.concord.forms.ValidationError;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
-import com.walmartlabs.concord.server.process.form.FormServiceV1;
 import com.walmartlabs.concord.server.process.form.FormServiceV2;
 import com.walmartlabs.concord.server.process.form.FormSubmitResult;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.*;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
+import org.immutables.value.Value;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -47,6 +53,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,8 +61,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.server.console.CustomFormServiceV1.FormData;
-import static com.walmartlabs.concord.server.console.CustomFormServiceV1.FormDataDefinition;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 
 public class CustomFormServiceV2 {
@@ -122,7 +127,7 @@ public class CustomFormServiceV2 {
                 Files.createDirectories(formDir);
             }
 
-            String resource = FormServiceV1.FORMS_RESOURCES_PATH + "/" + form.name();
+            String resource = FormServiceV2.FORMS_RESOURCES_PATH + "/" + form.name();
             // copy original branding files into the target directory
             boolean branded = stateManager.exportDirectory(processKey, resource, copyTo(formDir));
             if (!branded) {
@@ -294,7 +299,7 @@ public class CustomFormServiceV2 {
         for (FormField f : form.fields()) {
             Object allowedValue = f.allowedValue();
 
-            _definitions.put(f.name(), new FormDataDefinition(f.label(), f.type(), convert(f.cardinality()), allowedValue));
+            _definitions.put(f.name(), new FormDataDefinition(f.label(), f.type(), f.cardinality(), allowedValue));
 
             Object v = overrides != null ? overrides.get(f.name()) : null;
             if (v == null && skipMissingOverrides) {
@@ -329,25 +334,6 @@ public class CustomFormServiceV2 {
                 .build();
     }
 
-    private io.takari.bpm.model.form.FormField.Cardinality convert(FormField.Cardinality c) {
-        if (c == null) {
-            return null;
-        }
-
-        switch (c) {
-            case ANY:
-                return io.takari.bpm.model.form.FormField.Cardinality.ANY;
-            case AT_LEAST_ONE:
-                return io.takari.bpm.model.form.FormField.Cardinality.AT_LEAST_ONE;
-            case ONE_AND_ONLY_ONE:
-                return io.takari.bpm.model.form.FormField.Cardinality.ONE_AND_ONLY_ONE;
-            case ONE_OR_NONE:
-                return io.takari.bpm.model.form.FormField.Cardinality.ONE_OR_NONE;
-            default:
-                throw new IllegalArgumentException("Unsupported cardinality type: " + c);
-        }
-    }
-
     private void writeData(Path baseDir, Object data) throws IOException {
         Path dst = baseDir.resolve("data.js");
 
@@ -366,7 +352,7 @@ public class CustomFormServiceV2 {
             Files.createDirectories(sharedDir);
         }
 
-        String resource = FormServiceV1.FORMS_RESOURCES_PATH + "/" + SHARED_DIR_NAME;
+        String resource = FormServiceV2.FORMS_RESOURCES_PATH + "/" + SHARED_DIR_NAME;
         stateManager.exportDirectory(processKey, resource, copyTo(sharedDir));
     }
 
@@ -400,5 +386,72 @@ public class CustomFormServiceV2 {
 
     private static String formPath(PartialProcessKey processKey, String formName) {
         return String.format(FORMS_PATH_TEMPLATE, processKey, formName);
+    }
+
+    @Value.Immutable
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableFormData.class)
+    @JsonDeserialize(as = ImmutableFormData.class)
+    public interface FormData extends Serializable {
+
+        long serialVersionUID = -1591440785695774602L;
+
+        String txId();
+
+        String formName();
+
+        boolean success();
+
+        boolean processFailed();
+
+        String submitUrl();
+
+        List<String> fields();
+
+        Map<String, FormDataDefinition> definitions();
+
+        @Nullable
+        Map<String, Object> values();
+
+        @Nullable
+        Map<String, String> errors();
+
+        static ImmutableFormData.Builder builder() {
+            return ImmutableFormData.builder();
+        }
+    }
+
+    @JsonInclude(Include.NON_NULL)
+    public static class FormDataDefinition implements Serializable {
+
+        private static final long serialVersionUID = -3887713057699620530L;
+
+        private final String label;
+        private final String type;
+        private final Cardinality cardinality;
+        private final Object allow;
+
+        public FormDataDefinition(String label, String type, Cardinality cardinality, Object allow) {
+            this.label = label;
+            this.type = type;
+            this.cardinality = cardinality;
+            this.allow = allow;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public Cardinality getCardinality() {
+            return cardinality;
+        }
+
+        public Object getAllow() {
+            return allow;
+        }
     }
 }

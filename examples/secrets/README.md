@@ -1,6 +1,7 @@
 # Secrets
 
-Example of using "secrets" in processes.
+Example of using "secrets" in a runtime v2 process. The workflow exports
+secrets from the `Default` organization used by the commands below.
 
 ## Running
 
@@ -47,10 +48,5 @@ $ ./run.sh localhost:8001
 ```
 
 5. open [the UI](http://localhost:8001), find the process entry and
-open its log. You should see messages like this:
-```
-12:00:55.817 [INFO ] c.w.c.runner.engine.LoggingTask - Public key file: .tmp/public1856673009465277934.key
-12:00:55.821 [INFO ] c.w.c.runner.engine.LoggingTask - Private key file: .tmp/private5358774395817724546.key
-12:00:55.832 [INFO ] c.w.c.runner.engine.LoggingTask - Credentials: {password=myPassword, username=myUser}
-12:00:55.846 [INFO ] c.w.c.runner.engine.LoggingTask - Plain secret: my horrible secret
-```
+open its log. The key file paths are logged; sensitive credential and secret
+values are masked by runtime v2.

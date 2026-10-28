@@ -38,7 +38,7 @@ import static com.walmartlabs.concord.sdk.MapUtils.*;
 
 public class SmtpTaskUtils {
 
-    private static final Logger log = LoggerFactory.getLogger(SmtpTask.class);
+    private static final Logger log = LoggerFactory.getLogger(SmtpTaskUtils.class);
 
     private static String assertPath(Path workDir, String path) {
         Path result = workDir.resolve(path).normalize().toAbsolutePath();

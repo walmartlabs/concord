@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   arguments:
     forkItems:
     - entryPoint: sayHello
@@ -16,6 +17,8 @@ flows:
       debug: true # to see the arguments in the log
       entryPoint: ${item.entryPoint}
       arguments: ${item.arguments}
+    out:
+      jobs: ${result.ids}
     withItems: ${forkItems}
 
   - log: "Done! ${jobs} is completed"

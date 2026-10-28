@@ -1,6 +1,7 @@
 flows:
   default:
     - form: myForm
+      values: ${myForm}
     - log: "I've chosen those colors: ${myForm.colors}"
 
 forms:
@@ -8,6 +9,7 @@ forms:
     - colors: {type: "string+"}
 
 configuration:
+  runtime: concord-v2
   arguments:
     myForm:
       colors:

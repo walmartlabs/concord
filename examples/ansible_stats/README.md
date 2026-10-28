@@ -1,6 +1,8 @@
 # Ansible
 
 Example of running an Ansible playbook without creating a project.
+The runtime-v2 Ansible task returns registered variables in `ansibleResult`; this example
+logs its `_stats` field.
 
 ## Running
 

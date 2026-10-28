@@ -1,10 +1,9 @@
 package com.walmartlabs.concord.examples.customtask;
 
-import com.walmartlabs.concord.sdk.ContextUtils;
-import com.walmartlabs.concord.sdk.MockContext;
+import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import org.junit.Test;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,12 +16,9 @@ public class CustomTaskTest {
         Map<String, Object> args = new HashMap<>();
         args.put("url", "https://jsonplaceholder.typicode.com/todos/1");
 
-        MockContext ctx = new MockContext(args);
-
-        CustomTask task = new CustomTask();
-        task.execute(ctx);
-
-        Map<String, Object> result = ContextUtils.getMap(ctx, "result", Collections.emptyMap());
+        CustomTaskV2 task = new CustomTaskV2();
+        TaskResult.SimpleResult taskResult = (TaskResult.SimpleResult) task.execute(new MapBackedVariables(args));
+        Map<String, Object> result = taskResult.toMap();
         assertEquals(true, result.get("ok"));
 
         System.out.println(result.get("data"));

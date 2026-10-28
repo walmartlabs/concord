@@ -56,12 +56,12 @@ public class OneOpsTriggerIT extends AbstractOneOpsTriggerIT {
     }
 
     @Test
-    public void testOneOpsTriggerv1() throws Exception {
+    public void testOneOpsTriggerV2() throws Exception {
         waitForTriggers(orgName, projectName, repoName, 2);
 
         sendOneOpsEvent("oneopsTests/events/oneops_deployment_complete.json");
 
         Map<ProcessEntry.StatusEnum, ProcessEntry> ps = waitProcesses(orgName, projectName, ProcessEntry.StatusEnum.FINISHED);
-        assertProcessLog(ps.get(ProcessEntry.StatusEnum.FINISHED), ".*Oneops has completed a deployment trigger version 1*");
+        assertProcessLog(ps.get(ProcessEntry.StatusEnum.FINISHED), ".*Oneops has completed a production deployment trigger version 2.*");
     }
 }

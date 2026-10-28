@@ -36,18 +36,6 @@
                 <includes>
                     <include>**/*</include>
                 </includes>
-                <excludes>
-                    <exclude>**/processes/*.yml</exclude>
-                    <exclude>**/*.py</exclude>
-                </excludes>
-            </resource>
-            <resource>
-                <filtering>false</filtering>
-                <directory>${project.basedir}/src/main/filtered-resources</directory>
-                <includes>
-                    <include>**/processes/*.yml</include>
-                    <include>**/*.py</include>
-                </includes>
             </resource>
         </resources>
     </build>

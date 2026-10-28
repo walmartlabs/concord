@@ -39,7 +39,6 @@
         <aopalliance.version>1.0</aopalliance.version>
         <asm.version>9.10.1</asm.version>
         <bouncycastle.version>1.86</bouncycastle.version>
-        <bpm.version>1.0.3</bpm.version>
         <bytebuddy.version>1.14.9</bytebuddy.version>
         <classmate.version>1.7.1</classmate.version>
         <commons.beanutils.version>1.11.0</commons.beanutils.version>
@@ -190,11 +189,6 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.walmartlabs.concord.runtime.v1</groupId>
-                <artifactId>concord-runtime-model-v1</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>com.walmartlabs.concord.runtime</groupId>
                 <artifactId>concord-runtime-loader</artifactId>
                 <version>${project.version}</version>
@@ -217,11 +211,6 @@
             <dependency>
                 <groupId>com.walmartlabs.concord</groupId>
                 <artifactId>concord-repository</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.walmartlabs.concord.runtime.v1</groupId>
-                <artifactId>concord-runtime-impl-v1</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -624,7 +613,7 @@
                 <artifactId>guice-servlet</artifactId>
                 <version>${guice.version}</version>
             </dependency>
-            <dependency> <!-- for backwards compat with bpm-engine-impl -->
+            <dependency> <!-- runtime-v2 JSR-223 JavaScript adapter -->
                 <groupId>org.graalvm.js</groupId>
                 <artifactId>js-scriptengine</artifactId>
                 <version>${graalvm.version}</version>
@@ -664,32 +653,6 @@
                 <groupId>io.dropwizard.metrics</groupId>
                 <artifactId>metrics-jvm</artifactId>
                 <version>${metrics.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.takari.bpm</groupId>
-                <artifactId>activiti-compat</artifactId>
-                <version>${bpm.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.takari.bpm</groupId>
-                <artifactId>bpm-engine-api</artifactId>
-                <version>${bpm.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.takari.bpm</groupId>
-                <artifactId>bpm-engine-impl</artifactId>
-                <version>${bpm.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.graalvm.js</groupId>
-                        <artifactId>js</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>io.takari.bpm</groupId>
-                <artifactId>testkit</artifactId>
-                <version>${bpm.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.inject</groupId>

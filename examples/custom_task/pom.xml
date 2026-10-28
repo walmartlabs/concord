@@ -34,12 +34,6 @@
     <dependencies>
         <!-- system dependencies, should use the "provided" scope -->
         <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-sdk</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <!-- for runtime-v2 support -->
-        <dependency>
             <groupId>com.walmartlabs.concord.runtime.v2</groupId>
             <artifactId>concord-runtime-sdk-v2</artifactId>
             <scope>provided</scope>

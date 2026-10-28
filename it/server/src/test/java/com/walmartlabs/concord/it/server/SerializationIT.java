@@ -24,6 +24,7 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +34,7 @@ import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SerializationIT extends AbstractServerIT {
 
@@ -82,8 +84,20 @@ public class SerializationIT extends AbstractServerIT {
         // ---
 
         ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
-        byte[] ab = getLog(pir.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
+        String log = new String(getLog(pir.getInstanceId()), StandardCharsets.UTF_8);
+        assertTrue(log.lines().anyMatch(line -> line.contains("test") && line.contains("NonSerializableThingy")), log);
+    }
 
-        assertLog(".*Not serializable value: test.*", ab);
+    @Test
+    public void testNonSerializableVariable() throws Exception {
+        byte[] payload = archive(SerializationIT.class.getResource("nonSerializableVariable").toURI());
+
+        StartProcessResponse spr = start(payload);
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+        assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
+
+        String log = new String(getLog(pir.getInstanceId()), StandardCharsets.UTF_8);
+        assertTrue(log.lines().anyMatch(line -> line.contains("test") && line.contains("java.util.zip.ZipEntry")), log);
     }
 }

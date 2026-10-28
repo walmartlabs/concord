@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   dependencies:
   - "mvn://com.walmartlabs.concord.plugins:git:2.12.1"
 
@@ -47,29 +48,45 @@ flows:
   - task: github
     in:
       action: createPR
-      accessToken: myGitToken
+      auth:
+        accessToken: myGitToken
       org: myOrg
       repo: myRepo
       prTitle: "my PullRequest Title"
       prBody: "my PullRequest Body"
       prSourceBranch: mySource   # the name of the branch where your changes are implemented.
       prDestinationBranch: master # the name of the branch you want the changes pulled into
+    out:
+      prId: ${result.prId}
   # the ID of the created PR will be stored as `${prId}`
 
   # merging a pull request
   - task: github
     in:
       action: mergePR
-      accessToken: myGitToken
+      auth:
+        accessToken: myGitToken
       org: myOrg
       repo: myRepo
       prId: ${prId}
+
+  - task: github
+    in:
+      action: getLatestSHA
+      auth:
+        accessToken: myGitToken
+      org: myOrg
+      repo: myRepo
+      branch: master
+    out:
+      gitHubBranchSHA: ${result.latestCommitSHA}
 
   # create a tag based on a specific commit SHA
   - task: github
     in:
       action: createTag
-      accessToken: myGitToken
+      auth:
+        accessToken: myGitToken
       org: myOrg
       repo: myRepo
       tagVersion: v0.0.1

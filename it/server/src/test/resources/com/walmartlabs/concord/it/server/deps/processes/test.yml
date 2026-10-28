@@ -1,2 +1,3 @@
-main:
-- expr: ${example.hello()}
+flows:
+  main:
+  - expr: ${example.hello()}

@@ -53,7 +53,7 @@ import static com.walmartlabs.concord.server.process.state.ProcessStateManager.e
 public class PayloadManager {
 
     private static final String FORMS_PATH_PATTERN = String.format("%s/%s/%s/.*", Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
-            Constants.Files.JOB_STATE_DIR_NAME, Constants.Files.JOB_FORMS_DIR_NAME);
+            Constants.Files.JOB_STATE_DIR_NAME, Constants.Files.JOB_FORMS_V2_DIR_NAME);
 
     private final ProcessStateManager stateManager;
     private final OrganizationDao orgDao;

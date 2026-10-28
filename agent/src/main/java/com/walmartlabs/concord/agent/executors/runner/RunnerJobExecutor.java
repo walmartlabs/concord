@@ -72,7 +72,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.walmartlabs.concord.common.DockerProcessBuilder.CONCORD_DOCKER_LOCAL_MODE_KEY;
+import static com.walmartlabs.concord.agent.AgentConstants.CONCORD_DOCKER_LOCAL_MODE_KEY;
 
 /**
  * Executes jobs using concord-runner runtime.

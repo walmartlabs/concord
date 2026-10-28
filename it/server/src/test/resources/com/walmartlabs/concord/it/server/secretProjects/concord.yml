@@ -1,3 +1,3 @@
 flows:
   default:
-      - log: "${crypto.exportAsString(orgName, secretName, storePassword)}"
+      - log: "value matches: ${crypto.exportAsString(orgName, secretName, storePassword) == 'C0nC0rD'}"

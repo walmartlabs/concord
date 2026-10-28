@@ -1,3 +1,6 @@
+configuration:
+  runtime: "concord-v2"
+
 flows:
   default:
   # starts a process and retrieves it's variable value
@@ -9,6 +12,7 @@ flows:
       # list of output variables
       outVars:
       - result
+    out: jobOut
   - log: "${jobOut.result}"
 
   # starts a process from an existing project (it must be created beforehand)
@@ -18,4 +22,5 @@ flows:
       project: test
       repository: default
       sync: true
-  - log: "Done! ${jobs[0]} is completed"
+    out: startResult
+  - log: "Done! ${startResult.id} is completed"

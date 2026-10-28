@@ -35,8 +35,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.GrepUtils.grep;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
@@ -82,26 +80,22 @@ public class CronIT extends AbstractServerIT {
         while (true) {
             Thread.sleep(1000);
 
-            List<ProcessEntry> aaaProcesses = listCronProcesses(orgName, projectName, repoName, "AAA");
-            List<ProcessEntry> bbbProcesses = listCronProcesses(orgName, projectName, repoName, "BBB");
+            List<ProcessEntry> processes = listCronProcesses(orgName, projectName, repoName);
 
-            if (aaaProcesses.isEmpty() || bbbProcesses.isEmpty()) {
+            if (processes.isEmpty()) {
                 continue;
             }
-
-            List<ProcessEntry> processes = Stream.concat(aaaProcesses.stream(), bbbProcesses.stream())
-                    .collect(Collectors.toList());
 
             for (ProcessEntry e : processes) {
                 assertNotEquals(ProcessEntry.StatusEnum.FAILED, e.getStatus());
             }
 
             if (aaaProcessId == null) {
-                aaaProcessId = findProcessWithLogEntry(aaaProcesses, ".*Hello, AAA!.*");
+                aaaProcessId = findProcessWithLogEntry(processes, ".*Hello, AAA!.*");
             }
 
             if (bbbProcessId == null) {
-                bbbProcessId = findProcessWithLogEntry(bbbProcesses, ".*Hello, BBB!.*");
+                bbbProcessId = findProcessWithLogEntry(processes, ".*Hello, BBB!.*");
             }
 
             if (aaaProcessId != null && bbbProcessId != null) {
@@ -208,7 +202,7 @@ public class CronIT extends AbstractServerIT {
         }
     }
 
-    private List<ProcessEntry> listCronProcesses(String o, String p, String r, String tag) throws ApiException {
+    private List<ProcessEntry> listCronProcesses(String o, String p, String r) throws ApiException {
         ProcessV2Api processV2Api = new ProcessV2Api(getApiClient());
 
         ProcessListFilter filter = ProcessListFilter.builder()
@@ -216,7 +210,6 @@ public class CronIT extends AbstractServerIT {
                 .projectName(p)
                 .repoName(r)
                 .initiator("cron")
-                .tags(Collections.singleton(tag))
                 .build();
 
         return processV2Api.listProcesses(filter);

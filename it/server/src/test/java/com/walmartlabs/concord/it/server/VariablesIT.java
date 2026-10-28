@@ -95,13 +95,14 @@ public class VariablesIT extends AbstractServerIT {
         Map<String, Object> input = new HashMap<>();
         input.put("org", orgName);
         input.put("project", projectName);
+        input.put("arguments.expectedSecret", secretValue);
         input.put("archive", payload);
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*" + secretValue + ".*", ab);
+        assertLog(".*Decryption matches: true.*", ab);
     }
 
     @Test

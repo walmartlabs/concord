@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   entryPoint: main
   arguments:
     name: "stranger"
@@ -9,6 +10,5 @@ flows:
 
 
 resources:
-  disabled:
-    - profiles
+  concord: []
 

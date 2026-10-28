@@ -6,7 +6,7 @@ flows:
       method: GET
       url: ${url}
       response: string
-      out: rsp
+    out: rsp
 
-  - log: "Response: ${rsp.success}"
+  - log: "Success response: ${rsp.ok}"
   - log: "Content is NULL: ${rsp.content == null}"

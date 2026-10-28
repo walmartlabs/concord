@@ -1,6 +1,6 @@
 # Forms
 
-Example of using forms in processes.
+Example of using forms in a runtime v2 process.
 
 ## Running
 

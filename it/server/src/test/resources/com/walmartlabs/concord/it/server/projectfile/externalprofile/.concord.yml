@@ -2,13 +2,18 @@ flows:
   main:
   - log: Hello, ${name}
 
-variables:
+configuration:
+  runtime: concord-v2
   entryPoint: main
   arguments:
     name: "stranger"
 
 profiles:
   notUsed:
-    variables:
+    configuration:
       arguments:
         name: "there"
+
+resources:
+  concord:
+    - "glob:profiles/*.yml"

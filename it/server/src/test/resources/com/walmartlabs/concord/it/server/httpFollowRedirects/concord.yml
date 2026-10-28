@@ -6,7 +6,9 @@ flows:
       url: ${url}
       response: string
       followRedirects: false
-      out: rsp
+    out: rsp
+    ignoreErrors: true
+  - log: "Response status code: ${rsp.statusCode}"
 
 configuration:
   arguments:

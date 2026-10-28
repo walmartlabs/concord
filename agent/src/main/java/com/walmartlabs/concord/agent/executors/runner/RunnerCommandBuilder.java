@@ -159,7 +159,7 @@ public class RunnerCommandBuilder {
 
         // main class
         if (mainClass == null) {
-            mainClass = "com.walmartlabs.concord.runner.Main";
+            mainClass = "com.walmartlabs.concord.runtime.v2.runner.Main";
         }
         l.add(mainClass);
 

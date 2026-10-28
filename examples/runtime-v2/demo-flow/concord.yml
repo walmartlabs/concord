@@ -16,6 +16,10 @@ configuration:
     myVar: "world"
     newVar: " Hello earth"
 
+resources:
+  concord:
+    - "glob:concord/{**/,}{*.,}concord.{yml,yaml}"
+
 # restricted entrypoints. if not specified, all flows are public and can be used as an entrypoint
 publicFlows:
   - default
@@ -86,7 +90,8 @@ flows:
   # get and set script variables
   scriptFlow:
     - script: scripts/test-script.groovy
-      out: newVar
+      out:
+        newVar: ${result.newVar}
       meta:
         segmentName: "Processing ${myVar} Script Variable..."
       error:

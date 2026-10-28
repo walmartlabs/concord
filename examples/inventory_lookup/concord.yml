@@ -1,4 +1,5 @@
 configuration:
+  runtime: "concord-v2"
   dependencies:
   - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:2.40.0"
 
@@ -16,3 +17,4 @@ flows:
       playbook: playbook/hello.yml
       extraVars:
         greetings: "Hi there!"
+    out: ansibleResult

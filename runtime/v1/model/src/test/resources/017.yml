@@ -1,4 +1,0 @@
-main:
-  - ${testBean.toString("a")}
-  - event: ev1
-  - ${testBean.toString("b")}

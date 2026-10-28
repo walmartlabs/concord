@@ -1,4 +1,5 @@
 configuration:
+  runtime: "concord-v2"
   dependencies:
   - "mvn://org.apache.groovy:groovy-all:pom:5.0.4"
   arguments:
@@ -20,10 +21,12 @@ flows:
   - script: groovy
     # calculates the difference between items1 and items2
     body: |
-      execution.setVariable("delta",
+      result.set("delta",
         items2.stream()
               .filter { a -> !items1.contains(a) }
               .collect())
+    out:
+      delta: ${result.delta}
 
   - log: "We got ${delta}"
 

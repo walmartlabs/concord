@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static com.walmartlabs.concord.process.loader.ProjectLoaderUtils.getRuntimeType;
-import static com.walmartlabs.concord.process.loader.StandardRuntimeTypes.CONCORD_V1_RUNTIME_TYPE;
+import static com.walmartlabs.concord.process.loader.StandardRuntimeTypes.CONCORD_V2_RUNTIME_TYPE;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -55,7 +55,7 @@ public class DelegatingProjectLoader implements ProjectLoader {
     }
 
     public Result loadProject(Path workDir, ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception {
-        var runtime = getRuntimeType(workDir).orElse(CONCORD_V1_RUNTIME_TYPE);
+        var runtime = getRuntimeType(workDir).orElse(CONCORD_V2_RUNTIME_TYPE);
         return loadProject(workDir, runtime, importsNormalizer, listener);
     }
 

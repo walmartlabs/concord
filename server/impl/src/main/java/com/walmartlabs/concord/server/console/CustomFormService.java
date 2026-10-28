@@ -20,9 +20,6 @@ package com.walmartlabs.concord.server.console;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.process.state.ProcessStateManager;
-import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
@@ -35,19 +32,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.*;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
-
 @javax.ws.rs.Path("/api/service/custom_form")
 public class CustomFormService implements Resource {
 
-    private final ProcessStateManager stateManager;
-    private final CustomFormServiceV1 customFormServiceV1;
     private final CustomFormServiceV2 customFormServiceV2;
 
     @Inject
-    public CustomFormService(ProcessStateManager stateManager, CustomFormServiceV1 customFormServiceV1, CustomFormServiceV2 customFormServiceV2) {
-        this.stateManager = stateManager;
-        this.customFormServiceV1 = customFormServiceV1;
+    public CustomFormService(CustomFormServiceV2 customFormServiceV2) {
         this.customFormServiceV2 = customFormServiceV2;
     }
 
@@ -58,11 +49,7 @@ public class CustomFormService implements Resource {
     public FormSessionResponse startSession(@PathParam("processInstanceId") UUID processInstanceId,
                                             @PathParam("formName") String formName) {
 
-        if (isV2(processInstanceId)) {
-            return customFormServiceV2.startSession(processInstanceId, formName);
-        } else {
-            return customFormServiceV1.startSession(processInstanceId, formName);
-        }
+        return customFormServiceV2.startSession(processInstanceId, formName);
     }
 
     @POST
@@ -76,11 +63,7 @@ public class CustomFormService implements Resource {
                                     @PathParam("formName") String formName,
                                     MultivaluedMap<String, String> data) {
 
-        if (isV2(processInstanceId)) {
-            return customFormServiceV2.continueSession(uriInfo, headers, processInstanceId, formName, data);
-        } else {
-            return customFormServiceV1.continueSession(uriInfo, headers, processInstanceId, formName, data);
-        }
+        return customFormServiceV2.continueSession(uriInfo, headers, processInstanceId, formName, data);
     }
 
     @POST
@@ -94,20 +77,10 @@ public class CustomFormService implements Resource {
                                     MultipartInput data) {
 
         try {
-            if (isV2(processInstanceId)) {
-                return customFormServiceV2.continueSession(uriInfo, headers, processInstanceId, formName, data);
-            } else {
-                return customFormServiceV1.continueSession(uriInfo, headers, processInstanceId, formName, data);
-            }
+            return customFormServiceV2.continueSession(uriInfo, headers, processInstanceId, formName, data);
         } finally {
             data.close();
         }
     }
 
-    private boolean isV2(UUID processInstanceId) {
-        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
-                Constants.Files.JOB_STATE_DIR_NAME,
-                Constants.Files.JOB_FORMS_V2_DIR_NAME);
-        return stateManager.exists(PartialProcessKey.from(processInstanceId), resource);
-    }
 }

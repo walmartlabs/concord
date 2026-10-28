@@ -19,7 +19,7 @@
         <!-- version of Agent to use in tests -->
         <!-- should be one or more release versions behind the current version -->
         <!-- must be a multi-arch image to pass tests on both x86 and arm64 -->
-        <prev.concord.version>2.14.2</prev.concord.version>
+        <prev.concord.version>2.46.0</prev.concord.version>
 
         <server.image>walmartlabs/concord-server</server.image>
         <prev.agent.image>walmartlabs/concord-agent:${prev.concord.version}</prev.agent.image>
@@ -53,23 +53,6 @@
             <artifactId>concord-client2</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!-- LOCAL mode support -->
-        <dependency>
-            <groupId>com.walmartlabs.concord.server</groupId>
-            <artifactId>concord-server-impl</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.server</groupId>
-            <artifactId>concord-server</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-agent</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -100,33 +83,6 @@
                         <agent.image>${prev.agent.image}</agent.image>
                     </systemPropertyVariables>
                 </configuration>
-            </plugin>
-
-            <!-- LOCAL mode support -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-runner-jar</id>
-                        <phase>process-test-resources</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <overWriteIfNewer>true</overWriteIfNewer>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.runtime.v1</groupId>
-                                    <artifactId>concord-runtime-impl-v1</artifactId>
-                                    <classifier>jar-with-dependencies</classifier>
-                                    <destFileName>runner-v1.jar</destFileName>
-                                </artifactItem>
-                            </artifactItems>
-                            <outputDirectory>${project.build.directory}</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

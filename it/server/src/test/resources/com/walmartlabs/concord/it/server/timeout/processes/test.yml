@@ -1,2 +1,3 @@
-main:
-- expr: ${sleep.ms(15000)}
+flows:
+  main:
+  - expr: ${sleep.ms(15000)}

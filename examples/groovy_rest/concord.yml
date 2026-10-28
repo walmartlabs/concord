@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   dependencies:
   - "mvn://org.apache.groovy:groovy-all:pom:5.0.4"
   - "mvn://io.github.http-builder-ng:http-builder-ng-core:0.16.1"
@@ -14,11 +15,13 @@ flows:
         request.uri = "http://localhost:8001"
       }
 
-      Map result = http.get(Map) {
+      Map response = http.get(Map) {
         request.uri.path = "/api/v1/server/version"
       }
 
-      execution.setVariable("serverVersion", result["version"])
+      result.set("serverVersion", response["version"])
+    out:
+      serverVersion: ${result.serverVersion}
 
   - log: "Server's version: ${serverVersion}"
 

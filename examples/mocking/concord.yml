@@ -1,7 +1,8 @@
 configuration:
+  runtime: concord-v2
   dependencies:
     - "mvn://org.apache.groovy:groovy-all:pom:5.0.4"
-    - "mvn://com.walmartlabs.concord.plugins.basic:dynamic-tasks:2.40.0"
+    - "mvn://com.walmartlabs.concord.plugins.basic:dynamic-tasks:2.46.0"
     - "mvn://com.walmartlabs.concord.plugins:git:2.12.1"
 
 flows:
@@ -20,11 +21,13 @@ flows:
         prId: 123
 
   test:
-    - loadTasks: "mocks"
+    - task: loadTasks
+      in:
+        path: "mocks"
     - try:
       - call: myFlow
       error:
-        - log: "Failed as expected with ${lastError.cause}"
+        - log: "Failed as expected with ${lastError}"
 
 profiles:
   test:
@@ -32,5 +35,5 @@ profiles:
       # for testing purposes we omit the github plugin, which is replaced with a "mock" version loaded dynamically
       dependencies:
         - "mvn://org.apache.groovy:groovy-all:pom:5.0.4"
-        - "mvn://com.walmartlabs.concord.plugins.basic:dynamic-tasks:2.40.0"
+        - "mvn://com.walmartlabs.concord.plugins.basic:dynamic-tasks:2.46.0"
       entryPoint: test

@@ -1,0 +1,6 @@
+configuration:
+  runtime: concord-v2
+
+resources:
+  concord:
+    - "glob:flows/*.yml"

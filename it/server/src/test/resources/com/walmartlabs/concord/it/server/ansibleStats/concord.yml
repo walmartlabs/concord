@@ -13,7 +13,8 @@ flows:
             - "127.0.0.1"
           vars:
             ansible_connection: "local"
-      outVars: "_stats"
+      outVars: ["_stats"]
+    out: result
 
-  - log: "OK: ${ _stats.ok }"
+  - log: "OK: ${result._stats.ok}"
 

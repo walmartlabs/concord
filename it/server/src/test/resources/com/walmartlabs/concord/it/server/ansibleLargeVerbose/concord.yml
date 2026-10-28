@@ -2,7 +2,7 @@ configuration:
   dependencies:
     - mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:PROJECT_VERSION
   arguments:
-    groupLimit: null
+    groupLimit: ${null}
 
 flows:
   default:

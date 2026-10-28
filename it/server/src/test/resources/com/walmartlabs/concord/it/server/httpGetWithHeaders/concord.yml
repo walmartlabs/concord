@@ -13,6 +13,7 @@ flows:
           nestedVar: 123
       request: json
       response: string
-      out: rsp
-  - log: "Out Response: ${rsp.success}"
+    out: rsp
+  - log: "Success response: ${rsp.ok}"
+  - log: "Out Response: ${rsp.ok}"
   - log: "Response content: ${rsp.content}"

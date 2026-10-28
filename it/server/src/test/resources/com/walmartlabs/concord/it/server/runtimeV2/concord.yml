@@ -1,0 +1,5 @@
+configuration:
+  runtime: concord-v2
+flows:
+  default:
+    - log: "explicit runtime v2 selected"

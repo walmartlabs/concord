@@ -1,5 +1,7 @@
-myFlow:
-- form: myForm
+flows:
+  myFlow:
+    - form: myForm
 
-form(myForm):
-- myField: {type: "string"}
+forms:
+  myForm:
+    - myField: {type: "string"}

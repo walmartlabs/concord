@@ -1,28 +1,33 @@
-main:
-  - log: "before form"
-  - form: myForm1
-  - ${log.info("test", myForm1.x + 100)}
+flows:
+  main:
+    - log: "before form"
+    - form: myForm1
+      values:
+        x: "${myForm1.x}"
+    - log: "${myForm1.x + 100}"
 
-  - form: myForm2
-  - ${log.info("test", myForm1.firstName.concat(' ').concat(myForm2.lastName))}
-  - ${log.info("test", myForm2.age + 100)}
+    - form: myForm2
+    - log: "${myForm1.firstName.concat(' ').concat(myForm2.lastName)}"
+    - log: "${myForm2.age + 100}"
 
-  - ${log.info("test", myForm1.x + 200)}
+    - log: "${myForm1.x + 200}"
 
-  - ${log.info("test", myForm2.color)}
+    - log: "${myForm2.color}"
 
-  - log: "FILE_PATH ${myForm2.file}"
+    - log: "FILE_PATH ${myForm2.file}"
 
-  - log: "FILE ${resource.asString(myForm2.file)}"
+    - log: "FILE ${resource.asString(myForm2.file)}"
 
-  - log: "AAA ${myForm2.rememberMe}"
+    - log: "AAA ${myForm2.rememberMe}"
 
-form (myForm1):
-  - firstName: { label: "First Name", type: "string" }
+forms:
+  myForm1:
+    - firstName: { label: "First Name", type: "string" }
+    - x: { type: "int" }
 
-form (myForm2):
-  - lastName: { label: "Last Name", type: "string" }
-  - age: { label: "Age", type: "int?", min: 21, max: 120 }
-  - color: { label: "Favorite color", type: "string", value: "r3d" }
-  - rememberMe: { label: "Remember me", type: "boolean" }
-  - file: { label: "file", type: "file" }
+  myForm2:
+    - lastName: { label: "Last Name", type: "string" }
+    - age: { label: "Age", type: "int?", min: 21, max: 120 }
+    - color: { label: "Favorite color", type: "string", value: "r3d" }
+    - rememberMe: { label: "Remember me", type: "boolean" }
+    - file: { label: "file", type: "file" }

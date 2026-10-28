@@ -1,2 +1,3 @@
-main:
-- log: "Bye, ${name}"
+flows:
+  main:
+  - log: "Bye, ${name}"

@@ -1,17 +1,23 @@
+configuration:
+  runtime: concord-v2
+
 flows:
   default:
     - try:
       - call: startChild
+        out: [jobOut]
         in:
           enterHere: default
       error:
         - call: startChild
+          out: [jobOut]
           in:
             enterHere: setHello
     - log: "${jobOut.xyz}"
 
   startChild:
     - task: concord
+      out: jobOut
       in:
         apiKey: "${myApiKey}"
         action: start

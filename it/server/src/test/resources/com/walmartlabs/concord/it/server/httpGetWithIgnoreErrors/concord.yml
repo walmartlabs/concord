@@ -9,7 +9,9 @@ flows:
         password: ${password}
      url: ${url}
      response: "json"
-     out: rsp
      ignoreErrors: true
+    out: rsp
+    ignoreErrors: true
+  - log: "Success response: ${rsp.ok}"
 
   - log: "statusCode: ${rsp.statusCode}"

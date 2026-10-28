@@ -15,4 +15,4 @@ flows:
       request: json
       response: json
       debug: true
-      out: rsp
+    out: rsp

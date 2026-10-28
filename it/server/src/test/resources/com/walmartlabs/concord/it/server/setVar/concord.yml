@@ -1,7 +1,7 @@
 flows:
   default:
   - set:
-      shouldBeNull: null
+      shouldBeNull: ${null}
       nested:
         var: "nested.var"
 

@@ -99,5 +99,6 @@ public class EscapeGitCommitMessageIT extends AbstractServerIT {
 
         byte[] ab = getLog(psr.getInstanceId());
         assertLog(".*Hello, Vasia.*", ab);
+        assertLog(".*Commit message: oops .*\\$\\{booom\\}.*", ab);
     }
 }

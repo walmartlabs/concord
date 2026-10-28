@@ -1,13 +1,17 @@
-flows:
-  main:
-  - docker: ${image}
-    debug: true
-    forcePull: false
-    stdout: myStdout
-    cmd: echo "Hello, ${name}" && (>&2 echo "STDERR STILL WORKS")
-  - log: "!! ${myStdout.trim()} !!"
-
-variables:
+configuration:
   entryPoint: main
   arguments:
     name: "world"
+
+flows:
+  main:
+  - task: docker
+    in:
+      image: ${image}
+      debug: true
+      forcePull: false
+      saveOut: true
+      logOut: false
+      cmd: echo "Hello, ${name}" && (>&2 echo "STDERR STILL WORKS")
+    out: result
+  - log: "!! ${result.stdout.trim()} !!"

@@ -99,7 +99,10 @@ public class ConcordTaskIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(pir.getInstanceId());
+        assertEquals(1, pir.getChildrenIds().size());
+        assertLog(".*Hello, Concord.*", getLog(pir.getChildrenIds().iterator().next()));
         assertLog(".*Done!.*", ab);
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
     }
 
     @Test
@@ -242,7 +245,11 @@ public class ConcordTaskIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(pir.getInstanceId());
+        assertEquals(1, pir.getChildrenIds().size());
+        assertLog(".*BOOOM.*", getLog(pir.getChildrenIds().iterator().next()));
         assertLog(".*Child process.*FAILED.*BOOOM.*", ab);
+        assertNoLog(".*Done!.*", ab);
+        assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
     }
 
     @Test
@@ -269,7 +276,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         StartProcessResponse spr = start(input);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 
@@ -302,7 +309,7 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 

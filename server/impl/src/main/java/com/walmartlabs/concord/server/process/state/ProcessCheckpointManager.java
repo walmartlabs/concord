@@ -36,18 +36,13 @@ import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-
-import static com.walmartlabs.concord.sdk.Constants.Files.CHECKPOINT_META_FILE_NAME;
 
 public class ProcessCheckpointManager {
 
@@ -102,9 +97,6 @@ public class ProcessCheckpointManager {
             try (TemporaryPath extractedDir = PathUtils.tempDir("unzipped-checkpoint")) {
                 zipService.unzip(checkpointArchive.path(), extractedDir.path());
 
-                // TODO: only for v1 runtime
-                String eventName = readCheckpointEventName(extractedDir.path());
-
                 stateManager.tx(tx -> {
                     stateManager.deleteDirectory(tx, processKey, Constants.Files.CONCORD_SYSTEM_DIR_NAME, ignoreRestorePaths);
                     stateManager.deleteDirectory(tx, processKey, Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
@@ -119,7 +111,7 @@ public class ProcessCheckpointManager {
                     queueDao.updateMeta(processKey, Collections.singletonMap("out", out));
                 }
 
-                return CheckpointInfo.of(checkpointName, eventName);
+                return CheckpointInfo.of(checkpointName);
             }
         } catch (Exception e) {
             throw new RuntimeException("Restore checkpoint '" + checkpointId + "' error", e);
@@ -165,28 +157,11 @@ public class ProcessCheckpointManager {
 
         String name();
 
-        /**
-         * {@code null} in the "concord-v2" runtime.
-         */
-        @Nullable
-        String eventName();
-
-        static CheckpointInfo of(String name, String eventName) {
+        static CheckpointInfo of(String name) {
             return ImmutableCheckpointInfo.builder()
                     .name(name)
-                    .eventName(eventName)
                     .build();
         }
-    }
-
-    private String readCheckpointEventName(Path checkpointDir) throws IOException {
-        Path checkpoint = checkpointDir.resolve(CHECKPOINT_META_FILE_NAME);
-        if (!Files.exists(checkpoint)) {
-            return null;
-        }
-        String checkpointName = new String(Files.readAllBytes(checkpoint));
-        Files.delete(checkpoint);
-        return checkpointName;
     }
 
     private String export(ProcessKey processKey, UUID checkpointId, Path dest) {

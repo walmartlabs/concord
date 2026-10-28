@@ -22,8 +22,6 @@ package com.walmartlabs.concord.plugins.http;
 
 import com.walmartlabs.concord.plugins.http.HttpTask.RequestType;
 import com.walmartlabs.concord.plugins.http.HttpTask.ResponseType;
-import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.apache.http.client.utils.URIBuilder;
 
@@ -456,26 +454,6 @@ public class Configuration {
                     keyStorePath, keyStorePassword, strictSsl, trustStorePath, trustStorePassword);
         }
 
-        /**
-         * Invoking this method will result in a new configuration.
-         *
-         * @param ctx context use to build the configuration
-         * @return new instance of this {@link Configuration}
-         * @throws Exception
-         */
-        public Configuration build(Context ctx) throws Exception {
-            String workDir = (String) ctx.getVariable(Constants.Context.WORK_DIR_KEY);
-
-            Map<String, Object> input = new HashMap<>(ALL_KEYS.length);
-            for (String k : ALL_KEYS) {
-                Object v = ctx.getVariable(k);
-                if (v != null) {
-                    input.put(k, v);
-                }
-            }
-
-            return build(workDir, input, false);
-        }
 
         @SuppressWarnings("unchecked")
         public Configuration build(String workDir, Map<String, Object> input, boolean globalDebug) throws Exception {

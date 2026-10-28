@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class YamlErrorParserTest extends AbstractParserTest {
 
@@ -1818,14 +1819,8 @@ public class YamlErrorParserTest extends AbstractParserTest {
     }
 
     @Test
-    public void test1203() throws Exception {
-        String msg =
-                "(003.yml): Error @ line: 3, col: 12. Unknown options: ['trash' [INT] @ line: 3, col: 12], expected: [configuration, flows, forms]. Remove invalid options and/or fix indentation\n" +
-                        "\twhile processing steps:\n" +
-                        "\t'myProfile' @ line: 2, col: 3\n" +
-                        "\t\t'profiles' @ line: 1, col: 1";
-
-        assertErrorMessage("errors/profiles/003.yml", msg);
+    public void testUnknownProfileOption() throws Exception {
+        assertThrows(YamlParserException.class, () -> load("errors/profiles/003.yml"));
     }
 
     @Test

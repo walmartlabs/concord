@@ -1,1 +1,1 @@
-execution.setVariable("x", "world");
+result.set("x", "world");

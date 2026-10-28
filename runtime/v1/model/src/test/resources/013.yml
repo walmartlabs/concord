@@ -1,6 +1,0 @@
-main:
-  - ${testBean.toString("a")}
-  - myProc
-
-myProc:
-  - ${testBean.toString("b")}

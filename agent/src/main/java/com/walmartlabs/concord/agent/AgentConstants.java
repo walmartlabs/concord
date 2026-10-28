@@ -25,6 +25,8 @@ public final class AgentConstants {
     public static final long ERROR_DELAY = 5000;
     public static final int API_CALL_MAX_RETRIES = 3;
     public static final long API_CALL_RETRY_DELAY = 3000;
+    public static final String CONCORD_TX_ID_LABEL = "concordTxId";
+    public static final String CONCORD_DOCKER_LOCAL_MODE_KEY = "CONCORD_DOCKER_LOCAL_MODE";
 
     private AgentConstants() {
     }

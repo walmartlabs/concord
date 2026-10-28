@@ -705,7 +705,7 @@ public class ProcessResource implements Resource {
     /**
      * Appends a process' log.
      *
-     * @deprecated in favor of the /api/v2/process/{id}/log* endpoints. The endpoint is still used for the runtime-v1.
+     * @deprecated in favor of the /api/v2/process/{id}/log* endpoints.
      */
     @POST
     @javax.ws.rs.Path("{id}/log")

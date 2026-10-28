@@ -1,4 +1,0 @@
-main:
-  - checkpoint: "one"
-  - log: "trololo"
-  - checkpoint: "one"

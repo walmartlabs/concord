@@ -46,6 +46,36 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ProcessIT extends AbstractServerIT {
 
     @Test
+    public void testMissingRuntimeDefaultsToV2() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("runtimeDefault").toURI());
+        StartProcessResponse spr = start(payload);
+
+        ProcessEntry process = waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.FINISHED);
+        assertEquals(StatusEnum.FINISHED, process.getStatus());
+        assertLog(".*runtime v2 default selected.*", getLog(process.getInstanceId()));
+    }
+
+    @Test
+    public void testExplicitV2RuntimeLoads() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("runtimeV2").toURI());
+        StartProcessResponse spr = start(payload);
+
+        ProcessEntry process = waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.FINISHED);
+        assertEquals(StatusEnum.FINISHED, process.getStatus());
+        assertLog(".*explicit runtime v2 selected.*", getLog(process.getInstanceId()));
+    }
+
+    @Test
+    public void testUnsupportedRuntimeFailsWithoutRunningFlow() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("unsupportedRuntime").toURI());
+        StartProcessResponse spr = start(payload);
+
+        ProcessEntry process = waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.FAILED);
+        assertEquals(StatusEnum.FAILED, process.getStatus());
+        assertFalse(new String(getLog(process.getInstanceId())).contains("unsupported flow must not run"));
+    }
+
+    @Test
     @Disabled
     public void testLotsOfProcesses() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
@@ -84,22 +114,6 @@ public class ProcessIT extends AbstractServerIT {
     @Test
     public void testTaskOut() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("taskOut").toURI());
-
-        StartProcessResponse spr = start(payload);
-
-        // ---
-
-        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
-
-        // ---
-
-        byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*I said: Hello!.*", ab);
-    }
-
-    @Test
-    public void testDelegateOut() throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource("delegateOut").toURI());
 
         StartProcessResponse spr = start(payload);
 

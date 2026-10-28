@@ -1,7 +1,8 @@
 flows:
   default:
     - log: "Hello, ${name}"
+    - log: "Commit message: ${projectInfo.repoCommitMessage}"
 
-variables:
+configuration:
   arguments:
     name: "Vasia"

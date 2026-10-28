@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   dependencies:
   - "mvn://com.walmartlabs.concord.plugins:jira-task:2.12.1"
 
@@ -9,8 +10,10 @@ flows:
   - task: jira
     in:
       action: "createIssue"
-      userId: "${initiator.username}"
-      password: "myJiraPassword" # should be encrypted and exported using `crypto` task
+      auth:
+        basic:
+          username: "${initiator.username}"
+          password: "myJiraPassword" # should be encrypted and exported using `crypto` task
       projectKey: "MYPROJECTKEY"
       summary: "mySummary"
       description: "myDescription"
@@ -28,6 +31,8 @@ flows:
 
         customfield_20400: # application/service (array of values)
           - "2125921"      # "SDE - Concord"
+    out:
+      issueId: ${result.issueId}
 
   # the issue ID is stored as `issueId`
   - log: "Issue ID: ${issueId}"
@@ -36,8 +41,10 @@ flows:
   - task: jira
     in:
       action: "addComment"
-      userId: "${initiator.username}"
-      password: "myJiraPassword"
+      auth:
+        basic:
+          username: "${initiator.username}"
+          password: "myJiraPassword"
       issueKey: "${issueId}"
       comment: "This is my comment from Concord"
 
@@ -45,8 +52,10 @@ flows:
   - task: jira
     in:
       action: "transition"
-      userId: "${initiator.username}"
-      password: "myJiraPassword"
+      auth:
+        basic:
+          username: "${initiator.username}"
+          password: "myJiraPassword"
       issueKey: "${issueId}"
       transitionId: 321
       transitionComment: "Marking as Done"
@@ -60,8 +69,10 @@ flows:
   - task: jira
     in:
       action: "deleteIssue"
-      userId: "${initiator.username}"
-      password: "myJiraPassword"
+      auth:
+        basic:
+          username: "${initiator.username}"
+          password: "myJiraPassword"
       issueKey: "${issueId}"
 
   - log: "Done!"

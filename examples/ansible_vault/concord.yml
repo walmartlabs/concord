@@ -1,4 +1,5 @@
 configuration:
+  runtime: "concord-v2"
   # to use `ansible` task
   dependencies:
   - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:2.40.0"
@@ -15,3 +16,4 @@ flows:
           vars:
             ansible_connection: "local"
       vaultPassword: myVaultPassword
+    out: ansibleResult

@@ -7,4 +7,6 @@ flows:
 
 triggers:
   - testTrigger2:
+      version: 2
+      conditions: {}
       entryPoint: onValidTrigger

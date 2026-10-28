@@ -2,7 +2,13 @@ flows:
   default:
   - try:
     - log: "Url is: ${url}"
-    - log: "${http.asString( url )}"
+    - task: http
+      in:
+        url: ${url}
+        response: string
+      out: rsp
+    - log: "Success response: ${rsp.ok}"
+    - log: "${rsp.content}"
     error:
     - log: "Gotcha! ${lastError}"
 

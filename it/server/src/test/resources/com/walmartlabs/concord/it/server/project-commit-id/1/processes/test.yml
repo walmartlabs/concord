@@ -1,2 +1,3 @@
-main:
-- expr: ${log.info("test-commit-1", greeting)}
+flows:
+  main:
+  - log: "test-commit-1 ${greeting}"

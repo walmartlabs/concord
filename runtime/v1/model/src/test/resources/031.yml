@@ -1,9 +1,0 @@
-main:
-  - ::
-    - myOtherFlow
-    error:
-      - ${testBean.toString("e")}
-
-myOtherFlow:
-  - ${testBean.toString("in-call-activiti")}
-  - return: someError

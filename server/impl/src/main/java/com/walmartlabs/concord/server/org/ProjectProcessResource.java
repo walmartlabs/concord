@@ -25,11 +25,9 @@ import com.walmartlabs.concord.server.console.ResponseTemplates;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.*;
-import com.walmartlabs.concord.server.process.form.FormServiceV1;
 import com.walmartlabs.concord.server.process.form.FormServiceV2;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
-import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
@@ -54,7 +52,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
 
-import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 import static javax.ws.rs.core.Response.Status;
 
 @Path("/api/v1/org")
@@ -67,35 +64,29 @@ public class ProjectProcessResource implements Resource {
     private final OrganizationDao orgDao;
     private final ProcessQueueDao queueDao;
     private final ProcessQueueManager processQueueManager;
-    private final FormServiceV1 formServiceV1;
     private final FormServiceV2 formServiceV2;
     private final ResponseTemplates responseTemplates;
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
-    private final ProcessStateManager stateManager;
 
     @Inject
     public ProjectProcessResource(ProcessManager processManager,
                                   OrganizationDao orgDao,
                                   ProcessQueueDao queueDao,
                                   ProcessQueueManager processQueueManager,
-                                  FormServiceV1 formServiceV1,
                                   FormServiceV2 formServiceV2,
                                   ResponseTemplates responseTemplates,
                                   ProjectDao projectDao,
-                                  RepositoryDao repositoryDao,
-                                  ProcessStateManager stateManager) {
+                                  RepositoryDao repositoryDao) {
 
         this.processManager = processManager;
         this.orgDao = orgDao;
         this.queueDao = queueDao;
         this.processQueueManager = processQueueManager;
-        this.formServiceV1 = formServiceV1;
         this.formServiceV2 = formServiceV2;
         this.responseTemplates = responseTemplates;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
-        this.stateManager = stateManager;
     }
 
     /**
@@ -197,7 +188,7 @@ public class ProjectProcessResource implements Resource {
         } else if (s == ProcessStatus.FINISHED) {
             return processFinished(processKey);
         } else if (s == ProcessStatus.SUSPENDED) {
-            String nextFormId = nextFormId(pk);
+            String nextFormId = formServiceV2.nextFormId(pk);
             if (nextFormId == null) {
                 return processError(processKey, "Invalid process state: no forms found", null);
             }
@@ -209,14 +200,6 @@ public class ProjectProcessResource implements Resource {
         } else {
             Map<String, Object> args = prepareArgumentsForInProgressTemplate(entry);
             return responseTemplates.inProgressWait(Response.ok(), args).build();
-        }
-    }
-
-    private String nextFormId(ProcessKey processKey) {
-        if (isV2(processKey)) {
-            return formServiceV2.nextFormId(processKey);
-        } else {
-            return formServiceV1.nextFormId(processKey);
         }
     }
 
@@ -314,10 +297,4 @@ public class ProjectProcessResource implements Resource {
         return w.toString();
     }
 
-    private boolean isV2(ProcessKey processKey) {
-        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
-                Constants.Files.JOB_STATE_DIR_NAME,
-                Constants.Files.JOB_FORMS_V2_DIR_NAME);
-        return stateManager.exists(processKey, resource);
-    }
 }

@@ -47,7 +47,6 @@
         <module>runtime/model</module>
         <module>runtime/common</module>
         <module>runtime/loader</module>
-        <module>runtime/v1</module>
         <module>runtime/v2</module>
         <module>plugins</module>
         <module>agent</module>

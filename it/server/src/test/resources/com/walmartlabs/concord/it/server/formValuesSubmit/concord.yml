@@ -8,4 +8,6 @@ flows:
 
 forms:
   myForm:
+  - a: {type: "int"}
+  - b: {type: "string"}
   - c: {type: "string", value: "234"}

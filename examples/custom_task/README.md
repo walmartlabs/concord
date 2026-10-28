@@ -1,6 +1,6 @@
 # Custom Task Example
 
-An example Maven project which shows how to create a custom Concord task and use payload archives to test local changes.
+An example Maven project which shows how to create a runtime-v2 Concord task and use payload archives to test local changes.
 
 ## Usage
 
@@ -10,7 +10,7 @@ Run `test.sh` to test local changes:
 ```
 
 The script builds the task's JAR, collects all runtime dependencies and creates a
-[payload archive](https://concord.walmartlabs.com/docs/api/process.html#zip-file) with the [test flow](test.yml).
+[payload archive](https://concord.walmartlabs.com/docs/api/process.html#zip-file) with the [test flow](test-v2.yml).
 
 ## Unit Tests
 

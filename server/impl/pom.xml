@@ -37,10 +37,6 @@
             <artifactId>concord-dependency-manager</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord.runtime.v1</groupId>
-            <artifactId>concord-runtime-model-v1</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.walmartlabs.concord.runtime.v2</groupId>
             <artifactId>concord-runtime-model-v2</artifactId>
         </dependency>
@@ -110,14 +106,6 @@
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-github-app-installation</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.takari.bpm</groupId>
-            <artifactId>bpm-engine-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.takari.bpm</groupId>
-            <artifactId>bpm-engine-impl</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.resteasy</groupId>

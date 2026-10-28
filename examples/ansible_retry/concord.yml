@@ -1,4 +1,5 @@
 configuration:
+  runtime: "concord-v2"
   dependencies:
     - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:2.40.0"
 
@@ -24,6 +25,7 @@ flows:
               ansible_connection: "local"
         extraVars:
           makeItFail: "${makeItFail}"
+      out: ansibleResult
       retry:
         # specify new task parameters on the retry
         in:
@@ -54,6 +56,7 @@ flows:
                   ansible_connection: "local"
             extraVars:
               makeItFail: "${makeItFail}"
+          out: ansibleResult
       error:
         - if: "${(attempts + 1) >= maxAttempts}"  # give up eventually
           then:
@@ -66,6 +69,7 @@ flows:
             # 3 seconds to prove the point in this example
             # more useful would be 2 hours: ${2 * 60 * 60}
             duration: 3
+          out: sleepResult
         # try again, with retry file
         - call: retryAfterSuspend
           in:
@@ -91,6 +95,7 @@ flows:
                   ansible_connection: "local"
             extraVars:
               makeItFail: "${makeItFail}"
+          out: ansibleResult
       error:
         - if: "${(attempts + 1) >= maxAttempts}"  # give up eventually
           then:

@@ -6,6 +6,7 @@ imports:
       path: "examples/hello_world"
 
 configuration:
+  runtime: "concord-v2"
   arguments:
     name: "you"
 

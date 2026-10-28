@@ -1,4 +1,5 @@
 configuration:
+  runtime: concord-v2
   arguments:
     name: "Concord"
   runner:
@@ -11,7 +12,16 @@ flows:
     - ${log.warn("This is a warn log")}
     - ${log.error("This is a error log")}
 
-    - logDebug: "Hello, ${name}. This is a debug log"
+    - task: log
+      in:
+        level: DEBUG
+        msg: "Hello, ${name}. This is a debug log"
     - log: "Hello, ${name}. This is a normal log"
-    - logWarn: "Hello, ${name}. This is a warn log"
-    - logError: "Hello, ${name}. This is a error log"
+    - task: log
+      in:
+        level: WARN
+        msg: "Hello, ${name}. This is a warn log"
+    - task: log
+      in:
+        level: ERROR
+        msg: "Hello, ${name}. This is a error log"

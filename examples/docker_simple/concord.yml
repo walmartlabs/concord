@@ -1,8 +1,14 @@
 flows:
   default:
-  - docker: library/alpine
-    cmd: echo "Hello, ${name}"
+  - task: docker
+    in:
+      image: library/alpine
+      cmd: echo "Hello, ${name}"
+    out: dockerResult
 
 configuration:
+  runtime: "concord-v2"
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:docker-tasks:2.40.0"
   arguments:
     name: "world"

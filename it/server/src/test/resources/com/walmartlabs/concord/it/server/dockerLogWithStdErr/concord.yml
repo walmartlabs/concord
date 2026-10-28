@@ -1,14 +1,17 @@
-flows:
-  main:
-  - docker: ${image}
-    debug: true
-    forcePull: false
-    cmd: echo "Hello, ${name}" && (>&2 echo "STDERR WORKS")
-    stderr: myErr
-
-  - log: "STDERR: ${myErr}"
-
-variables:
+configuration:
   entryPoint: main
   arguments:
     name: "world"
+
+flows:
+  main:
+  - task: docker
+    in:
+      image: ${image}
+      debug: true
+      forcePull: false
+      cmd: echo "Hello, ${name}" && (>&2 echo "STDERR WORKS")
+      saveErr: true
+      logErr: false
+    out: result
+  - log: "STDERR: ${result.stderr}"

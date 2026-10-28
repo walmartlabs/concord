@@ -4,4 +4,6 @@ imports:
 
 triggers:
   - test:
+      version: 2
+      conditions: {}
       entryPoint: "flowFromTemplate"

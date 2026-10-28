@@ -29,6 +29,7 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class DockerIT extends AbstractServerIT {
@@ -43,6 +44,7 @@ public class DockerIT extends AbstractServerIT {
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
         assertNotNull(pir.getLogFileName());
 
         byte[] ab = getLog(pir.getInstanceId());
@@ -59,6 +61,7 @@ public class DockerIT extends AbstractServerIT {
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
         assertNotNull(pir.getLogFileName());
 
         byte[] ab = getLog(pir.getInstanceId());
@@ -76,6 +79,7 @@ public class DockerIT extends AbstractServerIT {
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
         assertNotNull(pir.getLogFileName());
 
         byte[] ab = getLog(pir.getInstanceId());
@@ -93,11 +97,13 @@ public class DockerIT extends AbstractServerIT {
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
         assertNotNull(pir.getLogFileName());
 
         byte[] ab = getLog(pir.getInstanceId());
-        assertNoLog(".*!! Hello, world .*", ab);
-        assertNoLog(".*STDERR WORKS !!.*", ab);
+        assertLog(".*stdout captured: true.*", ab);
+        assertNoLog(".*DOCKER: Hello, world.*", ab);
+        assertNoLog(".*DOCKER: STDERR WORKS.*", ab);
     }
 
     @Test
@@ -110,6 +116,7 @@ public class DockerIT extends AbstractServerIT {
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
         assertNotNull(pir.getLogFileName());
 
         byte[] ab = getLog(pir.getInstanceId());
@@ -127,6 +134,7 @@ public class DockerIT extends AbstractServerIT {
         StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
         assertNotNull(pir.getLogFileName());
 
         byte[] ab = getLog(pir.getInstanceId());
@@ -140,6 +148,7 @@ public class DockerIT extends AbstractServerIT {
         StartProcessResponse spr = start(payload);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
 
         byte[] ab = getLog(pir.getInstanceId());
         assertLogAtLeast(".*Error pulling the image.*", 2, ab);

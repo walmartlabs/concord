@@ -11,7 +11,8 @@ flows:
           - "value1"
           - "value2"
         response: json
-        out: rsp
+      out: rsp
+    - log: "Success response: ${rsp.ok}"
     - log: "message: ${rsp.content.message}"
     - log: "multi-value-1: ${rsp.content.multiValue1}"
     - log: "multi-value-2: ${rsp.content.multiValue2}"

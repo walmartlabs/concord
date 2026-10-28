@@ -58,7 +58,6 @@ public final class ConcordConfiguration {
 
     public static ConcordRule configure() {
         ConcordRule concord = new ConcordRule()
-                .pathToRunnerV1(null)
                 .pathToRunnerV2("target/runner-v2.jar")
                 .dbImage(System.getProperty("db.image", "library/postgres:14"))
                 .serverImage(System.getProperty("server.image", "walmartlabs/concord-server"))
@@ -83,7 +82,6 @@ public final class ConcordConfiguration {
                             signingKeyPath = "%%sharedDir%%/signing.pem"
                         }
                         websockets {
-                            # TODO set to true, uncomment agent api token, and create agent user + token like runtime-v1 ITs
                             requirePermission = false
                         }
                     }

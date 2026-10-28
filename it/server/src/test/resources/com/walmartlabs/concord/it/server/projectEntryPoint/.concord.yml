@@ -2,5 +2,5 @@ flows:
   main:
   - log: "Hello, Concord"
 
-variables:
+configuration:
   entryPoint: main

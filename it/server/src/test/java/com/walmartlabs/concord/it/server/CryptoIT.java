@@ -55,7 +55,7 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        test("cryptoPlain", secretName, storePassword, ".*value=" + secretValue + ".*");
+        test("cryptoPlain", secretName, storePassword, ".*value matches: true.*", ImmutableMap.of("expectedValue", secretValue));
     }
 
     @Test
@@ -73,7 +73,8 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        test("cryptoPwd", secretName, storePassword, ".*" + secretUsername + " " + secretPassword + ".*");
+        test("cryptoPwd", secretName, storePassword, ".*credentials match: true.*",
+                ImmutableMap.of("expectedUsername", secretUsername, "expectedPassword", secretPassword));
     }
 
     @Test
@@ -90,7 +91,7 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        test("cryptoFile", secretName, storePassword, ".*We got " + secretValue + ".*");
+        test("cryptoFile", secretName, storePassword, ".*We got " + secretValue + ".*", Collections.emptyMap());
     }
 
     @Test
@@ -147,14 +148,15 @@ public class CryptoIT extends AbstractServerIT {
         StartProcessResponse spr = start(ImmutableMap.of(
                 "archive", payload,
                 "arguments.secretName", secretName,
-                "arguments.secretOrgName", orgName));
+                "arguments.secretOrgName", orgName,
+                "arguments.expectedValue", secretValue));
 
         // ---
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*We got " + secretValue + ".*", ab);
+        assertLog(".*value matches: true.*", ab);
     }
 
     @Test
@@ -229,14 +231,15 @@ public class CryptoIT extends AbstractServerIT {
                 "org", orgName,
                 "project", projectName,
                 "archive", payload,
-                "arguments.encryptedValue", evr.getData()));
+                "arguments.encryptedValue", evr.getData(),
+                "arguments.expectedValue", value));
 
         // ---
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*We got " + value + ".*", ab);
+        assertLog(".*value matches: true.*", ab);
     }
 
     @Test
@@ -428,15 +431,12 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        test("cryptoPwd", secretName, storePassword, ".*secrets can only be accessed within the project they belong to.*" + secretName + ".*");
+        test("cryptoPwd", secretName, storePassword, ".*secrets can only be accessed within the project they belong to.*" + secretName + ".*", Collections.emptyMap());
     }
 
     /**
-     * If the organization is not specified the crypto task must pick the current organization.
-     * It works because Concord provides {@code projectInfo} variable that can be used to determine
-     * the current organization.
-     * The test uses a form to verify that "organization auto select" works
-     * for new and resumed processes.
+     * The crypto task must use the current organization for new and resumed processes.
+     * The workflow supplies the current organization from {@code projectInfo}.
      */
     @Test
     public void testCurrentOrg() throws Exception {
@@ -487,17 +487,20 @@ public class CryptoIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(pe.getInstanceId());
-        assertLog(".*Before form: " + orgSecretValue + ".*", ab);
-        assertLog(".*After form: " + orgSecretValue + ".*", ab);
+        assertLog(".*Before form matches: true.*", ab);
+        assertLog(".*After form matches: true.*", ab);
     }
 
-    private void test(String project, String secretName, String storePassword, @Language("RegExp") String log) throws Exception {
+    private void test(String project, String secretName, String storePassword, @Language("RegExp") String log,
+                      Map<String, String> expected) throws Exception {
         byte[] payload = archive(CryptoIT.class.getResource(project).toURI());
 
-        StartProcessResponse spr = start(ImmutableMap.of(
-                "archive", payload,
-                "arguments.secretName", secretName,
-                "arguments.pwd", storePassword));
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.secretName", secretName);
+        input.put("arguments.pwd", storePassword);
+        expected.forEach((key, value) -> input.put("arguments." + key, value));
+        StartProcessResponse spr = start(input);
 
         // ---
 

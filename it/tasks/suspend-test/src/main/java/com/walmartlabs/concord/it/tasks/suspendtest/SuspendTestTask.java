@@ -20,8 +20,9 @@ package com.walmartlabs.concord.it.tasks.suspendtest;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,9 +34,8 @@ public class SuspendTestTask implements Task {
     private static final Logger log = LoggerFactory.getLogger(SuspendTestTask.class);
 
     @Override
-    public void execute(Context ctx) throws Exception {
+    public TaskResult execute(Variables input) {
         log.info("Requesting suspend...");
-        String eventName = (String) ctx.getVariable("eventName");
-        ctx.suspend(eventName);
+        return TaskResult.suspend(input.assertString("eventName"));
     }
 }
