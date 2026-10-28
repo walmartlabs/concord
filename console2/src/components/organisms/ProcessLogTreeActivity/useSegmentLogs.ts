@@ -321,13 +321,18 @@ export const useSegmentLogs = (
 ): SegmentLogs => {
     const [, setVersion] = useState(0);
     const [workVersion, setWorkVersion] = useState(0);
+    // A healthy running poll picks up new work on its own; restarting it would reset the timer and
+    // poll again. A stopped or failing poll is restarted so the error reflects the new work at once.
+    const restartOnWork = useRef(true);
     const loader = useMemo(
         () =>
             new SegmentLogLoader(
                 instanceId,
                 () => setVersion((value) => value + 1),
                 getSegmentLogPage,
-                () => setWorkVersion((value) => value + 1)
+                () => {
+                    if (restartOnWork.current) setWorkVersion((value) => value + 1);
+                }
             ),
         [instanceId]
     );
@@ -336,12 +341,15 @@ export const useSegmentLogs = (
     useEffect(() => () => loader.dispose(), [loader]);
 
     const request = useCallback(async () => {
+        restartOnWork.current = false;
         const live = pollingEnabled && pollInterval > 0;
         loader.poll(live);
         await loader.waitForIdle();
         const error = loader.getTransientError();
+        const next = live && loader.hasLiveRequests();
+        restartOnWork.current = !!error || !next;
         if (error) throw error;
-        return live && loader.hasLiveRequests();
+        return next;
     }, [loader, pollingEnabled, pollInterval, workVersion]);
     const pollingError = usePolling(request, pollInterval, ignoreLoading, false, {
         reportInitialErrors: true,
