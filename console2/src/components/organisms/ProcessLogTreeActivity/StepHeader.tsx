@@ -55,9 +55,7 @@ const stepRunOf = (node: SegmentNode): SegmentNode | undefined => {
         return undefined;
     }
     const runs = node.children.filter(
-        (c) =>
-            (c.kind === 'attempt' || c.kind === 'iteration') &&
-            c.segment.correlationId === node.segment.correlationId
+        (c) => c.kind === 'attempt' || c.kind === 'iteration'
     );
     if (runs.length === 0) {
         return node;

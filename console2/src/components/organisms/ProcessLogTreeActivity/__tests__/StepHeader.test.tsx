@@ -168,6 +168,40 @@ describe('StepHeader delayed events', () => {
         expect(screen.getByText('parallel.yaml:7')).toBeTruthy();
     });
 
+    test.each([
+        [SegmentKind.ATTEMPT, 'parent-only', undefined],
+        [SegmentKind.ATTEMPT, undefined, 'child-only'],
+        [SegmentKind.ITERATION, 'parent-only', undefined],
+        [SegmentKind.ITERATION, undefined, 'child-only'],
+    ] as const)(
+        'resolves a child %s by parentId with correlation IDs %s / %s',
+        async (kind, parentCorrelationId, childCorrelationId) => {
+            const tree = buildSegmentTree([
+                { ...segment(1), correlationId: parentCorrelationId },
+                {
+                    ...segment(2),
+                    parentId: 1,
+                    kind,
+                    correlationId: childCorrelationId,
+                },
+            ]);
+            vi.mocked(listSegmentEvents).mockResolvedValue([
+                event('post', { fileName: 'child.yaml' }),
+            ]);
+            render(
+                <StepHeader
+                    instanceId="process"
+                    node={tree.byId.get(1)!}
+                    processStatus={ProcessStatus.FINISHED}
+                />
+            );
+            await openDetails();
+            expect(listSegmentEvents).toHaveBeenCalledWith('process', 2, false);
+            expect(screen.getByText('child.yaml:7')).toBeTruthy();
+            expect(vi.mocked(listSegmentEvents).mock.calls.every((call) => call[1] === 2)).toBe(true);
+        }
+    );
+
     test('resolves retry details from the local tree', async () => {
         const owner = segment(1);
         const run = {
