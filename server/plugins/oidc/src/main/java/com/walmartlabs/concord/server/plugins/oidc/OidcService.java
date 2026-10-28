@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.inject.Inject;
@@ -32,6 +31,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
+import java.time.Instant;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
@@ -63,7 +63,7 @@ public class OidcService {
                "&state=" + urlEncode(state);
     }
 
-    public UserProfile exchangeCodeForProfile(String code, String redirectUri) throws IOException {
+    public VerifiedProfile exchangeCodeForProfile(String code, String redirectUri) throws IOException {
         var discovery = getDiscoveryDocument();
 
         var tokenRequest = "grant_type=authorization_code" +
@@ -78,33 +78,45 @@ public class OidcService {
                 .POST(BodyPublishers.ofString(tokenRequest))
                 .build();
 
+        var tokenRequestedAt = Instant.now();
         try {
             var response = httpClient.send(request, BodyHandlers.ofString());
             if (response.statusCode() != 200) {
-                throw new IOException("Token exchange failed: " + response.statusCode() + " " + response.body());
+                throw new IOException("Token exchange failed: " + response.statusCode());
             }
 
             var tokenResponse = objectMapper.readTree(response.body());
-            var accessToken = tokenResponse.get("access_token").asText();
-            if (accessToken == null) {
+            var tokenNode = tokenResponse.get("access_token");
+            if (tokenNode == null || !tokenNode.isTextual() || tokenNode.asText().isBlank()) {
                 throw new IOException("No access token in response");
             }
 
-            return getUserInfo(accessToken, discovery.userinfoEndpoint());
+            Instant tokenExpiry = null;
+            var expiresIn = tokenResponse.get("expires_in");
+            if (expiresIn != null) {
+                if (!expiresIn.isIntegralNumber() || !expiresIn.canConvertToLong() || expiresIn.longValue() < 0) {
+                    throw new IOException("Invalid token expiry in response");
+                }
+                try {
+                    tokenExpiry = tokenRequestedAt.plusSeconds(expiresIn.longValue());
+                } catch (RuntimeException e) {
+                    throw new IOException("Invalid token expiry in response", e);
+                }
+            }
+            return getUserInfo(tokenNode.asText(), discovery, tokenExpiry);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IOException("Request interrupted", e);
         }
     }
 
-    public UserProfile validateToken(String accessToken) throws IOException {
-        var discovery = getDiscoveryDocument();
-        return getUserInfo(accessToken, discovery.userinfoEndpoint());
+    public VerifiedProfile validateToken(String accessToken) throws IOException {
+        return getUserInfo(accessToken, getDiscoveryDocument(), null);
     }
 
-    private UserProfile getUserInfo(String accessToken, String userinfoEndpoint) throws IOException {
+    private VerifiedProfile getUserInfo(String accessToken, DiscoveryDocument discovery, Instant tokenExpiry) throws IOException {
         var request = HttpRequest.newBuilder()
-                .uri(URI.create(userinfoEndpoint))
+                .uri(URI.create(discovery.userinfoEndpoint()))
                 .header("Authorization", "Bearer " + accessToken)
                 .GET()
                 .build();
@@ -112,10 +124,19 @@ public class OidcService {
         try {
             var response = httpClient.send(request, BodyHandlers.ofString());
             if (response.statusCode() != 200) {
-                throw new IOException("UserInfo request failed: " + response.statusCode() + " " + response.body());
+                throw new IOException("UserInfo request failed: " + response.statusCode());
             }
 
-            return UserProfileConverter.convert(objectMapper, response.body(), accessToken);
+            var observedAt = Instant.now();
+            var expiresAt = observedAt.plus(Duration.ofHours(1));
+            if (tokenExpiry != null && tokenExpiry.isBefore(expiresAt)) {
+                expiresAt = tokenExpiry;
+            }
+            if (!expiresAt.isAfter(observedAt)) {
+                throw new IOException("Token expired before userinfo verification");
+            }
+            return new VerifiedProfile(UserProfileConverter.convert(objectMapper, response.body(), accessToken),
+                    discovery.issuer(), observedAt, expiresAt);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IOException("Request interrupted", e);
@@ -146,7 +167,12 @@ public class OidcService {
             }
 
             var discovery = objectMapper.readTree(response.body());
+            var issuer = discovery.path("issuer");
+            if (!issuer.isTextual() || issuer.asText().isBlank()) {
+                throw new IllegalStateException("OIDC discovery document has no issuer");
+            }
             return new DiscoveryDocument(
+                    issuer.asText(),
                     discovery.get("authorization_endpoint").asText(),
                     discovery.get("token_endpoint").asText(),
                     discovery.get("userinfo_endpoint").asText()
@@ -161,6 +187,7 @@ public class OidcService {
     }
 
     private record DiscoveryDocument(
+            String issuer,
             String authorizationEndpoint,
             String tokenEndpoint,
             String userinfoEndpoint

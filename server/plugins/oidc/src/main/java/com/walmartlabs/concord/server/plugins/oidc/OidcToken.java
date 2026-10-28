@@ -30,30 +30,28 @@ public class OidcToken implements AuthenticationToken, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private final UserProfile profile;
+    private final VerifiedProfile verifiedProfile;
 
-    public OidcToken(UserProfile profile) {
-        this.profile = profile;
+    public OidcToken(VerifiedProfile verifiedProfile) {
+        this.verifiedProfile = java.util.Objects.requireNonNull(verifiedProfile);
     }
 
-    public UserProfile getProfile() {
-        return profile;
+    public VerifiedProfile getVerifiedProfile() {
+        return verifiedProfile;
     }
 
     @Override
     public Object getPrincipal() {
-        return profile.id();
+        return verifiedProfile.profile().id();
     }
 
     @Override
     public Object getCredentials() {
-        return profile;
+        return verifiedProfile;
     }
 
     @Override
     public String toString() {
-        return "OidcToken{" +
-                "profile=" + profile +
-                '}';
+        return "OidcToken{principal=" + getPrincipal() + '}';
     }
 }

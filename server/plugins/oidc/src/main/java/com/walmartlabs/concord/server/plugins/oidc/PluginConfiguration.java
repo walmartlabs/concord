@@ -67,6 +67,16 @@ public class PluginConfiguration {
     @Config("oidc.scopes")
     private List<String> scopes;
 
+    @Inject
+    @Nullable
+    @Config("oidc.profileProviderId")
+    private String profileProviderId;
+
+    @Inject
+    @Nullable
+    @Config("oidc.authorizationSources")
+    private List<String> authorizationSources;
+
     private final Map<UUID, TeamMapping> teamMapping;
 
     private final Map<String, List<Source>> roleMapping;
@@ -112,6 +122,14 @@ public class PluginConfiguration {
 
     public List<String> getScopes() {
         return scopes;
+    }
+
+    public String getProfileProviderId() {
+        return profileProviderId == null || profileProviderId.isBlank() ? "local" : profileProviderId;
+    }
+
+    public List<String> getAuthorizationSources() {
+        return authorizationSources == null ? List.of("oidc") : authorizationSources;
     }
 
     public Map<UUID, TeamMapping> getTeamMapping() {

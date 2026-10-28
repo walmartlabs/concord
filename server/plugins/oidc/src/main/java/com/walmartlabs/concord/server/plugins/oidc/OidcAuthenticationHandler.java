@@ -31,6 +31,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.Instant;
 
 public class OidcAuthenticationHandler implements AuthenticationHandler {
 
@@ -65,7 +66,13 @@ public class OidcAuthenticationHandler implements AuthenticationHandler {
                 return null;
             }
 
-            var profile = (UserProfile) session.getAttribute(SESSION_PROFILE_KEY);
+            var cached = session.getAttribute(SESSION_PROFILE_KEY);
+            if (!(cached instanceof VerifiedProfile profile) || !profile.expiresAt().isAfter(Instant.now())) {
+                if (cached != null) {
+                    session.removeAttribute(SESSION_PROFILE_KEY);
+                }
+                return null;
+            }
             return new OidcToken(profile);
         }
 

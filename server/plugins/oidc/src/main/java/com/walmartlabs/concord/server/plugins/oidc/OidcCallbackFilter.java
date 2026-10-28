@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
+import org.apache.shiro.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,6 +97,7 @@ public class OidcCallbackFilter implements Filter {
         try {
             var redirectUri = cfg.getUrlBase() + URL + "?client_name=oidc";
             var profile = oidcService.exchangeCodeForProfile(code, redirectUri);
+            SecurityUtils.getSubject().login(new OidcToken(profile));
 
             session.setAttribute(SESSION_PROFILE_KEY, profile);
             session.removeAttribute(SESSION_STATE_KEY);

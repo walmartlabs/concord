@@ -13,6 +13,8 @@ concord-server {
         clientId = "********************"
         secret = "****************************************"
         discoveryUri = "https://myorg.okta.com/oauth2/default/.well-known/openid-configuration"
+        profileProviderId = "local"
+        authorizationSources = ["oidc"]
         urlBase = "http://localhost:8001"
         afterLoginUrl = "http://localhost:8001"
         afterLogoutUrl = "http://localhost:8001/#/logout/done"
@@ -40,6 +42,17 @@ Okta, for example, does not provide the `groups` scope by default. You can
 add it in the "Security" -> "API" -> "Authorization Servers" -> your_server ->
 "Scope" section.
 
+
+OIDC accounts are linked by the discovery document's issuer and the verified
+userinfo `sub`, not by email on each login. Existing LOCAL accounts are eligible
+for a one-time adoption using the historical lowercased-email rule; changing
+email later does not relink an account.
+
+`oidc.profileProviderId` defaults to `local`, and `oidc.authorizationSources`
+defaults to `["oidc"]`. Role and team mappings contribute only OIDC-owned
+grants; direct roles and team memberships are independent. Userinfo attributes
+are retained without tokens for at most one hour, capped by the token response's
+expiry when available. Reusing a cached profile does not renew that deadline.
 ### Interactive Login
 
 Configure the Concord Console to use custom logout/login URLs:
