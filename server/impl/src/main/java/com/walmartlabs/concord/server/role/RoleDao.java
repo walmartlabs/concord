@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.role;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.UuidGenerator;
-import com.walmartlabs.concord.server.jooq.tables.RoleLdapGroups;
 import com.walmartlabs.concord.server.user.RoleEntry;
 import org.jooq.*;
 
@@ -135,27 +134,29 @@ public class RoleDao extends AbstractDao {
     }
 
     public void upsertLdapGroup(DSLContext tx, UUID roleId, String ldapGroup) {
-        tx.insertInto(ROLE_LDAP_GROUPS)
-                .columns(ROLE_LDAP_GROUPS.ROLE_ID, ROLE_LDAP_GROUPS.LDAP_GROUP)
-                .values(roleId, ldapGroup)
-                .onConflict(ROLE_LDAP_GROUPS.ROLE_ID, ROLE_LDAP_GROUPS.LDAP_GROUP)
-                .doNothing()
-                .execute();
+        upsertGroup(tx, roleId, "ldap", ldapGroup);
     }
-    
+
     public void removeLdapGroups(DSLContext tx, UUID roleId) {
-        tx.deleteFrom(ROLE_LDAP_GROUPS)
-                .where(ROLE_LDAP_GROUPS.ROLE_ID.eq(roleId))
-                .execute();
+        removeGroups(tx, roleId, "ldap");
     }
 
     public List<String> listLdapGroups(UUID roleId) {
-        RoleLdapGroups r = ROLE_LDAP_GROUPS.as("r");
-        return txResult(tx -> tx.select(r.LDAP_GROUP)
-                .from(r)
-                .where(r.ROLE_ID.eq(roleId))
-                .orderBy(r.LDAP_GROUP)
-                .fetch(r.LDAP_GROUP));
+        return listGroups(roleId, "ldap");
+    }
+
+    public void upsertGroup(DSLContext tx, UUID roleId, String sourceId, String groupId) {
+        tx.execute("INSERT INTO role_source_groups (role_id, source_id, group_id) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
+                roleId, sourceId, groupId);
+    }
+
+    public void removeGroups(DSLContext tx, UUID roleId, String sourceId) {
+        tx.execute("DELETE FROM role_source_groups WHERE role_id = ? AND source_id = ?", roleId, sourceId);
+    }
+
+    public List<String> listGroups(UUID roleId, String sourceId) {
+        return dsl().fetch("SELECT group_id FROM role_source_groups WHERE role_id = ? AND source_id = ? ORDER BY group_id",
+                roleId, sourceId).getValues(0, String.class);
     }
     
     private static RoleEntry toEntry(Record3<UUID, String, String[]> e) {

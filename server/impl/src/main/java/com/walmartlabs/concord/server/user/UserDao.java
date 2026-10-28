@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.user;
  * =====
  */
 
+import com.typesafe.config.Config;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.UuidGenerator;
@@ -53,11 +54,13 @@ import static org.jooq.impl.DSL.*;
 public class UserDao extends AbstractDao {
 
     private final UuidGenerator uuidGenerator;
+    private final Config config;
 
     @Inject
-    public UserDao(@MainDB Configuration cfg, UuidGenerator uuidGenerator) {
+    public UserDao(@MainDB Configuration cfg, UuidGenerator uuidGenerator, Config config) {
         super(cfg);
         this.uuidGenerator = requireNonNull(uuidGenerator);
+        this.config = requireNonNull(config);
     }
 
     @Override
@@ -114,6 +117,13 @@ public class UserDao extends AbstractDao {
                     identityId, id, key.providerId(), key.authority(), key.subject());
             if (type == UserType.LDAP) {
                 tx.execute("update users set profile_provider_id = 'ldap', profile_identity_id = ? where user_id = ?", identityId, id);
+                String qualified = "com.walmartlabs.concord.server.security.authorization.sources.ldap.required";
+                String plain = "security.authorization.sources.ldap.required";
+                boolean required = config.hasPath(qualified) ? config.getBoolean(qualified) :
+                        config.hasPath(plain) && config.getBoolean(plain);
+                tx.execute("insert into authorization_sources(source_id,is_active) values ('ldap',false) on conflict do nothing");
+                tx.execute("insert into user_authorization_bindings(binding_id,user_id,source_id,identity_id,is_required,origin,refresh_version) values (?,?,?,?,?,'DEFAULT',0)",
+                        uuidGenerator.generate(), id, "ldap", identityId, required);
             }
         }
         return id;
@@ -233,6 +243,23 @@ public class UserDao extends AbstractDao {
             }
         });
 
+        return get(id);
+    }
+
+    /** Updates profile fields without ever changing administrative account status. */
+    public UserEntry updateProfile(UUID id, String displayName, String email) {
+        if (displayName != null || email != null) {
+            tx(tx -> {
+                UpdateSetMoreStep<UsersRecord> q = tx.update(USERS).set(USERS.USER_ID, USERS.USER_ID);
+                if (displayName != null) {
+                    q.set(USERS.DISPLAY_NAME, displayName);
+                }
+                if (email != null) {
+                    q.set(USERS.USER_EMAIL, email);
+                }
+                q.where(USERS.USER_ID.eq(id)).execute();
+            });
+        }
         return get(id);
     }
 
@@ -412,14 +439,12 @@ public class UserDao extends AbstractDao {
     }
 
     public List<LdapGroupSearchResult> searchLdapGroups(String filter) {
-        return dsl().selectDistinct(USER_LDAP_GROUPS.LDAP_GROUP)
-                .from(USER_LDAP_GROUPS)
-                .where(USER_LDAP_GROUPS.LDAP_GROUP.likeIgnoreCase(String.format("%%%s%%", filter)))
-                .orderBy(USER_LDAP_GROUPS.LDAP_GROUP)
-                .limit(10)
-                .fetch(r -> LdapGroupSearchResult.builder()
-                        .displayName(r.get(USER_LDAP_GROUPS.LDAP_GROUP))
-                        .groupName(r.get(USER_LDAP_GROUPS.LDAP_GROUP))
+        return dsl().fetch("SELECT DISTINCT group_id FROM v_effective_source_groups " +
+                        "WHERE source_id = 'ldap' AND group_id ILIKE ? ORDER BY group_id LIMIT 10",
+                "%" + filter + "%")
+                .map(r -> LdapGroupSearchResult.builder()
+                        .displayName(r.get(0, String.class))
+                        .groupName(r.get(0, String.class))
                         .build());
     }
 

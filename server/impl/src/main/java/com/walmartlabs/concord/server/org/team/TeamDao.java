@@ -24,7 +24,6 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.UuidGenerator;
-import com.walmartlabs.concord.server.jooq.tables.TeamLdapGroups;
 import com.walmartlabs.concord.server.jooq.tables.records.TeamsRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.VUserTeamsRecord;
 import com.walmartlabs.concord.server.user.UserType;
@@ -188,34 +187,25 @@ public class TeamDao extends AbstractDao {
     }
 
     public List<TeamUserEntry> listLdapGroupMembers(DSLContext tx, UUID teamId) {
-        return tx.select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_TYPE, TEAM_LDAP_GROUPS.TEAM_ROLE, USER_LDAP_GROUPS.LDAP_GROUP)
-                .from(USERS)
-                .innerJoin(USER_LDAP_GROUPS).on(USER_LDAP_GROUPS.USER_ID.eq(USERS.USER_ID))
-                .innerJoin(TEAM_LDAP_GROUPS).on(TEAM_LDAP_GROUPS.LDAP_GROUP.eq(USER_LDAP_GROUPS.LDAP_GROUP))
-                .innerJoin(TEAMS).on(TEAMS.TEAM_ID.eq(TEAM_LDAP_GROUPS.TEAM_ID))
-                .where(TEAMS.TEAM_ID.eq(teamId))
-                .orderBy(USERS.USERNAME)
-                .fetch((Record7<UUID, String, String, String, String, String, String> r) ->
-                        new TeamUserEntry(r.value1(),
-                                r.value2(),
-                                r.value3(),
-                                r.value4(),
-                                UserType.fromNullable(r.value5()),
-                                TeamRole.valueOf(r.value6()),
-                                TeamMemberType.LDAP_GROUP,
-                                r.value7()));
+        return tx.fetch("SELECT u.user_id, u.username, u.domain, u.display_name, u.user_type, m.team_role, g.group_id " +
+                        "FROM users u JOIN v_effective_source_groups g ON g.user_id = u.user_id " +
+                        "JOIN team_source_groups m ON m.source_id = g.source_id AND m.group_id = g.group_id " +
+                        "WHERE m.team_id = ? AND g.source_id = 'ldap' ORDER BY u.username", teamId)
+                .map(r -> new TeamUserEntry(r.get(0, UUID.class), r.get(1, String.class),
+                        r.get(2, String.class), r.get(3, String.class),
+                        UserType.fromNullable(r.get(4, String.class)), TeamRole.valueOf(r.get(5, String.class)),
+                        TeamMemberType.LDAP_GROUP, r.get(6, String.class)));
     }
 
     public List<TeamLdapGroupEntry> listLdapGroups(UUID teamId) {
-        TeamLdapGroups t = TEAM_LDAP_GROUPS.as("t");
-        return txResult(tx -> tx.select(t.LDAP_GROUP, t.TEAM_ROLE)
-                .from(t)
-                .where(t.TEAM_ID.eq(teamId))
-                .orderBy(t.LDAP_GROUP)
-                .fetch(r -> TeamLdapGroupEntry.builder()
-                        .group(r.value1())
-                        .role(TeamRole.valueOf(r.value2()))
-                        .build()));
+        return listGroups(teamId, "ldap").stream()
+                .<TeamLdapGroupEntry>map(g -> TeamLdapGroupEntry.builder().group(g.groupId()).role(g.role()).build())
+                .toList();
+    }
+
+    public List<TeamSourceGroupEntry> listGroups(UUID teamId, String sourceId) {
+        return dsl().fetch("SELECT group_id, team_role FROM team_source_groups WHERE team_id = ? AND source_id = ? ORDER BY group_id",
+                teamId, sourceId).map(r -> new TeamSourceGroupEntry(r.get(0, String.class), TeamRole.valueOf(r.get(1, String.class))));
     }
 
     public void upsertUser(UUID teamId, UUID userId, TeamRole role) {
@@ -253,18 +243,21 @@ public class TeamDao extends AbstractDao {
     }
 
     public void upsertLdapGroup(DSLContext tx, UUID teamId, String ldapGroup, TeamRole role) {
-        tx.insertInto(TEAM_LDAP_GROUPS)
-                .columns(TEAM_LDAP_GROUPS.TEAM_ID, TEAM_LDAP_GROUPS.LDAP_GROUP, TEAM_LDAP_GROUPS.TEAM_ROLE)
-                .values(teamId, ldapGroup, role.toString())
-                .onConflict(TEAM_LDAP_GROUPS.TEAM_ID, TEAM_LDAP_GROUPS.LDAP_GROUP)
-                .doUpdate().set(TEAM_LDAP_GROUPS.TEAM_ROLE, role.toString())
-                .execute();
+        upsertGroup(tx, teamId, "ldap", ldapGroup, role);
     }
 
     public void removeLdapGroups(DSLContext tx, UUID teamId) {
-        tx.deleteFrom(TEAM_LDAP_GROUPS)
-                .where(TEAM_LDAP_GROUPS.TEAM_ID.eq(teamId))
-                .execute();
+        removeGroups(tx, teamId, "ldap");
+    }
+
+    public void upsertGroup(DSLContext tx, UUID teamId, String sourceId, String groupId, TeamRole role) {
+        tx.execute("INSERT INTO team_source_groups (team_id, source_id, group_id, team_role) VALUES (?, ?, ?, ?) " +
+                        "ON CONFLICT (team_id, source_id, group_id) DO UPDATE SET team_role = EXCLUDED.team_role",
+                teamId, sourceId, groupId, role.toString());
+    }
+
+    public void removeGroups(DSLContext tx, UUID teamId, String sourceId) {
+        tx.execute("DELETE FROM team_source_groups WHERE team_id = ? AND source_id = ?", teamId, sourceId);
     }
 
     public boolean isInAnyTeam(UUID orgId, UUID userId, TeamRole... roles) {

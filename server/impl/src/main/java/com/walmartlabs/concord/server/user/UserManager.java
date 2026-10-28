@@ -158,6 +158,26 @@ public class UserManager {
         return Optional.of(newEntry);
     }
 
+    public Optional<UserEntry> updateProfile(UUID userId, String displayName, String email) {
+        UserEntry previous = userDao.get(userId);
+        if (previous == null) {
+            return Optional.empty();
+        }
+        UserEntry updated = userDao.updateProfile(userId, displayName, email);
+        if (updated == null) {
+            return Optional.empty();
+        }
+        Map<String, Object> changes = DiffUtils.compare(previous, updated);
+        if (!changes.isEmpty()) {
+            auditLog.add(AuditObject.USER, AuditAction.UPDATE)
+                    .field("userId", userId)
+                    .field("username", previous.getName())
+                    .field("changes", changes)
+                    .log();
+        }
+        return Optional.of(updated);
+    }
+
     public UserEntry create(String username, String domain, String displayName, String email, UserType type, Set<String> roles) {
         if (type == null) {
             type = UserPrincipal.assertCurrent().getType();

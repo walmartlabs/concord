@@ -26,6 +26,7 @@ import com.google.inject.Module;
 import com.walmartlabs.concord.server.boot.BackgroundTasks;
 import com.walmartlabs.concord.server.boot.HttpServer;
 import com.walmartlabs.concord.server.message.MessageChannelManager;
+import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
 
 import javax.inject.Inject;
 import java.util.Collection;
@@ -47,6 +48,9 @@ public final class ConcordServer {
     @Inject
     private MessageChannelManager messageChannelManager;
 
+    @Inject
+    private AuthorizationService authorizationService;
+
     private final Lock controlMutex = new ReentrantLock();
 
     public static ConcordServer withModules(Module... modules) throws Exception {
@@ -66,6 +70,7 @@ public final class ConcordServer {
     public ConcordServer start() throws Exception {
         controlMutex.lock();
         try {
+            authorizationService.reconcile();
             tasks.start();
             server.start();
         } finally {

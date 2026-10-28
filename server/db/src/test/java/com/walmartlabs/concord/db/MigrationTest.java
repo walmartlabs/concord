@@ -107,10 +107,50 @@ public class MigrationTest {
             var before = snapshot(db);
             applyMigrations(db);
             assertEquals(before, snapshot(db));
-            assertEquals(List.of("2461000", "2461010", "2461020"), rows(db,
-                    "select id from server_db_log where id in ('2461000','2461010','2461020') order by id"));
+            assertEquals(List.of("2461000", "2461010", "2461020", "2461030"), rows(db,
+                    "select id from server_db_log where id in ('2461000','2461010','2461020','2461030') order by id"));
             execute(db, "delete from users where user_id='" + LDAP + "'");
             assertEquals(List.of("<null>|false"), rows(db, "select user_id,is_active from user_identities where provider_id='ldap' and authority='' and subject='[\"shared\",\"example\"]'"));
+        }
+    }
+
+    @Test
+    @Timeout(value = 2, unit = TimeUnit.MINUTES)
+    public void effectiveSourceGrantsRequireLiveEligibleBindingsAndRespectDirectTeams() throws Exception {
+        try (var db = createDbContainer()) {
+            db.start();
+            migrateBeforeSecurity(db);
+            fixture(db);
+            applyMigrations(db);
+            UUID derivedRole = UUID.randomUUID();
+            execute(db, "insert into roles(role_id, role_name) values ('" + derivedRole + "', 'derived-role')");
+            execute(db, "insert into role_source_groups values ('" + derivedRole + "', 'ldap', 'cn=fixture')");
+            execute(db, "update authorization_sources set is_active=true where source_id='ldap'");
+            assertEquals(List.of("0"), rows(db, "select count(*) from v_user_roles where user_id='" + LDAP + "' and role_id='" + derivedRole + "'"));
+            execute(db, "update user_authorization_state set status='VALID', valid_until=current_timestamp + interval '1 hour' where user_id='" + LDAP + "' and source_id='ldap'");
+            assertEquals(List.of("1"), rows(db, "select count(*) from v_user_roles where user_id='" + LDAP + "' and role_id='" + derivedRole + "'"));
+            UUID foreignRole = UUID.randomUUID();
+            execute(db, "insert into roles(role_id, role_name) values ('" + foreignRole + "', 'foreign-role')");
+            execute(db, "insert into authorization_sources values ('other', true)");
+            execute(db, "insert into role_source_groups values ('" + foreignRole + "', 'other', 'cn=fixture')");
+            assertEquals(List.of("0"), rows(db, "select count(*) from v_user_roles where user_id='" + LDAP + "' and role_id='" + foreignRole + "'"));
+            execute(db, "update authorization_sources set is_active=false where source_id='ldap'");
+            assertEquals(List.of("0"), rows(db, "select count(*) from v_effective_source_groups where user_id='" + LDAP + "'"));
+            execute(db, "update authorization_sources set is_active=true where source_id='ldap'");
+            assertEquals(List.of("OWNER"), rows(db, "select team_role from v_user_teams where user_id='" + LDAP + "' and team_id='" + TEAM + "'"));
+            execute(db, "delete from user_teams where user_id='" + LDAP + "' and team_id='" + TEAM + "'");
+            execute(db, "insert into user_source_teams values ('" + LDAP + "', 'ldap', '" + TEAM + "', 'MAINTAINER')");
+            assertEquals(List.of("MAINTAINER"), rows(db, "select team_role from v_user_teams where user_id='" + LDAP + "' and team_id='" + TEAM + "'"));
+            execute(db, "update user_authorization_state set status='UNAVAILABLE' where user_id='" + LDAP + "' and source_id='ldap'");
+            assertEquals(List.of("0"), rows(db, "select count(*) from v_user_teams where user_id='" + LDAP + "' and team_id='" + TEAM + "'"));
+            assertEquals(List.of("0"), rows(db, "select count(*) from v_user_roles where user_id='" + LDAP + "' and role_id='" + derivedRole + "'"));
+            execute(db, "update user_authorization_state set status='VALID', valid_until=current_timestamp - interval '1 second' where user_id='" + LDAP + "'");
+            assertEquals(List.of("0"), rows(db, "select count(*) from v_effective_source_groups where user_id='" + LDAP + "'"));
+            execute(db, "update user_authorization_state set valid_until=current_timestamp + interval '1 hour' where user_id='" + LDAP + "'");
+            execute(db, "update user_identities set is_active=false where identity_id=(select identity_id from user_authorization_bindings where user_id='" + LDAP + "' and source_id='ldap')");
+            assertEquals(List.of("0"), rows(db, "select count(*) from v_effective_source_groups where user_id='" + LDAP + "'"));
+            assertEquals(List.of("0"), rows(db, "select count(*) from information_schema.tables where table_name in ('user_ldap_groups','role_ldap_groups','team_ldap_groups')"));
+            assertEquals(List.of("0"), rows(db, "select count(*) from information_schema.columns where table_name='users' and column_name='last_group_sync_dt'"));
         }
     }
 
@@ -246,7 +286,7 @@ public class MigrationTest {
         assertEquals(List.of("local"), rows(db, "select profile_provider_id from users where user_id = '" + OAUTH + "'"));
         assertEquals(List.of("ldap|false"), rows(db, "select source_id,is_active from authorization_sources where source_id = 'ldap'"));
         assertEquals(List.of("ldap|DEFAULT|STALE|true"),
-                rows(db, "select b.source_id,b.origin,s.status,s.observed_at = u.last_group_sync_dt from user_authorization_bindings b join user_authorization_state s on s.binding_id=b.binding_id join users u on u.user_id=b.user_id where b.user_id='" + LDAP + "'"));
+                rows(db, "select b.source_id,b.origin,s.status,s.observed_at = timestamp '2020-01-02 03:04:05'::timestamptz from user_authorization_bindings b join user_authorization_state s on s.binding_id=b.binding_id where b.user_id='" + LDAP + "'"));
         assertEquals(List.of("ldap|cn=fixture"), rows(db, "select source_id,group_id from user_source_groups where user_id='" + LDAP + "'"));
         assertEquals(List.of("ldap|cn=fixture"), rows(db, "select source_id,group_id from role_source_groups where role_id='" + ROLE + "'"));
         assertEquals(List.of("ldap|cn=fixture|MEMBER"), rows(db, "select source_id,group_id,team_role from team_source_groups where team_id='" + TEAM + "'"));

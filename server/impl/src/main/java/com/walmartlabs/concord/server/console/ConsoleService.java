@@ -51,6 +51,7 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
+import com.walmartlabs.concord.server.security.legacy.LegacyApiGuard;
 import com.walmartlabs.concord.server.user.RoleEntry;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -88,6 +89,7 @@ public class ConsoleService implements Resource {
     private final JsonStoreAccessManager jsonStoreAccessManager;
     private final ConsoleServiceDao consoleServiceDao;
     private final ConsoleConfiguration consoleCfg;
+    private final LegacyApiGuard legacyApi;
 
     @Inject
     public ConsoleService(ProjectDao projectDao,
@@ -103,7 +105,7 @@ public class ConsoleService implements Resource {
                           JsonStoreQueryDao storageQueryDao,
                           JsonStoreAccessManager jsonStoreAccessManager,
                           ConsoleServiceDao consoleServiceDao,
-                          ConsoleConfiguration consoleCfg) {
+                          ConsoleConfiguration consoleCfg, LegacyApiGuard legacyApi) {
 
         this.projectDao = projectDao;
         this.repositoryManager = repositoryManager;
@@ -119,6 +121,7 @@ public class ConsoleService implements Resource {
         this.jsonStoreAccessManager = jsonStoreAccessManager;
         this.consoleServiceDao = consoleServiceDao;
         this.consoleCfg = consoleCfg;
+        this.legacyApi = legacyApi;
     }
 
     @GET
@@ -344,6 +347,7 @@ public class ConsoleService implements Resource {
     @Validate
     @WithTimer
     public List<LdapGroupSearchResult> searchLdapGroups(@QueryParam("filter") @Size(min = 5, max = 256) String filter) {
+        legacyApi.check();
         if (filter == null) {
             return Collections.emptyList();
         }

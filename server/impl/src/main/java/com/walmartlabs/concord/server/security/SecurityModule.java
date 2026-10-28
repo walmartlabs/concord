@@ -31,6 +31,7 @@ import com.walmartlabs.concord.server.sdk.security.UserDirectory;
 import com.walmartlabs.concord.server.sdk.security.UserProfileService;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyAuthenticationHandler;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyRealm;
+import com.walmartlabs.concord.server.security.authorization.SecuritySourcesResource;
 import com.walmartlabs.concord.server.security.github.GithubRealm;
 import com.walmartlabs.concord.server.security.identity.LocalUserDirectory;
 import com.walmartlabs.concord.server.security.identity.IdentityServiceImpl;
@@ -57,7 +58,7 @@ public class SecurityModule implements Module {
         newSetBinder(binder, UserDirectory.class).addBinding().to(LdapUserDirectory.class);
         binder.bind(UserProfileService.class).to(UserProfileServiceImpl.class);
         binder.bind(IdentityService.class).to(IdentityServiceImpl.class);
-        newSetBinder(binder, AuthorizationProvider.class);
+        newSetBinder(binder, AuthorizationProvider.class).addBinding().to(LdapAuthorizationProvider.class);
         newSetBinder(binder, ProvisioningPolicy.class);
         newSetBinder(binder, LegacyIdentityMatcher.class);
         binder.bind(ProviderRegistry.class).in(SINGLETON);
@@ -87,5 +88,6 @@ public class SecurityModule implements Module {
         bindExceptionMapper(binder, UnauthenticatedExceptionMapper.class);
 
         bindJaxRsResource(binder, UserLdapGroupResource.class);
+        bindJaxRsResource(binder, SecuritySourcesResource.class);
     }
 }

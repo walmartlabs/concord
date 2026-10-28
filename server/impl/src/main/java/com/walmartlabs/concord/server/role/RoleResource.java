@@ -33,6 +33,7 @@ import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
+import com.walmartlabs.concord.server.security.legacy.LegacyApiGuard;
 import com.walmartlabs.concord.server.user.RoleEntry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -53,11 +54,13 @@ public class RoleResource implements Resource {
 
     private final RoleDao roleDao;
     private final AuditLog auditLog;
+    private final LegacyApiGuard legacyApi;
 
     @Inject
-    public RoleResource(RoleDao roleDao, AuditLog auditLog) {
+    public RoleResource(RoleDao roleDao, AuditLog auditLog, LegacyApiGuard legacyApi) {
         this.roleDao = roleDao;
         this.auditLog = auditLog;
+        this.legacyApi = legacyApi;
     }
 
     @GET
@@ -161,6 +164,7 @@ public class RoleResource implements Resource {
                                                 @QueryParam("replace") @DefaultValue("false") boolean replace,
                                                 @Valid Collection<String> groups) {
         assertAdmin();
+        legacyApi.check();
 
         boolean isEmptyGroups = groups == null || groups.isEmpty();
         if (isEmptyGroups && !replace) {
@@ -177,8 +181,10 @@ public class RoleResource implements Resource {
                 roleDao.removeLdapGroups(tx, id);
             }
 
-            for (String g : groups) {
-                roleDao.upsertLdapGroup(tx, id, g);
+            if (groups != null) {
+                for (String g : groups) {
+                    roleDao.upsertLdapGroup(tx, id, g);
+                }
             }
         });
 
@@ -205,6 +211,7 @@ public class RoleResource implements Resource {
     @Operation(description = "List ldap groups of a role", operationId = "listLdapGroupsForRole")
     public List<String> listLdapGroups(@PathParam("roleName") @ConcordKey String roleName) {
         assertAdmin();
+        legacyApi.check();
 
         UUID id = roleDao.getId(roleName);
         if (id == null) {

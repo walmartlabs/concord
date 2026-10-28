@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.security.ldap;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2026 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,54 +22,32 @@ package com.walmartlabs.concord.server.security.ldap;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
-import com.walmartlabs.concord.db.PgUtils;
-import com.walmartlabs.concord.server.audit.ActionSource;
-import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.cfg.LdapGroupSyncConfiguration;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
-import com.walmartlabs.concord.server.user.UserManager;
-import com.walmartlabs.concord.server.user.UserType;
+import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
 import org.jooq.Configuration;
-import org.jooq.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.time.OffsetDateTime;
-import java.util.Collections;
+import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.jooq.Tables.USERS;
-import static org.jooq.impl.DSL.*;
-
-/**
- * Responsible for AD/LDAP group synchronization and enabling/disabling users
- * based on whether they have active groups or not.
- */
+/** Refreshes LDAP source bindings without changing account status. */
 public class UserLdapGroupSynchronizer implements ScheduledTask {
-
     private static final Logger log = LoggerFactory.getLogger(UserLdapGroupSynchronizer.class);
-
     private static final String TASK_NAME = "user-ldap-group-sync";
     private final Dao dao;
     private final LdapGroupSyncConfiguration cfg;
-    private final LdapManager ldapManager;
-    private final LdapGroupDao ldapGroupsDao;
-    private final UserManager userManager;
+    private final AuthorizationService authorizationService;
 
     @Inject
-    public UserLdapGroupSynchronizer(Dao dao, LdapGroupSyncConfiguration cfg,
-                                     LdapManager ldapManager,
-                                     LdapGroupDao ldapGroupsDao,
-                                     UserManager userManager) {
-
+    public UserLdapGroupSynchronizer(Dao dao, LdapGroupSyncConfiguration cfg, AuthorizationService authorizationService) {
         this.dao = dao;
         this.cfg = cfg;
-        this.ldapManager = ldapManager;
-        this.userManager = userManager;
-        this.ldapGroupsDao = ldapGroupsDao;
+        this.authorizationService = authorizationService;
     }
 
     @Override
@@ -84,86 +62,41 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
 
     @Override
     public void performTask() {
-        Field<OffsetDateTime> cutoff = PgUtils.nowMinus(cfg.getMinAgeSync());
-        Field<OffsetDateTime> disabledAge = cfg.getDisabledAge() != null ? PgUtils.nowMinus(cfg.getDisabledAge()) : null;
-
-        long usersCount = 0;
-        List<UserItem> users;
+        OffsetDateTime cutoff = OffsetDateTime.now(ZoneOffset.UTC).minus(cfg.getMinAgeSync());
+        UUID after = null;
+        long count = 0;
+        List<UUID> users;
         do {
-            users = dao.list(cfg.getFetchLimit(), cutoff, disabledAge);
-            users.forEach(this::processUser);
-            usersCount += users.size();
-        } while (users.size() >= cfg.getFetchLimit());
-
-        log.info("performTask -> done, {} user(s) synchronized", usersCount);
-    }
-
-    private void processUser(UserItem u) {
-        try {
-            Set<String> groups = ldapManager.getGroups(u.username, u.domain);
-            if (groups == null) {
-                if (u.expired) {
-                    deleteUser(u.userId);
-                } else {
-                    ldapGroupsDao.update(u.userId, Collections.emptySet());
-                    disableUser(u.userId);
+            users = dao.list(cfg.getFetchLimit(), cutoff, after);
+            for (UUID userId : users) {
+                try {
+                    authorizationService.refresh(userId, "ldap", true);
+                } catch (Exception e) {
+                    // A failure is recorded by the authorization service; continue the batch.
+                    log.warn("LDAP source refresh failed for user {}", userId, e);
                 }
-            } else if (!u.permanentlyDisabled) {
-                enableUser(u.userId);
-                ldapGroupsDao.update(u.userId, groups);
+                after = userId;
             }
-        } catch (Exception e) {
-            log.error("processUser ['{}'] -> error", u.username, e);
-        }
+            count += users.size();
+        } while (users.size() >= cfg.getFetchLimit() && !users.isEmpty());
+        log.info("performTask -> done, {} user(s) synchronized", count);
     }
 
-    private void enableUser(UUID userId) {
-        AuditLog.withActionSource(ActionSource.SYSTEM, Collections.singletonMap("task", TASK_NAME),
-                () -> userManager.enable(userId));
-    }
-
-    private void disableUser(UUID userId) {
-        AuditLog.withActionSource(ActionSource.SYSTEM, Collections.singletonMap("task", TASK_NAME),
-                () -> userManager.disable(userId));
-    }
-
-    private void deleteUser(UUID userId) {
-        AuditLog.withActionSource(ActionSource.SYSTEM, Collections.singletonMap("task", TASK_NAME),
-                () -> userManager.delete(userId));
-    }
-
-    public static final class Dao extends AbstractDao {
-
+    public static class Dao extends AbstractDao {
         @Inject
         public Dao(@MainDB Configuration cfg) {
             super(cfg);
         }
 
-        List<UserItem> list(int limit, Field<OffsetDateTime> cutoff, Field<OffsetDateTime> disabledAge) {
-            Field<Boolean> expiredFiled = disabledAge == null ? inline(false) : field(nvl(USERS.DISABLED_DATE, currentOffsetDateTime()).lessThan(disabledAge));
-            return txResult(tx -> tx.select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.IS_PERMANENTLY_DISABLED, expiredFiled)
-                    .from(USERS)
-                    .where(USERS.USER_TYPE.eq(UserType.LDAP.name()))
-                    .and(USERS.LAST_GROUP_SYNC_DT.isNull().or(USERS.LAST_GROUP_SYNC_DT.lessThan(cutoff)))
-                    .limit(limit)
-                    .fetch(r -> new UserItem(r.value1(), r.value2(), r.value3(), r.value4(), r.value5())));
-        }
-    }
-
-    private static class UserItem {
-
-        private final UUID userId;
-        private final String username;
-        private final String domain;
-        private final boolean permanentlyDisabled;
-        private final boolean expired;
-
-        private UserItem(UUID userId, String username, String domain, boolean expired, boolean permanentlyDisabled) {
-            this.userId = userId;
-            this.username = username;
-            this.domain = domain;
-            this.expired = expired;
-            this.permanentlyDisabled = permanentlyDisabled;
+        List<UUID> list(int limit, OffsetDateTime cutoff, UUID after) {
+            return txResult(tx -> tx.fetch("select b.user_id from user_authorization_bindings b " +
+                            "left join user_authorization_state s on s.user_id=b.user_id and s.source_id=b.source_id " +
+                            "and s.binding_id=b.binding_id " +
+                            "where b.source_id='ldap' and (s.observed_at is null or s.observed_at < ?) " +
+                            (after == null ? "" : "and b.user_id > ? ") +
+                            "order by b.user_id limit ?",
+                    after == null ? new Object[]{cutoff, limit} : new Object[]{cutoff, after, limit})
+                    .map(r -> r.get("user_id", UUID.class)));
         }
     }
 }

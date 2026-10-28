@@ -175,20 +175,25 @@ public class TeamManager {
     }
 
     public void addLdapGroups(String orgName, String teamName, boolean replace, Collection<TeamLdapGroupEntry> groups) {
+        addGroups(orgName, teamName, "ldap", replace, groups == null ? java.util.List.of() :
+                groups.stream().map(g -> new TeamSourceGroupEntry(g.group(), g.role())).toList());
+    }
+
+    public void addGroups(String orgName, String teamName, String sourceId, boolean replace, Collection<TeamSourceGroupEntry> groups) {
         TeamEntry t = assertTeam(orgName, teamName, TeamRole.MAINTAINER, true, true);
 
         teamDao.tx(tx -> {
             if (replace) {
-                teamDao.removeLdapGroups(tx, t.getId());
+                teamDao.removeGroups(tx, t.getId(), sourceId);
             }
 
-            for (TeamLdapGroupEntry g : groups) {
+            for (TeamSourceGroupEntry g : groups) {
                 TeamRole role = g.role();
                 if (role == null) {
                     role = TeamRole.MEMBER;
                 }
 
-                teamDao.upsertLdapGroup(tx, t.getId(), g.group(), role);
+                teamDao.upsertGroup(tx, t.getId(), sourceId, g.groupId(), role);
             }
 
             validateUsers(tx, t.getOrgId());
@@ -198,7 +203,8 @@ public class TeamManager {
                 .field("orgId", t.getOrgId())
                 .field("teamId", t.getId())
                 .field("name", t.getName())
-                .field("action", "addLdapGroups")
+                .field("action", "addGroups")
+                .field("sourceId", sourceId)
                 .field("groups", groups)
                 .field("replace", replace)
                 .log();

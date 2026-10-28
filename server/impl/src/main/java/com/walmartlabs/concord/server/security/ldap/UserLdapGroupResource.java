@@ -27,7 +27,8 @@ import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.user.UserInfoProvider;
+import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
+import com.walmartlabs.concord.server.security.legacy.LegacyApiGuard;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,8 +42,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Collections;
-import java.util.Set;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @Path("/api/v1/userldapgroup")
@@ -50,16 +50,14 @@ import java.util.UUID;
 public class UserLdapGroupResource implements Resource {
 
     private final UserManager userManager;
-    private final LdapUserInfoProvider ldapUserInfoProvider;
-    private final LdapGroupDao ldapGroupsDao;
-    private final LdapManager ldapManager;
+    private final AuthorizationService authorization;
+    private final LegacyApiGuard legacyApi;
 
     @Inject
-    public UserLdapGroupResource(UserManager userManager, LdapUserInfoProvider ldapUserInfoProvider, LdapGroupDao ldapGroupsDao, LdapManager ldapManager) {
+    public UserLdapGroupResource(UserManager userManager, AuthorizationService authorization, LegacyApiGuard legacyApi) {
         this.userManager = userManager;
-        this.ldapUserInfoProvider = ldapUserInfoProvider;
-        this.ldapGroupsDao = ldapGroupsDao;
-        this.ldapManager = ldapManager;
+        this.authorization = authorization;
+        this.legacyApi = legacyApi;
     }
 
     /**
@@ -76,26 +74,21 @@ public class UserLdapGroupResource implements Resource {
     @Operation(description = "Sync ldap groups for a user", operationId = "syncLdapGroups")
     public GenericOperationResult sync(@Valid SyncUserLdapGroupRequest req) {
         assertAdmin();
+        legacyApi.check();
 
         UUID id = userManager.getId(req.getUsername(), req.getUserDomain(), UserType.LDAP).orElse(null);
         if (id == null) {
             throw new ConcordApplicationException("User not found: " + req.getUsername(), Response.Status.BAD_REQUEST);
         }
 
-        UserInfoProvider.UserInfo info = ldapUserInfoProvider.getInfo(id, req.getUsername(), req.getUserDomain());
-        if (info == null) {
-            throw new ConcordApplicationException("User '" + req.getUsername() + "' with domain '" + req.getUserDomain() + "' not found in LDAP", Response.Status.BAD_REQUEST);
-        }
-
         try {
-            Set<String> groups = ldapManager.getGroups(req.getUsername(), req.getUserDomain());
-            if (groups == null) {
-                ldapGroupsDao.update(id, Collections.emptySet());
-            } else {
-                ldapGroupsDao.update(id, groups);
-            }
-        } catch (Exception e) {
-            throw new ConcordApplicationException("Failed to update groups for user '" + req.getUsername() + "' error -> '" + e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR);
+            authorization.refresh(id, "ldap", true);
+        } catch (NoSuchElementException e) {
+            throw new ConcordApplicationException("LDAP authorization binding not found", Response.Status.BAD_REQUEST);
+        } catch (com.walmartlabs.concord.server.sdk.security.AuthorizationSubjectNotFoundException e) {
+            throw new ConcordApplicationException("User not found in LDAP", Response.Status.BAD_REQUEST);
+        } catch (com.walmartlabs.concord.server.sdk.security.AuthorizationUnavailableException e) {
+            throw new ConcordApplicationException("Failed to update LDAP groups", Response.Status.SERVICE_UNAVAILABLE);
         }
 
         return new GenericOperationResult(OperationResult.UPDATED);

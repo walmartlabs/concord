@@ -22,3 +22,8 @@ User identity links can be inspected at `GET /api/v2/user/{id}/identities`;
 administrators can link or retire identities and select an account's profile
 provider through the corresponding v2 user endpoints. Retired identity keys
 remain reserved and require explicit administrative recovery.
+
+Authorization group mappings are qualified by source. LDAP refreshes replace
+only LDAP-owned observations; direct role and team grants remain independent.
+`security.authorization.sources.<id>.required` controls whether an unavailable
+or missing source prevents access, and `.maxAge` controls its observation lease.

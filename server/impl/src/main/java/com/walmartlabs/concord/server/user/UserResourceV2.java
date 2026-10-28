@@ -27,6 +27,12 @@ import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.security.AuthorizationSubjectNotFoundException;
+import com.walmartlabs.concord.server.sdk.security.AuthorizationUnavailableException;
+import com.walmartlabs.concord.server.GenericOperationResult;
+import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.security.identity.IdentityDao;
 import com.walmartlabs.concord.server.security.identity.IdentityDao.IdentityRecord;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,6 +41,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.NoSuchElementException;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,11 +52,13 @@ public class UserResourceV2 implements Resource {
 
     private final UserDao userDao;
     private final IdentityDao identityDao;
+    private final AuthorizationService authorization;
 
     @Inject
-    public UserResourceV2(UserDao userDao, IdentityDao identityDao) {
+    public UserResourceV2(UserDao userDao, IdentityDao identityDao, AuthorizationService authorization) {
         this.userDao = userDao;
         this.identityDao = identityDao;
+        this.authorization = authorization;
     }
 
     @GET
@@ -113,6 +123,59 @@ public class UserResourceV2 implements Resource {
     public void unlinkIdentity(@PathParam("id") UUID id, @PathParam("identityId") UUID identityId) {
         assertAdmin();
         identityDao.unlink(id, identityId);
+    }
+
+    public record AuthorizationBindingsRequest(List<AuthorizationService.BindingSpec> sources) {}
+
+    @GET
+    @Path("/{id}/authorization")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(operationId = "listUserAuthorization")
+    public List<AuthorizationService.Binding> authorization(@PathParam("id") UUID id) {
+        assertCanRead(id);
+        try {
+            return authorization.listBindings(id);
+        } catch (NoSuchElementException e) {
+            throw new ConcordApplicationException("User not found", Response.Status.NOT_FOUND);
+        }
+    }
+
+    @PUT
+    @Path("/{id}/authorization")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(operationId = "replaceUserAuthorization")
+    public GenericOperationResult authorization(@PathParam("id") UUID id, AuthorizationBindingsRequest request) {
+        assertAdmin();
+        if (request == null || request.sources() == null) {
+            throw new ValidationErrorsException("Missing authorization sources");
+        }
+        try {
+            authorization.replaceBindings(id, request.sources());
+        } catch (NoSuchElementException e) {
+            throw new ConcordApplicationException("User not found", Response.Status.NOT_FOUND);
+        } catch (IllegalArgumentException e) {
+            throw new ValidationErrorsException(e.getMessage());
+        }
+        return new GenericOperationResult(OperationResult.UPDATED);
+    }
+
+    @POST
+    @Path("/{id}/authorization/{sourceId}/sync")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(operationId = "syncUserAuthorization")
+    public GenericOperationResult syncAuthorization(@PathParam("id") UUID id, @PathParam("sourceId") String sourceId) {
+        assertAdmin();
+        try {
+            authorization.refresh(id, sourceId, true);
+        } catch (NoSuchElementException e) {
+            throw new ConcordApplicationException("Authorization binding not found", Response.Status.NOT_FOUND);
+        } catch (AuthorizationSubjectNotFoundException e) {
+            throw new ConcordApplicationException("Authorization subject not found", Response.Status.FORBIDDEN);
+        } catch (AuthorizationUnavailableException e) {
+            throw new ConcordApplicationException("Authorization source unavailable", Response.Status.SERVICE_UNAVAILABLE);
+        }
+        return new GenericOperationResult(OperationResult.UPDATED);
     }
 
     public record ProfileProviderRequest(String providerId, UUID identityId) {}

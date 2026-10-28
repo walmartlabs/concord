@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.legacy.LegacyApiGuard;
 import com.walmartlabs.concord.server.user.User;
 import com.walmartlabs.concord.server.user.UserType;
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,15 +51,17 @@ public class TeamResource implements Resource {
     private final TeamDao teamDao;
     private final TeamManager teamManager;
     private final OrganizationManager orgManager;
+    private final LegacyApiGuard legacyApi;
 
     @Inject
     public TeamResource(TeamDao teamDao,
                         TeamManager teamManager,
-                        OrganizationManager orgManager) {
+                        OrganizationManager orgManager, LegacyApiGuard legacyApi) {
 
         this.teamDao = teamDao;
         this.teamManager = teamManager;
         this.orgManager = orgManager;
+        this.legacyApi = legacyApi;
     }
 
     /**
@@ -148,6 +151,7 @@ public class TeamResource implements Resource {
     @Operation(description = "List ldap roles of a team")
     public List<TeamLdapGroupEntry> listLdapGroups(@PathParam("orgName") @ConcordKey String orgName,
                                                    @PathParam("teamName") @ConcordKey String teamName) {
+        legacyApi.check();
 
         TeamEntry t = assertTeam(orgName, teamName, TeamRole.MEMBER, true, false);
         return teamDao.listLdapGroups(t.getId());
@@ -189,6 +193,7 @@ public class TeamResource implements Resource {
                                                    @PathParam("teamName") @ConcordKey String teamName,
                                                    @QueryParam("replace") @DefaultValue("false") boolean replace,
                                                    @Valid Collection<TeamLdapGroupEntry> roles) {
+        legacyApi.check();
 
         boolean isEmptyRoles = roles == null || roles.isEmpty();
         if (isEmptyRoles && !replace) {

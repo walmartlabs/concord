@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.SecurityUtils;
+import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -54,7 +55,7 @@ public class LdapRealm extends AbstractLdapRealm {
 
     private final UserManager userManager;
     private final LdapManager ldapManager;
-    private final LdapGroupManager ldapGroupManager;
+    private final AuthorizationService authorizationService;
     private final LdapContextFactory ldapContextFactory;
     private final AuditLog auditLog;
 
@@ -63,12 +64,12 @@ public class LdapRealm extends AbstractLdapRealm {
                      UserManager userManager,
                      LdapContextFactory ldapContextFactory,
                      LdapManager ldapManager,
-                     LdapGroupManager ldapGroupManager,
+                     AuthorizationService authorizationService,
                      AuditLog auditLog) throws NamingException {
 
         this.userManager = userManager;
         this.ldapManager = ldapManager;
-        this.ldapGroupManager = ldapGroupManager;
+        this.authorizationService = authorizationService;
         this.auditLog = auditLog;
         this.searchBase = cfg.getSearchBase();
         this.systemUsername = cfg.getSystemUsername();
@@ -126,11 +127,13 @@ public class LdapRealm extends AbstractLdapRealm {
         }
 
         UUID userId = u.getId();
+        u = userManager.updateProfile(userId, ldapPrincipal.getDisplayName(), ldapPrincipal.getEmail())
+                .orElseThrow(() -> new AuthenticationException("User record not found: " + userId));
+        if (u.isDisabled()) {
+            throw new AuthenticationException("User account '" + u.getName() + "' is disabled");
+        }
 
-        u = userManager.update(userId, ldapPrincipal.getDisplayName(), ldapPrincipal.getEmail(), UserType.LDAP, false, null)
-                .orElseThrow(() -> new RuntimeException("User record not found: " + userId));
-
-        ldapGroupManager.cacheLdapGroupsIfNeeded(userId, ldapPrincipal.getGroups());
+        authorizationService.prepare(userId, true);
 
         UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, u);
 

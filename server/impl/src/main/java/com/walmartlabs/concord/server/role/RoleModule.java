@@ -30,5 +30,6 @@ public class RoleModule implements Module {
     @Override
     public void configure(Binder binder) {
         bindJaxRsResource(binder, RoleResource.class);
+        bindJaxRsResource(binder, RoleGroupsResource.class);
     }
 }

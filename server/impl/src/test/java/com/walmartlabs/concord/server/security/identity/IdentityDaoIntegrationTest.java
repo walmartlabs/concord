@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.sdk.security.*;
 import com.walmartlabs.concord.server.security.provider.ProviderRegistry;
 import com.walmartlabs.concord.server.user.UserDao;
+import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.junit.jupiter.api.*;
@@ -75,7 +76,7 @@ class IdentityDaoIntegrationTest {
         UserDirectory local = mock(UserDirectory.class);
         when(local.id()).thenReturn("local");
         ProviderRegistry registry = new ProviderRegistry(Set.of(local), Set.of(), Set.of(POLICY), Set.of());
-        dao = new IdentityDao(jooq, registry, new UserDao(jooq, new UuidGenerator()));
+        dao = new IdentityDao(jooq, registry, new UserDao(jooq, new UuidGenerator(), com.typesafe.config.ConfigFactory.empty()));
     }
 
     private static String encoded(String s) { return Base64.getEncoder().encodeToString(s.getBytes(UTF_8)); }
@@ -84,6 +85,24 @@ class IdentityDaoIntegrationTest {
     static void stop() throws Exception {
         if (dataSource != null) dataSource.getClass().getMethod("close").invoke(dataSource);
         if (database != null) database.stop();
+    }
+
+    @Test
+    void legacyLdapCreationBindsOnlyNewAccountsAndProfileUpdatesPreserveDisable() {
+        var config = com.typesafe.config.ConfigFactory.parseString("security.authorization.sources.ldap.required=true");
+        UserDao users = new UserDao(sql.configuration(), new UuidGenerator(), config);
+        String username = "ldap-" + UUID.randomUUID();
+        UUID user = users.insertOrUpdate(username, null, "Old", "old@example", UserType.LDAP, null);
+        var binding = sql.fetchOne("select b.binding_id,b.origin,b.is_required,i.subject from user_authorization_bindings b join user_identities i on i.identity_id=b.identity_id where b.user_id=? and b.source_id='ldap'", user);
+        assertNotNull(binding);
+        assertEquals("DEFAULT", binding.get("origin", String.class));
+        assertTrue(binding.get("is_required", Boolean.class));
+        assertEquals(com.walmartlabs.concord.server.security.ldap.LdapUserDirectory.key(username, null).subject(), binding.get("subject", String.class));
+        sql.transaction(c -> DSL.using(c).execute("delete from user_authorization_bindings where user_id=? and source_id='ldap'", user));
+        assertEquals(user, users.insertOrUpdate(username, null, "Old", "old@example", UserType.LDAP, null));
+        assertEquals(0, sql.fetchCount(sql.selectFrom(org.jooq.impl.DSL.table("user_authorization_bindings")).where(org.jooq.impl.DSL.field("user_id").eq(user))));
+        users.disable(user, false);
+        assertTrue(users.updateProfile(user, "New", "new@example").isDisabled());
     }
 
     private static UUID legacy(String username, boolean disabled) {
@@ -188,7 +207,7 @@ class IdentityDaoIntegrationTest {
         when(external.id()).thenReturn("directory");
         when(external.acceptsIdentity(key)).thenReturn(true);
         ProviderRegistry registry = new ProviderRegistry(Set.of(external), Set.of(), Set.of(), Set.of());
-        IdentityDao scoped = new IdentityDao(sql.configuration(), registry, new UserDao(sql.configuration(), new UuidGenerator()));
+        IdentityDao scoped = new IdentityDao(sql.configuration(), registry, new UserDao(sql.configuration(), new UuidGenerator(), com.typesafe.config.ConfigFactory.empty()));
         UUID identityId = scoped.link(user, key).identityId();
         assertThrows(javax.ws.rs.BadRequestException.class, () -> scoped.setProfile(other, "directory", identityId));
         scoped.setProfile(user, "directory", identityId);

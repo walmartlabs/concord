@@ -43,7 +43,7 @@ public class UserDaoTest extends AbstractDaoTest {
 
     @BeforeEach
     public void setUp() {
-        userDao = new UserDao(getConfiguration(), getUuidGenerator());
+        userDao = new UserDao(getConfiguration(), getUuidGenerator(), com.typesafe.config.ConfigFactory.empty());
         apiKeyDao = new ApiKeyDao(getConfiguration(), new SecureRandomProvider().get(), getUuidGenerator());
     }
 
