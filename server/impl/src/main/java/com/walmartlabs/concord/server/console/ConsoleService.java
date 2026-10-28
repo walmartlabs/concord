@@ -150,10 +150,11 @@ public class ConsoleService implements Resource {
 
         UserEntry u = userManager.get(p.userId())
                 .orElseThrow(() -> new ConcordApplicationException("Unknown user: " + p.userId()));
-        Set<String> userLdapGroups = authorizationService.getGroups(p.userId()).stream()
+        Set<GroupRef> groups = authorizationService.getGroups(p.userId());
+        Set<String> userLdapGroups = legacyApi.isEnabled() ? groups.stream()
                 .filter(g -> "ldap".equals(g.sourceId()))
                 .map(GroupRef::groupId)
-                .collect(java.util.stream.Collectors.toSet());
+                .collect(java.util.stream.Collectors.toSet()) : Set.of();
 
         return UserInfoResponse.builder()
                 .id(u.getId())
@@ -161,6 +162,7 @@ public class ConsoleService implements Resource {
                 .teams(consoleServiceDao.listTeams(p.userId()))
                 .roles(authorizationService.prepare(p.userId()).roles().stream().toList())
                 .ldapGroups(userLdapGroups)
+                .authorizationGroups(groups)
                 .build();
     }
 

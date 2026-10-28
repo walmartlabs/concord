@@ -18,6 +18,7 @@
     <modules>
         <module>ansible</module>
         <module>kafka-event-sink</module>
+        <module>ldap</module>
         <module>noderoster</module>
         <module>oidc</module>
         <module>oneops</module>

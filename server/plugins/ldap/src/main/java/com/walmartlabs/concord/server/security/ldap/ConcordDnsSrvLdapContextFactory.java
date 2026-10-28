@@ -66,7 +66,6 @@ public class ConcordDnsSrvLdapContextFactory implements LdapContextFactory {
      */
     public ConcordDnsSrvLdapContextFactory(LdapConfiguration cfg) {
         this.cfg = cfg;
-        this.setLdapContextFactory(getNewContextInstance(resolveUrl()));
     }
 
     public String getCurrentLdapUrl() {
@@ -110,6 +109,15 @@ public class ConcordDnsSrvLdapContextFactory implements LdapContextFactory {
     }
 
     private <T> T withRetry(Callable<T> f) throws Exception {
+        mutex.lock();
+        try {
+            if (delegate == null) {
+                refreshSRVList();
+                delegate = getNewContextInstance(resolveUrl());
+            }
+        } finally {
+            mutex.unlock();
+        }
         int tryCount = 0;
         while (tryCount < MAX_RETRY) {
             try {

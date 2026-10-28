@@ -88,9 +88,11 @@ public class LdapUserDirectory implements UserDirectory {
         } catch (IllegalArgumentException | DirectoryUnavailableException e) {
             throw e;
         } catch (Exception e) {
-            // LdapManager reports non-unique results as runtime exceptions for all three lookups.
-            if (e.getMessage() != null && e.getMessage().startsWith("LDAP error, non unique result")) {
-                throw new DirectoryAmbiguousException("Ambiguous LDAP directory lookup", e);
+            // LoadingCache wraps exceptions from its loader, including runtime exceptions.
+            for (Throwable cause = e; cause != null; cause = cause.getCause()) {
+                if (cause instanceof LdapNonUniqueResultException) {
+                    throw new DirectoryAmbiguousException("Ambiguous LDAP directory lookup", e);
+                }
             }
             throw new DirectoryUnavailableException("LDAP directory lookup failed", e);
         }

@@ -30,9 +30,11 @@ import java.util.Hashtable;
 
 public class ConcordLdapContextFactory implements LdapContextFactory {
     private final LdapContextFactory delegate;
+    private final boolean configured;
 
     @SuppressWarnings("unchecked")
     public ConcordLdapContextFactory(LdapConfiguration cfg) {
+        configured = cfg.getUrl() != null && !cfg.getUrl().isBlank();
         JndiLdapContextFactory f = new JndiLdapContextFactory() {
             @Override
             protected LdapContext createLdapContext(Hashtable env) throws NamingException {
@@ -46,7 +48,9 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
                 return super.createLdapContext(env);
             }
         };
-        f.setUrl(cfg.getUrl());
+        if (configured) {
+            f.setUrl(cfg.getUrl());
+        }
         f.setSystemUsername(cfg.getSystemUsername());
         f.setSystemPassword(cfg.getSystemPassword());
         f.setPoolingEnabled(true);
@@ -55,11 +59,13 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
 
     @Override
     public LdapContext getSystemLdapContext() throws NamingException {
+        if (!configured) throw new NamingException("LDAP URL is not configured");
         return delegate.getSystemLdapContext();
     }
 
     @Override
     public LdapContext getLdapContext(Object principal, Object credentials) throws NamingException {
+        if (!configured) throw new NamingException("LDAP URL is not configured");
         return delegate.getLdapContext(principal, credentials);
     }
 

@@ -417,6 +417,11 @@
             </dependency>
             <dependency>
                 <groupId>com.walmartlabs.concord.server.plugins</groupId>
+                <artifactId>ldap</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.server.plugins</groupId>
                 <artifactId>pfed-sso</artifactId>
                 <version>${project.version}</version>
             </dependency>

@@ -37,11 +37,10 @@ import com.walmartlabs.concord.server.security.identity.LocalUserDirectory;
 import com.walmartlabs.concord.server.security.identity.IdentityServiceImpl;
 import com.walmartlabs.concord.server.security.identity.UserProfileServiceImpl;
 import com.walmartlabs.concord.server.security.internal.InternalRealm;
-import com.walmartlabs.concord.server.security.ldap.*;
+import com.walmartlabs.concord.server.security.ldap.UserLdapGroupResource;
 import com.walmartlabs.concord.server.security.provider.ProviderRegistry;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyRealm;
 import org.apache.shiro.realm.Realm;
-import org.apache.shiro.realm.ldap.LdapContextFactory;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
@@ -53,11 +52,10 @@ public class SecurityModule implements Module {
     public void configure(Binder binder) {
         binder.bind(UserSecurityContext.class);
         newSetBinder(binder, UserDirectory.class).addBinding().to(LocalUserDirectory.class);
-        newSetBinder(binder, UserDirectory.class).addBinding().to(LdapUserDirectory.class);
         binder.bind(UserProfileService.class).to(UserProfileServiceImpl.class);
         binder.bind(IdentityService.class).to(IdentityServiceImpl.class);
-        newSetBinder(binder, AuthorizationProvider.class).addBinding().to(LdapAuthorizationProvider.class);
         newSetBinder(binder, ProvisioningPolicy.class);
+        newSetBinder(binder, AuthorizationProvider.class);
         newSetBinder(binder, LegacyIdentityMatcher.class);
         binder.bind(ProviderRegistry.class).in(SINGLETON);
 
@@ -70,13 +68,8 @@ public class SecurityModule implements Module {
         newSetBinder(binder, Realm.class).addBinding().to(ApiKeyRealm.class);
         newSetBinder(binder, Realm.class).addBinding().to(GithubRealm.class);
         newSetBinder(binder, Realm.class).addBinding().to(InternalRealm.class);
-        newSetBinder(binder, Realm.class).addBinding().to(LdapRealm.class);
         newSetBinder(binder, Realm.class).addBinding().to(SessionKeyRealm.class);
 
-        binder.bind(LdapManager.class).toProvider(LdapManagerProvider.class);
-        binder.bind(LdapContextFactory.class).toProvider(LdapContextFactoryProvider.class);
-
-        bindSingletonScheduledTask(binder, UserLdapGroupSynchronizer.class);
 
 
         bindExceptionMapper(binder, UnauthorizedExceptionMapper.class);

@@ -102,7 +102,7 @@ public class LdapManagerImpl implements LdapManager {
                 NamingEnumeration<? extends Attribute> ae = attrs.getAll();
                 while (ae.hasMore()) {
                     Attribute attr = ae.next();
-                    if (MEMBER_OF_ATTR.equals(attr.getID())) {
+                    if (MEMBER_OF_ATTR.equalsIgnoreCase(attr.getID())) {
                         result.addAll(LdapUtils.getAllAttributeValues(attr));
                         break;
                     }
@@ -129,7 +129,7 @@ public class LdapManagerImpl implements LdapManager {
                 @Override
                 public void handleNonUniqueResult() {
                     log.error("getPrincipal ['{}', '{}'] -> non unique results", username, domain);
-                    throw new RuntimeException("LDAP error, non unique result found for username: '" + username + "'. " +
+                    throw new LdapNonUniqueResultException("LDAP error, non unique result found for username: '" + username + "'. " +
                             "Try using a fully-qualified username.");
                 }
             });
@@ -163,7 +163,7 @@ public class LdapManagerImpl implements LdapManager {
                 @Override
                 public void handleNonUniqueResult() {
                     log.error("getPrincipalByDn ['{}'] -> non unique results", dn);
-                    throw new RuntimeException("LDAP error, non unique result found for DN: '" + dn + "'.");
+                    throw new LdapNonUniqueResultException("LDAP error, non unique result found for DN: '" + dn + "'.");
                 }
             });
         } catch (Exception e) {
@@ -191,7 +191,7 @@ public class LdapManagerImpl implements LdapManager {
                 @Override
                 public void handleNonUniqueResult() {
                     log.error("getPrincipalByMail ['{}'] -> non unique results", email);
-                    throw new RuntimeException("LDAP error, non unique result found for email: '" + email + "'.");
+                    throw new LdapNonUniqueResultException("LDAP error, non unique result found for email: '" + email + "'.");
                 }
             });
         } catch (Exception e) {

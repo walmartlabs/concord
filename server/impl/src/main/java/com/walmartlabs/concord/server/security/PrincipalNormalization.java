@@ -20,17 +20,15 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
-import com.walmartlabs.concord.server.sdk.security.AuthenticationContext;
 import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
 import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
 import org.apache.shiro.subject.PrincipalCollection;
-import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.ThreadContext;
 
 import java.util.UUID;
 
-/** Transitional bridge for authentication realms that still return legacy principals. */
+/** Accessors for the current SDK principal. */
 public final class PrincipalNormalization {
     private PrincipalNormalization() {
     }
@@ -57,7 +55,6 @@ public final class PrincipalNormalization {
             return null;
         }
         SubjectPrincipal sdk = null;
-        UserPrincipal legacy = null;
         UUID id = null;
         for (Object principal : principals) {
             UUID candidate = null;
@@ -67,12 +64,6 @@ public final class PrincipalNormalization {
                 if (sdk == null) {
                     sdk = subject;
                 }
-            } else if (principal instanceof UserPrincipal) {
-                UserPrincipal user = (UserPrincipal) principal;
-                candidate = user.getId();
-                if (legacy == null) {
-                    legacy = user;
-                }
             }
             if (candidate != null) {
                 if (id != null && !id.equals(candidate)) {
@@ -81,22 +72,7 @@ public final class PrincipalNormalization {
                 id = candidate;
             }
         }
-        if (sdk != null || legacy == null) {
-            return sdk;
-        }
-        return new SubjectPrincipal(legacy.getId(), legacy.getUsername(), legacy.getDomain(),
-                new AuthenticationContext(legacy.getRealm(), null, null));
+        return sdk;
     }
 
-    /** Adds the normalized principal without removing legacy or credential principals. */
-    public static PrincipalCollection normalize(PrincipalCollection principals) {
-        SubjectPrincipal subject = find(principals);
-        if (subject == null || !principals.byType(SubjectPrincipal.class).isEmpty()) {
-            return principals;
-        }
-        SimplePrincipalCollection result = new SimplePrincipalCollection();
-        result.addAll(principals);
-        result.add(subject, subject.authentication().providerId());
-        return result;
-    }
 }

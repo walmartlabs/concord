@@ -60,8 +60,6 @@ public class ConfigurationModule implements Module {
         binder.bind(GithubConfiguration.class).in(SINGLETON);
         binder.bind(GitHubAppInstallationConfig.class).to(GithubConfiguration.class).in(SINGLETON);
         binder.bind(ImportConfiguration.class).in(SINGLETON);
-        binder.bind(LdapConfiguration.class).in(SINGLETON);
-        binder.bind(LdapGroupSyncConfiguration.class).in(SINGLETON);
         binder.bind(LockingConfiguration.class).in(SINGLETON);
         binder.bind(PolicyCacheConfiguration.class).in(SINGLETON);
         binder.bind(ProcessConfiguration.class).in(SINGLETON);

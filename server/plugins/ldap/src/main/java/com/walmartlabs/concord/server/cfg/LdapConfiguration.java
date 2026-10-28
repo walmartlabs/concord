@@ -36,8 +36,14 @@ public class LdapConfiguration implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Inject
+    @Nullable
     @Config("ldap.url")
     private String url;
+
+    @Inject
+    @Nullable
+    @Config("ldap.authenticationEnabled")
+    private Boolean authenticationEnabled;
 
     @Inject
     @Config("ldap.searchBase")
@@ -125,6 +131,10 @@ public class LdapConfiguration implements Serializable {
 
     public String getUrl() {
         return url;
+    }
+
+    public boolean isAuthenticationEnabled() {
+        return authenticationEnabled == null || authenticationEnabled;
     }
 
     public String getSearchBase() {

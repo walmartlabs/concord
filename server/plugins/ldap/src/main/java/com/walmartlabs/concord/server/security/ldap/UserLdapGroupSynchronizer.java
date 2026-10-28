@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -95,7 +96,7 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
                             "where b.source_id='ldap' and (s.observed_at is null or s.observed_at < ?) " +
                             (after == null ? "" : "and b.user_id > ? ") +
                             "order by b.user_id limit ?",
-                    after == null ? new Object[]{cutoff, limit} : new Object[]{cutoff, after, limit})
+                    after == null ? new Object[]{Timestamp.from(cutoff.toInstant()), limit} : new Object[]{Timestamp.from(cutoff.toInstant()), after, limit})
                     .map(r -> r.get("user_id", UUID.class)));
         }
     }

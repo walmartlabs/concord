@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.server.org.team.TeamRole;
+import com.walmartlabs.concord.server.sdk.security.GroupRef;
 import org.immutables.value.Value;
 
 import java.io.Serial;
@@ -71,6 +72,8 @@ public interface UserInfoResponse extends Serializable {
     List<String> roles();
 
     Set<String> ldapGroups();
+
+    Set<GroupRef> authorizationGroups();
 
     static ImmutableUserInfoResponse.Builder builder() {
         return ImmutableUserInfoResponse.builder();

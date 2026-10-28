@@ -25,7 +25,6 @@ import com.walmartlabs.concord.server.security.AuthorizationFailure;
 import com.walmartlabs.concord.server.security.AuthorizationScope;
 import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
-import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.ThreadContext;
 import org.apache.shiro.web.servlet.OncePerRequestFilter;
@@ -54,20 +53,14 @@ public class ConcordAuthorizationFilter extends OncePerRequestFilter {
         Subject original = org.apache.shiro.SecurityUtils.getSubject();
         AuthorizationScope scope = null;
         try {
-            PrincipalCollection principals;
+            SubjectPrincipal principal;
             try {
-                principals = PrincipalNormalization.normalize(original.getPrincipals());
+                principal = PrincipalNormalization.find(original.getPrincipals());
             } catch (IllegalArgumentException conflict) {
                 ((HttpServletResponse) response).setStatus(HttpServletResponse.SC_FORBIDDEN);
                 request.removeAttribute(NEW_AUTHENTICATION);
                 request.removeAttribute(AUTHORIZATION_FAILURE);
                 return;
-            }
-            SubjectPrincipal principal = PrincipalNormalization.find(principals);
-            if (principals != original.getPrincipals()) {
-                Subject normalized = new Subject.Builder().principals(principals)
-                        .authenticated(original.isAuthenticated()).session(original.getSession(false)).buildSubject();
-                ThreadContext.bind(normalized);
             }
             if (principal != null) {
                 scope = AuthorizationScope.open(authorizationService, principal,

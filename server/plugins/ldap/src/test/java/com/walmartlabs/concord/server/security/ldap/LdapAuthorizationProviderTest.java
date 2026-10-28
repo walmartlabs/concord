@@ -41,6 +41,7 @@ class LdapAuthorizationProviderTest {
     @Test
     void sourceActivationAndIdentityAreIndependentOfAuthentication() {
         LdapConfiguration cfg = mock(LdapConfiguration.class);
+        when(cfg.isAuthenticationEnabled()).thenReturn(false);
         LdapManager manager = mock(LdapManager.class);
         LdapGroupSyncConfiguration sync = mock(LdapGroupSyncConfiguration.class);
         when(sync.getMinAgeLogin()).thenReturn(Duration.ZERO);
