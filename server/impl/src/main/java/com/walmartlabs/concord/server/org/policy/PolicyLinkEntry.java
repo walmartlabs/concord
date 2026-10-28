@@ -25,8 +25,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.sdk.security.ExternalIdentityKey;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
 public class PolicyLinkEntry implements Serializable {
@@ -44,6 +46,9 @@ public class PolicyLinkEntry implements Serializable {
 
     private final String userDomain;
 
+    private final UUID userId;
+    private final ExternalIdentityKey identity;
+
     public PolicyLinkEntry() {
         this(null, null, null, null);
     }
@@ -52,16 +57,24 @@ public class PolicyLinkEntry implements Serializable {
         this(orgName, null, null, null);
     }
 
+    public PolicyLinkEntry(String orgName, String projectName, String userName, String userDomain) {
+        this(orgName, projectName, userName, userDomain, null, null);
+    }
+
     @JsonCreator
     public PolicyLinkEntry(@JsonProperty("orgName") String orgName,
                            @JsonProperty("projectName") String projectName,
                            @JsonProperty("userName") String userName,
-                           @JsonProperty("userDomain") String userDomain) {
+                           @JsonProperty("userDomain") String userDomain,
+                           @JsonProperty("userId") UUID userId,
+                           @JsonProperty("identity") ExternalIdentityKey identity) {
 
         this.orgName = orgName;
         this.projectName = projectName;
         this.userName = userName;
         this.userDomain = userDomain;
+        this.userId = userId;
+        this.identity = identity;
     }
 
     public String getOrgName() {
@@ -80,6 +93,14 @@ public class PolicyLinkEntry implements Serializable {
         return userDomain;
     }
 
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public ExternalIdentityKey getIdentity() {
+        return identity;
+    }
+
     @Override
     public String toString() {
         return "PolicyLinkEntry{" +
@@ -87,6 +108,8 @@ public class PolicyLinkEntry implements Serializable {
                 ", projectName='" + projectName + '\'' +
                 ", userName='" + userName + '\'' +
                 ", userDomain='" + userDomain + '\'' +
+                ", userId=" + userId +
+                ", identity=" + identity +
                 '}';
     }
 }

@@ -38,7 +38,6 @@ import com.walmartlabs.concord.server.security.provider.ProviderRegistry;
 import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
 import com.walmartlabs.concord.server.security.identity.IdentityDao;
 import com.walmartlabs.concord.server.security.Roles;
-import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import java.util.stream.Collectors;
 import org.jooq.DSLContext;
 
@@ -56,12 +55,10 @@ public class UserManager {
     private final AuthorizationService authorization;
     private final ProviderRegistry registry;
     private final IdentityDao identities;
-    private final LdapConfiguration ldapConfiguration;
 
     @Inject
     public UserManager(UserDao userDao, TeamDao teamDao, AuditLog auditLog, UserProfileService profiles,
-                       AuthorizationService authorization, ProviderRegistry registry, IdentityDao identities,
-                       LdapConfiguration ldapConfiguration) {
+                       AuthorizationService authorization, ProviderRegistry registry, IdentityDao identities) {
         this.userDao = userDao;
         this.teamDao = teamDao;
         this.auditLog = auditLog;
@@ -69,7 +66,6 @@ public class UserManager {
         this.authorization = authorization;
         this.registry = registry;
         this.identities = identities;
-        this.ldapConfiguration = ldapConfiguration;
     }
 
     public Optional<UserEntry> get(String username, String domain, UserType type) {
@@ -85,33 +81,6 @@ public class UserManager {
         return Optional.of(userDao.get(id));
     }
 
-    public Optional<UserEntry> getOrCreate(String username, String userDomain, UserType type) {
-        return getOrCreate(username, userDomain, type, null, null, null);
-    }
-
-    public Optional<UserEntry> getOrCreate(String username, String userDomain, UserType type, String displayName, String email, Set<String> roles) {
-        Optional<UserEntry> result = get(username, userDomain, type);
-        if (result.isPresent()) {
-            return result;
-        }
-
-        if (type == null) {
-            type = currentLegacyType();
-        }
-
-        if (type == UserType.LDAP) {
-            UserProfile info = ldapProfile(username, userDomain);
-            if (info == null) return Optional.empty();
-            username = info.username();
-            userDomain = info.domain();
-            displayName = info.displayName();
-            email = info.email();
-            result = get(username, userDomain, type);
-            if (result.isPresent()) return result;
-        }
-
-        return Optional.of(create(username, userDomain, displayName, email, type, roles));
-    }
 
     public Optional<UserEntry> get(UUID id) {
         return Optional.ofNullable(userDao.get(id));
@@ -171,32 +140,14 @@ public class UserManager {
         return Optional.of(newEntry);
     }
 
-    public Optional<UserEntry> updateProfile(UUID userId, String displayName, String email) {
-        UserEntry previous = userDao.get(userId);
-        if (previous == null) {
-            return Optional.empty();
-        }
-        UserEntry updated = userDao.updateProfile(userId, displayName, email);
-        if (updated == null) {
-            return Optional.empty();
-        }
-        Map<String, Object> changes = DiffUtils.compare(previous, updated);
-        if (!changes.isEmpty()) {
-            auditLog.add(AuditObject.USER, AuditAction.UPDATE)
-                    .field("userId", userId)
-                    .field("username", previous.getName())
-                    .field("changes", changes)
-                    .log();
-        }
-        return Optional.of(updated);
-    }
 
     public UserEntry create(String username, String domain, String displayName, String email, UserType type, Set<String> roles) {
         if (type == null) {
             type = currentLegacyType();
         }
 
-        if (type == UserType.LDAP && !Roles.isAdmin() && !ldapConfiguration.isAutoCreateUsers()) {
+        if (type == UserType.LDAP && !Roles.isAdmin()
+                && Optional.ofNullable(registry.policies().get("ldap")).map(p -> !p.autoCreate()).orElse(true)) {
             throw new ConcordApplicationException("Automatic creation of users is disabled.");
         }
         UUID id = userDao.insertOrUpdate(username, domain, displayName, email, type, roles);
@@ -223,6 +174,22 @@ public class UserManager {
                 .field("username", e.getName())
                 .changes(null, e)
                 .log();
+    }
+
+    public CreateUserResponse updateSelected(UUID id, CreateUserRequest request) {
+        UserEntry previous = userDao.get(id);
+        UserEntry updated = userDao.updateSelected(id, request);
+        if (updated == null) {
+            throw new ConcordApplicationException("User not found: " + id, javax.ws.rs.core.Response.Status.NOT_FOUND);
+        }
+        if (previous != null) {
+            Map<String, Object> changes = DiffUtils.compare(previous, updated);
+            if (!changes.isEmpty()) {
+                auditLog.add(AuditObject.USER, AuditAction.UPDATE)
+                        .field("userId", id).field("username", updated.getName()).field("changes", changes).log();
+            }
+        }
+        return new CreateUserResponse(id, updated.getName(), com.walmartlabs.concord.server.OperationResult.UPDATED);
     }
 
     public CreateUserResponse upsertLegacy(CreateUserRequest request, UserType type) {

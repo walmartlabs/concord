@@ -34,6 +34,7 @@ import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
 import com.walmartlabs.concord.server.user.User;
+import com.walmartlabs.concord.server.user.AccountSelector;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.DSLContext;
@@ -63,6 +64,8 @@ public class TeamManager {
     private final OrganizationManager orgManager;
     private final UserManager userManager;
     private final AuditLog auditLog;
+    @Inject
+    AccountSelector accountSelector;
 
     @Inject
     public TeamManager(TeamDao teamDao,
@@ -131,14 +134,15 @@ public class TeamManager {
         TeamEntry t = assertTeam(orgName, teamName, TeamRole.MAINTAINER, true, true);
 
         Map<UUID, TeamRole> effectiveUsers = new HashMap<>();
-        for (TeamUserEntry u : users) {
-            UserType type = u.getUserType();
-            if (type == null) {
-                type = userManager.currentLegacyType();
-            }
-
+        for (TeamUserEntry u : users == null ? java.util.List.<TeamUserEntry>of() : users) {
+            accountSelector.validate(u.getUserId(), u.getIdentity(),
+                    u.getUsername() != null || u.getUserDomain() != null || u.getUserType() != null);
             UUID id = u.getUserId();
-            if (id == null) {
+            if (u.getIdentity() != null) {
+                id = accountSelector.identityId(u.getIdentity());
+            } else if (id == null) {
+                accountSelector.requireLegacy();
+                UserType type = u.getUserType() != null ? u.getUserType() : userManager.currentLegacyType();
                 id = userManager.getId(u.getUsername(), u.getUserDomain(), type)
                         .orElseThrow(() -> new ConcordApplicationException("User not found: " + u.getUsername()));
             }
@@ -237,6 +241,18 @@ public class TeamManager {
                 .field("name", t.getName())
                 .field("action", "removeUsers")
                 .field("users", users)
+                .log();
+    }
+
+    public void removeUsersById(String orgName, String teamName, Collection<UUID> userIds) {
+        TeamEntry t = assertTeam(orgName, teamName, TeamRole.MAINTAINER, true, true);
+        teamDao.removeUsers(t.getId(), userIds);
+        auditLog.add(AuditObject.TEAM, AuditAction.UPDATE)
+                .field("orgId", t.getOrgId())
+                .field("teamId", t.getId())
+                .field("name", t.getName())
+                .field("action", "removeUsers")
+                .field("users", userIds)
                 .log();
     }
 

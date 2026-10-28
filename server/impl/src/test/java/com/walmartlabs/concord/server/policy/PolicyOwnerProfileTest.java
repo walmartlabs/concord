@@ -20,22 +20,67 @@ package com.walmartlabs.concord.server.policy;
  * =====
  */
 
+import com.walmartlabs.concord.policyengine.EntityPolicy;
+import com.walmartlabs.concord.policyengine.EntityRule;
+import com.walmartlabs.concord.policyengine.PolicyEngine;
+import com.walmartlabs.concord.policyengine.PolicyRules;
+import com.walmartlabs.concord.server.sdk.security.AuthenticationContext;
+import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
 import com.walmartlabs.concord.server.sdk.security.ExternalIdentityKey;
 import com.walmartlabs.concord.server.sdk.security.UserProfile;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.identity.IdentityDao;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserInfo;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
+import org.apache.shiro.mgt.DefaultSecurityManager;
+import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.apache.shiro.subject.Subject;
+import org.apache.shiro.util.ThreadContext;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class PolicyOwnerProfileTest {
+    @AfterEach
+    void cleanupSubject() {
+        ThreadContext.remove();
+    }
+
+    @Test
+    void entityCheckUsesSdkPrincipalAndEnforcesPolicy() {
+        UUID userId = UUID.randomUUID();
+        UUID orgId = UUID.randomUUID();
+        UUID projectId = UUID.randomUUID();
+        SubjectPrincipal principal = new SubjectPrincipal(userId, "alice", null,
+                new AuthenticationContext("test", null, null));
+        DefaultSecurityManager securityManager = new DefaultSecurityManager();
+        ThreadContext.bind(securityManager);
+        ThreadContext.bind(new Subject.Builder(securityManager).authenticated(true)
+                .principals(new SimplePrincipalCollection(principal, "test")).buildSubject());
+
+        PolicyCache cache = mock(PolicyCache.class);
+        PolicyEngine engine = mock(PolicyEngine.class);
+        EntityRule deny = EntityRule.builder().entity("project").action("create").msg("denied").build();
+        when(engine.getEntityPolicy()).thenReturn(new EntityPolicy(new PolicyRules<>(null, null, List.of(deny))));
+        when(cache.get(orgId, projectId, userId)).thenReturn(engine);
+        PolicyManager manager = new PolicyManager(cache, null, mock(UserManager.class));
+
+        manager.checkEntity(orgId, projectId, EntityType.PROJECT, EntityAction.UPDATE, null, Map.of());
+        ValidationErrorsException error = assertThrows(ValidationErrorsException.class,
+                () -> manager.checkEntity(orgId, projectId, EntityType.PROJECT, EntityAction.CREATE, null, Map.of()));
+        assertEquals("Action forbidden: denied", error.getMessage());
+        verify(cache, times(2)).get(orgId, projectId, userId);
+    }
+
     @Test
     void ownerProfileIsSelectedByUuidAndCannotOverwriteIdentity() {
         UUID id = UUID.randomUUID();

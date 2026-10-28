@@ -27,10 +27,10 @@ import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.tables.AuditLog;
 import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.AuditLogRecord;
-import com.walmartlabs.concord.server.org.EntityOwner;
+import com.walmartlabs.concord.server.org.OwnerProjection;
 import com.walmartlabs.concord.server.sdk.audit.AuditEvent;
-import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.Configuration;
+import org.jooq.DSLContext;
 import org.jooq.JSONB;
 import org.jooq.Record9;
 import org.jooq.SelectOnConditionStep;
@@ -47,13 +47,16 @@ import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 public class AuditDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
+    private final OwnerProjection ownerProjection;
 
     @Inject
     public AuditDao(@MainDB Configuration cfg,
-                    ConcordObjectMapper objectMapper) {
+                    ConcordObjectMapper objectMapper,
+                    OwnerProjection ownerProjection) {
         super(cfg);
 
         this.objectMapper = objectMapper;
+        this.ownerProjection = ownerProjection;
     }
 
     /**
@@ -143,11 +146,11 @@ public class AuditDao extends AbstractDao {
 
             q.orderBy(l.ENTRY_DATE.desc(), l.ENTRY_SEQ.desc());
 
-            return q.fetch(this::toEntry);
+            return q.fetch(r -> toEntry(tx, r));
         });
     }
 
-    private AuditLogEntry toEntry(Record9<OffsetDateTime, String, String, JSONB, UUID, String, String, String, String> r) {
+    private AuditLogEntry toEntry(DSLContext tx, Record9<OffsetDateTime, String, String, JSONB, UUID, String, String, String, String> r) {
         ImmutableAuditLogEntry.Builder b = AuditLogEntry.builder()
                 .entryDate(r.get(0, OffsetDateTime.class))
                 .action(AuditAction.valueOf(r.get(1, String.class)))
@@ -155,13 +158,8 @@ public class AuditDao extends AbstractDao {
                 .details(objectMapper.fromJSONB(r.get(3, JSONB.class)));
 
         if (r.get(4) != null) {
-            b.user(EntityOwner.builder()
-                    .id(r.get(4, UUID.class))
-                    .username(r.get(5, String.class))
-                    .userDomain(r.get(6, String.class))
-                    .userType(UserType.fromNullable(r.get(7, String.class)))
-                    .displayName(r.get(8, String.class))
-                    .build());
+            b.user(ownerProjection.owner(tx, r.get(4, UUID.class), r.get(5, String.class),
+                    r.get(6, String.class), r.get(8, String.class), r.get(7, String.class)));
         }
 
         return b.build();

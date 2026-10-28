@@ -38,6 +38,7 @@ import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
+import com.walmartlabs.concord.server.user.AccountSelector;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import io.swagger.v3.oas.annotations.Operation;
@@ -63,6 +64,7 @@ public class PolicyResource implements Resource {
     private final ProjectDao projectDao;
     private final PolicyManager policyManager;
     private final UserManager userManager;
+    private final AccountSelector accountSelector;
     private final AuditLog auditLog;
 
     @Inject
@@ -71,7 +73,8 @@ public class PolicyResource implements Resource {
                           ProjectDao projectDao,
                           UserManager userManager,
                           PolicyManager policyManager,
-                          AuditLog auditLog) {
+                          AuditLog auditLog,
+                          AccountSelector accountSelector) {
 
         this.orgManager = orgManager;
         this.orgDao = orgDao;
@@ -79,6 +82,7 @@ public class PolicyResource implements Resource {
         this.policyManager = policyManager;
         this.userManager = userManager;
         this.auditLog = auditLog;
+        this.accountSelector = accountSelector;
     }
 
     @GET
@@ -164,9 +168,17 @@ public class PolicyResource implements Resource {
 
         assertAdmin();
 
-        // TODO: add user type into request
-        UserType userType = userManager.currentLegacyType();
-        PolicyLink l = assertLink(policyName, entry.getOrgName(), entry.getProjectName(), entry.getUserName(), entry.getUserDomain(), userType);
+        accountSelector.validate(entry.getUserId(), entry.getIdentity(),
+                entry.getUserName() != null || entry.getUserDomain() != null);
+        UUID userId = entry.getUserId();
+        if (entry.getIdentity() != null) {
+            userId = accountSelector.identityId(entry.getIdentity());
+        }
+        if (userId != null) {
+            assertUserId(userId);
+        }
+        UserType userType = userId == null && entry.getUserName() != null ? userManager.currentLegacyType() : null;
+        PolicyLink l = assertLink(policyName, entry.getOrgName(), entry.getProjectName(), entry.getUserName(), entry.getUserDomain(), userType, userId);
         policyManager.link(l.policyId, l.orgId, l.projectId, l.userId);
 
         auditLog.add(AuditObject.POLICY, AuditAction.UPDATE)
@@ -192,10 +204,11 @@ public class PolicyResource implements Resource {
 
         assertAdmin();
 
-        if (userType == null) {
+        accountSelector.validate(null, null, userName != null || domain != null || userType != null);
+        if (userType == null && userName != null) {
             userType = userManager.currentLegacyType();
         }
-        PolicyLink l = assertLink(policyName, orgName, projectName, userName, domain, userType);
+        PolicyLink l = assertLink(policyName, orgName, projectName, userName, domain, userType, null);
         policyManager.unlink(l.policyId, l.orgId, l.projectId, l.userId);
 
         auditLog.add(AuditObject.POLICY, AuditAction.UPDATE)
@@ -206,6 +219,39 @@ public class PolicyResource implements Resource {
                 .log();
 
         return new GenericOperationResult(OperationResult.DELETED);
+    }
+
+    @DELETE
+    @Path("/{policyName}/users/{userId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Unlink a policy from a user", operationId = "unlinkPolicyFromUser")
+    public GenericOperationResult unlinkPolicyFromUser(@PathParam("policyName") @ConcordKey String policyName,
+                                                        @PathParam("userId") UUID userId) {
+        assertAdmin();
+        UUID policyId = policyManager.getId(policyName);
+        if (policyId == null) {
+            throw new ConcordApplicationException("Policy not found: " + policyName, Status.NOT_FOUND);
+        }
+        assertUserId(userId);
+        PolicyLink link = new PolicyLink(policyId, null, null, userId);
+        policyManager.unlinkUser(policyId, userId);
+        auditLog.add(AuditObject.POLICY, AuditAction.UPDATE)
+                .field("policyId", policyId)
+                .field("name", policyName)
+                .field("link", link)
+                .field("action", "unlink")
+                .log();
+        return new GenericOperationResult(OperationResult.DELETED);
+    }
+
+    @GET
+    @Path("/byUser/{userId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "List user-level policy links", operationId = "listPoliciesByUserId")
+    public List<PolicyEntry> listPoliciesByUserId(@PathParam("userId") UUID userId) {
+        assertAdmin();
+        assertUserId(userId);
+        return policyManager.listByUser(userId);
     }
 
     @GET
@@ -219,6 +265,7 @@ public class PolicyResource implements Resource {
                                   @QueryParam("userType") UserType userType) {
 
         assertAdmin();
+        accountSelector.validate(null, null, userName != null || userDomain != null || userType != null);
 
         if (orgName == null && projectName == null && userName == null) {
             return policyManager.list();
@@ -285,7 +332,13 @@ public class PolicyResource implements Resource {
                 .orElseThrow(() -> new ConcordApplicationException("User '" + userName + "' with domain '" + doamin + "' (" + userType + ") not found", Status.BAD_REQUEST));
     }
 
-    private PolicyLink assertLink(String policyName, String orgName, String projectName, String userName, String domain, UserType userType) {
+    private void assertUserId(UUID userId) {
+        if (userId == null || userManager.get(userId).isEmpty()) {
+            throw new ConcordApplicationException("User not found: " + userId, Status.NOT_FOUND);
+        }
+    }
+
+    private PolicyLink assertLink(String policyName, String orgName, String projectName, String userName, String domain, UserType userType, UUID userId) {
         UUID policyId = policyManager.getId(policyName);
         if (policyId == null) {
             throw new ConcordApplicationException("Policy not found: " + policyName, Status.NOT_FOUND);
@@ -311,8 +364,7 @@ public class PolicyResource implements Resource {
             orgId = null;
         }
 
-        UUID userId = null;
-        if (userName != null && userType != null) {
+        if (userId == null && userName != null && userType != null) {
             userId = assertUser(userName, domain, userType);
         }
 

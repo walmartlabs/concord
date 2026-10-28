@@ -22,17 +22,17 @@ package com.walmartlabs.concord.server.user;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.walmartlabs.concord.server.sdk.security.ExternalIdentityKey;
 
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Set;
+import java.util.UUID;
 
 public class CreateUserRequest implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @NotNull
     @Size(max = UserEntry.MAX_USERNAME_LENGTH)
     private final String username;
 
@@ -51,6 +51,9 @@ public class CreateUserRequest implements Serializable {
 
     private final Set<String> roles;
 
+    private UUID userId;
+    private ExternalIdentityKey identity;
+
     @JsonCreator
     public CreateUserRequest(@JsonProperty("username") String username,
                              @JsonProperty("userDomain") String userDomain,
@@ -67,6 +70,26 @@ public class CreateUserRequest implements Serializable {
         this.type = type;
         this.disabled = disabled;
         this.roles = roles;
+    }
+
+    @JsonProperty("userId")
+    public UUID getUserId() {
+        return userId;
+    }
+
+    @JsonProperty("userId")
+    public void setUserId(UUID userId) {
+        this.userId = userId;
+    }
+
+    @JsonProperty("identity")
+    public ExternalIdentityKey getIdentity() {
+        return identity;
+    }
+
+    @JsonProperty("identity")
+    public void setIdentity(ExternalIdentityKey identity) {
+        this.identity = identity;
     }
 
     public String getUsername() {

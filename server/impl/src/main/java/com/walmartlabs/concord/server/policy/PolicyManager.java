@@ -27,7 +27,7 @@ import com.walmartlabs.concord.server.org.policy.PolicyDao;
 import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserInfo;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -72,6 +72,15 @@ public class PolicyManager {
         return policyDao.getLinked(orgId, projectId, userId);
     }
 
+    public List<PolicyEntry> listByUser(UUID userId) {
+        return policyDao.listByUser(userId);
+    }
+
+    public void unlinkUser(UUID policyId, UUID userId) {
+        policyDao.unlinkUser(policyId, userId);
+        policyCache.refresh();
+    }
+
     public UUID insert(String name, UUID parentId, Map<String, Object> rules) {
         return policyDao.insert(name, parentId, rules);
     }
@@ -100,7 +109,7 @@ public class PolicyManager {
                             EntityType entityType, EntityAction action,
                             UserEntry owner, Map<String, Object> entityAttrs) {
 
-        PolicyEngine pe = get(orgId, projectId, UserPrincipal.assertCurrent().getId());
+        PolicyEngine pe = get(orgId, projectId, PrincipalNormalization.assertCurrent().userId());
         if (pe == null) {
             return;
         }

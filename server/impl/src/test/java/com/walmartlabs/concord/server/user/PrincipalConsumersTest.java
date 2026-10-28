@@ -24,9 +24,10 @@ import com.walmartlabs.concord.server.console.ConsoleService;
 import com.walmartlabs.concord.server.sdk.security.AuthenticationContext;
 import com.walmartlabs.concord.server.sdk.security.GroupRef;
 import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
-import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
 import com.walmartlabs.concord.server.security.identity.IdentityDao;
+import com.walmartlabs.concord.server.security.legacy.LegacyApiGuard;
+import com.walmartlabs.concord.server.sdk.security.ExternalIdentityKey;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
@@ -71,20 +72,43 @@ class PrincipalConsumersTest {
         when(authorization.prepare(id)).thenReturn(new AuthorizationService.EffectiveAuthorization(Set.of("current-role"), Set.of()));
         var dao = mock(ConsoleService.ConsoleServiceDao.class);
         when(dao.listTeams(id)).thenReturn(List.of());
-        var console = new ConsoleService(null, null, users, null, null, null, null, null, null, null, null, null, dao, null, null, authorization);
+        var legacy = mock(LegacyApiGuard.class);
+        when(legacy.isEnabled()).thenReturn(true);
+        var console = new ConsoleService(null, null, users, null, null, null, null, null, null, null, null, null, dao, null, legacy, authorization);
         var info = console.getUserInfo();
         assertEquals(id, info.id());
         assertEquals("Current name", info.displayName());
         assertEquals(Set.of("current-role"), Set.copyOf(info.roles()));
         assertEquals(Set.of("current"), info.ldapGroups());
+        assertEquals(Set.of(new GroupRef("ldap", "current"), new GroupRef("other", "hidden")), info.authorizationGroups());
+        when(legacy.isEnabled()).thenReturn(false);
+        var withoutLegacy = console.getUserInfo();
+        assertTrue(withoutLegacy.ldapGroups().isEmpty());
+        assertEquals(info.authorizationGroups(), withoutLegacy.authorizationGroups());
     }
 
     @Test
-    void legacyPrincipalCanReadOwnAccountButNotAnother() {
-        bind(new UserPrincipal("oldPlugin", account));
+    void identityLookupUsesSameSelfAccessRule() {
+        bind(new SubjectPrincipal(id, "alice", null, new AuthenticationContext("plugin", null, null)));
+        UserDao dao = mock(UserDao.class);
+        IdentityDao identities = mock(IdentityDao.class);
+        AccountSelector selectors = mock(AccountSelector.class);
+        ExternalIdentityKey key = new ExternalIdentityKey("oidc", "issuer", "subject");
+        when(selectors.identityId(key)).thenReturn(id);
+        when(dao.get(id)).thenReturn(account);
+        var resource = new UserResourceV2(dao, identities, authorization, selectors);
+        assertSame(account, resource.getUserByIdentity("oidc", "issuer", "subject"));
+        when(selectors.identityId(key)).thenReturn(UUID.randomUUID());
+        assertThrows(com.walmartlabs.concord.server.security.UnauthorizedException.class,
+                () -> resource.getUserByIdentity("oidc", "issuer", "subject"));
+    }
+
+    @Test
+    void sdkPrincipalCanReadOwnAccountButNotAnother() {
+        bind(new SubjectPrincipal(id, "alice", "example", new AuthenticationContext("plugin", null, null)));
         UserDao dao = mock(UserDao.class);
         when(dao.get(id)).thenReturn(account);
-        var resource = new UserResourceV2(dao, mock(IdentityDao.class), authorization);
+        var resource = new UserResourceV2(dao, mock(IdentityDao.class), authorization, mock(AccountSelector.class));
         assertSame(account, resource.get(id));
         assertThrows(com.walmartlabs.concord.server.security.UnauthorizedException.class, () -> resource.get(UUID.randomUUID()));
     }

@@ -94,6 +94,12 @@ public interface ProcessEntry extends Serializable {
     @Nullable
     UUID initiatorId();
 
+    @Nullable
+    String initiatorProfileProviderId();
+
+    @Nullable
+    Set<String> initiatorIdentityProviderIds();
+
     ProcessStatus status();
 
     @Nullable

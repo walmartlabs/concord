@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
+import com.walmartlabs.concord.server.sdk.security.AuthenticationContext;
 import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyRealm;
@@ -108,7 +109,7 @@ class CoreRealmsTest {
     }
 
     @Test
-    void sessionKeyNormalizesLegacyActorAndPreservesProcessScope() {
+    void sessionKeyUsesCurrentActorAndPreservesProcessScope() {
         UUID instanceId = UUID.randomUUID();
         UUID actor = UUID.randomUUID();
         PartialProcessKey processKey = PartialProcessKey.from(instanceId);
@@ -116,14 +117,14 @@ class CoreRealmsTest {
         ProcessSecurityContext context = mock(ProcessSecurityContext.class);
         ProcessInitiatorEntry process = mock(ProcessInitiatorEntry.class);
         when(queue.getInitiator(processKey)).thenReturn(process);
-        when(process.initiatorId()).thenReturn(actor);
+        when(process.initiatorId()).thenReturn(UUID.randomUUID());
         when(process.status()).thenReturn(ProcessStatus.RUNNING);
-        UserPrincipal legacy = new UserPrincipal("oldPlugin", user(actor, false));
-        when(context.getPrincipals(processKey)).thenReturn(new SimplePrincipalCollection(legacy, "oldPlugin"));
+        SubjectPrincipal principal = new SubjectPrincipal(actor, "alice", "example", new AuthenticationContext("oldPlugin", null, null));
+        when(context.getPrincipals(processKey)).thenReturn(new SimplePrincipalCollection(principal, "oldPlugin"));
         SessionRealm realm = new SessionRealm(context, queue);
         AuthenticationInfo info = realm.authenticate(new SessionKey(instanceId));
         assertEquals(actor, info.getPrincipals().oneByType(SubjectPrincipal.class).userId());
-        assertSame(legacy, info.getPrincipals().oneByType(UserPrincipal.class));
+        assertNull(info.getPrincipals().oneByType(UserPrincipal.class));
         assertEquals(processKey, info.getPrincipals().oneByType(SessionKeyPrincipal.class).getProcessKey());
         assertEquals(instanceId, info.getCredentials());
 
@@ -149,7 +150,7 @@ class CoreRealmsTest {
         assertThrows(AuthenticationException.class, () -> realm.authenticate(new SessionKey(instanceId)));
 
         SimplePrincipalCollection principals = new SimplePrincipalCollection(
-                new UserPrincipal("oldPlugin", user(actor, false)), "oldPlugin");
+                new SubjectPrincipal(actor, "alice", "example", new AuthenticationContext("oldPlugin", null, null)), "oldPlugin");
         principals.add(new SessionKeyPrincipal(processKey), SessionKeyRealm.REALM_NAME);
         when(context.getPrincipals(processKey)).thenReturn(principals);
         assertThrows(AuthenticationException.class, () -> realm.authenticate(new SessionKey(instanceId)));

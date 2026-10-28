@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
+import com.walmartlabs.concord.server.user.AccountSelector;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.security.legacy.LegacyApiGuard;
 import com.walmartlabs.concord.server.user.User;
@@ -53,6 +54,8 @@ public class TeamResource implements Resource {
     private final OrganizationManager orgManager;
     private final LegacyApiGuard legacyApi;
     private final UserManager userManager;
+    @Inject
+    AccountSelector accountSelector;
 
     @Inject
     public TeamResource(TeamDao teamDao,
@@ -141,7 +144,8 @@ public class TeamResource implements Resource {
                                          @PathParam("teamName") @ConcordKey String teamName) {
 
         TeamEntry t = assertTeam(orgName, teamName, TeamRole.MEMBER, true, false);
-        return teamDao.listUsers(t.getId());
+        List<TeamUserEntry> users = teamDao.listUsers(t.getId());
+        return accountSelector.legacyEnabled() ? users : users.stream().map(TeamUserEntry::withoutLegacyFields).toList();
     }
 
     /**
@@ -218,6 +222,7 @@ public class TeamResource implements Resource {
                                                @PathParam("teamName") @ConcordKey String teamName,
                                                Collection<String> usernames) {
 
+        legacyApi.check();
         if (usernames == null || usernames.isEmpty()) {
             throw new ValidationErrorsException("Empty user list");
         }

@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.security.identity;
  */
 
 import com.typesafe.config.ConfigFactory;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.security.AuthorizationFailure;
 import com.walmartlabs.concord.server.sdk.security.*;
 import com.walmartlabs.concord.server.security.legacy.LegacyUserLookup;
 import com.walmartlabs.concord.server.security.provider.ProviderRegistry;
@@ -63,6 +63,20 @@ class IdentityServiceImplTest {
     }
 
     @Test
+    void disabledLegacyModesStillComputeSelectorsForConsumptionProtection() {
+        LegacyIdentityMatcher matcher = mock(LegacyIdentityMatcher.class);
+        when(matcher.providerId()).thenReturn("oauth");
+        LegacyAccountSelector selector = new LegacyAccountSelector("alice", null, "LOCAL");
+        when(matcher.selector(any())).thenReturn(Optional.of(selector));
+        ProviderRegistry registry = new ProviderRegistry(Set.of(), Set.of(), Set.of(), Set.of(matcher));
+        for (String flag : List.of("security.legacy.enabled", "security.legacy.enrollmentEnabled")) {
+            LegacyUserLookup lookup = new LegacyUserLookup(registry, ConfigFactory.parseString(flag + "=false"));
+            assertFalse(lookup.enrollmentEnabled());
+            assertEquals(Optional.of(selector), lookup.selector(verified(Set.of())));
+        }
+    }
+
+    @Test
     void exactKeySkipsDirectoryAndLegacyMatching() {
         ProviderRegistry registry = registry();
         UUID id = UUID.randomUUID();
@@ -83,7 +97,7 @@ class IdentityServiceImplTest {
         when(dao.find(key)).thenReturn(Optional.of(new IdentityDao.IdentityRecord(UUID.randomUUID(), id, key, false)));
         IdentityServiceImpl service = new IdentityServiceImpl(dao, registry, mock(LegacyUserLookup.class), users, ConfigFactory.empty());
         assertThrows(AuthenticationException.class, () -> service.resolve(verified(Set.of()), authentication));
-        verify(dao, never()).resolve(any(), any(), any(), anyList(), anyList(), any());
+        verify(dao, never()).resolve(any(), any(), any(), anyBoolean(), anyList(), anyList(), any());
         when(dao.find(key)).thenReturn(Optional.of(new IdentityDao.IdentityRecord(UUID.randomUUID(), id, key, true)));
         doThrow(new AuthenticationException("disabled")).when(dao).observe(eq(id), any());
         assertThrows(AuthenticationException.class, () -> service.resolve(verified(Set.of()), authentication));
@@ -98,13 +112,13 @@ class IdentityServiceImplTest {
         when(directory.acceptsIdentity(directoryKey)).thenReturn(true);
         when(source.acceptsIdentity(directoryKey)).thenReturn(true);
         when(source.isActive()).thenReturn(true);
-        when(dao.resolve(any(), any(), any(), anyList(), anyList(), any())).thenReturn(new IdentityDao.Resolution(id, true));
+        when(dao.resolve(any(), any(), any(), anyBoolean(), anyList(), anyList(), any())).thenReturn(new IdentityDao.Resolution(id, true));
         when(dao.profile(id)).thenReturn(Optional.of(new IdentityDao.ProfileSelection(profile, "local", null, null)));
         LegacyUserLookup legacy = mock(LegacyUserLookup.class);
         when(legacy.selector(any())).thenReturn(Optional.empty());
         IdentityServiceImpl service = new IdentityServiceImpl(dao, registry, legacy, users, ConfigFactory.empty());
         assertEquals(id, service.resolve(verified(Set.of(lookup())), authentication).userId());
-        verify(dao).resolve(any(), eq(policy), isNull(), eq(List.of(directoryKey)), eq(List.of(new IdentityDao.Binding("source", directoryKey, false))), isNull());
+        verify(dao).resolve(any(), eq(policy), isNull(), eq(false), eq(List.of(directoryKey)), eq(List.of(new IdentityDao.Binding("source", directoryKey, false))), isNull());
         verify(users).auditIdentityCreation(id);
     }
 
@@ -112,25 +126,46 @@ class IdentityServiceImplTest {
     void requiredMissingLookupIsForbiddenAndUntrustedLookupIsRejected() {
         ProviderRegistry registry = registry();
         when(dao.find(key)).thenReturn(Optional.empty());
+        when(source.isActive()).thenReturn(true);
         when(directory.find(any())).thenReturn(Optional.empty());
         IdentityServiceImpl service = new IdentityServiceImpl(dao, registry, mock(LegacyUserLookup.class), users,
                 ConfigFactory.parseString("security.authorization.sources.source.required=true"));
-        ConcordApplicationException e = assertThrows(ConcordApplicationException.class, () -> service.resolve(verified(Set.of(lookup())), authentication));
-        assertEquals(403, e.getResponse().getStatus());
+        AuthorizationSubjectNotFoundException e = assertThrows(AuthorizationSubjectNotFoundException.class, () -> service.resolve(verified(Set.of(lookup())), authentication));
+        assertEquals(403, AuthorizationFailure.status(e));
         IdentityLookup untrusted = new IdentityLookup("other", new DirectoryQuery("username", "alice", null), Set.of(), false);
         assertThrows(AuthenticationException.class, () -> service.resolve(verified(Set.of(untrusted)), authentication));
-        verify(dao, never()).resolve(any(), any(), any(), anyList(), anyList(), any());
+        verify(dao, never()).resolve(any(), any(), any(), anyBoolean(), anyList(), anyList(), any());
     }
     @Test
     void requiredUnavailableLookupIsServiceUnavailable() {
         ProviderRegistry registry = registry();
         when(dao.find(key)).thenReturn(Optional.empty());
+        when(source.isActive()).thenReturn(true);
         when(directory.find(any())).thenThrow(new DirectoryUnavailableException("offline"));
         IdentityServiceImpl service = new IdentityServiceImpl(dao, registry, mock(LegacyUserLookup.class), users,
                 ConfigFactory.parseString("security.authorization.sources.source.required=true"));
-        ConcordApplicationException e = assertThrows(ConcordApplicationException.class, () -> service.resolve(verified(Set.of(lookup())), authentication));
-        assertEquals(503, e.getResponse().getStatus());
-        verify(dao, never()).resolve(any(), any(), any(), anyList(), anyList(), any());
+        AuthorizationUnavailableException e = assertThrows(AuthorizationUnavailableException.class, () -> service.resolve(verified(Set.of(lookup())), authentication));
+        assertEquals(503, AuthorizationFailure.status(e));
+        verify(dao, never()).resolve(any(), any(), any(), anyBoolean(), anyList(), anyList(), any());
+    }
+
+    @Test
+    void requiredInactiveSourceIsServiceUnavailableWithOrWithoutIdentity() {
+        ProviderRegistry registry = registry();
+        when(dao.find(key)).thenReturn(Optional.empty());
+        when(directory.find(any())).thenReturn(Optional.empty())
+                .thenReturn(Optional.of(new DirectoryEntry(directoryKey, profile)));
+        when(directory.acceptsIdentity(directoryKey)).thenReturn(true);
+        when(source.acceptsIdentity(directoryKey)).thenReturn(true);
+        when(source.isActive()).thenReturn(false);
+        IdentityServiceImpl service = new IdentityServiceImpl(dao, registry, mock(LegacyUserLookup.class), users,
+                ConfigFactory.parseString("security.authorization.sources.source.required=true"));
+        for (int i = 0; i < 2; i++) {
+            AuthorizationUnavailableException e = assertThrows(AuthorizationUnavailableException.class,
+                    () -> service.resolve(verified(Set.of(lookup())), authentication));
+            assertEquals(503, AuthorizationFailure.status(e));
+        }
+        verify(dao, never()).resolve(any(), any(), any(), anyBoolean(), anyList(), anyList(), any());
     }
 
     @Test
@@ -140,6 +175,6 @@ class IdentityServiceImplTest {
         when(directory.find(any())).thenThrow(new DirectoryAmbiguousException("multiple entries"));
         IdentityServiceImpl service = new IdentityServiceImpl(dao, registry, mock(LegacyUserLookup.class), users, ConfigFactory.empty());
         assertThrows(AuthenticationException.class, () -> service.resolve(verified(Set.of(lookup())), authentication));
-        verify(dao, never()).resolve(any(), any(), any(), anyList(), anyList(), any());
+        verify(dao, never()).resolve(any(), any(), any(), anyBoolean(), anyList(), anyList(), any());
     }
 }

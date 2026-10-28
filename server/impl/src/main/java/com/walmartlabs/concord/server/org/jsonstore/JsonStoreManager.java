@@ -38,6 +38,7 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.PrincipalNormalization;
+import com.walmartlabs.concord.server.user.AccountSelector;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
@@ -56,6 +57,7 @@ public class JsonStoreManager {
     private final JsonStoreAccessManager jsonStoreAccessManager;
     private final OrganizationManager orgManager;
     private final UserManager userManager;
+    private final AccountSelector accountSelector;
     private final AuditLog auditLog;
     private final JsonStoreDao storeDao;
     private final JsonStoreDataDao storeDataDao;
@@ -71,12 +73,14 @@ public class JsonStoreManager {
                             JsonStoreDao storeDao,
                             JsonStoreDataDao storeDataDao,
                             OrganizationDao orgDao,
-                            TeamDao teamDao) {
+                            TeamDao teamDao,
+                            AccountSelector accountSelector) {
 
         this.policyManager = policyManager;
         this.jsonStoreAccessManager = jsonStoreAccessManager;
         this.orgManager = orgManager;
         this.userManager = userManager;
+        this.accountSelector = accountSelector;
         this.auditLog = auditLog;
         this.storeDao = storeDao;
         this.storeDataDao = storeDataDao;
@@ -252,13 +256,21 @@ public class JsonStoreManager {
             return defaultOwner;
         }
 
+        accountSelector.validate(owner.id(), owner.identity(),
+                owner.username() != null || owner.userDomain() != null || owner.userType() != null);
+        if (owner.identity() != null) {
+            UUID id = accountSelector.identityId(owner.identity());
+            return userManager.get(id).orElseThrow(() -> new ValidationErrorsException("User not found: " + id));
+        }
+
         if (owner.id() != null) {
             return userManager.get(owner.id())
                     .orElseThrow(() -> new ValidationErrorsException("User not found: " + owner.id()));
         }
 
         if (owner.username() != null) {
-            return userManager.get(owner.username(), owner.userDomain(), UserType.LDAP)
+            UserType type = owner.userType() != null ? owner.userType() : UserType.LDAP;
+            return userManager.get(owner.username(), owner.userDomain(), type)
                     .orElseThrow(() -> new ConcordApplicationException("User not found: " + owner.username()));
         }
 

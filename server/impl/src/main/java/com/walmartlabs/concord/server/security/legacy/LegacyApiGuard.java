@@ -36,6 +36,10 @@ public class LegacyApiGuard {
                 !config.hasPath(shortName) || config.getBoolean(shortName);
     }
 
+    public boolean isEnabled() {
+        return enabled;
+    }
+
     public void check() {
         if (!enabled) throw new ValidationErrorsException("Legacy APIs are disabled");
     }

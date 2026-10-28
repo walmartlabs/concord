@@ -20,9 +20,14 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
+import com.walmartlabs.concord.server.process.ExecutionIdentity;
+import com.walmartlabs.concord.server.process.ExecutionIdentityCodec;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.security.AuthenticationContext;
+import com.walmartlabs.concord.server.sdk.security.IdentityService;
 import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
 import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
 import com.walmartlabs.concord.server.user.UserEntry;
@@ -34,6 +39,9 @@ import org.apache.shiro.util.ThreadContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.function.Function;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -101,14 +109,14 @@ class RunAsAuthorizationTest {
     }
 
     @Test
-    void processRunAsNormalizesLegacyAndPreparesBeforeWork() throws Exception {
+    void processRunAsPreparesBeforeWork() throws Exception {
         ProcessKey key = ProcessKey.random();
-        ProcessSecurityContext context = spy(new ProcessSecurityContext(manager, mock(ProcessStateManager.class), authorization));
-        UserPrincipal legacy = new UserPrincipal("oldPlugin", user);
-        doReturn(new SimplePrincipalCollection(legacy, "oldPlugin")).when(context).getPrincipals(key);
+        ProcessSecurityContext context = spy(new ProcessSecurityContext(manager, mock(ProcessStateManager.class), authorization, mock(IdentityService.class)));
+        SubjectPrincipal principal = new SubjectPrincipal(id, "alice", "example", new AuthenticationContext("oldPlugin", null, null));
+        doReturn(new SimplePrincipalCollection(principal, "oldPlugin")).when(context).getPrincipals(key);
         when(authorization.prepare(id, false)).thenReturn(new AuthorizationService.EffectiveAuthorization(Set.of(), Set.of()));
         assertEquals(id, context.runAsCurrentUser(key, () -> {
-            assertSame(legacy, SecurityUtils.getCurrent(UserPrincipal.class));
+            assertSame(principal, SecurityUtils.getCurrent(SubjectPrincipal.class));
             assertNotNull(AuthorizationScope.current(id));
             return SecurityUtils.assertCurrent(SubjectPrincipal.class).userId();
         }));
@@ -116,10 +124,44 @@ class RunAsAuthorizationTest {
     }
 
     @Test
+    void processIdentityStoresOnlyProvenanceAndReloadsCurrentAccount() {
+        ProcessStateManager state = mock(ProcessStateManager.class);
+        IdentityService identities = mock(IdentityService.class);
+        ProcessSecurityContext context = new ProcessSecurityContext(manager, state, authorization, identities);
+        ProcessKey key = ProcessKey.random();
+        SubjectPrincipal original = new SubjectPrincipal(id, "old", "domain", new AuthenticationContext("removed-plugin", null, "secret"));
+        byte[] bytes = context.serializePrincipals(new SimplePrincipalCollection(original, "removed-plugin"));
+        assertEquals(new ExecutionIdentity(id, "removed-plugin"), ExecutionIdentityCodec.decode(bytes));
+        when(state.get(any(PartialProcessKey.class), eq(".concord/current_user"), any())).thenAnswer(invocation -> {
+            Function<InputStream, Optional<ExecutionIdentity>> reader = invocation.getArgument(2);
+            return reader.apply(new ByteArrayInputStream(bytes));
+        });
+        SubjectPrincipal current = new SubjectPrincipal(id, "renamed", null, new AuthenticationContext("removed-plugin", null, null));
+        when(identities.forUser(eq(id), any())).thenReturn(current).thenThrow(new IllegalStateException("disabled"));
+        assertSame(current, context.getPrincipals(key).oneByType(SubjectPrincipal.class));
+        assertThrows(IllegalStateException.class, () -> context.getPrincipals(key));
+        verify(identities, times(2)).forUser(eq(id), eq(new AuthenticationContext("removed-plugin", null, null)));
+    }
+
+    @Test
+    void missingProcessIdentityNeverRunsCallable() {
+        ProcessStateManager state = mock(ProcessStateManager.class);
+        ProcessSecurityContext context = new ProcessSecurityContext(manager, state, authorization, mock(IdentityService.class));
+        ProcessKey key = ProcessKey.random();
+        when(state.get(any(PartialProcessKey.class), eq(".concord/current_user"), any())).thenReturn(Optional.empty());
+        AtomicBoolean called = new AtomicBoolean();
+        assertThrows(UnauthorizedException.class, () -> context.runAsCurrentUser(key, () -> { called.set(true); return null; }));
+        assertFalse(called.get());
+        verifyNoInteractions(authorization);
+        assertThrows(UnauthorizedException.class, () -> context.serializePrincipals(new SimplePrincipalCollection()));
+    }
+
+    @Test
     void processPreparationFailureNeverRunsCallable() {
         ProcessKey key = ProcessKey.random();
-        ProcessSecurityContext context = spy(new ProcessSecurityContext(manager, mock(ProcessStateManager.class), authorization));
-        doReturn(new SimplePrincipalCollection(new UserPrincipal("oldPlugin", user), "oldPlugin")).when(context).getPrincipals(key);
+        ProcessSecurityContext context = spy(new ProcessSecurityContext(manager, mock(ProcessStateManager.class), authorization, mock(IdentityService.class)));
+        SubjectPrincipal principal = new SubjectPrincipal(id, "alice", "example", new AuthenticationContext("oldPlugin", null, null));
+        doReturn(new SimplePrincipalCollection(principal, "oldPlugin")).when(context).getPrincipals(key);
         when(authorization.prepare(id, false)).thenThrow(new IllegalStateException("unavailable"));
         AtomicBoolean called = new AtomicBoolean();
         assertThrows(IllegalStateException.class, () -> context.runAsCurrentUser(key, () -> { called.set(true); return null; }));

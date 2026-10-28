@@ -70,6 +70,10 @@ public class UserEntry implements Serializable {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     private final OffsetDateTime disabledDate;
 
+    private transient String profileProviderId;
+    private transient Set<String> identityProviderIds;
+    private transient boolean omitLegacyType;
+
     @JsonCreator
     public UserEntry(@JsonProperty("id") UUID id,
                      @JsonProperty("name") String name,
@@ -116,8 +120,25 @@ public class UserEntry implements Serializable {
         return orgs;
     }
 
+    @JsonProperty("type")
     public UserType getType() {
-        return type;
+        return omitLegacyType ? null : type;
+    }
+
+    @JsonProperty("profileProviderId")
+    public String getProfileProviderId() {
+        return profileProviderId;
+    }
+
+    @JsonProperty("identityProviderIds")
+    public Set<String> getIdentityProviderIds() {
+        return identityProviderIds;
+    }
+
+    public void setProjection(String profileProviderId, Set<String> identityProviderIds, boolean legacyEnabled) {
+        this.profileProviderId = profileProviderId;
+        this.identityProviderIds = identityProviderIds;
+        this.omitLegacyType = !legacyEnabled;
     }
 
     public String getEmail() {

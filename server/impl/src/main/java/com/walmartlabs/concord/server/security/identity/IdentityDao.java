@@ -131,11 +131,13 @@ public class IdentityDao extends AbstractDao {
     public void unlink(UUID userId, UUID identityId) {
         tx(tx -> {
             lock(tx); requireUser(tx, userId);
+            tx.fetchOne("select user_id from users where user_id=? for update", userId);
             Record r = tx.fetchOne("select identity_id from user_identities where identity_id=? and user_id=? and is_active for update", identityId, userId);
             if (r == null) throw new NotFoundException("Identity not found");
             if (tx.fetchOne("select binding_id from user_authorization_bindings where user_id=? and identity_id=? and is_required", userId, identityId) != null)
                 throw conflict("Identity is required by an authorization source");
-            tx.execute("delete from user_authorization_bindings where user_id=? and identity_id=?", userId, identityId);
+            if (tx.execute("delete from user_authorization_bindings where user_id=? and identity_id=?", userId, identityId) != 0)
+                tx.execute("update users set authorization_bindings_administered=true where user_id=?", userId);
             tx.execute("update users set profile_identity_id=null where user_id=? and profile_identity_id=?", userId, identityId);
             tx.execute("update user_identities set is_active=false where identity_id=?", identityId);
         });
@@ -185,7 +187,8 @@ public class IdentityDao extends AbstractDao {
             if (identity == null || !identity.active() || !userId.equals(identity.userId()))
                 throw new AuthenticationException("Identity is no longer active");
             if (attributes == null) return;
-            var bindings = tx.fetch("select binding_id,source_id from user_authorization_bindings where user_id=? and identity_id=?", userId, identity.identityId());
+            // Match refresh's binding-before-state lock order, including when several sources share an identity.
+            var bindings = tx.fetch("select binding_id,source_id from user_authorization_bindings where user_id=? and identity_id=? order by binding_id for update", userId, identity.identityId());
             for (Record binding : bindings) {
                 UUID bindingId = binding.get(0, UUID.class);
                 String source = binding.get(1, String.class);
@@ -196,7 +199,7 @@ public class IdentityDao extends AbstractDao {
     }
 
     public Resolution resolve(VerifiedIdentity verified, ProvisioningPolicy policy, LegacyAccountSelector selector,
-                              List<ExternalIdentityKey> directoryIdentities, List<Binding> bindings, ExternalIdentityKey profileIdentity) {
+                              boolean enrollmentEnabled, List<ExternalIdentityKey> directoryIdentities, List<Binding> bindings, ExternalIdentityKey profileIdentity) {
         return txResult(tx -> {
             lock(tx);
             ExternalIdentityKey primary = verified.identity();
@@ -211,12 +214,17 @@ public class IdentityDao extends AbstractDao {
             UUID userId = null;
             if (selector != null) {
                 var candidates = tx.fetch("select user_id from legacy_user_enrollment where username=? and (cast(? as text) is null or domain=?) and user_type=?", selector.username(), selector.domain(), selector.domain(), selector.userType());
-                if (candidates.size() > 1) throw conflict("Ambiguous legacy account");
-                if (!candidates.isEmpty()) {
-                    userId = candidates.get(0).get(0, UUID.class);
-                    requireEnabled(tx, userId);
-                    if (tx.fetchOne("select user_id from legacy_identity_adoptions where user_id=? and provider_id=? and authority=?", userId, primary.providerId(), primary.authority()) != null)
+                for (Record candidate : candidates) {
+                    UUID candidateId = candidate.get(0, UUID.class);
+                    if (tx.fetchOne("select user_id from legacy_identity_adoptions where user_id=? and provider_id=? and authority=?", candidateId, primary.providerId(), primary.authority()) != null)
                         throw new AuthenticationException("Legacy identity namespace already consumed");
+                }
+                if (enrollmentEnabled) {
+                    if (candidates.size() > 1) throw conflict("Ambiguous legacy account");
+                    if (!candidates.isEmpty()) {
+                        userId = candidates.get(0).get(0, UUID.class);
+                        requireEnabled(tx, userId);
+                    }
                 }
             }
             boolean created = userId == null;
@@ -233,10 +241,13 @@ public class IdentityDao extends AbstractDao {
             } else {
                 tx.execute("update users set profile_provider_id=?,profile_identity_id=null where user_id=?", policy.profileProviderId(), userId);
             }
-            for (Binding binding : bindings) {
-                UUID identityId = binding.identity() == null ? null : Objects.requireNonNull(find(tx, binding.identity())).identityId();
-                tx.execute("insert into authorization_sources(source_id,is_active) values (?,?) on conflict (source_id) do nothing", binding.sourceId(), registry.authorizationSources().get(binding.sourceId()).isActive());
-                tx.execute("insert into user_authorization_bindings(binding_id,user_id,source_id,identity_id,is_required,origin,refresh_version) values (?,?,?,?,?,'DEFAULT',0) on conflict (user_id,source_id) do nothing", UUID.randomUUID(), userId, binding.sourceId(), identityId, binding.required());
+            boolean bindingsAdministered = tx.fetchOne("select authorization_bindings_administered from users where user_id=? for update", userId).get(0, Boolean.class);
+            if (!bindingsAdministered) {
+                for (Binding binding : bindings) {
+                    UUID identityId = binding.identity() == null ? null : Objects.requireNonNull(find(tx, binding.identity())).identityId();
+                    tx.execute("insert into authorization_sources(source_id,is_active) values (?,?) on conflict (source_id) do nothing", binding.sourceId(), registry.authorizationSources().get(binding.sourceId()).isActive());
+                    tx.execute("insert into user_authorization_bindings(binding_id,user_id,source_id,identity_id,is_required,origin,refresh_version) values (?,?,?,?,?,'DEFAULT',0) on conflict (user_id,source_id) do nothing", UUID.randomUUID(), userId, binding.sourceId(), identityId, binding.required());
+                }
             }
             return new Resolution(userId, created);
         });

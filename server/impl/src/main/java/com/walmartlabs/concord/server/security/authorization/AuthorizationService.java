@@ -96,13 +96,15 @@ public class AuthorizationService extends AbstractDao {
             }
         }
         tx(tx -> {
+            // Refresh and observation both lock bindings before their state rows.
+            tx.fetch("select binding_id from user_authorization_bindings order by binding_id for update");
             tx.execute("update authorization_sources set is_active=false");
             for (var p : registry.authorizationSources().values()) {
                 tx.execute("insert into authorization_sources(source_id,is_active) values (?,?) on conflict(source_id) do update set is_active=excluded.is_active", p.id(), p.isActive());
                 tx.execute("update user_authorization_bindings set is_required=? where source_id=? and origin='DEFAULT'", required(p.id()), p.id());
             }
-            tx.execute("update user_authorization_state set status='STALE'");
-            tx.execute("update user_authorization_bindings set refresh_version=refresh_version+1");
+            // Restrict state invalidation to bindings whose versions this transaction locked.
+            tx.execute("with invalidated as (update user_authorization_bindings set refresh_version=refresh_version+1 returning binding_id) update user_authorization_state s set status='STALE' from invalidated b where s.binding_id=b.binding_id");
         });
     }
 
@@ -117,6 +119,7 @@ public class AuthorizationService extends AbstractDao {
         Set<String> seen = new HashSet<>();
         tx(tx -> {
             if (tx.fetchOne("select user_id from users where user_id=? for update", userId) == null) throw new NoSuchElementException("User not found");
+            tx.execute("update users set authorization_bindings_administered=true where user_id=?", userId);
             for (BindingSpec b : bindings) {
                 if (b == null || b.sourceId() == null || !seen.add(b.sourceId())) throw new IllegalArgumentException("Duplicate or invalid source");
                 AuthorizationProvider p = registry.authorizationSources().get(b.sourceId());

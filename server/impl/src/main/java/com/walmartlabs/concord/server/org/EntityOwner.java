@@ -23,11 +23,13 @@ package com.walmartlabs.concord.server.org;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.walmartlabs.concord.server.sdk.security.ExternalIdentityKey;
 import com.walmartlabs.concord.server.user.UserType;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Set;
 import java.util.UUID;
 
 @Value.Immutable
@@ -40,6 +42,9 @@ public interface EntityOwner extends Serializable {
     UUID id();
 
     @Nullable
+    ExternalIdentityKey identity();
+
+    @Nullable
     String username();
 
     @Nullable
@@ -50,6 +55,12 @@ public interface EntityOwner extends Serializable {
 
     @Nullable
     UserType userType();
+
+    @Nullable
+    String profileProviderId();
+
+    @Nullable
+    Set<String> identityProviderIds();
 
     static ImmutableEntityOwner.Builder builder() {
         return ImmutableEntityOwner.builder();

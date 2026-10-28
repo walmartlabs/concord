@@ -27,6 +27,9 @@ import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.TestObjectMapper;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.OwnerProjection;
+import com.walmartlabs.concord.server.user.AccountSelector;
+import com.typesafe.config.ConfigFactory;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
@@ -51,11 +54,12 @@ public class SecretDaoTest extends AbstractDaoTest {
 
         String projectName = "project#" + System.currentTimeMillis();
 
-        ProjectDao projectDao = new ProjectDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE), getUuidGenerator());
+        var ownerProjection = new OwnerProjection(new AccountSelector(null, ConfigFactory.empty()));
+        ProjectDao projectDao = new ProjectDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE), getUuidGenerator(), ownerProjection);
         UUID projectId = projectDao.insert(orgId, projectName, "test", null, null, null, null, new byte[0], null, null, null);
 
         String secretName = "secret#" + System.currentTimeMillis();
-        SecretDao secretDao = new SecretDao(getConfiguration(), getUuidGenerator());
+        SecretDao secretDao = new SecretDao(getConfiguration(), getUuidGenerator(), ownerProjection);
         byte[] secretSalt = SecretUtils.generateSalt(16);
         UUID secretId = secretDao.insert(orgId, secretName, null, SecretType.KEY_PAIR, SecretEncryptedByType.SERVER_KEY, "concord", SecretVisibility.PUBLIC, secretSalt, HashAlgorithm.SHA256, INSERT);
         secretDao.updateData(secretId, new byte[]{0, 1, 2});

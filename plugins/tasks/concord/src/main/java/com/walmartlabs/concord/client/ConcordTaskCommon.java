@@ -185,10 +185,15 @@ public class ConcordTaskCommon {
         return withClient(in.baseUrl(), in.apiKey(), client -> {
             log.info("Creating a new API key in {}", client.getBaseUri());
 
-            UUID userId = assertUserId(client, in);
+            ExternalIdentityKey identity = in.identity();
+            UUID userId = identity == null ? assertUserId(client, in) : null;
 
             String keyName = in.name();
             if (keyName != null) {
+                if (identity != null) {
+                    userId = new UserV2Api(client).getUserByIdentity(
+                            identity.getProviderId(), identity.getAuthority(), identity.getSubject()).getId();
+                }
                 ApiKeysApi api = new ApiKeysApi(client);
                 List<ApiKeyEntry> existingKeys = api.listUserApiKeys(userId);
                 Optional<ApiKeyEntry> maybeExistingKey = existingKeys.stream().filter(k -> k.getName().equals(keyName)).findFirst();
@@ -208,7 +213,8 @@ public class ConcordTaskCommon {
             ApiKeysApi apiKeysApi = new ApiKeysApi(client);
             CreateApiKeyResponse response = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
                     .name(keyName)
-                    .userId(userId)
+                    .userId(identity == null ? userId : null)
+                    .identity(identity)
                     .userDomain(in.userDomain())
                     .userType(in.userType())
                     .key(in.key()));
@@ -224,12 +230,14 @@ public class ConcordTaskCommon {
         return withClient(in.baseUrl(), in.apiKey(), client -> {
             log.info("Creating or updating an API key in {}", client.getBaseUri());
 
-            UUID userId = assertUserId(client, in);
+            ExternalIdentityKey identity = in.identity();
+            UUID userId = identity == null ? assertUserId(client, in) : null;
 
             ApiKeysV2Api apiKeysApi = new ApiKeysV2Api(client);
             CreateApiKeyResponse response = apiKeysApi.createOrUpdateUserApiKey(new CreateApiKeyRequest()
                     .name(in.name())
                     .userId(userId)
+                    .identity(identity)
                     .userDomain(in.userDomain())
                     .userType(in.userType())
                     .key(in.key()));

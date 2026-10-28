@@ -34,6 +34,7 @@ public class TeamModule implements Module {
         binder.bind(TeamManager.class).in(SINGLETON);
 
         bindJaxRsResource(binder, TeamResource.class);
+        bindJaxRsResource(binder, TeamUsersV2Resource.class);
         bindJaxRsResource(binder, TeamGroupsResource.class);
     }
 }

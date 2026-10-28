@@ -410,6 +410,17 @@
               "type": "string",
               "description": "Target user ID"
             },
+            "identity": {
+              "type": "object",
+              "description": "Target external identity",
+              "properties": {
+                "providerId": { "type": "string", "minLength": 1 },
+                "authority": { "type": "string" },
+                "subject": { "type": "string", "minLength": 1 }
+              },
+              "required": ["providerId", "authority", "subject"],
+              "additionalProperties": false
+            },
             "username": {
               "type": "string",
               "description": "Target username"
@@ -420,7 +431,7 @@
             },
             "userType": {
               "type": "string",
-              "pattern": "^(?:[lL][oO][cC][aA][lL]|[lL][dD][aA][pP]|[oO][iI][dD][cC])$",
+              "pattern": "^(?:[lL][oO][cC][aA][lL]|[lL][dD][aA][pP]|[sS][sS][oO])$",
               "description": "User type"
             },
             "name": {
@@ -439,8 +450,20 @@
           },
           "anyOf": [
             { "required": ["userId"] },
-            { "required": ["username"] }
+            { "required": ["username"] },
+            { "required": ["identity"] }
           ],
+          "not": {
+            "allOf": [
+              { "required": ["identity"] },
+              { "anyOf": [
+                { "required": ["userId"] },
+                { "required": ["username"] },
+                { "required": ["userDomain"] },
+                { "required": ["userType"] }
+              ] }
+            ]
+          },
           "additionalProperties": true
         }
       }

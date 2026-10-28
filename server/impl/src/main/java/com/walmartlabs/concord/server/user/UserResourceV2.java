@@ -53,12 +53,14 @@ public class UserResourceV2 implements Resource {
     private final UserDao userDao;
     private final IdentityDao identityDao;
     private final AuthorizationService authorization;
+    private final AccountSelector selectors;
 
     @Inject
-    public UserResourceV2(UserDao userDao, IdentityDao identityDao, AuthorizationService authorization) {
+    public UserResourceV2(UserDao userDao, IdentityDao identityDao, AuthorizationService authorization, AccountSelector selectors) {
         this.userDao = userDao;
         this.identityDao = identityDao;
         this.authorization = authorization;
+        this.selectors = selectors;
     }
 
     @GET
@@ -77,7 +79,45 @@ public class UserResourceV2 implements Resource {
             throw new ValidationErrorsException("'limit' must be a positive number");
         }
 
-        return userDao.list(filter, offset, limit);
+        List<UserEntry> users = userDao.list(filter, offset, limit);
+        users.forEach(this::project);
+        return users;
+    }
+
+    @GET
+    @Path("/identity")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(operationId = "getUserByIdentity")
+    public UserEntry getUserByIdentity(@QueryParam("providerId") String providerId,
+                                       @QueryParam("authority") String authority,
+                                       @QueryParam("subject") String subject) {
+        if (providerId == null || authority == null || subject == null) {
+            throw new ValidationErrorsException("providerId, authority and subject are required");
+        }
+        ExternalIdentityKey key;
+        try {
+            key = new ExternalIdentityKey(providerId, authority, subject);
+        } catch (IllegalArgumentException e) {
+            throw new ValidationErrorsException(e.getMessage());
+        }
+        return get(selectors.identityId(key));
+    }
+
+    @PUT
+    @Path("/{id}/roles")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(operationId = "updateUserRolesById")
+    public GenericOperationResult updateUserRolesById(@PathParam("id") UUID id, @javax.validation.Valid UpdateUserRolesRequest request) {
+        assertAdmin();
+        if (userDao.get(id) == null) {
+            throw new ConcordApplicationException("User not found", Response.Status.NOT_FOUND);
+        }
+        if (request == null || request.getRoles() == null) {
+            throw new ValidationErrorsException("Missing roles");
+        }
+        userDao.updateRoles(id, request.getRoles());
+        return new GenericOperationResult(OperationResult.UPDATED);
     }
 
     @GET
@@ -90,10 +130,19 @@ public class UserResourceV2 implements Resource {
         UUID authenticatedId = PrincipalNormalization.assertCurrent().userId();
 
         if (authenticatedId.equals(id) || Roles.isAdmin() || Roles.isGlobalReader()) {
-            return userDao.get(id);
+            return project(userDao.get(id));
         }
 
         throw new UnauthorizedException("Users can only view their own information or must have admin privileges.");
+    }
+
+    private UserEntry project(UserEntry user) {
+        if (user == null) return null;
+        String provider = identityDao.profile(user.getId()).map(IdentityDao.ProfileSelection::providerId).orElse(null);
+        var providers = identityDao.list(user.getId()).stream().filter(IdentityRecord::active)
+                .map(i -> i.identity().providerId()).collect(java.util.stream.Collectors.toSet());
+        user.setProjection(provider, providers, selectors.legacyEnabled());
+        return user;
     }
 
     @GET

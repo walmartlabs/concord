@@ -28,7 +28,6 @@ import com.walmartlabs.concord.server.jooq.tables.Organizations;
 import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.OrganizationsRecord;
 import com.walmartlabs.concord.server.org.team.TeamRole;
-import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 
 import javax.inject.Inject;
@@ -47,15 +46,18 @@ public class OrganizationDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
     private final UuidGenerator uuidGenerator;
+    private final OwnerProjection ownerProjection;
 
     @Inject
     public OrganizationDao(@MainDB Configuration cfg,
                            ConcordObjectMapper objectMapper,
-                           UuidGenerator uuidGenerator) {
+                           UuidGenerator uuidGenerator,
+                           OwnerProjection ownerProjection) {
 
         super(cfg);
         this.objectMapper = requireNonNull(objectMapper);
         this.uuidGenerator = requireNonNull(uuidGenerator);
+        this.ownerProjection = requireNonNull(ownerProjection);
     }
 
     @Override
@@ -262,15 +264,6 @@ public class OrganizationDao extends AbstractDao {
     }
 
     private EntityOwner toOwner(UUID id, String username, String domain, String displayName, String userType) {
-        if (id == null) {
-            return null;
-        }
-        return EntityOwner.builder()
-                .id(id)
-                .username(username)
-                .userDomain(domain)
-                .displayName(displayName)
-                .userType(UserType.fromNullable(userType))
-                .build();
+        return ownerProjection.owner(dsl(), id, username, domain, displayName, userType);
     }
 }

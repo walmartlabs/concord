@@ -34,9 +34,9 @@ import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.ProjectsRecord;
 import com.walmartlabs.concord.server.org.EntityOwner;
+import com.walmartlabs.concord.server.org.OwnerProjection;
 import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 
 import javax.inject.Inject;
@@ -58,14 +58,17 @@ public class ProjectDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
     private final UuidGenerator uuidGenerator;
+    private final OwnerProjection ownerProjection;
 
     @Inject
     public ProjectDao(@MainDB Configuration cfg,
                       ConcordObjectMapper objectMapper,
-                      UuidGenerator uuidGenerator) {
+                      UuidGenerator uuidGenerator,
+                      OwnerProjection ownerProjection) {
         super(cfg);
         this.objectMapper = requireNonNull(objectMapper);
         this.uuidGenerator = requireNonNull(uuidGenerator);
+        this.ownerProjection = requireNonNull(ownerProjection);
     }
 
     @Override
@@ -362,7 +365,7 @@ public class ProjectDao extends AbstractDao {
             q.limit(limit);
         }
 
-        return q.fetch(ProjectDao::toEntry);
+        return q.fetch(this::toEntry);
     }
 
     public Map<String, Object> getConfiguration(UUID projectId) {
@@ -467,7 +470,7 @@ public class ProjectDao extends AbstractDao {
                 .execute();
     }
 
-    private static ProjectEntry toEntry(Record15<UUID, String, String, UUID, String, String, UUID, String, String, String, String, RawPayloadMode, OutVariablesMode, ProcessExecMode, OffsetDateTime> r) {
+    private ProjectEntry toEntry(Record15<UUID, String, String, UUID, String, String, UUID, String, String, String, String, RawPayloadMode, OutVariablesMode, ProcessExecMode, OffsetDateTime> r) {
         return new ProjectEntry(r.get(PROJECTS.PROJECT_ID),
                 r.get(PROJECTS.PROJECT_NAME),
                 r.get(PROJECTS.DESCRIPTION),
@@ -484,16 +487,7 @@ public class ProjectDao extends AbstractDao {
                 r.get(PROJECTS.CREATED_AT));
     }
 
-    private static EntityOwner toOwner(UUID id, String username, String domain, String displayName, String userType) {
-        if (id == null) {
-            return null;
-        }
-        return EntityOwner.builder()
-                .id(id)
-                .username(username)
-                .userDomain(domain)
-                .displayName(displayName)
-                .userType(UserType.fromNullable(userType))
-                .build();
+    private EntityOwner toOwner(UUID id, String username, String domain, String displayName, String userType) {
+        return ownerProjection.owner(dsl(), id, username, domain, displayName, userType);
     }
 }

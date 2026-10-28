@@ -40,7 +40,7 @@ import static org.mockito.Mockito.*;
 
 class UserAuthorizationResourceTest {
     private final AuthorizationService service = mock(AuthorizationService.class);
-    private final UserResourceV2 resource = new UserResourceV2(mock(UserDao.class), mock(IdentityDao.class), service);
+    private final UserResourceV2 resource = new UserResourceV2(mock(UserDao.class), mock(IdentityDao.class), service, mock(AccountSelector.class));
     private final UUID userId = UUID.randomUUID();
 
     @AfterEach

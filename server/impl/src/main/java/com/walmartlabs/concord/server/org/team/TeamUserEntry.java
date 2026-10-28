@@ -26,9 +26,11 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserType;
+import com.walmartlabs.concord.server.sdk.security.ExternalIdentityKey;
 
 import javax.validation.constraints.Size;
 import java.io.Serializable;
+import java.util.List;
 import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
@@ -54,6 +56,19 @@ public class TeamUserEntry implements Serializable {
 
     private final String ldapGroupSource;
 
+    public enum MembershipKind { DIRECT, SOURCE }
+
+    public record GrantSource(String sourceId, String groupId, TeamRole role) implements Serializable {}
+
+    private final transient ExternalIdentityKey identity;
+    private final transient MembershipKind membershipKind;
+    private final transient List<GrantSource> grantSources;
+
+    public TeamUserEntry(UUID userId, String username, String userDomain, String displayName,
+                         UserType userType, TeamRole role, TeamMemberType memberType, String ldapGroupSource) {
+        this(userId, username, userDomain, displayName, userType, role, memberType, ldapGroupSource, null, null, null);
+    }
+
     @JsonCreator
     public TeamUserEntry(@JsonProperty("userId") UUID userId,
                          @JsonProperty("username") String username,
@@ -62,7 +77,10 @@ public class TeamUserEntry implements Serializable {
                          @JsonProperty("userType") UserType userType,
                          @JsonProperty("role") TeamRole role,
                          @JsonProperty("memberType") TeamMemberType memberType,
-                         @JsonProperty("ldapGroupSource") String ldapGroupSource) {
+                         @JsonProperty("ldapGroupSource") String ldapGroupSource,
+                         @JsonProperty("identity") ExternalIdentityKey identity,
+                         @JsonProperty("membershipKind") MembershipKind membershipKind,
+                         @JsonProperty("grantSources") List<GrantSource> grantSources) {
 
         this.userId = userId;
         this.username = username;
@@ -72,6 +90,9 @@ public class TeamUserEntry implements Serializable {
         this.role = role;
         this.memberType = memberType;
         this.ldapGroupSource = ldapGroupSource;
+        this.identity = identity;
+        this.membershipKind = membershipKind;
+        this.grantSources = grantSources;
     }
 
     public UUID getUserId() {
@@ -104,6 +125,26 @@ public class TeamUserEntry implements Serializable {
 
     public String getLdapGroupSource() {
         return ldapGroupSource;
+    }
+
+    @JsonProperty("identity")
+    public ExternalIdentityKey getIdentity() {
+        return identity;
+    }
+
+    @JsonProperty("membershipKind")
+    public MembershipKind getMembershipKind() {
+        return membershipKind;
+    }
+
+    @JsonProperty("grantSources")
+    public List<GrantSource> getGrantSources() {
+        return grantSources;
+    }
+
+    TeamUserEntry withoutLegacyFields() {
+        return new TeamUserEntry(userId, username, userDomain, displayName, null, role, null, null,
+                identity, membershipKind, grantSources);
     }
 
     @Override

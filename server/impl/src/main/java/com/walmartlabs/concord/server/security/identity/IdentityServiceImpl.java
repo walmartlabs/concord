@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.security.identity;
  */
 
 import com.typesafe.config.Config;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.security.*;
 import com.walmartlabs.concord.server.security.legacy.LegacyUserLookup;
 import com.walmartlabs.concord.server.security.provider.ProviderRegistry;
@@ -29,7 +28,6 @@ import com.walmartlabs.concord.server.user.UserManager;
 
 import javax.inject.Inject;
 import javax.ws.rs.ClientErrorException;
-import javax.ws.rs.core.Response;
 import java.util.*;
 
 /** Resolves verified authentication identities without treating presentation names as account keys. */
@@ -103,6 +101,10 @@ public class IdentityServiceImpl implements IdentityService {
         for (String source : policy.authorizationSources()) {
             AuthorizationProvider provider = registry.authorizationSources().get(source);
             boolean required = required(source);
+            if (!provider.isActive()) {
+                if (required) throw new AuthorizationUnavailableException("Required authorization source unavailable: " + source);
+                continue;
+            }
             ExternalIdentityKey selected = bySource.get(source);
             if (provider.acceptsIdentity(primary)) {
                 if (selected != null && !selected.equals(primary)) throw new AuthenticationException("Ambiguous source identity");
@@ -110,19 +112,15 @@ public class IdentityServiceImpl implements IdentityService {
             }
             if (selected == null && !provider.acceptsIdentity(null)) {
                 if (required) {
-                    Response.Status status = unavailable.contains(source) ? Response.Status.SERVICE_UNAVAILABLE : Response.Status.FORBIDDEN;
-                    throw new ConcordApplicationException("Required authorization identity unavailable: " + source, status);
+                    if (unavailable.contains(source)) throw new AuthorizationUnavailableException("Required authorization identity unavailable: " + source);
+                    throw new AuthorizationSubjectNotFoundException("Required authorization identity not found: " + source);
                 }
-                continue;
-            }
-            if (!provider.isActive()) {
-                if (required) throw new ConcordApplicationException("Required authorization source unavailable: " + source, Response.Status.SERVICE_UNAVAILABLE);
                 continue;
             }
             bindings.add(new IdentityDao.Binding(source, selected, required));
         }
         try {
-            IdentityDao.Resolution resolution = dao.resolve(verified, policy, legacy.selector(verified).orElse(null), new ArrayList<>(identities), bindings, profileIdentity);
+            IdentityDao.Resolution resolution = dao.resolve(verified, policy, legacy.selector(verified).orElse(null), legacy.enrollmentEnabled(), new ArrayList<>(identities), bindings, profileIdentity);
             if (resolution.created()) users.auditIdentityCreation(resolution.userId());
             dao.observe(resolution.userId(), verified);
             return forUser(resolution.userId(), authentication);

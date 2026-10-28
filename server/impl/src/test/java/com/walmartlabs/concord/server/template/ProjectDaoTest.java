@@ -21,10 +21,13 @@ package com.walmartlabs.concord.server.template;
  */
 
 import com.google.common.collect.ImmutableMap;
+import com.typesafe.config.ConfigFactory;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.TestObjectMapper;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.OwnerProjection;
+import com.walmartlabs.concord.server.user.AccountSelector;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.project.ProjectVisibility;
@@ -50,7 +53,8 @@ public class ProjectDaoTest extends AbstractDaoTest {
     @BeforeEach
     public void setUp() {
         repositoryDao = new RepositoryDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE), getUuidGenerator());
-        projectDao = new ProjectDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE), getUuidGenerator());
+        projectDao = new ProjectDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE), getUuidGenerator(),
+                new OwnerProjection(new AccountSelector(null, ConfigFactory.empty())));
     }
 
     @Test

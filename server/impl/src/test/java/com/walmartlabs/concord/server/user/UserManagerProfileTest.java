@@ -43,7 +43,7 @@ class UserManagerProfileTest {
         var ldap = new GroupRef("ldap", "cn=staff");
         var other = new GroupRef("oidc", "staff");
         when(authorization.getGroups(owner)).thenReturn(Set.of(ldap, other));
-        var manager = new UserManager(null, null, null, profiles, authorization, null, null, null);
+        var manager = new UserManager(null, null, null, profiles, authorization, null, null);
 
         UserInfo info = manager.getInfo(owner);
         assertEquals(owner, info.id());

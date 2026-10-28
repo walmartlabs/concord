@@ -35,9 +35,7 @@ import com.walmartlabs.concord.server.sdk.security.AuthenticationContext;
 import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
-import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.subject.SimplePrincipalCollection;
@@ -109,9 +107,8 @@ class ResourcePrincipalAccessTest {
     }
 
     @Test
-    void legacyPrincipalUsesSameStoreAcl() {
-        UserEntry user = new UserEntry(userId, "alice", null, null, null, null, null, null, false, null, false);
-        bind(new UserPrincipal("test", user), false);
+    void sdkPrincipalUsesCurrentStoreAcl() {
+        bind(sdkUser(), false);
         organizationOwnedByAnotherUser();
         JsonStoreEntry store = JsonStoreEntry.builder().id(resourceId).orgId(orgId).orgName("org")
                 .name("store").visibility(JsonStoreVisibility.PRIVATE).build();

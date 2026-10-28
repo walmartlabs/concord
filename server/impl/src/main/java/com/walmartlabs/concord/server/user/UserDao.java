@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.user;
  * =====
  */
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.typesafe.config.Config;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
@@ -32,7 +34,6 @@ import com.walmartlabs.concord.server.org.team.TeamManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.security.UserProfile;
 import com.walmartlabs.concord.server.sdk.security.ExternalIdentityKey;
-import com.walmartlabs.concord.server.security.ldap.LdapUserDirectory;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import org.jooq.*;
 
@@ -52,6 +53,8 @@ import static java.util.Objects.requireNonNull;
 import static org.jooq.impl.DSL.*;
 
 public class UserDao extends AbstractDao {
+    private static final ObjectMapper LEGACY_IDENTITY_JSON = new ObjectMapper();
+
 
     private final UuidGenerator uuidGenerator;
     private final Config config;
@@ -111,7 +114,7 @@ public class UserDao extends AbstractDao {
                 .values(id, toLowerCase(username), toLowerCase(domain), displayName, email, type.name()).execute();
         if (type == UserType.LOCAL || type == UserType.LDAP) {
             ExternalIdentityKey key = type == UserType.LOCAL
-                    ? new ExternalIdentityKey("local", "", id.toString()) : LdapUserDirectory.key(username, domain);
+                    ? new ExternalIdentityKey("local", "", id.toString()) : legacyLdapKey(username, domain);
             UUID identityId = uuidGenerator.generate();
             tx.execute("insert into user_identities (identity_id, user_id, provider_id, authority, subject, is_active) values (?, ?, ?, ?, ?, true)",
                     identityId, id, key.providerId(), key.authority(), key.subject());
@@ -127,6 +130,16 @@ public class UserDao extends AbstractDao {
             }
         }
         return id;
+    }
+
+    /** Canonical encoding for the legacy LDAP account creation API. */
+    private static ExternalIdentityKey legacyLdapKey(String username, String domain) {
+        try {
+            String subject = LEGACY_IDENTITY_JSON.writeValueAsString(Arrays.asList(toLowerCase(username), toLowerCase(domain)));
+            return new ExternalIdentityKey("ldap", "", subject);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("Invalid legacy LDAP identity", e);
+        }
     }
 
     public record LegacyUpsert(UUID id, boolean created, UserEntry previous) {}
@@ -244,6 +257,29 @@ public class UserDao extends AbstractDao {
         });
 
         return get(id);
+    }
+
+    public UserEntry updateSelected(UUID id, CreateUserRequest request) {
+        boolean found = txResult(tx -> {
+            var row = tx.select(USERS.IS_PERMANENTLY_DISABLED).from(USERS)
+                    .where(USERS.USER_ID.eq(id)).forUpdate().fetchOne();
+            if (row == null) return false;
+            if (Boolean.TRUE.equals(row.value1())) {
+                throw new ConcordApplicationException("User is permanently disabled");
+            }
+            UpdateSetMoreStep<UsersRecord> q = tx.update(USERS)
+                    .set(USERS.IS_DISABLED, request.isDisabled());
+            if (request.isDisabled()) q.set(USERS.DISABLED_DATE, currentOffsetDateTime());
+            else q.setNull(USERS.DISABLED_DATE);
+            if (request.getUsername() != null) q.set(USERS.USERNAME, request.getUsername());
+            if (request.getUserDomain() != null) q.set(USERS.DOMAIN, request.getUserDomain());
+            if (request.getDisplayName() != null) q.set(USERS.DISPLAY_NAME, request.getDisplayName());
+            if (request.getEmail() != null) q.set(USERS.USER_EMAIL, request.getEmail());
+            q.where(USERS.USER_ID.eq(id)).execute();
+            if (request.getRoles() != null) updateRoles(tx, id, request.getRoles());
+            return true;
+        });
+        return found ? get(id) : null;
     }
 
     /** Updates profile fields without ever changing administrative account status. */

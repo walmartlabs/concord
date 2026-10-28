@@ -46,8 +46,11 @@ public class LegacyUserLookup {
         return !config.hasPath(path) || config.getBoolean(path);
     }
 
+    public boolean enrollmentEnabled() {
+        return enabled;
+    }
+
     public Optional<LegacyAccountSelector> selector(VerifiedIdentity identity) {
-        if (!enabled) return Optional.empty();
         LegacyIdentityMatcher matcher = registry.legacyMatchers().get(identity.identity().providerId());
         return matcher == null ? Optional.empty() : matcher.selector(identity);
     }

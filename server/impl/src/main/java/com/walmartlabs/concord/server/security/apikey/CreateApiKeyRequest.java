@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.security.apikey;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.walmartlabs.concord.server.sdk.security.ExternalIdentityKey;
 import com.walmartlabs.concord.server.user.UserType;
 
 import java.io.Serial;
@@ -34,11 +35,16 @@ public class CreateApiKeyRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final UUID userId;
+    private final ExternalIdentityKey identity;
     private final String username;
     private final String userDomain;
     private final UserType userType;
     private final String name;
     private final String key;
+
+    public CreateApiKeyRequest(UUID userId, String username, String userDomain, UserType userType, String name, String key) {
+        this(userId, username, userDomain, userType, name, key, null);
+    }
 
     @JsonCreator
     public CreateApiKeyRequest(@JsonProperty("userId") UUID userId,
@@ -46,8 +52,10 @@ public class CreateApiKeyRequest implements Serializable {
                                @JsonProperty("userDomain") String userDomain,
                                @JsonProperty("userType") UserType userType,
                                @JsonProperty("name") String name,
-                               @JsonProperty("key") String key) {
+                               @JsonProperty("key") String key,
+                               @JsonProperty("identity") ExternalIdentityKey identity) {
         this.userId = userId;
+        this.identity = identity;
         this.username = username;
         this.userDomain = userDomain;
         this.userType = userType;
@@ -57,6 +65,10 @@ public class CreateApiKeyRequest implements Serializable {
 
     public UUID getUserId() {
         return userId;
+    }
+
+    public ExternalIdentityKey getIdentity() {
+        return identity;
     }
 
     public String getUsername() {

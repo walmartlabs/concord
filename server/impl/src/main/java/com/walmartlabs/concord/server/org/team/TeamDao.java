@@ -164,7 +164,7 @@ public class TeamDao extends AbstractDao {
 
         List<TeamUserEntry> l = new LinkedList<>();
         l.addAll(listMembers(tx, teamId));
-        l.addAll(listLdapGroupMembers(tx, teamId));
+        l.addAll(listSourceMembers(tx, teamId));
 
         return l;
     }
@@ -183,7 +183,7 @@ public class TeamDao extends AbstractDao {
                                 UserType.fromNullable(r.value5()),
                                 TeamRole.valueOf(r.value6()),
                                 TeamMemberType.SINGLE,
-                                null));
+                                null, null, TeamUserEntry.MembershipKind.DIRECT, List.of()));
     }
 
     public List<TeamUserEntry> listLdapGroupMembers(DSLContext tx, UUID teamId) {
@@ -195,6 +195,28 @@ public class TeamDao extends AbstractDao {
                         r.get(2, String.class), r.get(3, String.class),
                         UserType.fromNullable(r.get(4, String.class)), TeamRole.valueOf(r.get(5, String.class)),
                         TeamMemberType.LDAP_GROUP, r.get(6, String.class)));
+    }
+
+    private List<TeamUserEntry> listSourceMembers(DSLContext tx, UUID teamId) {
+        return tx.fetch("SELECT u.user_id, u.username, u.domain, u.display_name, u.user_type, s.team_role, s.source_id, s.group_id " +
+                        "FROM users u JOIN (" +
+                        "SELECT g.user_id, m.team_role, g.source_id, g.group_id FROM v_effective_source_groups g " +
+                        "JOIN team_source_groups m ON m.source_id = g.source_id AND m.group_id = g.group_id WHERE m.team_id = ? " +
+                        "UNION ALL SELECT t.user_id, t.team_role, t.source_id, NULL FROM user_source_teams t " +
+                        "JOIN v_eligible_authorization_sources e ON e.user_id = t.user_id AND e.source_id = t.source_id WHERE t.team_id = ?" +
+                        ") s ON s.user_id = u.user_id ORDER BY u.username, s.source_id, s.group_id",
+                teamId, teamId).map(r -> {
+            String source = r.get(6, String.class);
+            String group = r.get(7, String.class);
+            TeamRole role = TeamRole.valueOf(r.get(5, String.class));
+            boolean ldapGroup = "ldap".equals(source) && group != null;
+            return new TeamUserEntry(r.get(0, UUID.class), r.get(1, String.class),
+                    r.get(2, String.class), r.get(3, String.class),
+                    UserType.fromNullable(r.get(4, String.class)), role,
+                    ldapGroup ? TeamMemberType.LDAP_GROUP : null, ldapGroup ? group : null,
+                    null, TeamUserEntry.MembershipKind.SOURCE,
+                    List.of(new TeamUserEntry.GrantSource(source, group, role)));
+        });
     }
 
     public List<TeamLdapGroupEntry> listLdapGroups(UUID teamId) {

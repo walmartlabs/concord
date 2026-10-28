@@ -21,6 +21,7 @@ package com.walmartlabs.concord.client;
  */
 
 import com.walmartlabs.concord.client2.CreateApiKeyRequest;
+import com.walmartlabs.concord.client2.ExternalIdentityKey;
 import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
@@ -433,6 +434,7 @@ public class ConcordTaskParams {
         private static final String BASE_URL_KEY = "baseUrl";
         private static final String API_KEY = "apiKey";
         private static final String USER_ID_KEY = "userId";
+        private static final String IDENTITY_KEY = "identity";
         private static final String USERNAME_KEY = "username";
         private static final String USER_DOMAIN_KEY = "userDomain";
         private static final String USER_TYPE_KEY = "userType";
@@ -464,6 +466,25 @@ public class ConcordTaskParams {
             }
         }
 
+        public ExternalIdentityKey identity() {
+            Map<String, Object> identity = variables.getMap(IDENTITY_KEY, null);
+            if (identity == null) {
+                return null;
+            }
+            if (userId() != null || username() != null || userDomain() != null || variables.getString(USER_TYPE_KEY) != null) {
+                throw new IllegalArgumentException("identity cannot be combined with userId, username, userDomain or userType");
+            }
+            Object providerId = identity.get("providerId");
+            Object authority = identity.get("authority");
+            Object subject = identity.get("subject");
+            if (!(providerId instanceof String p) || p.isBlank()
+                    || !(authority instanceof String a)
+                    || !(subject instanceof String s) || s.isEmpty()) {
+                throw new IllegalArgumentException("identity requires a non-empty providerId and subject and a string authority");
+            }
+            return new ExternalIdentityKey().providerId(p).authority(a).subject(s);
+        }
+
         public String username() {
             return variables.getString(USERNAME_KEY);
         }
@@ -478,7 +499,7 @@ public class ConcordTaskParams {
                 return null;
             }
             try {
-                return CreateApiKeyRequest.UserTypeEnum.valueOf(value.toUpperCase());
+                return CreateApiKeyRequest.UserTypeEnum.valueOf(value.toUpperCase(Locale.ROOT));
             } catch (IllegalArgumentException e) {
                 String validTypes = Arrays.stream(CreateApiKeyRequest.UserTypeEnum.values())
                         .map(CreateApiKeyRequest.UserTypeEnum::toString).collect(Collectors.joining(", "));

@@ -34,6 +34,7 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
+import com.walmartlabs.concord.server.user.AccountSelector;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import io.swagger.v3.oas.annotations.Operation;
@@ -72,6 +73,7 @@ public class SecretResource implements Resource {
     private final TeamDao teamDao;
     private final ProjectDao projectDao;
     private final UserManager userManager;
+    private final AccountSelector accountSelector;
 
     @Inject
     public SecretResource(OrganizationManager orgManager,
@@ -80,7 +82,8 @@ public class SecretResource implements Resource {
                           SecretDao secretDao,
                           TeamDao teamDao,
                           ProjectDao projectDao,
-                          UserManager userManager) {
+                          UserManager userManager,
+                          AccountSelector accountSelector) {
 
         this.orgManager = orgManager;
         this.orgDao = orgDao;
@@ -89,6 +92,7 @@ public class SecretResource implements Resource {
         this.teamDao = teamDao;
         this.projectDao = projectDao;
         this.userManager = userManager;
+        this.accountSelector = accountSelector;
     }
 
     @POST
@@ -381,6 +385,12 @@ public class SecretResource implements Resource {
             return null;
         }
 
+        accountSelector.validate(owner.id(), owner.identity(),
+                owner.username() != null || owner.userDomain() != null || owner.userType() != null);
+        if (owner.identity() != null) {
+            return accountSelector.identityId(owner.identity());
+        }
+
         if (owner.id() != null) {
             return userManager.get(owner.id())
                     .orElseThrow(() -> new ValidationErrorsException("User not found: " + owner.id()))
@@ -388,8 +398,8 @@ public class SecretResource implements Resource {
         }
 
         if (owner.username() != null) {
-            // TODO don't assume LDAP here
-            return userManager.get(owner.username(), owner.userDomain(), UserType.LDAP)
+            UserType type = owner.userType() != null ? owner.userType() : UserType.LDAP;
+            return userManager.get(owner.username(), owner.userDomain(), type)
                     .orElseThrow(() -> new ConcordApplicationException("User not found: " + owner.username()))
                     .getId();
         }

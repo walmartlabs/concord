@@ -26,6 +26,7 @@ import com.walmartlabs.concord.db.DatabaseModule;
 import com.walmartlabs.concord.db.MainDBChangeLogProvider;
 import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.sdk.security.*;
+import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
 import com.walmartlabs.concord.server.security.provider.ProviderRegistry;
 import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserType;
@@ -97,7 +98,7 @@ class IdentityDaoIntegrationTest {
         assertNotNull(binding);
         assertEquals("DEFAULT", binding.get("origin", String.class));
         assertTrue(binding.get("is_required", Boolean.class));
-        assertEquals(com.walmartlabs.concord.server.security.ldap.LdapUserDirectory.key(username, null).subject(), binding.get("subject", String.class));
+        assertEquals("[\"" + username + "\",null]", binding.get("subject", String.class));
         sql.transaction(c -> DSL.using(c).execute("delete from user_authorization_bindings where user_id=? and source_id='ldap'", user));
         assertEquals(user, users.insertOrUpdate(username, null, "Old", "old@example", UserType.LDAP, null));
         assertEquals(0, sql.fetchCount(sql.selectFrom(org.jooq.impl.DSL.table("user_authorization_bindings")).where(org.jooq.impl.DSL.field("user_id").eq(user))));
@@ -120,7 +121,7 @@ class IdentityDaoIntegrationTest {
     }
 
     private static IdentityDao.Resolution resolve(ExternalIdentityKey key, String username) {
-        return dao.resolve(verified(key), POLICY, new LegacyAccountSelector(username, null, "LOCAL"), List.of(), List.of(), null);
+        return dao.resolve(verified(key), POLICY, new LegacyAccountSelector(username, null, "LOCAL"), true, List.of(), List.of(), null);
     }
 
     @Test
@@ -137,6 +138,69 @@ class IdentityDaoIntegrationTest {
         assertEquals(link.identityId(), dao.link(id, key).identityId());
         assertEquals(id, resolve(key, name).userId());
         assertEquals(1, sql.fetchCount(DSL.table("legacy_identity_adoptions"), DSL.field("user_id").eq(id)));
+    }
+
+    @Test
+    void disabledEnrollmentStillProtectsConsumedCandidateNamespace() {
+        String name = UUID.randomUUID().toString();
+        UUID user = legacy(name, false);
+        ExternalIdentityKey original = new ExternalIdentityKey("oauth", "issuer", UUID.randomUUID().toString());
+        assertEquals(user, resolve(original, name).userId());
+        ExternalIdentityKey different = new ExternalIdentityKey("oauth", "issuer", UUID.randomUUID().toString());
+        LegacyAccountSelector selector = new LegacyAccountSelector(name, null, "LOCAL");
+        assertThrows(AuthenticationException.class, () -> dao.resolve(verified(different), POLICY, selector, false, List.of(), List.of(), null));
+        assertTrue(dao.find(different).isEmpty());
+
+        String unconsumed = UUID.randomUUID().toString();
+        UUID oldUser = legacy(unconsumed, false);
+        ExternalIdentityKey newKey = new ExternalIdentityKey("oauth", "issuer", UUID.randomUUID().toString());
+        UUID created = dao.resolve(verified(newKey), POLICY, new LegacyAccountSelector(unconsumed, null, "LOCAL"), false, List.of(), List.of(), null).userId();
+        assertNotEquals(oldUser, created);
+    }
+
+    @Test
+    void adoptionPreservesExplicitlyRemovedAndSelectedBindings() {
+        AuthorizationProvider source = mock(AuthorizationProvider.class);
+        when(source.id()).thenReturn("adoption-test");
+        when(source.isActive()).thenReturn(true);
+        when(source.acceptsIdentity(null)).thenReturn(true);
+        UserDirectory local = mock(UserDirectory.class);
+        when(local.id()).thenReturn("local");
+        ProviderRegistry registry = new ProviderRegistry(Set.of(local), Set.of(source), Set.of(POLICY), Set.of());
+        IdentityDao scoped = new IdentityDao(sql.configuration(), registry, new UserDao(sql.configuration(), new UuidGenerator(), com.typesafe.config.ConfigFactory.empty()));
+        AuthorizationService authorization = new AuthorizationService(sql.configuration(), registry, com.typesafe.config.ConfigFactory.empty());
+        var defaultBinding = new IdentityDao.Binding("adoption-test", null, false);
+        for (boolean selected : List.of(false, true)) {
+            String name = UUID.randomUUID().toString();
+            UUID user = legacy(name, false);
+            authorization.replaceBindings(user, selected ? List.of(new AuthorizationService.BindingSpec("adoption-test", null, true)) : List.of());
+            ExternalIdentityKey key = new ExternalIdentityKey("oauth", "issuer", UUID.randomUUID().toString());
+            assertEquals(user, scoped.resolve(verified(key), POLICY, new LegacyAccountSelector(name, null, "LOCAL"), true, List.of(), List.of(defaultBinding), null).userId());
+            var rows = sql.fetch("select origin,is_required from user_authorization_bindings where user_id=?", user);
+            assertEquals(selected ? 1 : 0, rows.size());
+            if (selected) {
+                assertEquals("ADMIN", rows.get(0).get("origin", String.class));
+                assertTrue(rows.get(0).get("is_required", Boolean.class));
+            }
+        }
+        String name = UUID.randomUUID().toString();
+        UUID user = legacy(name, false);
+        ExternalIdentityKey key = new ExternalIdentityKey("oauth", "issuer", UUID.randomUUID().toString());
+        scoped.resolve(verified(key), POLICY, new LegacyAccountSelector(name, null, "LOCAL"), true, List.of(), List.of(defaultBinding), null);
+        assertEquals("DEFAULT", sql.fetchOne("select origin from user_authorization_bindings where user_id=?", user).get(0, String.class));
+        String removedName = UUID.randomUUID().toString();
+        UUID removedUser = legacy(removedName, false);
+        ExternalIdentityKey directoryKey = new ExternalIdentityKey("directory", "", UUID.randomUUID().toString());
+        UUID directoryId = scoped.link(removedUser, directoryKey).identityId();
+        sql.transaction(configuration -> {
+            var tx = DSL.using(configuration);
+            tx.execute("insert into authorization_sources(source_id,is_active) values ('adoption-test',true) on conflict do nothing");
+            tx.execute("insert into user_authorization_bindings(binding_id,user_id,source_id,identity_id,is_required,origin,refresh_version) values (?,?,'adoption-test',?,false,'DEFAULT',0)", UUID.randomUUID(), removedUser, directoryId);
+        });
+        scoped.unlink(removedUser, directoryId);
+        ExternalIdentityKey login = new ExternalIdentityKey("oauth", "issuer", UUID.randomUUID().toString());
+        scoped.resolve(verified(login), POLICY, new LegacyAccountSelector(removedName, null, "LOCAL"), true, List.of(), List.of(defaultBinding), null);
+        assertEquals(0, sql.fetchCount(DSL.table("user_authorization_bindings"), DSL.field("user_id").eq(removedUser)));
     }
 
     @Test
@@ -190,8 +254,8 @@ class IdentityDaoIntegrationTest {
         }
         ExternalIdentityKey a = new ExternalIdentityKey("oauth", "issuer", UUID.randomUUID().toString());
         ExternalIdentityKey b = new ExternalIdentityKey("oauth", "other", UUID.randomUUID().toString());
-        UUID one = dao.resolve(verified(a), POLICY, null, List.of(), List.of(), null).userId();
-        UUID two = dao.resolve(verified(b), POLICY, null, List.of(), List.of(), null).userId();
+        UUID one = dao.resolve(verified(a), POLICY, null, true, List.of(), List.of(), null).userId();
+        UUID two = dao.resolve(verified(b), POLICY, null, true, List.of(), List.of(), null).userId();
         assertNotEquals(one, two);
     }
 
@@ -258,6 +322,104 @@ class IdentityDaoIntegrationTest {
         sql.transaction(configuration -> DSL.using(configuration).execute("update users set is_disabled=false where user_id=?", user));
         dao.observe(user, observation);
         assertEquals(1, sql.fetchCount(DSL.table("user_authorization_state"), DSL.field("user_id").eq(user)));
+    }
+
+    @Test
+    void observationWaitsForBindingBeforeLockingStateAndInvalidatesOnlyNewerClaims() throws Exception {
+        UUID user = legacy(UUID.randomUUID().toString(), false);
+        ExternalIdentityKey key = new ExternalIdentityKey("oauth", "issuer", UUID.randomUUID().toString());
+        UUID identity = dao.link(user, key).identityId();
+        UUID binding = UUID.randomUUID();
+        sql.transaction(configuration -> {
+            var tx = DSL.using(configuration);
+            tx.execute("insert into authorization_sources(source_id,is_active) values ('observation-lock-test',true) on conflict do nothing");
+            tx.execute("insert into user_authorization_bindings(binding_id,user_id,source_id,identity_id,is_required,origin,refresh_version) values (?,?,'observation-lock-test',?,false,'ADMIN',0)", binding, user, identity);
+            tx.execute("insert into user_authorization_state(user_id,source_id,binding_id,status) values (?,'observation-lock-test',?,'VALID')", user, binding);
+        });
+        java.time.Instant now = java.time.Instant.now();
+        VerifiedIdentity observation = new VerifiedIdentity(key, PROFILE, Set.of(), Map.of("groups", List.of("new")), now, now.plusSeconds(60));
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<?>[] pending = new Future<?>[1];
+        try {
+            sql.transaction(configuration -> {
+                var tx = DSL.using(configuration);
+                int pid = tx.fetchOne("select pg_backend_pid()").get(0, Integer.class);
+                tx.fetchOne("select binding_id from user_authorization_bindings where binding_id=? for update", binding);
+                pending[0] = executor.submit(() -> dao.observe(user, observation));
+                try {
+                    long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+                    boolean blocked = false;
+                    while (System.nanoTime() < deadline) {
+                        blocked = Boolean.TRUE.equals(sql.fetchOne("select exists (select 1 from pg_stat_activity where ? = any(pg_blocking_pids(pid)))", pid).get(0, Boolean.class));
+                        if (blocked) break;
+                        if (pending[0].isDone()) pending[0].get();
+                        Thread.sleep(10);
+                    }
+                    assertTrue(blocked, "observation did not wait for the binding lock");
+                    // A refresh holding the binding must still be able to lock the state row.
+                    tx.execute("set local lock_timeout = '2s'");
+                    tx.execute("update user_authorization_state set status='STALE' where binding_id=?", binding);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            pending[0].get(10, TimeUnit.SECONDS);
+            var state = sql.fetchOne("select b.refresh_version,s.status,s.verified_attributes->'groups'->>0 as claim from user_authorization_bindings b join user_authorization_state s on s.binding_id=b.binding_id where b.binding_id=?", binding);
+            assertEquals(1L, state.get("refresh_version", Long.class));
+            assertEquals("STALE", state.get("status", String.class));
+            assertEquals("new", state.get("claim", String.class));
+            dao.observe(user, new VerifiedIdentity(key, PROFILE, Set.of(), Map.of("groups", List.of("old")), now.minusSeconds(1), now.plusSeconds(60)));
+            state = sql.fetchOne("select b.refresh_version,s.verified_attributes->'groups'->>0 as claim from user_authorization_bindings b join user_authorization_state s on s.binding_id=b.binding_id where b.binding_id=?", binding);
+            assertEquals(1L, state.get("refresh_version", Long.class));
+            assertEquals("new", state.get("claim", String.class));
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    void reconciliationWaitsForBindingBeforeLockingState() throws Exception {
+        UUID user = legacy(UUID.randomUUID().toString(), false);
+        UUID binding = UUID.randomUUID();
+        sql.transaction(configuration -> {
+            var tx = DSL.using(configuration);
+            tx.execute("insert into authorization_sources(source_id,is_active) values ('reconcile-lock-test',true) on conflict do nothing");
+            tx.execute("insert into user_authorization_bindings(binding_id,user_id,source_id,is_required,origin,refresh_version) values (?,?,'reconcile-lock-test',false,'ADMIN',0)", binding, user);
+            tx.execute("insert into user_authorization_state(user_id,source_id,binding_id,status) values (?,'reconcile-lock-test',?,'VALID')", user, binding);
+        });
+        var registry = new ProviderRegistry(Set.of(), Set.of(), Set.of(), Set.of());
+        var service = new AuthorizationService(sql.configuration(), registry, com.typesafe.config.ConfigFactory.empty());
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<?>[] pending = new Future<?>[1];
+        try {
+            sql.transaction(configuration -> {
+                var tx = DSL.using(configuration);
+                int pid = tx.fetchOne("select pg_backend_pid()").get(0, Integer.class);
+                tx.fetchOne("select binding_id from user_authorization_bindings where binding_id=? for update", binding);
+                pending[0] = executor.submit(service::reconcile);
+                try {
+                    long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+                    boolean blocked = false;
+                    while (System.nanoTime() < deadline) {
+                        blocked = Boolean.TRUE.equals(sql.fetchOne("select exists (select 1 from pg_stat_activity where ? = any(pg_blocking_pids(pid)))", pid).get(0, Boolean.class));
+                        if (blocked) break;
+                        if (pending[0].isDone()) pending[0].get();
+                        Thread.sleep(10);
+                    }
+                    assertTrue(blocked, "reconciliation did not wait for the binding lock");
+                    tx.execute("set local lock_timeout = '2s'");
+                    tx.execute("update user_authorization_state set status='STALE' where binding_id=?", binding);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            pending[0].get(10, TimeUnit.SECONDS);
+            var state = sql.fetchOne("select b.refresh_version,s.status from user_authorization_bindings b join user_authorization_state s on s.binding_id=b.binding_id where b.binding_id=?", binding);
+            assertEquals(1L, state.get("refresh_version", Long.class));
+            assertEquals("STALE", state.get("status", String.class));
+        } finally {
+            executor.shutdownNow();
+        }
     }
 
     private static boolean linkAfter(CountDownLatch start, UUID id, ExternalIdentityKey key) throws Exception {

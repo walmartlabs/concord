@@ -658,6 +658,10 @@ public class ProcessQueueDao extends AbstractDao {
 
         // users
         query.addSelect(USERS.USERNAME);
+        query.addSelect(field("(select u.profile_provider_id from users u where u.user_id = {0})",
+                String.class, PROCESS_QUEUE.INITIATOR_ID).as("initiator_profile_provider_id"));
+        query.addSelect(field("array(select distinct i.provider_id from user_identities i where i.user_id = {0} and i.is_active)",
+                String[].class, PROCESS_QUEUE.INITIATOR_ID).as("initiator_identity_provider_ids"));
         query.addJoin(USERS, JoinType.LEFT_OUTER_JOIN, USERS.USER_ID.eq(PROCESS_QUEUE.INITIATOR_ID));
 
         // repositories
@@ -869,6 +873,8 @@ public class ProcessQueueDao extends AbstractDao {
                 .commitBranch(r.get(PROCESS_QUEUE.COMMIT_BRANCH))
                 .initiator(r.get(USERS.USERNAME))
                 .initiatorId(r.get(PROCESS_QUEUE.INITIATOR_ID))
+                .initiatorProfileProviderId(getOrNull(r, "initiator_profile_provider_id"))
+                .initiatorIdentityProviderIds(toSet((String[]) getOrNull(r, "initiator_identity_provider_ids")))
                 .startAt(r.get(PROCESS_QUEUE.START_AT))
                 .lastUpdatedAt(r.get(PROCESS_QUEUE.LAST_UPDATED_AT))
                 .lastRunAt(r.get(PROCESS_QUEUE.LAST_RUN_AT))

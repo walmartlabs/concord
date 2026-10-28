@@ -21,19 +21,13 @@ package com.walmartlabs.concord.server.security;
  */
 
 import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
-import com.walmartlabs.concord.server.user.RoleEntry;
-import com.walmartlabs.concord.server.user.UserEntry;
-import org.apache.shiro.authz.AuthorizationInfo;
-import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.ThreadContext;
 
 import java.io.*;
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Utility methods for working with Shiro's security context.
@@ -118,37 +112,6 @@ public final class SecurityUtils {
         }
     }
 
-    public static AuthorizationInfo toAuthorizationInfo(PrincipalCollection principals) {
-        return toAuthorizationInfo(principals, null);
-    }
-
-    public static AuthorizationInfo toAuthorizationInfo(PrincipalCollection principals, List<String> extraRoles) {
-        SimpleAuthorizationInfo i = new SimpleAuthorizationInfo();
-
-        UserPrincipal p = principals.oneByType(UserPrincipal.class);
-        if (p == null) {
-            return i;
-        }
-
-        UserEntry u = p.getUser();
-        Set<RoleEntry> roles = u.getRoles();
-        if (roles != null) {
-            roles.forEach(r -> {
-                i.addRole(r.getName());
-
-                Set<String> permissions = r.getPermissions();
-                if (permissions != null) {
-                    permissions.forEach(i::addStringPermission);
-                }
-            });
-        }
-
-        if (extraRoles != null) {
-            extraRoles.forEach(i::addRole);
-        }
-
-        return i;
-    }
 
     private SecurityUtils() {
     }

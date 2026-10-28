@@ -33,6 +33,7 @@ import com.walmartlabs.concord.server.security.Permission;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.PrincipalNormalization;
+import com.walmartlabs.concord.server.user.AccountSelector;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.exception.DataAccessException;
@@ -55,26 +56,26 @@ public class ApiKeyManager {
     private final AuditLog auditLog;
     private final ApiKeyConfiguration cfg;
     private final UserManager userManager;
+    private final AccountSelector accountSelector;
 
     @Inject
     public ApiKeyManager(ApiKeyConfiguration cfg,
                          UserManager userManager,
                          ApiKeyDao apiKeyDao,
-                         AuditLog auditLog) {
+                         AuditLog auditLog,
+                         AccountSelector accountSelector) {
 
         this.cfg = requireNonNull(cfg);
         this.userManager = requireNonNull(userManager);
         this.apiKeyDao = requireNonNull(apiKeyDao);
         this.auditLog = requireNonNull(auditLog);
+        this.accountSelector = requireNonNull(accountSelector);
     }
 
     public CreateApiKeyResponse create(CreateApiKeyRequest req) {
         String key = assertKeyValue(req);
 
-        UUID userId = assertUserId(req.getUserId());
-        if (userId == null) {
-            userId = assertUsername(req.getUsername(), req.getUserDomain(), req.getUserType());
-        }
+        UUID userId = resolveUserId(req);
 
         if (userId == null) {
             userId = PrincipalNormalization.assertCurrent().userId();
@@ -102,10 +103,7 @@ public class ApiKeyManager {
     public CreateApiKeyResponse createOrUpdate(CreateApiKeyRequest req) {
         String key = assertKeyValue(req);
 
-        UUID userId = assertUserId(req.getUserId());
-        if (userId == null) {
-            userId = assertUsername(req.getUsername(), req.getUserDomain(), req.getUserType());
-        }
+        UUID userId = resolveUserId(req);
 
         if (userId == null) {
             userId = PrincipalNormalization.assertCurrent().userId();
@@ -205,6 +203,16 @@ public class ApiKeyManager {
         assertOwner(effectiveUserId);
 
         return apiKeyDao.list(effectiveUserId);
+    }
+
+    private UUID resolveUserId(CreateApiKeyRequest req) {
+        accountSelector.validate(req.getUserId(), req.getIdentity(),
+                req.getUsername() != null || req.getUserDomain() != null || req.getUserType() != null);
+        if (req.getIdentity() != null) {
+            return accountSelector.identityId(req.getIdentity());
+        }
+        UUID userId = assertUserId(req.getUserId());
+        return userId != null ? userId : assertUsername(req.getUsername(), req.getUserDomain(), req.getUserType());
     }
 
     private UUID assertUsername(String username, String domain, UserType type) {

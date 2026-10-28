@@ -41,6 +41,7 @@ import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.PrincipalNormalization;
 import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
+import com.walmartlabs.concord.server.user.AccountSelector;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
@@ -61,6 +62,7 @@ public class OrganizationManager {
     private final OrganizationDao orgDao;
     private final TeamDao teamDao;
     private final UserManager userManager;
+    private final AccountSelector accountSelector;
     private final Locks locks;
     private final AuditLog auditLog;
 
@@ -70,12 +72,14 @@ public class OrganizationManager {
                                TeamDao teamDao,
                                UserManager userManager,
                                Locks locks,
-                               AuditLog auditLog) {
+                               AuditLog auditLog,
+                               AccountSelector accountSelector) {
 
         this.policyManager = policyManager;
         this.orgDao = orgDao;
         this.teamDao = teamDao;
         this.userManager = userManager;
+        this.accountSelector = accountSelector;
         this.locks = locks;
         this.auditLog = auditLog;
     }
@@ -310,6 +314,13 @@ public class OrganizationManager {
     private UserEntry getOwner(EntityOwner owner, UserEntry defaultOwner) {
         if (owner == null) {
             return defaultOwner;
+        }
+
+        accountSelector.validate(owner.id(), owner.identity(),
+                owner.username() != null || owner.userDomain() != null || owner.userType() != null);
+        if (owner.identity() != null) {
+            UUID id = accountSelector.identityId(owner.identity());
+            return userManager.get(id).orElseThrow(() -> new ValidationErrorsException("User not found: " + id));
         }
 
         if (owner.id() != null) {

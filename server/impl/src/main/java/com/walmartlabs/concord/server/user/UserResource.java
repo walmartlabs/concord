@@ -46,11 +46,13 @@ public class UserResource implements Resource {
 
     private final UserManager userManager;
     private final UserDao userDao;
+    private final AccountSelector selectors;
 
     @Inject
-    public UserResource(UserManager userManager, UserDao userDao) {
+    public UserResource(UserManager userManager, UserDao userDao, AccountSelector selectors) {
         this.userManager = userManager;
         this.userDao = userDao;
+        this.selectors = selectors;
     }
 
     /**
@@ -67,6 +69,15 @@ public class UserResource implements Resource {
     public CreateUserResponse createOrUpdate(@Valid CreateUserRequest req) {
         assertAdmin();
 
+        selectors.validate(req.getUserId(), req.getIdentity(), req.getType() != null);
+        UUID id = req.getIdentity() == null ? req.getUserId() : selectors.identityId(req.getIdentity());
+        if (id != null) {
+            return userManager.updateSelected(id, req);
+        }
+        selectors.requireLegacy();
+        if (req.getUsername() == null) {
+            throw new ValidationErrorsException("Username is required for legacy user creation");
+        }
         return userManager.upsertLegacy(req, assertUserType(req.getType()));
     }
 
@@ -83,6 +94,7 @@ public class UserResource implements Resource {
     @Operation(description = "Find a user")
     public UserEntry findByUsername(@PathParam("username") @Size(max = UserEntry.MAX_USERNAME_LENGTH) @NotNull String username) {
         assertAdmin();
+        selectors.requireLegacy();
 
         UUID id = userManager.getId(username, null, null)
                 .orElseThrow(() -> new ConcordApplicationException("User not found: " + username, Status.NOT_FOUND));
@@ -111,7 +123,9 @@ public class UserResource implements Resource {
             userManager.disable(id);
         }
 
-        return userDao.get(id);
+        UserEntry user = userDao.get(id);
+        if (user != null && !selectors.legacyEnabled()) user.setProjection(null, null, false);
+        return user;
     }
 
     /**
@@ -145,6 +159,7 @@ public class UserResource implements Resource {
     public GenericOperationResult updateUserRoles(@PathParam("username") @Size(max = UserEntry.MAX_USERNAME_LENGTH) String username,
                                                   @Valid UpdateUserRolesRequest req) {
         assertAdmin();
+        selectors.requireLegacy();
 
         // TODO: type from request
         UserType type = userManager.currentLegacyType();

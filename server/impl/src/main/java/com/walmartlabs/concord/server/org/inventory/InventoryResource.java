@@ -161,7 +161,8 @@ public class InventoryResource implements Resource {
 
         InventoryOwner owner = null;
         if (e.owner() != null) {
-            owner = new InventoryOwner(e.owner().id(), e.owner().username());
+            owner = new InventoryOwner(e.owner().id(), e.owner().username(), null,
+                    e.owner().profileProviderId(), e.owner().identityProviderIds());
         }
 
         return new InventoryEntry(e.id(), e.name(), e.orgId(), e.orgName(), e.visibility(), owner, null);
@@ -174,6 +175,7 @@ public class InventoryResource implements Resource {
 
         return EntityOwner.builder()
                 .id(owner.getId())
+                .identity(owner.getIdentity())
                 .username(owner.getUsername())
                 .build();
     }

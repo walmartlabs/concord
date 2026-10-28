@@ -31,10 +31,10 @@ import com.walmartlabs.concord.server.jooq.tables.Secrets;
 import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.SecretsRecord;
 import com.walmartlabs.concord.server.org.EntityOwner;
+import com.walmartlabs.concord.server.org.OwnerProjection;
 import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 
@@ -62,11 +62,13 @@ public class SecretDao extends AbstractDao {
     }
 
     private final UuidGenerator uuidGenerator;
+    private final OwnerProjection ownerProjection;
 
     @Inject
-    public SecretDao(@MainDB Configuration cfg, UuidGenerator uuidGenerator) {
+    public SecretDao(@MainDB Configuration cfg, UuidGenerator uuidGenerator, OwnerProjection ownerProjection) {
         super(cfg);
         this.uuidGenerator = requireNonNull(uuidGenerator);
+        this.ownerProjection = requireNonNull(ownerProjection);
     }
 
     @Override
@@ -417,7 +419,7 @@ public class SecretDao extends AbstractDao {
                 .leftJoin(orgAlias).on(orgAlias.ORG_ID.eq(secretAlias.ORG_ID));
     }
 
-    private static SecretEntryV2 toEntry(DSLContext tx, Record17<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String, OffsetDateTime, OffsetDateTime> r) {
+    private SecretEntryV2 toEntry(DSLContext tx, Record17<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String, OffsetDateTime, OffsetDateTime> r) {
         UUID secretId = r.get(SECRETS.SECRET_ID);
         Set<ProjectEntry> projects = tx.select(PROJECTS.PROJECT_ID, PROJECTS.PROJECT_NAME).from(PROJECTS).leftJoin(PROJECT_SECRETS).on(PROJECTS.PROJECT_ID.eq(PROJECT_SECRETS.PROJECT_ID))
                 .where(PROJECT_SECRETS.SECRET_ID.eq(secretId)).stream()
@@ -431,7 +433,7 @@ public class SecretDao extends AbstractDao {
                 SecretEncryptedByType.valueOf(r.get(SECRETS.ENCRYPTED_BY)),
                 r.get(SECRETS.STORE_TYPE),
                 SecretVisibility.valueOf(r.get(SECRETS.VISIBILITY)),
-                toOwner(r),
+                toOwner(tx, r),
                 r.get(SECRETS.CREATED_AT),
                 r.get(SECRETS.LAST_UPDATED_AT),
                 r.get(SECRETS.SECRET_SALT),
@@ -439,20 +441,9 @@ public class SecretDao extends AbstractDao {
         );
     }
 
-    private static EntityOwner toOwner(Record17<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String, OffsetDateTime, OffsetDateTime> r) {
-
-        UUID id = r.get(USERS.USER_ID);
-        if (id == null) {
-            return null;
-        }
-
-        return EntityOwner.builder()
-                .id(id)
-                .username(r.get(USERS.USERNAME))
-                .userDomain(r.get(USERS.DOMAIN))
-                .displayName(r.get(USERS.DISPLAY_NAME))
-                .userType(UserType.fromNullable(r.get(USERS.USER_TYPE)))
-                .build();
+    private EntityOwner toOwner(DSLContext tx, Record17<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String, OffsetDateTime, OffsetDateTime> r) {
+        return ownerProjection.owner(tx, r.get(USERS.USER_ID), r.get(USERS.USERNAME), r.get(USERS.DOMAIN),
+                r.get(USERS.DISPLAY_NAME), r.get(USERS.USER_TYPE));
     }
 
     public static class SecretDataEntry extends SecretEntryV2 {

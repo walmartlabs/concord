@@ -23,8 +23,6 @@ package com.walmartlabs.concord.server.security;
 import com.walmartlabs.concord.server.sdk.security.AuthenticationContext;
 import com.walmartlabs.concord.server.sdk.security.SubjectPrincipal;
 import com.walmartlabs.concord.server.security.authorization.AuthorizationService;
-import com.walmartlabs.concord.server.user.UserEntry;
-import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
@@ -41,35 +39,16 @@ class ConcordAuthorizationRealmTest {
     private final ConcordAuthorizationRealm realm = new ConcordAuthorizationRealm(authorization);
     private final UUID id = UUID.randomUUID();
 
-    private UserPrincipal legacy(UUID userId) {
-        return new UserPrincipal("ldap", new UserEntry(userId, "alice", null, "Alice", Set.of(),
-                UserType.LDAP, null, Set.of(), false, null, false));
-    }
 
     private SubjectPrincipal subject(UUID userId) {
         return new SubjectPrincipal(userId, "alice", null, new AuthenticationContext("oidc", null, null));
     }
 
     @Test
-    void normalizesLegacyWithoutDiscardingCredentialOrLegacyPrincipal() {
-        UserPrincipal old = legacy(id);
-        SimplePrincipalCollection input = new SimplePrincipalCollection(old, "ldap");
-        input.add("credential", "apikey");
-        PrincipalCollection result = PrincipalNormalization.normalize(input);
-        assertTrue(result.asList().contains(old));
-        assertTrue(result.asList().contains("credential"));
-        SubjectPrincipal normalized = PrincipalNormalization.find(result);
-        assertEquals(id, normalized.userId());
-        assertEquals("ldap", normalized.authentication().providerId());
-        assertNull(normalized.authentication().authenticatedAt());
-        assertSame(result, PrincipalNormalization.normalize(result));
-    }
-
-    @Test
-    void rejectsConflictingOldAndNewAccounts() {
-        SimplePrincipalCollection input = new SimplePrincipalCollection(legacy(id), "ldap");
+    void rejectsConflictingAccounts() {
+        SimplePrincipalCollection input = new SimplePrincipalCollection(subject(id), "first");
         input.add(subject(UUID.randomUUID()), "oidc");
-        assertThrows(IllegalArgumentException.class, () -> PrincipalNormalization.normalize(input));
+        assertThrows(IllegalArgumentException.class, () -> PrincipalNormalization.find(input));
         assertThrows(IllegalArgumentException.class, () -> realm.hasRole(input, "admin"));
         verifyNoInteractions(authorization);
     }
@@ -78,7 +57,6 @@ class ConcordAuthorizationRealmTest {
     void credentialOnlyHasNoUserGrants() {
         SimplePrincipalCollection input = new SimplePrincipalCollection("credential", "apikey");
         assertNull(PrincipalNormalization.find(input));
-        assertSame(input, PrincipalNormalization.normalize(input));
         assertFalse(realm.hasRole(input, "admin"));
         assertFalse(realm.isPermitted(input, "thing:read"));
         verifyNoInteractions(authorization);
@@ -112,13 +90,4 @@ class ConcordAuthorizationRealmTest {
         verify(authorization).prepare(id);
     }
 
-    @Test
-    void permissionsAndRolesComeFromCurrentServiceForLegacyPrincipal() {
-        PrincipalCollection input = new SimplePrincipalCollection(legacy(id), "ldap");
-        when(authorization.prepare(id)).thenReturn(new AuthorizationService.EffectiveAuthorization(
-                Set.of("operator"), Set.of("thing:read")));
-        assertTrue(realm.hasRole(input, "operator"));
-        assertTrue(realm.isPermitted(input, "thing:read"));
-        assertFalse(realm.isPermitted(input, "thing:write"));
-    }
 }

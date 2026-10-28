@@ -30,9 +30,9 @@ import com.walmartlabs.concord.server.jooq.tables.Organizations;
 import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.JsonStoresRecord;
 import com.walmartlabs.concord.server.org.EntityOwner;
+import com.walmartlabs.concord.server.org.OwnerProjection;
 import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.Record;
 import org.jooq.*;
 
@@ -54,11 +54,13 @@ import static org.jooq.impl.DSL.*;
 public class JsonStoreDao extends AbstractDao {
 
     private final UuidGenerator uuidGenerator;
+    private final OwnerProjection ownerProjection;
 
     @Inject
-    public JsonStoreDao(@MainDB Configuration cfg, UuidGenerator uuidGenerator) {
+    public JsonStoreDao(@MainDB Configuration cfg, UuidGenerator uuidGenerator, OwnerProjection ownerProjection) {
         super(cfg);
         this.uuidGenerator = requireNonNull(uuidGenerator);
+        this.ownerProjection = requireNonNull(ownerProjection);
     }
 
     @Override
@@ -69,14 +71,14 @@ public class JsonStoreDao extends AbstractDao {
     public JsonStoreEntry get(UUID storeId) {
         return buildSelect(dsl())
                 .where(JSON_STORES.JSON_STORE_ID.eq(storeId))
-                .fetchOne(JsonStoreDao::toEntity);
+                .fetchOne(this::toEntity);
     }
 
     public JsonStoreEntry get(UUID orgId, String storeName) {
         return buildSelect(dsl())
                 .where(JSON_STORES.JSON_STORE_NAME.eq(storeName)
                         .and(JSON_STORES.ORG_ID.eq(orgId)))
-                .fetchOne(JsonStoreDao::toEntity);
+                .fetchOne(this::toEntity);
     }
 
     public UUID getId(UUID orgId, String storeName) {
@@ -130,7 +132,7 @@ public class JsonStoreDao extends AbstractDao {
 
         return q.where(j.ORG_ID.eq(orgId))
                 .orderBy(j.JSON_STORE_NAME)
-                .fetch(JsonStoreDao::toEntity);
+                .fetch(this::toEntity);
     }
 
     public UUID insert(UUID orgId, String name, JsonStoreVisibility visibility, UUID ownerId) {
@@ -276,7 +278,7 @@ public class JsonStoreDao extends AbstractDao {
                 .leftJoin(orgAlias).on(orgAlias.ORG_ID.eq(jsonStoreAlias.ORG_ID));
     }
 
-    private static JsonStoreEntry toEntity(Record r) {
+    private JsonStoreEntry toEntity(Record r) {
         return JsonStoreEntry.builder()
                 .id(r.getValue(JSON_STORES.JSON_STORE_ID))
                 .name(r.getValue(JSON_STORES.JSON_STORE_NAME))
@@ -287,17 +289,7 @@ public class JsonStoreDao extends AbstractDao {
                 .build();
     }
 
-    private static EntityOwner toOwner(UUID id, String username, String domain, String displayName, String userType) {
-        if (id == null) {
-            return null;
-        }
-
-        return EntityOwner.builder()
-                .id(id)
-                .username(username)
-                .userDomain(domain)
-                .displayName(displayName)
-                .userType(UserType.fromNullable(userType))
-                .build();
+    private EntityOwner toOwner(UUID id, String username, String domain, String displayName, String userType) {
+        return ownerProjection.owner(dsl(), id, username, domain, displayName, userType);
     }
 }

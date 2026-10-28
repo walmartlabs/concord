@@ -22,6 +22,9 @@ package com.walmartlabs.concord.client;
 
 import com.walmartlabs.concord.client.ConcordTaskParams.ForkParams;
 import com.walmartlabs.concord.client.ConcordTaskParams.ForkStartParams;
+import com.walmartlabs.concord.client.ConcordTaskParams.CreateOrUpdateApiKeyParams;
+import com.walmartlabs.concord.client2.CreateApiKeyRequest;
+import com.walmartlabs.concord.client2.ExternalIdentityKey;
 import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
 import org.junit.jupiter.api.Test;
 
@@ -29,6 +32,8 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ConcordTaskParamsTest {
 
@@ -58,5 +63,38 @@ public class ConcordTaskParamsTest {
         assertTrue(f2.tags().containsAll(tags));
 
         System.out.println(params);
+    }
+
+    @Test
+    public void testApiKeyIdentitySelector() {
+        Map<String, Object> identity = Map.of("providerId", "custom", "authority", "", "subject", "CaseSensitive");
+        CreateOrUpdateApiKeyParams params = new CreateOrUpdateApiKeyParams(new MapBackedVariables(Map.of("identity", identity)));
+        ExternalIdentityKey key = params.identity();
+        assertEquals("custom", key.getProviderId());
+        assertEquals("", key.getAuthority());
+        assertEquals("CaseSensitive", key.getSubject());
+        assertNull(params.userId());
+
+        for (String field : List.of("userId", "username", "userDomain", "userType")) {
+            Map<String, Object> input = new HashMap<>();
+            input.put("identity", identity);
+            input.put(field, field.equals("userId") ? UUID.randomUUID().toString() : "value");
+            assertThrows(IllegalArgumentException.class,
+                    () -> new CreateOrUpdateApiKeyParams(new MapBackedVariables(input)).identity());
+        }
+        assertThrows(IllegalArgumentException.class, () -> new CreateOrUpdateApiKeyParams(
+                new MapBackedVariables(Map.of("identity", Map.of("providerId", "p", "subject", "s")))).identity());
+    }
+
+    @Test
+    public void testApiKeyLegacySelectors() {
+        UUID userId = UUID.randomUUID();
+        CreateOrUpdateApiKeyParams params = new CreateOrUpdateApiKeyParams(new MapBackedVariables(Map.of(
+                "userId", userId.toString(), "userDomain", "example", "userType", "sso")));
+        assertNull(params.identity());
+        assertEquals(userId, params.userId());
+        assertEquals(CreateApiKeyRequest.UserTypeEnum.SSO, params.userType());
+        assertThrows(IllegalArgumentException.class, () -> new CreateOrUpdateApiKeyParams(
+                new MapBackedVariables(Map.of("userType", "oidc"))).userType());
     }
 }

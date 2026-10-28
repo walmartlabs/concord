@@ -152,4 +152,11 @@
             ALTER TABLE USERS DROP COLUMN LAST_GROUP_SYNC_DT;
         ]]></sql>
     </changeSet>
+    <changeSet id="2461040" author="concord">
+        <sql splitStatements="true"><![CDATA[
+            ALTER TABLE USERS ADD COLUMN AUTHORIZATION_BINDINGS_ADMINISTERED boolean NOT NULL DEFAULT false;
+            UPDATE USERS SET AUTHORIZATION_BINDINGS_ADMINISTERED = true
+            WHERE EXISTS (SELECT 1 FROM USER_AUTHORIZATION_BINDINGS b WHERE b.USER_ID = USERS.USER_ID AND b.ORIGIN = 'ADMIN');
+        ]]></sql>
+    </changeSet>
 </databaseChangeLog>

@@ -181,6 +181,25 @@ public class PolicyDao extends AbstractDao {
         });
     }
 
+    public void unlinkUser(UUID policyId, UUID userId) {
+        tx(tx -> tx.deleteFrom(POLICY_LINKS)
+                .where(POLICY_LINKS.POLICY_ID.eq(policyId))
+                .and(POLICY_LINKS.USER_ID.eq(userId))
+                .and(POLICY_LINKS.ORG_ID.isNull())
+                .and(POLICY_LINKS.PROJECT_ID.isNull())
+                .execute());
+    }
+
+    public List<PolicyEntry> listByUser(UUID userId) {
+        return dsl().select(POLICIES.POLICY_ID, POLICIES.PARENT_POLICY_ID, POLICIES.POLICY_NAME, POLICIES.RULES)
+                .from(POLICY_LINKS)
+                .join(POLICIES).on(POLICY_LINKS.POLICY_ID.eq(POLICIES.POLICY_ID))
+                .where(POLICY_LINKS.USER_ID.eq(userId))
+                .and(POLICY_LINKS.ORG_ID.isNull())
+                .and(POLICY_LINKS.PROJECT_ID.isNull())
+                .fetch(this::toEntry);
+    }
+
     public List<PolicyEntry> list() {
         return dsl().select(POLICIES.POLICY_ID,
                 POLICIES.PARENT_POLICY_ID,
