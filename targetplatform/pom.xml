@@ -425,11 +425,6 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-rewrite</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-artifact</artifactId>
                 <version>${maven.artifact.version}</version>
@@ -618,11 +613,6 @@
                 <artifactId>asm</artifactId>
                 <version>${asm.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.google.inject.extensions</groupId>
-                <artifactId>guice-servlet</artifactId>
-                <version>${guice.version}</version>
-            </dependency>
             <dependency> <!-- for backwards compat with bpm-engine-impl -->
                 <groupId>org.graalvm.js</groupId>
                 <artifactId>js-scriptengine</artifactId>
@@ -799,11 +789,6 @@
             <dependency>
                 <groupId>org.eclipse.jetty.ee8</groupId>
                 <artifactId>jetty-ee8-servlet</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty.ee8</groupId>
-                <artifactId>jetty-ee8-servlets</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
