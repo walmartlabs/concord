@@ -116,6 +116,40 @@ public class SsoConfiguration implements Serializable {
     @Config("sso.pfed.bearerToken.allowedClientIds")
     private List<String> allowedClientIds;
 
+    @Inject
+    @Nullable
+    @Config("sso.identityAuthority")
+    private String identityAuthority;
+
+    @Inject
+    @Config("sso.profileProviderId")
+    private String profileProviderId;
+
+    @Inject
+    @Nullable
+    @Config("sso.identityDirectory")
+    private String identityDirectory;
+
+    @Inject
+    @Config("sso.authorizationSources")
+    private List<String> authorizationSources;
+
+    public String getIdentityAuthority() {
+        return identityAuthority == null ? userInfoEndpointUrl : identityAuthority;
+    }
+
+    public String getProfileProviderId() {
+        return profileProviderId;
+    }
+
+    public String getIdentityDirectory() {
+        return identityDirectory;
+    }
+
+    public List<String> getAuthorizationSources() {
+        return authorizationSources;
+    }
+
     public boolean isAutoCreateUsers() {
         return autoCreateUsers;
     }

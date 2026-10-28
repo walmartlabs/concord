@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2026 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,34 +24,32 @@ import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
-import com.walmartlabs.concord.server.security.SecurityUtils;
-import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
-import com.walmartlabs.concord.server.user.UserEntry;
-import com.walmartlabs.concord.server.user.UserManager;
-import com.walmartlabs.concord.server.user.UserType;
+import com.walmartlabs.concord.server.sdk.security.*;
+import com.walmartlabs.concord.server.security.provider.ProviderRegistry;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authc.SimpleAccount;
-import org.apache.shiro.authz.AuthorizationInfo;
-import org.apache.shiro.realm.AuthorizingRealm;
-import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.authc.SimpleAuthenticationInfo;
+import org.apache.shiro.realm.AuthenticatingRealm;
 
 import javax.inject.Inject;
-import java.util.Arrays;
-import java.util.Collections;
+import java.time.Instant;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-public class SsoRealm extends AuthorizingRealm {
-
+public class SsoRealm extends AuthenticatingRealm {
     public static final String REALM_NAME = "sso";
 
-    private final UserManager userManager;
+    private final IdentityService identities;
+    private final ProviderRegistry registry;
+    private final SsoConfiguration cfg;
     private final AuditLog auditLog;
 
     @Inject
-    public SsoRealm(UserManager userManager, AuditLog auditLog) {
-        this.userManager = userManager;
+    public SsoRealm(IdentityService identities, ProviderRegistry registry, SsoConfiguration cfg, AuditLog auditLog) {
+        this.identities = identities;
+        this.registry = registry;
+        this.cfg = cfg;
         this.auditLog = auditLog;
     }
 
@@ -62,47 +60,34 @@ public class SsoRealm extends AuthorizingRealm {
 
     @Override
     @WithTimer
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) {
         SsoToken t = (SsoToken) token;
-
-        if (t.getUsername() == null) {
+        if (t.verifiedSubject() == null || t.verifiedSubject().isBlank() || t.getUsername() == null || cfg.getIdentityAuthority() == null) {
             return null;
         }
-
-        UserEntry u = userManager.get(t.getUsername(), t.getDomain(), UserType.LDAP)
-                .orElse(null);
-        if (u == null) {
-            u = userManager.create(t.getUsername(), t.getDomain(), t.getDisplayName(), t.getMail(), UserType.SSO, null);
+        ExternalIdentityKey key = new ExternalIdentityKey(REALM_NAME, cfg.getIdentityAuthority(), t.verifiedSubject());
+        UserProfile profile = new UserProfile(t.getUsername(), t.getDomain(), t.getDisplayName(), t.getMail(), Map.of());
+        ProvisioningPolicy policy = registry.policies().get(REALM_NAME);
+        String directory = cfg.getIdentityDirectory();
+        Set<IdentityLookup> lookups = Set.of();
+        if (directory != null && !directory.isBlank()) {
+            Set<String> sources = policy.authorizationSources().stream().filter(id -> {
+                AuthorizationProvider source = registry.authorizationSources().get(id);
+                return !source.acceptsIdentity(key) && !source.acceptsIdentity(null);
+            }).collect(Collectors.toUnmodifiableSet());
+            boolean forProfile = directory.equals(policy.profileProviderId());
+            if (forProfile || !sources.isEmpty()) {
+                lookups = Set.of(new IdentityLookup(directory, new DirectoryQuery("username", t.getUsername(), t.getDomain()), sources, forProfile));
+            }
         }
-
-        if (u.isPermanentlyDisabled()) {
-            return null;
-        }
-
-        // we consider the account active if the authentication was successful
-        userManager.enable(u.getId());
-
+        VerifiedIdentity verified = new VerifiedIdentity(key, profile, lookups, Map.of(), null, null);
+        SubjectPrincipal principal = identities.resolve(verified, new AuthenticationContext(REALM_NAME, Instant.now(), null));
         auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
-                .userId(u.getId())
-                .field("username", u.getName())
-                .field("userDomain", u.getDomain())
+                .userId(principal.userId())
+                .field("username", principal.username())
+                .field("userDomain", principal.domain())
                 .field("realm", REALM_NAME)
                 .log();
-
-        UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, u);
-
-        LdapPrincipal ldapPrincipal = new LdapPrincipal(t.getUsername(), t.getDomain(), t.getNameInNamespace(), t.getUserPrincipalName(), t.getDisplayName(), t.getMail(), t.getGroups(), Collections.singletonMap("mail", t.getMail()));
-
-        return new SimpleAccount(Arrays.asList(userPrincipal, t, ldapPrincipal), t.getCredentials(), getName());
-    }
-
-    @Override
-    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        UserPrincipal p = principals.oneByType(UserPrincipal.class);
-        if (p == null || !REALM_NAME.equals(p.getRealm())) {
-            return null;
-        }
-
-        return SecurityUtils.toAuthorizationInfo(principals);
+        return new SimpleAuthenticationInfo(principal, t.getCredentials(), getName());
     }
 }

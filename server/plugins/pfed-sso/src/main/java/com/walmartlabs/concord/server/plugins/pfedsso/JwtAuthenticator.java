@@ -142,7 +142,7 @@ public class JwtAuthenticator {
         JWT jwt = JWTParser.parse(token);
 
         if (jwt instanceof PlainJWT) {
-            if (signatureConfiguration == null) {
+            if (!cfg.isTokenSignatureValidation() && signatureConfiguration == null) {
                 log.debug("validateToken ['{}'] -> JWT is not signed and no signature configuration", token);
                 return jwt;
             } else {
@@ -169,6 +169,10 @@ public class JwtAuthenticator {
             if (signedJWT != null) {
                 jwt = signedJWT;
             }
+        }
+
+        if (cfg.isTokenSignatureValidation() && signedJWT == null) {
+            return null;
         }
 
         if (signedJWT != null && cfg.isTokenSignatureValidation()) {

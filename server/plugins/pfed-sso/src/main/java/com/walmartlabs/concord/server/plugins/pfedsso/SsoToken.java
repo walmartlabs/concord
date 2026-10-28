@@ -36,6 +36,9 @@ public class SsoToken implements AuthenticationToken {
     private final String nameInNamespace;
     private final Set<String> groups;
 
+    // Authentication input only. Old serialized tokens retain their original fields.
+    private transient String verifiedSubject;
+
     public SsoToken(String username, String domain, String displayName, String mail, String userPrincipalName, String nameInNamespace, Set<String> groups) {
         this.username = username;
         this.domain = domain;
@@ -44,6 +47,17 @@ public class SsoToken implements AuthenticationToken {
         this.userPrincipalName = userPrincipalName;
         this.nameInNamespace = nameInNamespace;
         this.groups = groups;
+    }
+
+    static SsoToken verified(String subject, String username, String domain, String displayName, String mail,
+                             String userPrincipalName, String nameInNamespace, Set<String> groups) {
+        SsoToken token = new SsoToken(username, domain, displayName, mail, userPrincipalName, nameInNamespace, groups);
+        token.verifiedSubject = subject;
+        return token;
+    }
+
+    String verifiedSubject() {
+        return verifiedSubject;
     }
 
     public String getUsername() {

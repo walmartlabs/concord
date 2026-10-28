@@ -72,13 +72,13 @@ public class SsoHandler implements AuthenticationHandler {
             SsoClient.Profile profile = bearerToken != null ? ssoClient.getProfile(bearerToken) :
                     ssoClient.getUserProfileByRefreshToken(SsoCookies.getRefreshCookie(req));
 
-            if (profile == null) {
+            if (profile == null || profile.sub() == null || profile.sub().isBlank()) {
                 return null;
             }
 
             String[] as = parseDomain(profile.sub());
 
-            return new SsoToken(as[0], as[1], profile.displayName(), profile.mail(), profile.userPrincipalName(), profile.nameInNamespace(), profile.groups());
+            return SsoToken.verified(profile.sub(), as[0], as[1], profile.displayName(), profile.mail(), profile.userPrincipalName(), profile.nameInNamespace(), profile.groups());
 
         } catch (IOException e) {
             return null;

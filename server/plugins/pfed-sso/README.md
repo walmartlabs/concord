@@ -28,6 +28,11 @@ concord-server {
         tokenSignatureValidation = true # Option to enable or disable token signature validation
         tokenSigningKey = null  # providing direct key here overrides the remote signing key
         autoCreateUsers = false
+        # Stable identity namespace defaults to userInfoEndpointUrl when null.
+        identityAuthority = null
+        profileProviderId = "ldap"
+        identityDirectory = "ldap"
+        authorizationSources = ["ldap"]
     }
 }
 ```

@@ -24,7 +24,8 @@ import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.walmartlabs.concord.server.boot.FilterChainConfigurator;
 import com.walmartlabs.concord.server.boot.filters.AuthenticationHandler;
-import com.walmartlabs.concord.server.user.UserInfoProvider;
+import com.walmartlabs.concord.server.sdk.security.LegacyIdentityMatcher;
+import com.walmartlabs.concord.server.sdk.security.ProvisioningPolicy;
 import org.apache.shiro.realm.Realm;
 
 import javax.inject.Named;
@@ -37,7 +38,8 @@ public class PluginModule implements Module {
 
     @Override
     public void configure(Binder binder) {
-        newSetBinder(binder, UserInfoProvider.class).addBinding().to(SsoUserInfoProvider.class);
+        newSetBinder(binder, ProvisioningPolicy.class).addBinding().toProvider(SsoProvisioningPolicyProvider.class);
+        newSetBinder(binder, LegacyIdentityMatcher.class).addBinding().to(SsoLegacyIdentityMatcher.class);
         newSetBinder(binder, FilterChainConfigurator.class).addBinding().to(SsoFilterChainConfigurator.class);
         newSetBinder(binder, AuthenticationHandler.class).addBinding().to(SsoHandler.class);
         newSetBinder(binder, Realm.class).addBinding().to(SsoRealm.class);
