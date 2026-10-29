@@ -114,7 +114,10 @@ public class HttpServer {
         ServletContext context = contextHandler.getServletContext();
         SessionCookieConfig sessionCookieConfig = context.getSessionCookieConfig();
         sessionCookieConfig.setHttpOnly(true);
-        sessionCookieConfig.setComment(cfg.getCookieComment());
+        String sameSite = sameSiteFromComment(cfg.getCookieComment());
+        if (sameSite != null) {
+            sessionCookieConfig.setAttribute("SameSite", sameSite);
+        }
         if (cfg.isSecureCookies()) {
             sessionCookieConfig.setSecure(true);
         }
@@ -242,6 +245,28 @@ public class HttpServer {
         writer.setRetainDays(cfg.getAccessLogRetainDays());
 
         return new CustomRequestLog(writer, ServerConfiguration.ACCESS_LOG_FORMAT);
+    }
+
+    /**
+     * Servlet 6 ignores cookie comments, so Jetty no longer turns the legacy
+     * "__SAME_SITE_*__" comment markers into the SameSite attribute.
+     */
+    static String sameSiteFromComment(String comment) {
+        if (comment == null || comment.isBlank()) {
+            return null;
+        }
+
+        if (comment.contains("__SAME_SITE_LAX__")) {
+            return "Lax";
+        } else if (comment.contains("__SAME_SITE_STRICT__")) {
+            return "Strict";
+        } else if (comment.contains("__SAME_SITE_NONE__")) {
+            return "None";
+        }
+
+        log.warn("Ignoring server.cookieComment '{}': cookie comments are not supported, " +
+                 "only the __SAME_SITE_LAX__, __SAME_SITE_STRICT__ and __SAME_SITE_NONE__ markers are", comment);
+        return null;
     }
 
     private static Comparator<Object> byPriority() {
