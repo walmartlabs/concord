@@ -20,13 +20,12 @@ package com.walmartlabs.concord.server.boot;
  * =====
  */
 
-import org.eclipse.jetty.ee8.nested.ErrorHandler;
-import org.eclipse.jetty.ee8.nested.Request;
+import org.eclipse.jetty.ee10.servlet.ErrorHandler;
+import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
 import org.eclipse.jetty.http.HttpHeader;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Set;
 
@@ -39,7 +38,7 @@ public class CustomErrorHandler extends ErrorHandler {
     }
 
     @Override
-    public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+    protected void generateAcceptableResponse(ServletContextRequest baseRequest, HttpServletRequest request, HttpServletResponse response, int code, String message) throws IOException {
         for (RequestErrorHandler h : handlers) {
             if (h.handle(request, response)) {
                 // automatically set the correct Cache-Control headers
@@ -51,6 +50,6 @@ public class CustomErrorHandler extends ErrorHandler {
             }
         }
 
-        super.handle(target, baseRequest, request, response);
+        super.generateAcceptableResponse(baseRequest, request, response, code, message);
     }
 }

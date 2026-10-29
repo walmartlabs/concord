@@ -1,0 +1,6518 @@
+openapi: 3.0.1
+info:
+  title: Concord Server API
+  description: Concord Server API
+  version: "2.0"
+paths:
+  /api/v1/agent/all/workersCount:
+    get:
+      tags:
+      - Agents
+      description: Counts the currently connected workers based on the specified capabilities
+        property
+      operationId: aggregate
+      parameters:
+      - name: capabilities
+        in: query
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: integer
+                  format: int64
+  /api/v1/agent/all/workers:
+    get:
+      tags:
+      - Agents
+      description: List currently available agent workers
+      operationId: listWorkers
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentWorkerEntry'
+  /api/v1/audit:
+    get:
+      tags:
+      - Audit Log
+      description: List audit log entries for the specified organization
+      operationId: list
+      parameters:
+      - name: object
+        in: query
+        schema:
+          type: string
+          enum:
+          - API_KEY
+          - EXTERNAL_EVENT
+          - JSON_STORE
+          - JSON_STORE_DATA
+          - JSON_STORE_QUERY
+          - ORGANIZATION
+          - POLICY
+          - PROJECT
+          - PROCESS
+          - ROLE
+          - SECRET
+          - SYSTEM
+          - TEAM
+          - USER
+      - name: action
+        in: query
+        schema:
+          type: string
+          enum:
+          - CREATE
+          - UPDATE
+          - DELETE
+          - ACCESS
+      - name: userId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: username
+        in: query
+        schema:
+          type: string
+      - name: after
+        in: query
+        schema:
+          $ref: '#/components/schemas/OffsetDateTimeParam'
+      - name: before
+        in: query
+        schema:
+          $ref: '#/components/schemas/OffsetDateTimeParam'
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLogEntry'
+  /api/v1/processcard/{id}/access:
+    post:
+      tags:
+      - ProcessCards
+      description: Process cards access
+      operationId: processCardAccess
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessCardAccessEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/processcard:
+    get:
+      tags:
+      - ProcessCards
+      description: List user process cards
+      operationId: listUserProcessCards
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessCardEntry'
+    post:
+      tags:
+      - ProcessCards
+      description: Create or update process card
+      operationId: createOrUpdateProcessCard
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProcessCardRequest'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessCardOperationResponse'
+  /api/v1/processcard/{id}:
+    get:
+      tags:
+      - ProcessCards
+      description: Get process card
+      operationId: getProcessCard
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessCardEntry'
+    delete:
+      tags:
+      - ProcessCards
+      description: Delete process card
+      operationId: deleteProcessCard
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/processcard/{cardId}/form:
+    get:
+      tags:
+      - ProcessCards
+      description: Get process card form
+      operationId: getProcessCardForm
+      parameters:
+      - name: cardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: Process form content
+          content:
+            text/html:
+              schema:
+                type: string
+                format: binary
+  /api/v1/processcard/{cardId}/data.js:
+    get:
+      tags:
+      - ProcessCards
+      description: Get process card form data
+      operationId: getProcessCardFormData
+      parameters:
+      - name: cardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: Process form data content
+          content:
+            text/javascript:
+              schema:
+                type: string
+                format: binary
+  /api/v1/events/{eventName}:
+    post:
+      tags:
+      - External Events
+      description: Handles an external event
+      operationId: externalEvent
+      parameters:
+      - name: eventName
+        in: path
+        required: true
+        schema:
+          pattern: .*
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /events/github/webhook:
+    post:
+      tags:
+      - GitHub Events
+      description: Handles GitHub repository level events
+      operationId: onEvent
+      parameters:
+      - name: query
+        in: query
+        schema:
+          type: object
+          additionalProperties:
+            type: object
+        x-concord:
+          customQueryParams: "true"
+      - name: X-GitHub-Delivery
+        in: header
+        schema:
+          type: string
+      - name: X-GitHub-Event
+        in: header
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+      responses:
+        default:
+          description: default response
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/v1/org:
+    get:
+      tags:
+      - Organizations
+      description: List organizations
+      operationId: listOrgs
+      parameters:
+      - name: onlyCurrent
+        in: query
+        schema:
+          type: boolean
+          default: false
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+      - name: filter
+        in: query
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrganizationEntry'
+    post:
+      tags:
+      - Organizations
+      description: Create or update an organization
+      operationId: createOrUpdateOrg
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrganizationResponse'
+  /api/v1/org/{orgName}:
+    get:
+      tags:
+      - Organizations
+      description: Get an existing organization
+      operationId: getOrg
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationEntry'
+    delete:
+      tags:
+      - Organizations
+      description: Remove an existing organization
+      operationId: deleteOrg
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: confirmation
+        in: query
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/project/{projectName}/repo/{repoName}/start/{entryPoint}:
+    get:
+      tags:
+      - Project Processes
+      description: Start a new process
+      operationId: startProjectProcess
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: repoName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: repoBranchOrTag
+        in: query
+        schema:
+          type: string
+      - name: repoCommitId
+        in: query
+        schema:
+          type: string
+      - name: entryPoint
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: activeProfiles
+        in: query
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v1/org/{orgName}/inventory/{inventoryName}/data/{itemPath}:
+    get:
+      tags:
+      - Inventory Data
+      description: Get inventory data
+      operationId: getInventoryData
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inventoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: itemPath
+        in: path
+        required: true
+        schema:
+          pattern: .*
+          type: string
+      - name: singleItem
+        in: query
+        schema:
+          type: boolean
+          default: false
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: object
+      deprecated: true
+    post:
+      tags:
+      - Inventory Data
+      description: Modify inventory data
+      operationId: updateInventoryData
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inventoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: itemPath
+        in: path
+        required: true
+        schema:
+          pattern: .*
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: object
+      deprecated: true
+    delete:
+      tags:
+      - Inventory Data
+      description: Delete inventory data
+      operationId: deleteInventoryData
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inventoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: itemPath
+        in: path
+        required: true
+        schema:
+          pattern: .*
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteInventoryDataResponse'
+      deprecated: true
+  /api/v1/org/{orgName}/inventory/{inventoryName}/data:
+    get:
+      tags:
+      - Inventory Data
+      description: List inventory data
+      operationId: listInventoryData
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inventoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties:
+                    type: object
+      deprecated: true
+  /api/v1/org/{orgName}/inventory/{inventoryName}/query/{queryName}:
+    get:
+      tags:
+      - Inventory Queries
+      description: Get inventory query
+      operationId: getInventoryQuery
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inventoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: queryName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryQueryEntry'
+      deprecated: true
+    post:
+      tags:
+      - Inventory Queries
+      description: Create or update inventory query
+      operationId: createOrUpdateInventoryQuery
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inventoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: queryName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+          text/plain:
+            schema:
+              type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateInventoryQueryResponse'
+      deprecated: true
+    delete:
+      tags:
+      - Inventory Queries
+      description: Delete inventory query
+      operationId: deleteInventoryQuery
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inventoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: queryName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteInventoryQueryResponse'
+      deprecated: true
+  /api/v1/org/{orgName}/inventory/{inventoryName}/query/{queryName}/exec:
+    post:
+      tags:
+      - Inventory Queries
+      description: Execute inventory query
+      operationId: executeInventoryQuery
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inventoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: queryName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+      deprecated: true
+  /api/v1/org/{orgName}/inventory/{inventoryName}/query:
+    get:
+      tags:
+      - Inventory Queries
+      description: List inventory queries
+      operationId: listInventoryQueries
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inventoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InventoryQueryEntry'
+      deprecated: true
+  /api/v1/org/{orgName}/inventory:
+    get:
+      tags:
+      - Inventories
+      description: List existing inventories
+      operationId: listInventories
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InventoryEntry'
+      deprecated: true
+    post:
+      tags:
+      - Inventories
+      description: Create or update inventory
+      operationId: createOrUpdateInventory
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateInventoryResponse'
+      deprecated: true
+  /api/v1/org/{orgName}/inventory/{inventoryName}:
+    get:
+      tags:
+      - Inventories
+      description: Get existing inventory
+      operationId: getInventory
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inventoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryEntry'
+      deprecated: true
+    delete:
+      tags:
+      - Inventories
+      description: Delete inventory
+      operationId: deleteInventory
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inventoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+      deprecated: true
+  /api/v1/org/{orgName}/inventory/{inventoryName}/access:
+    post:
+      tags:
+      - Inventories
+      description: Updates the access level for the specified inventory
+      operationId: updateInventoryAccessLevel
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inventoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceAccessEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+      deprecated: true
+  /api/v1/org/{orgName}/jsonstore/{storeName}/item/{itemPath}:
+    get:
+      tags:
+      - JsonStoreData
+      description: Get store data
+      operationId: getJsonStoreData
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: storeName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: itemPath
+        in: path
+        required: true
+        schema:
+          pattern: .*
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      tags:
+      - JsonStoreData
+      description: Update an item in a store
+      operationId: updateJsonStoreData
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: storeName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: itemPath
+        in: path
+        required: true
+        schema:
+          pattern: .*
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+    delete:
+      tags:
+      - JsonStoreData
+      description: Remove an item from a store
+      operationId: deleteJsonStoreDataItem
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: storeName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: itemPath
+        in: path
+        required: true
+        schema:
+          pattern: .*
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/jsonstore/{storeName}/item:
+    get:
+      tags:
+      - JsonStoreData
+      description: List items in a JSON store
+      operationId: listJsonStoreData
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: storeName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      - name: filter
+        in: query
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /api/v1/org/{orgName}/jsonstore/{storeName}/query:
+    get:
+      tags:
+      - JsonStoreQuery
+      description: List JSON Store queries
+      operationId: listJsonStoreQueries
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: storeName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      - name: filter
+        in: query
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JsonStoreQueryEntry'
+    post:
+      tags:
+      - JsonStoreQuery
+      description: Create or update a JSON store query
+      operationId: createOrUpdateJsonStoreQuery
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: storeName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JsonStoreQueryRequest'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/jsonstore/{storeName}/query/{queryName}:
+    get:
+      tags:
+      - JsonStoreQuery
+      description: Get an existing JSON store query
+      operationId: getJsonStoreQuery
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: storeName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: queryName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonStoreQueryEntry'
+    delete:
+      tags:
+      - JsonStoreQuery
+      description: Delete an existing JSON query query
+      operationId: deleteJsonStoreQuery
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: storeName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: queryName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/jsonstore/{storeName}/query/{queryName}/exec:
+    post:
+      tags:
+      - JsonStoreQuery
+      description: Execute an existing JSON store query
+      operationId: execJsonStoreQuery
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: storeName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: queryName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+  /api/v1/org/{orgName}/jsonstore:
+    get:
+      tags:
+      - JsonStore
+      description: List existing stores
+      operationId: listJsonStores
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      - name: filter
+        in: query
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JsonStoreEntry'
+    post:
+      tags:
+      - JsonStore
+      description: Create or update a store
+      operationId: createOrUpdateJsonStore
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JsonStoreRequest'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/jsonstore/{storeName}:
+    get:
+      tags:
+      - JsonStore
+      description: Get an existing store
+      operationId: getJsonStore
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: storeName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonStoreEntry'
+    delete:
+      tags:
+      - JsonStore
+      description: Delete an existing store
+      operationId: deleteJsonStore
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: storeName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/jsonstore/{storeName}/access:
+    get:
+      tags:
+      - JsonStore
+      description: Get a store's team access parameters
+      operationId: getJsonStoreAccessLevel
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: storeName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ResourceAccessEntry'
+    post:
+      tags:
+      - JsonStore
+      description: Updates the access level for the specified store and team
+      operationId: updateJsonStoreAccessLevel
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: storeName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceAccessEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/jsonstore/{storeName}/capacity:
+    get:
+      tags:
+      - JsonStore
+      description: Get an existing store capacity
+      operationId: getJsonStoreCapacity
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: storeName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonStoreCapacity'
+  /api/v1/org/{orgName}/jsonstore/{storeName}/access/bulk:
+    post:
+      tags:
+      - JsonStore
+      description: Updates the access level for the specified store and team
+      operationId: bulkUpdateJsonStoreAccessLevel
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: storeName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ResourceAccessEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/{entityType}/canCreate:
+    get:
+      tags:
+      - PolicyCheck
+      description: Check for new entity creation
+      operationId: canCreate
+      parameters:
+      - name: entityType
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - ORGANIZATION
+          - PROJECT
+          - REPOSITORY
+          - SECRET
+          - JSON_STORE
+          - JSON_STORE_ITEM
+          - JSON_STORE_QUERY
+          - TRIGGER
+      - name: orgName
+        in: query
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: boolean
+  /api/v2/policy:
+    get:
+      tags:
+      - Policy
+      description: "List policies, optionally filtering by organization, project and/or\
+        \ user links"
+      operationId: listPolicies
+      parameters:
+      - name: orgName
+        in: query
+        schema:
+          type: string
+      - name: projectName
+        in: query
+        schema:
+          type: string
+      - name: userName
+        in: query
+        schema:
+          type: string
+      - name: userDomain
+        in: query
+        schema:
+          type: string
+      - name: userType
+        in: query
+        schema:
+          type: string
+          enum:
+          - LOCAL
+          - LDAP
+          - SSO
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PolicyEntry'
+    post:
+      tags:
+      - Policy
+      description: Create or update a policy
+      operationId: createOrUpdatePolicy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyOperationResponse'
+  /api/v2/policy/{policyName}:
+    get:
+      tags:
+      - Policy
+      description: Get an existing policy
+      operationId: getPolicy
+      parameters:
+      - name: policyName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyEntry'
+    delete:
+      tags:
+      - Policy
+      description: Delete an existing policy
+      operationId: deletePolicy
+      parameters:
+      - name: policyName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v2/policy/{policyName}/link:
+    put:
+      tags:
+      - Policy
+      description: "Link an existing policy to an organization, a project or user"
+      operationId: linkPolicy
+      parameters:
+      - name: policyName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyLinkEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+    delete:
+      tags:
+      - Policy
+      description: Unlink an existing policy
+      operationId: unlinkPolicy
+      parameters:
+      - name: policyName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: orgName
+        in: query
+        schema:
+          type: string
+      - name: projectName
+        in: query
+        schema:
+          type: string
+      - name: userName
+        in: query
+        schema:
+          type: string
+      - name: userDomain
+        in: query
+        schema:
+          type: string
+      - name: userType
+        in: query
+        schema:
+          type: string
+          enum:
+          - LOCAL
+          - LDAP
+          - SSO
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v2/policy/refresh:
+    post:
+      tags:
+      - Policy
+      description: Refresh policy
+      operationId: refreshPolicy
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v1/org/{orgName}/project:
+    get:
+      tags:
+      - Projects
+      description: List existing projects
+      operationId: findProjects
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+      - name: filter
+        in: query
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectEntry'
+    post:
+      tags:
+      - Projects
+      description: Creates a new project or updates an existing one
+      operationId: createOrUpdateProject
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectOperationResponse'
+  /api/v1/org/{orgName}/project/{projectName}:
+    delete:
+      tags:
+      - Projects
+      description: Delete an existing project
+      operationId: deleteProject
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/project/{projectName}/cfg{path}:
+    get:
+      tags:
+      - Projects
+      description: Get a project's configuration
+      operationId: getProjectConfiguration
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: path
+        in: path
+        required: true
+        schema:
+          pattern: (.*)?
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      tags:
+      - Projects
+      description: Update a project's configuration parameter
+      operationId: updateProjectConfiguration_1
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: path
+        in: path
+        required: true
+        schema:
+          pattern: (.*)?
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+    delete:
+      tags:
+      - Projects
+      description: Delete a project's configuration parameter
+      operationId: deleteProjectConfiguration
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: path
+        in: path
+        required: true
+        schema:
+          pattern: (.*)?
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/project/{projectName}/encrypt:
+    post:
+      tags:
+      - Projects
+      description: Encrypts a string with the project's key
+      operationId: encrypt
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EncryptValueResponse'
+  /api/v1/org/{orgName}/project/{projectName}/kv:
+    get:
+      tags:
+      - Projects
+      description: List KV
+      operationId: listProjectKv
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+      - name: filter
+        in: query
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KvEntry'
+  /api/v1/org/{orgName}/project/{projectName}/access:
+    get:
+      tags:
+      - Projects
+      description: Get project team access
+      operationId: getProjectAccessLevel
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ResourceAccessEntry'
+    post:
+      tags:
+      - Projects
+      description: Updates the access level for the specified project and team
+      operationId: updateProjectAccessLevel
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceAccessEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/project/{projectName}/kv/capacity:
+    get:
+      tags:
+      - Projects
+      description: Get a project's KV capacity
+      operationId: getProjectKVCapacity
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectKvCapacity'
+  /api/v1/org/{orgName}/project/{projectName}/access/bulk:
+    post:
+      tags:
+      - Projects
+      description: Updates the access level for the specified project and team
+      operationId: updateProjectAccessLevelBulk
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ResourceAccessEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/project/{projectName}/cfg:
+    put:
+      tags:
+      - Projects
+      description: Update a project's configuration parameter
+      operationId: updateProjectConfiguration
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v2/org/{orgName}/project/{projectName}:
+    get:
+      tags:
+      - Projects
+      description: Get an existing project
+      operationId: getProject
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectEntry'
+  /api/v1/org/{orgName}/project/{projectName}/repository:
+    get:
+      tags:
+      - Repositories
+      description: List existing repositories
+      operationId: listRepositories
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+      - name: filter
+        in: query
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RepositoryEntry'
+    post:
+      tags:
+      - Repositories
+      description: Creates a new repository or updates an existing one
+      operationId: createOrUpdateRepository
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepositoryEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/project/{projectName}/repository/{repositoryName}:
+    get:
+      tags:
+      - Repositories
+      description: Get an existing repository
+      operationId: getRepository
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: repositoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepositoryEntry'
+    delete:
+      tags:
+      - Repositories
+      description: Delete an existing repository
+      operationId: deleteRepository
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: repositoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/project/{projectName}/repository/{repositoryName}/refresh:
+    post:
+      tags:
+      - Repositories
+      description: Refresh a local copy of the repository
+      operationId: refreshRepository
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: repositoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: sync
+        in: query
+        schema:
+          type: boolean
+          default: false
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/project/{projectName}/repository/{repositoryName}/validate:
+    post:
+      tags:
+      - Repositories
+      description: Validate an existing repository
+      operationId: validateRepository
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: repositoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepositoryValidationResponse'
+  /api/v2/repository/refresh:
+    post:
+      tags:
+      - RepositoriesV2
+      description: Refresh repositories by their IDs
+      operationId: refreshRepositoryV2
+      parameters:
+      - name: ids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/secret:
+    post:
+      tags:
+      - Secrets
+      description: Create secret
+      operationId: createSecret
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecretOperationResponse'
+  /api/v1/org/{orgName}/secret/{secretName}:
+    post:
+      tags:
+      - Secrets
+      description: Update secret
+      operationId: updateSecretV1
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: secretName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SecretUpdateRequest'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+    delete:
+      tags:
+      - Secrets
+      description: Delete an existing secret
+      operationId: delete
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: secretName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/secret/{secretName}/access:
+    get:
+      tags:
+      - Secrets
+      description: Get secret team access
+      operationId: getSecretAccessLevel
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: secretName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ResourceAccessEntry'
+    post:
+      tags:
+      - Secrets
+      description: Updates the access level for the specified secret and team
+      operationId: updateSecretAccessLevel
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: secretName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceAccessEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/secret/{secretName}/data:
+    post:
+      tags:
+      - Secrets
+      description: Get an existing secret's data
+      operationId: getSecretData
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: secretName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GetDataRequest'
+      responses:
+        default:
+          description: Secret content
+          headers:
+            X-Concord-SecretType:
+              style: simple
+              schema:
+                type: string
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+  /api/v1/org/{orgName}/secret/{secretName}/public:
+    get:
+      tags:
+      - Secrets
+      description: Retrieves the public key of a key pair
+      operationId: getPublicKey
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: secretName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicKeyResponse'
+  /api/v1/org/{orgName}/secret/{secretName}/access/bulk:
+    post:
+      tags:
+      - Secrets
+      description: Updates the access level for the specified secret and team
+      operationId: updateSecretAccessLevelBulk
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: secretName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ResourceAccessEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v2/org/{orgName}/secret/{secretName}:
+    get:
+      tags:
+      - SecretsV2
+      description: Get an existing secret
+      operationId: getSecret
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: secretName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecretEntryV2'
+    post:
+      tags:
+      - SecretsV2
+      description: Updates an existing secret
+      operationId: updateSecret
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: secretName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v2/org/{orgName}/secret:
+    get:
+      tags:
+      - SecretsV2
+      description: List secrets
+      operationId: listSecrets
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+      - name: filter
+        in: query
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SecretEntryV2'
+  /api/v1/secret/store:
+    get:
+      tags:
+      - Secret stores
+      description: List of active secret stores
+      operationId: listActiveStores
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SecretStoreEntry'
+  /api/v1/org/{orgName}/team/{teamName}/ldapGroups:
+    get:
+      tags:
+      - Teams
+      description: List ldap roles of a team
+      operationId: listLdapGroups
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: teamName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamLdapGroupEntry'
+    put:
+      tags:
+      - Teams
+      description: Add LDAP groups to a team
+      operationId: addLdapGroups
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: teamName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: replace
+        in: query
+        schema:
+          type: boolean
+          default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/TeamLdapGroupEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddTeamLdapGroupsResponse'
+  /api/v1/org/{orgName}/team/{teamName}/users:
+    get:
+      tags:
+      - Teams
+      description: List users of a team
+      operationId: listUserTeams
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: teamName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamUserEntry'
+    put:
+      tags:
+      - Teams
+      description: Add users to a team
+      operationId: addUsersToTeam
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: teamName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: replace
+        in: query
+        schema:
+          type: boolean
+          default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/TeamUserEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddTeamUsersResponse'
+    delete:
+      tags:
+      - Teams
+      description: Remove users from a team
+      operationId: removeUsersFromTeam
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: teamName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoveTeamUsersResponse'
+  /api/v1/org/{orgName}/team:
+    get:
+      tags:
+      - Teams
+      description: List teams
+      operationId: listTeams
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamEntry'
+    post:
+      tags:
+      - Teams
+      description: Create or update a team
+      operationId: createOrUpdateTeam
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTeamResponse'
+  /api/v1/org/{orgName}/team/{teamName}:
+    get:
+      tags:
+      - Teams
+      description: Get an existing team
+      operationId: getTeam
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: teamName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamEntry'
+    delete:
+      tags:
+      - Teams
+      description: Delete an existing team
+      operationId: deleteTeam
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: teamName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/org/{orgName}/project/{projectName}/repo/{repositoryName}/trigger:
+    get:
+      tags:
+      - Triggers
+      description: List trigger definitions
+      operationId: listTriggers
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: repositoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TriggerEntry'
+    post:
+      tags:
+      - Triggers
+      description: Refresh trigger definitions for the specified project and repository
+      operationId: refreshTriggers
+      parameters:
+      - name: orgName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: projectName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: repositoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v1/org/trigger/refresh:
+    post:
+      tags:
+      - Triggers
+      description: Refresh trigger definitions for all projects
+      operationId: refreshAllTriggers
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v2/trigger:
+    get:
+      tags:
+      - TriggersV2
+      description: List trigger definitions
+      operationId: listTriggersV2
+      parameters:
+      - name: type
+        in: query
+        schema:
+          type: string
+      - name: orgId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: orgName
+        in: query
+        schema:
+          type: string
+      - name: projectId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: projectName
+        in: query
+        schema:
+          type: string
+      - name: repoId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: repoName
+        in: query
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TriggerEntry'
+  /api/v1/process/{id}/ping:
+    post:
+      tags:
+      - ProcessHeartbeat
+      description: Process heartbeat
+      operationId: pingProcess
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v1/process/{id}/kv/{key}/long:
+    get:
+      tags:
+      - Process KV store
+      description: Get long KV
+      operationId: getKvLong
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: int64
+    put:
+      tags:
+      - Process KV store
+      description: Put long KV
+      operationId: putKvLong
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: integer
+              format: int64
+        required: true
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v1/process/{id}/kv/{key}/string:
+    get:
+      tags:
+      - Process KV store
+      description: Get string KV
+      operationId: getKvString
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            text/plain:
+              schema:
+                type: string
+    put:
+      tags:
+      - Process KV store
+      description: Put string KV
+      operationId: putKvString
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v1/process/{id}/kv/{key}/inc:
+    post:
+      tags:
+      - Process KV store
+      description: Inc long KV
+      operationId: incKvLong
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: int64
+  /api/v1/process/{id}/kv/{key}:
+    delete:
+      tags:
+      - Process KV store
+      description: Delete KV
+      operationId: deleteKv
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v2/process/{id}/log/segment/{segmentId}/data:
+    get:
+      tags:
+      - ProcessLogV2
+      description: Retrieve segment the log
+      operationId: getProcessLogSegmentData
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: segmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: range
+        in: header
+        schema:
+          type: string
+      responses:
+        default:
+          description: Data of process log segment
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+    post:
+      tags:
+      - ProcessLogV2
+      description: Appends a process' log
+      operationId: appendProcessLogSegment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: segmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: Log content
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+        required: true
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v2/process/{id}/log/segment:
+    get:
+      tags:
+      - ProcessLogV2
+      description: List process log segments
+      operationId: processLogSegments
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LogSegment'
+    post:
+      tags:
+      - ProcessLogV2
+      description: Create process log segment
+      operationId: createProcessLogSegment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogSegmentRequest'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogSegmentOperationResponse'
+  /api/v2/process/{id}/log/segment/{segmentId}:
+    post:
+      tags:
+      - ProcessLogV2
+      description: Update process log segment
+      operationId: updateProcessLogSegment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: segmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogSegmentUpdateRequest'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogSegmentOperationResponse'
+  /api/v1/process/{id}/log:
+    get:
+      tags:
+      - Process
+      description: Retrieves a process' log
+      operationId: getProcessLog
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: range
+        in: header
+        schema:
+          type: string
+      responses:
+        default:
+          description: Process log content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+    post:
+      tags:
+      - Process
+      description: Appends a process' log
+      operationId: appendProcessLog
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        description: Log content
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+        required: true
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+      deprecated: true
+  /api/v1/process/bulk:
+    delete:
+      tags:
+      - Process
+      description: Forcefully stop processes
+      operationId: batchKill
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: array
+              items:
+                type: string
+                format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v1/process/{id}/decrypt:
+    post:
+      tags:
+      - Process
+      description: Decrypt a base64 string previously encrypted with the process'
+        project key
+      operationId: decryptString
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: byte
+      responses:
+        "200":
+          description: Decrypted value
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: byte
+  /api/v1/process/{id}/disable/{disabled}:
+    post:
+      tags:
+      - Process
+      operationId: disable
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: disabled
+        in: path
+        required: true
+        schema:
+          type: boolean
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v1/process/{id}/attachment/{name}:
+    get:
+      tags:
+      - Process
+      description: Download a process' attachment
+      operationId: downloadAttachment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: name
+        in: path
+        required: true
+        schema:
+          maxLength: 2147483647
+          minLength: 1
+          pattern: .*
+          type: string
+      responses:
+        "200":
+          description: File content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+  /api/v1/process/{id}/state/snapshot:
+    get:
+      tags:
+      - Process
+      description: Download a process state snapshot
+      operationId: downloadState
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: File content
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+  /api/v1/process/{id}/state/snapshot/{name}:
+    get:
+      tags:
+      - Process
+      description: Download a single file from a process state snapshot
+      operationId: downloadStateFile
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: name
+        in: path
+        required: true
+        schema:
+          maxLength: 2147483647
+          minLength: 1
+          pattern: .*
+          type: string
+      responses:
+        "200":
+          description: File content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+  /api/v1/process/{id}/fork:
+    post:
+      tags:
+      - Process
+      description: Starts a new child process by forking the start of the specified
+        parent process.
+      operationId: fork
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: sync
+        in: query
+        schema:
+          type: boolean
+          default: false
+      - name: out
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartProcessResponse'
+  /api/v1/process/{id}/root:
+    get:
+      tags:
+      - Process
+      description: Get super parent for a process
+      operationId: getRoot
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessEntry'
+  /api/v1/process/{instanceId}/history:
+    get:
+      tags:
+      - Process
+      description: Get process status history
+      operationId: getStatusHistory
+      parameters:
+      - name: instanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessStatusHistoryEntry'
+  /api/v1/process/{instanceId}/waits:
+    get:
+      tags:
+      - Process
+      description: Get process' wait conditions
+      operationId: getWait
+      parameters:
+      - name: instanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessWaitEntry'
+  /api/v1/process/{id}:
+    delete:
+      tags:
+      - Process
+      operationId: kill
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v1/process/{id}/cascade:
+    delete:
+      tags:
+      - Process
+      description: Forcefully stops a process and its all children
+      operationId: killCascade
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v1/process/{id}/attachment:
+    get:
+      tags:
+      - Process
+      description: List attachments
+      operationId: listAttachments
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+    post:
+      tags:
+      - Process
+      description: Upload process attachments
+      operationId: uploadProcessAttachments
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        description: Attachment content
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+        required: true
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v1/process/{id}/subprocess:
+    get:
+      tags:
+      - Process
+      description: List subprocesses of a parent process
+      operationId: listSubprocesses
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: tags
+        in: query
+        schema:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessEntry'
+  /api/v1/process/{id}/restart:
+    post:
+      tags:
+      - Process
+      description: Restart process
+      operationId: restartProcess
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartProcessResponse'
+  /api/v1/process/{id}/resume/{eventName}:
+    post:
+      tags:
+      - Process
+      operationId: resume
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: eventName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: saveAs
+        in: query
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumeProcessResponse'
+  /api/v1/process/{id}/wait:
+    post:
+      tags:
+      - Process
+      description: Set the process' wait condition
+      operationId: setWaitCondition
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+      responses:
+        default:
+          description: default response
+          content:
+            application/json: {}
+  /api/v1/process:
+    post:
+      tags:
+      - Process
+      description: Start new process
+      operationId: startProcess
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartProcessResponse'
+  /api/v1/process/{id}/meta:
+    post:
+      tags:
+      - Process
+      description: Update process metadata
+      operationId: updateMetadata
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+      responses:
+        default:
+          description: default response
+          content:
+            application/json: {}
+  /api/v1/process/{id}/status:
+    post:
+      tags:
+      - Process
+      description: Update process status
+      operationId: updateStatus
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: agentId
+        in: query
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+              enum:
+              - NEW
+              - PREPARING
+              - ENQUEUED
+              - WAITING
+              - STARTING
+              - RUNNING
+              - SUSPENDED
+              - RESUMING
+              - FINISHED
+              - FAILED
+              - CANCELLED
+              - TIMED_OUT
+        required: true
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v1/process/{id}/waitForCompletion:
+    get:
+      tags:
+      - Process
+      operationId: waitForCompletion
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: timeout
+        in: query
+        schema:
+          type: integer
+          format: int64
+          default: -1
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessEntry'
+  /api/v2/process/count:
+    get:
+      tags:
+      - ProcessV2
+      description: Count processes
+      operationId: countProcesses
+      parameters:
+      - name: orgId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: orgName
+        in: query
+        schema:
+          type: string
+      - name: projectId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: projectName
+        in: query
+        schema:
+          type: string
+      - name: repoId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: repoName
+        in: query
+        schema:
+          type: string
+      - name: afterCreatedAt
+        in: query
+        schema:
+          $ref: '#/components/schemas/OffsetDateTimeParam'
+      - name: beforeCreatedAt
+        in: query
+        schema:
+          $ref: '#/components/schemas/OffsetDateTimeParam'
+      - name: tags
+        in: query
+        schema:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - NEW
+          - PREPARING
+          - ENQUEUED
+          - WAITING
+          - STARTING
+          - RUNNING
+          - SUSPENDED
+          - RESUMING
+          - FINISHED
+          - FAILED
+          - CANCELLED
+          - TIMED_OUT
+      - name: initiator
+        in: query
+        schema:
+          type: string
+      - name: parentInstanceId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: int32
+  /api/v2/process/{id}:
+    get:
+      tags:
+      - ProcessV2
+      description: Get a process' details
+      operationId: getProcess
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: include
+        in: query
+        schema:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            enum:
+            - CHECKPOINTS
+            - CHECKPOINTS_HISTORY
+            - CHILDREN_IDS
+            - STATUS_HISTORY
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessEntry'
+  /api/v2/process:
+    get:
+      tags:
+      - ProcessV2
+      description: List processes
+      operationId: listProcesses
+      parameters:
+      - name: meta
+        in: query
+        schema:
+          type: object
+          additionalProperties:
+            type: object
+        x-concord:
+          customQueryParams: "true"
+      - name: orgId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: orgName
+        in: query
+        schema:
+          type: string
+      - name: projectId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: projectName
+        in: query
+        schema:
+          type: string
+      - name: repoId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: repoName
+        in: query
+        schema:
+          type: string
+      - name: afterCreatedAt
+        in: query
+        schema:
+          $ref: '#/components/schemas/OffsetDateTimeParam'
+      - name: beforeCreatedAt
+        in: query
+        schema:
+          $ref: '#/components/schemas/OffsetDateTimeParam'
+      - name: tags
+        in: query
+        schema:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - NEW
+          - PREPARING
+          - ENQUEUED
+          - WAITING
+          - STARTING
+          - RUNNING
+          - SUSPENDED
+          - RESUMING
+          - FINISHED
+          - FAILED
+          - CANCELLED
+          - TIMED_OUT
+      - name: initiator
+        in: query
+        schema:
+          type: string
+      - name: parentInstanceId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: include
+        in: query
+        schema:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            enum:
+            - CHECKPOINTS
+            - CHECKPOINTS_HISTORY
+            - CHILDREN_IDS
+            - STATUS_HISTORY
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessEntry'
+      x-concord:
+        groupParams: "true"
+        groupName: ProcessListFilter
+  /api/v2/process/requirements:
+    get:
+      tags:
+      - ProcessV2
+      description: List process requirements
+      operationId: listRequirements
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - NEW
+          - PREPARING
+          - ENQUEUED
+          - WAITING
+          - STARTING
+          - RUNNING
+          - SUSPENDED
+          - RESUMING
+          - FINISHED
+          - FAILED
+          - CANCELLED
+          - TIMED_OUT
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessRequirementsEntry'
+  /api/v1/process/{id}/checkpoint:
+    get:
+      tags:
+      - Checkpoint
+      description: List the process checkpoints
+      operationId: listCheckpoints
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessCheckpointEntry'
+      deprecated: true
+    post:
+      tags:
+      - Checkpoint
+      description: Upload checkpoint
+      operationId: uploadCheckpoint
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v1/process/{id}/checkpoint/restore:
+    post:
+      tags:
+      - Checkpoint
+      description: Restore process from checkpoint
+      operationId: restore
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestoreCheckpointRequest'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumeProcessResponse'
+  /api/v2/process/{id}/checkpoint:
+    get:
+      tags:
+      - CheckpointV2
+      description: Process checkpoint
+      operationId: processCheckpoint
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: name
+        in: query
+        schema:
+          type: string
+      - name: action
+        in: query
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericCheckpointResponse'
+  /api/v3/process/{id}/checkpoint:
+    get:
+      tags:
+      - CheckpointV3
+      description: List the process checkpoints with pagination
+      operationId: pageCheckpoints
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 10
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessCheckpointEntry'
+  /api/v1/process/{processInstanceId}/eventBatch:
+    post:
+      tags:
+      - Process Events
+      description: Register multiple events for the specified process
+      operationId: batchEvent
+      parameters:
+      - name: processInstanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProcessEventRequest'
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v1/process/{processInstanceId}/event:
+    get:
+      tags:
+      - Process Events
+      description: List process events
+      operationId: listProcessEvents
+      parameters:
+      - name: processInstanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: type
+        in: query
+        schema:
+          type: string
+      - name: after
+        in: query
+        schema:
+          $ref: '#/components/schemas/OffsetDateTimeParam'
+      - name: fromId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: eventCorrelationId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: eventPhase
+        in: query
+        schema:
+          type: string
+          enum:
+          - PRE
+          - POST
+      - name: includeAll
+        in: query
+        schema:
+          type: boolean
+          default: false
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: -1
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessEventEntry'
+    post:
+      tags:
+      - Process Events
+      description: Register a process event
+      operationId: event
+      parameters:
+      - name: processInstanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessEventRequest'
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v1/process/{processInstanceId}/form/{formName}:
+    get:
+      tags:
+      - Process Forms
+      description: Get the current state of a form
+      operationId: getProcessForm
+      parameters:
+      - name: processInstanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: formName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormInstanceEntry'
+    post:
+      tags:
+      - Process Forms
+      description: Submit JSON form data
+      operationId: submitForm
+      parameters:
+      - name: processInstanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: formName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormSubmitResponse'
+  /api/v1/process/{processInstanceId}/form:
+    get:
+      tags:
+      - Process Forms
+      description: List the available forms
+      operationId: listProcessForms
+      parameters:
+      - name: processInstanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FormListEntry'
+  /api/v1/process/{processInstanceId}/form/{formName}/multipart:
+    post:
+      tags:
+      - Process Forms
+      description: Submit JSON form data
+      operationId: submitFormAsMultipart
+      parameters:
+      - name: processInstanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: formName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormSubmitResponse'
+  /api/v1/process/{processInstanceId}/lock/{lockName}:
+    post:
+      tags:
+      - Process Locks
+      description: Try lock
+      operationId: tryLock
+      parameters:
+      - name: processInstanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: lockName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: scope
+        in: query
+        schema:
+          type: string
+          enum:
+          - ORG
+          - PROJECT
+          default: PROJECT
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LockResult'
+  /api/v1/process/{processInstanceId}/unlock/{lockName}:
+    post:
+      tags:
+      - Process Locks
+      description: Releases the lock
+      operationId: unlock
+      parameters:
+      - name: processInstanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: lockName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: scope
+        in: query
+        schema:
+          type: string
+          enum:
+          - ORG
+          - PROJECT
+          default: PROJECT
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*': {}
+  /api/v1/role/{roleName}/ldapGroups:
+    get:
+      tags:
+      - Roles
+      description: List ldap groups of a role
+      operationId: listLdapGroupsForRole
+      parameters:
+      - name: roleName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+    put:
+      tags:
+      - Roles
+      description: Add LDAP groups to a role
+      operationId: addLdapGroupsToRole
+      parameters:
+      - name: roleName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: replace
+        in: query
+        schema:
+          type: boolean
+          default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/role:
+    get:
+      tags:
+      - Roles
+      description: List roles
+      operationId: listRoles
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoleEntry'
+    post:
+      tags:
+      - Roles
+      description: Create or update a role
+      operationId: createOrUpdateRole
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleOperationResponse'
+  /api/v1/role/{roleName}:
+    get:
+      tags:
+      - Roles
+      description: Get a role's details
+      operationId: getRole
+      parameters:
+      - name: roleName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleEntry'
+    delete:
+      tags:
+      - Roles
+      description: Delete an existing role
+      operationId: deleteRole
+      parameters:
+      - name: roleName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/apikey:
+    get:
+      tags:
+      - API keys
+      description: List user api keys
+      operationId: listUserApiKeys
+      parameters:
+      - name: userId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApiKeyEntry'
+    post:
+      tags:
+      - API keys
+      description: Create a new API key
+      operationId: createUserApiKey
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApiKeyRequest'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateApiKeyResponse'
+  /api/v1/apikey/{name}:
+    post:
+      tags:
+      - API keys
+      description: Create a new API key
+      operationId: createApiKey
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateApiKeyResponse'
+  /api/v1/apikey/{id}:
+    delete:
+      tags:
+      - API keys
+      description: Delete an existing API key
+      operationId: deleteUserApiKeyById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v2/apikey:
+    post:
+      tags:
+      - API keys V2
+      description: Create a new API key or update an existing one
+      operationId: createOrUpdateUserApiKey
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApiKeyRequest'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateApiKeyResponse'
+  /api/v1/userldapgroup/sync:
+    post:
+      tags:
+      - UserLdapGroup
+      description: Sync ldap groups for a user
+      operationId: syncLdapGroups
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncUserLdapGroupRequest'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v1/template/alias:
+    get:
+      tags:
+      - TemplateAlias
+      description: List current template aliases
+      operationId: listTemplates
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TemplateAliasEntry'
+    post:
+      tags:
+      - TemplateAlias
+      description: Create or update a template alias
+      operationId: createOrUpdateTemplate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateAliasEntry'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateAliasResponse'
+  /api/v1/template/alias/{alias}:
+    delete:
+      tags:
+      - TemplateAlias
+      description: Delete existing template alias
+      operationId: deleteTemplate
+      parameters:
+      - name: alias
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TemplateAliasResponse'
+  /api/v1/user:
+    post:
+      tags:
+      - Users
+      description: Create a new user or update an existing one
+      operationId: createOrUpdateUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateUserResponse'
+  /api/v1/user/{id}:
+    delete:
+      tags:
+      - Users
+      description: Delete an existing user
+      operationId: deleteUser
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteUserResponse'
+  /api/v1/user/{id}/disable:
+    put:
+      tags:
+      - Users
+      description: Disable a user
+      operationId: disableUser
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: permanent
+        in: query
+        schema:
+          type: boolean
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserEntry'
+  /api/v1/user/{username}:
+    get:
+      tags:
+      - Users
+      description: Find a user
+      operationId: findByUsername
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          maxLength: 128
+          minLength: 0
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserEntry'
+  /api/v1/user/{username}/roles:
+    post:
+      tags:
+      - Users
+      description: Update the list of roles for the existing user
+      operationId: updateUserRoles
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          maxLength: 128
+          minLength: 0
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRolesRequest'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericOperationResult'
+  /api/v2/user/{id}:
+    get:
+      tags:
+      - UserV2
+      description: Get an existing user
+      operationId: getUser
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserEntry'
+  /api/v2/user:
+    get:
+      tags:
+      - UserV2
+      description: Returns a list of existing active users matching the supplied filter
+      operationId: listUsersWithFilter
+      parameters:
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 10
+      - name: filter
+        in: query
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserEntry'
+components:
+  schemas:
+    AgentWorkerEntry:
+      type: object
+      properties:
+        channelId:
+          type: string
+        agentId:
+          type: string
+        userAgent:
+          type: string
+        capabilities:
+          type: object
+          additionalProperties:
+            type: object
+    AuditLogEntry:
+      type: object
+      properties:
+        entryDate:
+          type: string
+          format: date-time
+        action:
+          type: string
+          enum:
+          - CREATE
+          - UPDATE
+          - DELETE
+          - ACCESS
+        object:
+          type: string
+          enum:
+          - API_KEY
+          - EXTERNAL_EVENT
+          - JSON_STORE
+          - JSON_STORE_DATA
+          - JSON_STORE_QUERY
+          - ORGANIZATION
+          - POLICY
+          - PROJECT
+          - PROCESS
+          - ROLE
+          - SECRET
+          - SYSTEM
+          - TEAM
+          - USER
+        details:
+          type: object
+          additionalProperties:
+            type: object
+        user:
+          $ref: '#/components/schemas/EntityOwner'
+    EntityOwner:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        userDomain:
+          type: string
+        displayName:
+          type: string
+        userType:
+          type: string
+          enum:
+          - LOCAL
+          - LDAP
+          - SSO
+    OffsetDateTimeParam:
+      type: object
+      properties:
+        value:
+          type: string
+          format: date-time
+    GenericOperationResult:
+      type: object
+      properties:
+        result:
+          type: string
+          enum:
+          - CREATED
+          - UPDATED
+          - DELETED
+          - ALREADY_EXISTS
+          - NOT_FOUND
+          - VALIDATED
+        ok:
+          type: boolean
+    ProcessCardAccessEntry:
+      type: object
+      properties:
+        userIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        teamIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    ProcessCardOperationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        result:
+          type: string
+          enum:
+          - CREATED
+          - UPDATED
+          - DELETED
+          - ALREADY_EXISTS
+          - NOT_FOUND
+          - VALIDATED
+        ok:
+          type: boolean
+    ProcessCardRequest:
+      type: object
+      properties:
+        description:
+          type: string
+        projectId:
+          type: string
+          format: uuid
+        icon:
+          type: object
+        entryPoint:
+          type: string
+        project:
+          type: string
+        form:
+          type: object
+        orderId:
+          type: integer
+          format: int32
+        repo:
+          type: string
+        repoId:
+          type: string
+          format: uuid
+        org:
+          type: string
+        orgId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        id:
+          type: string
+          format: uuid
+        data:
+          type: object
+          additionalProperties:
+            type: object
+    ProcessCardEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orgName:
+          type: string
+        projectName:
+          type: string
+        repoName:
+          type: string
+        entryPoint:
+          maxLength: 256
+          minLength: 0
+          type: string
+        name:
+          maxLength: 128
+          minLength: 0
+          type: string
+        description:
+          maxLength: 512
+          minLength: 0
+          type: string
+        icon:
+          type: string
+        orderId:
+          type: integer
+          format: int32
+        isCustomForm:
+          type: boolean
+    CreateOrganizationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        result:
+          type: string
+          enum:
+          - CREATED
+          - UPDATED
+          - DELETED
+          - ALREADY_EXISTS
+          - NOT_FOUND
+          - VALIDATED
+        ok:
+          type: boolean
+    OrganizationEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        owner:
+          $ref: '#/components/schemas/EntityOwner'
+        visibility:
+          type: string
+          enum:
+          - PUBLIC
+          - PRIVATE
+        meta:
+          type: object
+          additionalProperties:
+            type: object
+        cfg:
+          type: object
+          additionalProperties:
+            type: object
+    DeleteInventoryDataResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+    CreateInventoryQueryResponse:
+      type: object
+      properties:
+        result:
+          type: string
+          enum:
+          - CREATED
+          - UPDATED
+          - DELETED
+          - ALREADY_EXISTS
+          - NOT_FOUND
+          - VALIDATED
+        id:
+          type: string
+          format: uuid
+        ok:
+          type: boolean
+    DeleteInventoryQueryResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+    InventoryQueryEntry:
+      required:
+      - name
+      - text
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        inventoryId:
+          type: string
+          format: uuid
+        text:
+          type: string
+    CreateInventoryResponse:
+      type: object
+      properties:
+        result:
+          type: string
+          enum:
+          - CREATED
+          - UPDATED
+          - DELETED
+          - ALREADY_EXISTS
+          - NOT_FOUND
+          - VALIDATED
+        id:
+          type: string
+          format: uuid
+        ok:
+          type: boolean
+    InventoryEntry:
+      required:
+      - name
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        orgId:
+          type: string
+          format: uuid
+        orgName:
+          type: string
+        visibility:
+          type: string
+          enum:
+          - PUBLIC
+          - PRIVATE
+        owner:
+          $ref: '#/components/schemas/InventoryOwner'
+        parent:
+          $ref: '#/components/schemas/InventoryEntry'
+        parentId:
+          type: string
+          format: uuid
+    InventoryOwner:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+    ResourceAccessEntry:
+      required:
+      - level
+      type: object
+      properties:
+        teamId:
+          type: string
+          format: uuid
+        orgName:
+          type: string
+        teamName:
+          type: string
+        level:
+          type: string
+          enum:
+          - OWNER
+          - WRITER
+          - READER
+    JsonStoreQueryRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        text:
+          type: string
+    JsonStoreQueryEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        storeId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        text:
+          type: string
+    JsonStoreRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        visibility:
+          type: string
+          enum:
+          - PUBLIC
+          - PRIVATE
+        orgName:
+          type: string
+        owner:
+          $ref: '#/components/schemas/EntityOwner'
+    JsonStoreEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        orgId:
+          type: string
+          format: uuid
+        orgName:
+          type: string
+        visibility:
+          type: string
+          enum:
+          - PUBLIC
+          - PRIVATE
+        owner:
+          $ref: '#/components/schemas/EntityOwner'
+    JsonStoreCapacity:
+      type: object
+      properties:
+        size:
+          type: integer
+          format: int64
+        maxSize:
+          type: integer
+          format: int64
+    PolicyOperationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        result:
+          type: string
+          enum:
+          - CREATED
+          - UPDATED
+          - DELETED
+          - ALREADY_EXISTS
+          - NOT_FOUND
+          - VALIDATED
+    PolicyEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        parentId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        rules:
+          type: object
+          additionalProperties:
+            type: object
+    PolicyLinkEntry:
+      type: object
+      properties:
+        orgName:
+          type: string
+        projectName:
+          type: string
+        userName:
+          type: string
+        userDomain:
+          type: string
+    ProjectOperationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        result:
+          type: string
+          enum:
+          - CREATED
+          - UPDATED
+          - DELETED
+          - ALREADY_EXISTS
+          - NOT_FOUND
+          - VALIDATED
+        ok:
+          type: boolean
+    ProjectEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          maxLength: 1024
+          minLength: 0
+          type: string
+        orgId:
+          type: string
+          format: uuid
+        orgName:
+          type: string
+        repositories:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/RepositoryEntry'
+        cfg:
+          type: object
+          additionalProperties:
+            type: object
+        visibility:
+          type: string
+          enum:
+          - PUBLIC
+          - PRIVATE
+        owner:
+          $ref: '#/components/schemas/EntityOwner'
+        rawPayloadMode:
+          type: string
+          enum:
+          - DISABLED
+          - OWNERS
+          - TEAM_MEMBERS
+          - ORG_MEMBERS
+          - EVERYONE
+        meta:
+          type: object
+          additionalProperties:
+            type: object
+        outVariablesMode:
+          type: string
+          enum:
+          - DISABLED
+          - OWNERS
+          - TEAM_MEMBERS
+          - ORG_MEMBERS
+          - EVERYONE
+        processExecMode:
+          type: string
+          enum:
+          - DISABLED
+          - READERS
+          - WRITERS
+        createdAt:
+          type: string
+          format: date-time
+    RepositoryEntry:
+      required:
+      - url
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        url:
+          maxLength: 2048
+          minLength: 0
+          type: string
+        branch:
+          maxLength: 255
+          minLength: 0
+          pattern: "^[^\\x00-\\x20\\x7F~^:?*\\[\\\\]+$"
+          type: string
+        commitId:
+          maxLength: 64
+          minLength: 0
+          pattern: "^[0-9a-fA-F]+$"
+          type: string
+        path:
+          maxLength: 2048
+          minLength: 0
+          type: string
+        disabled:
+          type: boolean
+        secretId:
+          type: string
+          format: uuid
+        secretName:
+          type: string
+        secretStoreType:
+          type: string
+        meta:
+          type: object
+          additionalProperties:
+            type: object
+        triggersDisabled:
+          type: boolean
+    EncryptValueResponse:
+      type: object
+      properties:
+        data:
+          type: string
+          format: string
+        ok:
+          type: boolean
+    KvEntry:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: object
+        lastUpdatedAt:
+          type: string
+          format: date-time
+    ProjectKvCapacity:
+      type: object
+      properties:
+        size:
+          type: integer
+          format: int64
+        maxSize:
+          type: integer
+          format: int32
+    RepositoryValidationResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        result:
+          type: string
+          enum:
+          - CREATED
+          - UPDATED
+          - DELETED
+          - ALREADY_EXISTS
+          - NOT_FOUND
+          - VALIDATED
+        errors:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            type: string
+    SecretOperationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        result:
+          type: string
+          enum:
+          - CREATED
+          - UPDATED
+          - DELETED
+          - ALREADY_EXISTS
+          - NOT_FOUND
+          - VALIDATED
+        password:
+          type: string
+        ok:
+          type: boolean
+    GetDataRequest:
+      type: object
+      properties:
+        storePassword:
+          type: string
+    PublicKeyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        result:
+          type: string
+          enum:
+          - CREATED
+          - UPDATED
+          - DELETED
+          - ALREADY_EXISTS
+          - NOT_FOUND
+          - VALIDATED
+        password:
+          type: string
+        publicKey:
+          type: string
+        ok:
+          type: boolean
+    SecretUpdateRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        owner:
+          $ref: '#/components/schemas/EntityOwner'
+        visibility:
+          type: string
+          enum:
+          - PUBLIC
+          - PRIVATE
+        storePassword:
+          type: string
+        newStorePassword:
+          type: string
+        projectName:
+          type: string
+        projectId:
+          type: string
+          format: uuid
+        orgId:
+          type: string
+          format: uuid
+        orgName:
+          type: string
+        data:
+          type: string
+    SecretEntryV2:
+      required:
+      - name
+      - storeType
+      - type
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        orgId:
+          type: string
+          format: uuid
+        orgName:
+          type: string
+        projects:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectEntry'
+        type:
+          type: string
+          enum:
+          - KEY_PAIR
+          - USERNAME_PASSWORD
+          - DATA
+        encryptedBy:
+          type: string
+          enum:
+          - SERVER_KEY
+          - PASSWORD
+        storeType:
+          type: string
+        visibility:
+          type: string
+          enum:
+          - PUBLIC
+          - PRIVATE
+        owner:
+          $ref: '#/components/schemas/EntityOwner'
+        createdAt:
+          type: string
+          format: date-time
+        lastUpdatedAt:
+          type: string
+          format: date-time
+    SecretStoreEntry:
+      required:
+      - description
+      - storeType
+      type: object
+      properties:
+        storeType:
+          type: string
+        description:
+          type: string
+    AddTeamLdapGroupsResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+    TeamLdapGroupEntry:
+      type: object
+      properties:
+        group:
+          type: string
+        role:
+          type: string
+          enum:
+          - OWNER
+          - MAINTAINER
+          - MEMBER
+    AddTeamUsersResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+    TeamUserEntry:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        username:
+          maxLength: 128
+          minLength: 0
+          type: string
+        userDomain:
+          maxLength: 512
+          minLength: 0
+          type: string
+        displayName:
+          type: string
+        userType:
+          type: string
+          enum:
+          - LOCAL
+          - LDAP
+          - SSO
+        role:
+          type: string
+          enum:
+          - OWNER
+          - MAINTAINER
+          - MEMBER
+        memberType:
+          type: string
+          enum:
+          - SINGLE
+          - LDAP_GROUP
+        ldapGroupSource:
+          type: string
+    CreateTeamResponse:
+      type: object
+      properties:
+        result:
+          type: string
+          enum:
+          - CREATED
+          - UPDATED
+          - DELETED
+          - ALREADY_EXISTS
+          - NOT_FOUND
+          - VALIDATED
+        id:
+          type: string
+          format: uuid
+        ok:
+          type: boolean
+    TeamEntry:
+      required:
+      - name
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orgId:
+          type: string
+          format: uuid
+        orgName:
+          type: string
+        name:
+          type: string
+        description:
+          maxLength: 2048
+          minLength: 0
+          type: string
+    RemoveTeamUsersResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+    TriggerEntry:
+      required:
+      - cfg
+      - eventSource
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orgId:
+          type: string
+          format: uuid
+        orgName:
+          type: string
+        projectId:
+          type: string
+          format: uuid
+        projectName:
+          type: string
+        repositoryId:
+          type: string
+          format: uuid
+        repositoryName:
+          type: string
+        eventSource:
+          type: string
+        activeProfiles:
+          type: array
+          items:
+            type: string
+        arguments:
+          type: object
+          additionalProperties:
+            type: object
+        conditions:
+          type: object
+          additionalProperties:
+            type: object
+        cfg:
+          type: object
+          additionalProperties:
+            type: object
+    LogSegmentOperationResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        result:
+          type: string
+          enum:
+          - CREATED
+          - UPDATED
+          - DELETED
+          - ALREADY_EXISTS
+          - NOT_FOUND
+          - VALIDATED
+        ok:
+          type: boolean
+    LogSegmentRequest:
+      type: object
+      properties:
+        correlationId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    LogSegment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        correlationId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        status:
+          type: string
+          enum:
+          - OK
+          - FAILED
+          - RUNNING
+          - SUSPENDED
+        statusUpdatedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        warnings:
+          type: integer
+          format: int32
+        errors:
+          type: integer
+          format: int32
+    LogSegmentUpdateRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - OK
+          - FAILED
+          - RUNNING
+          - SUSPENDED
+        warnings:
+          type: integer
+          format: int32
+        errors:
+          type: integer
+          format: int32
+        statusUpdatedAt:
+          type: string
+          format: date-time
+    StartProcessResponse:
+      type: object
+      properties:
+        instanceId:
+          type: string
+          format: uuid
+        ok:
+          type: boolean
+    CheckpointRestoreHistoryEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        checkpointId:
+          type: string
+          format: uuid
+        processStatus:
+          type: string
+          enum:
+          - NEW
+          - PREPARING
+          - ENQUEUED
+          - WAITING
+          - STARTING
+          - RUNNING
+          - SUSPENDED
+          - RESUMING
+          - FINISHED
+          - FAILED
+          - CANCELLED
+          - TIMED_OUT
+        changeDate:
+          type: string
+          format: date-time
+    ProcessCheckpointEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        correlationId:
+          type: string
+          format: uuid
+    ProcessEntry:
+      type: object
+      properties:
+        instanceId:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum:
+          - DEFAULT
+          - FAILURE_HANDLER
+          - CANCEL_HANDLER
+          - TIMEOUT_HANDLER
+        parentInstanceId:
+          type: string
+          format: uuid
+        orgId:
+          type: string
+          format: uuid
+        orgName:
+          type: string
+        projectId:
+          type: string
+          format: uuid
+        projectName:
+          type: string
+        repoId:
+          type: string
+          format: uuid
+        repoName:
+          type: string
+        repoUrl:
+          type: string
+        repoPath:
+          type: string
+        commitId:
+          type: string
+        commitBranch:
+          type: string
+        commitMsg:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        initiator:
+          type: string
+        initiatorId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - NEW
+          - PREPARING
+          - ENQUEUED
+          - WAITING
+          - STARTING
+          - RUNNING
+          - SUSPENDED
+          - RESUMING
+          - FINISHED
+          - FAILED
+          - CANCELLED
+          - TIMED_OUT
+        lastAgentId:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        lastUpdatedAt:
+          type: string
+          format: date-time
+        lastRunAt:
+          type: string
+          format: date-time
+        totalRuntimeMs:
+          type: integer
+          format: int64
+        logFileName:
+          type: string
+        tags:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        childrenIds:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            format: uuid
+        meta:
+          type: object
+          additionalProperties:
+            type: object
+        handlers:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        requirements:
+          type: object
+          additionalProperties:
+            type: object
+        disabled:
+          type: boolean
+        checkpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessCheckpointEntry'
+        checkpointRestoreHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckpointRestoreHistoryEntry'
+        statusHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessStatusHistoryEntry'
+        triggeredBy:
+          $ref: '#/components/schemas/TriggeredByEntry'
+        timeout:
+          type: integer
+          format: int64
+        suspendTimeout:
+          type: integer
+          format: int64
+        runtime:
+          type: string
+    ProcessStatusHistoryEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - NEW
+          - PREPARING
+          - ENQUEUED
+          - WAITING
+          - STARTING
+          - RUNNING
+          - SUSPENDED
+          - RESUMING
+          - FINISHED
+          - FAILED
+          - CANCELLED
+          - TIMED_OUT
+        changeDate:
+          type: string
+          format: date-time
+    TriggeredByEntry:
+      type: object
+      properties:
+        externalEventId:
+          type: string
+        trigger:
+          $ref: '#/components/schemas/TriggerEntry'
+    ProcessWaitEntry:
+      type: object
+      properties:
+        waits:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: object
+        isWaiting:
+          type: boolean
+    ResumeProcessResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+    ProcessRequirementsEntry:
+      type: object
+      properties:
+        instanceId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        requirements:
+          type: object
+          additionalProperties:
+            type: object
+    RestoreCheckpointRequest:
+      required:
+      - id
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+    GenericCheckpointResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+    ProcessEventRequest:
+      type: object
+      properties:
+        eventType:
+          type: string
+        eventDate:
+          type: string
+          format: date-time
+        data:
+          type: object
+          additionalProperties:
+            type: object
+    ProcessEventEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        seqId:
+          type: integer
+          format: int64
+        eventType:
+          type: string
+        data:
+          type: object
+          additionalProperties:
+            type: object
+        eventDate:
+          type: string
+          format: date-time
+    Field:
+      type: object
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+        cardinality:
+          type: string
+          enum:
+          - ONE_OR_NONE
+          - ONE_AND_ONLY_ONE
+          - AT_LEAST_ONE
+          - ANY
+        value:
+          type: object
+        allowedValue:
+          type: object
+        options:
+          type: object
+          additionalProperties:
+            type: object
+    FormInstanceEntry:
+      type: object
+      properties:
+        processInstanceId:
+          type: string
+        name:
+          type: string
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/Field'
+        custom:
+          type: boolean
+        yield:
+          type: boolean
+    FormListEntry:
+      type: object
+      properties:
+        name:
+          type: string
+        custom:
+          type: boolean
+        yield:
+          type: boolean
+        runAs:
+          type: object
+          additionalProperties:
+            type: object
+    FormSubmitResponse:
+      type: object
+      properties:
+        processInstanceId:
+          type: string
+          format: uuid
+        errors:
+          type: object
+          additionalProperties:
+            type: string
+        ok:
+          type: boolean
+    LockEntry:
+      type: object
+      properties:
+        instanceId:
+          type: string
+          format: uuid
+        orgId:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        scope:
+          type: string
+          enum:
+          - ORG
+          - PROJECT
+    LockResult:
+      type: object
+      properties:
+        info:
+          $ref: '#/components/schemas/LockEntry'
+        acquired:
+          type: boolean
+    RoleOperationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        result:
+          type: string
+          enum:
+          - CREATED
+          - UPDATED
+          - DELETED
+          - ALREADY_EXISTS
+          - NOT_FOUND
+          - VALIDATED
+    RoleEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        permissions:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    CreateApiKeyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        key:
+          type: string
+        result:
+          type: string
+          enum:
+          - CREATED
+          - UPDATED
+          - DELETED
+          - ALREADY_EXISTS
+          - NOT_FOUND
+          - VALIDATED
+        ok:
+          type: boolean
+    CreateApiKeyRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        username:
+          type: string
+        userDomain:
+          type: string
+        userType:
+          type: string
+          enum:
+          - LOCAL
+          - LDAP
+          - SSO
+        name:
+          type: string
+        key:
+          type: string
+    ApiKeyEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        expiredAt:
+          type: string
+          format: date-time
+    SyncUserLdapGroupRequest:
+      required:
+      - username
+      type: object
+      properties:
+        username:
+          type: string
+        userDomain:
+          type: string
+    TemplateAliasResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+    TemplateAliasEntry:
+      required:
+      - alias
+      - url
+      type: object
+      properties:
+        alias:
+          type: string
+        url:
+          maxLength: 2048
+          minLength: 0
+          type: string
+    CreateUserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        result:
+          type: string
+          enum:
+          - CREATED
+          - UPDATED
+          - DELETED
+          - ALREADY_EXISTS
+          - NOT_FOUND
+          - VALIDATED
+        ok:
+          type: boolean
+    CreateUserRequest:
+      required:
+      - username
+      type: object
+      properties:
+        username:
+          maxLength: 128
+          minLength: 0
+          type: string
+        userDomain:
+          maxLength: 512
+          minLength: 0
+          type: string
+        displayName:
+          maxLength: 1024
+          minLength: 0
+          type: string
+        email:
+          maxLength: 512
+          minLength: 0
+          type: string
+        userType:
+          type: string
+          writeOnly: true
+          enum:
+          - LOCAL
+          - LDAP
+          - SSO
+        disabled:
+          type: boolean
+        roles:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+          enum:
+          - LOCAL
+          - LDAP
+          - SSO
+    DeleteUserResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+    UserEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          maxLength: 128
+          minLength: 0
+          type: string
+        domain:
+          maxLength: 512
+          minLength: 0
+          type: string
+        displayName:
+          maxLength: 1024
+          minLength: 0
+          type: string
+        orgs:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationEntry'
+        type:
+          type: string
+          enum:
+          - LOCAL
+          - LDAP
+          - SSO
+        email:
+          maxLength: 512
+          minLength: 0
+          type: string
+        roles:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleEntry'
+        disabled:
+          type: boolean
+        disabledDate:
+          type: string
+          format: date-time
+        permanentlyDisabled:
+          type: boolean
+    UpdateUserRolesRequest:
+      required:
+      - roles
+      type: object
+      properties:
+        roles:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
