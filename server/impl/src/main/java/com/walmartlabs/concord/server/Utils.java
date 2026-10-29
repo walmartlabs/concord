@@ -26,10 +26,10 @@ import com.walmartlabs.concord.server.sdk.BackgroundTask;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import com.walmartlabs.concord.server.sdk.rest.Component;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
-import org.eclipse.jetty.ee8.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
 
-import javax.servlet.Filter;
-import javax.ws.rs.ext.ExceptionMapper;
+import jakarta.servlet.Filter;
+import jakarta.ws.rs.ext.ExceptionMapper;
 import java.util.List;
 
 import static com.google.inject.Scopes.SINGLETON;

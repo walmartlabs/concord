@@ -20,13 +20,13 @@ package com.walmartlabs.concord.server.boot;
  * =====
  */
 
-import org.eclipse.jetty.ee8.nested.ErrorHandler;
-import org.eclipse.jetty.ee8.nested.Request;
+import org.eclipse.jetty.ee10.nested.ErrorHandler;
+import org.eclipse.jetty.ee10.nested.Request;
 import org.eclipse.jetty.http.HttpHeader;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Set;
 
