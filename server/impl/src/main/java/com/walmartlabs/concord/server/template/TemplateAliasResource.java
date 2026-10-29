@@ -32,9 +32,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jooq.Configuration;
 
 import javax.inject.Inject;
-import javax.validation.Valid;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
 @Path("/api/v1/template/alias")
