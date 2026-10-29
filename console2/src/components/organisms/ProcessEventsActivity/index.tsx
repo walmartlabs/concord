@@ -29,7 +29,7 @@ import {
 import { ProcessElementList } from '../../molecules';
 import { useCallback, useRef } from 'react';
 import { useState } from 'react';
-import { usePolling } from '../../../api/usePolling';
+import { isBlockingPollingError, usePolling } from '../../../api/usePolling';
 import { ConcordId } from '../../../api/common';
 import RequestErrorActivity from '../RequestErrorActivity';
 
@@ -76,7 +76,7 @@ const ProcessEventsActivity = (props: ExternalProps) => {
 
     const error = usePolling(fetchData, dataFetchInterval, loadingHandler, forceRefresh);
 
-    if (error) {
+    if (isBlockingPollingError(error)) {
         return <RequestErrorActivity error={error} />;
     }
 

@@ -26,9 +26,9 @@ import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 
-import javax.xml.bind.DatatypeConverter;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public final class PayloadUtils {
@@ -75,7 +75,7 @@ public final class PayloadUtils {
 
             if (t.isBefore(OffsetDateTime.now())) {
                 throw new ProcessException(p.getProcessKey(), "Invalid '" + k + "' value, can't be in the past: " + v +
-                        " Current server time: " + DatatypeConverter.printDateTime(Calendar.getInstance()));
+                        " Current server time: " + DateTimeUtils.toIsoString(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS)));
             }
 
             return t;

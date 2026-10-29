@@ -36,76 +36,109 @@ export interface RequestErrorData {
 
 export type RequestError = RequestErrorData | null;
 
-export const parseSiestaError = async (resp: Response) => {
+const statusMessage = (message: unknown, resp: Pick<Response, 'status' | 'statusText'>): string => {
+    const value =
+        typeof message === 'string' && message.trim().length > 0
+            ? message.trim()
+            : resp.statusText || 'Request failed';
+    return `${value} (${resp.status})`;
+};
+
+const textValue = (value: unknown): string | undefined =>
+    typeof value === 'string' ? value : undefined;
+
+// Keep the actual HTTP status even when an otherwise successful response is invalid.
+export const responseError = (
+    response: Pick<Response, 'status' | 'statusText'>,
+    message?: string,
+    details?: string
+): RequestErrorData => ({
+    status: response.status,
+    message: statusMessage(message, response),
+    details,
+});
+
+const isAbortError = (error: unknown): boolean =>
+    (error instanceof Error || error instanceof DOMException) && error.name === 'AbortError';
+
+const TRANSIENT_STATUSES = new Set([0, 408, 429, 500, 502, 503, 504]);
+
+/**
+ * Whether a thrown value is an API error worth retrying. Only errors produced by the API layer
+ * qualify: a plain Error is a client-side bug and would be retried forever.
+ */
+export const isTransientRequestError = (error: unknown): boolean => {
+    if (typeof error !== 'object' || error === null || error instanceof Error) {
+        return false;
+    }
+    const status = (error as Partial<RequestErrorData>).status;
+    return typeof status === 'number' && TRANSIENT_STATUSES.has(status);
+};
+
+export const toRequestError = (error: unknown): RequestErrorData => {
+    if (typeof error === 'object' && error !== null) {
+        const value = error as Partial<RequestErrorData>;
+        if (typeof value.status === 'number' && Number.isFinite(value.status)) {
+            return {
+                status: value.status,
+                message: textValue(value.message)?.trim()
+                    ? value.message
+                    : statusMessage(undefined, { status: value.status, statusText: '' }),
+                details: textValue(value.details),
+                instanceId: textValue(value.instanceId),
+                level: textValue(value.level),
+            };
+        }
+    }
+
+    // Zero means no HTTP status is available; the caller may supply a non-HTTP exception.
+    return responseError({ status: 0, statusText: '' }, error instanceof Error ? error.message : undefined);
+};
+
+export const parseSiestaError = async (resp: Response): Promise<RequestErrorData> => {
     const json = await resp.json();
-
-    let message;
-    if (resp.status < 400 || resp.status >= 500) {
-        message = `ERROR: ${resp.statusText} (${resp.status})`;
-    }
-
+    // Retry predicates inspect details. Preserve that contract and include every validation error.
+    const details = Array.isArray(json)
+        ? json.map((entry) => textValue(entry?.message)).filter(Boolean).join('\n') || undefined
+        : textValue(json?.details) ?? textValue(json?.message);
     return {
-        message,
-        instanceId: json.instanceId,
-        details: json[0].message,
-        status: resp.status
+        ...responseError(resp, undefined, details),
+        instanceId: textValue(json?.instanceId),
     };
 };
 
-export const parseJsonError = async (resp: Response) => {
+export const parseJsonError = async (resp: Response): Promise<RequestErrorData> => {
     const json = await resp.json();
-
-    let message;
-    if (resp.status < 400 || resp.status >= 500) {
-        message = json.message;
-    }
-
     return {
-        message,
-        instanceId: json.instanceId,
-        details: json.details,
-        level: json.level ? json.level : 'ERROR',
-        status: resp.status
+        ...responseError(resp, textValue(json?.message), textValue(json?.details)),
+        instanceId: textValue(json?.instanceId),
+        level: textValue(json?.level) || 'ERROR',
     };
 };
 
-export const parseTextError = async (resp: Response) => {
-    const text = await resp.text();
+export const parseTextError = async (resp: Response): Promise<RequestErrorData> =>
+    responseError(resp, undefined, await resp.text());
 
-    let message;
-    if (resp.status < 400 && resp.status >= 500) {
-        message = `ERROR: ${resp.statusText} (${resp.status})`;
-    }
-
-    return {
-        message,
-        details: text,
-        status: resp.status
-    };
-};
-
-export const makeError = async (resp: Response): Promise<RequestError> => {
+export const makeError = async (resp: Response): Promise<RequestErrorData> => {
     const contentLength = resp.headers.get('Content-Length');
     if (contentLength !== '0') {
         const contentType = resp.headers.get('Content-Type') || '';
         try {
             if (contentType.indexOf('vnd.concord-validation-errors-v1+json') >= 0) {
-                return parseSiestaError(resp);
+                return await parseSiestaError(resp);
             } else if (contentType.indexOf('json') >= 0) {
-                return parseJsonError(resp);
+                return await parseJsonError(resp);
             } else if (contentType.indexOf('text/plain') >= 0) {
-                return parseTextError(resp);
+                return await parseTextError(resp);
             }
         } catch (e) {
+            if (isAbortError(e)) throw e;
             console.warn('makeError -> error while parsing the response: %o', e);
             // fall back to the default error handling
         }
     }
 
-    return {
-        message: `ERROR: ${resp.statusText} (${resp.status})`,
-        status: resp.status
-    };
+    return responseError(resp);
 };
 
 export const managedFetch = async (input: RequestInfo, init?: RequestInit): Promise<Response> => {
@@ -130,14 +163,17 @@ export const managedFetch = async (input: RequestInfo, init?: RequestInit): Prom
     try {
         response = await fetch(input, init);
     } catch (err) {
+        if (isAbortError(err)) {
+            throw err;
+        }
+
         console.warn(
             "managedFetch ['%o', '%o'] -> error while performing a request: %o",
             input,
             init,
-            response,
             err
         );
-        return Promise.reject({ message: 'Error while performing a request', cause: err });
+        throw toRequestError(err);
     }
 
     if (!response.ok) {
@@ -280,9 +316,28 @@ export const parseNestedQueryParams = (params: QueryParams, keys: string[]): Que
     return result;
 };
 
+/**
+ * Reads a successful response body. Malformed JSON keeps the HTTP status; a body that cannot be
+ * read at all, e.g. because the connection dropped mid-response, is a network failure (status 0).
+ */
+export const readBody = async <T>(
+    response: Response,
+    read: (response: Response) => Promise<T>
+): Promise<T> => {
+    try {
+        return await read(response);
+    } catch (error) {
+        if (isAbortError(error)) throw error;
+        if (error instanceof SyntaxError) {
+            throw responseError(response, 'Invalid JSON response');
+        }
+        throw toRequestError(error);
+    }
+};
+
 export const fetchJson = async <T>(uri: string, init?: RequestInit): Promise<T> => {
     const response = await managedFetch(uri, init);
-    return response.json();
+    return readBody(response, (r) => r.json());
 };
 
 const wait = (delayMs: number) =>
