@@ -16,6 +16,12 @@
     <name>${project.groupId}:${project.artifactId}</name>
 
     <dependencies>
+        <!-- @javax.annotation.Generated in the generated sources -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server</artifactId>
