@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.boot;
 
 import com.walmartlabs.concord.server.sdk.rest.ApiDescriptor;
 import com.walmartlabs.concord.server.cfg.ServerConfiguration;
-import org.eclipse.jetty.ee10.nested.SessionHandler;
+import org.eclipse.jetty.ee10.servlet.SessionHandler;
 import org.eclipse.jetty.ee10.servlet.FilterHolder;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
@@ -36,7 +36,7 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Priority;
+import jakarta.annotation.Priority;
 import javax.inject.Inject;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
@@ -98,6 +98,9 @@ public class HttpServer {
         // servlets, filters, etc...
         ServletContextHandler contextHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
         contextHandler.setContextPath("/");
+        // Servlet 6 rejects "ambiguous" URIs (e.g. an encoded '/' in a path parameter) by default,
+        // keep accepting them together with UriCompliance.LEGACY above
+        contextHandler.getServletHandler().setDecodeAmbiguousURIs(true);
 
         // custom 404s and other error handlers
         contextHandler.setErrorHandler(new CustomErrorHandler(requestErrorHandlers));

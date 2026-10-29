@@ -35,9 +35,9 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import jakarta.validation.executable.ExecutableValidator;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static com.walmartlabs.concord.server.Utils.bindExceptionMapper;
 
@@ -77,9 +77,9 @@ public class ValidationModule implements Module {
                     }
 
                     @Override
-                    public Set<String> getGetterMethodNameCandidates(String propertyName) {
-                        Set<String> getters = delegate.getGetterMethodNameCandidates(propertyName);
-                        Set<String> result = new HashSet<>(getters);
+                    public List<String> getGetterMethodNameCandidates(String propertyName) {
+                        List<String> getters = delegate.getGetterMethodNameCandidates(propertyName);
+                        List<String> result = new ArrayList<>(getters);
                         result.add(propertyName);
                         return result;
                     }

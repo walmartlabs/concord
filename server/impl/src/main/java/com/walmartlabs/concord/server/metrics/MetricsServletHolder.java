@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.metrics;
  * =====
  */
 
-import io.prometheus.client.exporter.MetricsServlet;
+import io.prometheus.client.servlet.jakarta.exporter.MetricsServlet;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
 
 import javax.inject.Singleton;
