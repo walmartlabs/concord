@@ -13,7 +13,7 @@
 ([#1381](https://github.com/walmartlabs/concord/pull/1381));
 - concord-console2: use Vite development mode
 ([#1386](https://github.com/walmartlabs/concord/pull/1386));
-github-app-installation: stop caching token-fetch failures as "no auth"
+- github-app-installation: stop caching token-fetch failures as "no auth"
 ([#1387](https://github.com/walmartlabs/concord/pull/1387));
 - runtime-v2: keep the order of parallel errors
 ([#1390](https://github.com/walmartlabs/concord/pull/1390));
@@ -34,11 +34,11 @@ github-app-installation: stop caching token-fetch failures as "no auth"
 - project: drop unused resteasy-jaxb-provider, jetty javax websocket and siesta.version
 ([#1413](https://github.com/walmartlabs/concord/pull/1413));
 - project: replace javax.xml.bind.DatatypeConverter with java.util/java.time
-([#1414](https://github.com/walmartlabs/concord/pull/14014));
+([#1414](https://github.com/walmartlabs/concord/pull/1414));
 - http-tasks: drop the JAX-RS API dependency
-([#1415](https://github.com/walmartlabs/concord/pull/14015));
+([#1415](https://github.com/walmartlabs/concord/pull/1415));
 - queue-client: switch to the Jetty core websocket client, drop JAX-RS
-([#1416](https://github.com/walmartlabs/concord/pull/14016)).
+([#1416](https://github.com/walmartlabs/concord/pull/1416)).
 
 ## [2.46.0] - 2026-09-18
 
