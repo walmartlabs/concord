@@ -38,7 +38,9 @@
 - http-tasks: drop the JAX-RS API dependency
 ([#1415](https://github.com/walmartlabs/concord/pull/1415));
 - queue-client: switch to the Jetty core websocket client, drop JAX-RS
-([#1416](https://github.com/walmartlabs/concord/pull/1416)).
+([#1416](https://github.com/walmartlabs/concord/pull/1416));
+- project: update dependencies
+([#1425](https://github.com/walmartlabs/concord/pull/1425)).
 
 ## [2.46.0] - 2026-09-18
 
