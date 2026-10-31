@@ -1,0 +1,219 @@
+openapi: 3.0.1
+info:
+  title: Concord Node Roster API
+  description: Concord Node Roster API
+  version: "2.0"
+paths:
+  /api/v1/noderoster/artifacts:
+    get:
+      tags:
+      - Node Roster Artifacts
+      description: List artifacts deployed on a host
+      operationId: listHostArtifacts
+      parameters:
+      - name: hostId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: hostName
+        in: query
+        schema:
+          type: string
+      - name: filter
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArtifactEntry'
+  /api/v1/noderoster/facts/last:
+    get:
+      tags:
+      - Node Roster Facts
+      description: Get last known Ansible facts for a host
+      operationId: getFacts
+      parameters:
+      - name: hostId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: hostName
+        in: query
+        schema:
+          type: string
+      responses:
+        default:
+          description: Facts content
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/v1/noderoster/hosts/{hostId}:
+    get:
+      tags:
+      - Node Roster Hosts
+      description: Get a host
+      operationId: getHost
+      parameters:
+      - name: hostId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostEntry'
+  /api/v1/noderoster/hosts:
+    get:
+      tags:
+      - Node Roster Hosts
+      description: List all known hosts
+      operationId: listKnownHosts
+      parameters:
+      - name: host
+        in: query
+        schema:
+          type: string
+      - name: artifact
+        in: query
+        schema:
+          type: string
+      - name: processInstanceId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: include
+        in: query
+        schema:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            enum:
+            - ARTIFACTS
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HostEntry'
+  /api/v1/noderoster/processes:
+    get:
+      tags:
+      - Node Roster Processes
+      description: Get all known hosts
+      operationId: listHosts
+      parameters:
+      - name: hostId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: hostName
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessEntry'
+components:
+  schemas:
+    ArtifactEntry:
+      type: object
+      properties:
+        url:
+          type: string
+        processInstanceId:
+          type: string
+          format: uuid
+    HostEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        artifactUrl:
+          type: string
+    ProcessEntry:
+      type: object
+      properties:
+        instanceId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        projectId:
+          type: string
+          format: uuid
+        projectName:
+          type: string
+        initiatorId:
+          type: string
+          format: uuid
+        initiator:
+          type: string

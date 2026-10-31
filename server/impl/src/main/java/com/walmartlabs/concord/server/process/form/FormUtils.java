@@ -33,7 +33,7 @@ import io.takari.bpm.model.form.DefaultFormFields;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.model.form.FormField;
 
-import javax.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.MultivaluedMap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;

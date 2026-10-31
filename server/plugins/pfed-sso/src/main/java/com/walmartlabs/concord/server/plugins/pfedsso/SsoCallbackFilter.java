@@ -22,9 +22,9 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
 
 
 import javax.inject.Inject;
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static com.walmartlabs.concord.server.plugins.pfedsso.SsoCookies.REFRESH_TOKEN_COOKIE;

@@ -22,27 +22,27 @@ package com.walmartlabs.concord.server.boot;
 
 import com.walmartlabs.concord.server.sdk.rest.ApiDescriptor;
 import com.walmartlabs.concord.server.cfg.ServerConfiguration;
-import org.eclipse.jetty.ee8.nested.SessionHandler;
-import org.eclipse.jetty.ee8.servlet.FilterHolder;
-import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
-import org.eclipse.jetty.ee8.servlet.ServletHolder;
-import org.eclipse.jetty.ee8.websocket.server.config.JettyWebSocketServletContainerInitializer;
+import org.eclipse.jetty.ee10.servlet.SessionHandler;
+import org.eclipse.jetty.ee10.servlet.FilterHolder;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
+import org.eclipse.jetty.websocket.server.WebSocketUpgradeHandler;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Priority;
+import jakarta.annotation.Priority;
 import javax.inject.Inject;
-import javax.servlet.*;
-import javax.servlet.annotation.WebFilter;
-import javax.servlet.annotation.WebListener;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
+import jakarta.servlet.*;
+import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.annotation.WebListener;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
 import java.lang.management.ManagementFactory;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -65,7 +65,8 @@ public class HttpServer {
                       Set<ServletHolder> servletHolders,
                       Set<Filter> filters,
                       Set<FilterHolder> filterHolders,
-                      Set<ContextHandlerConfigurator> contextHandlerConfigurators) {
+                      Set<ContextHandlerConfigurator> contextHandlerConfigurators,
+                      Set<WebSocketConfigurator> webSocketConfigurators) {
 
         Server server = new Server();
 
@@ -97,6 +98,9 @@ public class HttpServer {
         // servlets, filters, etc...
         ServletContextHandler contextHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
         contextHandler.setContextPath("/");
+        // Servlet 6 rejects "ambiguous" URIs (e.g. an encoded '/' in a path parameter) by default,
+        // keep accepting them together with UriCompliance.LEGACY above
+        contextHandler.getServletHandler().setDecodeAmbiguousURIs(true);
 
         // custom 404s and other error handlers
         contextHandler.setErrorHandler(new CustomErrorHandler(requestErrorHandlers));
@@ -110,7 +114,10 @@ public class HttpServer {
         ServletContext context = contextHandler.getServletContext();
         SessionCookieConfig sessionCookieConfig = context.getSessionCookieConfig();
         sessionCookieConfig.setHttpOnly(true);
-        sessionCookieConfig.setComment(cfg.getCookieComment());
+        String sameSite = sameSiteFromComment(cfg.getCookieComment());
+        if (sameSite != null) {
+            sessionCookieConfig.setAttribute("SameSite", sameSite);
+        }
         if (cfg.isSecureCookies()) {
             sessionCookieConfig.setSecure(true);
         }
@@ -187,8 +194,6 @@ public class HttpServer {
             }
         });
 
-        JettyWebSocketServletContainerInitializer.configure(contextHandler, null);
-
         ContextHandlerCollection contextHandlerCollection = new ContextHandlerCollection();
         contextHandlerCollection.addHandler(contextHandler);
 
@@ -198,8 +203,16 @@ public class HttpServer {
             configurator.configure(contextHandlerCollection);
         });
 
+        // websockets are handled before the servlet context, using Jetty's core API
+        WebSocketUpgradeHandler webSocketHandler = WebSocketUpgradeHandler.from(server, container ->
+                webSocketConfigurators.stream().sorted(byPriority()).forEachOrdered(configurator -> {
+                    log.info("Configuring websockets {}...", configurator.getClass());
+                    configurator.configure(container);
+                }));
+        webSocketHandler.setHandler(contextHandlerCollection);
+
         this.statisticsHandler = new StatisticsHandler();
-        this.statisticsHandler.setHandler(contextHandlerCollection);
+        this.statisticsHandler.setHandler(webSocketHandler);
         server.setHandler(this.statisticsHandler);
 
         this.server = server;
@@ -232,6 +245,28 @@ public class HttpServer {
         writer.setRetainDays(cfg.getAccessLogRetainDays());
 
         return new CustomRequestLog(writer, ServerConfiguration.ACCESS_LOG_FORMAT);
+    }
+
+    /**
+     * Servlet 6 ignores cookie comments, so Jetty no longer turns the legacy
+     * "__SAME_SITE_*__" comment markers into the SameSite attribute.
+     */
+    static String sameSiteFromComment(String comment) {
+        if (comment == null || comment.isBlank()) {
+            return null;
+        }
+
+        if (comment.contains("__SAME_SITE_LAX__")) {
+            return "Lax";
+        } else if (comment.contains("__SAME_SITE_STRICT__")) {
+            return "Strict";
+        } else if (comment.contains("__SAME_SITE_NONE__")) {
+            return "None";
+        }
+
+        log.warn("Ignoring server.cookieComment '{}': cookie comments are not supported, " +
+                 "only the __SAME_SITE_LAX__, __SAME_SITE_STRICT__ and __SAME_SITE_NONE__ markers are", comment);
+        return null;
     }
 
     private static Comparator<Object> byPriority() {

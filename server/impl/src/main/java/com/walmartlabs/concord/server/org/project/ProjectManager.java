@@ -46,7 +46,7 @@ import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;

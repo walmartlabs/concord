@@ -23,10 +23,10 @@ package com.walmartlabs.concord.server.org.project;
 import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
 import com.walmartlabs.concord.server.process.ErrorMessage;
 
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 

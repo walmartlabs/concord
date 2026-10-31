@@ -1,0 +1,341 @@
+openapi: 3.0.1
+info:
+  title: Concord Ansible API
+  description: Concord Ansible API
+  version: "2.0"
+paths:
+  /api/v1/process/{processInstanceId}/ansible/hosts:
+    get:
+      tags:
+      - Ansible Process
+      description: List Ansible hosts of a specific process
+      operationId: listAnsibleHosts
+      parameters:
+      - name: processInstanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: host
+        in: query
+        schema:
+          type: string
+      - name: hostGroup
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - RUNNING
+          - CHANGED
+          - FAILED
+          - OK
+          - SKIPPED
+          - UNREACHABLE
+      - name: statuses
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - RUNNING
+            - CHANGED
+            - FAILED
+            - OK
+            - SKIPPED
+            - UNREACHABLE
+      - name: playbookId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: sortField
+        in: query
+        schema:
+          type: string
+          enum:
+          - HOST
+          - DURATION
+          - STATUS
+          - HOST_GROUP
+      - name: sortBy
+        in: query
+        schema:
+          type: string
+          enum:
+          - ASC
+          - DESC
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnsibleHostListResponse'
+  /api/v1/process/{processInstanceId}/ansible/events:
+    get:
+      tags:
+      - Ansible Process
+      description: List Ansible events of a specific process
+      operationId: listEvents
+      parameters:
+      - name: processInstanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: host
+        in: query
+        schema:
+          type: string
+      - name: hostGroup
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: playbookId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessEventEntry'
+  /api/v1/process/{processInstanceId}/ansible/playbooks:
+    get:
+      tags:
+      - Ansible Process
+      description: List Ansible playbooks of a specific process
+      operationId: listPlaybooks
+      parameters:
+      - name: processInstanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlaybookEntry'
+  /api/v1/process/{processInstanceId}/ansible/{playbookId}/plays:
+    get:
+      tags:
+      - Ansible Process
+      description: List Ansible plays of a specific process
+      operationId: listPlays
+      parameters:
+      - name: processInstanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: playbookId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlayInfo'
+  /api/v1/process/{processInstanceId}/ansible/tasks:
+    get:
+      tags:
+      - Ansible Process
+      description: List Ansible plays of a specific process
+      operationId: listTasks
+      parameters:
+      - name: processInstanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: playId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      responses:
+        default:
+          description: default response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskInfo'
+components:
+  schemas:
+    AnsibleHostEntry:
+      type: object
+      properties:
+        host:
+          type: string
+        hostGroup:
+          type: string
+        status:
+          type: string
+          enum:
+          - RUNNING
+          - CHANGED
+          - FAILED
+          - OK
+          - SKIPPED
+          - UNREACHABLE
+        duration:
+          type: integer
+          format: int64
+    AnsibleHostListResponse:
+      type: object
+      properties:
+        hostGroups:
+          type: array
+          items:
+            type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnsibleHostEntry'
+    ProcessEventEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+        data:
+          type: object
+        eventDate:
+          type: string
+          format: date-time
+    PlaybookEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        hostsCount:
+          type: integer
+          format: int64
+        failedHostsCount:
+          type: integer
+          format: int64
+        playsCount:
+          type: integer
+          format: int32
+        failedTasksCount:
+          type: integer
+          format: int64
+        progress:
+          type: integer
+          format: int32
+        status:
+          type: string
+          enum:
+          - RUNNING
+          - OK
+          - FAILED
+        retryNum:
+          type: integer
+          format: int32
+    PlayInfo:
+      type: object
+      properties:
+        playId:
+          type: string
+          format: uuid
+        playName:
+          type: string
+        playOrder:
+          type: integer
+          format: int32
+        hostCount:
+          type: integer
+          format: int64
+        taskCount:
+          type: integer
+          format: int32
+        taskStats:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        finishedTaskCount:
+          type: integer
+          format: int64
+    TaskInfo:
+      type: object
+      properties:
+        taskName:
+          type: string
+        type:
+          type: string
+          enum:
+          - TASK
+          - SETUP
+          - HANDLER
+        taskOrder:
+          type: integer
+          format: int64
+        okCount:
+          type: integer
+          format: int64
+        failedCount:
+          type: integer
+          format: int64
+        unreachableCount:
+          type: integer
+          format: int64
+        skippedCount:
+          type: integer
+          format: int64
+        runningCount:
+          type: integer
+          format: int64

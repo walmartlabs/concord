@@ -32,12 +32,12 @@ package com.walmartlabs.concord.server.boot.validation;
 
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorXO;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.ElementKind;
-import javax.validation.Path;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.ext.Provider;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ElementKind;
+import jakarta.validation.Path;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.ext.Provider;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;

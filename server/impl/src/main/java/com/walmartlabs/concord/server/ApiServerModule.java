@@ -30,9 +30,9 @@ import com.walmartlabs.concord.server.boot.statics.StaticResourcesConfigurator;
 import com.walmartlabs.concord.server.boot.validation.ValidationModule;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.web.mgt.WebSecurityManager;
-import org.eclipse.jetty.ee8.servlet.FilterHolder;
+import org.eclipse.jetty.ee10.servlet.FilterHolder;
 
-import javax.servlet.ServletContextListener;
+import jakarta.servlet.ServletContextListener;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
@@ -70,6 +70,10 @@ public class ApiServerModule implements Module {
         // ContextHandlerConfigurator
 
         newSetBinder(binder, ContextHandlerConfigurator.class).addBinding().to(StaticResourcesConfigurator.class);
+
+        // WebSocketConfigurator
+
+        newSetBinder(binder, WebSocketConfigurator.class);
 
         // Shiro
 
