@@ -20,8 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
-import org.apache.commons.text.similarity.LevenshteinDistance;
-
 import javax.el.ELException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -90,11 +88,10 @@ public class MethodNotFoundException extends ELException {
 
         String methodName = method.toString();
 
-        LevenshteinDistance distance = LevenshteinDistance.getDefaultInstance();
         List<String> candidates = Arrays.stream(baseClass.getDeclaredMethods())
                 .filter(m -> Modifier.isPublic(m.getModifiers()))
                 .map(MethodNotFoundException::formatMethod)
-                .sorted(Comparator.comparingInt(m -> distance.apply(methodName, m)))
+                .sorted(Comparator.comparingInt(m -> distance(methodName, m)))
                 .limit(MAX_HINTS)
                 .distinct()
                 .collect(Collectors.toList());
@@ -104,6 +101,32 @@ public class MethodNotFoundException extends ELException {
         }
 
         return "Did you mean: " + String.join(", ", candidates) + "?";
+    }
+
+    static int distance(String left, String right) {
+        if (left.length() > right.length()) {
+            String tmp = left;
+            left = right;
+            right = tmp;
+        }
+
+        int[] previous = new int[left.length() + 1];
+        int[] current = new int[left.length() + 1];
+        for (int i = 0; i <= left.length(); i++) {
+            previous[i] = i;
+        }
+
+        for (int j = 1; j <= right.length(); j++) {
+            current[0] = j;
+            for (int i = 1; i <= left.length(); i++) {
+                int substitution = previous[i - 1] + (left.charAt(i - 1) == right.charAt(j - 1) ? 0 : 1);
+                current[i] = Math.min(substitution, Math.min(previous[i] + 1, current[i - 1] + 1));
+            }
+            int[] tmp = previous;
+            previous = current;
+            current = tmp;
+        }
+        return previous[left.length()];
     }
 
     private static String formatMethod(Method m) {

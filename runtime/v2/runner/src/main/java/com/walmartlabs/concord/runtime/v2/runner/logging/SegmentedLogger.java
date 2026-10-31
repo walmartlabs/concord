@@ -27,8 +27,6 @@ import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.org.lidalia.sysoutslf4j.context.LogLevel;
-import uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -72,8 +70,8 @@ public class SegmentedLogger implements RunnerLogger {
         ThreadGroup threadGroup = new LogContextThreadGroup(context);
         executeInThreadGroup(threadGroup, "thread-" + context.segmentName(), () -> {
             // make sure the redirection is enabled in the current thread
-            if (context.redirectSystemOutAndErr() && !SysOutOverSLF4J.systemOutputsAreSLF4JPrintStreams()) {
-                SysOutOverSLF4J.sendSystemOutAndErrToSLF4J(LogLevel.INFO, LogLevel.ERROR);
+            if (context.redirectSystemOutAndErr()) {
+                SystemOutputBridge.install();
             }
 
             runnable.run();
