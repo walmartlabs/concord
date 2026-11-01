@@ -35,6 +35,7 @@ import {
     ProcessHistoryActivity,
     ProcessLogActivity,
     ProcessLogActivityV2,
+    ProcessLogTreeActivity,
     ProcessStatusActivity,
     ProcessWaitActivity,
 } from '../index';
@@ -58,6 +59,7 @@ export type TabLink =
     | 'status'
     | 'ansible'
     | 'log'
+    | 'logTree'
     | 'events'
     | 'history'
     | 'wait'
@@ -74,6 +76,7 @@ const TAB_LABELS: Record<NonNullable<TabLink>, string> = {
     status: 'Status',
     ansible: 'Ansible',
     log: 'Logs',
+    logTree: 'Log Tree',
     events: 'Events',
     history: 'History',
     wait: 'Wait Conditions',
@@ -249,6 +252,13 @@ const ProcessActivityView = (props: ExternalProps) => {
                     <Icon name="book" />
                     <Link to={`${baseUrl}/log`}>Logs</Link>
                 </Menu.Item>
+                {process &&
+                    (process.runtime === 'concord-v2' || process.runtime === undefined) && (
+                        <Menu.Item active={activeTab === 'logTree'}>
+                            <Icon name="sitemap" />
+                            <Link to={`${baseUrl}/log-tree`}>Log Tree</Link>
+                        </Menu.Item>
+                    )}
                 <Menu.Item active={activeTab === 'history'}>
                     <Icon name="history" />
                     <Link to={`${baseUrl}/history`}>History</Link>
@@ -331,6 +341,19 @@ const ProcessActivityView = (props: ExternalProps) => {
                                         />
                                     )}
                             </>
+                        }
+                    />
+                    <Route
+                        path="log-tree"
+                        element={
+                            <ProcessLogTreeActivity
+                                instanceId={instanceId}
+                                processStatus={process?.status}
+                                loadingHandler={loadingHandler}
+                                forceRefresh={refresh}
+                                dataFetchInterval={dataFetchInterval}
+                                onRefresh={refreshHandler}
+                            />
                         }
                     />
                     <Route
