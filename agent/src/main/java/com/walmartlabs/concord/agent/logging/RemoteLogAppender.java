@@ -20,7 +20,7 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
-import com.walmartlabs.concord.agent.AgentConstants;
+import com.walmartlabs.concord.agent.remote.RemoteOperations;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
 import org.slf4j.Logger;
@@ -34,6 +34,7 @@ public class RemoteLogAppender implements LogAppender {
 
     private static final Logger log = LoggerFactory.getLogger(RemoteLogAppender.class);
 
+    private volatile String authorizationError;
     private final ProcessApi processApi;
     private final ProcessLogV2Api processLogV2Api;
 
@@ -45,12 +46,15 @@ public class RemoteLogAppender implements LogAppender {
 
     @Override
     public void appendLog(UUID instanceId, byte[] ab) {
+        checkDelivery();
         try {
-            ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY, () -> {
+            RemoteOperations.withRetry(() -> {
                 processApi.appendProcessLog(instanceId, new ByteArrayInputStream(ab));
                 return null;
             });
         } catch (ApiException e) {
+            rejectAuthorization(e);
+            checkDelivery();
             // TODO handle errors
             log.warn("appendLog ['{}'] -> error: {}", instanceId, e.getMessage());
         }
@@ -58,13 +62,16 @@ public class RemoteLogAppender implements LogAppender {
 
     @Override
     public boolean appendLog(UUID instanceId, long segmentId, byte[] ab) {
+        checkDelivery();
         try {
-            ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY, () -> {
+            RemoteOperations.withRetry(() -> {
                 processLogV2Api.appendProcessLogSegment(instanceId, segmentId, new ByteArrayInputStream(ab));
                 return null;
             });
             return true;
         } catch (ApiException e) {
+            rejectAuthorization(e);
+            checkDelivery();
             log.warn("appendLog ['{}'] -> error: {}", instanceId, e.getMessage());
 
             return e.getCode() >= 400 && e.getCode() < 500;
@@ -79,14 +86,31 @@ public class RemoteLogAppender implements LogAppender {
                 .errors(stats.errors())
                 .statusUpdatedAt(stats.statusUpdatedAt());
 
+        checkDelivery();
         try {
-            ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY,
-                    () -> processLogV2Api.updateProcessLogSegment(instanceId, segmentId, request));
+            RemoteOperations.withRetry(() -> processLogV2Api.updateProcessLogSegment(instanceId, segmentId, request));
             return true;
         } catch (Exception e) {
+            if (e instanceof ApiException apiException) {
+                rejectAuthorization(apiException);
+            }
+            checkDelivery();
             log.warn("updateSegment ['{}', '{}', '{}'] -> error: {}", instanceId, segmentId, stats, e.getMessage());
         }
         return false;
+    }
+
+    private void rejectAuthorization(ApiException e) {
+        if (e.getCode() == 401 || e.getCode() == 403) {
+            authorizationError = "Authorization rejected: HTTP " + e.getCode();
+        }
+    }
+
+    private void checkDelivery() {
+        if (authorizationError != null) {
+            throw new LogStreamingException(authorizationError);
+        }
+        LogStreamingException.checkInterrupted();
     }
 
     private static LogSegmentUpdateRequest.StatusEnum convertStatus(LogSegmentStatus status) {

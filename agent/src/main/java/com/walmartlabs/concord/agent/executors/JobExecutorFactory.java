@@ -29,6 +29,7 @@ import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
+import com.walmartlabs.concord.agent.remote.FinalizationHeartbeat;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
@@ -52,6 +53,7 @@ public class JobExecutorFactory {
     private final DefaultDependencies defaultDependencies;
     private final ProcessPool processPool;
     private final ProcessLog processLog;
+    private final FinalizationHeartbeat heartbeat;
     private final AttachmentsUploader attachmentsUploader;
     private final ProcessLogFactory processLogFactory;
 
@@ -68,7 +70,8 @@ public class JobExecutorFactory {
                               ProcessPool processPool,
                               ProcessLog processLog,
                               AttachmentsUploader attachmentsUploader,
-                              ProcessLogFactory processLogFactory) {
+                              ProcessLogFactory processLogFactory,
+                              FinalizationHeartbeat heartbeat) {
 
         this.agentCfg = agentCfg;
         this.serverCfg = serverCfg;
@@ -79,6 +82,7 @@ public class JobExecutorFactory {
         this.defaultDependencies = defaultDependencies;
         this.processPool = processPool;
         this.processLog = processLog;
+        this.heartbeat = heartbeat;
         this.attachmentsUploader = attachmentsUploader;
         this.processLogFactory = processLogFactory;
 
@@ -114,6 +118,7 @@ public class JobExecutorFactory {
                     .extraDockerVolumes(dockerCfg.getExtraVolumes())
                     .exposeDockerDaemon(dockerCfg.exposeDockerDaemon())
                     .maxHeartbeatInterval(serverCfg.getMaxNoHeartbeatInterval())
+                    .logDrainTimeout(agentCfg.getLogDrainTimeout())
                     .segmentedLogs(runtimeCfg.segmentedLogs())
                     .workDirMasking(agentCfg.isWorkDirMaskings())
                     .persistentWorkDir(runtimeCfg.persistentWorkDir())
@@ -121,7 +126,7 @@ public class JobExecutorFactory {
                     .cleanRunnerDescendants(runtimeCfg.cleanRunnerDescendants())
                     .build();
 
-            JobExecutor delegate = new RunnerJobExecutor(runnerExecutorCfg, dependencyManager, defaultDependencies, attachmentsUploader, processPool, processLogFactory, executor);
+            JobExecutor delegate = new RunnerJobExecutor(runnerExecutorCfg, dependencyManager, defaultDependencies, attachmentsUploader, processPool, processLogFactory, executor, heartbeat);
             return delegate.exec(jobRequest);
         };
     }
