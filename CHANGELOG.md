@@ -40,7 +40,9 @@
 - queue-client: switch to the Jetty core websocket client, drop JAX-RS
 ([#1416](https://github.com/walmartlabs/concord/pull/1416));
 - noderoster: drop unused JAX-RS, servlet, Jetty and validation deps
-([#1417](https://github.com/walmartlabs/concord/pull/14217))
+([#1417](https://github.com/walmartlabs/concord/pull/1417));
+- queue-client: register a request before sending it
+([#1419](https://github.com/walmartlabs/concord/pull/1419));
 - project: update dependencies
 ([#1425](https://github.com/walmartlabs/concord/pull/1425)).
 
