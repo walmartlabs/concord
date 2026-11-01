@@ -35,7 +35,8 @@
     <properties>
         <scm.connection>scm:git:https://github.com/walmartlabs/concord.git</scm.connection>
 
-        <activation.api.version>1.2.2</activation.api.version>
+        <activation.api.version>2.1.4</activation.api.version>
+        <angus.mail.version>2.0.5</angus.mail.version>
         <aopalliance.version>1.0</aopalliance.version>
         <asm.version>9.10.1</asm.version>
         <bouncycastle.version>1.86</bouncycastle.version>
@@ -72,9 +73,9 @@
         <jackson.annotations.version>2.22</jackson.annotations.version>
         <jackson.databind.version>2.22.3</jackson.databind.version>
         <jackson.version>2.22.3</jackson.version>
-        <!-- the only mail implementation: replaces com.sun.mail:javax.mail, which is abandoned at 1.6.2
-             and ships the same javax.mail.* packages. Stays on the 1.6.x line because 2.x moves to the
-             jakarta.* namespace, which resteasy 4.x cannot use -->
+        <!-- javax.mail.* implementation for the smtp task, ITs and resteasy 4.x multipart: replaces
+             com.sun.mail:javax.mail, which is abandoned at 1.6.2 and ships the same packages.
+             The server's own code uses angus-mail (jakarta.mail.*) -->
         <jakarta.mail.version>1.6.8</jakarta.mail.version>
         <jansi.version>2.4.3</jansi.version>
         <javax.activation.version>1.2.0</javax.activation.version>
@@ -1134,6 +1135,11 @@
                 <groupId>com.sun.mail</groupId>
                 <artifactId>jakarta.mail</artifactId>
                 <version>${jakarta.mail.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.angus</groupId>
+                <artifactId>angus-mail</artifactId>
+                <version>${angus.mail.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
