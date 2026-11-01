@@ -9,3 +9,7 @@ module, the default cfg file and core plugins;
 - [queue-client](./queue-client) - WebSocket based client for
 the process queue. Used by the Agent;
 - [sdk](./sdk) - set of APIs for server plugins.
+
+Server plugins can submit normalized external triggers through the SDK's
+`ExternalEventService`. The OneOps plugin requires a server version containing
+this service; it remains part of the default server distribution.
