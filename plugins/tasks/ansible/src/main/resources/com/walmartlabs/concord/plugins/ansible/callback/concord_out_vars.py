@@ -26,7 +26,7 @@ class CallbackModule(CallbackBase):
 
         print("Saving out variables:", self.out_vars)
 
-    def playbook_on_stats(self, stats):
+    def v2_playbook_on_stats(self, stats):
         if not self.out_vars:
             return
 
