@@ -41,6 +41,8 @@
 ([#1416](https://github.com/walmartlabs/concord/pull/1416));
 - noderoster: drop unused JAX-RS, servlet, Jetty and validation deps
 ([#1417](https://github.com/walmartlabs/concord/pull/1417));
+- server: serve the agent websocket with Jetty's core API
+([#1418](https://github.com/walmartlabs/concord/pull/1418));
 - queue-client: register a request before sending it
 ([#1419](https://github.com/walmartlabs/concord/pull/1419));
 - project: update dependencies
