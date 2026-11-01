@@ -31,8 +31,13 @@ import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.mgt.CookieRememberMeManager;
 import org.apache.shiro.web.util.WebUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.io.ByteArrayInputStream;
+import java.io.ObjectInputFilter;
+import java.io.ObjectInputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
@@ -93,14 +98,54 @@ public class ConcordRememberMeManager extends CookieRememberMeManager {
     }
 
     private static class PrincipalCollectionSerializer implements Serializer<PrincipalCollection> {
+
+        private static final Logger log = LoggerFactory.getLogger(PrincipalCollectionSerializer.class);
+
         @Override
-        public byte[] serialize(PrincipalCollection principalCollection) throws SerializationException {
-            return SecurityUtils.serialize(principalCollection);
+        public byte[] serialize(PrincipalCollection data) throws SerializationException {
+            return SecurityUtils.serializeJson(data);
         }
 
         @Override
         public PrincipalCollection deserialize(byte[] bytes) throws SerializationException {
-            return SecurityUtils.deserialize(bytes).orElse(null);
+            var result = SecurityUtils.deserializeJson(bytes);
+            if (result.isPresent()) {
+                return result.get();
+            }
+
+            log.warn("Deserializing legacy remember-me cookie (Java serialization), will be upgraded on next login");
+            return deserializeLegacy(bytes);
         }
+
+        private PrincipalCollection deserializeLegacy(byte[] data) {
+            try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data))) {
+                ois.setObjectInputFilter(REMEMBER_ME_FILTER);
+                return (PrincipalCollection) ois.readObject();
+            } catch (Exception e) {
+                throw new RuntimeException("Error deserializing legacy remember-me cookie", e);
+            }
+        }
+
+        private static final ObjectInputFilter REMEMBER_ME_FILTER = filterInfo -> {
+            Class<?> c = filterInfo.serialClass();
+            if (c == null) {
+                return ObjectInputFilter.Status.UNDECIDED;
+            }
+            if (c.isArray()) {
+                return ObjectInputFilter.Status.ALLOWED;
+            }
+            String name = c.getName();
+            if (name.startsWith("java.lang.") || name.startsWith("java.util.")) {
+                return ObjectInputFilter.Status.ALLOWED;
+            }
+            if (name.startsWith("org.apache.shiro.subject.") || name.startsWith("org.apache.shiro.authc.")) {
+                return ObjectInputFilter.Status.ALLOWED;
+            }
+            if (name.equals("com.walmartlabs.concord.server.security.apikey.ApiKey")) {
+                return ObjectInputFilter.Status.ALLOWED;
+            }
+            log.warn("Rejected deserialization of class {} in legacy remember-me cookie", name);
+            return ObjectInputFilter.Status.REJECTED;
+        };
     }
 }
