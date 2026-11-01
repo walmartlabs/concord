@@ -309,10 +309,6 @@
             <artifactId>jetty-websocket-jetty-server</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee8.websocket</groupId>
-            <artifactId>jetty-ee8-websocket-jetty-server</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-queue-client</artifactId>
         </dependency>

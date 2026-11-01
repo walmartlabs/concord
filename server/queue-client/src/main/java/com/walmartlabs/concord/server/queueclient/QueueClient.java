@@ -276,7 +276,6 @@ public class QueueClient {
                 return false;
             }
 
-            message.setCorrelationId(requestIdGenerator.incrementAndGet());
             try {
                 Callback.Completable.with(c -> session.sendText(MessageSerializer.serialize(message), c)).get();
 
@@ -296,14 +295,16 @@ public class QueueClient {
                 return;
             }
 
+            // register the request before sending it, the response may arrive before send() returns
+            e.request.setCorrelationId(requestIdGenerator.incrementAndGet());
+            awaitResponses.put(e.getCorrelationId(), e);
+
             boolean sent = send(session, e.request);
             if (!sent) {
+                awaitResponses.remove(e.getCorrelationId());
                 e.cancel();
                 state.set(State.DISCONNECTING);
-                return;
             }
-
-            awaitResponses.put(e.getCorrelationId(), e);
         }
 
         private void processPing(Session session) throws Exception {
