@@ -1,5 +1,5 @@
 # Concord Runtime V2 Model Classes
 
-A few notable differences to the v1 model classes:
-- `ProjectDefinition` is `ProcessDefinition` now. As before it contains flows, forms, profiles, etc.
-- TBD
+The v1 and v2 model classes have these notable differences:
+- `ProjectDefinition` is now `ProcessDefinition`. It still contains flows, forms, profiles, and other items.
+- TBD.

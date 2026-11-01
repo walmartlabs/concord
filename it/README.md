@@ -1,51 +1,54 @@
 # Integration Tests
 
-This directory contains Concord's integration test modules.
+This directory contains the integration test modules for Concord.
 
-Commands:
+## Commands
 
-- Full docker-profile build without tests:
+- To build all modules with the `docker` profile without tests, run this command:
   ```shell
   ./mvnw clean install -Pdocker -DskipTests
   ```
-- Single console integration test with Docker-managed dependencies:
+- To run one console integration test with dependencies that Docker manages, run this command:
   ```shell
   ./mvnw -pl it/console verify -Pit -Pdocker -Dit.test=LoginIT
   ```
 
-The `-Pdocker` IT flow uses the locally built `walmartlabs/concord-server` and
-`walmartlabs/concord-agent` images, along with their upstream dependencies. If
-you changed those areas, rebuild first with the full docker-profile command
-above before running `it/console`.
+Integration tests with `-Pdocker` use the local `walmartlabs/concord-server` and `walmartlabs/concord-agent` images.
+The tests also use the upstream dependencies of these images.
+If you change the server or agent, build the images again before you run `it/console`.
+Use the full build command with the `docker` profile above.
 
-In the `it/server -Pdocker` flow, Docker starts the outer DB, server, and agent
-containers plus a privileged Docker-in-Docker daemon. Maven runs the tests on
-the host; only Docker task containers started by Concord flows run inside the
-managed daemon. Its Unix socket is shared with the agent, and the daemon and
-agent share the temporary directory at the same absolute path. The harness
-transfers the locally built `concord-ansible` image to the daemon.
+For `it/server -Pdocker`, Docker starts the outer database, server, and agent containers.
+Docker also starts a privileged Docker-in-Docker daemon.
+Maven runs the tests on the host.
+Only Docker task containers that Concord flows start run inside the managed daemon.
+The agent uses the Unix socket of the daemon.
+The daemon and agent use the same temporary directory at the same absolute path.
+The test harness transfers the local `concord-ansible` image to the daemon.
 
-Notes:
+## Test requirements
 
-- Integration test resources are part of the regression surface. Prefer adding
-  new flows or fixtures for additional coverage instead of changing existing
-  flows. Modify an existing flow only when the previous behavior is explicitly
-  no longer supported, or when the fixture itself is incorrect, and document the
-  reason in the corresponding change.
-- The single-test command starts Postgres, Concord Server, Concord Agent,
-  and Selenium via Docker.
-- The first `LoginIT` run may need to pull browser images, so it can be
-  noticeably slower than subsequent runs.
-- Failing `it/console` tests write screenshots to
-  `it/console/target/screenshots/`.
-- New test modules should prefer `testcontainer-concord` instead of the
-  older setup pattern used in `it/server`.
-- `it/agent-operator` deploys the agent operator into a k3s testcontainer.
-  It requires the locally built `walmartlabs/concord-server`,
-  `walmartlabs/concord-agent` and `walmartlabs/concord-agent-operator`
-  images (see the docker-profile command above). Run it with:
+- Integration test resources help detect regressions.
+  If possible, add flows or fixtures for more test coverage instead of changes to existing flows.
+  Change an existing flow only in these conditions:
+  - Support for the previous behavior has explicitly stopped.
+  - The fixture is incorrect.
+
+  Record the reason in the related change.
+- The command for one console test starts Postgres, Concord Server, Concord Agent, and Selenium through Docker.
+- The first `LoginIT` run can download browser images.
+  Thus, the first run can take more time than later runs.
+- If an `it/console` test fails, it writes screenshots to `it/console/target/screenshots/`.
+- If possible, use `testcontainer-concord` for new test modules instead of the older setup pattern in `it/server`.
+- The `it/agent-operator` module deploys the agent operator into a k3s testcontainer.
+  It requires these local images:
+  - `walmartlabs/concord-server`
+  - `walmartlabs/concord-agent`
+  - `walmartlabs/concord-agent-operator`
+
+  To build the images, use the command with the `docker` profile above.
+  To run the test, use this command:
   ```shell
   ./mvnw -pl it/agent-operator verify -Pit -Dit.test=AgentOperatorIT
   ```
-- For broader context on prerequisites and the general `-Pit` flow, see
-  [../README.md](../README.md).
+- For prerequisites and general instructions for `-Pit`, see [../README.md](../README.md).

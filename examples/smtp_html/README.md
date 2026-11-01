@@ -1,8 +1,8 @@
 # SMTP task example
 
-1. change the address of the SMTP server in `concord.yml`
-2. start the process:
+1. Change the SMTP server address in `concord.yml`.
+2. Start the process:
    ```
    ./run.sh localhost:8001
    ```
-3. Use your Concord credentials when prompted.
+3. When prompted, enter your Concord credentials.

@@ -1,8 +1,8 @@
 # concord-runner
 
-The default (v1) runtime for Concord processes.
+The default runtime for Concord processes is runtime v1.
 
 Modules:
-- [project-model](./model) - Concord DSL parser/model;
-- [model](./model) - configuration classes;
-- [impl](./impl) - the runtime itself.
+- [project-model](./model) parses the Concord DSL and defines its model.
+- [model](./model) defines configuration classes.
+- [impl](./impl) implements the runtime.
