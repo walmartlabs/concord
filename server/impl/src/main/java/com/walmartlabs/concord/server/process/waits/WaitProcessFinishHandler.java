@@ -119,7 +119,7 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
         Set<UUID> newAwaitProcesses = item.waitCondition().processes();
         if (newAwaitProcesses.isEmpty()) {
             if (item.waitCondition().resumeEvent() != null) {
-                return Result.resume(item, item.waitCondition().resumeEvent());
+                return Result.resume(item, item.waitCondition().resumeEvent(), null);
             } else {
                 return Result.action(item, tx -> processQueueManager.updateExpectedStatus(tx, item.processKey(), ProcessStatus.WAITING, ProcessStatus.ENQUEUED));
             }
