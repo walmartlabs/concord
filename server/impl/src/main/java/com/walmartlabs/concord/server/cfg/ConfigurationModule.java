@@ -64,6 +64,7 @@ public class ConfigurationModule implements Module {
         binder.bind(LdapGroupSyncConfiguration.class).in(SINGLETON);
         binder.bind(LockingConfiguration.class).in(SINGLETON);
         binder.bind(PolicyCacheConfiguration.class).in(SINGLETON);
+        binder.bind(PrincipalSerializationConfiguration.class).in(SINGLETON);
         binder.bind(ProcessConfiguration.class).in(SINGLETON);
         binder.bind(ProcessQueueConfiguration.class).in(SINGLETON);
         binder.bind(ProcessWaitWatchdogConfiguration.class).in(SINGLETON);
