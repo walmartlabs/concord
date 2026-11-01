@@ -45,8 +45,11 @@
 ([#1418](https://github.com/walmartlabs/concord/pull/1418));
 - queue-client: register a request before sending it
 ([#1419](https://github.com/walmartlabs/concord/pull/1419));
+- server: send API key expiration emails with angus-mail
+([#1422](https://github.com/walmartlabs/concord/pull/1422));
 - project: update dependencies
 ([#1425](https://github.com/walmartlabs/concord/pull/1425)).
+
 
 ## [2.46.0] - 2026-09-18
 
