@@ -34,6 +34,14 @@ public class PopFrameCommand implements Command {
         this.skipFinallyHandler = ignoreFinallyHandler;
     }
 
+    /**
+     * {@code true} if the command removes the frame right away, i.e. there's no
+     * {@code finally} block to run first.
+     */
+    public boolean removesFrame(Frame frame) {
+        return skipFinallyHandler || frame.getFinallyHandler() == null;
+    }
+
     @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         if (skipFinallyHandler) {

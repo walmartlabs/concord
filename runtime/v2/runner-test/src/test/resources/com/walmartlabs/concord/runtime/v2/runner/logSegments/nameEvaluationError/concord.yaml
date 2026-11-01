@@ -1,0 +1,8 @@
+flows:
+  default:
+    - name: Parent
+      call: child
+
+  child:
+    - name: "Deploy ${missingNameVariable}"
+      log: "This step must not execute"

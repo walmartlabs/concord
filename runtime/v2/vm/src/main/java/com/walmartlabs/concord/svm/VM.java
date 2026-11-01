@@ -146,6 +146,8 @@ public class VM {
                 if (status == ThreadStatus.UNWINDING) {
                     Command handler = frame.getExceptionHandler();
                     if (handler != null) {
+                        listeners.fireBeforeExceptionHandler(runtime, state, threadId, frame);
+
                         ThreadError threadError = state.clearThreadError(threadId);
                         if (threadError == null) {
                             throw new IllegalStateException("The thread is unwinding the stack but no error was set: " + threadId);
@@ -173,6 +175,10 @@ public class VM {
                     log.trace("eval [{}] -> the frame is complete", threadId);
                     frame.push(new PopFrameCommand());
                     continue;
+                }
+
+                if (cmd instanceof PopFrameCommand pop && pop.removesFrame(frame)) {
+                    listeners.fireBeforeFramePop(runtime, state, threadId, frame);
                 }
 
                 boolean stop = false;

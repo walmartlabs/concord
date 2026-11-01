@@ -1,0 +1,20 @@
+flows:
+  default:
+    - name: "outer"
+      call: "inner"
+      error:
+        - name: "outer handler"
+          task: "log"
+          in:
+            msg: "outer handled"
+
+  inner:
+    - name: "failed"
+      task: "faultyTask"
+      error:
+        - name: "inner handler"
+          task: "log"
+          in:
+            msg: "inner handled"
+
+        - throw: "rethrown"
