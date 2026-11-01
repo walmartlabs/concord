@@ -23,50 +23,36 @@ package com.walmartlabs.concord.it.server;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.client2.StartProcessResponse;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Disabled("needs a fix for new wiremock version")
 public class DependencyManagerIT extends AbstractServerIT {
 
     @RegisterExtension
-    static WireMockExtension rule = WireMockExtension.newInstance()
-            .options(wireMockConfig()
-                    .dynamicPort()
-                    .globalTemplating(true)
-                    .extensions(new HttpTaskIT.RequestHeaders()))
+    final WireMockExtension rule = WireMockExtension.newInstance()
+            .options(wireMockConfig().dynamicPort())
             .build();
-
-    @BeforeAll
-    public static void setUp() {
-        rule.stubFor(get(urlEqualTo("/item.txt"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/octet-stream")
-                        .withBody("Hello!".getBytes()))
-        );
-    }
-
-    @AfterAll
-    public static void tearDown() {
-        rule.shutdownServer();
-    }
 
     @Test
     public void test() throws Exception {
+        String path = "/" + UUID.randomUUID() + "/item.txt";
+        rule.stubFor(get(urlEqualTo(path))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/octet-stream")
+                        .withBody("Hello!")));
+
         byte[] payload = archive(DependencyManagerIT.class.getResource("dependencyManager").toURI());
 
         Map<String, Object> input = new HashMap<>();
@@ -74,7 +60,7 @@ public class DependencyManagerIT extends AbstractServerIT {
 
         Map<String, Object> cfg = new HashMap<>();
         cfg.put("dependencies", new String[]{"mvn://com.walmartlabs.concord.it.tasks:dependency-manager-test:" + ITConstants.PROJECT_VERSION});
-        String url = "http://" + env("IT_DOCKER_HOST_ADDR", "localhost") + ":" + rule.getPort() + "/item.txt";
+        String url = "http://" + env("IT_DOCKER_HOST_ADDR", "localhost") + ":" + rule.getPort() + path;
         cfg.put("arguments", Collections.singletonMap("url", url));
 
         input.put("request", cfg);
@@ -83,11 +69,11 @@ public class DependencyManagerIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         byte[] ab = getLog(pir.getInstanceId());
 
-        assertLog(".*downloading.*", ab);
-        assertLog(".*using a cached copy.*", ab);
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(), () -> new String(ab));
         assertLog(".*Got: Hello!.*", ab);
+        rule.verify(1, getRequestedFor(urlEqualTo(path)));
     }
 }
