@@ -105,3 +105,20 @@ jobs:
         with:
           path: ${{ env.MAVEN_REPO_LOCAL }}
           key: ${{ steps.restore-maven-cache.outputs.cache-primary-key }}
+
+  docs:
+    needs: check-labels
+    if: needs.check-labels.outputs.skip == 'false'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install mdBook
+        run: |
+          cargo install --locked mdbook --version 0.4.52
+          cargo install --locked mdbook-variables --version 0.2.4
+
+      - name: Build docs with mdBook
+        run: mdbook build docs
