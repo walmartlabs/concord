@@ -45,6 +45,8 @@
 ([#1418](https://github.com/walmartlabs/concord/pull/1418));
 - queue-client: register a request before sending it
 ([#1419](https://github.com/walmartlabs/concord/pull/1419));
+- client2: guard OpenAPI contracts during Jakarta migration
+([#1420](https://github.com/walmartlabs/concord/pull/1420));
 - server: add validation contract tests
 ([#1421](https://github.com/walmartlabs/concord/pull/1421));
 - server: send API key expiration emails with angus-mail
