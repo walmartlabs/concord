@@ -9,8 +9,7 @@
 
 ![](console2/public/images/concord.svg)
 
-Concord is a workflow server. It is the orchestration engine that connects
-different systems together using scenarios and plugins created by users.
+Concord is a workflow server. It connects different systems through scenarios and plugins that users create.
 
 - [Building](#building)
 - [Console](#console)
@@ -24,12 +23,12 @@ different systems together using scenarios and plugins created by users.
 
 ## Building
 
-Dependencies:
-- [Git](https://git-scm.com/) 2.18+
-- [Java 25](https://adoptium.net/)
-- [Docker Community Edition](https://www.docker.com/community-edition)
-- [Docker Buildx](https://docs.docker.com/build/buildx/install/)
-- (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 24 LTS)
+Install these dependencies:
+- [Git](https://git-scm.com/) 2.18 or later.
+- [Java 25](https://adoptium.net/).
+- [Docker Community Edition](https://www.docker.com/community-edition).
+- [Docker Buildx](https://docs.docker.com/build/buildx/install/).
+- Optional: [NodeJS and NPM](https://nodejs.org/en/download/) (Node 24 LTS).
 
 ```shell
 git clone https://github.com/walmartlabs/concord.git
@@ -37,13 +36,13 @@ cd concord
 ./mvnw clean install -DskipTests
 ```
 
-Available Maven profiles:
+Maven profiles:
 
-- `docker` - build Docker images;
-- `it` - run integration tests;
-- `jdk25-aarch64` - build Docker images for aarch64.
+- `docker`: Build Docker images.
+- `it`: Run integration tests.
+- `jdk25-aarch64`: Build Docker images for aarch64.
 
-Profiles can be combined, e.g.
+You can use more than one profile in a command:
 
 ```
 ./mvnw clean install -Pdocker -Pit -Pjdk25-aarch64
@@ -57,7 +56,7 @@ cd ./console2
 npm ci # Install dependencies
 ```
 
-Start the console in dev mode by running:
+Start the console in development mode:
 ```shell
 npm run start
 ```
@@ -66,49 +65,47 @@ npm run start
 
 ### Prerequisites
 
-Prerequisites:
+Before you run integration tests, make sure that these requirements are met:
 
-- Git 2.18+;
-- Docker (privileged containers are required for `it/server` with `-Pdocker`);
-- Ansible 2.6.0+ must be installed and available in `$PATH`.
-  See [the official documentation](http://docs.ansible.com/ansible/intro_installation.html);
-- `requests` python module is required. It can be installed by using `pip install requests`
-  or the system package manager;
-- Java must be available in `$PATH` as `java`;
-- [Chrome WebDriver](http://chromedriver.chromium.org/) available in `$PATH`.
+- Git 2.18 or later is available.
+- Docker is available. The `it/server` module with `-Pdocker` requires privileged containers.
+- Ansible 2.6.0 or later is installed and available in `$PATH`.
+  See [the official documentation](http://docs.ansible.com/ansible/intro_installation.html).
+- The Python module `requests` is installed.
+  To install it, use `pip install requests` or the system package manager.
+- Java is available in `$PATH` as `java`.
+- [Chrome WebDriver](http://chromedriver.chromium.org/) is available in `$PATH`.
 
-Server-mode ITs that run against a locally managed agent require a Docker
-endpoint configured for that agent. `it/server` with `-Pdocker` manages a
-privileged Docker-in-Docker daemon.
+Server-mode integration tests can use an agent that you manage locally.
+For these tests, configure a Docker endpoint for the agent.
+The `it/server` module with `-Pdocker` manages a privileged Docker-in-Docker daemon.
 
 ### Running tests
 
-Integration tests are disabled by default. Use the `it` profile to enable them:
+Integration tests do not run by default. To run them, use the `it` profile:
 
 ```shell
 ./mvnw verify -Pit
 ```
 
-This will run ITs against the locally running server and agent. Docker-backed
-tasks require a Docker endpoint configured for the agent. In the
-`it/server -Pdocker` setup, managed Docker-in-Docker is used instead; see
-[the server IT instructions](./it/server/README.md).
+This command runs integration tests against the local server and agent.
+Tasks that use Docker require a Docker endpoint for the agent.
+The `it/server -Pdocker` configuration uses a managed Docker-in-Docker daemon instead.
+See [the server IT instructions](./it/server/README.md).
 
-To automatically start and stop the server and the agent using docker, use the
-`docker` profile:
-
+To start and stop the server and agent automatically with Docker, use the `docker` profile:
 ```shell
 ./mvnw verify -Pit -Pdocker
 ```
 
-To run UI ITs in an IDE using the UI's dev mode:
-- start the UI's dev mode with `cd console2 && npm start`;
-- set up `IT_CONSOLE_BASE_URL=http://localhost:3000` environment variable before running
-any UI tests.
+To run UI integration tests in an IDE with the UI in development mode:
+
+1. Start the UI with `cd console2 && npm start`.
+2. Set the environment variable `IT_CONSOLE_BASE_URL=http://localhost:3000` before you run UI tests.
 
 ## Repository Docs
 
-For repo-specific development entrypoints, see:
+For development instructions for this repository, see these documents:
 
 - [Integration tests](./it/README.md)
 - [Development notes](./NOTES.md)
@@ -122,34 +119,46 @@ See the [examples](examples) directory.
 
 ## How To Release New Versions
 
-- perform a regular Maven release:
-  ```
-  $ ./mvnw release:prepare release:perform
-  ```
-- update and commit the CHANGELOG.md file
-  ```
-  $ git add CHANGELOG.md
-  $ git commit -m 'update changelog'
-  ```
-- push the new tag and the master branch:
-  ```
-  $ git push origin RELEASE_TAG
-  $ git push origin master
-  ```
-- build and push the Docker images:
-  ```
-  $ git checkout RELEASE_TAG
-  $ gh workflow run docker-multiarch.yml --ref master -f ref=RELEASE_TAG -f docker_tag=RELEASE_TAG -f docker_namespace=walmartlabs
-  ```
-- sync to [Sonatype](https://oss.sonatype.org/);
-- check the Central repository if the sync is complete:
-  ```
-  https://repo.maven.apache.org/maven2/com/walmartlabs/concord/parent/RELEASE_TAG
-  ```
-- once the sync is complete, push the `latest` Docker images:
-  ```
-  $ gh workflow run docker-multiarch.yml --ref master -f ref=RELEASE_TAG -f docker_tag=latest -f docker_namespace=walmartlabs
-  ```
+1. Run the standard Maven release procedure:
+
+   ```
+   $ ./mvnw release:prepare release:perform
+   ```
+
+2. Update the `CHANGELOG.md` file.
+3. Commit the `CHANGELOG.md` file:
+
+   ```
+   $ git add CHANGELOG.md
+   $ git commit -m 'update changelog'
+   ```
+
+4. Push the new tag. Then push the master branch:
+
+   ```
+   $ git push origin RELEASE_TAG
+   $ git push origin master
+   ```
+
+5. Build the Docker images. Then push the images:
+
+   ```
+   $ git checkout RELEASE_TAG
+   $ gh workflow run docker-multiarch.yml --ref master -f ref=RELEASE_TAG -f docker_tag=RELEASE_TAG -f docker_namespace=walmartlabs
+   ```
+
+6. Synchronize the release with [Sonatype](https://oss.sonatype.org/).
+7. Check the Central repository to see if synchronization is complete:
+
+   ```
+   https://repo.maven.apache.org/maven2/com/walmartlabs/concord/parent/RELEASE_TAG
+   ```
+
+8. When synchronization is complete, push the `latest` Docker images:
+
+   ```
+   $ gh workflow run docker-multiarch.yml --ref master -f ref=RELEASE_TAG -f docker_tag=latest -f docker_namespace=walmartlabs
+   ```
 
 ## Development Notes
 

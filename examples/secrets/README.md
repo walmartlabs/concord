@@ -1,10 +1,10 @@
 # Secrets
 
-Example of using "secrets" in processes.
+This example shows how to use secrets in processes.
 
 ## Running
 
-1. create a new SSH key pair:
+1. Create an SSH key pair:
 ```
 $ curl -H "Authorization: API_TOKEN" -F storePassword=12345678 -F name=myKey -F type=KEY_PAIR 'http://localhost:8001/api/v1/org/Default/secret'
 {
@@ -15,9 +15,9 @@ $ curl -H "Authorization: API_TOKEN" -F storePassword=12345678 -F name=myKey -F 
 }
 ```
 
-The `storePassword` value is the password you must use to decrypt/export the secret later.
+The `storePassword` value is the password to use later to decrypt or export the secret.
 
-2. create a new username/password pair:
+2. Create a username and password pair:
 ```
 $ curl -H "Authorization: API_TOKEN" -F username=myUser -F password=myPassword -F storePassword=12345678 -F name=myCreds -F type=USERNAME_PASSWORD 'http://localhost:8001/api/v1/org/Default/secret'
 {
@@ -26,9 +26,9 @@ $ curl -H "Authorization: API_TOKEN" -F username=myUser -F password=myPassword -
 }
 ```
 
-For the sake of the example, the same `storePassword` value is used.
+For this example, use the same `storePassword` value.
 
-3. create a plain value secret:
+3. Create a plain-value secret:
 ```
 $ curl -H "Authorization: API_TOKEN" -F secret='my horrible secret' -F storePassword=12345678 -F name=myValue -F type=DATA 'http://localhost:8001/api/v1/org/Default/secret'
 {
@@ -37,7 +37,7 @@ $ curl -H "Authorization: API_TOKEN" -F secret='my horrible secret' -F storePass
 }
 ```
 
-4. start the process:
+4. Start the process:
 ```
 $ ./run.sh localhost:8001
 {
@@ -46,8 +46,8 @@ $ ./run.sh localhost:8001
 }
 ```
 
-5. open [the UI](http://localhost:8001), find the process entry and
-open its log. You should see messages like this:
+5. Open [the UI](http://localhost:8001). Find the process entry and
+open its log. Check the log for messages like these:
 ```
 12:00:55.817 [INFO ] c.w.c.runner.engine.LoggingTask - Public key file: .tmp/public1856673009465277934.key
 12:00:55.821 [INFO ] c.w.c.runner.engine.LoggingTask - Private key file: .tmp/private5358774395817724546.key

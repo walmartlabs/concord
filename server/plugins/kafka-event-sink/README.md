@@ -1,10 +1,10 @@
 # Kafka Sink
 
-A Kafka-based sink for process events, process logs and audit log events.
+This Kafka-based sink handles process events, process logs, and audit log events.
 
 ## Usage
 
-Must be included into the server's [dist](../../dist) module.
+Include this module in the server's [dist](../../dist) module.
 
 ## Configuration
 

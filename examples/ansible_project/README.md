@@ -1,17 +1,17 @@
 # Example: running an Ansible project
 
-This example shows how to run an Ansible playbook using Concord.
+This example runs an Ansible playbook with Concord.
 
 ## Playbook's repository
 
-Create a git repository of the following structure:
+Create a Git repository with this structure:
 
 ```
 playbook/
   hello.yml
 ```
 
-The `hello.yml` playbook consists of a simple debug task:
+The `hello.yml` playbook contains a simple debug task:
 
 ```yaml
 
@@ -23,24 +23,24 @@ The `hello.yml` playbook consists of a simple debug task:
       verbosity: 0
 ```
 
-Commit and push the repository to a remote server (e.g. GitHub). If you are using SSH, a
-new SSH key pair will be created in step 1 - you will need access to the repository
-settings to add a new public key.
+Commit the repository. Push the repository to a remote server, such as GitHub.
+If you use SSH, step 1 creates a new SSH key pair.
+Add the public key to the repository settings. You need access to those settings.
 
 ## Concord project
 
-Before we create our own user, all requests are performed using the default admin API key.
-This example assumes that the `ansible` template is already uploaded to the server.
+All requests use the default admin API key until you create a user.
+This example requires the `ansible` template on the server.
 
 ### 1. Create a new repository key
 
-Use `mySecret` as a name of the key pair, it will be used on the next step.
+Use `mySecret` as the key pair name. You will use this name in the next step.
 
 ### 2. Create a new Concord project
 
-We are going to create a new project using the `ansible` project template. The `ansible` template
-will automatically add the necessary boilerplate - a workflow process definition to run our playbook
-and necessary runtime dependencies.
+Create a project with the `ansible` project template.
+The `ansible` template adds a workflow process definition to run the playbook.
+It also adds the required runtime dependencies.
 
 ```
 curl -v \
@@ -50,7 +50,7 @@ curl -v \
 http://localhost:8001/api/v1/org/Default/project
 ```
 
-The `secret` parameter is the name of the key created in step 1.
+The `secret` parameter names the key created in step 1.
 
 ```json
 {
@@ -78,7 +78,7 @@ http://localhost:8001/api/v1/user
 
 ### 4. Create an API key (optional)
 
-Use the `username` value of the user created in the previous step.
+Use the `username` value of the user that you created in the previous step.
 
 ```
 curl -v \
@@ -95,7 +95,7 @@ http://localhost:8001/api/v1/apikey
 }
 ```
 
-The `key` value can be used for further access to the API, e.g. to start a process.
+Use the `key` value to access the API, for example, to start a process.
 
 ### 5. Start a process
 
@@ -120,7 +120,7 @@ Create the `request.json` file:
 }
 ```
 
-Make a call:
+Send this request:
 
 ```
 curl -v \
@@ -142,8 +142,8 @@ http://localhost:8001/api/v1/process
 
 ### 6. Check the logs (optional)
 
-Use the `instanceId` value returned by the server in the previous step.
-Open the UI to see the log:
+Use the `instanceId` value that the server returned in the previous step.
+Open the UI to view the log:
 
 ```
 http://localhost:8001/#/process/33c8f91e-db14-11e6-8d94-a3efec7ccd7b/log
@@ -151,7 +151,7 @@ http://localhost:8001/#/process/33c8f91e-db14-11e6-8d94-a3efec7ccd7b/log
 
 ### 7. Get Ansible's statistics (optional)
 
-You can download Ansible play statistics with this request:
+Use this request to download the Ansible play statistics:
 
 ```
 curl -v \
@@ -159,7 +159,7 @@ curl -v \
 http://localhost:8001/api/v1/process/33c8f91e-db14-11e6-8d94-a3efec7ccd7b/attachment/ansible_stats.json
 ```
 
-Example of response:
+Example response:
 
 ```json
 {

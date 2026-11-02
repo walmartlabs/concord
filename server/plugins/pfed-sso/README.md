@@ -1,12 +1,12 @@
 # PingFederate SSO plugin
 
-Adds support for authentication using [PingFederate](https://www.pingidentity.com/en/software/pingfederate.html)
+This plugin adds support for authentication with [PingFederate](https://www.pingidentity.com/en/software/pingfederate.html).
 
 ## Usage
 
-Must be included into the server's [dist](../../dist) module.
+Include this module in the server's [dist](../../dist) module.
 
-Add the necessary parameters to the Server's configuration file. Example:
+Add the required parameters to the server configuration file. For example:
 
 ```
 concord-server {
@@ -32,12 +32,11 @@ concord-server {
 }
 ```
 
-Click [here](https://docs.pingidentity.com/bundle/developer/page/erq1601508087286.html#developer-OpenIDConnect10DeveloperGuide-7)
-for developer guide to implement OpenID Connect with PingFederate
+See the [PingFederate developer guide](https://docs.pingidentity.com/bundle/developer/page/erq1601508087286.html#developer-OpenIDConnect10DeveloperGuide-7) for instructions to implement OpenID Connect with PingFederate.
 
 ### Interactive Login
 
-Configure the Concord Console to use custom logout/login URLs:
+Configure the Concord Console to use custom login and logout URLs:
 
 - create a `cfg.js` (use [the default file](../../../console2/public/cfg.js) as an example):
   ```javascript
@@ -46,9 +45,9 @@ Configure the Concord Console to use custom logout/login URLs:
       logoutUrl: '/api/service/sso/logout'
   };
   ```
-- mount in into the Server's container:
+- mount the file in the server container:
   ```
   docker run ... -v /path/to/cfg.js:/opt/concord/console/cfg.js:ro walmartlabs/concord-server
   ```
 
-When accessing the Concord Console you should be redirected to the pingfederate sign-in page.
+When you access the Concord Console, the browser redirects you to the PingFederate sign-in page.

@@ -1,6 +1,6 @@
 # Ansible
 
-Example of running an Ansible playbook without creating a project.
+This example runs an Ansible playbook without a project.
 
 ## Running
 

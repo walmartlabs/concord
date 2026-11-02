@@ -1,6 +1,6 @@
 # Docker
 
-Example of running an Ansible playbook from a Docker container.
+This example runs an Ansible playbook in a Docker container.
 
 ## Running
 

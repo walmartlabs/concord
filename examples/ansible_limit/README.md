@@ -1,6 +1,6 @@
 # Ansible
 
-Example of running an Ansible playbook with --limit option.
+This example runs an Ansible playbook with the `--limit` option.
 
 ## Running
 

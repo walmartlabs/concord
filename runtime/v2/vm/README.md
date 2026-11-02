@@ -1,3 +1,3 @@
 # Concord VM
 
-A virtual machine implementation used to run Concord flows v2.
+This virtual machine runs Concord v2 flows.

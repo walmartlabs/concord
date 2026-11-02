@@ -1,6 +1,6 @@
 # Ansible
 
-Example of running an Ansible playbook with retry (--limit <playbook>.retry).
+This example runs an Ansible playbook with retry (`--limit <playbook>.retry`).
 
 ## Running
 

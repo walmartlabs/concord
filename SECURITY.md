@@ -2,8 +2,8 @@
 
 ## Reporting a Vulnerability
 
-To report a vulnerability please use [GitHub Issues](https://github.com/walmartlabs/concord/issues)
-or reach the team using the following email address:
+To report a vulnerability, use [GitHub Issues](https://github.com/walmartlabs/concord/issues).
+You can also send an email to the team:
 
 - [concord-team@wal-mart.com](mailto:concord-team@wal-mart.com).
 
