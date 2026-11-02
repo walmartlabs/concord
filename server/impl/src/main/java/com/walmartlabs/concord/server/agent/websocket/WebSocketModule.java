@@ -22,8 +22,7 @@ package com.walmartlabs.concord.server.agent.websocket;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
-
-import javax.servlet.http.HttpServlet;
+import com.walmartlabs.concord.server.boot.WebSocketConfigurator;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
@@ -32,7 +31,7 @@ public class WebSocketModule implements Module {
 
     @Override
     public void configure(Binder binder) {
-        newSetBinder(binder, HttpServlet.class).addBinding().to(ConcordWebSocketServlet.class).in(SINGLETON);
+        newSetBinder(binder, WebSocketConfigurator.class).addBinding().to(AgentWebSocketConfigurator.class).in(SINGLETON);
         binder.install(new WebSocketMetricsModule());
     }
 }

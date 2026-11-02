@@ -71,6 +71,10 @@ public class ApiServerModule implements Module {
 
         newSetBinder(binder, ContextHandlerConfigurator.class).addBinding().to(StaticResourcesConfigurator.class);
 
+        // WebSocketConfigurator
+
+        newSetBinder(binder, WebSocketConfigurator.class);
+
         // Shiro
 
         newSetBinder(binder, ServletContextListener.class).addBinding().to(ShiroListener.class).in(SINGLETON);

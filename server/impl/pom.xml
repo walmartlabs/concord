@@ -232,8 +232,8 @@
             <artifactId>config</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>jakarta.mail</artifactId>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>angus-mail</artifactId>
         </dependency>
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
@@ -307,10 +307,6 @@
         <dependency>
             <groupId>org.eclipse.jetty.websocket</groupId>
             <artifactId>jetty-websocket-jetty-server</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty.ee8.websocket</groupId>
-            <artifactId>jetty-ee8-websocket-jetty-server</artifactId>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>

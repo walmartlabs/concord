@@ -23,13 +23,11 @@ package com.walmartlabs.concord.server.queueclient;
 import com.walmartlabs.concord.server.queueclient.message.CommandRequest;
 import com.walmartlabs.concord.server.queueclient.message.CommandResponse;
 import com.walmartlabs.concord.server.queueclient.message.Message;
-import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
-import org.eclipse.jetty.ee8.websocket.api.Session;
-import org.eclipse.jetty.ee8.websocket.api.WebSocketListener;
-import org.eclipse.jetty.ee8.websocket.api.WebSocketPingPongListener;
-import org.eclipse.jetty.ee8.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.websocket.api.Callback;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.server.WebSocketUpgradeHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Runs {@link QueueClient} against a Jetty websocket endpoint set up the same
- * way as the server's {@code ConcordWebSocketServlet}.
+ * way as the server's {@code AgentWebSocketConfigurator}.
  */
 public class QueueClientTest {
 
@@ -63,13 +61,11 @@ public class QueueClientTest {
         connector.setPort(0);
         server.addConnector(connector);
 
-        ServletContextHandler ctx = new ServletContextHandler();
-        ctx.setContextPath("/");
-        JettyWebSocketServletContainerInitializer.configure(ctx, (servletContext, container) -> {
+        WebSocketUpgradeHandler handler = WebSocketUpgradeHandler.from(server, container -> {
             container.setIdleTimeout(Duration.ofMinutes(1));
-            container.addMapping("/websocket", (req, resp) -> {
+            container.addMapping("/websocket", (req, resp, callback) -> {
                 for (String h : new String[]{"Authorization", QueueClient.AGENT_ID, QueueClient.AGENT_UA}) {
-                    String v = req.getHeader(h);
+                    String v = req.getHeaders().get(h);
                     if (v != null) {
                         upgradeHeaders.put(h, v);
                     }
@@ -77,7 +73,7 @@ public class QueueClientTest {
                 return new ServerListener();
             });
         });
-        server.setHandler(ctx);
+        server.setHandler(handler);
         server.start();
 
         port = connector.getLocalPort();
@@ -122,12 +118,12 @@ public class QueueClientTest {
         }
     }
 
-    private class ServerListener implements WebSocketListener, WebSocketPingPongListener {
+    public class ServerListener implements Session.Listener.AutoDemanding {
 
         private Session session;
 
         @Override
-        public void onWebSocketConnect(Session session) {
+        public void onWebSocketOpen(Session session) {
             this.session = session;
         }
 
@@ -135,21 +131,13 @@ public class QueueClientTest {
         public void onWebSocketText(String message) {
             CommandRequest request = (CommandRequest) MessageSerializer.deserialize(message);
             CommandResponse response = CommandResponse.cancel(request.getCorrelationId(), Map.of("agentId", request.getAgentId().toString()));
-            session.getRemote().sendString(MessageSerializer.serialize(response), null);
+            session.sendText(MessageSerializer.serialize(response), Callback.NOOP);
         }
 
         @Override
         public void onWebSocketPing(ByteBuffer payload) {
             pingReceived.countDown();
-            try {
-                session.getRemote().sendPong(payload);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public void onWebSocketPong(ByteBuffer payload) {
+            session.sendPong(payload, Callback.NOOP);
         }
     }
 }

@@ -26,12 +26,12 @@ import org.eclipse.jetty.ee8.nested.SessionHandler;
 import org.eclipse.jetty.ee8.servlet.FilterHolder;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
-import org.eclipse.jetty.ee8.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
+import org.eclipse.jetty.websocket.server.WebSocketUpgradeHandler;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +65,8 @@ public class HttpServer {
                       Set<ServletHolder> servletHolders,
                       Set<Filter> filters,
                       Set<FilterHolder> filterHolders,
-                      Set<ContextHandlerConfigurator> contextHandlerConfigurators) {
+                      Set<ContextHandlerConfigurator> contextHandlerConfigurators,
+                      Set<WebSocketConfigurator> webSocketConfigurators) {
 
         Server server = new Server();
 
@@ -187,8 +188,6 @@ public class HttpServer {
             }
         });
 
-        JettyWebSocketServletContainerInitializer.configure(contextHandler, null);
-
         ContextHandlerCollection contextHandlerCollection = new ContextHandlerCollection();
         contextHandlerCollection.addHandler(contextHandler);
 
@@ -198,8 +197,16 @@ public class HttpServer {
             configurator.configure(contextHandlerCollection);
         });
 
+        // websockets are handled before the servlet context, using Jetty's core API
+        WebSocketUpgradeHandler webSocketHandler = WebSocketUpgradeHandler.from(server, container ->
+                webSocketConfigurators.stream().sorted(byPriority()).forEachOrdered(configurator -> {
+                    log.info("Configuring websockets {}...", configurator.getClass());
+                    configurator.configure(container);
+                }));
+        webSocketHandler.setHandler(contextHandlerCollection);
+
         this.statisticsHandler = new StatisticsHandler();
-        this.statisticsHandler.setHandler(contextHandlerCollection);
+        this.statisticsHandler.setHandler(webSocketHandler);
         server.setHandler(this.statisticsHandler);
 
         this.server = server;

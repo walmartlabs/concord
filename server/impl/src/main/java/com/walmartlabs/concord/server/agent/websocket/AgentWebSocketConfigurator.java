@@ -20,21 +20,17 @@ package com.walmartlabs.concord.server.agent.websocket;
  * =====
  */
 
+import com.walmartlabs.concord.server.boot.WebSocketConfigurator;
 import com.walmartlabs.concord.server.message.MessageChannelManager;
 import com.walmartlabs.concord.server.security.UserSecurityContext;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
-import org.eclipse.jetty.ee8.websocket.server.JettyWebSocketServlet;
-import org.eclipse.jetty.ee8.websocket.server.JettyWebSocketServletFactory;
+import org.eclipse.jetty.websocket.server.ServerWebSocketContainer;
 
 import javax.inject.Inject;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-@WebServlet("/websocket")
-public class ConcordWebSocketServlet extends JettyWebSocketServlet {
+public class AgentWebSocketConfigurator implements WebSocketConfigurator {
 
-    private static final long serialVersionUID = 1L;
+    public static final String PATH = "/websocket";
 
     private final MessageChannelManager channelManager;
     private final ApiKeyDao apiKeyDao;
@@ -42,7 +38,7 @@ public class ConcordWebSocketServlet extends JettyWebSocketServlet {
     private final WebsocketsConfiguration cfg;
 
     @Inject
-    public ConcordWebSocketServlet(
+    public AgentWebSocketConfigurator(
             MessageChannelManager channelManager,
             ApiKeyDao apiKeyDao,
             WebsocketsConfiguration cfg,
@@ -55,12 +51,7 @@ public class ConcordWebSocketServlet extends JettyWebSocketServlet {
     }
 
     @Override
-    public void configure(JettyWebSocketServletFactory factory) {
-        factory.setCreator(new WebSocketCreator(channelManager, apiKeyDao, cfg, userSecurityContext));
-    }
-
-    @Override
-    protected void doTrace(HttpServletRequest req, HttpServletResponse resp) {
-        resp.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+    public void configure(ServerWebSocketContainer container) {
+        container.addMapping(PATH, new WebSocketCreator(channelManager, apiKeyDao, cfg, userSecurityContext));
     }
 }
