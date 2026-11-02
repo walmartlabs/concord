@@ -1,57 +1,57 @@
-# OpenAPI contracts used by the generated clients
+# Temporary OpenAPI migration check
 
-`OpenApiContractTest` compares all three complete published OpenAPI documents
-against their snapshots. Its input files are the same `inputSpec` files consumed
-by the corresponding `openapi-generator-maven-plugin` executions:
+`OpenApiContractTest` protects the RESTEasy/Jakarta migration and is intended to
+be removed after the migration. It is not a permanent API evolution policy.
 
-| Case / snapshot | Specification producer | Generated client |
+The baseline is the YAML packaged in the published **2.46.0** JARs:
+
+| Case | Baseline artifact | Current specification producer |
 | --- | --- | --- |
-| `server` / `server-api.yaml` | `server/impl` | `client2` |
-| `ansible` / `ansible-api.yaml` | `server/plugins/ansible/impl` | `server/plugins/ansible/client2` |
-| `noderoster` / `noderoster-api.yaml` | `server/plugins/noderoster/impl` | `server/plugins/noderoster/client2` |
+| `server` | `com.walmartlabs.concord.server:concord-server-impl` | `server/impl` |
+| `ansible` | `com.walmartlabs.concord.server.plugins.ansible:concord-ansible-plugin` | `server/plugins/ansible/impl` |
+| `noderoster` | `com.walmartlabs.concord.server.plugins.noderoster:concord-noderoster-plugin` | `server/plugins/noderoster/impl` |
 
-Each producer generates its YAML during `compile`. The test lives in `client2`,
-whose existing dependency on `server/dist` puts all three producers earlier in
-the normal reactor build. It reads their generated files directly, so a missing
-file fails even if an older server/plugin JAR is available in the local repository.
-It does not run a separate scanner or start a server or database.
+Maven unpacks only the Swagger YAML resources into
+`client2/target/openapi-migration-baseline` during `generate-test-resources`.
+The version is pinned by `openapi.migration.baseline.version` in `client2/pom.xml`;
+it does not follow the current project version or a changing SNAPSHOT. The first
+run needs repository access; subsequent runs can use cached release artifacts.
 
-The comparison covers paths, methods, parameters, request/response schemas,
-validation constraints and the remaining document metadata. Object field order
-and YAML formatting are ignored. Array order is preserved, including examples
-and defaults; changes to array order therefore require review too.
+The current inputs are the same generated files used by all three client generators.
+Each producer generates its YAML during `compile`. The existing dependency on
+`server/dist` orders all producers before `client2` in the normal reactor build.
+A missing current input fails instead of falling back to an installed JAR.
 
-## Running
+Comparison covers the complete documents, including paths, schemas and validation
+constraints. Object field order and YAML formatting are ignored; array order and
+values are preserved. The test does not start a server or database.
 
-From the repository root, with dependencies already built locally, generate all
-three specifications and run the three test cases:
+One explicit baseline adjustment accounts for `LogSegmentUpdateRequest.statusUpdatedAt`
+(`string`, `date-time`), added after 2.46.0 in commit `f11201f10` before the migration.
+The test adds that exact schema to the baseline; it does not ignore the field or
+permit arbitrary additions.
+
+## Running and investigating failures
+
+With dependencies already built locally:
 
 ```sh
 ./mvnw -pl server/impl,server/plugins/ansible/impl,server/plugins/noderoster/impl,client2 test \
   -Dtest=OpenApiContractTest -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-The test also runs as part of the normal Maven test lifecycle and CI.
 For a fresh checkout, use the normal repository build prerequisites (including
-Docker for the database modules) and add `-am` to build dependencies in the reactor.
-The generators and compilation in the three client modules separately check that
-Java clients can still be built; this test protects their input contracts.
+Docker for database modules) and add `-am` to build dependencies in the reactor.
 
-## Reviewing an intentional API change
+Each case writes `actual.yaml` and `diff.txt` to
+`client2/target/openapi-contract/<api>/`. Diff locations are JSON Pointers.
+Review differences against the extracted release YAML. A difference can also
+reflect an API change since 2.46.0; investigate it separately from the migration.
+Do not update the baseline merely to make a migration regression pass.
 
-1. Run the test. For each API it writes the generated document to
-   `client2/target/openapi-contract/<api>/actual.yaml` and a field-level diff to
-   `client2/target/openapi-contract/<api>/diff.txt`. Diff locations are JSON Pointers;
-   `/` within a path name is escaped as `~1`.
-2. Review each difference against the intended API change. Missing constraints
-   after a dependency upgrade are regressions, not a reason to refresh a baseline.
-3. After reviewing an intentional change, update only its snapshot. For example:
+## Removal
 
-   ```sh
-   cp client2/target/openapi-contract/ansible/actual.yaml client2/src/test/resources/openapi/ansible-api.yaml
-   ```
-
-4. Review the snapshot diff, rerun the test and commit the snapshot with the API change.
-
-The test never updates its baselines automatically. A new API requires another
-parameter row with its generator's input file and a corresponding snapshot.
+After the migration is verified, remove `OpenApiContractTest`, this document,
+the README reference, the baseline property and dependency-plugin execution,
+and the test-only YAML/JUnit parameter dependencies if no other tests need them.
+No committed YAML snapshots need maintenance.

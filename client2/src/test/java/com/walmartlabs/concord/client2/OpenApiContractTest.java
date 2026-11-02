@@ -22,6 +22,7 @@ package com.walmartlabs.concord.client2;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -32,28 +33,34 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/** Temporary RESTEasy/Jakarta migration guard; remove after migration. */
 class OpenApiContractTest {
 
     @ParameterizedTest(name = "{0}")
     @CsvSource({
-            "server, ../server/impl/target/classes/com/walmartlabs/concord/server/swagger/swagger.yaml",
-            "ansible, ../server/plugins/ansible/impl/target/classes/com/walmartlabs/concord/server/plugins/ansible/swagger/swagger.yaml",
-            "noderoster, ../server/plugins/noderoster/impl/target/classes/com/walmartlabs/concord/server/plugins/noderoster/swagger/swagger.yaml"
+            "server, ../server/impl, com/walmartlabs/concord/server/swagger/swagger.yaml",
+            "ansible, ../server/plugins/ansible/impl, com/walmartlabs/concord/server/plugins/ansible/swagger/swagger.yaml",
+            "noderoster, ../server/plugins/noderoster/impl, com/walmartlabs/concord/server/plugins/noderoster/swagger/swagger.yaml"
     })
-    void preservesPublishedContract(String api, String inputSpec) throws Exception {
+    void preservesPublishedContract(String api, String producer, String resource) throws Exception {
         // Read the same files as the client generators, never fall back to an installed server/plugin JAR.
-        var generated = Path.of(inputSpec);
+        var generated = Path.of(producer, "target", "classes", resource);
         assertTrue(Files.isRegularFile(generated),
-                () -> "Missing " + inputSpec + "; run the corresponding server/plugin compile phase first");
-        var baselineResource = "/openapi/" + api + "-api.yaml";
-        try (var baseline = getClass().getResourceAsStream(baselineResource)) {
-            assertNotNull(baseline, "Missing OpenAPI baseline: " + baselineResource);
+                () -> "Missing " + generated + "; run the corresponding server/plugin compile phase first");
+        var baselineFile = Path.of("target", "openapi-migration-baseline", resource);
+        assertTrue(Files.isRegularFile(baselineFile),
+                () -> "Missing " + baselineFile + "; run generate-test-resources to unpack the release baseline");
+        try (var baseline = Files.newInputStream(baselineFile)) {
 
             var yaml = new ObjectMapper(new YAMLFactory());
             var expected = yaml.readTree(baseline);
+            if ("server".equals(api)) {
+                // Added after 2.46.0, before the migration (f11201f10); keep checking its exact schema.
+                var properties = (ObjectNode) expected.at("/components/schemas/LogSegmentUpdateRequest/properties");
+                properties.putObject("statusUpdatedAt").put("type", "string").put("format", "date-time");
+            }
             var actualBytes = Files.readAllBytes(generated);
             var actual = yaml.readTree(actualBytes);
             var differences = new ArrayList<String>();
@@ -67,7 +74,7 @@ class OpenApiContractTest {
             assertTrue(differences.isEmpty(), () -> api + " OpenAPI contract changed:\n"
                     + String.join("\n", differences)
                     + "\nSee " + output + "/{actual.yaml,diff.txt}. "
-                    + "Review changes before updating src/test/resources" + baselineResource + ".");
+                    + "Compare with " + baselineFile + ". Do not refresh the baseline to hide migration regressions.");
         }
     }
 

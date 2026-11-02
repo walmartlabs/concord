@@ -15,6 +15,11 @@
 
     <name>${project.groupId}:${project.artifactId}</name>
 
+    <properties>
+        <!-- Temporary baseline for the RESTEasy/Jakarta migration; remove after migration. -->
+        <openapi.migration.baseline.version>2.46.0</openapi.migration.baseline.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
@@ -96,6 +101,44 @@
         </resources>
 
         <plugins>
+            <!-- Temporary migration guard: extract only OpenAPI resources, without transitive dependencies. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>openapi-migration-baseline</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord.server</groupId>
+                                    <artifactId>concord-server-impl</artifactId>
+                                    <version>${openapi.migration.baseline.version}</version>
+                                    <type>jar</type>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
+                                    <artifactId>concord-ansible-plugin</artifactId>
+                                    <version>${openapi.migration.baseline.version}</version>
+                                    <type>jar</type>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
+                                    <artifactId>concord-noderoster-plugin</artifactId>
+                                    <version>${openapi.migration.baseline.version}</version>
+                                    <type>jar</type>
+                                </artifactItem>
+                            </artifactItems>
+                            <includes>**/swagger/swagger.yaml</includes>
+                            <outputDirectory>${project.build.directory}/openapi-migration-baseline</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>cobertura-maven-plugin</artifactId>
