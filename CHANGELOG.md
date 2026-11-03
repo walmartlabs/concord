@@ -52,7 +52,9 @@
 - server: send API key expiration emails with angus-mail
 ([#1422](https://github.com/walmartlabs/concord/pull/1422));
 - project: update dependencies
-([#1425](https://github.com/walmartlabs/concord/pull/1425)).
+([#1425](https://github.com/walmartlabs/concord/pull/1425));
+- project: update dependencies
+([#1426](https://github.com/walmartlabs/concord/pull/1426)).
 
 
 ## [2.46.0] - 2026-09-18
