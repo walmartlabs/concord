@@ -32,6 +32,8 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -42,6 +44,78 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class Tasks {
 
     private static final Logger log = LoggerFactory.getLogger(Tasks.class);
+
+    /**
+     * Fails on the first call after {@link #reset()}, succeeds afterwards.
+     */
+    @Named("failOnceTask")
+    public static class FailOnceTask implements Task {
+
+        private static final AtomicBoolean failed = new AtomicBoolean();
+
+        public static void reset() {
+            failed.set(false);
+        }
+
+        @Override
+        public TaskResult execute(Variables input) {
+            if (failed.compareAndSet(false, true)) {
+                throw new FailOnceException();
+            }
+            return TaskResult.success();
+        }
+    }
+
+    public static class FailOnceException extends RuntimeException {
+
+        private static final long serialVersionUID = 1L;
+
+        public FailOnceException() {
+            super("failed once");
+        }
+    }
+
+    /**
+     * Records whether the process state references a {@link FailOnceException}.
+     */
+    @Named("stateReferencesErrorTask")
+    public static class StateReferencesErrorTask implements Task {
+
+        private static volatile Boolean result;
+
+        public static Boolean result() {
+            return result;
+        }
+
+        private final Context ctx;
+
+        @Inject
+        public StateReferencesErrorTask(Context ctx) {
+            this.ctx = ctx;
+        }
+
+        @Override
+        public TaskResult execute(Variables input) throws Exception {
+            AtomicBoolean found = new AtomicBoolean();
+            try (ObjectOutputStream out = new ObjectOutputStream(OutputStream.nullOutputStream()) {
+                {
+                    enableReplaceObject(true);
+                }
+
+                @Override
+                protected Object replaceObject(Object obj) {
+                    if (obj instanceof FailOnceException) {
+                        found.set(true);
+                    }
+                    return obj;
+                }
+            }) {
+                out.writeObject(ctx.execution().state());
+            }
+            result = found.get();
+            return TaskResult.success();
+        }
+    }
 
     @Named("testDefaults")
     static class TestDefaults implements Task {
@@ -125,6 +199,11 @@ public final class Tasks {
 
         private static final Logger log = LoggerFactory.getLogger(LoggingExampleTask.class);
         private static final Logger processLog = LoggerFactory.getLogger("processLog");
+
+        public void logLevels(String prefix) {
+            log.info("{} info", prefix);
+            log.warn("{} warn", prefix);
+        }
 
         public void logString(String msg) {
             System.out.println(msg);

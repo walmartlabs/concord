@@ -1,0 +1,9 @@
+flows:
+  default:
+    - name: parent
+      call: inner
+  inner:
+    - form: approval
+forms:
+  approval:
+    - confirmed: { type: "boolean?" }

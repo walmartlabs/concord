@@ -27,6 +27,7 @@ import com.walmartlabs.concord.svm.Command;
 
 import javax.inject.Named;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Named
@@ -43,6 +44,7 @@ public class ParallelStepCompiler implements StepCompiler<ParallelBlock> {
                 .map(s -> context.compiler().compile(context.processDefinition(), s))
                 .collect(Collectors.toList());
 
-        return new ParallelCommand(step, steps);
+        UUID correlationId = UUID.randomUUID();
+        return StepSegments.parallel(new ParallelCommand(correlationId, step, steps), step, correlationId);
     }
 }

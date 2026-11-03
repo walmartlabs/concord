@@ -75,7 +75,7 @@ public abstract class StepCommand<T extends Step> implements Command {
         UUID correlationId = getCorrelationId();
         Context ctx = contextFactory.create(runtime, state, threadId, step, correlationId);
 
-        LogContext logContext = LogSegmentUtils.getLogContext(threadId, state);
+        LogContext logContext = getLogContext(runtime, state, threadId);
         if (logContext == null) {
             executeWithContext(ctx, runtime, state, threadId);
         } else {
@@ -137,6 +137,18 @@ public abstract class StepCommand<T extends Step> implements Command {
     private static boolean hasExceptionHandler(State state, ThreadId threadId) {
         return state.getFrames(threadId).stream()
                 .anyMatch(f -> f.getExceptionHandler() != null);
+    }
+
+    protected LogContext getLogContext(Runtime runtime, State state, ThreadId threadId) {
+        LogContext context = LogSegmentUtils.getLogContext(threadId, state);
+        return context != null ? context : getDefaultLogContext(runtime, correlationId);
+    }
+
+    /**
+     * The log segment of the step if there's no open segment, {@code null} if none.
+     */
+    protected LogContext getDefaultLogContext(Runtime runtime, UUID correlationId) {
+        return null;
     }
 
     protected abstract void execute(Runtime runtime, State state, ThreadId threadId);

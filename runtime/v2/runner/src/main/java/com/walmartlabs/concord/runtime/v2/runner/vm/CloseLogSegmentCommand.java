@@ -54,15 +54,11 @@ public class CloseLogSegmentCommand implements Command {
         }
         assert correlationId == logContext.correlationId();
 
+        ThreadError threadError = state.getThreadError(threadId);
+        LogSegmentStatus status = threadError != null ? LogSegmentStatus.ERROR : LogSegmentStatus.OK;
+
         runtime.getService(RunnerLogger.class)
-                .setSegmentStatus(segmentId, getStatus(state, threadId));
+                .setSegmentStatus(segmentId, status);
     }
 
-    private static LogSegmentStatus getStatus(State state, ThreadId threadId) {
-        if (state.getThreadError(threadId) != null) {
-            return LogSegmentStatus.ERROR;
-        } else {
-            return LogSegmentStatus.OK;
-        }
-    }
 }

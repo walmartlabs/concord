@@ -1,0 +1,30 @@
+flows:
+  default:
+    - name: "outer"
+      call: "inner"
+
+    - name: "top level"
+      task: "log"
+      in:
+        msg: "top"
+
+  inner:
+    - name: "inner task"
+      task: "log"
+      in:
+        msg: "in inner"
+
+    - parallel:
+        - name: "branch A"
+          task: "log"
+          in:
+            msg: "A"
+
+        - name: "branch B"
+          call: "leaf"
+
+  leaf:
+    - name: "leaf task"
+      task: "log"
+      in:
+        msg: "leaf"

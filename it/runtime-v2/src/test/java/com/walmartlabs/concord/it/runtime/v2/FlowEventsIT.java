@@ -52,6 +52,14 @@ public class FlowEventsIT extends AbstractTest {
         ProcessEventsApi processEventsApi = new ProcessEventsApi(concord.apiClient());
         List<ProcessEventEntry> events = processEventsApi.listProcessEvents(proc.instanceId(), "ELEMENT", null, null, null, null, null, null);
         assertNotNull(events);
+        assertEquals(16, events.size());
+
+        long taskSegmentId = segmentId(events.get(2));
+        long scriptSegmentId = segmentId(events.get(4));
+        long ifTaskSegmentId = segmentId(events.get(6));
+        long switchTaskSegmentId = segmentId(events.get(9));
+        assertEquals(4, new HashSet<>(List.of(taskSegmentId, scriptSegmentId,
+                ifTaskSegmentId, switchTaskSegmentId)).size());
 
         // ---
         // expression:
@@ -81,6 +89,7 @@ public class FlowEventsIT extends AbstractTest {
         //     msg: "test"
         // pre
         assertEvent(events, 2, new EventData()
+                .logSegmentId(taskSegmentId)
                 .pre()
                 .correlationId()
                 .location(12, 7, "concord.yml")
@@ -89,6 +98,7 @@ public class FlowEventsIT extends AbstractTest {
                 .description("Task: log"));
         // post
         assertEvent(events, 3, new EventData()
+                .logSegmentId(taskSegmentId)
                 .post()
                 .duration()
                 .correlationId()
@@ -100,6 +110,7 @@ public class FlowEventsIT extends AbstractTest {
         // script:
         // - script: js
         assertEvent(events, 4, new EventData()
+                .logSegmentId(scriptSegmentId)
                 .correlationId()
                 .location(17, 7, "concord.yml")
                 .flow("default")
@@ -116,6 +127,7 @@ public class FlowEventsIT extends AbstractTest {
         // - log: "It's true!"
         // pre
         assertEvent(events, 6, new EventData()
+                .logSegmentId(ifTaskSegmentId)
                 .pre()
                 .correlationId()
                 .location(24, 11, "concord.yml")
@@ -124,6 +136,7 @@ public class FlowEventsIT extends AbstractTest {
                 .description("Task: log"));
         // post
         assertEvent(events, 7, new EventData()
+                .logSegmentId(ifTaskSegmentId)
                 .post()
                 .correlationId()
                 .duration()
@@ -142,6 +155,7 @@ public class FlowEventsIT extends AbstractTest {
         // - log: "It's red!"
         // pre
         assertEvent(events, 9, new EventData()
+                .logSegmentId(switchTaskSegmentId)
                 .pre()
                 .correlationId()
                 .location(28, 11, "concord.yml")
@@ -150,6 +164,7 @@ public class FlowEventsIT extends AbstractTest {
                 .description("Task: log"));
         // post
         assertEvent(events, 10, new EventData()
+                .logSegmentId(switchTaskSegmentId)
                 .post()
                 .correlationId()
                 .duration()
@@ -194,6 +209,14 @@ public class FlowEventsIT extends AbstractTest {
                 .description("Exit"));
     }
 
+    private static long segmentId(ProcessEventEntry event) {
+        Object value = event.getData().get("logSegmentId");
+        assertInstanceOf(Number.class, value);
+        long id = ((Number) value).longValue();
+        assertTrue(id > 0, "An owning step must reference a non-system segment");
+        return id;
+    }
+
     private static void assertEvent(List<ProcessEventEntry> events, int index, EventData expected) {
         assertTrue(index < events.size());
 
@@ -202,6 +225,9 @@ public class FlowEventsIT extends AbstractTest {
                 .map(e -> {
                     if (toIntKeys.contains(e.getKey())) {
                         return new AbstractMap.SimpleEntry<>(e.getKey(), ((Number) e.getValue()).intValue());
+                    }
+                    if ("logSegmentId".equals(e.getKey())) {
+                        return new AbstractMap.SimpleEntry<>(e.getKey(), ((Number) e.getValue()).longValue());
                     }
                     return e;
                 })
@@ -213,6 +239,11 @@ public class FlowEventsIT extends AbstractTest {
     static class EventData extends HashMap<String, Object> {
 
         private static final long serialVersionUID = 1L;
+
+        public EventData logSegmentId(long id) {
+            put("logSegmentId", id);
+            return this;
+        }
 
         public EventData location(int line, int column, String fileName) {
             put("line", line);

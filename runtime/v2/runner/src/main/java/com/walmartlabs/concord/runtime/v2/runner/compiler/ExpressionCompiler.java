@@ -22,8 +22,9 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
 
 import com.walmartlabs.concord.runtime.v2.model.Expression;
 import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogSegmentKind;
+import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ExpressionCommand;
-import com.walmartlabs.concord.runtime.v2.runner.vm.LogSegmentScopeCommand;
 import com.walmartlabs.concord.svm.Command;
 
 import javax.inject.Named;
@@ -40,8 +41,13 @@ public class ExpressionCompiler implements StepCompiler<Expression> {
     @Override
     public Command compile(CompilerContext context, Expression step) {
         UUID correlationId = UUID.randomUUID();
+        Command cmd = new ExpressionCommand(correlationId, step);
 
-        return new LogSegmentScopeCommand<>(correlationId, new ExpressionCommand(correlationId, step), step);
+        // an unnamed expression has no segment, it logs into the enclosing one
+        if (SegmentedLogger.getSegmentName(step) == null) {
+            return cmd;
+        }
 
+        return StepSegments.step(cmd, step, correlationId, LogSegmentKind.STEP, null);
     }
 }

@@ -50,7 +50,7 @@ public class ConcordLogEncoder extends LayoutWrappingEncoder<ILoggingEvent> {
             msg = layout.doLayout(event);
         } else if (isFinalStatus(marker)) {
             // when the status changed, epoch millis. A RUNNING marker has no body:
-            // the agent can't tell it from a log line
+            // its zero length distinguishes it from a log line
             msg = String.valueOf(event.getTimeStamp());
         } else {
             msg = null;

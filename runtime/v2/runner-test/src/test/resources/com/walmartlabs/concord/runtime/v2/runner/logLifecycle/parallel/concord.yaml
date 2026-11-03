@@ -1,0 +1,16 @@
+flows:
+  default:
+    - name: parent
+      call: branches
+  branches:
+    - parallel:
+        - name: first
+          call: wait
+          in: { event: first }
+        - name: second
+          call: wait
+          in: { event: second }
+  wait:
+    - task: suspendTask
+      in:
+        eventName: "${event}"

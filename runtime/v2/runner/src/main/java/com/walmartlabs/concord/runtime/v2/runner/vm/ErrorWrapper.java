@@ -20,12 +20,20 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogSegmentKind;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
+
+import java.util.UUID;
 
 /**
  * Wraps the specified command into a new frame with an exception handler
  * consisting of a {@link ExposeLastErrorCommand} and the provided {@link #errorSteps}.
+ * <p>
+ * If the step has a log segment ({@link #correlationId} is set), the segment is opened in
+ * the frame and stays open while the handler runs: the handler gets an {@code error}
+ * segment inside it, and the failed step stays {@code ERROR} even if the handler succeeds.
  */
 public class ErrorWrapper implements Command {
 
@@ -34,9 +42,26 @@ public class ErrorWrapper implements Command {
     private final Command cmd;
     private final Command errorSteps;
 
+    /**
+     * {@code null} if the step has no log segment or in processes started by older runners.
+     */
+    private final Step step;
+    private final UUID correlationId;
+    private final boolean evaluateName;
+    // null in saved processes compiled before explicit LOOP/RETRY parent kinds.
+    private final LogSegmentKind kind;
+
     public ErrorWrapper(Command cmd, Command errorSteps) {
+        this(cmd, errorSteps, null, null, LogSegmentKind.STEP);
+    }
+
+    public ErrorWrapper(Command cmd, Command errorSteps, Step step, UUID correlationId, LogSegmentKind kind) {
         this.cmd = cmd;
         this.errorSteps = errorSteps;
+        this.step = step;
+        this.correlationId = correlationId;
+        this.evaluateName = kind == LogSegmentKind.STEP;
+        this.kind = kind;
     }
 
     @Override
@@ -48,14 +73,24 @@ public class ErrorWrapper implements Command {
         //  block:
         //    - ExposeLastErrorCommand
         //    - ...compiled steps from the "error" block...
-        BlockCommand exceptionHandler = new BlockCommand(new ExposeLastErrorCommand(), errorSteps);
+        Frame.Builder inner = Frame.builder()
+                .nonRoot();
 
-        Frame inner = Frame.builder()
-                .nonRoot()
-                .exceptionHandler(exceptionHandler)
-                .commands(cmd)
-                .build();
+        if (correlationId == null) {
+            inner.exceptionHandler(new BlockCommand(new ExposeLastErrorCommand(), errorSteps))
+                    .commands(cmd);
+        } else {
+            LogSegmentKind segmentKind = kind != null ? kind : LogSegmentKind.STEP;
+            inner.exceptionHandler(new BlockCommand(new ExposeLastErrorCommand(),
+                            OpenSegmentCommand.error(step, correlationId),
+                            errorSteps,
+                            new CloseSegmentCommand(LogSegmentKind.ERROR, correlationId)))
+                    // pushed in this order: the last command runs first
+                    .commands(new CloseSegmentCommand(segmentKind, correlationId),
+                            cmd,
+                            OpenSegmentCommand.guardedStep(step, correlationId, segmentKind, evaluateName));
+        }
 
-        state.pushFrame(threadId, inner);
+        state.pushFrame(threadId, inner.build());
     }
 }
