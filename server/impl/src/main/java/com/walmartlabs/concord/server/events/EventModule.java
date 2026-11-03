@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.events.externalevent.ExternalEventTriggerP
 import com.walmartlabs.concord.server.events.externalevent.ExternalEventTriggerV1Processor;
 import com.walmartlabs.concord.server.events.externalevent.ExternalEventTriggerV2Processor;
 import com.walmartlabs.concord.server.events.github.GithubTriggerProcessor;
+import com.walmartlabs.concord.server.sdk.events.ExternalEventService;
 import com.walmartlabs.concord.server.sdk.events.ProcessEventListener;
 
 import static com.google.inject.Scopes.SINGLETON;
@@ -40,6 +41,7 @@ public class EventModule implements Module {
         newSetBinder(binder, ExternalEventTriggerProcessor.class).addBinding().to(ExternalEventTriggerV2Processor.class);
 
         binder.bind(TriggerProcessExecutor.class).in(SINGLETON);
+        binder.bind(ExternalEventService.class).to(DefaultExternalEventService.class).in(SINGLETON);
 
         newSetBinder(binder, ProcessEventListener.class);
 
