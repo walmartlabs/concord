@@ -20,10 +20,12 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.client2.StartProcessResponse;
-import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.net.URI;
 import java.util.Map;
@@ -35,34 +37,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ResourceIT extends AbstractServerIT {
 
-    @Test
-    public void testReadAsJson() throws Exception {
-        basicAssert(test("resourceReadAsJson"), ".*Hello Concord!");
-    }
-
-    @Test
-    public void testFromJsonString() throws Exception {
-        basicAssert(test("resourceReadFromJsonString"), ".*Hello Concord!");
-    }
-
-    @Test
-    public void testReadAsString() throws Exception {
-        basicAssert(test("resourceReadAsString"), ".*Hello Concord!");
-    }
-
-    @Test
-    public void testWriteAsJson() throws Exception {
-        basicAssert(test("resourceWriteAsJson"), ".*Hello Concord!");
-    }
-
-    @Test
-    public void testWriteAsString() throws Exception {
-        basicAssert(test("resourceWriteAsString"), ".*Hello Concord!");
-    }
-
-    @Test
-    public void testWriteAsYaml() throws Exception {
-        basicAssert(test("resourceWriteAsYaml"), ".*Hello Concord!");
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {
+            "resourceReadAsJson",
+            "resourceReadFromJsonString",
+            "resourceReadAsString",
+            "resourceWriteAsJson",
+            "resourceWriteAsString",
+            "resourceWriteAsYaml"
+    })
+    public void testResource(String resource) throws Exception {
+        ProcessEntry pir = test(resource);
+        assertLog(".*Hello Concord!", getLog(pir.getInstanceId()));
     }
 
     @Test
@@ -72,16 +58,17 @@ public class ResourceIT extends AbstractServerIT {
         // ---
 
         Map<String, Object> meta = pir.getMeta();
+        ObjectMapper mapper = getApiClient().getObjectMapper();
 
         String condensedResult = (String) meta.get("condensedResult");
         assertFalse(condensedResult.contains("\n"));
-        assertTrue(condensedResult.contains("\"x\":123"));
-        assertTrue(condensedResult.contains("\"y\":\"hello"));
+        assertEquals(Map.of("x", 123, "y", "hello"),
+                mapper.readValue(condensedResult, Map.class));
 
         String prettyResult = (String) meta.get("prettyResult");
         assertTrue(prettyResult.contains("\n"));
-        assertTrue(prettyResult.contains("\"x\" : 123"));
-        assertTrue(prettyResult.contains("\"y\" : \"hello\""));
+        assertEquals(Map.of("x", 123, "y", "hello"),
+                mapper.readValue(prettyResult, Map.class));
     }
 
     private ProcessEntry test(String resource) throws Exception {
@@ -94,10 +81,5 @@ public class ResourceIT extends AbstractServerIT {
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         return pir;
-    }
-
-    private void basicAssert(ProcessEntry pir, @Language("RegExp") String pattern) throws Exception {
-        byte[] ab = getLog(pir.getInstanceId());
-        assertLog(pattern, ab);
     }
 }

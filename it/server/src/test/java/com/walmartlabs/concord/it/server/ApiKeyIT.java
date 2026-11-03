@@ -56,6 +56,7 @@ public class ApiKeyIT extends AbstractServerIT {
             apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userBName));
             fail("Should fail");
         } catch (ApiException e) {
+            assertEquals(403, e.getCode(), "Non-admins must not create API keys for other users");
         }
 
         // ---
