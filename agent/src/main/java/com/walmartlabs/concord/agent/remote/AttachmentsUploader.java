@@ -20,7 +20,7 @@ package com.walmartlabs.concord.agent.remote;
  * =====
  */
 
-import com.walmartlabs.concord.agent.AgentConstants;
+import com.walmartlabs.concord.agent.cfg.AgentConfiguration;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
@@ -29,17 +29,29 @@ import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
 import javax.inject.Inject;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Duration;
 import java.util.UUID;
 
 public class AttachmentsUploader {
 
     private final ApiClient apiClient;
+    private final Duration timeout;
 
     @Inject
-    public AttachmentsUploader(ApiClient apiClient) {
+    public AttachmentsUploader(ApiClient apiClient, AgentConfiguration cfg) {
+        this(apiClient, cfg.getAttachmentsUploadTimeout());
+    }
+
+    public AttachmentsUploader(ApiClient apiClient, Duration timeout) {
         this.apiClient = apiClient;
+        this.timeout = timeout;
     }
 
     public void upload(UUID instanceId, Path workDir) throws Exception {
@@ -48,15 +60,35 @@ public class AttachmentsUploader {
             return;
         }
 
+        RemoteOperations.call(timeout, () -> {
+            uploadArchive(instanceId, attachmentsDir);
+            return null;
+        });
+    }
+
+    private void uploadArchive(UUID instanceId, Path attachmentsDir) throws Exception {
         try (TemporaryPath tmp = PathUtils.tempFile("attachments", ".zip")) {
             try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp.path()))) {
-                ZipUtils.zip(zip, attachmentsDir);
+                Files.walkFileTree(attachmentsDir, new SimpleFileVisitor<>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        // Follow symlinks when checking the type, just as zipFile does when reading.
+                        // Opening a FIFO can block without responding to the upload deadline's interrupt.
+                        if (!Files.isRegularFile(file)) {
+                            throw new IOException("Attachment is not a regular file: " + file);
+                        }
+                        ZipUtils.zipFile(zip, file, attachmentsDir.relativize(file).toString());
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
             }
 
             ProcessApi api = new ProcessApi(apiClient);
-            ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY, () -> {
-                api.uploadProcessAttachments(instanceId, Files.newInputStream(tmp.path()));
-                return null;
+            RemoteOperations.withRetry(() -> {
+                try (InputStream input = Files.newInputStream(tmp.path())) {
+                    api.uploadProcessAttachments(instanceId, input);
+                    return null;
+                }
             });
         }
     }

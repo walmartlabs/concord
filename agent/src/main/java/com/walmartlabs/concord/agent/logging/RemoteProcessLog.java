@@ -43,6 +43,11 @@ public class RemoteProcessLog extends AbstractProcessLog {
 
     @Override
     protected void log(String message) {
-        appender.appendLog(instanceId, message.getBytes());
+        try {
+            appender.appendLog(instanceId, message.getBytes());
+        } catch (LogStreamingException e) {
+            // Agent diagnostics must not change the runner's outcome. The sender
+            // reports the stopped stream and its remaining bytes separately.
+        }
     }
 }

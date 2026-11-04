@@ -37,6 +37,7 @@ public class RedirectedProcessLog implements ProcessLog {
     protected final long logSteamMaxDelay;
     private final LocalProcessLog localLog;
     private final Consumer<Chunk> consumer;
+    private volatile long processedBytes;
 
     public RedirectedProcessLog(Path baseDir, long logSteamMaxDelay, Consumer<Chunk> consumer) throws IOException {
         this.localLog = new LocalProcessLog(baseDir);
@@ -46,6 +47,14 @@ public class RedirectedProcessLog implements ProcessLog {
 
     public void run(Supplier<Boolean> stopCondition) throws Exception {
         streamLog(localLog.logFile(), stopCondition, logSteamMaxDelay, consumer);
+    }
+
+    public long remainingBytes() {
+        try {
+            return Math.max(0, Files.size(localLog.logFile()) - processedBytes);
+        } catch (IOException e) {
+            return -1;
+        }
     }
 
     @Override
@@ -73,17 +82,19 @@ public class RedirectedProcessLog implements ProcessLog {
         this.localLog.error(log, args);
     }
 
-    private static void streamLog(Path p, Supplier<Boolean> stopCondition, long maxDelay, Consumer<Chunk> sink) throws IOException {
+    private void streamLog(Path p, Supplier<Boolean> stopCondition, long maxDelay, Consumer<Chunk> sink) throws IOException {
         long total = 0;
 
         byte[] ab = new byte[8192];
 
         try (InputStream in = Files.newInputStream(p, StandardOpenOption.READ)) {
             while (true) {
+                LogStreamingException.checkInterrupted();
                 int read = in.read(ab, 0, ab.length);
                 if (read > 0) {
                     sink.accept(new Chunk(ab, read));
                     total += read;
+                    processedBytes = total;
                 }
 
                 if (read < ab.length) {
@@ -97,7 +108,7 @@ public class RedirectedProcessLog implements ProcessLog {
                         Thread.sleep(maxDelay);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
-                        break;
+                        throw new LogStreamingException("Log streaming interrupted", e);
                     }
                 }
             }

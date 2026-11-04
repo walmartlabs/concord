@@ -24,12 +24,13 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.agent.DefaultStateFetcher;
 import com.walmartlabs.concord.agent.StateFetcher;
 import com.walmartlabs.concord.agent.logging.*;
 import com.walmartlabs.concord.agent.remote.ApiClientFactory;
+import com.walmartlabs.concord.agent.remote.FinalizationHeartbeat;
 import com.walmartlabs.concord.agent.remote.ProcessStatusUpdater;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +82,12 @@ public class WorkerModule extends AbstractModule {
     @Singleton
     ProcessStatusUpdater getProcessStatusUpdater(ProcessApi processApi) {
         return new ProcessStatusUpdater(agentId, processApi);
+    }
+
+    @Provides
+    @Singleton
+    FinalizationHeartbeat getFinalizationHeartbeat(ApiClient apiClient) {
+        return new FinalizationHeartbeat(instanceId, new ProcessHeartbeatApi(apiClient));
     }
 
     @Override
