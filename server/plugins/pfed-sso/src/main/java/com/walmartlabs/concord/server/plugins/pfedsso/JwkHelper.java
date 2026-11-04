@@ -24,11 +24,11 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.jwk.RSAKey;
-import net.minidev.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.text.ParseException;
+import java.util.Map;
 
 public final class JwkHelper {
 
@@ -38,7 +38,7 @@ public final class JwkHelper {
      * @param json json
      * @return secret
      */
-    public static String buildSecretFromJwk(JSONObject json) {
+    public static String buildSecretFromJwk(Map<String, Object> json) {
         try {
             OctetSequenceKey octetSequenceKey = OctetSequenceKey.parse(json);
             return new String(octetSequenceKey.toByteArray(), StandardCharsets.UTF_8);
@@ -53,7 +53,7 @@ public final class JwkHelper {
      * @param json json
      * @return key pair
      */
-    public static KeyPair buildRSAKeyPairFromJwk(JSONObject json) {
+    public static KeyPair buildRSAKeyPairFromJwk(Map<String, Object> json) {
         try {
             RSAKey rsaKey = RSAKey.parse(json);
             return rsaKey.toKeyPair();
@@ -68,7 +68,7 @@ public final class JwkHelper {
      * @param json json
      * @return key pair
      */
-    public static KeyPair buildECKeyPairFromJwk(JSONObject json) {
+    public static KeyPair buildECKeyPairFromJwk(Map<String, Object> json) {
         try {
             ECKey ecKey = ECKey.parse(json);
             return ecKey.toKeyPair();
