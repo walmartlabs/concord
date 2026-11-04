@@ -20,7 +20,6 @@ package com.walmartlabs.concord.agent.executors.runner;
  * =====
  */
 
-import com.google.common.hash.HashCode;
 import com.walmartlabs.concord.agent.ExecutionException;
 import com.walmartlabs.concord.agent.Utils;
 import com.walmartlabs.concord.agent.cfg.PreForkConfiguration;
@@ -43,7 +42,7 @@ public class ProcessPool {
 
     private final long maxEntryAge;
     private final int maxEntryCount;
-    private final Map<HashCode, Queue<ProcessEntry>> pool = new HashMap<>();
+    private final Map<String, Queue<ProcessEntry>> pool = new HashMap<>();
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
     @Inject
@@ -71,7 +70,7 @@ public class ProcessPool {
         t.start();
     }
 
-    public ProcessEntry take(HashCode hc, ProcessLauncher launcher) throws ExecutionException {
+    public ProcessEntry take(String hc, ProcessLauncher launcher) throws ExecutionException {
         synchronized (pool) {
             Queue<ProcessEntry> q = pool.computeIfAbsent(hc, k -> new LinkedList<>());
 
@@ -94,18 +93,18 @@ public class ProcessPool {
         }
     }
 
-    private void populate(HashCode hc, ProcessLauncher launcher) {
+    private void populate(String hc, ProcessLauncher launcher) {
         synchronized (pool) {
             // calculate the total number of processes in the pool
             int total = 0;
-            for (Map.Entry<HashCode, Queue<ProcessEntry>> e : pool.entrySet()) {
+            for (Map.Entry<String, Queue<ProcessEntry>> e : pool.entrySet()) {
                 total += e.getValue().size();
             }
 
             if (total >= maxEntryCount) {
                 // mark the oldest entry for removal
                 ProcessEntry oldest = null;
-                for (Map.Entry<HashCode, Queue<ProcessEntry>> q : pool.entrySet()) {
+                for (Map.Entry<String, Queue<ProcessEntry>> q : pool.entrySet()) {
                     for (ProcessEntry e : q.getValue()) {
                         if (oldest == null || oldest.timestamp > e.timestamp) {
                             oldest = e;
@@ -130,7 +129,7 @@ public class ProcessPool {
     }
 
     private void maintenance() {
-        List<HashCode> queuesToRemove = new ArrayList<>();
+        List<String> queuesToRemove = new ArrayList<>();
         List<ProcessEntry> processesToKill = new ArrayList<>();
 
         long t = System.currentTimeMillis();
@@ -150,7 +149,7 @@ public class ProcessPool {
                 }
             });
 
-            for (HashCode hc : queuesToRemove) {
+            for (String hc : queuesToRemove) {
                 pool.remove(hc);
             }
         }

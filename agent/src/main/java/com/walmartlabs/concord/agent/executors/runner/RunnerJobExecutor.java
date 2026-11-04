@@ -22,10 +22,6 @@ package com.walmartlabs.concord.agent.executors.runner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import com.walmartlabs.concord.agent.ConfiguredJobRequest;
 import com.walmartlabs.concord.agent.ExecutionException;
 import com.walmartlabs.concord.agent.JobInstance;
@@ -62,6 +58,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -480,7 +478,7 @@ public class RunnerJobExecutor implements JobExecutor {
     private ProcessEntry fork(RunnerJob job, String[] cmd) throws ExecutionException, IOException {
         long t1 = System.currentTimeMillis();
 
-        HashCode hc = hash(cmd);
+        String hc = hash(cmd);
 
         // take a "pre-forked" JVM from the pool or start a new one
         ProcessEntry entry = processPool.take(hc, () -> {
@@ -561,7 +559,7 @@ public class RunnerJobExecutor implements JobExecutor {
         }
 
         byte[] data = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(runnerCfg);
-        HashCode hc = Hashing.sha256().hashBytes(data);
+        String hc = HexFormat.of().formatHex(sha256().digest(data));
 
         Path cfgFile = baseDir.resolve(hc + ".json");
         if (!Files.exists(cfgFile)) {
@@ -671,13 +669,20 @@ public class RunnerJobExecutor implements JobExecutor {
         return logLevel.toUpperCase();
     }
 
-    private static HashCode hash(String[] as) {
-        HashFunction f = Hashing.sha256();
-        Hasher h = f.newHasher();
+    private static String hash(String[] as) {
+        MessageDigest md = sha256();
         for (String s : as) {
-            h.putString(s, StandardCharsets.UTF_8);
+            md.update(s.getBytes(StandardCharsets.UTF_8));
         }
-        return h.hash();
+        return HexFormat.of().formatHex(md.digest());
+    }
+
+    private static MessageDigest sha256() {
+        try {
+            return MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private static void cleanup(RunnerJob job) {
