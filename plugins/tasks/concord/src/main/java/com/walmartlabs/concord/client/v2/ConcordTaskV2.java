@@ -68,13 +68,13 @@ public class ConcordTaskV2 implements ReentrantTask {
     public List<String> listSubprocesses(String instanceId, String... tags) throws Exception {
         return delegate().listSubProcesses(ListSubProcesses.of(UUID.fromString(instanceId), tags)).stream()
                 .map(e -> e.getInstanceId().toString())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<String> listSubprocesses(Map<String, Object> cfg) throws Exception {
         return delegate().listSubProcesses(new ListSubProcesses(new MapBackedVariables(cfg))).stream()
                 .map(e -> e.getInstanceId().toString())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public void suspendForCompletion(List<String> ids) throws Exception {

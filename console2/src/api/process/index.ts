@@ -126,7 +126,8 @@ export enum WaitType {
     NONE = 'NONE',
     PROCESS_COMPLETION = 'PROCESS_COMPLETION',
     PROCESS_LOCK = 'PROCESS_LOCK',
-    PROCESS_SLEEP = 'PROCESS_SLEEP'
+    PROCESS_SLEEP = 'PROCESS_SLEEP',
+    EXTERNAL_EVENT = 'EXTERNAL_EVENT'
 }
 
 export interface AbstractWaitCondition {
@@ -146,6 +147,12 @@ export interface ProcessLockCondition extends AbstractWaitCondition {
 
 export interface ProcessSleepCondition extends AbstractWaitCondition {
     until: string;
+}
+
+export interface ProcessExternalEventCondition extends AbstractWaitCondition {
+    externalEvent: string;
+    reason: string;
+    expiresAt: string;
 }
 
 export type WaitCondition = ProcessWaitCondition | ProcessLockCondition | ProcessSleepCondition;
