@@ -107,6 +107,31 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
                 throw new UserDefinedException(e.getCause().getMessage());
             }
             throw new UserDefinedException(e.getMessage());
+        } finally {
+            closeQuietly(b, engine);
+        }
+    }
+
+    /**
+     * GraalJS bindings own a polyglot Context and each GraalJS script engine owns
+     * an explicitly created polyglot Engine. Neither is released automatically,
+     * so both must be closed to avoid leaking Truffle objects.
+     */
+    private static void closeQuietly(Bindings bindings, ScriptEngine engine) {
+        if (bindings instanceof AutoCloseable closeable) {
+            try {
+                closeable.close();
+            } catch (Exception e) {
+                log.warn("Error while closing script bindings: {}", e.getMessage());
+            }
+        }
+
+        if (engine instanceof GraalJSScriptEngine graalEngine) {
+            try {
+                graalEngine.getPolyglotEngine().close();
+            } catch (Exception e) {
+                log.warn("Error while closing script engine: {}", e.getMessage());
+            }
         }
     }
 
