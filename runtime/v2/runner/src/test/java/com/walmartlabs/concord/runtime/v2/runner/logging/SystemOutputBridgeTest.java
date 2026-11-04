@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.AppenderBase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.ResourceLock;
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -140,6 +142,11 @@ class SystemOutputBridgeTest {
             }
         };
         appender.start();
+        // The configured console appenders write formatted events to System.out, which would land
+        // in the captured raw bytes once an earlier test has initialized CustomLayout.
+        List<Appender<ILoggingEvent>> savedAppenders = new ArrayList<>();
+        root.iteratorForAppenders().forEachRemaining(savedAppenders::add);
+        savedAppenders.forEach(root::detachAppender);
         root.addAppender(appender);
         root.setLevel(Level.INFO);
         try {
@@ -171,6 +178,7 @@ class SystemOutputBridgeTest {
             root.setLevel(savedLevel);
             root.detachAppender(appender);
             appender.stop();
+            savedAppenders.forEach(root::addAppender);
         }
     }
 
