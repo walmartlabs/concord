@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner.checkpoints;
  * =====
  */
 
-import com.google.common.annotations.VisibleForTesting;
 import com.walmartlabs.concord.common.ObjectInputStreamWithClassLoader;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
@@ -105,7 +104,7 @@ public class DefaultCheckpointService implements CheckpointService {
         }
     }
 
-    @VisibleForTesting
+    // visible for testing
     @SuppressWarnings("unchecked")
     static <T> T clone(T object, ClassLoader cl) throws Exception {
         byte[] ab;

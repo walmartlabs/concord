@@ -20,7 +20,6 @@ package com.walmartlabs.concord.dependencymanager;
  * =====
  */
 
-import com.google.common.annotations.VisibleForTesting;
 import com.walmartlabs.concord.common.ExceptionUtils;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -106,7 +105,7 @@ public class DependencyManager {
         this.offlineMode = cfg.offlineMode();
     }
 
-    @VisibleForTesting
+    // visible for testing
     static Path resolveLocalCacheDir() {
         String localRepo = System.getProperty("maven.repo.local");
         if (localRepo != null && !localRepo.isBlank()) {

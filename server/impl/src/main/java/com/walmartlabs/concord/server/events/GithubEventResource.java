@@ -24,7 +24,6 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -275,7 +274,7 @@ public class GithubEventResource implements Resource {
         }
     }
 
-    @VisibleForTesting
+    // visible for testing
     static class GithubEventInitiatorSupplier implements Supplier<UserEntry> {
 
         private final GithubConfiguration githubCfg;
@@ -464,7 +463,7 @@ public class GithubEventResource implements Resource {
     private record GitHubUser(String email) {
     }
 
-    @VisibleForTesting
+    // visible for testing
     record EmailCacheKey(@Nonnull URI repoUrl, @Nonnull URI userUrl) {
 
         @Override
@@ -484,7 +483,7 @@ public class GithubEventResource implements Resource {
         }
     }
 
-    @VisibleForTesting
+    // visible for testing
     static class EmailCacheLoader extends CacheLoader<EmailCacheKey, Optional<String>> {
 
         private final Map<String, Long> rateLimitGauges;

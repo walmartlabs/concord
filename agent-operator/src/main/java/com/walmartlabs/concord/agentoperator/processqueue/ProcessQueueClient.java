@@ -22,7 +22,6 @@ package com.walmartlabs.concord.agentoperator.processqueue;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
 import com.walmartlabs.concord.agentoperator.scheduler.QueueSelector;
 import com.walmartlabs.concord.sdk.Constants;
 
@@ -129,7 +128,7 @@ public class ProcessQueueClient {
         }
     }
 
-    @VisibleForTesting
+    // visible for testing
     static String escapeQueryParam(String s) {
         int i = s.indexOf("=");
         if (i < 0) {

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
-import com.google.common.annotations.VisibleForTesting;
 import com.walmartlabs.concord.common.Matcher;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamRole;
@@ -157,7 +156,7 @@ public class OidcRealm extends AuthorizingRealm {
         return teams.stream().anyMatch(ut -> ut.teamId() == teamId && ut.role() == role);
     }
 
-    @VisibleForTesting
+    // visible for testing
     static Map<String, List<PluginConfiguration.Source>> validateRoleMapping(Map<String, List<PluginConfiguration.Source>> input, RoleDao roleDao) {
         for (Map.Entry<String, List<PluginConfiguration.Source>> entry : input.entrySet()) {
             String roleName = entry.getKey();
@@ -168,7 +167,7 @@ public class OidcRealm extends AuthorizingRealm {
         return input;
     }
 
-    @VisibleForTesting
+    // visible for testing
     static Map<UUID, TeamMapping> validateTeamMapping(Map<UUID, TeamMapping> input, TeamDao teamDao) {
         Map<UUID, TeamMapping> output = new HashMap<>();
 

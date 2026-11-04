@@ -20,7 +20,6 @@ package ca.ibodrov.concord.webapp;
  * =====
  */
 
-import com.google.common.annotations.VisibleForTesting;
 import com.walmartlabs.concord.server.sdk.rest.ApiDescriptor;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
 
@@ -51,7 +50,7 @@ public class ExcludedPrefixes {
         this(collectPrefixes(apiDescriptors, servlets, servletHolders));
     }
 
-    @VisibleForTesting
+    // visible for testing
     ExcludedPrefixes(Stream<String> prefixes) {
         this.prefixes = prefixes.map(prefix -> {
                     if (prefix.endsWith("/*")) {
