@@ -22,8 +22,10 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.google.inject.TypeLiteral;
 import com.walmartlabs.concord.server.boot.FilterChainConfigurator;
 import com.walmartlabs.concord.server.boot.filters.AuthenticationHandler;
+import com.walmartlabs.concord.server.sdk.security.PrincipalSerializer;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import org.apache.shiro.realm.Realm;
 
@@ -41,6 +43,8 @@ public class PluginModule implements Module {
         newSetBinder(binder, FilterChainConfigurator.class).addBinding().to(SsoFilterChainConfigurator.class);
         newSetBinder(binder, AuthenticationHandler.class).addBinding().to(SsoHandler.class);
         newSetBinder(binder, Realm.class).addBinding().to(SsoRealm.class);
+        newSetBinder(binder, new TypeLiteral<PrincipalSerializer<?>>() {
+        }).addBinding().to(SsoTokenPrincipalSerializer.class);
 
         binder.bind(JwtAuthenticator.class).in(SINGLETON);
     }

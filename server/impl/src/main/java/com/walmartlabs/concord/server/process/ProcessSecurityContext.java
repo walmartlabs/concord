@@ -25,6 +25,7 @@ import com.google.common.cache.CacheBuilder;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.security.PrincipalCollectionSerializer;
 import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
@@ -47,12 +48,16 @@ public class ProcessSecurityContext {
 
     private final SecurityManager securityManager;
     private final ProcessStateManager stateManager;
+    private final PrincipalCollectionSerializer principalCollectionSerializer;
     private final Cache<PartialProcessKey, PrincipalCollection> principalCache;
 
     @Inject
-    public ProcessSecurityContext(SecurityManager securityManager, ProcessStateManager stateManager) {
+    public ProcessSecurityContext(SecurityManager securityManager,
+                                  ProcessStateManager stateManager,
+                                  PrincipalCollectionSerializer principalCollectionSerializer) {
         this.securityManager = securityManager;
         this.stateManager = stateManager;
+        this.principalCollectionSerializer = principalCollectionSerializer;
         this.principalCache = CacheBuilder.newBuilder()
                 .expireAfterAccess(1, TimeUnit.MINUTES)
                 .build();
@@ -71,7 +76,7 @@ public class ProcessSecurityContext {
                 dst.add(p, realm);
             }
         }
-        return SecurityUtils.serialize(dst);
+        return principalCollectionSerializer.serialize(dst);
     }
 
     /**
@@ -113,7 +118,7 @@ public class ProcessSecurityContext {
     }
 
     private PrincipalCollection doGetPrincipals(PartialProcessKey processKey) {
-        return stateManager.get(processKey, PRINCIPAL_FILE_PATH, SecurityUtils::deserialize)
+        return stateManager.get(processKey, PRINCIPAL_FILE_PATH, principalCollectionSerializer::deserialize)
                 .orElse(null);
     }
 
