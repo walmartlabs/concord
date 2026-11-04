@@ -1,0 +1,258 @@
+package com.walmartlabs.concord.project.runtime.v2;
+
+/*-
+ * *****
+ * Concord
+ * -----
+ * Copyright (C) 2017 - 2018 Walmart Inc.
+ * -----
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =====
+ */
+
+import com.walmartlabs.concord.imports.ImportManager;
+import com.walmartlabs.concord.imports.ImportsListener;
+import com.walmartlabs.concord.runtime.model.EffectiveConfiguration;
+import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
+import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.Profile;
+import com.walmartlabs.concord.runtime.v2.wrapper.ProcessDefinitionV2;
+import org.junit.jupiter.api.Test;
+
+import java.net.URI;
+import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.mockito.Mockito.mock;
+
+public class ProfileOverlayTest {
+
+    @Test
+    public void testNoActiveProfiles() throws Exception {
+        Map<String, Object> cfg = effectiveConfiguration(Collections.emptyList());
+
+        assertTopLevelValues(cfg);
+        assertEquals(List.of("mvn://base:base:1.0"), cfg.get("dependencies"));
+    }
+
+    /**
+     * A profile must only override the values its author actually specified. Everything
+     * else must be inherited from the top-level {@code configuration} block.
+     */
+    @Test
+    public void testProfileDoesNotResetUnspecifiedValues() throws Exception {
+        Map<String, Object> cfg = effectiveConfiguration(List.of("onlyDeps"));
+
+        assertTopLevelValues(cfg);
+        assertEquals(List.of("mvn://profile:profile:1.0"), cfg.get("dependencies"));
+    }
+
+    /**
+     * A value explicitly specified in a profile must win, even when it is equal to the
+     * attribute's default value.
+     */
+    @Test
+    public void testProfileOverridesExplicitValues() throws Exception {
+        Map<String, Object> cfg = effectiveConfiguration(List.of("explicitDebug"));
+
+        assertEquals(false, cfg.get("debug"));
+        assertEquals("myEntry", cfg.get("entryPoint"));
+    }
+
+    /**
+     * A partially specified nested block must only override the nested keys it actually
+     * specifies, the rest must be inherited from the top-level block.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testProfileDoesNotResetUnspecifiedNestedValues() throws Exception {
+        Map<String, Object> cfg = effectiveConfiguration(List.of("partialEvents"));
+
+        Map<String, Object> events = (Map<String, Object>) cfg.get("events");
+        assertEquals(false, events.get("recordTaskOutVars"));
+        assertEquals(7, events.get("batchSize"));
+        assertEquals(true, events.get("recordTaskInVars"));
+
+        assertEquals(true, cfg.get("debug"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testProfileDoesNotResetUnspecifiedNestedRecordValues() throws Exception {
+        Map<String, Object> cfg = effectiveConfiguration(List.of("partialValidation"));
+
+        Map<String, Object> taskCalls = (Map<String, Object>) ((Map<String, Object>) cfg.get("validation")).get("taskCalls");
+        assertEquals("DISABLED", taskCalls.get("out"));
+        assertEquals("FAIL", taskCalls.get("in"));
+    }
+
+    /**
+     * A specified nested list is replaced as a whole -- neither merged with the top-level
+     * one nor reset to the attribute's default -- and its siblings are left alone.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testProfileReplacesNestedList() throws Exception {
+        Map<String, Object> cfg = effectiveConfiguration(List.of("nestedList"));
+
+        Map<String, Object> events = (Map<String, Object>) cfg.get("events");
+        assertEquals(List.of("profileSecret"), events.get("inVarsBlacklist"));
+        assertEquals(true, events.get("recordTaskInVars"));
+        assertEquals(true, events.get("recordTaskOutVars"));
+    }
+
+    /**
+     * Active profiles are applied one after another, so each one must keep both the
+     * top-level values and whatever the previous profiles contributed.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testMultipleActiveProfiles() throws Exception {
+        for (List<String> profiles : List.of(
+                List.of("explicitDebug", "partialEvents"),
+                List.of("partialEvents", "explicitDebug"))) {
+
+            Map<String, Object> cfg = effectiveConfiguration(profiles);
+
+            // from "explicitDebug"
+            assertEquals(false, cfg.get("debug"), profiles::toString);
+
+            // from "partialEvents"
+            Map<String, Object> events = (Map<String, Object>) cfg.get("events");
+            assertEquals(false, events.get("recordTaskOutVars"), profiles::toString);
+            assertEquals(7, events.get("batchSize"), profiles::toString);
+
+            // neither profile mentions these
+            assertEquals(true, events.get("recordTaskInVars"), profiles::toString);
+            assertEquals("myEntry", cfg.get("entryPoint"), profiles::toString);
+            assertEquals(3, cfg.get("parallelLoopParallelism"), profiles::toString);
+        }
+    }
+
+    /**
+     * When several active profiles specify the same key, the last one wins.
+     */
+    @Test
+    public void testMultipleActiveProfilesOrder() throws Exception {
+        assertEquals(true, effectiveConfiguration(List.of("explicitDebug", "debugBackOn")).get("debug"));
+        assertEquals(false, effectiveConfiguration(List.of("debugBackOn", "explicitDebug")).get("debug"));
+    }
+
+    /**
+     * A profile without a {@code configuration} block at all overrides nothing.
+     */
+    @Test
+    public void testProfileWithoutConfiguration() throws Exception {
+        Map<String, Object> cfg = effectiveConfiguration(List.of("noConfiguration"));
+
+        assertTopLevelValues(cfg);
+        assertEquals(List.of("mvn://base:base:1.0"), cfg.get("dependencies"));
+    }
+
+    /**
+     * A profile that didn't come from the parser has no recorded shape, so its
+     * configuration has to be applied as a whole. Dropping it would silently lose the
+     * overlay -- see {@link Profile#rawConfiguration()}.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testProfileWithoutRecordedShapeKeepsItsConfiguration() {
+        ProcessDefinition pd = ProcessDefinition.builder()
+                .configuration(ProcessDefinitionConfiguration.builder()
+                        .entryPoint("myEntry")
+                        .build())
+                .putProfiles("assembled", Profile.builder()
+                        .configuration(ProcessDefinitionConfiguration.builder()
+                                .putArguments("myString", "hello")
+                                .build())
+                        .build())
+                .build();
+
+        Map<String, Object> cfg = EffectiveConfiguration.getEffectiveConfiguration(
+                new ProcessDefinitionV2(pd), List.of("assembled"));
+
+        assertEquals(Map.of("myString", "hello"), cfg.get("arguments"));
+    }
+
+    /**
+     * The shape is part of a profile's identity: two profiles with an equal
+     * {@link Profile#configuration()} but a different shape override different things, so
+     * they must not be equal either.
+     */
+    @Test
+    public void testShapeIsPartOfProfileIdentity() {
+        ProcessDefinitionConfiguration cfg = ProcessDefinitionConfiguration.builder()
+                .debug(false)
+                .build();
+
+        Profile explicit = Profile.builder()
+                .configuration(cfg)
+                .rawConfiguration(Map.of("debug", false))
+                .build();
+
+        Profile implicit = Profile.builder()
+                .configuration(cfg)
+                .rawConfiguration(Map.of())
+                .build();
+
+        assertNotEquals(explicit, implicit);
+
+        // ...and they really do behave differently
+        assertEquals(false, overlay(explicit).get("debug"));
+        assertEquals(true, overlay(implicit).get("debug"));
+    }
+
+    private static Map<String, Object> overlay(Profile profile) {
+        ProcessDefinition pd = ProcessDefinition.builder()
+                .configuration(ProcessDefinitionConfiguration.builder()
+                        .debug(true)
+                        .build())
+                .putProfiles("p", profile)
+                .build();
+
+        return EffectiveConfiguration.getEffectiveConfiguration(new ProcessDefinitionV2(pd), List.of("p"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void assertTopLevelValues(Map<String, Object> cfg) {
+        assertEquals(true, cfg.get("debug"));
+        assertEquals("myEntry", cfg.get("entryPoint"));
+        assertEquals(3, cfg.get("parallelLoopParallelism"));
+
+        Map<String, Object> events = (Map<String, Object>) cfg.get("events");
+        assertEquals(true, events.get("recordTaskInVars"));
+        assertEquals(true, events.get("recordTaskOutVars"));
+        assertEquals(List.of("baseSecret", "baseToken"), events.get("inVarsBlacklist"));
+
+        Map<String, Object> taskCalls = (Map<String, Object>) ((Map<String, Object>) cfg.get("validation")).get("taskCalls");
+        assertEquals("FAIL", taskCalls.get("in"));
+        assertEquals("WARN", taskCalls.get("out"));
+    }
+
+    private static Map<String, Object> effectiveConfiguration(Collection<String> activeProfiles) throws Exception {
+        ProjectLoaderV2 loader = new ProjectLoaderV2(mock(ImportManager.class));
+
+        URI uri = ClassLoader.getSystemResource("profileOverlay").toURI();
+        ProjectLoaderV2.Result result = loader.load(Paths.get(uri), new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER);
+
+        return EffectiveConfiguration.getEffectiveConfiguration(
+                new ProcessDefinitionV2(result.getProjectDefinition()), activeProfiles);
+    }
+}

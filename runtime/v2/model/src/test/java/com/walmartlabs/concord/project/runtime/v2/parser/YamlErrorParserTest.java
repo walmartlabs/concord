@@ -1829,6 +1829,18 @@ public class YamlErrorParserTest extends AbstractParserTest {
     }
 
     @Test
+    public void test1204() throws Exception {
+        String msg =
+                "(004.yml): Error @ line: 3, col: 20. Invalid value type, expected: CONFIGURATION, got: INT\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'configuration' @ line: 3, col: 5\n" +
+                        "\t\t'myProfile' @ line: 2, col: 3\n" +
+                        "\t\t\t'profiles' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/profiles/004.yml", msg);
+    }
+
+    @Test
     public void test1300() throws Exception {
         String msg =
                 "(000.yml): Error @ line: 1, col: 15. Invalid value type, expected: CONFIGURATION, got: NULL. Remove attribute or complete the definition\n" +

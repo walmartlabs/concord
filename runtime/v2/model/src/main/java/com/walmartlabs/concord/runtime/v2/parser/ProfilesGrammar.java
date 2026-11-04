@@ -22,9 +22,13 @@ package com.walmartlabs.concord.runtime.v2.parser;
 
 import com.fasterxml.jackson.core.JsonToken;
 import com.walmartlabs.concord.runtime.v2.model.ImmutableProfile;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Profile;
 import io.takari.parc.Parser;
+import io.takari.parc.Result;
 
+import java.io.Serializable;
+import java.util.Collections;
 import java.util.Map;
 
 import static com.walmartlabs.concord.runtime.v2.parser.ConfigurationGrammar.processCfgVal;
@@ -33,18 +37,55 @@ import static com.walmartlabs.concord.runtime.v2.parser.FormsGrammar.formsVal;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.mapVal;
 import static io.takari.parc.Combinators.many;
+import static io.takari.parc.Combinators.ok;
 
 public final class ProfilesGrammar {
 
+    /**
+     * The profile's {@code configuration} block, both as a typed object and in its
+     * original YAML shape -- see {@link Profile#rawConfiguration()}.
+     */
+    private static final Parser<Atom, ParsedConfiguration> profileCfgVal = in -> {
+        // parse the typed configuration first, so that invalid values are reported in
+        // terms of the configuration's own grammar rather than as a plain object
+        Result<Atom, ProcessDefinitionConfiguration> cfg = processCfgVal.apply(in);
+        if (!cfg.isSuccess()) {
+            return cfg.cast();
+        }
+
+        // the input is immutable, so the same position can be parsed again
+        Result<Atom, Map<String, Serializable>> raw = mapVal.apply(in);
+
+        return ok(new ParsedConfiguration(
+                cfg.toSuccess().getResult(),
+                raw.isSuccess() ? raw.toSuccess().getResult() : Collections.emptyMap()), cfg.getRest());
+    };
+
     public static final Parser<Atom, Profile> profileDefinition =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    with(ImmutableProfile::builder,
+                    with(ProfilesGrammar::profileBuilder,
                             o -> options(
-                                    optional("configuration", processCfgVal.map(o::configuration)),
+                                    optional("configuration", profileCfgVal.map(v -> o
+                                            .configuration(v.configuration())
+                                            .rawConfiguration(v.rawConfiguration()))),
                                     optional("flows", flowsVal.map(o::flows)),
                                     optional("forms", formsVal.map(o::forms))))
                             .map(ImmutableProfile.Builder::build));
+
+    /**
+     * Parsed profiles always carry a configuration shape, even without a
+     * {@code configuration} block -- an empty one overrides nothing.
+     */
+    private static ImmutableProfile.Builder profileBuilder() {
+        return ImmutableProfile.builder()
+                .rawConfiguration(Collections.emptyMap());
+    }
+
+    private record ParsedConfiguration(ProcessDefinitionConfiguration configuration,
+                                       Map<String, Serializable> rawConfiguration) {
+    }
 
     private static final Parser<Atom, KV<String, Profile>> profile =
             satisfyAnyField(YamlValueType.PROFILE, f -> profileDefinition.map(s -> new KV<>(f.name, s)));
