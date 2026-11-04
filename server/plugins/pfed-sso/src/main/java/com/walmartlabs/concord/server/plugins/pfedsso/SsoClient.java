@@ -26,7 +26,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.apache.http.HttpHeaders;
 import org.immutables.value.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +45,13 @@ import java.util.Set;
 public class SsoClient {
 
     private static final Logger log = LoggerFactory.getLogger(SsoClient.class);
+
+    private static final String ACCEPT_CHARSET = "Accept-Charset";
+    private static final String ACCEPT_LANGUAGE = "Accept-Language";
+    private static final String AUTHORIZATION = "Authorization";
+    private static final String CONTENT_LENGTH = "Content-Length";
+    private static final String CONTENT_TYPE = "Content-Type";
+    private static final String USER_AGENT = "User-Agent";
 
     private static final String USER_AGENT_HEADER = "Mozilla/5.0";
     private static final String ACCEPT_LANG_HEADER = "en-US,en;q=0.5";
@@ -157,11 +163,11 @@ public class SsoClient {
         String clientIdAndSecret = String.format("%s:%s", cfg.getClientId(), cfg.getClientSecret());
         String authzHeaderValue = String.format("Basic %s", Base64.getEncoder().encodeToString(clientIdAndSecret.getBytes()));
 
-        con.setRequestProperty(HttpHeaders.AUTHORIZATION, authzHeaderValue);
-        con.setRequestProperty(HttpHeaders.USER_AGENT, USER_AGENT_HEADER);
-        con.setRequestProperty(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_HEADER);
-        con.setRequestProperty(HttpHeaders.ACCEPT_LANGUAGE, ACCEPT_LANG_HEADER);
-        con.setRequestProperty(HttpHeaders.ACCEPT_CHARSET, CHARSET_HEADER);
+        con.setRequestProperty(AUTHORIZATION, authzHeaderValue);
+        con.setRequestProperty(USER_AGENT, USER_AGENT_HEADER);
+        con.setRequestProperty(CONTENT_TYPE, CONTENT_TYPE_HEADER);
+        con.setRequestProperty(ACCEPT_LANGUAGE, ACCEPT_LANG_HEADER);
+        con.setRequestProperty(ACCEPT_CHARSET, CHARSET_HEADER);
 
         con.setRequestMethod("POST");
         con.setConnectTimeout((int) cfg.getTokenServiceConnectTimeout().toMillis());
@@ -170,7 +176,7 @@ public class SsoClient {
 
         byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
         int postDataLength = postData.length;
-        con.setRequestProperty(HttpHeaders.CONTENT_LENGTH, Integer.toString(postDataLength));
+        con.setRequestProperty(CONTENT_LENGTH, Integer.toString(postDataLength));
 
         try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
             wr.write(postData);
@@ -187,8 +193,8 @@ public class SsoClient {
             URL url = new URL(cfg.getUserInfoEndpointUrl());
             con = (HttpURLConnection) url.openConnection();
             String authzHeaderValue = String.format("Bearer %s", accessToken);
-            con.setRequestProperty(HttpHeaders.AUTHORIZATION, authzHeaderValue);
-            con.setRequestProperty(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_HEADER);
+            con.setRequestProperty(AUTHORIZATION, authzHeaderValue);
+            con.setRequestProperty(CONTENT_TYPE, CONTENT_TYPE_HEADER);
             con.setRequestMethod("GET");
             con.setConnectTimeout((int) cfg.getTokenServiceConnectTimeout().toMillis());
             con.setReadTimeout((int) cfg.getTokenServiceReadTimeout().toMillis());
