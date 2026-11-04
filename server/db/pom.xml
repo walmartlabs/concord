@@ -21,6 +21,9 @@
         <db.host>localhost</db.host>
         <db.username>postgres</db.username>
         <db.password>q1</db.password>
+        <db.codegen.baseline.refresh>false</db.codegen.baseline.refresh>
+        <db.codegen.baseline.verify>false</db.codegen.baseline.verify>
+        <db.codegen.external>false</db.codegen.external>
     </properties>
 
     <dependencies>
@@ -120,6 +123,18 @@
                             </portNames>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>codegen-test-sources</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src/codegen/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -170,7 +185,8 @@
                 <version>${liquibase.version}</version>
                 <executions>
                     <execution>
-                        <phase>generate-sources</phase>
+                        <id>codegen-migrations</id>
+                        <phase>none</phase>
                         <goals>
                             <goal>update</goal>
                         </goals>
@@ -188,6 +204,67 @@
                         <createExtensionAvailable>true</createExtensionAvailable>
                     </expressionVariables>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>check-codegen-baseline</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${project.build.directory}/codegen-classes"/>
+                                <mkdir dir="${project.build.directory}/codegen-baseline"/>
+                                <javac srcdir="${project.basedir}/src/codegen/java"
+                                       destdir="${project.build.directory}/codegen-classes"
+                                       encoding="UTF-8" includeantruntime="false">
+                                    <classpath refid="maven.compile.classpath"/>
+                                    <compilerarg value="--release"/>
+                                    <compilerarg value="${maven.compiler.release}"/>
+                                </javac>
+                                <property name="codegen.moduleDirectory" value="${project.basedir}"/>
+                                <property name="codegen.workDirectory" value="${project.build.directory}/codegen-baseline"/>
+                                <echoproperties destfile="${project.build.directory}/codegen-baseline/build.properties"/>
+                                <java classname="com.walmartlabs.concord.db.codegen.CodegenBaseline" fork="false" failonerror="true">
+                                    <classpath>
+                                        <pathelement location="${project.build.directory}/codegen-classes"/>
+                                        <path refid="maven.compile.classpath"/>
+                                    </classpath>
+                                    <arg value="check"/>
+                                    <arg value="${project.build.directory}/codegen-baseline/build.properties"/>
+                                </java>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>prepare-codegen-schema</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <property name="codegen.moduleDirectory" value="${project.basedir}"/>
+                                <property name="codegen.workDirectory" value="${project.build.directory}/codegen-baseline"/>
+                                <property name="codegen.containerId" value="${docker.container.db.id}"/>
+                                <echoproperties destfile="${project.build.directory}/codegen-baseline/build.properties"/>
+                                <java classname="com.walmartlabs.concord.db.codegen.CodegenBaseline" fork="false" failonerror="true">
+                                    <classpath>
+                                        <pathelement location="${project.build.directory}/codegen-classes"/>
+                                        <path refid="maven.compile.classpath"/>
+                                    </classpath>
+                                    <arg value="run"/>
+                                    <arg value="${project.build.directory}/codegen-baseline/build.properties"/>
+                                </java>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.jooq</groupId>
@@ -238,6 +315,46 @@
 
     <profiles>
         <profile>
+            <id>refresh-codegen-baseline</id>
+            <properties>
+                <db.codegen.baseline.refresh>true</db.codegen.baseline.refresh>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.liquibase</groupId>
+                        <artifactId>liquibase-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>codegen-migrations</id>
+                                <phase>generate-sources</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>verify-codegen-baseline</id>
+            <properties>
+                <db.codegen.baseline.verify>true</db.codegen.baseline.verify>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.liquibase</groupId>
+                        <artifactId>liquibase-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>codegen-migrations</id>
+                                <phase>generate-sources</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>looper</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
@@ -245,6 +362,7 @@
             <properties>
                 <db.host>${env.DB_CONTAINER_NAME}</db.host>
                 <db.port>5432</db.port>
+                <db.codegen.external>true</db.codegen.external>
             </properties>
             <build>
                 <plugins>
