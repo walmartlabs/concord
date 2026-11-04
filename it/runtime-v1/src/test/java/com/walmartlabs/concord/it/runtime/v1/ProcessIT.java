@@ -23,7 +23,6 @@ package com.walmartlabs.concord.it.runtime.v1;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
-import com.google.common.io.Resources;
 import com.walmartlabs.concord.client2.ApiException;
 import com.walmartlabs.concord.client2.FormListEntry;
 import com.walmartlabs.concord.client2.FormSubmitResponse;
@@ -44,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -675,6 +675,8 @@ public class ProcessIT {
     }
 
     private static String resourceToString(URL resource) throws IOException {
-        return Resources.toString(resource, StandardCharsets.UTF_8);
+        try (InputStream in = resource.openStream()) {
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 }

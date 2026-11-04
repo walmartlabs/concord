@@ -153,7 +153,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
     }
 
     private static void assertFileContent(String expected, Path f) throws IOException {
-        String str = com.google.common.io.Files.asCharSource(f.toFile(), StandardCharsets.UTF_8).read();
+        String str = new String(Files.readAllBytes(f), StandardCharsets.UTF_8);
         assertEquals(expected, str);
     }
 

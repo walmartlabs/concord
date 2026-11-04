@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.google.common.io.Files;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import org.junit.jupiter.api.Test;
@@ -247,7 +246,7 @@ public class AnsibleIT extends AbstractServerIT {
 
         URI playbookUri = AnsibleIT.class.getResource("ansibleWithPostFormSuspension/playbook/hello.yml").toURI();
         File playbookFileContent = new File(playbookUri);
-        InputStream playbookStream = Files.asByteSource(playbookFileContent).openStream();
+        InputStream playbookStream = new FileInputStream(playbookFileContent);
 
         // ---
 

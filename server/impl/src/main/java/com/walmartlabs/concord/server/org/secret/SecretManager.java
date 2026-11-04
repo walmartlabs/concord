@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.secret.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Secret;
@@ -283,8 +282,9 @@ public class SecretManager {
 
     public BinaryDataSecret buildBinaryData(InputStream data) throws IOException {
         int maxSecretDataSize = secretStoreProvider.getMaxSecretDataSize();
-        InputStream limitedDataInputStream = ByteStreams.limit(data, maxSecretDataSize + 1L);
-        BinaryDataSecret secret = new BinaryDataSecret(ByteStreams.toByteArray(limitedDataInputStream));
+        // read one byte past the limit to detect oversized data
+        int readLimit = (int) Math.min(Integer.MAX_VALUE, maxSecretDataSize + 1L);
+        BinaryDataSecret secret = new BinaryDataSecret(data.readNBytes(readLimit));
         if (secret.getData().length > maxSecretDataSize) {
             throw new IllegalArgumentException("File size exceeds limit of " + maxSecretDataSize + " bytes");
         }

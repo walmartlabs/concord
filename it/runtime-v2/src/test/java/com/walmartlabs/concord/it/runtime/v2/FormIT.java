@@ -23,7 +23,6 @@ package com.walmartlabs.concord.it.runtime.v2;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
-import com.google.common.io.CharStreams;
 import com.walmartlabs.concord.client2.FormListEntry;
 import com.walmartlabs.concord.client2.FormSubmitResponse;
 import com.walmartlabs.concord.client2.ProcessApi;
@@ -35,7 +34,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -278,7 +276,7 @@ public class FormIT extends AbstractTest {
         assertEquals(200, http.getResponseCode());
 
         try (InputStream is = http.getInputStream()) {
-            String str = CharStreams.toString(new InputStreamReader(is, StandardCharsets.UTF_8));
+            String str = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             ScriptEngine se = new ScriptEngineManager().getEngineByName("js");
             Object result = se.eval(str);
             assertInstanceOf(Map.class, result);
