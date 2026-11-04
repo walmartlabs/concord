@@ -24,7 +24,6 @@ import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.google.common.base.Strings;
 import com.walmartlabs.concord.runtime.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.model.SourceMap;
 import com.walmartlabs.concord.runtime.model.Trigger;
@@ -71,7 +70,7 @@ public class ProjectValidator {
     private static void validateEntryPoint(ProcessDefinition pd, Trigger t, List<String> errors, List<String> warnings) {
         String entryPoint = getEntryPoint(t);
 
-        if (Strings.isNullOrEmpty(entryPoint)) {
+        if (entryPoint == null || entryPoint.isEmpty()) {
             errors.add(makeErrorMessage(t, Constants.Request.ENTRY_POINT_KEY, "is missing"));
             return;
         }

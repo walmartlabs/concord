@@ -37,7 +37,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -69,7 +68,9 @@ public class TestingConcordServer implements AutoCloseable {
     }
 
     public synchronized TestingConcordServer start() throws Exception {
-        checkArgument(db.isRunning(), "The database container is not running");
+        if (!db.isRunning()) {
+            throw new IllegalArgumentException("The database container is not running");
+        }
 
         var config = prepareConfig(db);
         var system = new ConcordServerModule(config);

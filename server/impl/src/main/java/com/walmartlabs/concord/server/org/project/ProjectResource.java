@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-import com.google.common.base.Splitter;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.GenericOperationResult;
@@ -394,7 +393,8 @@ public class ProjectResource implements Resource {
             return new String[0];
         }
 
-        List<String> l = Splitter.on("/").omitEmptyStrings().splitToList(s);
-        return l.toArray(new String[0]);
+        return Arrays.stream(s.split("/"))
+                .filter(p -> !p.isEmpty())
+                .toArray(String[]::new);
     }
 }

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.google.common.base.Strings;
 
 public final class ITConstants {
 
@@ -54,7 +53,7 @@ public final class ITConstants {
 
     private static String env(String k, String def) {
         String v = System.getenv(k);
-        if (Strings.isNullOrEmpty(v)) {
+        if (v == null || v.isEmpty()) {
             return def;
         }
         return v;

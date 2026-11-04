@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.misc;
  * =====
  */
 
-import com.google.common.collect.Lists;
 import com.walmartlabs.concord.runtime.v2.sdk.DryRunReady;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
@@ -72,7 +71,7 @@ public class CollectionsTaskV2 implements Task {
      * @return a new list with the elements in reverse order
      */
     public static <T> List<T> reverse(List<T> list) {
-        return Lists.reverse(list);
+        return list.reversed();
     }
 
     /**
