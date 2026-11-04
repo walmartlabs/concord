@@ -20,8 +20,6 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
@@ -40,7 +38,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -89,14 +89,14 @@ public class TriggerManager extends AbstractDao {
         }
 
         List<TriggerEntry> currentTriggers = triggersDao.list(tx, projectId, repoId);
-        ListMultimap<String, TriggerEntry> triggerIds = toTriggerIds(currentTriggers);
+        Map<String, List<TriggerEntry>> triggerIds = toTriggerIds(currentTriggers);
 
         pd.triggers().forEach(t -> {
             t = enrichTriggerDefinition(tx, repoId, t);
 
             String internalId = TriggerInternalIdCalculator.getId(t.name(), t.activeProfiles(), t.arguments(), t.conditions(), t.configuration());
             List<TriggerEntry> triggers = triggerIds.get(internalId);
-            if (!triggers.isEmpty()) {
+            if (triggers != null && !triggers.isEmpty()) {
                 triggers.remove(0);
                 return;
             }
@@ -113,8 +113,12 @@ public class TriggerManager extends AbstractDao {
             postProcessTrigger(tx, triggerId, t);
         });
 
-        if (!triggerIds.isEmpty()) {
-            triggersDao.delete(tx, triggerIds.values().stream().map(TriggerEntry::getId).collect(Collectors.toList()));
+        List<UUID> obsoleteTriggerIds = triggerIds.values().stream()
+                .flatMap(List::stream)
+                .map(TriggerEntry::getId)
+                .collect(Collectors.toList());
+        if (!obsoleteTriggerIds.isEmpty()) {
+            triggersDao.delete(tx, obsoleteTriggerIds);
         }
 
         log.info("refresh ['{}', '{}'] -> done, triggers count: {}", projectId, repoId, pd.triggers().size());
@@ -146,11 +150,11 @@ public class TriggerManager extends AbstractDao {
         }
     }
 
-    private static ListMultimap<String, TriggerEntry> toTriggerIds(List<TriggerEntry> triggers) {
-        ListMultimap<String, TriggerEntry> result = ArrayListMultimap.create();
+    private static Map<String, List<TriggerEntry>> toTriggerIds(List<TriggerEntry> triggers) {
+        Map<String, List<TriggerEntry>> result = new HashMap<>();
         for (TriggerEntry t : triggers) {
             String internalId = TriggerInternalIdCalculator.getId(t.getEventSource(), t.getActiveProfiles(), t.getArguments(), t.getConditions(), t.getCfg());
-            result.put(internalId, t);
+            result.computeIfAbsent(internalId, k -> new ArrayList<>()).add(t);
         }
         return result;
     }
