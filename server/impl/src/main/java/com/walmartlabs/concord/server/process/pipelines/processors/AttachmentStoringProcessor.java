@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.server.jooq.enums.RawPayloadMode;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
@@ -42,7 +41,7 @@ public class AttachmentStoringProcessor implements PayloadProcessor {
     /**
      * Attachments used by the server. They should not be added to the workspace.
      */
-    private static final Set<String> SYSTEM_ATTACHMENT_NAMES = ImmutableSet.of(Payload.WORKSPACE_ARCHIVE.name(),
+    private static final Set<String> SYSTEM_ATTACHMENT_NAMES = Set.of(Payload.WORKSPACE_ARCHIVE.name(),
             ConfigurationProcessor.REQUEST_ATTACHMENT_KEY.name());
 
     private static final Pattern RAW_PAYLOAD_PATTERN = Pattern.compile("^(concord|flows)[/.](.*)(yml|yaml)$");

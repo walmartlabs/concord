@@ -23,7 +23,6 @@ package ca.ibodrov.concord.webapp;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableMap;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
@@ -304,7 +303,7 @@ public class WebappFilter extends HttpFilter {
     }
 
     private static Map<String, StaticResource> loadResources(String file) {
-        var resources = ImmutableMap.<String, StaticResource>builder();
+        var resources = new HashMap<String, StaticResource>();
 
         var cl = WebappFilter.class.getClassLoader();
         try (var in = cl.getResourceAsStream(file)) {
@@ -331,14 +330,16 @@ public class WebappFilter extends HttpFilter {
                     var contentType = getContentType(path)
                             .orElseThrow(() -> new RuntimeException("Can't determine Content-Type for " + path));
 
-                    resources.put(path, new StaticResource(path, contentType, eTag));
+                    if (resources.putIfAbsent(path, new StaticResource(path, contentType, eTag)) != null) {
+                        throw new RuntimeException(file + " file, duplicate path: " + path);
+                    }
                 }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        return resources.build();
+        return Map.copyOf(resources);
     }
 
     private static String toEntityTag(String value) {

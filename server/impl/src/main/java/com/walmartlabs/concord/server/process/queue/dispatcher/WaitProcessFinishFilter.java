@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
  * =====
  */
 
-import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.process.waits.ProcessCompletionCondition;
@@ -37,7 +36,7 @@ import java.util.UUID;
  */
 public abstract class WaitProcessFinishFilter implements Filter {
 
-    private static final Set<ProcessStatus> FINAL_STATUSES = ImmutableSet.of(
+    private static final Set<ProcessStatus> FINAL_STATUSES = Set.of(
             ProcessStatus.FINISHED,
             ProcessStatus.FAILED,
             ProcessStatus.CANCELLED,

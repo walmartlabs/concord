@@ -21,7 +21,6 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.it.common.GitUtils;
 
@@ -107,7 +106,7 @@ public abstract class AbstractOneOpsTriggerIT extends AbstractServerIT {
                 .name(projectName)
                 .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
-                .repositories(ImmutableMap.of(repoName, repo)));
+                .repositories(Map.of(repoName, repo)));
 
         return bareRepo;
     }

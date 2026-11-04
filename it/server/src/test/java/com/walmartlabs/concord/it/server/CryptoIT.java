@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.client2.*;
 import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
@@ -111,7 +110,7 @@ public class CryptoIT extends AbstractServerIT {
 
         byte[] payload = archive(CryptoIT.class.getResource("cryptoFileWithOrg").toURI());
 
-        StartProcessResponse spr = start(ImmutableMap.of(
+        StartProcessResponse spr = start(Map.of(
                 "archive", payload,
                 "arguments.secretName", secretName,
                 "arguments.pwd", storePassword,
@@ -143,7 +142,7 @@ public class CryptoIT extends AbstractServerIT {
 
         byte[] payload = archive(CryptoIT.class.getResource("cryptoWithoutPassword").toURI());
 
-        StartProcessResponse spr = start(ImmutableMap.of(
+        StartProcessResponse spr = start(Map.of(
                 "archive", payload,
                 "arguments.secretName", secretName,
                 "arguments.secretOrgName", orgName));
@@ -183,7 +182,7 @@ public class CryptoIT extends AbstractServerIT {
 
         byte[] payload = archive(CryptoIT.class.getResource("encryptString").toURI());
 
-        StartProcessResponse spr = start(ImmutableMap.of(
+        StartProcessResponse spr = start(Map.of(
                 "org", orgName,
                 "project", projectName,
                 "archive", payload,
@@ -224,7 +223,7 @@ public class CryptoIT extends AbstractServerIT {
 
         byte[] payload = archive(CryptoIT.class.getResource("decryptString").toURI());
 
-        StartProcessResponse spr = start(ImmutableMap.of(
+        StartProcessResponse spr = start(Map.of(
                 "org", orgName,
                 "project", projectName,
                 "archive", payload,
@@ -280,7 +279,7 @@ public class CryptoIT extends AbstractServerIT {
         String encryptedData = evr.getData();
         byte[] rawEncryptedData = Base64.getDecoder().decode(encryptedData);
 
-        StartProcessResponse spr = start(ImmutableMap.of(
+        StartProcessResponse spr = start(Map.of(
                 "org", orgName,
                 "project", projectName,
                 "archive", payload,
@@ -326,7 +325,7 @@ public class CryptoIT extends AbstractServerIT {
 
         byte[] payload = archive(CryptoIT.class.getResource("decryptString").toURI());
 
-        StartProcessResponse spr = start(ImmutableMap.of(
+        StartProcessResponse spr = start(Map.of(
                 "org", orgName,
                 "project", projectName,
                 "archive", payload,
@@ -360,7 +359,7 @@ public class CryptoIT extends AbstractServerIT {
 
         byte[] payload = archive(CryptoIT.class.getResource("decryptString").toURI());
 
-        StartProcessResponse spr = start(ImmutableMap.of(
+        StartProcessResponse spr = start(Map.of(
                 "org", orgName,
                 "project", projectName,
                 "archive", payload,
@@ -373,7 +372,7 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        spr = start(ImmutableMap.of(
+        spr = start(Map.of(
                 "org", orgName,
                 "project", projectName,
                 "archive", payload,
@@ -493,7 +492,7 @@ public class CryptoIT extends AbstractServerIT {
     private void test(String project, String secretName, String storePassword, @Language("RegExp") String log) throws Exception {
         byte[] payload = archive(CryptoIT.class.getResource(project).toURI());
 
-        StartProcessResponse spr = start(ImmutableMap.of(
+        StartProcessResponse spr = start(Map.of(
                 "archive", payload,
                 "arguments.secretName", secretName,
                 "arguments.pwd", storePassword));

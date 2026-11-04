@@ -22,7 +22,6 @@ package com.walmartlabs.concord.it.runtime.v2;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
-import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.it.common.GitHubUtils;
 import com.walmartlabs.concord.it.common.GitUtils;
@@ -222,7 +221,7 @@ public class GitHubTriggersV2IT extends AbstractTest {
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
-                .repositories(ImmutableMap.of(repoName, repo)));
+                .repositories(Map.of(repoName, repo)));
 
         return bareRepo;
     }

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
@@ -41,9 +40,9 @@ public class VariablesIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
-                .cfg(ImmutableMap.of("arguments",
-                        ImmutableMap.of("nested",
-                                ImmutableMap.of(
+                .cfg(Map.of("arguments",
+                        Map.of("nested",
+                                Map.of(
                                         "y", "cba",
                                         "z", true))))
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
@@ -85,8 +84,8 @@ public class VariablesIT extends AbstractServerIT {
         String encryptedValue = evr.getData();
 
         projectsApi.updateProjectConfiguration(orgName, projectName,
-                ImmutableMap.of("arguments",
-                        ImmutableMap.of("mySecret", encryptedValue)));
+                Map.of("arguments",
+                        Map.of("mySecret", encryptedValue)));
 
         // ---
 

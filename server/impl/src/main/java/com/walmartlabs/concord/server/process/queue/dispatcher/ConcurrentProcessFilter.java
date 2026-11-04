@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
  * =====
  */
 
-import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.ConcurrentProcessRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
@@ -42,7 +41,7 @@ import java.util.*;
  */
 public class ConcurrentProcessFilter extends WaitProcessFinishFilter {
 
-    private static final Set<ProcessStatus> FINAL_STATUSES = ImmutableSet.of(
+    private static final Set<ProcessStatus> FINAL_STATUSES = Set.of(
             ProcessStatus.SUSPENDED,
             ProcessStatus.FINISHED,
             ProcessStatus.FAILED,

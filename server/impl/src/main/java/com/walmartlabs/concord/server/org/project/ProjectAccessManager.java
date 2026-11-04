@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
@@ -38,6 +37,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -174,13 +174,13 @@ public class ProjectAccessManager {
     }
 
     private void addAuditLog(UUID projectId, Collection<ResourceAccessEntry> entries, boolean isReplace) {
-        List<ImmutableMap<String, ? extends Serializable>> teams = entries.stream()
-                .map(e -> ImmutableMap.of("id", e.getTeamId(), "level", e.getLevel()))
+        List<Map<String, ? extends Serializable>> teams = entries.stream()
+                .map(e -> Map.of("id", e.getTeamId(), "level", e.getLevel()))
                 .collect(Collectors.toList());
 
         auditLog.add(AuditObject.PROJECT, AuditAction.UPDATE)
                 .field("projectId", projectId)
-                .field("access", ImmutableMap.of(
+                .field("access", Map.of(
                         "replace", isReplace,
                         "teams", teams))
                 .log();

@@ -31,7 +31,6 @@ import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -192,7 +191,7 @@ public class FormIT extends AbstractTest {
         assertEquals("Moo", values.get("firstName"));
         assertEquals("Xaa", values.get("lastName"));
         assertEquals(3, values.get("sum"));
-        assertEquals(ImmutableMap.of("city", "Toronto", "province", "Ontario"), values.get("address"));
+        assertEquals(Map.of("city", "Toronto", "province", "Ontario"), values.get("address"));
     }
 
     @Test

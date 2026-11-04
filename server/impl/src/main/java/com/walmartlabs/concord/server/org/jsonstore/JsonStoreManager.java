@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.jsonstore;
  * =====
  */
 
-import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.JsonStoreRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
@@ -310,13 +309,13 @@ public class JsonStoreManager {
     }
 
     private void addAuditLog(UUID storeId, Collection<ResourceAccessEntry> entries, boolean isReplace) {
-        List<ImmutableMap<String, ? extends Serializable>> teams = entries.stream()
-                .map(e -> ImmutableMap.of("id", e.getTeamId(), "level", e.getLevel()))
+        List<Map<String, ? extends Serializable>> teams = entries.stream()
+                .map(e -> Map.of("id", e.getTeamId(), "level", e.getLevel()))
                 .collect(Collectors.toList());
 
         auditLog.add(AuditObject.JSON_STORE, AuditAction.UPDATE)
                 .field("storeId", storeId)
-                .field("access", ImmutableMap.of(
+                .field("access", Map.of(
                         "replace", isReplace,
                         "teams", teams))
                 .log();
