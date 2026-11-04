@@ -20,12 +20,12 @@ package com.walmartlabs.concord.agentoperator.resources;
  * =====
  */
 
-import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -42,7 +42,7 @@ public final class Resources {
             if (in == null) {
                 throw new RuntimeException("Resource '" + name + "' not found");
             }
-            return CharStreams.toString(new InputStreamReader(in, Charsets.UTF_8));
+            return CharStreams.toString(new InputStreamReader(in, StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

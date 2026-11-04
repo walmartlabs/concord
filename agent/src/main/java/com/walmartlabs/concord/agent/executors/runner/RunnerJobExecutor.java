@@ -22,7 +22,6 @@ package com.walmartlabs.concord.agent.executors.runner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.common.base.Charsets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
@@ -57,6 +56,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -675,7 +675,7 @@ public class RunnerJobExecutor implements JobExecutor {
         HashFunction f = Hashing.sha256();
         Hasher h = f.newHasher();
         for (String s : as) {
-            h.putString(s, Charsets.UTF_8);
+            h.putString(s, StandardCharsets.UTF_8);
         }
         return h.hash();
     }
