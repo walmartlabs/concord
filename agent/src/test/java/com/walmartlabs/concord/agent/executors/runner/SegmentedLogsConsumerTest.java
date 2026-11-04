@@ -20,7 +20,6 @@ package com.walmartlabs.concord.agent.executors.runner;
  * =====
  */
 
-import com.google.common.primitives.Bytes;
 import com.walmartlabs.concord.agent.logging.LogAppender;
 import com.walmartlabs.concord.agent.logging.LogSegmentStats;
 import com.walmartlabs.concord.agent.logging.SegmentedLogsConsumer;
@@ -70,9 +69,9 @@ public class SegmentedLogsConsumerTest {
         String msg2 = "hello223";
         byte[] s2 = bb(1, msg2);
 
-        consumer.accept(toChunk(Bytes.concat(s1, s2)));
+        consumer.accept(toChunk(concat(s1, s2)));
 
-        verify(logAppender, times(1)).appendLog(any(), eq(1L), eq(Bytes.concat(msg1.getBytes(), msg2.getBytes())));
+        verify(logAppender, times(1)).appendLog(any(), eq(1L), eq(concat(msg1.getBytes(), msg2.getBytes())));
         verify(logAppender, times(1)).updateSegment(any(), eq(1L), eq(new LogSegmentStats(null, 2, 1)));
     }
 
@@ -87,7 +86,7 @@ public class SegmentedLogsConsumerTest {
         String msg2 = "hello223";
         byte[] s2 = bb(2, msg2);
 
-        consumer.accept(toChunk(Bytes.concat(s1, s2)));
+        consumer.accept(toChunk(concat(s1, s2)));
 
         verify(logAppender, times(1)).appendLog(any(), eq(1L), eq(msg1.getBytes()));
         verify(logAppender, times(1)).appendLog(any(), eq(2L), eq(msg2.getBytes()));
@@ -136,7 +135,7 @@ public class SegmentedLogsConsumerTest {
         String msg2 = "bye";
         byte[] s1 = bb(1, msg1, 0, 0);
         byte[] s2 = bb(2, msg2, 0, 0);
-        byte[] ab = Bytes.concat(s1, "trash".getBytes(), s2);
+        byte[] ab = concat(s1, "trash".getBytes(), s2);
 
         System.out.println(">>>" + new String(ab));
 
@@ -153,7 +152,7 @@ public class SegmentedLogsConsumerTest {
      */
     @Test
     public void statusTime() {
-        byte[] ab = Bytes.concat(bb(1, "hello", 0, 0), status(1, LogSegmentStatus.OK, "1767225600123"));
+        byte[] ab = concat(bb(1, "hello", 0, 0), status(1, LogSegmentStatus.OK, "1767225600123"));
 
         consumer.accept(toChunk(ab));
 
@@ -168,7 +167,7 @@ public class SegmentedLogsConsumerTest {
      */
     @Test
     public void splitStatusTime() {
-        byte[] ab = Bytes.concat(bb(1, "hello", 0, 0), status(1, LogSegmentStatus.ERROR, "1767225600123"));
+        byte[] ab = concat(bb(1, "hello", 0, 0), status(1, LogSegmentStatus.ERROR, "1767225600123"));
 
         consumer.accept(toChunk(Arrays.copyOfRange(ab, 0, ab.length - 5)));
         verify(logAppender, times(1)).appendLog(any(), eq(1L), eq("hello".getBytes()));
@@ -185,7 +184,7 @@ public class SegmentedLogsConsumerTest {
      */
     @Test
     public void lastStatus() {
-        byte[] ab = Bytes.concat(status(1, LogSegmentStatus.ERROR, "1767225600123"),
+        byte[] ab = concat(status(1, LogSegmentStatus.ERROR, "1767225600123"),
                 status(1, LogSegmentStatus.OK, "1767225601456"));
 
         consumer.accept(toChunk(ab));
@@ -219,7 +218,7 @@ public class SegmentedLogsConsumerTest {
                 .status(LogSegmentStatus.OK)
                 .build());
 
-        consumer.accept(toChunk(Bytes.concat(header, "hello".getBytes())));
+        consumer.accept(toChunk(concat(header, "hello".getBytes())));
         verify(logAppender, times(1)).appendLog(any(), eq(1L), eq("hello".getBytes()));
         verify(logAppender, times(1)).updateSegment(any(), eq(1L), eq(new LogSegmentStats(LogSegmentStatus.OK, 0, 0)));
 
@@ -258,6 +257,21 @@ public class SegmentedLogsConsumerTest {
                 .status(LogSegmentStatus.RUNNING)
                 .build());
 
-        return Bytes.concat(header, ab);
+        return concat(header, ab);
+    }
+
+    private static byte[] concat(byte[]... arrays) {
+        int length = 0;
+        for (byte[] a : arrays) {
+            length += a.length;
+        }
+
+        byte[] result = new byte[length];
+        int pos = 0;
+        for (byte[] a : arrays) {
+            System.arraycopy(a, 0, result, pos, a.length);
+            pos += a.length;
+        }
+        return result;
     }
 }
