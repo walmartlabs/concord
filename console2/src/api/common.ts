@@ -61,6 +61,20 @@ export const responseError = (
 const isAbortError = (error: unknown): boolean =>
     (error instanceof Error || error instanceof DOMException) && error.name === 'AbortError';
 
+const TRANSIENT_STATUSES = new Set([0, 408, 429, 500, 502, 503, 504]);
+
+/**
+ * Whether a thrown value is an API error worth retrying. Only errors produced by the API layer
+ * qualify: a plain Error is a client-side bug and would be retried forever.
+ */
+export const isTransientRequestError = (error: unknown): boolean => {
+    if (typeof error !== 'object' || error === null || error instanceof Error) {
+        return false;
+    }
+    const status = (error as Partial<RequestErrorData>).status;
+    return typeof status === 'number' && TRANSIENT_STATUSES.has(status);
+};
+
 export const toRequestError = (error: unknown): RequestErrorData => {
     if (typeof error === 'object' && error !== null) {
         const value = error as Partial<RequestErrorData>;
@@ -302,14 +316,28 @@ export const parseNestedQueryParams = (params: QueryParams, keys: string[]): Que
     return result;
 };
 
-export const fetchJson = async <T>(uri: string, init?: RequestInit): Promise<T> => {
-    const response = await managedFetch(uri, init);
+/**
+ * Reads a successful response body. Malformed JSON keeps the HTTP status; a body that cannot be
+ * read at all, e.g. because the connection dropped mid-response, is a network failure (status 0).
+ */
+export const readBody = async <T>(
+    response: Response,
+    read: (response: Response) => Promise<T>
+): Promise<T> => {
     try {
-        return await response.json();
+        return await read(response);
     } catch (error) {
         if (isAbortError(error)) throw error;
-        throw responseError(response, 'Invalid JSON response');
+        if (error instanceof SyntaxError) {
+            throw responseError(response, 'Invalid JSON response');
+        }
+        throw toRequestError(error);
     }
+};
+
+export const fetchJson = async <T>(uri: string, init?: RequestInit): Promise<T> => {
+    const response = await managedFetch(uri, init);
+    return readBody(response, (r) => r.json());
 };
 
 const wait = (delayMs: number) =>

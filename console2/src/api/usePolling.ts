@@ -17,17 +17,40 @@
  * limitations under the License.
  * =====
  */
-import { useEffect, useRef, useState } from 'react';
-import { RequestError } from './common';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { isTransientRequestError, RequestErrorData, toRequestError } from './common';
+
+export interface PollingError extends RequestErrorData {
+    /** The hook keeps polling after this error. */
+    retrying: boolean;
+    /** An earlier request succeeded, so the caller has data to keep showing. */
+    loaded: boolean;
+}
+
+/** Whether the error should replace loaded content rather than wait for the next poll. */
+export const isBlockingPollingError = (error?: PollingError): error is PollingError =>
+    !!error && !(error.retrying && error.loaded);
+
+/** Receives non-blocking errors of nested polls; `undefined` clears the error of `id`. */
+export type PollingErrorReporter = (id: object, error?: PollingError) => void;
+
+/**
+ * Lets a page surface errors that nested polls keep hidden behind their loaded content.
+ * Without a provider such errors are not shown anywhere.
+ */
+export const PollingErrorContext = createContext<PollingErrorReporter | undefined>(undefined);
 
 export const usePolling = (
     request: () => Promise<boolean>,
     interval: number,
     loadingHandler: (inc: number) => void,
     refresh: boolean
-): RequestError | undefined => {
+): PollingError | undefined => {
     const poll = useRef<number | undefined>(undefined);
-    const [error, setError] = useState<RequestError>();
+    const loaded = useRef(false);
+    const [error, setError] = useState<PollingError>();
+    const reportError = useContext(PollingErrorContext);
+    const [reporterId] = useState(() => ({}));
 
     useEffect(() => {
         let cancelled = false;
@@ -39,16 +62,23 @@ export const usePolling = (
             try {
                 result = await request();
 
-                setError(undefined);
+                if (!cancelled) {
+                    loaded.current = true;
+                    setError(undefined);
+                }
             } catch (e) {
-                setError(e);
+                if (!cancelled) {
+                    // Retry transient failures using the configured polling interval.
+                    result = isTransientRequestError(e);
+                    setError({ ...toRequestError(e), retrying: result, loaded: loaded.current });
+                }
             } finally {
-                if (result) {
-                    if (!cancelled) {
+                if (!cancelled) {
+                    if (result) {
                         poll.current = window.setTimeout(() => fetchData(), interval);
+                    } else {
+                        stopPolling();
                     }
-                } else {
-                    stopPolling();
                 }
 
                 loadingHandler(-1);
@@ -62,6 +92,15 @@ export const usePolling = (
             stopPolling();
         };
     }, [request, interval, refresh, loadingHandler]);
+
+    useEffect(() => {
+        // Blocking errors are rendered by the caller itself.
+        if (!reportError || !error || isBlockingPollingError(error)) {
+            return;
+        }
+        reportError(reporterId, error);
+        return () => reportError(reporterId, undefined);
+    }, [reportError, reporterId, error]);
 
     const stopPolling = () => {
         if (poll.current) {

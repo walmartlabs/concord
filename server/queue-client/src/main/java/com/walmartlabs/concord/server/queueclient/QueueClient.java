@@ -24,17 +24,15 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.walmartlabs.concord.server.queueclient.message.Message;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.ee8.websocket.api.Session;
-import org.eclipse.jetty.ee8.websocket.api.WebSocketListener;
-import org.eclipse.jetty.ee8.websocket.api.WebSocketPingPongListener;
-import org.eclipse.jetty.ee8.websocket.client.ClientUpgradeRequest;
-import org.eclipse.jetty.ee8.websocket.client.WebSocketClient;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.websocket.api.Callback;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
+import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.HttpHeaders;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
@@ -107,7 +105,10 @@ public class QueueClient {
         return (Future<E>) f;
     }
 
-    private static final class Worker implements Runnable, WebSocketListener, WebSocketPingPongListener {
+    /**
+     * Must be public: Jetty invokes {@link Session.Listener} methods via method handles.
+     */
+    public static final class Worker implements Runnable, Session.Listener.AutoDemanding {
 
         private enum State {
             CONNECTING,
@@ -213,13 +214,9 @@ public class QueueClient {
         }
 
         @Override
-        public void onWebSocketPing(ByteBuffer payload) {
-            // we don't expect pings
-        }
-
-        @Override
-        public void onWebSocketBinary(byte[] payload, int offset, int len) {
-            log.warn("onWebSocketBinary [{}, '{}'] -> ignored", offset, len);
+        public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
+            log.warn("onWebSocketBinary ['{}'] -> ignored", payload.remaining());
+            callback.succeed();
         }
 
         @Override
@@ -244,8 +241,8 @@ public class QueueClient {
         }
 
         @Override
-        public void onWebSocketConnect(Session session) {
-            log.info("onWebSocketConnect ['{}'] -> done", session);
+        public void onWebSocketOpen(Session session) {
+            log.info("onWebSocketOpen ['{}'] -> done", session);
         }
 
         @Override
@@ -270,7 +267,7 @@ public class QueueClient {
             ClientUpgradeRequest request = new ClientUpgradeRequest();
             request.setHeader(AGENT_ID, agentId);
             request.setHeader(AGENT_UA, userAgent);
-            request.setHeader(HttpHeaders.AUTHORIZATION, apiToken);
+            request.setHeader(HttpHeader.AUTHORIZATION.asString(), apiToken);
             return client.connect(this, destUri, request).get(connectTimeout, TimeUnit.MILLISECONDS);
         }
 
@@ -279,9 +276,8 @@ public class QueueClient {
                 return false;
             }
 
-            message.setCorrelationId(requestIdGenerator.incrementAndGet());
             try {
-                session.getRemote().sendString(MessageSerializer.serialize(message));
+                Callback.Completable.with(c -> session.sendText(MessageSerializer.serialize(message), c)).get();
 
                 lastRequestTimestamp = System.currentTimeMillis();
 
@@ -299,21 +295,23 @@ public class QueueClient {
                 return;
             }
 
+            // register the request before sending it, the response may arrive before send() returns
+            e.request.setCorrelationId(requestIdGenerator.incrementAndGet());
+            awaitResponses.put(e.getCorrelationId(), e);
+
             boolean sent = send(session, e.request);
             if (!sent) {
+                awaitResponses.remove(e.getCorrelationId());
                 e.cancel();
                 state.set(State.DISCONNECTING);
-                return;
             }
-
-            awaitResponses.put(e.getCorrelationId(), e);
         }
 
-        private void processPing(Session session) throws IOException {
+        private void processPing(Session session) throws Exception {
             long now = System.currentTimeMillis();
 
             if (now - lastRequestTimestamp >= pingInterval) {
-                session.getRemote().sendPing(ByteBuffer.wrap("ping".getBytes()));
+                Callback.Completable.with(c -> session.sendPing(ByteBuffer.wrap("ping".getBytes()), c)).get();
             }
 
             if (now - lastResponseTimestamp >= maxNoActivityPeriod) {

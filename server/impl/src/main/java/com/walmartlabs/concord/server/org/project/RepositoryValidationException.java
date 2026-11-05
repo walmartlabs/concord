@@ -21,8 +21,8 @@ package com.walmartlabs.concord.server.org.project;
  */
 
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.StatusType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.StatusType;
 
 
 public class RepositoryValidationException extends RuntimeException {

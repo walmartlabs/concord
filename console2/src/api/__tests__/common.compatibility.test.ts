@@ -19,7 +19,7 @@
  */
 
 import { afterEach, expect, test, vi } from 'vitest';
-import { fetchJson, managedFetch, toRequestError } from '../common';
+import { fetchJson, isTransientRequestError, managedFetch, toRequestError } from '../common';
 import { getProjectAccess, updateProjectAccess } from '../org/project';
 import { get as getTeam, createOrUpdate as createTeam } from '../org/team';
 
@@ -124,6 +124,21 @@ test.each(['<html>Login</html>', '{broken', ''])(
         });
     }
 );
+
+test('reports a dropped connection while reading the body as a network failure', async () => {
+    const response = jsonResponse({ ok: true });
+    vi.spyOn(response, 'json').mockRejectedValue(new TypeError('network error'));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(response);
+    const error = await fetchJson('/api/test').catch((e) => e);
+    expect(error).toMatchObject({ status: 0, message: 'network error (0)' });
+    expect(isTransientRequestError(error)).toBe(true);
+});
+
+test('does not retry a successful response with malformed JSON', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('{broken', { status: 200 }));
+    const error = await fetchJson('/api/test').catch((e) => e);
+    expect(isTransientRequestError(error)).toBe(false);
+});
 
 test('preserves cancellation while reading a successful response body', async () => {
     const response = jsonResponse({ ok: true });

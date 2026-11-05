@@ -25,9 +25,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HexFormat;
 
 public final class HashUtils {
 
@@ -37,7 +37,7 @@ public final class HashUtils {
     public static String hashAsHexString(Object v) throws IOException {
         String s = objectMapper.writeValueAsString(v);
         HashCode hc = Hashing.sha1().hashString(s, StandardCharsets.UTF_8);
-        return DatatypeConverter.printHexBinary(hc.asBytes());
+        return HexFormat.of().withUpperCase().formatHex(hc.asBytes());
     }
 
     private HashUtils() {
