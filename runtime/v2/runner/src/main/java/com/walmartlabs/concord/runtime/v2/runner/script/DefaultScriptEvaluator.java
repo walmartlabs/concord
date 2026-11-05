@@ -25,6 +25,7 @@ import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import com.walmartlabs.concord.sdk.Constants;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.HostAccess;
@@ -107,6 +108,56 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
                 throw new UserDefinedException(e.getCause().getMessage());
             }
             throw new UserDefinedException(e.getMessage());
+        } finally {
+            if (engine instanceof GraalJSScriptEngine) {
+                detachGuestValues(context, variables, scriptResult);
+            }
+            closeQuietly(b, engine);
+        }
+    }
+
+    /**
+     * Scripts get direct references to workflow variables and can store JS objects
+     * in them (e.g. {@code config.servers = [...]}). Such values must be converted to
+     * plain Java objects while the script's context is still open.
+     */
+    private static void detachGuestValues(Context context, Map<String, Object> variables, ScriptResult scriptResult) {
+        try {
+            Variables vars = context.variables();
+            vars.toMap().forEach((k, v) -> {
+                Object detached = PolyglotValueDetacher.detach(v);
+                if (detached != v) {
+                    vars.set(k, detached);
+                }
+            });
+
+            variables.values().forEach(PolyglotValueDetacher::detach);
+            PolyglotValueDetacher.detachValues(scriptResult.items());
+        } catch (Exception e) {
+            log.warn("Error while detaching script values: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * GraalJS bindings own a polyglot Context and each GraalJS script engine owns
+     * an explicitly created polyglot Engine. Neither is released automatically,
+     * so both must be closed to avoid leaking Truffle objects.
+     */
+    private static void closeQuietly(Bindings bindings, ScriptEngine engine) {
+        if (bindings instanceof AutoCloseable closeable) {
+            try {
+                closeable.close();
+            } catch (Exception e) {
+                log.warn("Error while closing script bindings: {}", e.getMessage());
+            }
+        }
+
+        if (engine instanceof GraalJSScriptEngine graalEngine) {
+            try {
+                graalEngine.getPolyglotEngine().close();
+            } catch (Exception e) {
+                log.warn("Error while closing script engine: {}", e.getMessage());
+            }
         }
     }
 

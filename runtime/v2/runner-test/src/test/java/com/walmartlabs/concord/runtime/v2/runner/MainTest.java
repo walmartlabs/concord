@@ -570,6 +570,33 @@ public class MainTest  {
     }
 
     @Test
+    public void testScriptVariablesMutation() throws Exception {
+        deploy("scriptVariablesMutation");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("items", new ArrayList<>())
+                .putArguments("kv", new HashMap<>())
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*items: \\[\\{name=a, nested=\\{x=1}}].*");
+        assertLog(log, ".*boom=\\{y=\\[1, 2]}.*");
+        assertLog(log, ".*bang=\\{z=ok}.*");
+    }
+
+    @Test
+    public void testScriptVariablesNestedAssign() throws Exception {
+        deploy("scriptVariablesNestedAssign");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*first server: a.example.com.*");
+        assertLog(log, ".*after checkpoint: b.example.com.*");
+    }
+
+    @Test
     public void testScriptOut() throws Exception {
         deploy("scriptOut");
 
