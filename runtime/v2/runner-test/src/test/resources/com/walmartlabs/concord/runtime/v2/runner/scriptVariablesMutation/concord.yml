@@ -1,0 +1,9 @@
+flows:
+  default:
+    - script: js
+      body: |
+        items.add({ name: "a", nested: { x: 1 } });
+        kv.put("boom", { y: [1, 2] });
+        context.variables().get("kv").put("bang", { z: "ok" });
+    - log: "items: ${items}"
+    - log: "kv: ${kv}"
