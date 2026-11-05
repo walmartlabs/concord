@@ -21,7 +21,6 @@ package com.walmartlabs.concord.repository;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.util.concurrent.Striped;
 import com.walmartlabs.concord.common.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +35,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class RepositoryCache {
 
@@ -46,7 +46,7 @@ public class RepositoryCache {
     private final long lockTimeout;
     private final long maxCacheAge;
 
-    private final Striped<Lock> locks;
+    private final Lock[] locks;
 
     public RepositoryCache(Path cacheDir,
                            Path repoJournalPath,
@@ -59,7 +59,13 @@ public class RepositoryCache {
         this.lockTimeout = lockTimeout.toMillis();
         this.accessJournal = maxCacheAge.toMillis() > 0 ? new RepositoryAccessJournal(objectMapper, repoJournalPath) : null;
         this.maxCacheAge = maxCacheAge.toMillis();
-        this.locks = Striped.lock(lockCount);
+        if (lockCount <= 0) {
+            throw new IllegalArgumentException("lockCount must be positive: " + lockCount);
+        }
+        this.locks = new Lock[lockCount];
+        for (int i = 0; i < lockCount; i++) {
+            this.locks[i] = new ReentrantLock();
+        }
     }
 
     public Path getPath(String repositoryUrl) {
@@ -82,7 +88,7 @@ public class RepositoryCache {
     }
 
     private <T> T withLock(long lockTimeout, String repoUrl, Callable<T> f) {
-        Lock l = locks.get(repoUrl);
+        Lock l = locks[Math.floorMod(repoUrl.hashCode(), locks.length)];
         try {
             if (l.tryLock(lockTimeout, TimeUnit.MILLISECONDS)) {
                 try {

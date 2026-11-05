@@ -22,9 +22,6 @@ package com.walmartlabs.concord.agentoperator.processqueue;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.escape.Escaper;
-import com.google.common.net.UrlEscapers;
 import com.walmartlabs.concord.agentoperator.scheduler.QueueSelector;
 import com.walmartlabs.concord.sdk.Constants;
 
@@ -38,6 +35,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -45,6 +43,8 @@ import java.security.cert.X509Certificate;
 import java.util.List;
 
 public class ProcessQueueClient {
+    private static final String PATH_SEGMENT_SAFE_CHARS = "-._~!$&'()*+,;=:@";
+    private static final String HEX_DIGITS = "0123456789ABCDEF";
 
     private static final TypeReference<List<ProcessQueueEntry>> LIST_OF_PROCESS_QUEUE_ENTRIES = new TypeReference<>() {
     };
@@ -128,15 +128,31 @@ public class ProcessQueueClient {
         }
     }
 
-    @VisibleForTesting
+    // visible for testing
     static String escapeQueryParam(String s) {
-        Escaper escaper = UrlEscapers.urlPathSegmentEscaper();
         int i = s.indexOf("=");
         if (i < 0) {
-            return escaper.escape(s);
+            return escapePathSegment(s);
         }
         String key = s.substring(0, i);
         String value = s.substring(i + 1);
-        return escaper.escape(key) + "=" + escaper.escape(value);
+        return escapePathSegment(key) + "=" + escapePathSegment(value);
+    }
+
+    /**
+     * Percent-encodes everything except RFC 3986 unreserved characters, sub-delims, ':' and '@',
+     * i.e. the characters allowed in a URL path segment.
+     */
+    private static String escapePathSegment(String s) {
+        StringBuilder sb = new StringBuilder(s.length());
+        for (byte b : s.getBytes(StandardCharsets.UTF_8)) {
+            int c = b & 0xFF;
+            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || PATH_SEGMENT_SAFE_CHARS.indexOf(c) >= 0) {
+                sb.append((char) c);
+            } else {
+                sb.append('%').append(HEX_DIGITS.charAt(c >> 4)).append(HEX_DIGITS.charAt(c & 0xF));
+            }
+        }
+        return sb.toString();
     }
 }

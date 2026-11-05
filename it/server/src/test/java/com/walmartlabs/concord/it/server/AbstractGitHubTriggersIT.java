@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.common.PathUtils;
@@ -68,7 +67,7 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
-                .repositories(ImmutableMap.of(repoName, repo)));
+                .repositories(Map.of(repoName, repo)));
 
         return bareRepo;
     }

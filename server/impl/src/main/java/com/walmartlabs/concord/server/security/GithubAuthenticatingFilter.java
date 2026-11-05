@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.security;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
@@ -225,7 +224,7 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
 
         private byte[] getPayload() throws IOException {
             if (payload == null) {
-                payload = ByteStreams.toByteArray(getRequest().getInputStream());
+                payload = getRequest().getInputStream().readAllBytes();
             }
             return payload;
         }

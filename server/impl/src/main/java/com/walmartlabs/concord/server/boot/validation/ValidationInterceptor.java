@@ -43,7 +43,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Set;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Based on the original {@link org.sonatype.siesta.server.validation.ValidationInterceptor}.
@@ -54,7 +54,7 @@ public class ValidationInterceptor implements MethodInterceptor {
     private ExecutableValidator methodValidator;
 
     public Object invoke(final MethodInvocation mi) throws Throwable {
-        checkNotNull(methodValidator);
+        requireNonNull(methodValidator);
 
         final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
         try {

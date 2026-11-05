@@ -21,7 +21,6 @@ package com.walmartlabs.concord.it.testingserver;
  */
 
 import ca.ibodrov.concord.webapp.WebappPluginModule;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -38,7 +37,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -70,7 +68,9 @@ public class TestingConcordServer implements AutoCloseable {
     }
 
     public synchronized TestingConcordServer start() throws Exception {
-        checkArgument(db.isRunning(), "The database container is not running");
+        if (!db.isRunning()) {
+            throw new IllegalArgumentException("The database container is not running");
+        }
 
         var config = prepareConfig(db);
         var system = new ConcordServerModule(config);
@@ -121,19 +121,18 @@ public class TestingConcordServer implements AutoCloseable {
     private Config prepareConfig(PostgreSQLContainer<?> db) {
         var extraConfig = ConfigFactory.parseMap(this.extraConfiguration);
 
-        var testConfig = ConfigFactory.parseMap(ImmutableMap.<String, String>builder()
-                .put("server.port", String.valueOf(apiPort))
-                .put("db.url", db.getJdbcUrl())
-                .put("db.appUsername", db.getUsername())
-                .put("db.appPassword", db.getPassword())
-                .put("db.inventoryUsername", db.getUsername())
-                .put("db.inventoryPassword", db.getPassword())
-                .put("db.changeLogParameters.defaultAdminToken", adminApiKey)
-                .put("db.changeLogParameters.defaultAgentToken", agentApiKey)
-                .put("secretStore.serverPassword", randomString(64))
-                .put("secretStore.secretStoreSalt", randomString(64))
-                .put("secretStore.projectSecretSalt", randomString(64))
-                .build());
+        var testConfig = ConfigFactory.parseMap(Map.ofEntries(
+                Map.entry("server.port", String.valueOf(apiPort)),
+                Map.entry("db.url", db.getJdbcUrl()),
+                Map.entry("db.appUsername", db.getUsername()),
+                Map.entry("db.appPassword", db.getPassword()),
+                Map.entry("db.inventoryUsername", db.getUsername()),
+                Map.entry("db.inventoryPassword", db.getPassword()),
+                Map.entry("db.changeLogParameters.defaultAdminToken", adminApiKey),
+                Map.entry("db.changeLogParameters.defaultAgentToken", agentApiKey),
+                Map.entry("secretStore.serverPassword", randomString(64)),
+                Map.entry("secretStore.secretStoreSalt", randomString(64)),
+                Map.entry("secretStore.projectSecretSalt", randomString(64))));
 
         var defaultConfig = ConfigFactory.load("concord-server.conf", ConfigParseOptions.defaults(), ConfigResolveOptions.defaults().setAllowUnresolved(true))
                 .getConfig("concord-server");

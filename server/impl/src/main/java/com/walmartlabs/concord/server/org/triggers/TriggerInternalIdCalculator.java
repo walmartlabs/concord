@@ -20,29 +20,28 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 
 public final class TriggerInternalIdCalculator {
 
-    @SuppressWarnings("UnstableApiUsage")
     public static String getId(String name, List<String> activeProfiles, Map<String, Object> arguments, Map<String, Object> conditions, Map<String, Object> cfg) {
-        HashFunction hf = Hashing.sha256();
-        return hf.newHasher()
-                .putUnencodedChars(name)
-                .putObject(ensureList(activeProfiles), (from, into) -> from.stream().sorted().forEach(p -> into.putString(p, StandardCharsets.UTF_8)))
-                .putUnencodedChars(objectToString(arguments))
-                .putUnencodedChars(objectToString(conditions))
-                .putUnencodedChars(objectToString(cfg))
-                .hash()
-                .toString();
+        MessageDigest md = sha256();
+        putUnencodedChars(md, name);
+        ensureList(activeProfiles).stream()
+                .sorted()
+                .forEach(p -> md.update(p.getBytes(StandardCharsets.UTF_8)));
+        putUnencodedChars(md, objectToString(arguments));
+        putUnencodedChars(md, objectToString(conditions));
+        putUnencodedChars(md, objectToString(cfg));
+        return HexFormat.of().formatHex(md.digest());
     }
 
     @SuppressWarnings("unchecked")
@@ -60,26 +59,49 @@ public final class TriggerInternalIdCalculator {
         return o.toString();
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     private static String hashCollection(Collection<Object> collection) {
-        Hasher hasher = Hashing.sha256().newHasher();
+        MessageDigest md = sha256();
         collection.stream()
                 .map(TriggerInternalIdCalculator::objectToString)
                 .sorted()
-                .forEach(hasher::putUnencodedChars);
-        return hasher.hash().toString();
+                .forEach(s -> putUnencodedChars(md, s));
+        return HexFormat.of().formatHex(md.digest());
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     private static String hashMap(Map<String, Object> map) {
-        Hasher hasher = Hashing.sha256().newHasher();
+        MessageDigest md = sha256();
 
         map.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
-                .forEach(e -> hasher.putUnencodedChars(e.getKey())
-                        .putUnencodedChars(objectToString(e.getValue())));
+                .forEach(e -> {
+                    putUnencodedChars(md, e.getKey());
+                    putUnencodedChars(md, objectToString(e.getValue()));
+                });
 
-        return hasher.hash().toString();
+        return HexFormat.of().formatHex(md.digest());
+    }
+
+    /**
+     * Feeds each UTF-16 code unit as two little-endian bytes, without any charset encoding,
+     * so unpaired surrogates are hashed as-is. Keeps the IDs produced by the former
+     * Guava-based implementation ({@code Hasher#putUnencodedChars}).
+     */
+    private static void putUnencodedChars(MessageDigest md, String s) {
+        byte[] bytes = new byte[s.length() * 2];
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            bytes[i * 2] = (byte) c;
+            bytes[i * 2 + 1] = (byte) (c >>> 8);
+        }
+        md.update(bytes);
+    }
+
+    private static MessageDigest sha256() {
+        try {
+            return MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private static <E> List<E> ensureList(List<E> list) {

@@ -20,16 +20,18 @@ package com.walmartlabs.concord.it.runtime.v2;
  * =====
  */
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public final class Utils {
 
     public static String resourceToString(URL resource) throws IOException {
-        return Resources.toString(resource, Charsets.UTF_8);
+        try (InputStream in = resource.openStream()) {
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 
     private Utils() {

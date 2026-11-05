@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.process.state;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.walmartlabs.concord.common.DateTimeUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.AbstractDaoTest;
@@ -38,6 +37,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -153,7 +153,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
     }
 
     private static void assertFileContent(String expected, Path f) throws IOException {
-        String str = com.google.common.io.Files.asCharSource(f.toFile(), Charsets.UTF_8).read();
+        String str = new String(Files.readAllBytes(f), StandardCharsets.UTF_8);
         assertEquals(expected, str);
     }
 

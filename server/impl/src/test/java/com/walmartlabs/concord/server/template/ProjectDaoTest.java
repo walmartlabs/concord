@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.template;
  * =====
  */
 
-import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.TestObjectMapper;
@@ -57,7 +56,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
     public void testInsertDelete() {
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
-        Map<String, Object> cfg = ImmutableMap.of("a", "a-v");
+        Map<String, Object> cfg = Map.of("a", "a-v");
         String projectName = "project#" + System.currentTimeMillis();
         UUID projectId = projectDao.insert(orgId, projectName, "test", null, cfg, null, null, new byte[0], null, null, null);
 
@@ -72,14 +71,14 @@ public class ProjectDaoTest extends AbstractDaoTest {
         repositoryDao.insert(projectId, repoName, repoUrl, null, null, null, null, false, null, false);
 
         // ---
-        Map<String, Object> newCfg1 = ImmutableMap.of("a1", "a1-v");
+        Map<String, Object> newCfg1 = Map.of("a1", "a1-v");
         tx(tx -> projectDao.updateCfg(tx, projectId, newCfg1));
 
         actualCfg = projectDao.getConfiguration(projectId);
         assertEquals(newCfg1, actualCfg);
 
         // ---
-        Map<String, Object> newCfg2 = ImmutableMap.of("a2", "a2-v");
+        Map<String, Object> newCfg2 = Map.of("a2", "a2-v");
         tx(tx -> projectDao.update(tx, orgId, projectId, ProjectVisibility.PRIVATE, projectName, "new-description", newCfg2, null, null, null, null, null));
 
         actualCfg = projectDao.getConfiguration(projectId);

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.queueclient;
  * =====
  */
 
-import com.google.common.util.concurrent.SettableFuture;
 import com.walmartlabs.concord.server.queueclient.message.Message;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import org.eclipse.jetty.client.HttpClient;
@@ -94,10 +93,10 @@ public class QueueClient {
 
     @SuppressWarnings("unchecked")
     public <E extends Message> Future<E> request(Message request) {
-        SettableFuture<Message> f = SettableFuture.create();
+        CompletableFuture<Message> f = new CompletableFuture<>();
         synchronized (requests) {
             if (ignoreRequests.contains(request.getMessageType())) {
-                f.set(null);
+                f.complete(null);
             } else {
                 requests.add(new RequestEntry(request, f));
             }
@@ -394,19 +393,19 @@ public class QueueClient {
     private static class RequestEntry {
 
         private final Message request;
-        private final SettableFuture<Message> future;
+        private final CompletableFuture<Message> future;
 
-        public RequestEntry(Message request, SettableFuture<Message> future) {
+        public RequestEntry(Message request, CompletableFuture<Message> future) {
             this.request = request;
             this.future = future;
         }
 
         public void onResponse(Message response) {
-            future.set(response);
+            future.complete(response);
         }
 
         public void cancel() {
-            future.set(null);
+            future.complete(null);
         }
 
         public Long getCorrelationId() {

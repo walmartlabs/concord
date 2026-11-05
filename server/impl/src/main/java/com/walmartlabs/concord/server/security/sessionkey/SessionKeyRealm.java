@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security.sessionkey;
  * =====
  */
 
-import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.process.queue.ProcessInitiatorEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
@@ -51,7 +50,7 @@ public class SessionKeyRealm extends AuthorizingRealm {
     private final ProcessSecurityContext processSecurityContext;
     private final ProcessQueueManager processQueueManager;
 
-    private static final Set<ProcessStatus> FINISHED_STATUSES = ImmutableSet.of(
+    private static final Set<ProcessStatus> FINISHED_STATUSES = Set.of(
             ProcessStatus.FINISHED,
             ProcessStatus.FAILED,
             ProcessStatus.CANCELLED,

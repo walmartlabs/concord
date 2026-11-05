@@ -23,9 +23,9 @@ package com.walmartlabs.concord.server.plugins.pfedsso.signature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.KeyType;
 import com.walmartlabs.concord.server.plugins.pfedsso.JwkHelper;
-import net.minidev.json.JSONObject;
 
 import java.security.KeyPair;
+import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -39,8 +39,8 @@ public class SignatureConfigurationFactory {
         }
 
         try {
-            JSONObject json = objectMapper.readValue(cfg, JSONObject.class);
-            KeyType kty = KeyType.parse(json.getAsString("kty"));
+            Map<String, Object> json = objectMapper.readerForMapOf(Object.class).readValue(cfg);
+            KeyType kty = KeyType.parse((String) json.get("kty"));
             if (KeyType.EC.equals(kty)) {
                 KeyPair key = JwkHelper.buildECKeyPairFromJwk(json);
                 return new ECSignatureConfiguration(key);

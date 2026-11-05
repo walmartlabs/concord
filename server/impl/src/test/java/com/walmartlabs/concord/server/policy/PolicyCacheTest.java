@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.policy;
  * =====
  */
 
-import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.policyengine.EntityRule;
 import com.walmartlabs.concord.policyengine.PolicyEngineRules;
 import com.walmartlabs.concord.server.TestObjectMapper;
@@ -43,7 +42,7 @@ public class PolicyCacheTest {
         Map<String, Object> ruleParams = new HashMap<>();
         ruleParams.put("nullValue", null);
         ruleParams.put("nullValue2", null);
-        Map<String, Object> conditions = Collections.singletonMap("entity", ImmutableMap.of("params", ruleParams));
+        Map<String, Object> conditions = Collections.singletonMap("entity", Map.of("params", ruleParams));
 
         Map<String, Object> denyEntityRule = new HashMap<>();
         denyEntityRule.put("msg", "test message");

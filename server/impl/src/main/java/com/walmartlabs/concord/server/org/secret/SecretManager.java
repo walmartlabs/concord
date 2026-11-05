@@ -20,8 +20,6 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.secret.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Secret;
@@ -284,8 +282,9 @@ public class SecretManager {
 
     public BinaryDataSecret buildBinaryData(InputStream data) throws IOException {
         int maxSecretDataSize = secretStoreProvider.getMaxSecretDataSize();
-        InputStream limitedDataInputStream = ByteStreams.limit(data, maxSecretDataSize + 1L);
-        BinaryDataSecret secret = new BinaryDataSecret(ByteStreams.toByteArray(limitedDataInputStream));
+        // read one byte past the limit to detect oversized data
+        int readLimit = (int) Math.min(Integer.MAX_VALUE, maxSecretDataSize + 1L);
+        BinaryDataSecret secret = new BinaryDataSecret(data.readNBytes(readLimit));
         if (secret.getData().length > maxSecretDataSize) {
             throw new IllegalArgumentException("File size exceeds limit of " + maxSecretDataSize + " bytes");
         }
@@ -874,13 +873,13 @@ public class SecretManager {
     }
 
     private void addAuditLog(UUID secretId, Collection<ResourceAccessEntry> entries, boolean isReplace) {
-        List<ImmutableMap<String, ? extends Serializable>> teams = entries.stream()
-                .map(e -> ImmutableMap.of("id", e.getTeamId(), "level", e.getLevel()))
+        List<Map<String, ? extends Serializable>> teams = entries.stream()
+                .map(e -> Map.of("id", e.getTeamId(), "level", e.getLevel()))
                 .collect(Collectors.toList());
 
         auditLog.add(AuditObject.SECRET, AuditAction.UPDATE)
                 .field("secretId", secretId)
-                .field("access", ImmutableMap.of(
+                .field("access", Map.of(
                         "replace", isReplace,
                         "teams", teams))
                 .log();

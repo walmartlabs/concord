@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server;
 
 import com.walmartlabs.concord.server.boot.RequestErrorHandler;
 import com.walmartlabs.concord.server.console.ResponseTemplates;
-import org.apache.http.HttpHeaders;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.MimeTypes;
 
 import javax.inject.Inject;
@@ -48,7 +48,7 @@ public class GenericRequestErrorHandler implements RequestErrorHandler {
 
         OutputStream out = response.getOutputStream();
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        String accept = request.getHeader(HttpHeaders.ACCEPT);
+        String accept = request.getHeader(HttpHeader.ACCEPT.asString());
 
         if (accept != null && accept.toLowerCase().startsWith(MimeTypes.Type.APPLICATION_JSON.asString())) {
             response.setContentType(MimeTypes.Type.APPLICATION_JSON_UTF_8.asString());

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Test;
@@ -225,7 +224,7 @@ public class CheckpointsIT extends AbstractServerIT {
 
         // start the process
 
-        StartProcessResponse spr = start(ImmutableMap.of(
+        StartProcessResponse spr = start(Map.of(
                 "org", orgName,
                 "project", projectName,
                 "archive", payload,
@@ -249,7 +248,7 @@ public class CheckpointsIT extends AbstractServerIT {
 
         byte[] payload = archive(CheckpointsIT.class.getResource("checkpointExpressions").toURI());
 
-        StartProcessResponse spr = start(ImmutableMap.of(
+        StartProcessResponse spr = start(Map.of(
                 "arguments.x", xValue,
                 "archive", payload));
 

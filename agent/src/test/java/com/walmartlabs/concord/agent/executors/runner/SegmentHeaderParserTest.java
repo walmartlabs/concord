@@ -20,7 +20,6 @@ package com.walmartlabs.concord.agent.executors.runner;
  * =====
  */
 
-import com.google.common.primitives.Bytes;
 import com.walmartlabs.concord.agent.logging.SegmentHeaderParser;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentHeader;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentSerializer;
@@ -60,7 +59,7 @@ public class SegmentHeaderParserTest {
      */
     @Test
     public void test1_1() {
-        byte[] ab = Bytes.concat(bb(1, "hello-1"), bb(2, "hello-21"));
+        byte[] ab = concat(bb(1, "hello-1"), bb(2, "hello-21"));
 
         List<Segment> segments = new ArrayList<>();
         List<Position> invalidSegments = new ArrayList<>();
@@ -97,7 +96,7 @@ public class SegmentHeaderParserTest {
     public void test3() {
         String log = "hello";
         byte[] ab = {'1', '2', '3'};
-        ab = Bytes.concat(ab, bb(2, log));
+        ab = concat(ab, bb(2, log));
 
         List<Segment> segments = new ArrayList<>();
         List<Position> invalidSegments = new ArrayList<>();
@@ -119,7 +118,7 @@ public class SegmentHeaderParserTest {
     public void test4() {
         String log = "hello";
         byte[] ab = {'1', '2', '3'};
-        ab = Bytes.concat(bb(2, log), ab);
+        ab = concat(bb(2, log), ab);
 
         List<Segment> segments = new ArrayList<>();
         List<Position> invalidSegments = new ArrayList<>();
@@ -223,6 +222,21 @@ public class SegmentHeaderParserTest {
                 .status(LogSegmentStatus.RUNNING)
                 .build());
 
-        return Bytes.concat(header, ab);
+        return concat(header, ab);
+    }
+
+    private static byte[] concat(byte[]... arrays) {
+        int length = 0;
+        for (byte[] a : arrays) {
+            length += a.length;
+        }
+
+        byte[] result = new byte[length];
+        int pos = 0;
+        for (byte[] a : arrays) {
+            System.arraycopy(a, 0, result, pos, a.length);
+            pos += a.length;
+        }
+        return result;
     }
 }

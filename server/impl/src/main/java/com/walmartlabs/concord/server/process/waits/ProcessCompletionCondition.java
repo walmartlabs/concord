@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.process.waits;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.immutables.value.Value;
 
@@ -38,7 +37,7 @@ public abstract class ProcessCompletionCondition extends AbstractWaitCondition {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Set<ProcessStatus> DEFAULT_FINISHED_STATUSES = ImmutableSet.of(
+    private static final Set<ProcessStatus> DEFAULT_FINISHED_STATUSES = Set.of(
             ProcessStatus.FINISHED,
             ProcessStatus.FAILED,
             ProcessStatus.CANCELLED,

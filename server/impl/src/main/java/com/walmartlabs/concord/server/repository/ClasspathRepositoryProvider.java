@@ -20,11 +20,11 @@ package com.walmartlabs.concord.server.repository;
  * =====
  */
 
-import com.google.common.io.Resources;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.repository.*;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
@@ -46,7 +46,7 @@ public class ClasspathRepositoryProvider implements RepositoryProvider {
     public FetchResult fetch(FetchRequest request) {
         String repoUrl = request.url();
         Path dst = request.destination();
-        URL resUrl = Resources.getResource(normalizeUrl(repoUrl));
+        URL resUrl = getResource(normalizeUrl(repoUrl));
 
         try {
             if (!Files.exists(dst)) {
@@ -56,8 +56,9 @@ public class ClasspathRepositoryProvider implements RepositoryProvider {
             String fileName = repoUrl.substring(repoUrl.lastIndexOf('/') + 1);
             Path dstFile = dst.resolve(fileName);
 
-            try (OutputStream out = Files.newOutputStream(dstFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-                Resources.copy(resUrl, out);
+            try (InputStream in = resUrl.openStream();
+                 OutputStream out = Files.newOutputStream(dstFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+                in.transferTo(out);
             }
             return null;
         } catch (IOException e) {
@@ -69,6 +70,19 @@ public class ClasspathRepositoryProvider implements RepositoryProvider {
     public Snapshot export(Path src, Path dst, List<String> ignorePatterns) throws IOException {
         PathUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
         return Snapshot.includeAll();
+    }
+
+    private static URL getResource(String name) {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        if (cl == null) {
+            cl = ClasspathRepositoryProvider.class.getClassLoader();
+        }
+
+        URL url = cl.getResource(name);
+        if (url == null) {
+            throw new IllegalArgumentException("resource " + name + " not found.");
+        }
+        return url;
     }
 
     private static String normalizeUrl(String url) {

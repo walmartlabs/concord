@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.metrics;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.google.common.base.Suppliers;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -32,7 +31,6 @@ import javax.inject.Provider;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
 public class MetricInterceptor implements MethodInterceptor {
 
@@ -42,19 +40,31 @@ public class MetricInterceptor implements MethodInterceptor {
     private Provider<MetricRegistry> registryProvider;
 
     // because we had to use very late binding for MetricRegistry, let's cache the result
-    private final Supplier<MetricRegistry> registrySupplier = Suppliers.memoize(() -> this.registryProvider.get());
+    private volatile MetricRegistry registry;
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
-        MetricRegistry registry = registrySupplier.get();
-
-        Timer t = registry.timer(timerName(invocation.getMethod()));
+        Timer t = registry().timer(timerName(invocation.getMethod()));
         Timer.Context ctx = t.time();
         try {
             return invocation.proceed();
         } finally {
             ctx.stop();
         }
+    }
+
+    private MetricRegistry registry() {
+        MetricRegistry result = registry;
+        if (result == null) {
+            synchronized (this) {
+                result = registry;
+                if (result == null) {
+                    result = registryProvider.get();
+                    registry = result;
+                }
+            }
+        }
+        return result;
     }
 
     private String timerName(Method m) {

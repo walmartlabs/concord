@@ -20,12 +20,12 @@ package com.walmartlabs.concord.common.form;
  * =====
  */
 
+import com.walmartlabs.concord.common.email.EmailValidator;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.DefaultFormValidator;
 import io.takari.bpm.form.FormSubmitResult;
 import io.takari.bpm.form.FormValidatorLocale;
 import io.takari.bpm.model.form.FormField;
-import org.apache.commons.validator.routines.EmailValidator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -94,7 +94,7 @@ public class ConcordFormValidator extends DefaultFormValidator {
             }
             String inputType = f.getOption(new FormField.Option<>("inputType", String.class));
             if ("email".equalsIgnoreCase(inputType)) {
-                boolean valid = EmailValidator.getInstance().isValid((String)v);
+                boolean valid = EmailValidator.isValid((String)v);
                 if (!valid) {
                     return new FormSubmitResult.ValidationError(f.getName(), "Invalid email address");
                 }

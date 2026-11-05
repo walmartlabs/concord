@@ -24,7 +24,6 @@ import com.walmartlabs.concord.common.AuthTokenProvider;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Secret;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -36,6 +35,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -84,36 +84,36 @@ public class GitClientSpeedTest {
             fetch(url, "master", null, null, repoPath.path());
             assertContent(repoPath, "pom.xml", "<version>1.73.1-SNAPSHOT</version>");
 
-            long size = FileUtils.sizeOfDirectory(repoPath.path().toFile());
-            System.out.println("#1: " + FileUtils.byteCountToDisplaySize(size));
+            long size = sizeOfDirectory(repoPath.path());
+            System.out.println("#1: " + size / (1024 * 1024) + " MB");
 
             // fetch branch
             fetch(url, "1.70.x", null, null, repoPath.path());
             assertContent(repoPath, "pom.xml", "<version>1.70.2-SNAPSHOT</version>");
 
-            size = FileUtils.sizeOfDirectory(repoPath.path().toFile());
-            System.out.println("#2: " + FileUtils.byteCountToDisplaySize(size));
+            size = sizeOfDirectory(repoPath.path());
+            System.out.println("#2: " + size / (1024 * 1024) + " MB");
 
             // fetch tag
             String tagCommitId = fetch(url, "1.73.0", null, null, repoPath.path());
             assertContent(repoPath, "pom.xml", "<version>1.73.0</version>");
             assertEquals("9c080a5e3a34dea8ae7c3b19b66a7c26e78a9c62", tagCommitId);
 
-            size = FileUtils.sizeOfDirectory(repoPath.path().toFile());
-            System.out.println("#3: " + FileUtils.byteCountToDisplaySize(size));
+            size = sizeOfDirectory(repoPath.path());
+            System.out.println("#3: " + size / (1024 * 1024) + " MB");
 
             // fetch by commit
             fetch(url, null, "071b966c36f30047aba6e94b49564a836c26bbd5", null, repoPath.path());
             assertContent(repoPath, "pom.xml", "<version>1.72.1-SNAPSHOT</version>");
 
-            size = FileUtils.sizeOfDirectory(repoPath.path().toFile());
-            System.out.println("#4: " + FileUtils.byteCountToDisplaySize(size));
+            size = sizeOfDirectory(repoPath.path());
+            System.out.println("#4: " + size / (1024 * 1024) + " MB");
 
             fetch(url, null, "910dbf2830f67b04ccbfd6aa0f2fad4aa5b54834", null, repoPath.path());
             assertContent(repoPath, "pom.xml", "<version>1.72.0</version>");
 
-            size = FileUtils.sizeOfDirectory(repoPath.path().toFile());
-            System.out.println("#5: " + FileUtils.byteCountToDisplaySize(size));
+            size = sizeOfDirectory(repoPath.path());
+            System.out.println("#5: " + size / (1024 * 1024) + " MB");
         }
 
         // fetch by commit with clean repo
@@ -122,8 +122,8 @@ public class GitClientSpeedTest {
             assertContent(repoPath, "pom.xml", "<version>1.63.1</version>");
             assertEquals("64feb9fe2d518e71a5497ba43132f4dafa1c471f", result);
 
-            long size = FileUtils.sizeOfDirectory(repoPath.path().toFile());
-            System.out.println("#6: " + FileUtils.byteCountToDisplaySize(size));
+            long size = sizeOfDirectory(repoPath.path());
+            System.out.println("#6: " + size / (1024 * 1024) + " MB");
         }
 
         // fetch by commit with clean repo
@@ -132,8 +132,8 @@ public class GitClientSpeedTest {
             assertContent(repoPath, "pom.xml", "<version>1.65.1-SNAPSHOT</version>");
             assertEquals("56e248cf2e6fa10d058e41aac005b5dee70526e4", result);
 
-            long size = FileUtils.sizeOfDirectory(repoPath.path().toFile());
-            System.out.println("#7: " + FileUtils.byteCountToDisplaySize(size));
+            long size = sizeOfDirectory(repoPath.path());
+            System.out.println("#7: " + size / (1024 * 1024) + " MB");
         }
 
         // fetch by commit with clean repo and without branch -> should  fetch all repo and checkout commit-id
@@ -142,8 +142,8 @@ public class GitClientSpeedTest {
             assertContent(repoPath, "pom.xml", "<version>1.65.1-SNAPSHOT</version>");
             assertEquals("56e248cf2e6fa10d058e41aac005b5dee70526e4", result);
 
-            long size = FileUtils.sizeOfDirectory(repoPath.path().toFile());
-            System.out.println("#8: " + FileUtils.byteCountToDisplaySize(size));
+            long size = sizeOfDirectory(repoPath.path());
+            System.out.println("#8: " + size / (1024 * 1024) + " MB");
         }
 
         // fetch same branch two times
@@ -152,15 +152,15 @@ public class GitClientSpeedTest {
             fetch(url, "1.70.x", null, null, repoPath.path());
             assertContent(repoPath, "pom.xml", "<version>1.70.2-SNAPSHOT</version>");
 
-            long size = FileUtils.sizeOfDirectory(repoPath.path().toFile());
-            System.out.println("#9: " + FileUtils.byteCountToDisplaySize(size));
+            long size = sizeOfDirectory(repoPath.path());
+            System.out.println("#9: " + size / (1024 * 1024) + " MB");
 
             // fetch branch
             fetch(url, "1.70.x", null, null, repoPath.path());
             assertContent(repoPath, "pom.xml", "<version>1.70.2-SNAPSHOT</version>");
 
-            size = FileUtils.sizeOfDirectory(repoPath.path().toFile());
-            System.out.println("#10: " + FileUtils.byteCountToDisplaySize(size));
+            size = sizeOfDirectory(repoPath.path());
+            System.out.println("#10: " + size / (1024 * 1024) + " MB");
         }
     }
 
@@ -172,6 +172,14 @@ public class GitClientSpeedTest {
                 .destination(dest)
                 .shallow(true)
                 .build()).head();
+    }
+
+    private static long sizeOfDirectory(Path dir) throws IOException {
+        try (Stream<Path> files = Files.walk(dir)) {
+            return files.filter(Files::isRegularFile)
+                    .mapToLong(f -> f.toFile().length())
+                    .sum();
+        }
     }
 
     private static void assertContent(TemporaryPath repoPath, String path, String expectedContent) throws IOException {

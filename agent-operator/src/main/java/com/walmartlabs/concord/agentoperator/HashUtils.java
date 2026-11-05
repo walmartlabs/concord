@@ -22,11 +22,11 @@ package com.walmartlabs.concord.agentoperator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 
 public final class HashUtils {
@@ -36,8 +36,12 @@ public final class HashUtils {
 
     public static String hashAsHexString(Object v) throws IOException {
         String s = objectMapper.writeValueAsString(v);
-        HashCode hc = Hashing.sha1().hashString(s, StandardCharsets.UTF_8);
-        return HexFormat.of().withUpperCase().formatHex(hc.asBytes());
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-1").digest(s.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().withUpperCase().formatHex(digest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private HashUtils() {

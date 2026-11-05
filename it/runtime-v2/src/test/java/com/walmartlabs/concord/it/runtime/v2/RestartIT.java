@@ -23,7 +23,6 @@ package com.walmartlabs.concord.it.runtime.v2;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
-import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.it.common.GitUtils;
 import org.junit.jupiter.api.Test;
@@ -31,6 +30,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static org.junit.jupiter.api.Assertions.*;
@@ -60,7 +60,7 @@ public class RestartIT extends AbstractTest {
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
-                .repositories(ImmutableMap.of(repoName, repo)));
+                .repositories(Map.of(repoName, repo)));
 
         // ---
         ConcordProcess proc = concord.processes().start(new Payload()

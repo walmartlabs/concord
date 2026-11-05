@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
-import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
@@ -152,9 +151,7 @@ public class TriggerProcessExecutor {
             initiator = initiatorResolver.resolve(t, event);
         } catch (Exception e) {
             log.error("process ['{}', '{}', '{}'] -> error", event.id(), event.name(), t.getId(), e);
-            SettableFuture<PartialProcessKey> f = SettableFuture.create();
-            f.set(null);
-            return f;
+            return CompletableFuture.completedFuture(null);
         }
 
         return executor.submit(() -> {

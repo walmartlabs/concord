@@ -22,28 +22,53 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MethodNotFoundExceptionTest {
 
     @Test
-    public void test() {
-        TestBean bean = new TestBean();
-        MethodNotFoundException e = new MethodNotFoundException(bean.getClass(), "test", new Class[]{double.class, String.class, List.class});
+    public void distanceHandlesEditsAndUtf16() {
+        assertEquals(0, MethodNotFoundException.distance("", ""));
+        assertEquals(3, MethodNotFoundException.distance("", "abc"));
+        assertEquals(0, MethodNotFoundException.distance("same", "same"));
+        assertEquals(1, MethodNotFoundException.distance("cat", "cats"));
+        assertEquals(1, MethodNotFoundException.distance("cats", "cat"));
+        assertEquals(1, MethodNotFoundException.distance("cat", "cut"));
+        assertEquals(3, MethodNotFoundException.distance("kitten", "sitting"));
+        assertEquals(3, MethodNotFoundException.distance("sitting", "kitten"));
+        assertEquals(2, MethodNotFoundException.distance("", "\uD83D\uDE00"));
+        assertEquals(1, MethodNotFoundException.distance("\uD83D\uDE00", "\uD83D\uDE01"));
+    }
 
-        String expected = "Can't find 'test(double, java.lang.String, java.util.List)' method in com.walmartlabs.concord.runtime.v2.runner.el.MethodNotFoundExceptionTest$TestBean.\n" +
-                "Check the task's or type's available methods and their signatures.\n" +
-                "Did you mean: test(long)?";
+    @Test
+    public void hintsAreRankedAndLimitedToPublicMethods() {
+        MethodNotFoundException e = new MethodNotFoundException(TestBean.class, "read", null);
+        String message = e.getMessage();
 
-        assertEquals(expected, e.getMessage());
+        int first = message.indexOf("read()");
+        int second = message.indexOf("reads()");
+        int third = message.indexOf("readers()");
+        assertTrue(first >= 0 && first < second && second < third);
+        assertFalse(message.contains("unrelated()"));
+        assertFalse(message.contains("readx()"));
     }
 
     public static class TestBean {
+        public void read() {
+        }
 
-        public void test(long i) {
+        public void reads() {
+        }
 
+        public void readers() {
+        }
+
+        public void unrelated() {
+        }
+
+        private void readx() {
         }
     }
 }

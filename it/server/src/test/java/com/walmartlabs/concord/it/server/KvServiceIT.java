@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.ZipUtils;
@@ -155,7 +154,7 @@ public class KvServiceIT extends AbstractServerIT {
     }
 
     private byte[] test(String process, String entryPoint, String testKey) throws Exception {
-        Map<String, Object> args = ImmutableMap.of("testKey", testKey);
+        Map<String, Object> args = Map.of("testKey", testKey);
         byte[] payload = createPayload(process, entryPoint, args);
 
         StartProcessResponse spr = start(payload);
@@ -172,7 +171,7 @@ public class KvServiceIT extends AbstractServerIT {
         Path tmpDir = createTempDir();
         PathUtils.copy(src, tmpDir);
 
-        Map<String, Object> req = ImmutableMap.of("entryPoint", entryPoint,
+        Map<String, Object> req = Map.of("entryPoint", entryPoint,
                 "arguments", args);
 
         Path reqFile = tmpDir.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
