@@ -54,10 +54,10 @@ public class Lint implements Callable<Integer> {
     @Spec
     private CommandSpec spec;
 
-    @Option(names = {"-h", "--help"}, usageHelp = true, description = "display the command's help message")
+    @Option(names = { "-h", "--help" }, usageHelp = true, description = "display the command's help message")
     boolean helpRequested = false;
 
-    @Option(names = {"-v", "--verbose"}, description = "Verbose output")
+    @Option(names = { "-v", "--verbose" }, description = "Verbose output")
     boolean verbose = false;
 
     @Parameters(arity = "0..1")
@@ -75,7 +75,9 @@ public class Lint implements Callable<Integer> {
         ProjectLoaderV1 v1 = new ProjectLoaderV1(importManager);
         ProjectLoaderV2 v2 = new ProjectLoaderV2(importManager);
         DelegatingProjectLoader loader = new DelegatingProjectLoader(Set.of(v1, v2));
-        ProcessDefinition pd = loader.loadProject(targetDir, new DummyImportsNormalizer(), verbose ? new CliImportsListener() : null).projectDefinition();
+        ProcessDefinition pd = loader
+                .loadProject(targetDir, new DummyImportsNormalizer(), verbose ? new CliImportsListener() : null)
+                .projectDefinition();
 
         List<LintResult> lintResults = new ArrayList<>();
         linters().forEach(l -> lintResults.addAll(l.apply(pd)));
@@ -110,8 +112,8 @@ public class Lint implements Callable<Integer> {
     private List<Linter> linters() {
         return Arrays.asList(
                 new ExpressionLinter(verbose),
-                new TaskCallLinter(verbose)
-        );
+                new TaskCallLinter(verbose),
+                new DuplicateDependencyLinter(verbose));
     }
 
     private void print(List<LintResult> results) {
