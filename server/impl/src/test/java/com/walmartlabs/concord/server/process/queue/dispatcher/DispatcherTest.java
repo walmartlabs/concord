@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
  * =====
  */
 
+import com.walmartlabs.concord.server.metrics.ProcessQueueMetrics;
 import com.codahale.metrics.MetricRegistry;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.process.loader.ImportsNormalizer;
@@ -140,7 +141,7 @@ class DispatcherTest {
                 .build();
 
         TestDispatcherDao dao = new TestDispatcherDao(tx, candidate);
-        MessageChannelManager channelManager = new MessageChannelManager();
+        MessageChannelManager channelManager = new MessageChannelManager(new ProcessQueueMetrics(new com.codahale.metrics.MetricRegistry()));
         TestMessageChannel channel = new TestMessageChannel("channel-1", "agent-1", processRequest(321));
         channelManager.add(channel);
 

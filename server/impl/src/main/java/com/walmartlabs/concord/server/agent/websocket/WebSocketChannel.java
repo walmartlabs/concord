@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.agent.websocket;
  */
 
 import com.walmartlabs.concord.server.message.MessageChannel;
+import com.walmartlabs.concord.server.metrics.ProcessQueueMetrics;
 import com.walmartlabs.concord.server.queueclient.MessageSerializer;
 import com.walmartlabs.concord.server.queueclient.message.Message;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
@@ -32,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WebSocketChannel implements MessageChannel {
@@ -43,9 +45,11 @@ public class WebSocketChannel implements MessageChannel {
     private final String userAgent;
     private final Session session;
 
-    private final Map<Long, Message> requests = new ConcurrentHashMap<>();
+    private final ProcessQueueMetrics metrics;
+    private final Map<Long, PendingRequest> requests = new ConcurrentHashMap<>();
 
-    public WebSocketChannel(String channelId, String agentId, Session session, String userAgent) {
+    public WebSocketChannel(String channelId, String agentId, Session session, String userAgent, ProcessQueueMetrics metrics) {
+        this.metrics = metrics;
         this.channelId = channelId;
         this.agentId = agentId;
         this.session = session;
@@ -79,7 +83,7 @@ public class WebSocketChannel implements MessageChannel {
             return false;
         }
 
-        Message request = requests.remove(response.getCorrelationId());
+        PendingRequest request = requests.remove(response.getCorrelationId());
         if (request == null) {
             log.warn("response ['{}', '{}'] -> request not found", channelId, response);
             return false;
@@ -98,6 +102,7 @@ public class WebSocketChannel implements MessageChannel {
     @Override
     public Optional<Message> getMessage(MessageType requestType) {
         return requests.values().stream()
+                .map(PendingRequest::message)
                 .filter(m -> m.getMessageType() == requestType)
                 .findAny();
     }
@@ -117,11 +122,20 @@ public class WebSocketChannel implements MessageChannel {
     }
 
     void onRequest(Message request) {
-        Message old = requests.put(request.getCorrelationId(), request);
+        PendingRequest old = requests.put(request.getCorrelationId(), new PendingRequest(request, System.nanoTime()));
         if (old != null) {
+            metrics.channelEvents.get(ProcessQueueMetrics.ChannelEvent.DUPLICATE_REQUEST).inc();
             log.error("request ['{}', '{}'] -> duplicate request. closing channel", channelId, request);
             close();
         }
+    }
+
+    public OptionalLong requestArrivalNanos(long correlationId) {
+        PendingRequest request = requests.get(correlationId);
+        return request == null ? OptionalLong.empty() : OptionalLong.of(request.arrivalNanos());
+    }
+
+    private record PendingRequest(Message message, long arrivalNanos) {
     }
 
     void pong() {

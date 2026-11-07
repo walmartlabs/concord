@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.agent.websocket;
  */
 
 import com.walmartlabs.concord.server.message.MessageChannelManager;
+import com.walmartlabs.concord.server.metrics.ProcessQueueMetrics;
 import com.walmartlabs.concord.server.queueclient.QueueClient;
 import com.walmartlabs.concord.server.security.Permission;
 import com.walmartlabs.concord.server.security.UserSecurityContext;
@@ -39,6 +40,7 @@ import java.util.UUID;
 public class WebSocketCreator implements org.eclipse.jetty.websocket.server.WebSocketCreator {
 
     private final MessageChannelManager channelManager;
+    private final ProcessQueueMetrics metrics;
     private final ApiKeyDao apiKeyDao;
     private final WebsocketsConfiguration cfg;
     private final UserSecurityContext userSecurityContext;
@@ -47,9 +49,11 @@ public class WebSocketCreator implements org.eclipse.jetty.websocket.server.WebS
             MessageChannelManager channelManager,
             ApiKeyDao apiKeyDao,
             WebsocketsConfiguration cfg,
-            UserSecurityContext userSecurityContext
+            UserSecurityContext userSecurityContext,
+            ProcessQueueMetrics metrics
     ) {
         this.channelManager = channelManager;
+        this.metrics = metrics;
         this.apiKeyDao = apiKeyDao;
         this.cfg = cfg;
         this.userSecurityContext = userSecurityContext;
@@ -87,7 +91,7 @@ public class WebSocketCreator implements org.eclipse.jetty.websocket.server.WebS
         String channelId = "ws-" + UUID.randomUUID();
         String agentId = req.getHeaders().get(QueueClient.AGENT_ID);
         String userAgent = req.getHeaders().get(QueueClient.AGENT_UA);
-        return new WebSocketListener(channelManager, channelId, agentId, userAgent);
+        return new WebSocketListener(channelManager, channelId, agentId, userAgent, metrics);
     }
 
     private static boolean invalidApiKey(String s) {

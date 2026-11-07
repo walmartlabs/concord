@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.agent.websocket;
 
 import com.walmartlabs.concord.server.boot.WebSocketConfigurator;
 import com.walmartlabs.concord.server.message.MessageChannelManager;
+import com.walmartlabs.concord.server.metrics.ProcessQueueMetrics;
 import com.walmartlabs.concord.server.security.UserSecurityContext;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import org.eclipse.jetty.websocket.server.ServerWebSocketContainer;
@@ -33,6 +34,7 @@ public class AgentWebSocketConfigurator implements WebSocketConfigurator {
     public static final String PATH = "/websocket";
 
     private final MessageChannelManager channelManager;
+    private final ProcessQueueMetrics metrics;
     private final ApiKeyDao apiKeyDao;
     private final UserSecurityContext userSecurityContext;
     private final WebsocketsConfiguration cfg;
@@ -42,9 +44,11 @@ public class AgentWebSocketConfigurator implements WebSocketConfigurator {
             MessageChannelManager channelManager,
             ApiKeyDao apiKeyDao,
             WebsocketsConfiguration cfg,
-            UserSecurityContext userSecurityContext
+            UserSecurityContext userSecurityContext,
+            ProcessQueueMetrics metrics
     ) {
         this.channelManager = channelManager;
+        this.metrics = metrics;
         this.apiKeyDao = apiKeyDao;
         this.cfg = cfg;
         this.userSecurityContext = userSecurityContext;
@@ -52,6 +56,6 @@ public class AgentWebSocketConfigurator implements WebSocketConfigurator {
 
     @Override
     public void configure(ServerWebSocketContainer container) {
-        container.addMapping(PATH, new WebSocketCreator(channelManager, apiKeyDao, cfg, userSecurityContext));
+        container.addMapping(PATH, new WebSocketCreator(channelManager, apiKeyDao, cfg, userSecurityContext, metrics));
     }
 }

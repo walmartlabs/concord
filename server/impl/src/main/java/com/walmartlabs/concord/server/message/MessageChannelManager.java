@@ -20,10 +20,14 @@ package com.walmartlabs.concord.server.message;
  * =====
  */
 
+import com.walmartlabs.concord.server.metrics.ProcessQueueMetrics;
 import com.walmartlabs.concord.server.queueclient.message.Message;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,6 +42,12 @@ public class MessageChannelManager {
     private final Map<String, MessageChannel> channels = new ConcurrentHashMap<>();
 
     private volatile boolean isShutdown;
+    private final ProcessQueueMetrics metrics;
+
+    @Inject
+    public MessageChannelManager(ProcessQueueMetrics metrics) {
+        this.metrics = metrics;
+    }
 
     public boolean isShutdown() {
         return isShutdown;
@@ -63,6 +73,7 @@ public class MessageChannelManager {
             return;
         }
 
+        metrics.channelEvents.get(ProcessQueueMetrics.ChannelEvent.DISCONNECT).inc();
         try {
             channel.close();
         } catch (Exception e) {
@@ -104,6 +115,7 @@ public class MessageChannelManager {
 
     public void add(MessageChannel channel) {
         channels.put(channel.getChannelId(), channel);
+        metrics.channelEvents.get(ProcessQueueMetrics.ChannelEvent.CONNECT).inc();
     }
 
     public int connectedClientsCount() {
