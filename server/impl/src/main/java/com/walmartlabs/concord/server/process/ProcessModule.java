@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.walmartlabs.concord.imports.ImportManager;
+import com.walmartlabs.concord.server.metrics.ProcessQueueMetrics;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.runtime.v1.ProjectLoaderV1;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
@@ -64,6 +65,9 @@ public class ProcessModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        binder.bind(ProcessQueueMetrics.class).asEagerSingleton();
+        newSetBinder(binder, ProcessStatusListener.class).addBinding().to(ProcessQueueMetrics.class);
+
         binder.bind(ImportManager.class).toProvider(ImportManagerProvider.class);
         binder.bind(ProcessEventDao.class).in(SINGLETON);
         binder.bind(ProcessEventManager.class).in(SINGLETON);
