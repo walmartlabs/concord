@@ -51,6 +51,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Collections;
+import java.util.Set;
+import static com.walmartlabs.concord.server.metrics.ProcessQueueMetrics.*;
+import static org.mockito.Mockito.doThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -152,7 +156,7 @@ class DispatcherTest {
         when(cfg.getDispatcherBatchSize()).thenReturn(10);
 
         Dispatcher dispatcher = new Dispatcher(locks, dao, channelManager, logManager, queueManager, Collections.emptySet(),
-                importsNormalizerFactory, cfg, new MetricRegistry(), sessionTokenCreator);
+                importsNormalizerFactory, cfg, new MetricRegistry(), new ProcessQueueMetrics(new MetricRegistry()), sessionTokenCreator);
 
         assertTrue(dispatcher.performTask());
 
@@ -163,6 +167,121 @@ class DispatcherTest {
         assertEquals(requirements, processResponse.getRequirements());
         assertEquals("session-token", processResponse.getSessionToken());
         assertEquals(imports, processResponse.getImports());
+    }
+
+    @Test
+    void testPassWithoutCredits() {
+        MetricRegistry registry = new MetricRegistry();
+        Dispatcher dispatcher = metricDispatcher(registry, new MessageChannelManager(new ProcessQueueMetrics(registry)), Set.of());
+        assertFalse(dispatcher.performTask());
+        assertEquals(1, registry.counter("process-queue-dispatcher-pass-no-credits").getCount());
+        assertEquals(0, registry.histogram("process-queue-dispatcher-credits-per-pass").getSnapshot().getMax());
+        assertEquals(0, registry.timer("process-queue-dispatcher-lock-wait").getCount());
+    }
+
+    @Test
+    void testPassWithoutCandidates() throws Exception {
+        MetricRegistry registry = new MetricRegistry();
+        assertFalse(metricDispatcher(registry, credits(registry, true), Set.of()).performTask());
+        assertEquals(1, registry.counter("process-queue-dispatcher-pass-no-candidates").getCount());
+        assertEquals(1, registry.histogram("process-queue-dispatcher-pages-per-pass").getSnapshot().getMax());
+    }
+
+    @Test
+    void testNoCreditMatchReadsMultiplePages() throws Exception {
+        MetricRegistry registry = new MetricRegistry();
+        assertFalse(metricDispatcher(registry, credits(registry, true), Set.of(), generateCandidate("other")).performTask());
+        assertEquals(1, registry.counter("process-queue-dispatcher-pass-no-match").getCount());
+        assertEquals(1, registry.counter("process-queue-dispatcher-rejection-no-credit-match").getCount());
+        assertEquals(1, registry.histogram("process-queue-dispatcher-candidates-per-pass").getSnapshot().getMax());
+        assertEquals(2, registry.histogram("process-queue-dispatcher-pages-per-pass").getSnapshot().getMax());
+    }
+
+    @Test
+    void testCustomFilterRejection() throws Exception {
+        MetricRegistry registry = new MetricRegistry();
+        Filter custom = mock(Filter.class);
+        assertFalse(metricDispatcher(registry, credits(registry, true), Set.of(custom), generateCandidate("default")).performTask());
+        assertEquals(1, registry.counter("process-queue-dispatcher-rejection-filter-other").getCount());
+        assertEquals(1, registry.counter("process-queue-dispatcher-pass-no-match").getCount());
+        verify(custom).cleanup();
+    }
+
+    @Test
+    void testBuiltInFilterReasonsAndCustomSubclass() {
+        assertEquals(Rejection.FILTER_CONCURRENT, Dispatcher.rejection(new ConcurrentProcessFilter(null, null, null, null)));
+        assertEquals(Rejection.FILTER_EXCLUSIVE, Dispatcher.rejection(new ExclusiveProcessFilter(null, null, null)));
+        assertEquals(Rejection.FILTER_OTHER, Dispatcher.rejection(new ExclusiveProcessFilter(null, null, null) {}));
+    }
+
+    @Test
+    void testSentResponseAndScheduledAgeClamping() throws Exception {
+        MetricRegistry registry = new MetricRegistry();
+        ProcessQueueEntry candidate = ProcessQueueEntry.builder().key(ProcessKey.random())
+                .lastUpdatedAt(OffsetDateTime.now().minusDays(1)).startAt(OffsetDateTime.now().plusDays(1)).build();
+        when(importsNormalizerFactory.forProject(null)).thenReturn(value -> value);
+        assertTrue(metricDispatcher(registry, credits(registry, true), Set.of(), candidate).performTask());
+        assertEquals(1, registry.counter("process-queue-dispatcher-pass-matched").getCount());
+        assertEquals(1, registry.counter("process-queue-dispatcher-response-sent").getCount());
+        assertEquals(0, registry.histogram("process-queue-dispatcher-enqueued-age-ms").getSnapshot().getMax());
+        assertEquals(1, registry.timer("process-queue-dispatcher-lock-wait").getCount());
+        assertEquals(1, registry.timer("process-queue-dispatcher-lock-hold").getCount());
+    }
+
+    @Test
+    void testSendFailure() throws Exception {
+        MetricRegistry registry = new MetricRegistry();
+        when(importsNormalizerFactory.forProject(null)).thenReturn(value -> value);
+        assertTrue(metricDispatcher(registry, credits(registry, false), Set.of(), generateCandidate("default")).performTask());
+        assertEquals(1, registry.counter("process-queue-dispatcher-response-send-failed").getCount());
+        assertEquals(0, registry.counter("process-queue-dispatcher-response-prepare-failed").getCount());
+    }
+
+    @Test
+    void testPrepareFailure() throws Exception {
+        MetricRegistry registry = new MetricRegistry();
+        when(importsNormalizerFactory.forProject(null)).thenThrow(new IllegalStateException("prepare"));
+        assertTrue(metricDispatcher(registry, credits(registry, true), Set.of(), generateCandidate("default")).performTask());
+        assertEquals(1, registry.counter("process-queue-dispatcher-response-prepare-failed").getCount());
+        assertEquals(0, registry.counter("process-queue-dispatcher-response-sent").getCount());
+    }
+
+    @Test
+    void testLoggingFailureDoesNotDoubleCountResponse() throws Exception {
+        MetricRegistry registry = new MetricRegistry();
+        ProcessQueueMetrics metrics = new ProcessQueueMetrics(registry);
+        MessageChannelManager manager = new MessageChannelManager(metrics);
+        com.walmartlabs.concord.server.agent.websocket.WebSocketChannel channel = mock(com.walmartlabs.concord.server.agent.websocket.WebSocketChannel.class);
+        when(channel.getChannelId()).thenReturn("channel");
+        when(channel.getMessage(MessageType.PROCESS_REQUEST)).thenReturn(Optional.of(processRequest(1)));
+        when(channel.requestArrivalNanos(1)).thenReturn(java.util.OptionalLong.of(System.nanoTime() - 10_000_000));
+        when(channel.offerMessage(any())).thenReturn(true);
+        when(channel.getUserAgent()).thenReturn("ua");
+        manager.add(channel);
+        when(importsNormalizerFactory.forProject(null)).thenReturn(value -> value);
+        doThrow(new IllegalStateException("log")).when(logManager).info(any(), any());
+        assertTrue(metricDispatcher(registry, manager, Set.of(), generateCandidate("default")).performTask());
+        assertEquals(1, registry.counter("process-queue-dispatcher-response-sent").getCount());
+        assertEquals(0, registry.counter("process-queue-dispatcher-response-prepare-failed").getCount());
+        assertEquals(1, registry.histogram("process-queue-dispatcher-credit-age-ms").getCount());
+    }
+
+    private Dispatcher metricDispatcher(MetricRegistry registry, MessageChannelManager manager, Set<Filter> filters, ProcessQueueEntry... candidates) {
+        when(cfg.getDispatcherPollDelay()).thenReturn(Duration.ofSeconds(1));
+        when(cfg.getDispatcherBatchSize()).thenReturn(10);
+        return new Dispatcher(locks, new TestDispatcherDao(tx, candidates), manager, logManager, queueManager, filters,
+                importsNormalizerFactory, cfg, registry, new ProcessQueueMetrics(registry), sessionTokenCreator);
+    }
+
+    private static MessageChannelManager credits(MetricRegistry registry, boolean canSend) throws Exception {
+        MessageChannelManager manager = new MessageChannelManager(new ProcessQueueMetrics(registry));
+        MessageChannel channel = mock(MessageChannel.class);
+        when(channel.getChannelId()).thenReturn("channel");
+        when(channel.getMessage(MessageType.PROCESS_REQUEST)).thenReturn(Optional.of(processRequest(1)));
+        // lenient: no-match passes never attempt to send a response.
+        org.mockito.Mockito.lenient().when(channel.offerMessage(any())).thenReturn(canSend);
+        manager.add(channel);
+        return manager;
     }
 
     private static ProcessQueueEntry generateCandidate(String flavor) {
@@ -188,10 +307,10 @@ class DispatcherTest {
         private final List<ProcessQueueEntry> candidates;
         private boolean fetched;
 
-        private TestDispatcherDao(DSLContext tx, ProcessQueueEntry candidate) {
+        private TestDispatcherDao(DSLContext tx, ProcessQueueEntry... candidates) {
             super(mock(Configuration.class), mock(ConcordObjectMapper.class), new MetricRegistry());
             this.tx = tx;
-            this.candidates = List.of(candidate);
+            this.candidates = List.of(candidates);
         }
 
         @Override

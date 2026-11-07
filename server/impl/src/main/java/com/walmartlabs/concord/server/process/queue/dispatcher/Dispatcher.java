@@ -31,8 +31,12 @@ import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Locks;
 import com.walmartlabs.concord.server.PeriodicTask;
+import com.walmartlabs.concord.server.agent.websocket.WebSocketChannel;
 import com.walmartlabs.concord.server.cfg.ProcessQueueConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
+import com.walmartlabs.concord.server.message.MessageChannel;
+import com.walmartlabs.concord.server.message.MessageChannelManager;
+import com.walmartlabs.concord.server.metrics.ProcessQueueMetrics;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.process.SessionTokenCreator;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
@@ -44,14 +48,13 @@ import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import com.walmartlabs.concord.server.message.MessageChannel;
-import com.walmartlabs.concord.server.message.MessageChannelManager;
-import com.walmartlabs.concord.server.agent.websocket.WebSocketChannel;
+
 import org.jooq.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -63,6 +66,7 @@ import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 import static com.walmartlabs.concord.server.metrics.MetricUtils.withTimer;
+import static com.walmartlabs.concord.server.metrics.ProcessQueueMetrics.*;
 import static org.jooq.impl.DSL.*;
 
 /**
@@ -87,6 +91,7 @@ public class Dispatcher extends PeriodicTask {
 
     private final Histogram dispatchedCountHistogram;
     private final Timer responseTimer;
+    private final ProcessQueueMetrics metrics;
 
     private final SessionTokenCreator sessionTokenCreator;
     private final RequirementsMatcherErrorHandler requirementsMatcherErrorHandler;
@@ -101,10 +106,12 @@ public class Dispatcher extends PeriodicTask {
                       ImportsNormalizerFactory importsNormalizerFactory,
                       ProcessQueueConfiguration cfg,
                       MetricRegistry metricRegistry,
+                      ProcessQueueMetrics metrics,
                       SessionTokenCreator sessionTokenCreator) {
 
         super(cfg.getDispatcherPollDelay().toMillis(), ERROR_DELAY);
 
+        this.metrics = metrics;
         this.locks = locks;
         this.dao = dao;
         this.channelManager = channelManager;
@@ -128,7 +135,11 @@ public class Dispatcher extends PeriodicTask {
 
         // grab the requests w/o responses
         Map<MessageChannel, ProcessRequest> requests = this.channelManager.getRequests(MessageType.PROCESS_REQUEST);
+        metrics.credits.update(requests.size());
         if (requests.isEmpty()) {
+            metrics.passes.get(PassOutcome.NO_CREDITS).inc();
+            metrics.candidates.update(0);
+            metrics.pages.update(0);
             return false;
         }
 
@@ -138,14 +149,34 @@ public class Dispatcher extends PeriodicTask {
 
         // prepare all responses in a single transaction
         // take a global lock to avoid races
-        List<Match> matches = dao.txResult(tx -> {
-            locks.lock(tx, LOCK_KEY);
-            try {
-                return match(tx, l);
-            } finally {
-                filters.forEach(Filter::cleanup);
+        long[] lockAcquired = {0};
+        Scan scan = new Scan();
+        List<Match> matches;
+        try {
+            matches = dao.txResult(tx -> {
+                long lockStart = System.nanoTime();
+                try {
+                    locks.lock(tx, LOCK_KEY);
+                } finally {
+                    metrics.lockWait.update(Math.max(0, System.nanoTime() - lockStart), TimeUnit.NANOSECONDS);
+                }
+                lockAcquired[0] = System.nanoTime();
+                try {
+                    return match(tx, l, scan);
+                } finally {
+                    filters.forEach(Filter::cleanup);
+                }
+            });
+        } finally {
+            // Include transaction completion: the database releases the lock at commit/rollback.
+            if (lockAcquired[0] != 0) {
+                metrics.lockHold.update(Math.max(0, System.nanoTime() - lockAcquired[0]), TimeUnit.NANOSECONDS);
             }
-        });
+            metrics.candidates.update(scan.candidates);
+            metrics.pages.update(scan.pages);
+        }
+        metrics.passes.get(scan.candidates == 0 ? PassOutcome.NO_CANDIDATES
+                : matches.isEmpty() ? PassOutcome.NO_MATCH : PassOutcome.MATCHED).inc();
 
         dispatchedCountHistogram.update(matches.size());
 
@@ -162,7 +193,7 @@ public class Dispatcher extends PeriodicTask {
         return true;
     }
 
-    private List<Match> match(DSLContext tx, List<Request> requests) {
+    private List<Match> match(DSLContext tx, List<Request> requests, Scan scan) {
         // we need it modifiable
         List<Request> inbox = new ArrayList<>(requests);
 
@@ -171,6 +202,8 @@ public class Dispatcher extends PeriodicTask {
         while (true) {
             // fetch the next few ENQUEUED processes from the DB
             List<ProcessQueueEntry> candidates = dao.next(tx, offset, batchSize);
+            scan.pages++;
+            scan.candidates += candidates.size();
             if (candidates.isEmpty()) {
                 break;
             }
@@ -181,6 +214,7 @@ public class Dispatcher extends PeriodicTask {
                 Request req = findRequest(e, inbox, tx, requirementsMatcherErrorHandler);
 
                 if (req == null) {
+                    metrics.rejections.get(Rejection.NO_CREDIT_MATCH).inc();
                     continue;
                 }
 
@@ -213,6 +247,17 @@ public class Dispatcher extends PeriodicTask {
             // mark the process as STARTING
             String agentId = m.request.channel.getAgentId();
             queueManager.updateAgentId(tx, candidate.key(), agentId, ProcessStatus.STARTING);
+            OffsetDateTime eligibleAt = candidate.lastUpdatedAt();
+            if (eligibleAt != null) {
+                if (candidate.startAt() != null && candidate.startAt().isAfter(eligibleAt)) {
+                    eligibleAt = candidate.startAt();
+                }
+                metrics.enqueuedAge.update(ageMillis(eligibleAt, OffsetDateTime.now()));
+            }
+            if (m.request.channel instanceof WebSocketChannel channel) {
+                channel.requestArrivalNanos(m.request.request.getCorrelationId())
+                        .ifPresent(arrival -> metrics.creditAge.update(elapsedMillis(arrival, System.nanoTime())));
+            }
         }
 
         return matches;
@@ -268,6 +313,7 @@ public class Dispatcher extends PeriodicTask {
     private boolean pass(DSLContext tx, ProcessQueueEntry e, List<ProcessQueueEntry> startingProcesses) {
         for (Filter f : filters) {
             if (!f.apply(tx, e, startingProcesses)) {
+                metrics.rejections.get(rejection(f)).inc();
                 return false;
             }
         }
@@ -275,10 +321,25 @@ public class Dispatcher extends PeriodicTask {
         return true;
     }
 
+    static Rejection rejection(Filter filter) {
+        Class<?> type = filter.getClass();
+        if (type == ConcurrentProcessFilter.class) {
+            return Rejection.FILTER_CONCURRENT;
+        }
+        if (type == ExclusiveProcessFilter.class) {
+            return Rejection.FILTER_EXCLUSIVE;
+        }
+        // FILTER_WAIT is reserved: the generic wait filter is abstract today.
+        // Plugin filters, including subclasses of the built-ins, always count as OTHER.
+        return Rejection.FILTER_OTHER;
+    }
+
     private void sendResponse(Match match) {
         long correlationId = match.request.request.getCorrelationId();
         ProcessQueueEntry item = match.response;
 
+        boolean responseAttempted = false;
+        boolean outcomeRecorded = false;
         try {
             SecretReference secret = null;
             if (item.repoId() != null) {
@@ -303,7 +364,11 @@ public class Dispatcher extends PeriodicTask {
                     item.requirements());
 
             MessageChannel channel = match.request.channel;
-            if (!channelManager.sendMessage(channel.getChannelId(), resp)) {
+            responseAttempted = true;
+            boolean sent = channelManager.sendMessage(channel.getChannelId(), resp);
+            metrics.responses.get(sent ? ResponseOutcome.SENT : ResponseOutcome.SEND_FAILED).inc();
+            outcomeRecorded = true;
+            if (!sent) {
                 log.warn("sendResponse ['{}'] -> failed", correlationId);
             }
 
@@ -313,6 +378,9 @@ public class Dispatcher extends PeriodicTask {
                 logManager.info(item.key(), "Acquired by: " + userAgent);
             }
         } catch (Exception e) {
+            if (!outcomeRecorded) {
+                metrics.responses.get(responseAttempted ? ResponseOutcome.SEND_FAILED : ResponseOutcome.PREPARE_FAILED).inc();
+            }
             log.error("sendResponse ['{}'] -> failed (instanceId: {})", correlationId, item.key().getInstanceId());
         }
     }
@@ -346,7 +414,7 @@ public class Dispatcher extends PeriodicTask {
 
             Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(q.PROJECT_ID)).asField();
 
-            SelectJoinStep<Record14<UUID, OffsetDateTime, UUID, UUID, UUID, UUID, String, String, String, UUID, JSONB, JSONB, JSONB, String>> s =
+            SelectJoinStep<Record16<UUID, OffsetDateTime, UUID, UUID, UUID, UUID, String, String, String, UUID, JSONB, JSONB, JSONB, String, OffsetDateTime, OffsetDateTime>> s =
                     tx.select(
                                     q.INSTANCE_ID,
                                     q.CREATED_AT,
@@ -361,7 +429,9 @@ public class Dispatcher extends PeriodicTask {
                                     q.IMPORTS,
                                     q.REQUIREMENTS,
                                     q.EXCLUSIVE,
-                                    q.COMMIT_BRANCH)
+                                    q.COMMIT_BRANCH,
+                                    q.LAST_UPDATED_AT,
+                                    q.START_AT)
                             .from(q);
 
             s.where(q.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString())
@@ -376,6 +446,8 @@ public class Dispatcher extends PeriodicTask {
                     .skipLocked()
                     .fetch(r -> ProcessQueueEntry.builder()
                             .key(new ProcessKey(r.value1(), r.value2()))
+                            .lastUpdatedAt(r.value15())
+                            .startAt(r.value16())
                             .projectId(r.value3())
                             .orgId(r.value4())
                             .initiatorId(r.value5())
@@ -399,6 +471,11 @@ public class Dispatcher extends PeriodicTask {
                     .where(REPOSITORIES.REPO_ID.eq(repoId))
                     .fetchOne(r -> new SecretReference(r.value1(), r.value2()));
         }
+    }
+
+    private static class Scan {
+        private long candidates;
+        private long pages;
     }
 
     record Request(MessageChannel channel, ProcessRequest request) {
