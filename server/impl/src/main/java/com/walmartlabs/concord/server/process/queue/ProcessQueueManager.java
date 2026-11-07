@@ -26,6 +26,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.RequestUtils;
+import com.walmartlabs.concord.server.metrics.ProcessQueueMetrics;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.event.NewProcessEvent;
 import com.walmartlabs.concord.server.process.event.ProcessEventManager;
@@ -34,14 +35,18 @@ import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKeyCache;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
+
 import org.jooq.DSLContext;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+
+import static com.walmartlabs.concord.server.metrics.ProcessQueueMetrics.EnqueuedSource;
 
 public class ProcessQueueManager {
 
@@ -52,6 +57,7 @@ public class ProcessQueueManager {
             ProcessStatus.SUSPENDED
     );
 
+    private final ProcessQueueMetrics metrics;
     private final ProcessQueueDao queueDao;
     private final ProcessKeyCache keyCache;
     private final ProcessEventManager eventManager;
@@ -63,8 +69,10 @@ public class ProcessQueueManager {
                                ProcessKeyCache keyCache,
                                ProcessEventManager eventManager,
                                ProcessLogManager processLogManager,
-                               Set<ProcessStatusListener> statusListeners) {
+                               Set<ProcessStatusListener> statusListeners,
+                               ProcessQueueMetrics metrics) {
 
+        this.metrics = metrics;
         this.queueDao = queueDao;
         this.eventManager = eventManager;
         this.keyCache = keyCache;
@@ -132,6 +140,7 @@ public class ProcessQueueManager {
         return queueDao.txResult(tx -> {
             boolean updated = queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive, runtime, dependencies, suspendTimeout, TO_ENQUEUED_STATUSES);
             if (updated) {
+                metrics.enqueued.get(EnqueuedSource.ENQUEUE).inc();
                 notifyStatusChange(tx, processKey, ProcessStatus.ENQUEUED);
             }
             return updated;
@@ -198,6 +207,9 @@ public class ProcessQueueManager {
      */
     public void updateAgentId(DSLContext tx, ProcessKey processKey, @Nullable String agentId, ProcessStatus status) {
         queueDao.updateAgentId(tx, processKey, agentId, status);
+        if (status == ProcessStatus.ENQUEUED) {
+            metrics.enqueued.get(EnqueuedSource.STATUS_API).inc();
+        }
         notifyStatusChange(tx, processKey, status);
     }
 

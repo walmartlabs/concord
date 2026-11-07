@@ -20,11 +20,13 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
+import com.walmartlabs.concord.server.metrics.ProcessQueueMetrics;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,11 +39,13 @@ public class ResumeProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ResumeProcessor.class);
 
+    private final ProcessQueueMetrics metrics;
     private final ProcessQueueManager queueManager;
 
     @Inject
-    public ResumeProcessor(ProcessQueueManager queueManager) {
+    public ResumeProcessor(ProcessQueueManager queueManager, ProcessQueueMetrics metrics) {
         this.queueManager = queueManager;
+        this.metrics = metrics;
     }
 
     @Override
@@ -51,6 +55,7 @@ public class ResumeProcessor implements PayloadProcessor {
 
         boolean updated = queueManager.updateExpectedStatus(processKey, ProcessStatus.RESUMING, ProcessStatus.ENQUEUED);
         if (updated) {
+            metrics.enqueued.get(ProcessQueueMetrics.EnqueuedSource.RESUME).inc();
             return chain.process(payload);
         }
 
