@@ -71,8 +71,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     @Inject
     @SuppressWarnings({"unchecked", "rawtypes"})
     public ProcessWaitWatchdog(ProcessWaitWatchdogConfiguration cfg,
-                               @MainDB Configuration dbCfg,
-                               ConcordObjectMapper objectMapper,
+                               WatchdogDao dao,
                                ProcessWaitManager processWaitManager,
                                ProcessManager processManager,
                                PayloadManager payloadManager,
@@ -80,7 +79,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                                MetricRegistry metricRegistry) {
 
         this.cfg = cfg;
-        this.dao = new WatchdogDao(dbCfg, objectMapper);
+        this.dao = dao;
         this.processWaitManager = processWaitManager;
         this.processManager = processManager;
         this.payloadManager = payloadManager;
@@ -261,14 +260,15 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         }
     }
 
-    private static class WatchdogDao extends AbstractDao {
+    public static class WatchdogDao extends AbstractDao {
 
         private static final TypeReference<List<AbstractWaitCondition>> WAIT_LIST = new TypeReference<List<AbstractWaitCondition>>() {
         };
 
         private final ConcordObjectMapper objectMapper;
 
-        private WatchdogDao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
+        @Inject
+        public WatchdogDao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
             super(cfg);
 
             this.objectMapper = objectMapper;
