@@ -28,10 +28,12 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.cfg.ProcessWaitWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessWaitConditions;
+import com.walmartlabs.concord.server.metrics.ProcessQueueMetrics;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+
 import org.immutables.value.Value;
 import org.jooq.Configuration;
 import org.jooq.JSONB;
@@ -42,15 +44,17 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
+
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
-import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.WaitConditionItem;
-import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.Result;
+import static com.walmartlabs.concord.server.metrics.ProcessQueueMetrics.*;
 import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.Action;
+import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.Result;
+import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.WaitConditionItem;
 
 /**
  * Takes care of processes with wait conditions.
@@ -67,6 +71,8 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     private final PayloadManager payloadManager;
     private final Map<WaitType, ProcessWaitHandler<AbstractWaitCondition>> processWaitHandlers;
     private final Histogram waitItemsHistogram;
+    private final ProcessQueueMetrics metrics;
+    private Long previousPassNanos;
 
     @Inject
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -76,10 +82,12 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                                ProcessManager processManager,
                                PayloadManager payloadManager,
                                Set<ProcessWaitHandler> handlers,
-                               MetricRegistry metricRegistry) {
+                               MetricRegistry metricRegistry,
+                               ProcessQueueMetrics metrics) {
 
         this.cfg = cfg;
         this.dao = dao;
+        this.metrics = metrics;
         this.processWaitManager = processWaitManager;
         this.processManager = processManager;
         this.payloadManager = payloadManager;
@@ -102,6 +110,11 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     @Override
     @WithTimer
     public void performTask() {
+        long now = System.nanoTime();
+        if (previousPassNanos != null) {
+            metrics.watchdogInterval.update(elapsedMillis(previousPassNanos, now));
+        }
+        previousPassNanos = now;
         Long lastId = null;
         while (true) {
             List<WaitingProcess> processes = dao.nextWaitItems(lastId, cfg.getPollLimit());
@@ -170,8 +183,12 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                 if (updated && !resumeEvents.isEmpty()) {
                     log.info("processWaits ['{}', '{}', {}] -> resume", p.processKey(), resultWaits, p.version());
                     resumeProcess(p.processKey(), resumeEvents);
+                    metrics.resolutions.get(Resolution.RESUMED).inc();
+                } else {
+                    metrics.resolutions.get(updated ? Resolution.UPDATED : Resolution.VERSION_CONFLICT).inc();
                 }
             } catch (Exception e) {
+                metrics.resolutions.get(Resolution.ERROR).inc();
                 log.info("processWaits ['{}'] -> error", p, e);
             }
         }
