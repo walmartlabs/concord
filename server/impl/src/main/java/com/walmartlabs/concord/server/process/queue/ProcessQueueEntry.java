@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -33,6 +34,12 @@ import java.util.UUID;
 public interface ProcessQueueEntry {
 
     ProcessKey key();
+
+    @Nullable
+    OffsetDateTime lastUpdatedAt();
+
+    @Nullable
+    OffsetDateTime startAt();
 
     @Nullable
     UUID projectId();

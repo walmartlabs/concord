@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.agent.websocket;
  * =====
  */
 
+import com.walmartlabs.concord.server.metrics.ProcessQueueMetrics;
+import com.codahale.metrics.MetricRegistry;
 import com.walmartlabs.concord.server.message.MessageChannel;
 import com.walmartlabs.concord.server.message.MessageChannelManager;
 import com.walmartlabs.concord.server.queueclient.QueueClient;
@@ -72,7 +74,8 @@ public class AgentWebSocketTest {
     private static final String UNKNOWN_API_KEY = Base64.getEncoder().encodeToString("unknown".getBytes(StandardCharsets.UTF_8));
     private static final UUID USER_ID = UUID.randomUUID();
 
-    private final MessageChannelManager channelManager = new MessageChannelManager();
+    private final ProcessQueueMetrics metrics = new ProcessQueueMetrics(new MetricRegistry());
+    private final MessageChannelManager channelManager = new MessageChannelManager(metrics);
     private final WebsocketsConfiguration cfg = mock(WebsocketsConfiguration.class);
     private final UserSecurityContext userSecurityContext = mock(UserSecurityContext.class);
 
@@ -85,7 +88,7 @@ public class AgentWebSocketTest {
         ApiKeyDao apiKeyDao = mock(ApiKeyDao.class);
         when(apiKeyDao.find(API_KEY)).thenReturn(new ApiKeyEntry(UUID.randomUUID(), USER_ID, "test", null));
 
-        AgentWebSocketConfigurator configurator = new AgentWebSocketConfigurator(channelManager, apiKeyDao, cfg, userSecurityContext);
+        AgentWebSocketConfigurator configurator = new AgentWebSocketConfigurator(channelManager, apiKeyDao, cfg, userSecurityContext, metrics);
 
         server = new Server();
         ServerConnector connector = new ServerConnector(server);

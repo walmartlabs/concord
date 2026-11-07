@@ -20,10 +20,13 @@ package com.walmartlabs.concord.server.process.waits;
  * =====
  */
 
+import com.walmartlabs.concord.server.metrics.ProcessQueueMetrics;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
+
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,6 +37,13 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepCondition> {
+
+    private final ProcessQueueMetrics metrics;
+
+    @Inject
+    public WaitProcessSleepHandler(ProcessQueueMetrics metrics) {
+        this.metrics = metrics;
+    }
 
     @Override
     public WaitType getType() {
@@ -49,7 +59,9 @@ public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepC
 
     @WithTimer
     public Result<ProcessSleepCondition> process(ProcessKey key, int waitConditionId, ProcessSleepCondition wait) {
-        if (wait.until().before(new Date())) {
+        Date now = new Date();
+        if (wait.until().before(now)) {
+            metrics.sleepOvershoot.update(now.getTime() - wait.until().getTime());
             return Result.resume(key, waitConditionId, wait.resumeEvent());
         }
 

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.agent.websocket;
  */
 
 import com.walmartlabs.concord.server.message.MessageChannelManager;
+import com.walmartlabs.concord.server.metrics.ProcessQueueMetrics;
 import com.walmartlabs.concord.server.queueclient.MessageSerializer;
 import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
@@ -36,13 +37,15 @@ public class WebSocketListener implements Session.Listener.AutoDemanding {
     private static final Logger log = LoggerFactory.getLogger(WebSocketListener.class);
 
     private final MessageChannelManager channelManager;
+    private final ProcessQueueMetrics metrics;
 
     private final String channelId;
     private final String agentId;
     private final String userAgent;
 
-    public WebSocketListener(MessageChannelManager channelManager, String channelId, String agentId, String userAgent) {
+    public WebSocketListener(MessageChannelManager channelManager, String channelId, String agentId, String userAgent, ProcessQueueMetrics metrics) {
         this.channelManager = requireNonNull(channelManager);
+        this.metrics = metrics;
         this.channelId = requireNonNull(channelId);
         this.agentId = requireNonNull(agentId);
         this.userAgent = sanitize(userAgent);
@@ -82,7 +85,7 @@ public class WebSocketListener implements Session.Listener.AutoDemanding {
 
     @Override
     public void onWebSocketOpen(Session session) {
-        var channel = new WebSocketChannel(channelId, agentId, session, userAgent);
+        var channel = new WebSocketChannel(channelId, agentId, session, userAgent, metrics);
         channelManager.add(channel);
         log.debug("onWebSocketOpen ['{}'] -> '{}'", channelId, userAgent);
     }
