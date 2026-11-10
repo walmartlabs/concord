@@ -51,6 +51,8 @@
 ([#1421](https://github.com/walmartlabs/concord/pull/1421));
 - server: send API key expiration emails with angus-mail
 ([#1422](https://github.com/walmartlabs/concord/pull/1422));
+- server: migrate to RESTEasy 7, Jakarta EE 10 and Jetty ee10
+([#1423](https://github.com/walmartlabs/concord/pull/1423));
 - project: update dependencies
 ([#1425](https://github.com/walmartlabs/concord/pull/1425));
 - project: update dependencies
