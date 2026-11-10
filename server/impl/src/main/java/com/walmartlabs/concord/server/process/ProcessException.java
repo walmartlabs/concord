@@ -22,8 +22,8 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.Response.StatusType;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.Response.StatusType;
 
 public class ProcessException extends RuntimeException {
 
