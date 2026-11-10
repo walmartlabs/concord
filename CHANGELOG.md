@@ -1,6 +1,6 @@
 # Change Log
 
-## [2.47.0] - TBD
+## [2.47.0] - 2026-11-10
 
 ### Added
 
@@ -51,12 +51,20 @@
 ([#1421](https://github.com/walmartlabs/concord/pull/1421));
 - server: send API key expiration emails with angus-mail
 ([#1422](https://github.com/walmartlabs/concord/pull/1422));
-- server: migrate to RESTEasy 7, Jakarta EE 10 and Jetty ee10
-([#1423](https://github.com/walmartlabs/concord/pull/1423));
 - project: update dependencies
 ([#1425](https://github.com/walmartlabs/concord/pull/1425));
 - project: update dependencies
 ([#1426](https://github.com/walmartlabs/concord/pull/1426)).
+
+### Breaking
+
+- server: migrate to RESTEasy 7, Jakarta EE 10 and Jetty ee10
+([#1423](https://github.com/walmartlabs/concord/pull/1423)).
+    - common: migrate `ConcordId` and `ConcordKey` constraints to Jakarta
+      Validation. Consumers must use the Jakarta Validation API.
+    - External server plugins must be rebuilt against the Jakarta APIs. Plugins
+      retaining `javax.validation` or `javax.annotation.Priority` can silently
+      lose validation or ordering behavior.
 
 
 ## [2.46.0] - 2026-09-18
