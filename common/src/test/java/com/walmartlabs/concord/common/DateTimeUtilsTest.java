@@ -22,11 +22,10 @@ package com.walmartlabs.concord.common;
 
 import org.junit.jupiter.api.Test;
 
-import javax.xml.bind.DatatypeConverter;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
-import java.util.Calendar;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -34,15 +33,8 @@ public class DateTimeUtilsTest {
 
     @Test
     public void test() throws Exception {
-        Calendar now1 = Calendar.getInstance();
-        now1.set(Calendar.MILLISECOND, 123);
-
-        String a = DatatypeConverter.printDateTime(now1);
-
-        OffsetDateTime now2 = OffsetDateTime.ofInstant(now1.toInstant(), ZoneId.of(now1.getTimeZone().getID()));
-        String b = DateTimeUtils.toIsoString(now2);
-
-        assertEquals(a, b);
+        OffsetDateTime t = OffsetDateTime.of(2020, 7, 16, 13, 47, 51, 123_000_000, ZoneOffset.ofHours(-4));
+        assertEquals("2020-07-16T13:47:51.123-04:00", DateTimeUtils.toIsoString(t));
 
         String src = "2020-07-16T13:47:51.085-04:00";
         OffsetDateTime x = DateTimeUtils.fromIsoString(src);

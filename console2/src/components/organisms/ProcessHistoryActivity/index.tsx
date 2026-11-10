@@ -23,7 +23,7 @@ import { useState } from 'react';
 import { ProcessHistoryEntry, ProcessEntry, get as apiGet, isFinal } from '../../../api/process';
 import { ProcessHistoryList } from '../../molecules';
 import { useCallback } from 'react';
-import { usePolling } from '../../../api/usePolling';
+import { isBlockingPollingError, usePolling } from '../../../api/usePolling';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { ConcordId } from '../../../api/common';
 
@@ -47,7 +47,7 @@ const ProcessHistoryActivity = ({ instanceId, loadingHandler, forceRefresh, data
 
     const error = usePolling(fetchData, dataFetchInterval, loadingHandler, forceRefresh);
 
-    if (error) {
+    if (isBlockingPollingError(error)) {
         return <RequestErrorActivity error={error} />;
     }
 

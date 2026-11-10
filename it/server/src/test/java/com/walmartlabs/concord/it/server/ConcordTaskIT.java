@@ -24,8 +24,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.InputStream;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 import static com.walmartlabs.concord.common.GrepUtils.grep;
@@ -146,9 +146,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
 
-        Calendar c = Calendar.getInstance();
-        c.add(Calendar.SECOND, 30);
-        input.put("arguments.startAt", DatatypeConverter.printDateTime(c));
+        input.put("arguments.startAt", OffsetDateTime.now().plusSeconds(30).toString());
 
         StartProcessResponse spr = start(input);
 

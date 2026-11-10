@@ -30,7 +30,7 @@ import {
     LogSegmentEntry,
     SegmentStatus,
 } from '../../../api/process/log';
-import { usePolling } from '../../../api/usePolling';
+import { isBlockingPollingError, usePolling } from '../../../api/usePolling';
 import { RequestErrorActivity } from '../../organisms';
 import LogSegmentActivity from './LogSegmentActivity';
 import { FormWizardAction, ProcessToolbar } from '../../molecules';
@@ -156,11 +156,11 @@ const ProcessLogActivityV2 = ({
 
     const error = usePolling(fetchSegments, dataFetchInterval, loadingHandler, forceRefresh);
 
-    if (error) {
+    if (isBlockingPollingError(error)) {
         return <RequestErrorActivity error={error} />;
     }
 
-    if (formError) {
+    if (isBlockingPollingError(formError)) {
         return <RequestErrorActivity error={formError} />;
     }
 

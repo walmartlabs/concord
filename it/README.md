@@ -18,6 +18,13 @@ The `-Pdocker` IT flow uses the locally built `walmartlabs/concord-server` and
 you changed those areas, rebuild first with the full docker-profile command
 above before running `it/console`.
 
+In the `it/server -Pdocker` flow, Docker starts the outer DB, server, and agent
+containers plus a privileged Docker-in-Docker daemon. Maven runs the tests on
+the host; only Docker task containers started by Concord flows run inside the
+managed daemon. Its Unix socket is shared with the agent, and the daemon and
+agent share the temporary directory at the same absolute path. The harness
+transfers the locally built `concord-ansible` image to the daemon.
+
 Notes:
 
 - Integration test resources are part of the regression surface. Prefer adding

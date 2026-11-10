@@ -26,21 +26,17 @@ import com.walmartlabs.concord.server.security.Permission;
 import com.walmartlabs.concord.server.security.UserSecurityContext;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyEntry;
-import org.eclipse.jetty.ee8.websocket.server.JettyServerUpgradeRequest;
-import org.eclipse.jetty.ee8.websocket.server.JettyServerUpgradeResponse;
-import org.eclipse.jetty.ee8.websocket.server.JettyWebSocketCreator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Callback;
+import org.eclipse.jetty.websocket.server.ServerUpgradeRequest;
+import org.eclipse.jetty.websocket.server.ServerUpgradeResponse;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.HttpHeaders;
-import java.io.IOException;
 import java.util.Base64;
 import java.util.UUID;
 
-public class WebSocketCreator implements JettyWebSocketCreator {
-
-    private static final Logger log = LoggerFactory.getLogger(WebSocketCreator.class);
+public class WebSocketCreator implements org.eclipse.jetty.websocket.server.WebSocketCreator {
 
     private final MessageChannelManager channelManager;
     private final ApiKeyDao apiKeyDao;
@@ -60,37 +56,37 @@ public class WebSocketCreator implements JettyWebSocketCreator {
     }
 
     @Override
-    public Object createWebSocket(JettyServerUpgradeRequest req, JettyServerUpgradeResponse resp) {
+    public Object createWebSocket(ServerUpgradeRequest req, ServerUpgradeResponse resp, Callback callback) {
         if (channelManager.isShutdown()) {
-            sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Server is in the maintenance mode", resp);
+            Response.writeError(req, resp, callback, HttpStatus.SERVICE_UNAVAILABLE_503, "Server is in the maintenance mode");
             return null;
         }
 
-        String auth = req.getHeader(HttpHeaders.AUTHORIZATION);
+        String auth = req.getHeaders().get(HttpHeader.AUTHORIZATION);
         if (auth == null) {
-            sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing " + HttpHeaders.AUTHORIZATION + " header", resp);
+            Response.writeError(req, resp, callback, HttpStatus.UNAUTHORIZED_401, "Missing " + HttpHeader.AUTHORIZATION.asString() + " header");
             return null;
         }
 
         if (invalidApiKey(auth)) {
-            sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid API key: '" + auth + "'", resp);
+            Response.writeError(req, resp, callback, HttpStatus.FORBIDDEN_403, "Invalid API key: '" + auth + "'");
             return null;
         }
 
         ApiKeyEntry apiKey = apiKeyDao.find(auth);
         if (apiKey == null) {
-            sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid API key or user not found", resp);
+            Response.writeError(req, resp, callback, HttpStatus.FORBIDDEN_403, "Invalid API key or user not found");
             return null;
         }
 
         if (cfg.isRequirePermission() && !userSecurityContext.isPermitted(apiKey.getUserId(), Permission.AGENT_WEBSOCKET)) {
-            sendError(HttpServletResponse.SC_FORBIDDEN, "Permission denied", resp);
+            Response.writeError(req, resp, callback, HttpStatus.FORBIDDEN_403, "Permission denied");
             return null;
         }
 
         String channelId = "ws-" + UUID.randomUUID();
-        String agentId = req.getHeader(QueueClient.AGENT_ID);
-        String userAgent = req.getHeader(QueueClient.AGENT_UA);
+        String agentId = req.getHeaders().get(QueueClient.AGENT_ID);
+        String userAgent = req.getHeaders().get(QueueClient.AGENT_UA);
         return new WebSocketListener(channelManager, channelId, agentId, userAgent);
     }
 
@@ -103,12 +99,4 @@ public class WebSocketCreator implements JettyWebSocketCreator {
         }
     }
 
-    private void sendError(int statusCode, String message, JettyServerUpgradeResponse resp) {
-        try {
-            resp.sendError(statusCode, message);
-        } catch (IOException e) {
-            log.error("sendError ['{}', '{}'] -> error", statusCode, message, e);
-            throw new RuntimeException(e);
-        }
-    }
 }

@@ -26,7 +26,7 @@ import { isFinal, ProcessStatus } from '../../../api/process';
 import { ProcessAttachmentsList } from '../../molecules';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { useCallback } from 'react';
-import { usePolling } from '../../../api/usePolling';
+import { isBlockingPollingError, usePolling } from '../../../api/usePolling';
 import { ConcordId } from '../../../api/common';
 
 interface ExternalProps {
@@ -55,7 +55,7 @@ const ProcessAttachmentsActivity = ({
 
     const error = usePolling(fetchData, dataFetchInterval, loadingHandler, forceRefresh);
 
-    if (error) {
+    if (isBlockingPollingError(error)) {
         return <RequestErrorActivity error={error} />;
     }
 

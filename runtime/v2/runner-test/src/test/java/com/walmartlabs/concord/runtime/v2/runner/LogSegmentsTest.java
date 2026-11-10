@@ -758,7 +758,13 @@ public class LogSegmentsTest {
     }
 
     private static void assertSegmentStatus(byte[] log, int segmentId, LogSegmentStatus status) throws IOException {
-        String statusLog = Pattern.quote("|%d|%d|%d|".formatted(0, segmentId, status.id())) + "\\d+\\|\\d+\\|";
+        // final statuses carry the time of the status (epoch millis), RUNNING has no body
+        String statusLog;
+        if (status == LogSegmentStatus.RUNNING) {
+            statusLog = Pattern.quote("|0|%d|%d|".formatted(segmentId, status.id())) + "\\d+\\|\\d+\\|";
+        } else {
+            statusLog = "\\|13\\|" + Pattern.quote("%d|%d|".formatted(segmentId, status.id())) + "\\d+\\|\\d+\\|\\d{13}";
+        }
         assertLog(log, ".*" + statusLog + ".*");
 
         byte[] logWithoutSegments = removePattern(logWithoutSegmentsHolder.get(), statusLog);

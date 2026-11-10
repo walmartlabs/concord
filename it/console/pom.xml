@@ -24,7 +24,6 @@
         <agent.image>walmartlabs/concord-agent</agent.image>
         <console.image>walmartlabs/concord-console</console.image>
 
-        <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
 
         <it.webdriver.type>local</it.webdriver.type>
         <local.repository.src.mount>${settings.localRepository}</local.repository.src.mount>
