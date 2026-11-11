@@ -72,8 +72,8 @@
         <httpmime.version>4.5.14</httpmime.version>
         <immutables.version>2.9.3</immutables.version>
         <jackson.annotations.version>2.22</jackson.annotations.version>
-        <jackson.databind.version>2.22.3</jackson.databind.version>
-        <jackson.version>2.22.3</jackson.version>
+        <jackson.databind.version>2.22.4</jackson.databind.version>
+        <jackson.version>2.22.4</jackson.version>
         <jakarta.annotation.api.version>2.1.1</jakarta.annotation.api.version>
         <!-- javax.mail.* implementation for the smtp task and ITs: replaces com.sun.mail:javax.mail, which is
              abandoned at 1.6.2 and ships the same packages. The server uses angus-mail (jakarta.mail.*) -->
