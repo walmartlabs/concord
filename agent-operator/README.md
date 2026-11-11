@@ -130,6 +130,14 @@ Then forward the pod's debugger port to a local port
 $ kubectl port-forward -n default pod/<agent-operator-pod-name> 5006:5005
 ```
 
+## Terminated Pods
+
+Pods in the `Failed` or `Succeeded` phase (for example, pods evicted for exceeding
+their ephemeral storage limit) can no longer do any work. The operator does not count
+them as capacity: it deletes them and creates replacements.
+
+Pods that are still draining during a scale-down are not touched.
+
 ## How To Release New Versions
 
 - build the image;

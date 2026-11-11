@@ -55,6 +55,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -79,6 +80,8 @@ public class AgentOperatorIT {
 
     private static final String NAMESPACE = "default";
     private static final String POOL_NAME = "test-pool";
+    private static final String EVICTION_POOL_NAME = "eviction-pool";
+    private static final int EVICTION_STORAGE_LIMIT_MIB = 100;
     private static final String AGENT_FLAVOR = "k8s-it";
 
     private static final String SERVER_IMAGE = System.getProperty("server.image", "walmartlabs/concord-server:latest");
@@ -175,8 +178,8 @@ public class AgentOperatorIT {
                 .replace("http://host.minikube.internal:8001", serverUrl)
                 .replace("...API token...", concord.environment().apiToken()));
 
-        createAgentPool();
-        waitForAgentPod();
+        createAgentPool(POOL_NAME, "10Gi");
+        waitForAgentPod(POOL_NAME);
     }
 
     @AfterAll
@@ -228,6 +231,35 @@ public class AgentOperatorIT {
         proc.assertLog(".*Hello from a k8s agent!.*");
     }
 
+    @Test
+    @Timeout(value = 10, unit = TimeUnit.MINUTES)
+    public void evictedPodIsRemovedAndReplaced() throws Exception {
+        createAgentPool(EVICTION_POOL_NAME, EVICTION_STORAGE_LIMIT_MIB + "Mi");
+        try {
+            waitForAgentPod(EVICTION_POOL_NAME);
+
+            var evictedName = k8s.pods().inNamespace(NAMESPACE).withLabel("poolName", EVICTION_POOL_NAME)
+                    .list().getItems().get(0).getMetadata().getName();
+
+            fillEphemeralStorage(evictedName, EVICTION_STORAGE_LIMIT_MIB * 3);
+
+            var evicted = k8s.pods().inNamespace(NAMESPACE).withName(evictedName)
+                    .waitUntilCondition(p -> p != null && "Evicted".equals(p.getStatus().getReason()), 3, TimeUnit.MINUTES);
+            assertEquals("Failed", evicted.getStatus().getPhase());
+
+            k8s.pods().inNamespace(NAMESPACE).withName(evictedName)
+                    .waitUntilCondition(Objects::isNull, 3, TimeUnit.MINUTES);
+
+            k8s.pods().inNamespace(NAMESPACE).withLabel("poolName", EVICTION_POOL_NAME)
+                    .waitUntilCondition(p -> p != null && !evictedName.equals(p.getMetadata().getName()) && isReady(p), 5, TimeUnit.MINUTES);
+        } catch (Exception e) {
+            dumpPodLogs("concord-agent-operator", "name", "concord-agent-operator");
+            throw e;
+        } finally {
+            deleteAgentPool(EVICTION_POOL_NAME);
+        }
+    }
+
     private static void applyManifest(String name, UnaryOperator<String> transform) throws IOException {
         var content = Files.readString(DEPLOY_DIR.resolve(name));
         if (transform != null) {
@@ -249,8 +281,10 @@ public class AgentOperatorIT {
                         60, TimeUnit.SECONDS);
     }
 
-    private static void createAgentPool() throws IOException {
+    private static void createAgentPool(String name, String ephemeralStorageLimit) throws IOException {
         var cr = resourceToString("agentpool.yml")
+                .replace("%%crName%%", name)
+                .replace("%%ephemeralStorageLimit%%", ephemeralStorageLimit)
                 .replace("%%serverApiBaseUrl%%", serverUrl)
                 .replace("%%serverWebsocketUrl%%", serverUrl.replace("http://", "ws://") + "/websocket")
                 .replace("%%agentToken%%", AGENT_TOKEN)
@@ -261,14 +295,30 @@ public class AgentOperatorIT {
         }
     }
 
-    private static void waitForAgentPod() {
+    private static void deleteAgentPool(String name) {
+        k8s.genericKubernetesResources("concord.walmartlabs.com/v1alpha1", "AgentPool")
+                .inNamespace(NAMESPACE)
+                .withName(name)
+                .delete();
+    }
+
+    private static void fillEphemeralStorage(String podName, int megabytes) throws Exception {
+        try (var exec = k8s.pods().inNamespace(NAMESPACE).withName(podName).inContainer("agent")
+                .writingOutput(OutputStream.nullOutputStream())
+                .writingError(OutputStream.nullOutputStream())
+                .exec("dd", "if=/dev/zero", "of=/tmp/fill", "bs=1M", "count=" + megabytes)) {
+            assertEquals(0, exec.exitCode().get(1, TimeUnit.MINUTES));
+        }
+    }
+
+    private static void waitForAgentPod(String poolName) {
         try {
             k8s.pods().inNamespace(NAMESPACE)
-                    .withLabel("poolName", POOL_NAME)
+                    .withLabel("poolName", poolName)
                     .waitUntilCondition(AgentOperatorIT::isReady, 5, TimeUnit.MINUTES);
         } catch (Exception e) {
             dumpPodLogs("concord-agent-operator", "name", "concord-agent-operator");
-            dumpPodLogs("agent", "poolName", POOL_NAME);
+            dumpPodLogs("agent", "poolName", poolName);
             throw e;
         }
     }
