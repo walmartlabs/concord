@@ -25,6 +25,7 @@ import ca.ibodrov.concord.testcontainers.ContainerListener;
 import ca.ibodrov.concord.testcontainers.ContainerType;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -45,6 +46,7 @@ import org.testcontainers.k3s.K3sContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -178,7 +180,7 @@ public class AgentOperatorIT {
                 .replace("http://host.minikube.internal:8001", serverUrl)
                 .replace("...API token...", concord.environment().apiToken()));
 
-        createAgentPool(POOL_NAME, "10Gi");
+        createAgentPool();
         waitForAgentPod(POOL_NAME);
     }
 
@@ -234,7 +236,7 @@ public class AgentOperatorIT {
     @Test
     @Timeout(value = 10, unit = TimeUnit.MINUTES)
     public void evictedPodIsRemovedAndReplaced() throws Exception {
-        createAgentPool(EVICTION_POOL_NAME, EVICTION_STORAGE_LIMIT_MIB + "Mi");
+        createEvictionPool();
         try {
             waitForAgentPod(EVICTION_POOL_NAME);
 
@@ -253,10 +255,11 @@ public class AgentOperatorIT {
             k8s.pods().inNamespace(NAMESPACE).withLabel("poolName", EVICTION_POOL_NAME)
                     .waitUntilCondition(p -> p != null && !evictedName.equals(p.getMetadata().getName()) && isReady(p), 5, TimeUnit.MINUTES);
         } catch (Exception e) {
+            dumpEvictionDiagnostics();
             dumpPodLogs("concord-agent-operator", "name", "concord-agent-operator");
             throw e;
         } finally {
-            deleteAgentPool(EVICTION_POOL_NAME);
+            deleteEvictionPool();
         }
     }
 
@@ -281,10 +284,17 @@ public class AgentOperatorIT {
                         60, TimeUnit.SECONDS);
     }
 
-    private static void createAgentPool(String name, String ephemeralStorageLimit) throws IOException {
-        var cr = resourceToString("agentpool.yml")
-                .replace("%%crName%%", name)
-                .replace("%%ephemeralStorageLimit%%", ephemeralStorageLimit)
+    private static void createAgentPool() throws IOException {
+        applyAgentPool("agentpool.yml", UnaryOperator.identity());
+    }
+
+    private static void createEvictionPool() throws IOException {
+        applyAgentPool("agentpool-eviction.yml",
+                s -> s.replace("%%ephemeralStorageLimit%%", EVICTION_STORAGE_LIMIT_MIB + "Mi"));
+    }
+
+    private static void applyAgentPool(String fixture, UnaryOperator<String> transform) throws IOException {
+        var cr = transform.apply(resourceToString(fixture))
                 .replace("%%serverApiBaseUrl%%", serverUrl)
                 .replace("%%serverWebsocketUrl%%", serverUrl.replace("http://", "ws://") + "/websocket")
                 .replace("%%agentToken%%", AGENT_TOKEN)
@@ -295,19 +305,27 @@ public class AgentOperatorIT {
         }
     }
 
-    private static void deleteAgentPool(String name) {
+    private static void deleteEvictionPool() {
         k8s.genericKubernetesResources("concord.walmartlabs.com/v1alpha1", "AgentPool")
                 .inNamespace(NAMESPACE)
-                .withName(name)
+                .withName(EVICTION_POOL_NAME)
                 .delete();
     }
 
     private static void fillEphemeralStorage(String podName, int megabytes) throws Exception {
+        execInAgent(podName, "dd", "if=/dev/zero", "of=/tmp/fill", "bs=1M", "count=" + megabytes);
+    }
+
+    private static String execInAgent(String podName, String... command) throws Exception {
+        var output = new ByteArrayOutputStream();
         try (var exec = k8s.pods().inNamespace(NAMESPACE).withName(podName).inContainer("agent")
-                .writingOutput(OutputStream.nullOutputStream())
-                .writingError(OutputStream.nullOutputStream())
-                .exec("dd", "if=/dev/zero", "of=/tmp/fill", "bs=1M", "count=" + megabytes)) {
-            assertEquals(0, exec.exitCode().get(1, TimeUnit.MINUTES));
+                .writingOutput(output)
+                .writingError(output)
+                .exec(command)) {
+            var exitCode = exec.exitCode().get(1, TimeUnit.MINUTES);
+            var result = output.toString(StandardCharsets.UTF_8);
+            assertEquals(0, exitCode, "'" + String.join(" ", command) + "' failed: " + result);
+            return result;
         }
     }
 
@@ -356,6 +374,62 @@ public class AgentOperatorIT {
         } catch (Exception e) {
             log.warn("Can't list pods with {}={}: {}", labelKey, labelValue, e.getMessage());
         }
+    }
+
+    /**
+     * Collects what the kubelet sees when the eviction doesn't happen: the pod's status and events,
+     * the disk usage inside the pod, the ephemeral storage usage as computed by the kubelet
+     * and the eviction-related lines of the k3s log.
+     */
+    private static void dumpEvictionDiagnostics() {
+        try {
+            k8s.pods().inNamespace(NAMESPACE).withLabel("poolName", EVICTION_POOL_NAME).list().getItems()
+                    .forEach(pod -> {
+                        var name = pod.getMetadata().getName();
+                        log.info("Status of {}: {}", name, pod.getStatus());
+                        logDiskUsage(name);
+                        logKubeletEphemeralStorageStats(pod);
+                    });
+
+            k8s.v1().events().inNamespace(NAMESPACE).list().getItems().stream()
+                    .filter(e -> e.getInvolvedObject().getName().startsWith(EVICTION_POOL_NAME))
+                    .forEach(e -> log.info("Event of {}: {} {}: {}",
+                            e.getInvolvedObject().getName(), e.getType(), e.getReason(), e.getMessage()));
+
+            log.info("Eviction-related lines of the k3s log:\n{}", k3sLog("evict", "ephemeral"));
+        } catch (Exception e) {
+            log.warn("Can't collect the eviction diagnostics: {}", e.getMessage());
+        }
+    }
+
+    private static void logDiskUsage(String podName) {
+        try {
+            log.info("Disk usage in {}:\n{}", podName, execInAgent(podName, "sh", "-c", "df -k /tmp; du -sk /tmp"));
+        } catch (Exception | AssertionError e) {
+            log.warn("Can't check the disk usage in {}: {}", podName, e.getMessage());
+        }
+    }
+
+    private static void logKubeletEphemeralStorageStats(Pod pod) {
+        var name = pod.getMetadata().getName();
+        try {
+            var stats = k3s.execInContainer("kubectl", "get", "--raw",
+                    "/api/v1/nodes/" + pod.getSpec().getNodeName() + "/proxy/stats/summary");
+            for (var podStats : new ObjectMapper().readTree(stats.getStdout()).path("pods")) {
+                if (name.equals(podStats.at("/podRef/name").asText())) {
+                    log.info("Kubelet ephemeral storage stats of {}: {}", name, podStats.path("ephemeral-storage"));
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Can't fetch the kubelet stats of {}: {}", name, e.getMessage());
+        }
+    }
+
+    private static String k3sLog(String... keywords) {
+        var lines = k3s.getLogs().lines()
+                .filter(line -> Arrays.stream(keywords).anyMatch(line.toLowerCase()::contains))
+                .toList();
+        return String.join("\n", lines.subList(Math.max(0, lines.size() - 50), lines.size()));
     }
 
     /**
