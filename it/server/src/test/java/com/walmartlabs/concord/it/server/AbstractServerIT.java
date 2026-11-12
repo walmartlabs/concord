@@ -250,6 +250,41 @@ public abstract class AbstractServerIT {
         }
     }
 
+    /**
+     * A freshly created LOCAL user and their first API key.
+     */
+    protected static final class TestUser {
+
+        public final String username;
+        public final CreateApiKeyResponse apiKey;
+
+        TestUser(String username, CreateApiKeyResponse apiKey) {
+            this.username = username;
+            this.apiKey = apiKey;
+        }
+    }
+
+    protected TestUser createUser(String prefix) throws ApiException {
+        String username = prefix + "_" + randomString();
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
+
+        ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse apiKey = apiKeysApi.createUserApiKey(new CreateApiKeyRequest().username(username));
+
+        return new TestUser(username, apiKey);
+    }
+
+    protected void addUserToTeam(String orgName, String teamName, String username, TeamUserEntry.RoleEnum role) throws ApiException {
+        TeamsApi teamsApi = new TeamsApi(getApiClient());
+        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
+                .username(username)
+                .role(role)));
+    }
+
     @FunctionalInterface
     public interface Consumer<T> {
         void accept(T t) throws Exception;

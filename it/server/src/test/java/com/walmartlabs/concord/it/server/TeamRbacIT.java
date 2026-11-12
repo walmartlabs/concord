@@ -52,37 +52,16 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        UsersApi usersApi = new UsersApi(getApiClient());
-        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
+        TestUser userA = createUser("userA");
+        addUserToTeam(orgAName, teamAName, userA.username, TeamUserEntry.RoleEnum.MEMBER);
 
-        String userAName = "userA_" + randomString();
-        usersApi.createOrUpdateUser(new CreateUserRequest()
-                .username(userAName)
-                .type(CreateUserRequest.TypeEnum.LOCAL));
-        CreateApiKeyResponse apiKeyA = apiKeyResource.createUserApiKey(new CreateApiKeyRequest()
-                .username(userAName)
-                .userType(CreateApiKeyRequest.UserTypeEnum.LOCAL));
-
-        teamsApi.addUsersToTeam(orgAName, teamAName, false, Collections.singletonList(new TeamUserEntry()
-                .username(userAName)
-                .role(TeamUserEntry.RoleEnum.MEMBER)));
-
-        String userBName = "userB_" + randomString();
-        usersApi.createOrUpdateUser(new CreateUserRequest()
-                .username(userBName)
-                .type(CreateUserRequest.TypeEnum.LOCAL));
-        CreateApiKeyResponse apiKeyB = apiKeyResource.createUserApiKey(new CreateApiKeyRequest()
-                .username(userBName)
-                .userType(CreateApiKeyRequest.UserTypeEnum.LOCAL));
-
-        teamsApi.addUsersToTeam(orgBName, teamBName, false, Collections.singletonList(new TeamUserEntry()
-                .username(userBName)
-                .role(TeamUserEntry.RoleEnum.MEMBER)));
+        TestUser userB = createUser("userB");
+        addUserToTeam(orgBName, teamBName, userB.username, TeamUserEntry.RoleEnum.MEMBER);
 
         // ---
 
 
-        setApiKey(apiKeyA.getKey());
+        setApiKey(userA.apiKey.getKey());
 
         String projectAName = "projectA_" + randomString();
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
@@ -95,7 +74,7 @@ public class TeamRbacIT extends AbstractServerIT {
         } catch (ApiException e) {
         }
 
-        setApiKey(apiKeyB.getKey());
+        setApiKey(userB.apiKey.getKey());
 
         projectsApi = new ProjectsApi(getApiClient());
         String projectBName = "projectB_" + randomString();
@@ -118,18 +97,11 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        UsersApi usersApi = new UsersApi(getApiClient());
-        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-
-        String userAName = "userA_" + randomString();
-        usersApi.createOrUpdateUser(new CreateUserRequest().username(userAName).type(CreateUserRequest.TypeEnum.LOCAL));
-        CreateApiKeyResponse apiKeyA = apiKeyResource.createUserApiKey(new CreateApiKeyRequest()
-                .username(userAName)
-                .userType(CreateApiKeyRequest.UserTypeEnum.LOCAL));
+        TestUser userA = createUser("userA");
 
         // ---
 
-        setApiKey(apiKeyA.getKey());
+        setApiKey(userA.apiKey.getKey());
 
         try {
             teamsApi.createOrUpdateTeam(orgName, new TeamEntry()
@@ -143,13 +115,11 @@ public class TeamRbacIT extends AbstractServerIT {
 
         resetApiKey();
 
-        teamsApi.addUsersToTeam(orgName, teamAName, false, Collections.singletonList(new TeamUserEntry()
-                .username(userAName)
-                .role(TeamUserEntry.RoleEnum.MAINTAINER)));
+        addUserToTeam(orgName, teamAName, userA.username, TeamUserEntry.RoleEnum.MAINTAINER);
 
         // ---
 
-        setApiKey(apiKeyA.getKey());
+        setApiKey(userA.apiKey.getKey());
 
         teamsApi.createOrUpdateTeam(orgName, new TeamEntry()
                 .name(teamAName)
@@ -169,9 +139,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         resetApiKey();
 
-        teamsApi.addUsersToTeam(orgName, teamAName, false, Collections.singletonList(new TeamUserEntry()
-                .username(userAName)
-                .role(TeamUserEntry.RoleEnum.OWNER)));
+        addUserToTeam(orgName, teamAName, userA.username, TeamUserEntry.RoleEnum.OWNER);
 
         // ---
 
@@ -194,30 +162,18 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        UsersApi usersApi = new UsersApi(getApiClient());
-        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
+        TestUser userA = createUser("userA");
+        addUserToTeam(orgName, teamName, userA.username, TeamUserEntry.RoleEnum.MAINTAINER);
 
-        String userAName = "userA_" + randomString();
-        usersApi.createOrUpdateUser(new CreateUserRequest().username(userAName).type(CreateUserRequest.TypeEnum.LOCAL));
-        CreateApiKeyResponse apiKeyA = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
-
-        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .username(userAName)
-                .role(TeamUserEntry.RoleEnum.MAINTAINER)));
-
-        String userBName = "userB_" + randomString();
-        usersApi.createOrUpdateUser(new CreateUserRequest()
-                .username(userBName)
-                .type(CreateUserRequest.TypeEnum.LOCAL));
-        CreateApiKeyResponse apiKeyB = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userBName));
+        TestUser userB = createUser("userB");
 
         // ---
 
-        setApiKey(apiKeyB.getKey());
+        setApiKey(userB.apiKey.getKey());
 
         try {
             teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                    .username(userBName)
+                    .username(userB.username)
                     .role(TeamUserEntry.RoleEnum.MEMBER)));
             fail("should fail");
         } catch (ApiException e) {
@@ -225,29 +181,16 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        setApiKey(apiKeyA.getKey());
+        setApiKey(userA.apiKey.getKey());
         teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .username(userBName)
+                .username(userB.username)
                 .role(TeamUserEntry.RoleEnum.MEMBER)));
     }
 
     @Test
     public void testNewTeamOwner() throws Exception {
-        String userA = "userA_" + randomString();
-
-        UsersApi usersApi = new UsersApi(getApiClient());
-        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-
-        usersApi.createOrUpdateUser(new CreateUserRequest().username(userA).type(CreateUserRequest.TypeEnum.LOCAL));
-        CreateApiKeyResponse userAKey = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userA));
-
-        String userB = "userA_" + randomString();
-
-        usersApi.createOrUpdateUser(new CreateUserRequest()
-                .username(userB)
-                .type(CreateUserRequest.TypeEnum.LOCAL));
-        CreateApiKeyResponse userBKey = apiKeyResource.createUserApiKey(new CreateApiKeyRequest()
-                .username(userB));
+        TestUser userA = createUser("userA");
+        TestUser userB = createUser("userB");
 
         // ---
 
@@ -260,12 +203,12 @@ public class TeamRbacIT extends AbstractServerIT {
 
         TeamsApi teamsApi = new TeamsApi(getApiClient());
         teamsApi.addUsersToTeam(orgName, "default", false, Collections.singletonList(new TeamUserEntry()
-                .username(userA)
+                .username(userA.username)
                 .role(TeamUserEntry.RoleEnum.OWNER)));
 
         // ---
 
-        setApiKey(userBKey.getKey());
+        setApiKey(userB.apiKey.getKey());
 
         // ---
 
@@ -278,13 +221,13 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        setApiKey(userAKey.getKey());
+        setApiKey(userA.apiKey.getKey());
 
         // ---
 
         teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name(teamName));
         teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .username(userB)
+                .username(userB.username)
                 .role(TeamUserEntry.RoleEnum.MEMBER)));
     }
 
@@ -339,22 +282,12 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        UsersApi usersApi = new UsersApi(getApiClient());
-        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-
-        String userAName = "userA_" + randomString();
-        usersApi.createOrUpdateUser(new CreateUserRequest().username(userAName).type(CreateUserRequest.TypeEnum.LOCAL));
-        CreateApiKeyResponse apiKeyA = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
-
-        String userBName = "userB_" + randomString();
-        usersApi.createOrUpdateUser(new CreateUserRequest()
-                .username(userBName)
-                .type(CreateUserRequest.TypeEnum.LOCAL));
-        CreateApiKeyResponse apiKeyB = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userBName));
+        TestUser userA = createUser("userA");
+        TestUser userB = createUser("userB");
 
         // ---
 
-        setApiKey(apiKeyA.getKey());
+        setApiKey(userA.apiKey.getKey());
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 
@@ -369,17 +302,17 @@ public class TeamRbacIT extends AbstractServerIT {
 
         resetApiKey();
         teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .username(userAName)
+                .username(userA.username)
                 .role(TeamUserEntry.RoleEnum.MEMBER)));
 
         // ---
 
-        setApiKey(apiKeyA.getKey());
+        setApiKey(userA.apiKey.getKey());
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(projectName));
 
         // ---
 
-        setApiKey(apiKeyB.getKey());
+        setApiKey(userB.apiKey.getKey());
 
         try {
             projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
@@ -392,7 +325,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        setApiKey(apiKeyA.getKey());
+        setApiKey(userA.apiKey.getKey());
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .description("new description")
@@ -400,7 +333,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        setApiKey(apiKeyA.getKey());
+        setApiKey(userA.apiKey.getKey());
         projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
                 .teamId(ctr.getId())
                 .orgName(orgName)
@@ -409,7 +342,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        setApiKey(apiKeyB.getKey());
+        setApiKey(userB.apiKey.getKey());
 
         try {
             projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
@@ -424,12 +357,12 @@ public class TeamRbacIT extends AbstractServerIT {
 
         resetApiKey();
         teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .username(userBName)
+                .username(userB.username)
                 .role(TeamUserEntry.RoleEnum.MEMBER)));
 
         // ---
 
-        setApiKey(apiKeyB.getKey());
+        setApiKey(userB.apiKey.getKey());
         projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .description("another description")
@@ -452,22 +385,12 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        UsersApi usersApi = new UsersApi(getApiClient());
-        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-
-        String userAName = "userA_" + randomString();
-        usersApi.createOrUpdateUser(new CreateUserRequest().username(userAName).type(CreateUserRequest.TypeEnum.LOCAL));
-        CreateApiKeyResponse apiKeyA = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
-
-        String userBName = "userB_" + randomString();
-        usersApi.createOrUpdateUser(new CreateUserRequest()
-                .username(userBName)
-                .type(CreateUserRequest.TypeEnum.LOCAL));
-        CreateApiKeyResponse apiKeyB = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userBName));
+        TestUser userA = createUser("userA");
+        TestUser userB = createUser("userB");
 
         // ---
 
-        setApiKey(apiKeyA.getKey());
+        setApiKey(userA.apiKey.getKey());
 
         String secretAName = "secretA_" + randomString();
         try {
@@ -480,24 +403,24 @@ public class TeamRbacIT extends AbstractServerIT {
 
         resetApiKey();
         teamsApi.addUsersToTeam(orgAName, teamAName, false, Collections.singletonList(new TeamUserEntry()
-                .username(userAName)
+                .username(userA.username)
                 .role(TeamUserEntry.RoleEnum.MEMBER)));
 
         // ---
 
-        setApiKey(apiKeyA.getKey());
+        setApiKey(userA.apiKey.getKey());
         generateKeyPair(orgAName, secretAName, false, null);
 
         // ---
 
         SecretsApi secretResource = new SecretsApi(getApiClient());
 
-        setApiKey(apiKeyB.getKey());
+        setApiKey(userB.apiKey.getKey());
         secretResource.getPublicKey(orgAName, secretAName);
 
         // ---
 
-        setApiKey(apiKeyB.getKey());
+        setApiKey(userB.apiKey.getKey());
 
         try {
             secretResource.delete(orgAName, secretAName);
@@ -507,7 +430,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        setApiKey(apiKeyA.getKey());
+        setApiKey(userA.apiKey.getKey());
         secretResource.delete(orgAName, secretAName);
     }
 
@@ -543,36 +466,22 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        String userAName = "userA_" + randomString();
-        String userBName = "userB_" + randomString();
-
-        UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdateUser(new CreateUserRequest().username(userAName).type(CreateUserRequest.TypeEnum.LOCAL));
-        usersApi.createOrUpdateUser(new CreateUserRequest()
-                .username(userBName)
-                .type(CreateUserRequest.TypeEnum.LOCAL));
+        TestUser userA = createUser("userA");
+        TestUser userB = createUser("userB");
 
         // ---
 
-        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse cakrA = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
-        CreateApiKeyResponse cakrB = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userBName));
+        addUserToTeam(orgName, teamName, userA.username, TeamUserEntry.RoleEnum.MEMBER);
 
         // ---
 
-        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .username(userAName)
-                .role(TeamUserEntry.RoleEnum.MEMBER)));
-
-        // ---
-
-        setApiKey(cakrA.getKey());
+        setApiKey(userA.apiKey.getKey());
 
         inventoryResource.getInventory(orgName, inventoryName);
 
         // ---
 
-        setApiKey(cakrB.getKey());
+        setApiKey(userB.apiKey.getKey());
 
         try {
             inventoryResource.getInventory(orgName, inventoryName);
@@ -584,13 +493,11 @@ public class TeamRbacIT extends AbstractServerIT {
 
         resetApiKey();
 
-        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .username(userBName)
-                .role(TeamUserEntry.RoleEnum.MEMBER)));
+        addUserToTeam(orgName, teamName, userB.username, TeamUserEntry.RoleEnum.MEMBER);
 
         // ---
 
-        setApiKey(cakrB.getKey());
+        setApiKey(userB.apiKey.getKey());
 
         inventoryResource.getInventory(orgName, inventoryName);
     }
@@ -647,19 +554,11 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        String username = "user_" + randomString();
-
-        UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdateUser(new CreateUserRequest()
-                .username(username)
-                .type(CreateUserRequest.TypeEnum.LOCAL));
-
-        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse cakr = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(username));
+        TestUser user = createUser("user");
 
         // ---
 
-        setApiKey(cakr.getKey());
+        setApiKey(user.apiKey.getKey());
 
         try {
             new SecretsV2Api(getApiClient()).getSecret(orgName, secretName);
@@ -678,13 +577,11 @@ public class TeamRbacIT extends AbstractServerIT {
         TeamsApi teamsApi = new TeamsApi(getApiClient());
         teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name(teamName));
 
-        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .username(username)
-                .role(TeamUserEntry.RoleEnum.MEMBER)));
+        addUserToTeam(orgName, teamName, user.username, TeamUserEntry.RoleEnum.MEMBER);
 
         // ---
 
-        setApiKey(cakr.getKey());
+        setApiKey(user.apiKey.getKey());
 
         try {
             new SecretsV2Api(getApiClient()).getSecret(orgName, secretName);
@@ -702,7 +599,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        setApiKey(cakr.getKey());
+        setApiKey(user.apiKey.getKey());
 
         SecretEntryV2 s = new SecretsV2Api(getApiClient()).getSecret(orgName, secretName);
         assertEquals(secretName, s.getName());
@@ -723,7 +620,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        setApiKey(cakr.getKey());
+        setApiKey(user.apiKey.getKey());
 
         GenericOperationResult r = secretResource.delete(orgName, secretName);
         assertEquals(GenericOperationResult.ResultEnum.DELETED, r.getResult());
@@ -745,18 +642,9 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        String userName = "user_" + randomString();
-        UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdateUser(new CreateUserRequest()
-                .username(userName)
-                .type(CreateUserRequest.TypeEnum.LOCAL));
+        TestUser user = createUser("user");
 
-        ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse cakr = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
-                .username(userName)
-                .userType(CreateApiKeyRequest.UserTypeEnum.LOCAL));
-
-        setApiKey(cakr.getKey());
+        setApiKey(user.apiKey.getKey());
 
         assertTrue(organizationsApi.listOrgs(false, null, null, null).stream().anyMatch(o -> o.getName().equals(orgName)));
 
@@ -772,7 +660,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        setApiKey(cakr.getKey());
+        setApiKey(user.apiKey.getKey());
         organizationsApi = new OrganizationsApi(getApiClient());
         assertFalse(organizationsApi.listOrgs(true, null, null, null).stream().anyMatch(o -> o.getName().equals(orgName)));
     }
@@ -791,18 +679,9 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        String userName = "user_" + randomString();
-        UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdateUser(new CreateUserRequest()
-                .username(userName)
-                .type(CreateUserRequest.TypeEnum.LOCAL));
+        TestUser user = createUser("user");
 
-        ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse cakr = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
-                .username(userName)
-                .userType(CreateApiKeyRequest.UserTypeEnum.LOCAL));
-
-        setApiKey(cakr.getKey());
+        setApiKey(user.apiKey.getKey());
 
         assertFalse(organizationsApi.listOrgs(true, null, null, null).stream().anyMatch(o -> o.getName().equals(orgName)));
 
@@ -813,12 +692,12 @@ public class TeamRbacIT extends AbstractServerIT {
         organizationsApi.createOrUpdateOrg(new OrganizationEntry()
                 .name(orgName)
                 .owner(new EntityOwner()
-                        .username(userName)
+                        .username(user.username)
                         .userType(EntityOwner.UserTypeEnum.LOCAL)));
 
         // ---
 
-        setApiKey(cakr.getKey());
+        setApiKey(user.apiKey.getKey());
 
         assertTrue(organizationsApi.listOrgs(true, null, null, null).stream().anyMatch(o -> o.getName().equals(orgName)));
 
@@ -843,7 +722,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        setApiKey(cakr.getKey());
+        setApiKey(user.apiKey.getKey());
 
         assertTrue(projectsApi.findProjects(orgName, null, null, null).stream().anyMatch(p -> p.getName().equals(projectName)));
 

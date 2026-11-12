@@ -25,6 +25,8 @@ import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -35,8 +37,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class FormIT extends AbstractServerIT {
 
-    @Test
-    public void test() throws Exception {
+    private enum SubmitMode {
+        JSON, MULTIPART
+    }
+
+    @ParameterizedTest
+    @EnumSource(SubmitMode.class)
+    public void test(SubmitMode mode) throws Exception {
         String firstName = "john_" + randomString();
         String lastName = "smith_" + randomString();
         byte[] payload = archive(FormIT.class.getResource("form").toURI());
@@ -63,7 +70,7 @@ public class FormIT extends AbstractServerIT {
         String formName = f0.getName();
 
         Map<String, Object> data = Collections.singletonMap("firstName", firstName);
-        FormSubmitResponse fsr = formsApi.submitForm(spr.getInstanceId(), formName, data);
+        FormSubmitResponse fsr = submit(mode, formsApi, spr.getInstanceId(), formName, data);
         assertTrue(fsr.getOk());
 
         ProcessEntry psr = waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.SUSPENDED);
@@ -83,9 +90,9 @@ public class FormIT extends AbstractServerIT {
         data = new HashMap<>();
         data.put("lastName", lastName);
         data.put("rememberMe", true);
-        data.put("file", "file-content");
+        data.put("file", mode == SubmitMode.JSON ? "file-content" : "file-content".getBytes());
 
-        fsr = formsApi.submitForm(spr.getInstanceId(), formName, data);
+        fsr = submit(mode, formsApi, spr.getInstanceId(), formName, data);
         assertTrue(fsr.getOk());
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
@@ -98,75 +105,17 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*" + firstName + " " + lastName + ".*", ab);
         assertLog(".*100323.*", ab);
         assertLog(".*r3d.*", ab);
-        assertLog(".*FILE_PATH _form_files/myForm2/file.*", ab);
+        if (mode == SubmitMode.JSON) {
+            assertLog(".*FILE_PATH _form_files/myForm2/file.*", ab);
+        }
         assertLog(".*FILE file-content.*", ab);
         assertLog(".*AAA true.*", ab);
     }
 
-    @Test
-    public void testSubmitMultipart() throws Exception {
-        String firstName = "john_" + randomString();
-        String lastName = "smith_" + randomString();
-        byte[] payload = archive(FormIT.class.getResource("form").toURI());
-
-        // ---
-
-        StartProcessResponse spr = start(payload);
-
-        waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.SUSPENDED);
-
-        // ---
-
-        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
-
-        List<FormListEntry> forms = formsApi.listProcessForms(spr.getInstanceId());
-        assertEquals(1, forms.size());
-
-        // ---
-
-        FormListEntry f0 = forms.get(0);
-        assertFalse(f0.getCustom());
-
-        String formName = f0.getName();
-
-        Map<String, Object> data = Collections.singletonMap("firstName", firstName);
-        FormSubmitResponse fsr = formsApi.submitFormAsMultipart(spr.getInstanceId(), formName, data);
-        assertTrue(fsr.getOk());
-
-        ProcessEntry psr = waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.SUSPENDED);
-
-        byte[] ab = getLog(psr.getInstanceId());
-        assertLog(".*100223.*", ab);
-
-        // ---
-
-        forms = formsApi.listProcessForms(spr.getInstanceId());
-        assertEquals(1, forms.size());
-
-        // ---
-
-        formName = forms.get(0).getName();
-
-        data = new HashMap<>();
-        data.put("lastName", lastName);
-        data.put("rememberMe", true);
-        data.put("file", "file-content".getBytes());
-
-        fsr = formsApi.submitFormAsMultipart(spr.getInstanceId(), formName, data);
-        assertTrue(fsr.getOk());
-        assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
-
-        psr = waitForCompletion(getApiClient(), spr.getInstanceId());
-        assertEquals(StatusEnum.FINISHED, psr.getStatus());
-
-        // ---
-
-        ab = getLog(psr.getInstanceId());
-        assertLog(".*" + firstName + " " + lastName + ".*", ab);
-        assertLog(".*100323.*", ab);
-        assertLog(".*r3d.*", ab);
-        assertLog(".*FILE file-content.*", ab);
-        assertLog(".*AAA true.*", ab);
+    private static FormSubmitResponse submit(SubmitMode mode, ProcessFormsApi api, UUID instanceId, String formName, Map<String, Object> data) throws ApiException {
+        return mode == SubmitMode.JSON
+                ? api.submitForm(instanceId, formName, data)
+                : api.submitFormAsMultipart(instanceId, formName, data);
     }
 
     @Test

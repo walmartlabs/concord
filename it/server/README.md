@@ -18,6 +18,25 @@ built `concord-ansible` image to the daemon.
 When running a server and agent manually, configure the agent with its own
 reachable Docker endpoint.
 
+### Dependency manager
+
+To run `DependencyManagerIT` against an existing server and agent, install its
+task fixture first (commands run from the repository root):
+
+```shell
+./mvnw -pl it/tasks/dependency-manager-test clean install -DskipTests
+./mvnw -pl it/server clean verify -Pit -Dit.test=DependencyManagerIT
+```
+
+Add `-Pdocker` to the second command to start Docker-managed dependencies.
+If the agent runs in a bridge network, set `-Ddocker.host.addr=<host-address>`
+to an address it can reach; the test's WireMock server runs on the host.
+
+The test resolves a unique HTTP URL twice and checks that the process finishes,
+both resolutions return the same path and the expected content, and WireMock
+receives only one GET. Register the stub inside the test: WireMock's per-test
+reset removes stubs registered in `@BeforeAll`.
+
 ## OpenLDAP tests
 
 To run tests such as [LdapIT](./src/test/java/com/walmartlabs/concord/it/server/LdapIT.java)

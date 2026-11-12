@@ -22,11 +22,14 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
@@ -72,37 +75,44 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
                 .projectName(projectName));
     }
 
-    @Test
-    public void testLargeInventoryLimitedToGroup() throws Exception {
-        URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
-        byte[] payload = archive(dir);
-
-        // ---
-
-        Map<String, Object> input = new HashMap<>();
-        input.put("org", orgName);
-        input.put("project", projectName);
-        input.put("arguments.playbook", "playbook_single.yml");
-        input.put("arguments.verboseLevel", "1");
-        input.put("arguments.invFile", "inventory_limit.ini");
-        input.put("arguments.groupLimit", "dev");
-        input.put("archive", payload);
-
-        StartProcessResponse spr = start(input);
-
-        // ---
-
-        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(), "Large inventory limited to small group must FINISH");
-
-        // ---
-
-        byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*ansible completed successfully.*", ab);
+    @SuppressWarnings("unused")
+    private static Stream<Arguments> scenarios() {
+        return Stream.of(
+                // a group limit keeps a large inventory under the policy limits
+                Arguments.of("large inventory limited to a small group",
+                        "playbook_single.yml", "1", "inventory_limit.ini", "dev",
+                        "Large inventory limited to small group must FINISH",
+                        ".*ansible completed successfully.*"),
+                // work of imported playbooks counts towards maxTotalWork
+                Arguments.of("imported tasks exceeding max work",
+                        "playbook_include.yml", "4", "inventory_small.ini", null,
+                        "Imported tasks exceeding max work must FINISH",
+                        ".*Disabling verbose output. Too much work.*"),
+                Arguments.of("too many hosts",
+                        "playbook_single.yml", "1", "inventory_large.ini", null,
+                        "Large inventory with verbose logging must FINISH",
+                        ".*Disabling verbose output. Too many hosts.*"),
+                Arguments.of("too much work",
+                        "playbook_multi.yml", "1", "inventory_small.ini", null,
+                        "Small inventory with many calls and verbose logging must FINISH",
+                        ".*Disabling verbose output. Too much work.*"),
+                // verbose logging disabled by the flow, not by the policy
+                Arguments.of("large inventory without verbose logging",
+                        "playbook_single.yml", "0", "inventory_large.ini", null,
+                        "Large inventory with standard logging must FINISH",
+                        ".*ansible completed successfully.*"),
+                // only shows with verbose logging enabled
+                // TODO may be flaky? no guarantee it'll *always* be in every ansible version
+                Arguments.of("small inventory with verbose logging",
+                        "playbook_single.yml", "3", "inventory_small.ini", null,
+                        "Small inventory with verbose logging must FINISH",
+                        ".*Using .* as config file.*"));
     }
 
-    @Test
-    public void testVerboseTooManyImportedTasks() throws Exception {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("scenarios")
+    public void test(String displayName, String playbook, String verboseLevel, String invFile, String groupLimit,
+                     String mustFinishMessage, String expectedLog) throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
         byte[] payload = archive(dir);
 
@@ -111,9 +121,12 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
         Map<String, Object> input = new HashMap<>();
         input.put("org", orgName);
         input.put("project", projectName);
-        input.put("arguments.playbook", "playbook_include.yml");
-        input.put("arguments.verboseLevel", "4");
-        input.put("arguments.invFile", "inventory_small.ini");
+        input.put("arguments.playbook", playbook);
+        input.put("arguments.verboseLevel", verboseLevel);
+        input.put("arguments.invFile", invFile);
+        if (groupLimit != null) {
+            input.put("arguments.groupLimit", groupLimit);
+        }
         input.put("archive", payload);
 
         StartProcessResponse spr = start(input);
@@ -121,131 +134,11 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
         // ---
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(),
-                "Imported tasks exceeding max work must FINISH");
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(), mustFinishMessage);
 
         // ---
 
         byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*Disabling verbose output. Too much work.*", ab);
-    }
-
-    @Test
-    public void testVerboseTooManyHosts() throws Exception {
-        URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
-        byte[] payload = archive(dir);
-
-        // ---
-
-        Map<String, Object> input = new HashMap<>();
-        input.put("org", orgName);
-        input.put("project", projectName);
-        input.put("arguments.playbook", "playbook_single.yml");
-        input.put("arguments.verboseLevel", "1");
-        input.put("arguments.invFile", "inventory_large.ini");
-        input.put("archive", payload);
-
-        StartProcessResponse spr = start(input);
-
-        // ---
-
-        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(),
-                "Large inventory with verbose logging must FINISH");
-
-        // ---
-
-        byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*Disabling verbose output. Too many hosts.*", ab);
-    }
-
-    @Test
-    public void testVerboseTooMuchWork() throws Exception {
-        URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
-        byte[] payload = archive(dir);
-
-        // ---
-
-        Map<String, Object> input = new HashMap<>();
-        input.put("org", orgName);
-        input.put("project", projectName);
-        input.put("arguments.playbook", "playbook_multi.yml");
-        input.put("arguments.verboseLevel", "1");
-        input.put("arguments.invFile", "inventory_small.ini");
-        input.put("archive", payload);
-
-        StartProcessResponse spr = start(input);
-
-        // ---
-
-        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(),
-                "Small inventory with many calls and verbose logging must FINISH");
-
-        // ---
-
-        byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*Disabling verbose output. Too much work.*", ab);
-    }
-
-    @Test
-    public void testNoVerboseLargeInventory() throws Exception {
-        URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
-        byte[] payload = archive(dir);
-
-        // ---
-
-        Map<String, Object> input = new HashMap<>();
-        input.put("org", orgName);
-        input.put("project", projectName);
-        input.put("arguments.playbook", "playbook_single.yml");
-        input.put("arguments.verboseLevel", "0");
-        input.put("arguments.invFile", "inventory_large.ini");
-        input.put("archive", payload);
-
-        StartProcessResponse spr = start(input);
-
-        // ---
-
-        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(),
-                "Large inventory with standard logging must FINISH");
-
-        // ---
-
-        byte[] ab = getLog(pir.getInstanceId());
-        assertLog(".*ansible completed successfully.*", ab);
-    }
-
-    @Test
-    public void testVerboseSmallInventory() throws Exception {
-        URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
-        byte[] payload = archive(dir);
-
-        // ---
-
-        Map<String, Object> input = new HashMap<>();
-        input.put("org", orgName);
-        input.put("project", projectName);
-        input.put("arguments.playbook", "playbook_single.yml");
-        input.put("arguments.verboseLevel", "3");
-        input.put("arguments.invFile", "inventory_small.ini");
-        input.put("archive", payload);
-
-        StartProcessResponse spr = start(input);
-
-        // ---
-
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(),
-                "Small inventory with verbose logging must FINISH");
-
-        // ---
-
-        byte[] ab = getLog(pir.getInstanceId());
-        // only shows with verbose logging enabled
-        // TODO may be flaky? no guarantee it'll *always* be in every ansible version
-        assertLog(".*Using .* as config file.*", ab);
+        assertLog(expectedLog, ab);
     }
 }
