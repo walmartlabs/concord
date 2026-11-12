@@ -20,33 +20,24 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
-import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.UUID;
 
 /**
- * Adds policy to a payload.
+ * Loads the policy for server-side payload processing without persisting it in the workspace.
  */
 public class PolicyExportProcessor implements PayloadProcessor {
 
-    private final ObjectMapper objectMapper;
     private final PolicyManager policyManager;
     private final ProcessLogManager logManager;
 
     @Inject
-    public PolicyExportProcessor(ObjectMapper objectMapper, PolicyManager policyManager, ProcessLogManager logManager) {
-        this.objectMapper = objectMapper;
+    public PolicyExportProcessor(PolicyManager policyManager, ProcessLogManager logManager) {
         this.policyManager = policyManager;
         this.logManager = logManager;
     }
@@ -55,26 +46,12 @@ public class PolicyExportProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
 
-        UUID orgId = payload.getHeader(Payload.ORGANIZATION_ID);
-        UUID projectId = payload.getHeader(Payload.PROJECT_ID);
-        UUID userId = payload.getHeader(Payload.INITIATOR_ID);
-
-        PolicyEngine policy = policyManager.get(orgId, projectId, userId);
+        PolicyEngine policy = policyManager.getPolicyEngine(payload);
         if (policy == null) {
             return chain.process(payload);
         }
 
-        logManager.info(processKey, "Storing policy '{}' data", policy.policyNames());
-
-        Path ws = payload.getHeader(Payload.WORKSPACE_DIR);
-
-        try {
-            Path dst = Files.createDirectories(ws.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME));
-            objectMapper.writeValue(dst.resolve(Constants.Files.POLICY_FILE_NAME).toFile(), policy.getRules());
-        } catch (IOException e) {
-            logManager.error(processKey, "Error while storing process policy: {}", e);
-            throw new ProcessException(processKey, "Storing process policy error", e);
-        }
+        logManager.info(processKey, "Applying policy '{}' data", policy.policyNames());
 
         payload = payload.putHeader(Payload.POLICY, policy);
 
