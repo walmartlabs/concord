@@ -30,6 +30,7 @@ ENV PATH=/usr/local/bin/concord_venv/bin:${PATH}
 ENV VIRTUAL_ENV=/usr/local/bin/concord_venv
 
 RUN umask 0022 && \
+    python3 -m venv /usr/local/bin/concord_venv &&\
     pip3 install --no-cache-dir --upgrade --break-system-packages --ignore-installed \
         "cryptography<=3.4.8" \
         "ansible-core>=2.14,<2.15" \
@@ -48,8 +49,7 @@ RUN umask 0022 && \
         "pywinrm>=0.4.3" \
         requests_kerberos \
         urllib3 \
-        ujson \
-        virtualenv
+        ujson
 
 RUN umask 0022 && \
     ansible-galaxy collection install -p /usr/share/ansible/collections -r galaxy_requirements.yml

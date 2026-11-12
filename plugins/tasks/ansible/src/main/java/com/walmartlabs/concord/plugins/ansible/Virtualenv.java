@@ -28,9 +28,11 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Virtualenv {
 
@@ -66,8 +68,34 @@ public class Virtualenv {
         }
 
         virtualenv.indexUrl = Utils.assertArgSafe(getIndexUrl(context.defaults(), m));
+        virtualenv.tool = getTool(m);
 
         return virtualenv;
+    }
+
+    public enum Tool {
+        VENV("venv"),
+        VIRTUALENV("virtualenv");
+
+        private final String key;
+
+        Tool(String key) {
+            this.key = key;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public static Tool fromString(String s) {
+            for (Tool t : values()) {
+                if (t.key.equalsIgnoreCase(s)) {
+                    return t;
+                }
+            }
+            throw new IllegalArgumentException("Invalid virtualenv 'tool' value: '" + s + "'. " +
+                    "Expected one of: " + Arrays.stream(values()).map(Tool::getKey).collect(Collectors.toList()));
+        }
     }
 
     private final Path targetDir;
@@ -75,6 +103,7 @@ public class Virtualenv {
 
     private boolean enabled = false;
     private String indexUrl;
+    private Tool tool;
 
     private Virtualenv(Path targetDir) {
         this.targetDir = targetDir;
@@ -90,6 +119,13 @@ public class Virtualenv {
 
     public String getIndexUrl() {
         return indexUrl;
+    }
+
+    /**
+     * @return the explicitly requested tool or {@code null} to use venv with a virtualenv fallback
+     */
+    public Tool getTool() {
+        return tool;
     }
 
     public Path getTargetDir() {
@@ -111,6 +147,20 @@ public class Virtualenv {
 
         String s = Utils.assertArgSafe((String) p);
         v.packages.add(s);
+    }
+
+    private static Tool getTool(Map<String, Object> m) {
+        Object tool = m.get("tool");
+        if (tool == null) {
+            return null;
+        }
+
+        if (!(tool instanceof String)) {
+            throw new IllegalArgumentException("Invalid virtualenv 'tool' value. " +
+                    "Expected a string, got: " + tool);
+        }
+
+        return Tool.fromString((String) tool);
     }
 
     private static String getIndexUrl(Map<String, Object> defaults, Map<String, Object> m) {
