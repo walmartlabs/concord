@@ -66,6 +66,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -248,12 +249,8 @@ public class AgentOperatorIT {
             fillEphemeralStorage(evictedName, EVICTION_STORAGE_LIMIT_MIB * 3);
             var filledAt = Instant.now();
 
-            var evicted = k8s.pods().inNamespace(NAMESPACE).withName(evictedName)
-                    .waitUntilCondition(p -> p != null && "Evicted".equals(p.getStatus().getReason()), 3, TimeUnit.MINUTES);
-            assertEquals("Failed", evicted.getStatus().getPhase());
-            log.info("{} was evicted {}s after the storage was filled: {}",
-                    evictedName, secondsSince(filledAt), evicted.getStatus().getMessage());
-
+            // the status of an evicted pod depends on the environment (Failed/Evicted or Succeeded without a reason),
+            // so wait for the outcome - the operator removes the pod - and check the eviction event afterwards
             k8s.pods().inNamespace(NAMESPACE).withName(evictedName)
                     .waitUntilCondition(Objects::isNull, 3, TimeUnit.MINUTES);
             log.info("{} was removed by the operator {}s after the storage was filled", evictedName, secondsSince(filledAt));
@@ -261,7 +258,9 @@ public class AgentOperatorIT {
             k8s.pods().inNamespace(NAMESPACE).withLabel("poolName", EVICTION_POOL_NAME)
                     .waitUntilCondition(p -> p != null && !evictedName.equals(p.getMetadata().getName()) && isReady(p), 5, TimeUnit.MINUTES);
             log.info("The replacement pod is ready {}s after the storage was filled", secondsSince(filledAt));
-        } catch (Exception e) {
+
+            assertEvicted(evictedName);
+        } catch (Exception | AssertionError e) {
             dumpEvictionDiagnostics();
             dumpPodLogs("concord-agent-operator", "name", "concord-agent-operator");
             throw e;
@@ -346,6 +345,17 @@ public class AgentOperatorIT {
             dumpPodLogs("agent", "poolName", poolName);
             throw e;
         }
+    }
+
+    /**
+     * Makes sure the pod went away because the kubelet evicted it, not for some other reason.
+     */
+    private static void assertEvicted(String podName) {
+        var evictions = k8s.v1().events().inNamespace(NAMESPACE).list().getItems().stream()
+                .filter(e -> podName.equals(e.getInvolvedObject().getName()) && "Evicted".equals(e.getReason()))
+                .toList();
+        assertFalse(evictions.isEmpty(), "No 'Evicted' event found for " + podName);
+        log.info("{} was evicted: {}", podName, evictions.get(0).getMessage());
     }
 
     private static long secondsSince(Instant start) {
