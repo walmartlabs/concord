@@ -55,6 +55,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Objects;
@@ -244,16 +246,21 @@ public class AgentOperatorIT {
                     .list().getItems().get(0).getMetadata().getName();
 
             fillEphemeralStorage(evictedName, EVICTION_STORAGE_LIMIT_MIB * 3);
+            var filledAt = Instant.now();
 
             var evicted = k8s.pods().inNamespace(NAMESPACE).withName(evictedName)
                     .waitUntilCondition(p -> p != null && "Evicted".equals(p.getStatus().getReason()), 3, TimeUnit.MINUTES);
             assertEquals("Failed", evicted.getStatus().getPhase());
+            log.info("{} was evicted {}s after the storage was filled: {}",
+                    evictedName, secondsSince(filledAt), evicted.getStatus().getMessage());
 
             k8s.pods().inNamespace(NAMESPACE).withName(evictedName)
                     .waitUntilCondition(Objects::isNull, 3, TimeUnit.MINUTES);
+            log.info("{} was removed by the operator {}s after the storage was filled", evictedName, secondsSince(filledAt));
 
             k8s.pods().inNamespace(NAMESPACE).withLabel("poolName", EVICTION_POOL_NAME)
                     .waitUntilCondition(p -> p != null && !evictedName.equals(p.getMetadata().getName()) && isReady(p), 5, TimeUnit.MINUTES);
+            log.info("The replacement pod is ready {}s after the storage was filled", secondsSince(filledAt));
         } catch (Exception e) {
             dumpEvictionDiagnostics();
             dumpPodLogs("concord-agent-operator", "name", "concord-agent-operator");
@@ -339,6 +346,10 @@ public class AgentOperatorIT {
             dumpPodLogs("agent", "poolName", poolName);
             throw e;
         }
+    }
+
+    private static long secondsSince(Instant start) {
+        return Duration.between(start, Instant.now()).toSeconds();
     }
 
     private static boolean isReady(Pod pod) {
