@@ -25,6 +25,7 @@ import com.walmartlabs.concord.agentoperator.crd.AgentPool;
 import com.walmartlabs.concord.agentoperator.crd.AgentPoolConfiguration;
 import com.walmartlabs.concord.agentoperator.scheduler.AgentPoolInstance;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 public final class AgentPod {
 
@@ -44,6 +46,13 @@ public final class AgentPod {
     public static final String CONFIG_HASH_LABEL = "concordCfgHash";
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    private static final Set<String> TERMINAL_PHASES = Set.of("Failed", "Succeeded");
+
+    public static boolean isTerminated(Pod pod) {
+        PodStatus status = pod.getStatus();
+        return status != null && TERMINAL_PHASES.contains(status.getPhase());
+    }
 
     public static List<Pod> listMarkedForRemoval(KubernetesClient client, String resourceName) {
         try {
@@ -68,6 +77,12 @@ public final class AgentPod {
             log.warn("list ['{}'] -> error while listing pool pods: {}", resourceName, e.getMessage());
             throw e;
         }
+    }
+
+    public static List<Pod> listActive(KubernetesClient client, String resourceName) {
+        return list(client, resourceName).stream()
+                .filter(p -> !isTerminated(p))
+                .toList();
     }
 
     public static void create(KubernetesClient client,
