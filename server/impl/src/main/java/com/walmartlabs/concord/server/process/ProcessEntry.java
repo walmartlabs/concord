@@ -227,8 +227,11 @@ public interface ProcessEntry extends Serializable {
         // Can't use AbstractWaitCondition because swagger can't generate code :(
         List<Map<String, Object>> waits();
 
-        static ProcessWaitEntry of(boolean isWaiting, List<Map<String, Object>> waits) {
-            return ImmutableProcessWaitEntry.of(isWaiting, waits);
+        @Value.Parameter
+        long version();
+
+        static ProcessWaitEntry of(boolean isWaiting, List<Map<String, Object>> waits, long version) {
+            return ImmutableProcessWaitEntry.of(isWaiting, waits, version);
         }
     }
 }
