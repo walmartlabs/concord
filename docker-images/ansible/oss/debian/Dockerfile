@@ -16,6 +16,7 @@ COPY galaxy_requirements.yml galaxy_requirements.yml
 RUN DEBIAN_FRONTEND=${DEBIAN_FRONTEND} apt-get -y install \
     gcc \
     g++ \
+    python3-dev \
     libkrb5-dev \
     krb5-user \
     libpam-krb5 \
@@ -31,11 +32,11 @@ ENV VIRTUAL_ENV=/usr/local/bin/concord_venv
 
 RUN umask 0022 && \
     pip3 install --no-cache-dir --upgrade --break-system-packages --ignore-installed \
-        "cryptography<=3.4.8" \
-        "ansible-core>=2.14,<2.15" \
+        cryptography \
+        "ansible-core==2.21.5" \
         "Appium-Python-Client<1.0" \
         "openshift==0.13.2" \
-        "jinja2<=3.1.0" \
+        "jinja2>=3.1.0" \
         boto3 \
         botocore \
         bzt \

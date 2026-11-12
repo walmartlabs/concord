@@ -1,0 +1,46 @@
+---
+- hosts: local
+  gather_facts: false
+  tasks:
+  - name: Conditional forbidden copy
+    copy:
+      src: "{{ undefined_forbidden_source }}"
+      dest: "{{ playbook_dir }}/conditional-forbidden"
+    when: false
+
+  - name: Copy secret data
+    block:
+    - name: Copy secret data
+      copy:
+        src: "{{ item }}"
+        dest: "{{ playbook_dir }}/policy-{{ item }}"
+      loop:
+      - public_data
+      - top_secret
+    rescue:
+    - set_fact:
+        policy_rescue_ran: true
+
+  - name: Ignored forbidden copy
+    copy:
+      src: top_secret
+      dest: "{{ playbook_dir }}/ignored-secret"
+    ignore_errors: true
+
+  - stat:
+      path: "{{ playbook_dir }}/policy-public_data"
+    register: public_file
+  - stat:
+      path: "{{ playbook_dir }}/policy-top_secret"
+    register: secret_file
+  - stat:
+      path: "{{ playbook_dir }}/ignored-secret"
+    register: ignored_file
+  - name: Verify policy effects
+    assert:
+      that:
+      - policy_rescue_ran | default(false)
+      - public_file.stat.exists
+      - lookup('file', playbook_dir + '/policy-public_data') == 'public data'
+      - not secret_file.stat.exists
+      - not ignored_file.stat.exists

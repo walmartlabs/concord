@@ -160,22 +160,22 @@ class CallbackModule(CallbackBase):
         self.handle_event(data)
 
     def _on_task_skipped(self, result):
-        task_correlation_id = self._task_correlation_id(result._host.name, result._task._uuid)
+        task_correlation_id = self._task_correlation_id(result.host.name, result.task._uuid)
 
         data = {
             'status': 'SKIPPED',
             'playbook': self.playbook._file_name,
             'playId': self.play._uuid,
-            'host': result._host.name,
+            'host': result.host.name,
             'hostGroup': self.play.get_name(),
-            'taskId': result._task._uuid,
-            'task': result._task.get_name(),
-            'isHandler': isinstance(result._task, Handler),
-            'action': result._task.action,
+            'taskId': result.task._uuid,
+            'task': result.task.get_name(),
+            'isHandler': isinstance(result.task, Handler),
+            'action': result.task.action,
             'correlationId': task_correlation_id,
             'phase': "post",
             'duration': self._task_duration(task_correlation_id),
-            'result': self.cleanup_results(result._result)
+            'result': self.cleanup_results(result.result)
         }
 
         self.handle_event(data)
@@ -271,7 +271,7 @@ class CallbackModule(CallbackBase):
         self.playbook = playbook
         self.handle_playbook_start(playbook)
 
-    def playbook_on_stats(self, stats):
+    def v2_playbook_on_stats(self, stats):
         status = self._get_playbook_status(stats)
         self._handle_event('ANSIBLE_PLAYBOOK_RESULT', {'playbook': self.playbook._file_name,
                                                        'status': status})
@@ -279,91 +279,91 @@ class CallbackModule(CallbackBase):
         self.outFile.close()
 
     def v2_runner_on_failed(self, result, ignore_errors=False):
-        task_correlation_id = self._task_correlation_id(result._host.name, result._task._uuid)
+        task_correlation_id = self._task_correlation_id(result.host.name, result.task._uuid)
 
         data = {
             'status': "FAILED",
             'playbook': self.playbook._file_name,
             'playId': self.play._uuid,
-            'host': result._host.name,
+            'host': result.host.name,
             'hostGroup': self.play.get_name(),
-            'taskId': result._task._uuid,
-            'task': result._task.get_name(),
-            'isHandler': isinstance(result._task, Handler),
-            'action': result._task.action,
+            'taskId': result.task._uuid,
+            'task': result.task.get_name(),
+            'isHandler': isinstance(result.task, Handler),
+            'action': result.task.action,
             'correlationId': task_correlation_id,
             'phase': "post",
             'duration': self._task_duration(task_correlation_id),
-            'result': self.cleanup_results(result._result),
+            'result': self.cleanup_results(result.result),
             'ignore_errors': isinstance(ignore_errors, bool) and ignore_errors
         }
 
         self.handle_event(data)
 
     def v2_runner_on_ok(self, result, **kwargs):
-        task_correlation_id = self._task_correlation_id(result._host.name, result._task._uuid)
+        task_correlation_id = self._task_correlation_id(result.host.name, result.task._uuid)
 
         data = {
             'status': "OK",
             'playbook': self.playbook._file_name,
             'playId': self.play._uuid,
-            'host': result._host.name,
+            'host': result.host.name,
             'hostGroup': self.play.get_name(),
-            'taskId': result._task._uuid,
-            'task': result._task.get_name(),
-            'isHandler': isinstance(result._task, Handler),
-            'action': result._task.action,
+            'taskId': result.task._uuid,
+            'task': result.task.get_name(),
+            'isHandler': isinstance(result.task, Handler),
+            'action': result.task.action,
             'correlationId': task_correlation_id,
             'phase': "post",
             'duration': self._task_duration(task_correlation_id),
-            'result': self.cleanup_results(result._result)
+            'result': self.cleanup_results(result.result)
         }
 
         self.handle_event(data)
 
     def v2_runner_on_unreachable(self, result):
-        task_correlation_id = self._task_correlation_id(result._host.name, result._task._uuid)
+        task_correlation_id = self._task_correlation_id(result.host.name, result.task._uuid)
 
         data = {
             'status': 'UNREACHABLE',
             'playbook': self.playbook._file_name,
             'playId': self.play._uuid,
-            'host': result._host.name,
+            'host': result.host.name,
             'hostGroup': self.play.get_name(),
-            'taskId': result._task._uuid,
-            'task': result._task.get_name(),
-            'isHandler': isinstance(result._task, Handler),
-            'action': result._task.action,
+            'taskId': result.task._uuid,
+            'task': result.task.get_name(),
+            'isHandler': isinstance(result.task, Handler),
+            'action': result.task.action,
             'correlationId': task_correlation_id,
             'phase': "post",
             'duration': self._task_duration(task_correlation_id),
-            'result': self.cleanup_results(result._result)
+            'result': self.cleanup_results(result.result)
         }
 
         self.handle_event(data)
 
     def v2_runner_on_async_failed(self, result, **kwargs):
-        task_correlation_id = self._task_correlation_id(result._host.name, result._task._uuid)
+        task_correlation_id = self._task_correlation_id(result.host.name, result.task._uuid)
 
         data = {
             'status': 'UNREACHABLE',
             'playbook': self.playbook._file_name,
             'playId': self.play._uuid,
-            'host': result._host.name,
+            'host': result.host.name,
             'hostGroup': self.play.get_name(),
-            'taskId': result._task._uuid,
-            'task': result._task.get_name(),
-            'isHandler': isinstance(result._task, Handler),
-            'action': result._task.action,
+            'taskId': result.task._uuid,
+            'task': result.task.get_name(),
+            'isHandler': isinstance(result.task, Handler),
+            'action': result.task.action,
             'correlationId': task_correlation_id,
             'phase': "post",
             'duration': self._task_duration(task_correlation_id),
-            'result': self.cleanup_results(result._result)
+            'result': self.cleanup_results(result.result)
         }
 
         self.handle_event(data)
 
-    def concord_on_task_start(self, host, task):
+    def v2_runner_on_start(self, host, task):
         self._on_task_start(host, task)
 
     def v2_runner_on_skipped(self, result):

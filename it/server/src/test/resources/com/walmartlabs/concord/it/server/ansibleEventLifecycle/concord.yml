@@ -1,0 +1,31 @@
+configuration:
+  runtime: concord-v2
+  dependencies:
+    - mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:PROJECT_VERSION
+  arguments:
+    image: "${null}"
+
+flows:
+  default:
+    - task: ansible
+      in:
+        dockerImage: "${image}"
+        forcePull: false
+        playbook: playbook.yml
+        inventory:
+          local:
+            hosts:
+              - "127.0.0.1"
+            vars:
+              ansible_connection: local
+        enableLogFiltering: true
+        outVars:
+          - payload
+          - _stats
+      out: ansibleResult
+
+    - log: "message: ${ansibleResult.payload['127.0.0.1']['msg']['message']}"
+    - log: "count: ${ansibleResult.payload['127.0.0.1']['msg']['count']}"
+    - log: "unicode: ${ansibleResult.payload['127.0.0.1']['msg']['values'][2]}"
+    - log: "exitCode: ${ansibleResult.exitCode}"
+    - log: "ok: ${ansibleResult._stats.ok}"
