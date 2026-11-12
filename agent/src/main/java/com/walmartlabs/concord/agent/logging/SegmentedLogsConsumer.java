@@ -82,6 +82,7 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
 
         Map<Long, List<Segment>> segmentsById = byId(segments);
         for (Map.Entry<Long, List<Segment>> e : segmentsById.entrySet()) {
+            LogStreamingException.checkInterrupted();
             List<Segment> logs = e.getValue().stream()
                     .filter(s -> !hasStatusTime(s))
                     .toList();
@@ -97,6 +98,7 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
 
             LogSegmentStats stats = findStats(e.getValue(), ab);
             if (stats != null) {
+                LogStreamingException.checkInterrupted();
                 logAppender.updateSegment(instanceId, e.getKey(), stats);
             }
         }

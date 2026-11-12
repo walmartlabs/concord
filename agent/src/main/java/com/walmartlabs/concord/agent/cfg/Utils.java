@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.function.Supplier;
 
 public final class Utils {
@@ -77,6 +78,17 @@ public final class Utils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static Duration getTimeout(Config cfg, String key, Duration defaultValue) {
+        if (!cfg.hasPath(key)) {
+            return defaultValue;
+        }
+        Duration result = cfg.getDuration(key);
+        if (result.isZero() || result.isNegative()) {
+            throw new IllegalArgumentException(key + " must be positive");
+        }
+        return result;
     }
 
     private Utils() {
