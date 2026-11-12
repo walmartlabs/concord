@@ -19,6 +19,7 @@
  */
 
 import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { Link } from 'react-router';
 import { Icon, Menu } from 'semantic-ui-react';
@@ -34,6 +35,9 @@ import { NotFoundPage } from '../../pages';
 import StorageListActivity from '../../pages/JsonStorePage/StoreListActivity';
 import OrganizationSettings from './OrganizationSettings';
 import OrganizationProcesses from './OrganizationProcesses';
+import CreateNotificationActivity from '../CreateNotificationActivity';
+import NotificationBanners from '../NotificationBanners';
+import { get as getUserInfo } from '../../../api/profile/user';
 
 export type TabLink =
     | 'process'
@@ -43,6 +47,7 @@ export type TabLink =
     | 'jsonstore'
     | 'settings'
     | 'audit'
+    | 'notify'
     | null;
 
 interface ExternalProps {
@@ -54,8 +59,22 @@ interface ExternalProps {
 const OrganizationActivity = ({ activeTab, orgName, forceRefresh }: ExternalProps) => {
     const baseUrl = `/org/${orgName}`;
 
+    const [canNotify, setCanNotify] = useState(false);
+    useEffect(() => {
+        getUserInfo()
+            .then((info) => {
+                setCanNotify(
+                    info.roles?.some(
+                        (r) => r === 'concordAdmin' || r === 'concordModerator'
+                    ) ?? false
+                );
+            })
+            .catch(() => {});
+    }, []);
+
     return (
         <>
+            <NotificationBanners orgName={orgName} />
             <Menu tabular={true} style={{ marginTop: 0 }}>
                 <Menu.Item active={activeTab === 'project'}>
                     <Icon name="sitemap" />
@@ -85,6 +104,12 @@ const OrganizationActivity = ({ activeTab, orgName, forceRefresh }: ExternalProp
                     <Icon name="history" />
                     <Link to={`${baseUrl}/audit`}>Audit Log</Link>
                 </Menu.Item>
+                {canNotify && (
+                    <Menu.Item active={activeTab === 'notify'}>
+                        <Icon name="bell" />
+                        <Link to={`${baseUrl}/notify`}>Notify</Link>
+                    </Menu.Item>
+                )}
             </Menu>
 
             <Routes>
@@ -122,6 +147,15 @@ const OrganizationActivity = ({ activeTab, orgName, forceRefresh }: ExternalProp
                             showRefreshButton={false}
                             filter={{ details: { orgName: orgName } }}
                             forceRefresh={forceRefresh}
+                        />
+                    }
+                />
+                <Route
+                    path="notify"
+                    element={
+                        <CreateNotificationActivity
+                            defaultOwnerType="ORG"
+                            defaultOrgName={orgName}
                         />
                     }
                 />

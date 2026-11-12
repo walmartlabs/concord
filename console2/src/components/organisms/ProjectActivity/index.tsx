@@ -19,6 +19,7 @@
  */
 
 import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { Link } from 'react-router';
 import { Icon, Menu } from 'semantic-ui-react';
@@ -31,6 +32,9 @@ import ProjectProcesses from './ProjectProcesses';
 import ProjectRepositories from './ProjectRepositories';
 import ProjectSettings from './ProjectSettings';
 import ProjectCheckpoints from './ProjectCheckpoints';
+import CreateNotificationActivity from '../CreateNotificationActivity';
+import NotificationBanners from '../NotificationBanners';
+import { get as getUserInfo } from '../../../api/profile/user';
 
 export type TabLink =
     | 'process'
@@ -40,6 +44,7 @@ export type TabLink =
     | 'access'
     | 'configuration'
     | 'audit'
+    | 'notify'
     | null;
 
 interface ExternalProps {
@@ -52,8 +57,22 @@ interface ExternalProps {
 const ProjectActivity = ({ activeTab, orgName, projectName, forceRefresh }: ExternalProps) => {
     const baseUrl = `/org/${orgName}/project/${projectName}`;
 
+    const [canNotify, setCanNotify] = useState(false);
+    useEffect(() => {
+        getUserInfo()
+            .then((info) => {
+                setCanNotify(
+                    info.roles?.some(
+                        (r) => r === 'concordAdmin' || r === 'concordModerator'
+                    ) ?? false
+                );
+            })
+            .catch(() => {});
+    }, []);
+
     return (
         <>
+            <NotificationBanners orgName={orgName} projectName={projectName} />
             <Menu tabular={true} style={{ marginTop: 0 }}>
                 <Menu.Item active={activeTab === 'process'}>
                     <Icon name="tasks" />
@@ -83,6 +102,12 @@ const ProjectActivity = ({ activeTab, orgName, projectName, forceRefresh }: Exte
                     <Icon name="history" />
                     <Link to={`${baseUrl}/audit`}>Audit Log</Link>
                 </Menu.Item>
+                {canNotify && (
+                    <Menu.Item active={activeTab === 'notify'}>
+                        <Icon name="bell" />
+                        <Link to={`${baseUrl}/notify`}>Notify</Link>
+                    </Menu.Item>
+                )}
             </Menu>
 
             <Routes>
@@ -150,6 +175,16 @@ const ProjectActivity = ({ activeTab, orgName, projectName, forceRefresh }: Exte
                             showRefreshButton={false}
                             filter={{ details: { orgName: orgName, projectName: projectName } }}
                             forceRefresh={forceRefresh}
+                        />
+                    }
+                />
+                <Route
+                    path="notify"
+                    element={
+                        <CreateNotificationActivity
+                            defaultOwnerType="PROJECT"
+                            defaultOrgName={orgName}
+                            defaultProjectName={projectName}
                         />
                     }
                 />

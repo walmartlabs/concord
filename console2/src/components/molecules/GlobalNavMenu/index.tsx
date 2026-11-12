@@ -22,11 +22,13 @@ import * as React from 'react';
 import { Link } from 'react-router';
 import { Dropdown, Image, Menu } from 'semantic-ui-react';
 import { CustomResources, LinkMeta } from '../../../../cfg';
+import NotificationsMenu from '../../organisms/NotificationsMenu';
 
 export type GlobalNavTab = 'activity' | 'process' | 'org' | 'noderoster' | null;
 
 interface Props {
     activeTab: GlobalNavTab;
+    username?: string;
     userDisplayName?: string;
     openUrl: (url: string) => void;
     extraSystemLinks: LinkMeta[];
@@ -41,6 +43,7 @@ class GlobalNavMenu extends React.PureComponent<Props> {
     render() {
         const {
             activeTab,
+            username,
             userDisplayName,
             extraSystemLinks,
             openUrl,
@@ -70,6 +73,7 @@ class GlobalNavMenu extends React.PureComponent<Props> {
                 </Menu.Item>
                 <Menu.Item position="right" fitted="vertically">
                     <Menu inverted={true} size="small" secondary={true}>
+                        {username && <NotificationsMenu username={username} />}
                         <Menu.Item as={Dropdown} text="System" data-testid="topbar-system-menu">
                             <Dropdown.Menu>
                                 <Dropdown.Item
