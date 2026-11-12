@@ -81,6 +81,7 @@ import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 import jakarta.ws.rs.core.Response.Status;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -92,6 +93,7 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.POLICY_FILE_PATH;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
 import static java.util.Objects.requireNonNull;
@@ -754,14 +756,26 @@ public class ProcessResource implements Resource {
 
         assertProcessAccessOwner(entry, "state");
 
+        PolicyEngine policy = policyManager.get(entry.orgId(), entry.projectId(), entry.initiatorId());
+
         StreamingOutput out = output -> {
             try (ZipArchiveOutputStream dst = new ZipArchiveOutputStream(output)) {
                 stateManager.export(processKey, new ProcessStateManager.FilteringConsumer(zipTo(dst), s -> {
+                    // Never export a stale policy stored by an older server.
+                    if (POLICY_FILE_PATH.equals(s)) {
+                        return false;
+                    }
                     if (!isSessionResource(s)) {
                         return true;
                     }
                     return isSessionKeyAccess(instanceId);
                 }));
+
+                if (policy != null) {
+                    try (InputStream in = new ByteArrayInputStream(objectMapper.writeValueAsBytes(policy.getRules()))) {
+                        zipTo(dst).accept(POLICY_FILE_PATH, 0100644, in);
+                    }
+                }
             }
         };
 
@@ -790,6 +804,15 @@ public class ProcessResource implements Resource {
 
         assertProcessAccessOwner(p, "state");
         assertResourceAccess(p, fileName);
+
+        if (POLICY_FILE_PATH.equals(fileName)) {
+            PolicyEngine policy = policyManager.get(p.orgId(), p.projectId(), p.initiatorId());
+            if (policy == null) {
+                throw new ConcordApplicationException("State file not found: " + fileName, Status.NOT_FOUND);
+            }
+            return Response.ok((StreamingOutput) output -> output.write(objectMapper.writeValueAsBytes(policy.getRules())))
+                    .build();
+        }
 
         StreamingOutput out = output -> {
             Path tmp = stateManager.get(processKey, fileName, ProcessResource::copyToTmp)
