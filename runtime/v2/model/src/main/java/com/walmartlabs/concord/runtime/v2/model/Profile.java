@@ -20,11 +20,13 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
@@ -58,6 +60,20 @@ public interface Profile extends Serializable {
     default Map<String, Form> forms() {
         return Collections.emptyMap();
     }
+
+    /**
+     * Original YAML shape of the {@code configuration} block, used to restrict the overlay
+     * to the keys it actually contains. Most attributes of
+     * {@link ProcessDefinitionConfiguration} have non-empty defaults, which makes an unset
+     * attribute indistinguishable from one set to its default once {@link #configuration()}
+     * is serialized.
+     * <p/>
+     * An empty map overrides nothing. {@code null} means the shape is unknown, and
+     * {@link #configuration()} has to be applied as a whole.
+     */
+    @Nullable
+    @JsonIgnore
+    Map<String, Serializable> rawConfiguration();
 
     static ImmutableProfile.Builder builder() {
         return ImmutableProfile.builder();
