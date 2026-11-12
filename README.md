@@ -68,14 +68,18 @@ npm run start
 
 Prerequisites:
 
-- Git 2.18+
-- Docker, listening on `tcp://127.0.0.1:2375`;
+- Git 2.18+;
+- Docker (privileged containers are required for `it/server` with `-Pdocker`);
 - Ansible 2.6.0+ must be installed and available in `$PATH`.
   See [the official documentation](http://docs.ansible.com/ansible/intro_installation.html);
 - `requests` python module is required. It can be installed by using `pip install requests`
   or the system package manager;
 - Java must be available in `$PATH` as `java`;
 - [Chrome WebDriver](http://chromedriver.chromium.org/) available in `$PATH`.
+
+Server-mode ITs that run against a locally managed agent require a Docker
+endpoint configured for that agent. `it/server` with `-Pdocker` manages a
+privileged Docker-in-Docker daemon.
 
 ### Running tests
 
@@ -85,7 +89,11 @@ Integration tests are disabled by default. Use the `it` profile to enable them:
 ./mvnw verify -Pit
 ```
 
-This will run ITs agains the locally running server and the agent.
+This will run ITs against the locally running server and agent. Docker-backed
+tasks require a Docker endpoint configured for the agent. In the
+`it/server -Pdocker` setup, managed Docker-in-Docker is used instead; see
+[the server IT instructions](./it/server/README.md).
+
 To automatically start and stop the server and the agent using docker, use the
 `docker` profile:
 

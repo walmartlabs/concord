@@ -702,6 +702,20 @@ public class MainTest  {
         assertTrue(exception.getMessage().matches("(?s)Parallel execution errors:.*boom.*\n.*boom.*"));
     }
 
+    /**
+     * The errors of a parallel loop are in the order of the items, not in the order of the failures.
+     */
+    @Test
+    public void testParallelLoopErrorsOrder() throws Exception {
+        deploy("parallelLoopErrorsOrder");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*errors: \\[BOOM1, BOOM2\\].*");
+    }
+
     @Test
     public void testWithItemsBlock() throws Exception {
         deploy("withItemsBlock");
@@ -1259,8 +1273,9 @@ public class MainTest  {
 
         byte[] log = run(runnerCfg);
 
-        assertLog(log, Pattern.quote("|0|1|1|0|0||70|2|0|0|0|") + ".*done!.*");
-        assertLog(log, Pattern.quote("|0|2|1|0|0|"));
+        // final statuses carry the time of the status (epoch millis)
+        assertLog(log, Pattern.quote("|13|1|1|0|0|") + "\\d{13}" + Pattern.quote("|70|2|0|0|0|") + ".*done!.*");
+        assertLog(log, Pattern.quote("|13|2|1|0|0|") + "\\d{13}");
     }
 
     @Test

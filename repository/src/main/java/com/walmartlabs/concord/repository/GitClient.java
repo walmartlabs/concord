@@ -33,7 +33,9 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.io.*;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -84,9 +86,10 @@ public class GitClient {
             }
 
             configure(req.destination());
-            configureRemote(req.destination(), updateUrl(req.url(), req.secret()));
+            String remoteUrl = updateUrl(req.url(), req.secret());
+            configureRemote(req.destination(), remoteUrl);
 
-            Ref ref = getHeadRef(req.destination(), req.version().ref(), req.secret());
+            Ref ref = getHeadRef(req.destination(), req.version().ref(), req.secret(), remoteUrl);
             configureFetch(req.destination(), getRefSpec(ref));
 
             NormalizedVersion version = NormalizedVersion.from(req.version(), ref);
@@ -95,7 +98,7 @@ public class GitClient {
             boolean alreadyFetched = exists && req.checkAlreadyFetched() && alreadyFetched(req.destination(), ref, version);
             if (!alreadyFetched) {
                 boolean effectiveShallow = req.shallow() && version.commitId() == null;
-                fetch(req.destination(), effectiveShallow, req.secret());
+                fetch(req.destination(), effectiveShallow, req.secret(), remoteUrl);
 
                 checkout(req.destination(), req.version().value());
                 if (version.commitId() == null) {
@@ -185,7 +188,7 @@ public class GitClient {
                 .build());
     }
 
-    private void fetch(Path workDir, boolean shallow, Secret secret) {
+    private void fetch(Path workDir, boolean shallow, Secret secret, String remoteUrl) {
         List<String> args = new ArrayList<>();
         args.add("fetch");
         if (shallow) {
@@ -200,7 +203,7 @@ public class GitClient {
                 .workDir(workDir)
                 .timeout(cfg.fetchTimeout())
                 .addAllArgs(args)
-                .build(), secret);
+                .build(), secret, remoteUrl);
     }
 
     private boolean isShallowRepo(Path workDir) {
@@ -250,12 +253,12 @@ public class GitClient {
         return fromString(line);
     }
 
-    private List<Ref> getRefs(Path workDir, String version, Secret secret) {
+    private List<Ref> getRefs(Path workDir, String version, Secret secret, String remoteUrl) {
         String result = execWithCredentials(Command.builder()
                 .workDir(workDir)
                 .timeout(cfg.defaultOperationTimeout())
                 .addArgs("ls-remote", "--symref", "--", "origin", version)
-                .build(), secret);
+                .build(), secret, remoteUrl);
 
         List<Ref> refs = new ArrayList<>();
 
@@ -284,14 +287,14 @@ public class GitClient {
         return refs;
     }
 
-    private Ref getHeadRef(Path workDir, String version, Secret secret) {
+    private Ref getHeadRef(Path workDir, String version, Secret secret, String remoteUrl) {
         if (version == null) {
             return null;
         }
 
         String branchHeadRef = "refs/heads/" + version;
         String tagRef = "refs/tags/" + version;
-        return getRefs(workDir, version, secret).stream()
+        return getRefs(workDir, version, secret, remoteUrl).stream()
                 .filter(r -> r.ref().equalsIgnoreCase(branchHeadRef) || r.ref().equalsIgnoreCase(tagRef))
                 .findFirst()
                 .orElse(null);
@@ -433,7 +436,7 @@ public class GitClient {
                             .timeout(cfg.fetchTimeout())
                             .addAllArgs(perModuleArgs)
                             .build(),
-                    secret);
+                    secret, pUrl);
         }
     }
 
@@ -563,7 +566,7 @@ public class GitClient {
         }
     }
 
-    private String execWithCredentials(Command cmd, Secret secret) {
+    private String execWithCredentials(Command cmd, Secret secret, @Nullable String remoteUrl) {
         Path key = null;
         Path ssh = null;
         Path askpass = null;
@@ -586,14 +589,23 @@ public class GitClient {
 
                 log.info("using GIT_SSH to set credentials");
             } else if (secret instanceof UsernamePassword userPass) {
-                askpass = createUnixStandardAskpass(userPass);
+                askpass = createUnixStandardAskpass(new AskpassCredentials(
+                        userPass.getUsername(), new String(userPass.getPassword()), null));
 
                 env.put("GIT_ASKPASS", askpass.toAbsolutePath().toString());
                 env.put("SSH_ASKPASS", askpass.toAbsolutePath().toString());
 
                 log.info("using GIT_ASKPASS to set credentials ");
+            } else {
+                // Credentials embedded in the URL (e.g. tokens) are lost by git after an HTTP redirect
+                // when libcurl strips them from CURLINFO_EFFECTIVE_URL. Provide them via GIT_ASKPASS
+                // so git can still answer the auth challenge for the same host.
+                AskpassCredentials urlCreds = credentialsFromUrl(remoteUrl);
+                if (urlCreds != null) {
+                    askpass = createUnixStandardAskpass(urlCreds);
+                    env.put("GIT_ASKPASS", askpass.toAbsolutePath().toString());
+                }
             }
-            // if secret is single-value, it was already applied to the URL in updateUrl()
 
             env.put("GIT_HTTP_LOW_SPEED_LIMIT", String.valueOf(cfg.httpLowSpeedLimit()));
             env.put("GIT_HTTP_LOW_SPEED_TIME", String.valueOf(cfg.httpLowSpeedTime().getSeconds()));
@@ -645,17 +657,74 @@ public class GitClient {
         }
     }
 
-    private static Path createUnixStandardAskpass(UsernamePassword creds) throws IOException {
+    /**
+     * Creates a GIT_ASKPASS script which answers git's username/password prompts.
+     * If {@link AskpassCredentials#origin()} is set ({@code scheme://host[:port]}),
+     * only prompts for that origin are answered. Otherwise, prompts for any host are answered.
+     */
+    static Path createUnixStandardAskpass(AskpassCredentials creds) throws IOException {
+        String usernamePattern = "Username*";
+        String passwordPattern = "Password*";
+        if (creds.origin() != null) {
+            // git prompts: "Username for 'https://host': ", "Password for 'https://user@host': "
+            String scheme = creds.origin().substring(0, creds.origin().indexOf("://") + 3);
+            String hostSuffix = creds.origin().substring(scheme.length()) + "': ";
+            usernamePattern = shellQuote("Username for '" + scheme + hostSuffix);
+            passwordPattern = shellQuote("Password for '" + scheme + hostSuffix) + "|"
+                    + shellQuote("Password for '" + scheme) + "*" + shellQuote("@" + hostSuffix);
+        }
+
         Path askpass = PathUtils.createTempFile("pass", ".sh");
         try (PrintWriter w = new PrintWriter(askpass.toFile(), Charset.defaultCharset())) {
             w.println("#!/bin/sh");
             w.println("case \"$1\" in");
-            w.println("Username*) echo '" + quoteUnixCredentials(creds.getUsername()) + "' ;;");
-            w.println("Password*) echo '" + quoteUnixCredentials(new String(creds.getPassword())) + "' ;;");
+            w.println(usernamePattern + ") echo '" + quoteUnixCredentials(creds.username()) + "' ;;");
+            w.println(passwordPattern + ") echo '" + quoteUnixCredentials(creds.password()) + "' ;;");
             w.println("esac");
         }
         Files.setPosixFilePermissions(askpass, Set.of(OWNER_READ, OWNER_EXECUTE));
         return askpass;
+    }
+
+    /**
+     * Extracts credentials embedded in the URL, restricted to the URL's origin.
+     *
+     * @return {@code null} if the URL doesn't contain any credentials.
+     */
+    @Nullable
+    static AskpassCredentials credentialsFromUrl(@Nullable String url) {
+        if (url == null) {
+            return null;
+        }
+
+        URI uri;
+        try {
+            uri = URI.create(url);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+
+        String scheme = uri.getScheme();
+        String authority = uri.getRawAuthority();
+        String userInfo = uri.getRawUserInfo();
+        if (scheme == null || authority == null || userInfo == null || userInfo.isEmpty()) {
+            return null;
+        }
+
+        String hostAndPort = percentDecode(authority.substring(authority.lastIndexOf('@') + 1));
+        int idx = userInfo.indexOf(':');
+        String username = percentDecode(idx >= 0 ? userInfo.substring(0, idx) : userInfo);
+        String password = idx >= 0 ? percentDecode(userInfo.substring(idx + 1)) : "";
+
+        return new AskpassCredentials(username, password, scheme + "://" + hostAndPort);
+    }
+
+    private static String shellQuote(String s) {
+        return "'" + quoteUnixCredentials(s) + "'";
+    }
+
+    private static String percentDecode(String s) {
+        return URLDecoder.decode(s.replace("+", "%2B"), StandardCharsets.UTF_8);
     }
 
     private static Path createSshKeyFile(KeyPair keyPair) throws IOException {
@@ -793,5 +862,10 @@ public class GitClient {
 
     private record Obfuscation(String pattern,
                                String replacement) {
+    }
+
+    record AskpassCredentials(String username,
+                              String password,
+                              @Nullable String origin) {
     }
 }

@@ -26,6 +26,7 @@ import com.walmartlabs.concord.common.ObjectMapperProvider;
 import com.walmartlabs.concord.common.cfg.MappingAuthConfig;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.github.appinstallation.cfg.GitHubAppInstallationConfig;
+import com.walmartlabs.concord.github.appinstallation.exception.GitHubAppException;
 import com.walmartlabs.concord.sdk.Secret;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +40,8 @@ import java.util.List;
 
 import static com.walmartlabs.concord.github.appinstallation.TestConstants.APP_INSTALL_CONTENT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -87,6 +90,73 @@ class GitHubAppInstallationTest {
     private static final Secret MOCK_STATIC_SECRET = new BinaryDataSecret(staticKeyAuth.token().getBytes(StandardCharsets.UTF_8));
 
     private static final Secret MOCK_APP_INSTALL_SECRET = new BinaryDataSecret(APP_INSTALL_CONTENT.getBytes(StandardCharsets.UTF_8));
+
+    @Test
+    void testTransientErrorIsNotCached() {
+        // -- prepare 0
+        // simulates a network blip while fetching the installation token
+        when(accessTokenProvider.getRepoInstallationToken(any(), any()))
+                .thenThrow(new GitHubAppException("Error sending request"))
+                .thenReturn(TOKEN_1HR);
+        var app = new TestApp(CFG, MAPPER, accessTokenProvider);
+
+        // -- execute + verify 1
+        // the error must propagate, not be swallowed into an empty/anonymous result
+        assertThrows(GitHubAppException.class, () -> app.getToken(VALID_APP_AUTH_URI_01, null));
+        assertEquals(0, app.cacheSize());
+
+        // -- execute + verify 2
+        // a failed load isn't cached, so the very next call retries and succeeds
+        var tokenResp = app.getToken(VALID_APP_AUTH_URI_01, null);
+        assertTrue(tokenResp.isPresent());
+        assertEquals(TOKEN_1HR, tokenResp.get());
+        verify(accessTokenProvider, times(2))
+                .getRepoInstallationToken(any(), any());
+    }
+
+    @Test
+    void testAppNotInstalledFallsBackToAnonymous() {
+        // -- prepare 0
+        when(accessTokenProvider.getRepoInstallationToken(any(), any()))
+                .thenThrow(new GitHubAppException.NotFoundException("Repo not found or App installation not found for repo"));
+        var app = new TestApp(CFG, MAPPER, accessTokenProvider);
+
+        // -- execute 1
+        var tokenResp = app.getToken(VALID_APP_AUTH_URI_01, null);
+
+        // -- verify 1
+        // no token available, caller falls back to anonymous access - not an error
+        assertFalse(tokenResp.isPresent());
+        // deliberately cached for the full duration: repos the app will never be
+        // installed on (e.g. public, third-party repos matched by a broad urlPattern)
+        // shouldn't cause a GitHub API call on every single fetch
+        assertEquals(1, app.cacheSize());
+
+        // -- execute 2
+        app.getToken(VALID_APP_AUTH_URI_01, null);
+
+        // -- verify 2
+        verify(accessTokenProvider, times(1))
+                .getRepoInstallationToken(any(), any());
+    }
+
+    @Test
+    void testSecretPatternMismatchFallsBackToAnonymous() {
+        // -- prepare 0
+        // the secret's urlPattern doesn't match the repo, so owner/repo can't be extracted
+        var repo = URI.create("https://other.local/owner/repo-1.git");
+        var app = new TestApp(CFG, MAPPER, accessTokenProvider);
+
+        // -- execute 1
+        var tokenResp = app.getToken(repo, MOCK_APP_INSTALL_SECRET);
+
+        // -- verify 1
+        // not an error, caller falls back to anonymous access
+        assertFalse(tokenResp.isPresent());
+        assertEquals(1, app.cacheSize());
+        verify(accessTokenProvider, times(0))
+                .getRepoInstallationToken(any(), any());
+    }
 
     @Test
     void testCache() {

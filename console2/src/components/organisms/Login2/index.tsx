@@ -37,7 +37,7 @@ import { UserSessionContext } from '../../../session';
 
 import './styles.css';
 import { Link } from 'react-router';
-import { parse as parseQueryString } from 'query-string';
+import queryString from 'query-string';
 
 const nonEmpty = (s?: string) => {
     if (!s) {
@@ -73,7 +73,7 @@ const getFrom = (props: RouteComponentProps<{}>): string => {
         return location.state.from.pathname;
     }
 
-    const fromUrl = parseQueryString(props.location.search);
+    const fromUrl = queryString.parse(props.location.search);
 
     if (fromUrl && typeof fromUrl.from === 'string') {
         return fromUrl.from;
@@ -83,7 +83,7 @@ const getFrom = (props: RouteComponentProps<{}>): string => {
 };
 
 const getRedirectTo = (props: RouteComponentProps<{}>): string | undefined => {
-    const qs = parseQueryString(props.location.search);
+    const qs = queryString.parse(props.location.search);
     const redirectTo = qs ? qs.redirectTo : undefined;
     if (typeof redirectTo === 'string') {
         return redirectTo;

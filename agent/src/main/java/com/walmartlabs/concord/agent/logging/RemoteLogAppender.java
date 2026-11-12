@@ -76,7 +76,8 @@ public class RemoteLogAppender implements LogAppender {
         LogSegmentUpdateRequest request = new LogSegmentUpdateRequest()
                 .status(convertStatus(stats.status()))
                 .warnings(stats.warnings())
-                .errors(stats.errors());
+                .errors(stats.errors())
+                .statusUpdatedAt(stats.statusUpdatedAt());
 
         try {
             ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY,

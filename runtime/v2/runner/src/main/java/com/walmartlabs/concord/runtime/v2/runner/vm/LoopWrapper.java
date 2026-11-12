@@ -246,6 +246,7 @@ public abstract class LoopWrapper implements Command {
                     }
 
                     throw new ParallelExecutionException(failed.stream()
+                            .sorted()
                             .map(state::clearThreadError)
                             .filter(Objects::nonNull)
                             .toList());

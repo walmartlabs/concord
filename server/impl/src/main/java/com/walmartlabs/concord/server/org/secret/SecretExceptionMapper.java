@@ -22,10 +22,10 @@ package com.walmartlabs.concord.server.org.secret;
 
 import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
 
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.Provider;
 
 @Provider
 public class SecretExceptionMapper extends ExceptionMapperSupport<SecretException> {

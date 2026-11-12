@@ -46,7 +46,7 @@ import {
 import { ProcessFilters } from '../../../api/process';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { usePolling } from '../../../api/usePolling';
+import { isBlockingPollingError, usePolling } from '../../../api/usePolling';
 import { get as apiGetProject, ProjectEntry } from '../../../api/org/project';
 import { useApi } from '../../../hooks/useApi';
 import { LoadingDispatch } from '../../../App';
@@ -153,7 +153,7 @@ const ProcessChildrenActivity = ({
 
     return (
         <>
-            {error && <RequestErrorActivity error={error} />}
+            {isBlockingPollingError(error) && <RequestErrorActivity error={error} />}
             {projectError && <RequestErrorActivity error={projectError} />}
 
             <ProcessListWithSearch

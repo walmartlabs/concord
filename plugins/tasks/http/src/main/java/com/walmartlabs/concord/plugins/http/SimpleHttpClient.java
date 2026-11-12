@@ -53,7 +53,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HostnameVerifier;
-import javax.ws.rs.core.Response.Status.Family;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -127,8 +126,7 @@ public class SimpleHttpClient {
                 throw new UnauthorizedException("Authorization required for " + request.getURI().toURL() + "(code: " + code + ")");
             }
 
-            Family statusCodeFamily = Family.familyOf(httpResponse.getStatusLine().getStatusCode());
-            boolean isSuccess = Family.SUCCESSFUL == statusCodeFamily;
+            boolean isSuccess = isSuccessful(code);
 
             Map<String, Object> response = new HashMap<>();
             if (isSuccess) {
@@ -325,6 +323,10 @@ public class SimpleHttpClient {
      */
     private boolean isUnauthorized(int statusCode) {
         return HttpStatus.SC_UNAUTHORIZED == statusCode;
+    }
+
+    private static boolean isSuccessful(int statusCode) {
+        return statusCode >= 200 && statusCode < 300;
     }
 
     /**

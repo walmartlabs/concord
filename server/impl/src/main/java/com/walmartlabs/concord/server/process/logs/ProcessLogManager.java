@@ -93,8 +93,9 @@ public class ProcessLogManager {
         return logsDao.createSegment(processKey, correlationId, name, createdAt, LogSegment.Status.RUNNING.name());
     }
 
-    public void updateSegment(ProcessKey processKey, long segmentId, LogSegment.Status status, Integer warnings, Integer errors) {
-        logsDao.updateSegment(processKey, segmentId, status, warnings, errors);
+    public void updateSegment(ProcessKey processKey, long segmentId, LogSegment.Status status, Integer warnings, Integer errors,
+                              OffsetDateTime statusUpdatedAt) {
+        logsDao.updateSegment(processKey, segmentId, status, warnings, errors, statusUpdatedAt);
     }
 
     public ProcessLog segmentData(ProcessKey processKey, long segmentId, Integer start, Integer end) {

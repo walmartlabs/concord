@@ -20,12 +20,14 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.time.OffsetDateTime;
 
 @Value.Immutable
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -41,4 +43,12 @@ public interface LogSegmentUpdateRequest {
 
     @Nullable
     Integer errors();
+
+    /**
+     * When the status changed, by the runner's clock. If not set (older runners),
+     * the time of the request.
+     */
+    @Nullable
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    OffsetDateTime statusUpdatedAt();
 }
