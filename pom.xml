@@ -404,7 +404,6 @@
                 <plugin>
                     <groupId>io.fabric8</groupId>
                     <artifactId>crd-generator-maven-plugin</artifactId>
-                    <!-- keep in sync with kubernetes.client.version in targetplatform/pom.xml -->
                     <version>7.4.1</version>
                 </plugin>
                 <plugin>
