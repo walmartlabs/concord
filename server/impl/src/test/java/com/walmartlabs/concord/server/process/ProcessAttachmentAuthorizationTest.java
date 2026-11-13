@@ -61,6 +61,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
@@ -75,7 +76,7 @@ class ProcessAttachmentAuthorizationTest {
     private final UUID instanceId = UUID.randomUUID();
     private final UUID userId = UUID.randomUUID();
     private final UUID projectId = UUID.randomUUID();
-    private final OffsetDateTime createdAt = OffsetDateTime.now();
+    private final OffsetDateTime createdAt = OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS);
     private final ProcessEntry entry = mock(ProcessEntry.class);
     private final ProcessQueueManager queueManager = mock(ProcessQueueManager.class);
     private final ProcessQueueDao queueDao = mock(ProcessQueueDao.class);
