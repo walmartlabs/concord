@@ -46,9 +46,9 @@ present in your minikube instance):
   $ minikube kubectl -- create -f deploy/service_account.yml -n default
   $ minikube kubectl -- create -f deploy/cluster_role_binding.yml -n default
   ```
-5. Create the custom resource:
+5. Register the AgentPool CRD and create an AgentPool:
   ```
-  $ minikube kubectl -- create -f deploy/crds/crd.yml -n default
+  $ minikube kubectl -- create -f deploy/crds/agentpools.concord.walmartlabs.com-v1.yml
   $ minikube kubectl -- create -f deploy/crds/example.agentpool.yml -n default
   ```
 6. Start the operator:
@@ -89,9 +89,10 @@ minikube kubectl -- logs -f <pod_name> -c <container_name> -n default
 
 ## Running in Production
 
-1. Deploy the service account, the cluster role and the cluster role binding
-(modify the commands according to your namespace):
+1. Register the AgentPool CRD, deploy the service account, the cluster role and
+the cluster role binding (modify the commands according to your namespace):
   ```
+  $ minikube kubectl -- create -f deploy/crds/agentpools.concord.walmartlabs.com-v1.yml
   $ minikube kubectl -- create -f deploy/cluster_role.yml
   $ minikube kubectl -- create -f deploy/service_account.yml
   $ minikube kubectl -- create -f deploy/cluster_role_binding.yml
@@ -104,6 +105,13 @@ minikube kubectl -- logs -f <pod_name> -c <container_name> -n default
   ```
 4. Check the operator's pod logs;
 5. Deploy one or more CRs using `deploy/crds/example.agentpool.yml` as a template.
+
+## AgentPool CRD
+
+`deploy/crds/agentpools.concord.walmartlabs.com-v1.yml` is generated from
+`AgentPool` and `AgentPoolConfiguration` by `crd-generator-maven-plugin`
+on every build. Don't edit it by hand: change the model classes, rebuild
+the module and commit the regenerated file.
 
 ## Debug deployed agent-operator pod
 
