@@ -233,7 +233,7 @@ public class TriggerScheduler implements ScheduledTask {
             return CRON;
         }
 
-        ApiKeyEntry apiKey = userSecurityContext.runAs(CRON.id(), () -> secretManager.assertApiKey(SecretManager.AccessScope.project(t.getProjectId()), t.getOrgId(), runAs.secretName(), null));
+        ApiKeyEntry apiKey = userSecurityContext.runAs(CRON.id(), () -> secretManager.assertApiKey(t.getProjectId(), t.getOrgId(), runAs.secretName(), null));
         UserEntry u = userManager.get(apiKey.getUserId()).orElse(null);
         if (u == null) {
             throw new RuntimeException("Can't find user with API token from secret '" + runAs.secretName() + "'");
