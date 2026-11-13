@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.process.ProcessAccessManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -47,14 +48,16 @@ public class FormResource implements Resource {
 
     private final ProcessStateManager stateManager;
     private final ProcessAccessManager processAccessManager;
+    private final FormAccessManager formAccessManager;
     private final FormResourceV1 formResourceV1;
     private final FormResourceV2 formResourceV2;
 
     @Inject
     public FormResource(ProcessStateManager stateManager, ProcessAccessManager processAccessManager,
-                        FormResourceV1 formResourceV1, FormResourceV2 formResourceV2) {
+                        FormAccessManager formAccessManager, FormResourceV1 formResourceV1, FormResourceV2 formResourceV2) {
         this.stateManager = stateManager;
         this.processAccessManager = processAccessManager;
+        this.formAccessManager = formAccessManager;
         this.formResourceV1 = formResourceV1;
         this.formResourceV2 = formResourceV2;
     }
@@ -64,8 +67,22 @@ public class FormResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "List the available forms", operationId = "listProcessForms")
     public List<FormListEntry> list(@PathParam("processInstanceId") UUID processInstanceId) {
-        processAccessManager.assertAccess(processInstanceId, Set.of());
+        try {
+            processAccessManager.assertAccess(processInstanceId, Set.of());
+        } catch (UnauthorizedException denied) {
+            List<FormListEntry> delegated = listForms(processInstanceId).stream()
+                    .filter(this::isExplicitlyDelegated)
+                    .toList();
+            if (delegated.isEmpty()) {
+                throw denied;
+            }
+            return delegated;
+        }
 
+        return listForms(processInstanceId);
+    }
+
+    private List<FormListEntry> listForms(UUID processInstanceId) {
         if (isV2(processInstanceId)) {
             return formResourceV2.list(processInstanceId);
         } else {
@@ -83,7 +100,17 @@ public class FormResource implements Resource {
     public FormInstanceEntry get(@PathParam("processInstanceId") UUID processInstanceId,
                                  @PathParam("formName") String formName) {
 
-        processAccessManager.assertAccess(processInstanceId, Set.of());
+        try {
+            processAccessManager.assertAccess(processInstanceId, Set.of());
+        } catch (UnauthorizedException denied) {
+            FormListEntry form = listForms(processInstanceId).stream()
+                    .filter(f -> formName.equals(f.getName()))
+                    .findFirst()
+                    .orElse(null);
+            if (form == null || !formAccessManager.assertExplicitFormAccess(formName, form.getRunAs())) {
+                throw denied;
+            }
+        }
 
         if (isV2(processInstanceId)) {
             return formResourceV2.get(processInstanceId, formName);
@@ -141,5 +168,13 @@ public class FormResource implements Resource {
                 Constants.Files.JOB_STATE_DIR_NAME,
                 Constants.Files.JOB_FORMS_V2_DIR_NAME);
         return stateManager.exists(PartialProcessKey.from(processInstanceId), resource);
+    }
+
+    private boolean isExplicitlyDelegated(FormListEntry form) {
+        try {
+            return formAccessManager.assertExplicitFormAccess(form.getName(), form.getRunAs());
+        } catch (UnauthorizedException denied) {
+            return false;
+        }
     }
 }
