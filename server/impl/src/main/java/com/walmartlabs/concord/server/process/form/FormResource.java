@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.form;
  */
 
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.process.ProcessAccessManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
@@ -35,6 +36,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
@@ -44,12 +46,15 @@ import static com.walmartlabs.concord.server.process.state.ProcessStateManager.p
 public class FormResource implements Resource {
 
     private final ProcessStateManager stateManager;
+    private final ProcessAccessManager processAccessManager;
     private final FormResourceV1 formResourceV1;
     private final FormResourceV2 formResourceV2;
 
     @Inject
-    public FormResource(ProcessStateManager stateManager, FormResourceV1 formResourceV1, FormResourceV2 formResourceV2) {
+    public FormResource(ProcessStateManager stateManager, ProcessAccessManager processAccessManager,
+                        FormResourceV1 formResourceV1, FormResourceV2 formResourceV2) {
         this.stateManager = stateManager;
+        this.processAccessManager = processAccessManager;
         this.formResourceV1 = formResourceV1;
         this.formResourceV2 = formResourceV2;
     }
@@ -59,6 +64,8 @@ public class FormResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "List the available forms", operationId = "listProcessForms")
     public List<FormListEntry> list(@PathParam("processInstanceId") UUID processInstanceId) {
+        processAccessManager.assertAccess(processInstanceId, Set.of());
+
         if (isV2(processInstanceId)) {
             return formResourceV2.list(processInstanceId);
         } else {
@@ -75,6 +82,8 @@ public class FormResource implements Resource {
     @Operation(description = "Get the current state of a form", operationId = "getProcessForm")
     public FormInstanceEntry get(@PathParam("processInstanceId") UUID processInstanceId,
                                  @PathParam("formName") String formName) {
+
+        processAccessManager.assertAccess(processInstanceId, Set.of());
 
         if (isV2(processInstanceId)) {
             return formResourceV2.get(processInstanceId, formName);
