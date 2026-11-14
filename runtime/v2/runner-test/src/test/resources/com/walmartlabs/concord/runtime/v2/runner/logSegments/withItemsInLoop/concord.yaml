@@ -1,0 +1,16 @@
+flows:
+  default:
+    - block:
+        - name: "item ${item}"
+          task: "log"
+          in:
+            msg: "item ${item}"
+          withItems: ["p", "q"]
+      loop:
+        items: ["a", "b"]
+
+    - name: "parallel ${item}"
+      task: "log"
+      in:
+        msg: "parallel ${item}"
+      parallelWithItems: ["x", "y"]

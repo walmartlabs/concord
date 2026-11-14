@@ -1,0 +1,28 @@
+flows:
+  default:
+    - name: "empty task ${item}"
+      task: log
+      loop:
+        items: []
+    - name: "empty call ${item}"
+      call: inner
+      loop:
+        items: []
+    - name: "empty script ${item}"
+      script: groovy
+      body: "println('unused')"
+      loop:
+        items: []
+    - name: "empty block ${item}"
+      block:
+        - log: unused
+      loop:
+        items: []
+    - name: "invalid loop ${item}"
+      call: inner
+      loop:
+        items: "${missingItems}"
+      error:
+        - log: handled
+  inner:
+    - log: done

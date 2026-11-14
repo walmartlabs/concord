@@ -1,0 +1,57 @@
+flows:
+  default:
+    - block:
+        - name: "loop failure ${item}"
+          task: "faultyTask"
+          error:
+            - name: "loop handler"
+              task: "log"
+              in:
+                msg: "handled loop"
+      loop:
+        items: ["a", "b"]
+        mode: serial
+
+    - block:
+        - name: "withItems failure ${item}"
+          task: "faultyTask"
+          error:
+            - name: "withItems handler"
+              task: "log"
+              in:
+                msg: "handled withItems"
+      withItems: ["a", "b"]
+
+    - name: "failed before recovery"
+      task: "faultyTask"
+      error:
+        - name: "guarded recovery"
+          task: "log"
+          in:
+            msg: "guarded recovery"
+          error:
+            - name: "unused nested handler"
+              task: "log"
+              in:
+                msg: "must not run"
+
+        - name: "Recovery nested flow"
+          call: "recovery"
+
+    - call: "missingFlow"
+      error:
+        - name: "missing flow handler"
+          task: "log"
+          in:
+            msg: "handled missing flow"
+
+  recovery:
+    - parallel:
+        - name: "Recovery parallel A"
+          task: "log"
+          in:
+            msg: "parallel A"
+        - name: "Recovery parallel B"
+          task: "log"
+          in:
+            msg: "parallel B"

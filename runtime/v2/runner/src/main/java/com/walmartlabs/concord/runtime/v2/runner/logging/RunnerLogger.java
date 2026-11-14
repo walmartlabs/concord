@@ -29,8 +29,13 @@ public interface RunnerLogger {
 
     void withContext(LogContext context, Runnable runnable);
 
+    /** Returns the existing system segment ID, or null when segmented logging is disabled. */
     @Nullable
-    Long createSegment(String segmentName, UUID correlationId);
+    Long getSystemSegmentId();
+
+    /** Creates a segment with non-null structural attributes. */
+    @Nullable
+    Long createSegment(String segmentName, UUID correlationId, LogSegmentAttributes attributes);
 
     void setSegmentStatus(long segmentId, LogSegmentStatus segmentStatus);
 }

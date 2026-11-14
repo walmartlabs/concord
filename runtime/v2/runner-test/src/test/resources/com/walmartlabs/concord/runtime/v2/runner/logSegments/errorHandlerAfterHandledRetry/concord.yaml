@@ -1,0 +1,22 @@
+flows:
+  default:
+    - name: "outer"
+      call: "inner"
+
+  inner:
+    - block:
+        - name: "retried"
+          task: "failOnceTask"
+          retry:
+            times: 1
+            delay: 1
+
+        # fails without a segment of its own
+        - if: "${undefinedVariable}"
+          then:
+            - log: "unreachable"
+      error:
+        - name: "handler"
+          task: "log"
+          in:
+            msg: "handled"
