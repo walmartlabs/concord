@@ -34,6 +34,11 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 public interface UserInfoProvider {
 
+    /**
+     * @deprecated providers will be looked up by the user's realm instead.
+     * See <a href="https://github.com/walmartlabs/concord/issues/1064">#1064</a>.
+     */
+    @Deprecated
     UserType getUserType();
 
     /**
@@ -45,6 +50,11 @@ public interface UserInfoProvider {
      */
     UserInfo getInfo(UUID id, String username, String userDomain);
 
+    /**
+     * @deprecated new users should be created by {@link UserManager}, not by
+     * the provider. See <a href="https://github.com/walmartlabs/concord/issues/1064">#1064</a>.
+     */
+    @Deprecated
     UUID create(String username, String domain, String displayName, String email, Set<String> roles);
 
     @Value.Immutable
