@@ -292,10 +292,19 @@ public class SecretManager {
         return secret;
     }
 
-    public ApiKeyEntry assertApiKey(AccessScope accessScope, UUID orgId, String secretName, String password) {
-        DecryptedSecret secret = getSecret(accessScope, orgId, secretName, password, SecretType.DATA);
-        BinaryDataSecret data = (BinaryDataSecret) secret.getSecret();
-        ApiKeyEntry result = apiKeyDao.find(new String(data.getData()));
+    /**
+     * Resolves a runAs API key only when its secret explicitly delegates access to the project.
+     * An unscoped secret is not a delegation, even for privileged internal callers.
+     */
+    public ApiKeyEntry assertApiKey(UUID projectId, UUID orgId, String secretName, String password) {
+        SecretEntryV2 secret = assertAccess(orgId, null, secretName, ResourceAccessLevel.READER, false);
+        assertSecretProject(secret, projectId);
+        if (secret.getType() != SecretType.DATA) {
+            throw new IllegalArgumentException("Invalid secret type: " + secretName + ", expected " + SecretType.DATA + ", got: " + secret.getType());
+        }
+
+        SecretDataEntry data = getRaw(AccessScope.project(projectId), secret, password);
+        ApiKeyEntry result = apiKeyDao.find(new String(data.getData(), StandardCharsets.UTF_8));
         if (result == null) {
             throw new ConcordApplicationException("Api key from secret '" + secretName + "' not found", Status.NOT_FOUND);
         }
@@ -476,11 +485,15 @@ public class SecretManager {
             return null;
         }
 
+        return getRaw(accessScope, e, password);
+    }
+
+    private SecretDataEntry getRaw(AccessScope accessScope, SecretEntryV2 e, String password) {
         // getting a decrypted secret requires additional checks in some cases
         assertProjectScope(accessScope, e);
 
         SecretEncryptedByType providedEncryptedByType = getEncryptedBy(password);
-        assertEncryptedByType(name, providedEncryptedByType, e.getEncryptedBy());
+        assertEncryptedByType(e.getName(), providedEncryptedByType, e.getEncryptedBy());
 
         byte[] ab = decryptData(e, password);
 
@@ -637,6 +650,11 @@ public class SecretManager {
             return;
         }
 
+        if (scope instanceof ProjectAccessScope) {
+            assertSecretProject(e, ((ProjectAccessScope) scope).getProjectId());
+            return;
+        }
+
         // currently both the server and the agent access repositories and thus require access to secrets
         // the agent uses its own API key which is typically a "globalReader". That is why we need to check both
         // "globalReaders" and the current session token
@@ -647,15 +665,6 @@ public class SecretManager {
         }
 
         if (scope instanceof InternalAccessScope) {
-            return;
-        }
-
-        // internal access within a scope of a project
-        if (scope instanceof ProjectAccessScope) {
-            UUID scopeProjectId = ((ProjectAccessScope) scope).getProjectId();
-            if (projectIds.stream().noneMatch(scopeProjectId::equals)) {
-                throw new UnauthorizedException("Project-scoped secrets can only be accessed within the project they belong to. Secret: " + e.getName());
-            }
             return;
         }
 
@@ -671,6 +680,13 @@ public class SecretManager {
         if (projectIds.stream().noneMatch(projectId -> projectId.equals(p.projectId()))) {
             throw new UnauthorizedException("Project-scoped secrets can only be accessed within the project they belong to. Secret: " + e.getName());
 
+        }
+    }
+
+    private static void assertSecretProject(SecretEntryV2 secret, UUID projectId) {
+        Objects.requireNonNull(projectId, "Project ID is required");
+        if (secret.getProjects().stream().noneMatch(project -> projectId.equals(project.getId()))) {
+            throw new UnauthorizedException("The secret must be scoped to the requesting project. Secret: " + secret.getName());
         }
     }
 
