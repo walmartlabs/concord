@@ -44,7 +44,9 @@ export const usePolling = (
     request: () => Promise<boolean>,
     interval: number,
     loadingHandler: (inc: number) => void,
-    refresh: boolean
+    refresh: boolean,
+    // Batch views can show partial content even when their first batch fails.
+    { reportInitialErrors = false }: { reportInitialErrors?: boolean } = {}
 ): PollingError | undefined => {
     const poll = useRef<number | undefined>(undefined);
     const loaded = useRef(false);
@@ -94,13 +96,13 @@ export const usePolling = (
     }, [request, interval, refresh, loadingHandler]);
 
     useEffect(() => {
-        // Blocking errors are rendered by the caller itself.
-        if (!reportError || !error || isBlockingPollingError(error)) {
+        // Permanent errors are rendered by the caller itself.
+        if (!reportError || !error?.retrying || (!error.loaded && !reportInitialErrors)) {
             return;
         }
         reportError(reporterId, error);
         return () => reportError(reporterId, undefined);
-    }, [reportError, reporterId, error]);
+    }, [reportError, reporterId, error, reportInitialErrors]);
 
     const stopPolling = () => {
         if (poll.current) {
