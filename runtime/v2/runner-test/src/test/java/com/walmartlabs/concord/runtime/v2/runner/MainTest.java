@@ -1803,6 +1803,22 @@ public class MainTest  {
     }
 
     @Test
+    public void emptyLoopOutVariables() throws Exception {
+        deploy("emptyLoopOutVariables");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("empty loop out var: []") + ".*");
+        assertLog(log, ".*" + Pattern.quote("empty loop multi out: [], []") + ".*");
+        assertLog(log, ".*" + Pattern.quote("empty loop out expression: []") + ".*");
+        assertLog(log, ".*" + Pattern.quote("empty loop out map: []") + ".*");
+        assertLog(log, ".*" + Pattern.quote("empty parallel loop out var: []") + ".*");
+        assertLog(log, ".*" + Pattern.quote("empty expr loop out var: []") + ".*");
+    }
+
+    @Test
     public void prefixedFunctionsInExpressions() throws Exception {
         deploy("prefixedFunctions");
 
