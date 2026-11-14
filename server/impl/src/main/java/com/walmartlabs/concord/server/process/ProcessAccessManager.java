@@ -33,7 +33,6 @@ import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 
 import javax.inject.Inject;
 import jakarta.ws.rs.core.Response.Status;
-import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
@@ -50,6 +49,11 @@ public class ProcessAccessManager {
         this.processQueueManager = processQueueManager;
     }
 
+    /**
+     * Loads a process and asserts read access, allowing administrators, global readers,
+     * the initiator, a matching process session key, or project readers.
+     * Use for read-only endpoints; mutations must use {@link #assertWriteAccess(ProcessEntry)}.
+     */
     public ProcessEntry assertAccess(UUID instanceId, Set<ProcessDataInclude> includes) {
         var entry = processQueueManager.get(PartialProcessKey.from(instanceId), includes);
         if (entry == null) {
@@ -80,5 +84,35 @@ public class ProcessAccessManager {
 
         throw new UnauthorizedException("The current user (" + current.getUsername() + ") doesn't have " +
                                         "the necessary permissions to access process: " + entry.instanceId());
+    }
+
+    /**
+     * Asserts mutation access to an existing process, allowing administrators, system writers,
+     * the initiator, a session key scoped to this process instance, or project owners.
+     * Unlike {@link #assertAccess(UUID, Set)}, global-reader or project-reader access alone
+     * is insufficient. The caller must load the process before invoking this method.
+     */
+    public void assertWriteAccess(ProcessEntry entry) {
+        if (Roles.isAdmin() || Roles.isGlobalWriter()) {
+            return;
+        }
+
+        var sessionKey = SessionKeyPrincipal.getCurrent();
+        if (sessionKey != null && entry.instanceId().equals(sessionKey.getProcessKey().getInstanceId())) {
+            return;
+        }
+
+        var current = UserPrincipal.assertCurrent();
+        if (current.getId().equals(entry.initiatorId())) {
+            return;
+        }
+
+        if (entry.projectId() != null) {
+            projectAccessManager.assertAccess(entry.projectId(), ResourceAccessLevel.OWNER, true);
+            return;
+        }
+
+        throw new UnauthorizedException("The current user (" + current.getUsername() + ") doesn't have " +
+                                        "the necessary permissions to modify process: " + entry.instanceId());
     }
 }
