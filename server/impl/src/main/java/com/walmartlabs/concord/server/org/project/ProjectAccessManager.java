@@ -31,6 +31,7 @@ import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
+import com.walmartlabs.concord.server.user.UserEntry;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
@@ -146,6 +147,27 @@ public class ProjectAccessManager {
     public List<ResourceAccessEntry> getResourceAccess(UUID projectId) {
         assertAccess(projectId, ResourceAccessLevel.READER, false);
         return projectDao.getAccessLevel(projectId);
+    }
+
+    /**
+     * Checks a persisted recipient without changing the authenticated subject.
+     * Public projects are readable here only by members of their organization.
+     */
+    public boolean hasUserReadAccess(ProjectEntry project, UUID userId) {
+        UserEntry user = userDao.get(userId);
+        if (user == null || user.isDisabled() || user.isPermanentlyDisabled()) {
+            return false;
+        }
+        if (user.getRoles() != null && user.getRoles().stream().anyMatch(r ->
+                Roles.ADMIN.equals(r.getName()) || Roles.SYSTEM_READER.equals(r.getName())
+                        || Roles.SYSTEM_WRITER.equals(r.getName()))) {
+            return true;
+        }
+        OrganizationEntry org = orgManager.assertAccess(project.getOrgId(), false);
+        return (project.getOwner() != null && userId.equals(project.getOwner().id()))
+                || (org.getOwner() != null && userId.equals(org.getOwner().id()))
+                || (project.getVisibility() == ProjectVisibility.PUBLIC && userDao.isInOrganization(userId, project.getOrgId()))
+                || projectDao.hasAccessLevel(project.getId(), userId, ResourceAccessLevel.atLeast(ResourceAccessLevel.READER));
     }
 
     public void updateAccessLevel(UUID projectId, Collection<ResourceAccessEntry> entries, boolean isReplace) {
