@@ -41,6 +41,7 @@ import { LoadingDispatch } from '../../../App';
 import RequestErrorActivity from '../RequestErrorActivity';
 import {Link} from "react-router";
 import './styles.css';
+import ProcessCardForm from '../ProcessCardForm';
 
 export interface ExternalProps {
     forceRefresh: any;
@@ -74,12 +75,7 @@ const renderCard = (card: ProcessCardEntry) => {
                         <Modal trigger={<Button basic color='green'>Start process</Button>}>
                             <Modal.Content>
                                 <div className={"ui active embed"}>
-                                    <iframe title={card.id}
-                                            src={`/api/v1/processcard/${card.id}/form`}
-                                            height={"100%"}
-                                            width={"100%"}
-                                            frameBorder={0}
-                                            allowFullScreen={true}/>
+                                    <ProcessCardForm cardId={card.id} />
                                 </div>
                             </Modal.Content>
                         </Modal>
