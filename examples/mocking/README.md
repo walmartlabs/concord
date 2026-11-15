@@ -1,5 +1,5 @@
-Example of how to replace a runtime dependency with a "mock" version.
-Can be useful for testing flows.
+This example shows how to replace a runtime dependency with a mock version.
+Use this example to test flows.
 
-Note the ` -F activeProfiles=test` in `run.sh` -- activates the test
-profile which loads the task replacement.
+The `-F activeProfiles=test` option in `run.sh` activates the test profile.
+The profile loads the task replacement.

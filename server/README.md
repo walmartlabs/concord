@@ -1,11 +1,8 @@
 # Concord Server
 
-- [db](./db) - main database module, included into [impl](./impl)
-to autorollout on start;
-- [dist](./dist) - the server's distribution. Includes the main
-module, the default cfg file and core plugins;
-- [impl](./impl) - main app module;
-- [plugins](./plugins) - core server-side plugins;
-- [queue-client](./queue-client) - WebSocket based client for
-the process queue. Used by the Agent;
-- [sdk](./sdk) - set of APIs for server plugins.
+- [db](./db) contains the primary database module. The [impl](./impl) module includes it to run automatic rollouts at startup.
+- [dist](./dist) contains the server distribution, the primary module, the default configuration file, and core plugins.
+- [impl](./impl) contains the primary application module.
+- [plugins](./plugins) contains core server-side plugins.
+- [queue-client](./queue-client) contains a WebSocket client for the process queue. The Agent uses this client.
+- [sdk](./sdk) provides APIs for server plugins.

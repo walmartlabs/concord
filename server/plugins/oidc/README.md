@@ -1,10 +1,10 @@
 # OpenID Connect Integration
 
-Adds support for authentication using OpenID Connect.
+This plugin adds support for authentication with OpenID Connect.
 
 ## Usage
 
-Add the necessary parameters to the Server's configuration file. Example for [Okta](https://www.okta.com/):
+Add the required parameters to the server configuration file. The following example uses [Okta](https://www.okta.com/):
 
 ```
 concord-server {
@@ -23,26 +23,22 @@ concord-server {
 }
 ```
 
-For running in development mode (i.e. on `localhost`), callback URLs must be
-in the form of
+For development on `localhost`, use this callback URL:
 
 ```
 http://localhost:8001/api/service/oidc/callback?client_name=oidc
 ```
 
-Note the `client_name=oidc` query parameter, it is required by the plugin and
-must be present in the provider's configuration.
-
-The plugin uses the following scopes: `openid`, `profile`, `email`, `groups`.
-Which may or may not be enabled by default in the provider's configuration.
-
-Okta, for example, does not provide the `groups` scope by default. You can
-add it in the "Security" -> "API" -> "Authorization Servers" -> your_server ->
-"Scope" section.
+The plugin requires the `client_name=oidc` query parameter.
+Include this parameter in the provider configuration.
+The plugin uses these scopes: `openid`, `profile`, `email`, and `groups`.
+The provider might not enable all these scopes by default.
+For example, Okta does not provide the `groups` scope by default.
+To add this scope, go to "Security" -> "API" -> "Authorization Servers" -> your_server -> "Scope".
 
 ### Interactive Login
 
-Configure the Concord Console to use custom logout/login URLs:
+Configure the Concord Console to use custom login and logout URLs:
 - create a `cfg.js` (use [the default file](../../../console2/public/cfg.js) as an example):
   ```javascript
   window.concord = {
@@ -50,20 +46,18 @@ Configure the Concord Console to use custom logout/login URLs:
       logoutUrl: '/api/service/oidc/logout'
   };
   ```
-- mount in into the Server's container:
+- mount the file in the server container:
   ```
   docker run ... -v /path/to/cfg.js:/opt/concord/console/cfg.js:ro walmartlabs/concord-server
   ```
 
-When accessing the Concord Console you should be redirected to the OpenID Connect
-provider's sign-in page.
+When you access the Concord Console, the browser redirects you to the OpenID Connect provider's sign-in page.
 
 ### API Tokens
 
-- get an access token from the ID provider. For Okta, you can use
-[the implicit flow](https://developer.okta.com/docs/guides/implement-implicit/use-flow/).
-The token must allow `openid`, `email` and `profile` scopes;
-- call a Concord API endpoint using the token:
+- Get an access token from the identity provider. For Okta, you can use [the implicit flow](https://developer.okta.com/docs/guides/implement-implicit/use-flow/).
+  The token must allow the `openid`, `email`, and `profile` scopes.
+- Call a Concord API endpoint with the token:
   ```
   curl -ik -H 'Authorization: Bearer TOKEN' http://localhost:8001/api/service/console/whoami
   ```

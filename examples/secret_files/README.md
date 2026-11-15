@@ -1,10 +1,10 @@
 # Secrets
 
-Example of exporting "secrets" as files.
+This example shows how to export secrets as files.
 
 ## Running
 
-1. upload a couple of files as secrets:
+1. Upload two files as secrets:
 ```
 $ curl -u AD_USERNAME -F name=myFileA -F type=DATA -F storePassword=12345678 -F data=@myFileA.txt 'http://localhost:8001/api/v1/org/Default/secret'
 $ curl -u AD_USERNAME -F name=myFileB -F type=DATA -F storePassword=12345678 -F data=@myFileB.txt 'http://localhost:8001/api/v1/org/Default/secret'
@@ -17,9 +17,9 @@ $ curl -u AD_USERNAME -F name=myFileB -F type=DATA -F storePassword=12345678 -F 
 }
 ```
 
-The `storePassword` value is the password you must use to decrypt/export the secret later.
+The `storePassword` value is the password to use later to decrypt or export the secret.
 
-2. start the process:
+2. Start the process:
 ```
 $ ./run.sh localhost:8001
 {
@@ -28,8 +28,8 @@ $ ./run.sh localhost:8001
 }
 ```
 
-3. open [the UI](http://localhost:8001), find the process entry and
-open its log. You should see messages like these:
+3. Open [the UI](http://localhost:8001). Find the process entry and
+open its log. Check the log for messages like these:
 ```
 13:51:54 [INFO ] My file A: .tmp/file698533367913439655.bin
 13:51:54 [INFO ] My file B: .tmp/file4802153809032830974.bin

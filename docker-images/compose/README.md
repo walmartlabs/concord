@@ -1,6 +1,6 @@
 # Running Concord with Docker Compose
 
-Requires [docker-compose](https://docs.docker.com/compose/) >= 1.26.x.
+This setup requires [Docker Compose](https://docs.docker.com/compose/) version 1.26.x or later.
 
 ## Usage
 
@@ -8,6 +8,6 @@ Requires [docker-compose](https://docs.docker.com/compose/) >= 1.26.x.
 $ docker-compose up
 ```
 
-The Server generates the default admin API token on the first start up - check
-the logs. Use http://localhost:8001/#/login?useApiKey=true to access the
-Concord UI with an API key.
+On the first start, the Server generates the default admin API token. Check the
+logs to find the token. Use http://localhost:8001/#/login?useApiKey=true to
+open the Concord UI with an API key.

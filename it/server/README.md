@@ -2,32 +2,32 @@
 
 ## Running
 
-The server Docker integration tests can be run with:
+Run the server Docker integration tests with:
 
 ```shell
 ./mvnw verify -Pit -Pdocker -pl it/server -Dit.test=DockerIT,DockerAnsibleIT
 ```
 
-With `-Pdocker`, Docker starts the outer DB, server, and agent containers plus
-a privileged Docker-in-Docker daemon. Maven runs these tests on the host; only
-Docker task containers started by Concord flows run inside the managed daemon.
-The daemon is accessed through a Unix socket shared with the agent, and both
-share `${tmp.dir}` at the same absolute path. The harness transfers the locally
-built `concord-ansible` image to the daemon.
+With `-Pdocker`, Docker starts the outer DB, Server, and Agent containers, plus
+a privileged Docker-in-Docker daemon. Maven runs the tests on the host.
+Concord flows start Docker task containers inside the managed daemon only.
+The agent accesses the daemon through a shared Unix socket. The agent and
+daemon share `${tmp.dir}` at the same absolute path. The harness transfers the
+locally built `concord-ansible` image to the daemon.
 
-When running a server and agent manually, configure the agent with its own
-reachable Docker endpoint.
+When you run a Server and Agent manually, configure the Agent to use a Docker
+endpoint that it can reach.
 
 ## OpenLDAP tests
 
 To run tests such as [LdapIT](./src/test/java/com/walmartlabs/concord/it/server/LdapIT.java)
 locally:
-- start the OpenLDAP docker container:
+- Start the OpenLDAP Docker container:
   ```
   $ docker run -it --rm -p 1389:389 osixia/openldap
   ```
-- start the DB and Concord Agent as usual;
-- run the server with the following `ldap` configuration:
+- Start the DB and Concord Agent as usual.
+- Run the Server with this `ldap` configuration:
   ```
   ldap {
       url = "ldap://localhost:1389"
@@ -41,7 +41,7 @@ locally:
       systemPassword = "admin"
   }
   ```
-- run the test with `IT_LDAP_URL` environment variable:
+- Run the test with the `IT_LDAP_URL` environment variable:
   ```
   IT_LDAP_URL=ldap://localhost:1389
   ```

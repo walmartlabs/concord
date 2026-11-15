@@ -1,4 +1,4 @@
 # HTTP Task
 
-A simple example of interacting with a REST endpoint with the HTTP task.
+This example shows how to use the HTTP task to call a REST endpoint.
 

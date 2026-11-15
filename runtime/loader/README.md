@@ -1,4 +1,4 @@
 # Process Loader
 
-A common `ProcessDefinition` loader for both runtime v1 and v2.
+This module loads `ProcessDefinition` objects for runtime v1 and runtime v2.
 
