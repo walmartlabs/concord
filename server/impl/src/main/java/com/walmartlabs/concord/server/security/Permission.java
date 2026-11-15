@@ -50,7 +50,13 @@ public enum Permission {
     /**
      * Permission to connect a websocket as an agent
      */
-    AGENT_WEBSOCKET("agentWebsocket"),;
+    AGENT_WEBSOCKET("agentWebsocket"),
+    /**
+     * Permission to scrape the Prometheus endpoint when metrics authentication is enabled.
+     * <p>
+     * As in {@code com/walmartlabs/concord/server/db/v2.48.0.xml}
+     */
+    READ_METRICS("readMetrics");
 
     private final String key;
 
