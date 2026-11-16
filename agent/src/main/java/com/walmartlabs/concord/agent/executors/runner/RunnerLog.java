@@ -42,6 +42,10 @@ public class RunnerLog implements ProcessLog {
         redirectedLog.run(stopCondition);
     }
 
+    public long remainingBytes() {
+        return redirectedLog.remainingBytes();
+    }
+
     @Override
     public void delete() {
         redirectedLog.delete();
