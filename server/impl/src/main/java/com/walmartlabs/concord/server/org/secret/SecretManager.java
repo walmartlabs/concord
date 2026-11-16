@@ -138,6 +138,8 @@ public class SecretManager {
             }
         }
 
+        OrganizationEntry org = orgManager.assertReadAccess(e.getOrgId());
+
         if (Roles.isAdmin()) {
             // an admin can access any secret
             return e;
@@ -164,7 +166,6 @@ public class SecretManager {
             return e;
         }
 
-        OrganizationEntry org = orgManager.assertAccess(e.getOrgId(), false);
         if (ResourceAccessUtils.isSame(p, org.getOwner())) {
             // the org owner can do anything with the org's secrets
             return e;
@@ -517,6 +518,8 @@ public class SecretManager {
      * Returns a list of secrets for the specified organization.
      */
     public List<SecretEntryV2> list(UUID orgId, int offset, int limit, String filter) {
+        orgManager.assertReadAccess(orgId);
+
         UserPrincipal p = UserPrincipal.assertCurrent();
         UUID userId = p.getId();
         if (Roles.isAdmin() || Roles.isGlobalReader() || Roles.isGlobalWriter()) {
