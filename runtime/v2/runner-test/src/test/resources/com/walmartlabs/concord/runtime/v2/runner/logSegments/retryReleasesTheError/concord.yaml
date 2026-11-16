@@ -1,0 +1,9 @@
+flows:
+  default:
+    - name: "retried"
+      task: "failOnceTask"
+      retry:
+        times: 1
+        delay: 1
+
+    - task: "stateReferencesErrorTask"

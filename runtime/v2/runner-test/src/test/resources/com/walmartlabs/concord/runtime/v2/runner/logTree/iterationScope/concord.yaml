@@ -1,0 +1,29 @@
+flows:
+  default:
+    - name: outer ${item}
+      call: inner
+      loop:
+        items: [a, b]
+        mode: parallel
+      retry:
+        times: 1
+        delay: 0
+  inner:
+    - name: check variables
+      script: groovy
+      body: |
+        assert !context.variables().toMap().keySet().any { it.startsWith('__log_iteration_') }
+      retry:
+        times: 1
+        delay: 0
+    - name: nested ${item}
+      task: conditionallyFailTask
+      in:
+        fail: true
+      loop:
+        items: [x, y]
+      retry:
+        times: 1
+        delay: 0
+        in:
+          fail: false

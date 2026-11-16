@@ -1,0 +1,13 @@
+flows:
+  default:
+    - name: "failed"
+      task: "faultyTask"
+      error:
+        - task: "suspendTask"
+          in:
+            eventName: "ev"
+
+        - name: "after resume"
+          task: "log"
+          in:
+            msg: "resumed"

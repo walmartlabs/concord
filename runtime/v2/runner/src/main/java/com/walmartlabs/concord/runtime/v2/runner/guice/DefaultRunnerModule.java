@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
+import com.walmartlabs.concord.runtime.v2.runner.vm.LogSegmentLifecycleListener;
 import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.runtime.v2.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
@@ -81,5 +82,6 @@ public class DefaultRunnerModule extends AbstractModule {
         executionListeners.addBinding().to(OutVariablesProcessor.class);
         executionListeners.addBinding().to(SensitiveDataPersistenceService.class);
         executionListeners.addBinding().to(StackTraceCollector.class);
+        executionListeners.addBinding().to(LogSegmentLifecycleListener.class);
     }
 }
