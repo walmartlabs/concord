@@ -48,6 +48,20 @@ public class PlaybookScriptBuilder {
             "'" + TaskParams.DOCKER_IMAGE_KEY.getKey() + "' option." +
             "\" ; exit 1; }";
 
+    private static final String VENV_CMD = "python3";
+    private static final String VENV_AVAILABLE = VENV_CMD + " -c 'import venv, ensurepip' >/dev/null 2>&1";
+    private static final String MISSING_VENV_CHECK =
+            VENV_AVAILABLE + " || { echo \"" +
+            "Can't find python3 with the venv module in \\$PATH. Install a local copy, use " +
+            "'" + TaskParams.DOCKER_IMAGE_KEY.getKey() + "' option or set the virtualenv 'tool' to 'virtualenv'." +
+            "\" ; exit 1; }";
+
+    private static final String MISSING_VENV_AND_VIRTUALENV_CHECK =
+            "command -v " + VIRTUALENV_CMD + " >/dev/null 2>&1 || { echo \"" +
+            "Can't find python3 with the venv module or virtualenv binary in \\$PATH. Install a local copy or use " +
+            "'" + TaskParams.DOCKER_IMAGE_KEY.getKey() + "' option." +
+            "\" ; exit 1; }";
+
     private final String playbook;
     private List<String> inventories;
     private final Path workDir;
@@ -254,15 +268,32 @@ public class PlaybookScriptBuilder {
                 .append("set -e").append("\n");
 
         if (virtualenv.isEnabled()) {
-            if (!skipCheckBinary) {
-                sb.append(MISSING_VIRTUALENV_CHECK).append("\n");
-            }
-
             String virtualenvDir = workDir.relativize(virtualenv.getTargetDir()).toString();
+            String venvCreate = VENV_CMD + " -m venv --system-site-packages " + virtualenvDir;
+            String virtualenvCreate = VIRTUALENV_CMD + " --no-download --system-site-packages " + virtualenvDir;
 
-            sb.append("virtualenv --no-download --system-site-packages ")
-                    .append(virtualenvDir)
-                    .append("\n");
+            Virtualenv.Tool tool = virtualenv.getTool();
+            if (tool == Virtualenv.Tool.VENV) {
+                if (!skipCheckBinary) {
+                    sb.append(MISSING_VENV_CHECK).append("\n");
+                }
+                sb.append(venvCreate).append("\n");
+            } else if (tool == Virtualenv.Tool.VIRTUALENV) {
+                if (!skipCheckBinary) {
+                    sb.append(MISSING_VIRTUALENV_CHECK).append("\n");
+                }
+                sb.append(virtualenvCreate).append("\n");
+            } else {
+                // no explicit tool: prefer the builtin venv, fall back to virtualenv
+                sb.append("if ").append(VENV_AVAILABLE).append("; then").append("\n")
+                        .append("  ").append(venvCreate).append("\n")
+                        .append("else").append("\n");
+                if (!skipCheckBinary) {
+                    sb.append("  ").append(MISSING_VENV_AND_VIRTUALENV_CHECK).append("\n");
+                }
+                sb.append("  ").append(virtualenvCreate).append("\n")
+                        .append("fi").append("\n");
+            }
 
             sb.append("source ").append(virtualenvDir).append("/bin/activate")
                     .append("\n");
