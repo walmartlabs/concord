@@ -34,7 +34,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ProcessWaitManager {
 
@@ -62,10 +61,24 @@ public class ProcessWaitManager {
     }
 
     /**
-     * @see #addWait(DSLContext, ProcessKey, AbstractWaitCondition)
+     * @see #addWait(DSLContext, ProcessKey, AbstractWaitCondition, int)
      */
-    public void addWait(ProcessKey processKey, AbstractWaitCondition wait) {
-        processWaitDao.tx(tx -> addWait(tx, processKey, wait));
+    public int addWait(ProcessKey processKey, AbstractWaitCondition wait, int maxWaits) {
+        int[] result = new int[1];
+        processWaitDao.tx(tx -> result[0] = addWait(tx, processKey, wait, maxWaits));
+        return result[0];
+    }
+
+    /**
+     * Add the process' wait conditions. Fails if adding would exceed the max limit.
+     * @return the number of rows updated (0 if the add failed due to max limit).
+     */
+    public int addWait(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait, int maxWaits) {
+        int updated = processWaitDao.addWait(tx, processKey, wait, maxWaits);
+        if (updated > 0) {
+            eventManager.event(tx, Collections.singletonList(buildEvent(processKey, Collections.singletonList(wait), "add")));
+        }
+        return updated;
     }
 
     /**
@@ -93,7 +106,7 @@ public class ProcessWaitManager {
         if (waits != null && !waits.isEmpty()) {
             data.put("waits", waits.stream()
                     .map(objectMapper::convertToMap)
-                    .collect(Collectors.toList()));
+                    .toList());
         }
         data.put("action", action);
         return NewProcessEvent.builder()

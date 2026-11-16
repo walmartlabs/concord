@@ -87,6 +87,14 @@ public class ProcessConfiguration implements Serializable {
     private boolean checkLogPermissions;
 
     @Inject
+    @Config("process.waitLimitProcessExternalEventCount")
+    private int waitLimitProcessExternalEventCount;
+
+    @Inject
+    @Config("process.waitLimitProcessExternalEventVarsSize")
+    private int waitLimitProcessExternalEventVarsSize;
+
+    @Inject
     public ProcessConfiguration(@Config("process.signingKeyPath") @Nullable String signingKeyPath) {
         this.signingKeyPath = signingKeyPath != null ? Paths.get(signingKeyPath) : null;
     }
@@ -146,5 +154,13 @@ public class ProcessConfiguration implements Serializable {
 
     public boolean isCheckLogPermissions() {
         return checkLogPermissions;
+    }
+
+    public int waitLimitProcessExternalEventCount() {
+        return waitLimitProcessExternalEventCount;
+    }
+
+    public int waitLimitProcessExternalEventVarsSize() {
+        return waitLimitProcessExternalEventVarsSize;
     }
 }

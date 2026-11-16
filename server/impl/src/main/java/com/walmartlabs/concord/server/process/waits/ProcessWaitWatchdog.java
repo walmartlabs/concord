@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.waits;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
@@ -30,12 +31,13 @@ import com.walmartlabs.concord.server.cfg.ProcessWaitWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessWaitConditions;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.immutables.value.Value;
 import org.jooq.Configuration;
 import org.jooq.JSONB;
-import org.jooq.Record5;
+import org.jooq.Record6;
 import org.jooq.SelectConditionStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +49,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
 import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.WaitConditionItem;
 import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.Result;
@@ -141,6 +144,11 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                 continue;
             }
 
+            if (p.status() != ProcessStatus.SUSPENDED && p.status() != ProcessStatus.WAITING) {
+                log.warn("Skipping wait processing for process '{}', because it's in status '{}'", p.processKey().getInstanceId(), p.status());
+                continue; // invalid state, process may have created waits for across multiple threads
+            }
+
             Set<String> resumeEvents = resultForProcess.stream()
                     .map(Result::resumeEvent)
                     .filter(Objects::nonNull)
@@ -154,6 +162,11 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             if (p.waits().equals(resultWaits)) {
                 continue;
             }
+
+            Map<String, Object> resumeVars = resultForProcess.stream()
+                    .map(Result::resumeVariables)
+                    .filter(Objects::nonNull)
+                    .reduce(new LinkedHashMap<>(), ConfigurationUtils::deepMerge);
 
             try {
                 boolean updated = processWaitManager.txResult(tx -> {
@@ -170,7 +183,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
                 if (updated && !resumeEvents.isEmpty()) {
                     log.info("processWaits ['{}', '{}', {}] -> resume", p.processKey(), resultWaits, p.version());
-                    resumeProcess(p.processKey(), resumeEvents);
+                    resumeProcess(p.processKey(), resumeEvents, Map.of("arguments", resumeVars));
                 }
             } catch (Exception e) {
                 log.info("processWaits ['{}'] -> error", p, e);
@@ -185,7 +198,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             log.warn("processBatch ['{}'] -> handler not found", type);
             return waitConditions.stream()
                     .map(w -> Result.of(w.processKey(), w.waitConditionId(), null))
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         try {
@@ -197,10 +210,10 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     }
 
     @WithTimer
-    void resumeProcess(ProcessKey key, Set<String> events) {
+    void resumeProcess(ProcessKey key, Set<String> events, Map<String, Object> req) {
         Payload payload;
         try {
-            payload = payloadManager.createResumePayload(key, events, null);
+            payload = payloadManager.createResumePayload(key, events, req);
         } catch (ProcessException e) {
             if (e.getStatus() == Response.Status.NOT_FOUND) {
                 log.info("resumeProcess ['{}'] -> can't resume: {}. killing process", key, e.getMessage());
@@ -217,7 +230,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     }
 
     private static Map<WaitType, List<WaitConditionItem<AbstractWaitCondition>>> toBatches(List<WaitingProcess> processes) {
-        Map<WaitType, List<WaitConditionItem<AbstractWaitCondition>>> result = new HashMap<>();
+        Map<WaitType, List<WaitConditionItem<AbstractWaitCondition>>> result = new EnumMap<>(WaitType.class);
 
         for (WaitingProcess p : processes) {
             boolean hasExclusive = p.waits().stream().anyMatch(AbstractWaitCondition::exclusive);
@@ -242,7 +255,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         }
         return result.stream()
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Value.Immutable
@@ -255,6 +268,8 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         List<AbstractWaitCondition> waits();
 
         long version();
+
+        ProcessStatus status();
 
         static ImmutableWaitingProcess.Builder builder() {
             return ImmutableWaitingProcess.builder();
@@ -279,13 +294,15 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             return txResult(tx -> {
                 ProcessWaitConditions w = PROCESS_WAIT_CONDITIONS.as("w");
 
-                SelectConditionStep<Record5<UUID, OffsetDateTime, Long, JSONB, Long>> s = tx.select(
+                SelectConditionStep<Record6<UUID, OffsetDateTime, Long, JSONB, Long, String>> s = tx.select(
                                 w.INSTANCE_ID,
                                 w.INSTANCE_CREATED_AT,
                                 w.ID_SEQ,
                                 w.WAIT_CONDITIONS,
-                                w.VERSION)
+                                w.VERSION,
+                                PROCESS_QUEUE.CURRENT_STATUS)
                         .from(w)
+                        .innerJoin(PROCESS_QUEUE).on(PROCESS_QUEUE.INSTANCE_ID.eq(w.INSTANCE_ID))
                         .where(w.IS_WAITING.eq(true));
 
                 if (lastId != null) {
@@ -299,6 +316,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                                 .id(r.value3())
                                 .waits(objectMapper.fromJSONB(r.value4(), WAIT_LIST))
                                 .version(r.value5())
+                                .status(ProcessStatus.valueOf(r.get(PROCESS_QUEUE.CURRENT_STATUS)))
                                 .build());
             });
         }
