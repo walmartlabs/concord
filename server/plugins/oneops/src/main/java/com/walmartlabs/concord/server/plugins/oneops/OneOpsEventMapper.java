@@ -20,13 +20,11 @@ package com.walmartlabs.concord.server.plugins.oneops;
  * =====
  */
 
-import com.walmartlabs.concord.server.events.DefaultEventFilter;
-import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
-import com.walmartlabs.concord.server.org.triggers.TriggersDao;
+import com.walmartlabs.concord.server.sdk.events.ExternalEvent;
 
 import java.util.*;
 
-public abstract class OneOpsTriggerProcessor {
+final class OneOpsEventMapper {
 
     private static final String ORG_KEY = "org";
     private static final String ASM_KEY = "asm";
@@ -42,30 +40,16 @@ public abstract class OneOpsTriggerProcessor {
     private static final String AUTHOR_KEY = "author";
     private static final String EVENT_SOURCE = "oneops";
 
-    private final TriggersDao triggersDao;
-    private final int version;
-
-    public OneOpsTriggerProcessor(TriggersDao triggersDao, int version) {
-        this.triggersDao = triggersDao;
-        this.version = version;
+    private OneOpsEventMapper() {
     }
 
-    public void process(Map<String, Object> event, List<Result> result) {
-        List<TriggerEntry> triggers = triggersDao.list(EVENT_SOURCE, version);
-
-        Map<String, Object> triggerConditions = buildConditions(event);
-        enrichTriggerConditions(triggerConditions, version);
-        Map<String, Object> triggerEvent = buildTriggerEvent(event, triggerConditions);
-
-        for (TriggerEntry triggerEntry : triggers) {
-            if (DefaultEventFilter.filter(triggerConditions, triggerEntry)) {
-                result.add(Result.from(triggerEvent, triggerEntry));
-            }
-        }
-    }
-
-    private static void enrichTriggerConditions(Map<String, Object> triggerConditions, Integer version) {
-        triggerConditions.put("version", version);
+    static ExternalEvent map(String eventId, Map<String, Object> event, int version) {
+        Map<String, Object> conditions = buildConditions(event);
+        conditions.put("version", version);
+        Map<String, Object> attributes = buildTriggerEvent(event, conditions);
+        Object author = conditions.get(AUTHOR_KEY);
+        return new ExternalEvent(EVENT_SOURCE, eventId, version, conditions, attributes,
+                author != null ? author.toString() : null);
     }
 
     private static Map<String, Object> buildTriggerEvent(Map<String, Object> event,
@@ -181,27 +165,4 @@ public abstract class OneOpsTriggerProcessor {
         }
     }
 
-    public static class Result {
-
-        private final Map<String, Object> event;
-
-        private final List<TriggerEntry> triggers;
-
-        public Result(Map<String, Object> event, List<TriggerEntry> triggers) {
-            this.event = event;
-            this.triggers = triggers;
-        }
-
-        public Map<String, Object> event() {
-            return event;
-        }
-
-        public List<TriggerEntry> triggers() {
-            return triggers;
-        }
-
-        static Result from(Map<String, Object> event, TriggerEntry trigger) {
-            return new OneOpsTriggerProcessor.Result(event, Collections.singletonList(trigger));
-        }
-    }
 }
