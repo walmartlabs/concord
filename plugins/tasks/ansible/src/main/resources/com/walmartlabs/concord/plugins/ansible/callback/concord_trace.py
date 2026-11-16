@@ -63,5 +63,5 @@ class CallbackModule(CallbackBase):
     def v2_playbook_on_start(self, playbook):
         self.playbook = playbook
 
-    def playbook_on_stats(self, stats):
+    def v2_playbook_on_stats(self, stats):
         self.log(ConcordAnsibleStats.build_stats_data(stats))
