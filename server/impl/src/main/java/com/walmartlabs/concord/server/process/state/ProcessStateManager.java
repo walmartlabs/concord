@@ -29,6 +29,7 @@ import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.policyengine.StatePolicy;
 import com.walmartlabs.concord.policyengine.StateRule;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.policy.PolicyException;
@@ -72,6 +73,8 @@ import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static org.jooq.impl.DSL.*;
 
 public class ProcessStateManager extends AbstractDao {
+
+    public static final String POLICY_FILE_PATH = path(Constants.Files.CONCORD_SYSTEM_DIR_NAME, Constants.Files.POLICY_FILE_NAME);
 
     private static final Logger log = LoggerFactory.getLogger(ProcessStateManager.class);
 
@@ -352,16 +355,20 @@ public class ProcessStateManager extends AbstractDao {
     }
 
     private void doImportPath(DSLContext tx, ProcessStateTable table, ProcessKey processKey, String path, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {
-        PolicyEngine policyEngine = assertPolicy(tx, processKey, src, filter);
-
         String prefix = fixPath(path);
+        Path target = Paths.get(prefix != null ? prefix : "");
+        // Policies are generated at download time, including for states created by older servers.
+        BiFunction<Path, BasicFileAttributes, Boolean> importFilter = (file, attrs) ->
+                !POLICY_FILE_PATH.equals(target.resolve(src.relativize(file)).normalize().toString())
+                        && filter.apply(file, attrs);
+        PolicyEngine policyEngine = assertPolicy(tx, processKey, src, importFilter);
 
         List<BatchItem> batch = new ArrayList<>();
         try {
             Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    if (!filter.apply(file, attrs)) {
+                    if (!importFilter.apply(file, attrs)) {
                         return FileVisitResult.CONTINUE;
                     }
 

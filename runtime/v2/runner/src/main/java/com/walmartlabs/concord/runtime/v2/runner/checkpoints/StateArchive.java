@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 public class StateArchive implements AutoCloseable {
 
@@ -74,7 +75,7 @@ public class StateArchive implements AutoCloseable {
                 Files.createDirectories(dst);
             }
 
-            PathUtils.copy(src, dst);
+            PathUtils.copy(src, dst, Pattern.quote(Constants.Files.POLICY_FILE_NAME));
         } catch (IOException e) {
             throw new RuntimeException("Error while copying the process' system directory: " + e.getMessage(), e);
         }

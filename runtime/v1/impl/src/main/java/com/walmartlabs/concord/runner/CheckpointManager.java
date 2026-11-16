@@ -36,6 +36,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 public class CheckpointManager {
 
@@ -63,7 +64,8 @@ public class CheckpointManager {
             try (TemporaryPath checkpointFile = new TemporaryPath(checkpointDir.resolve(checkpointId + "_" + checkpointName + ".zip"))) {
                 try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(checkpointFile.path()))) {
                     ZipUtils.zip(zip, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME + "/", baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME));
-                    ZipUtils.zip(zip, InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME + "/", baseDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME));
+                    ZipUtils.zip(zip, InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME + "/",
+                            baseDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME), Pattern.quote(Constants.Files.POLICY_FILE_NAME));
                     ZipUtils.zipFile(zip, checkpointMeta, Constants.Files.CHECKPOINT_META_FILE_NAME);
                 }
 
