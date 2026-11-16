@@ -34,14 +34,23 @@ interface Props {
 export default ({ error }: Props) => {
     const location = useLocation();
 
+    const loginUrl = error?.status === 401 ? window.concord?.loginUrl : undefined;
+
+    React.useEffect(() => {
+        if (!loginUrl) {
+            return;
+        }
+
+        const requested = new URL(window.location.href).hash;
+        // Delay the redirect to avoid layout issues; cancel it when this error is no longer shown.
+        const timer = window.setTimeout(() => {
+            window.location.href = setQueryParam(loginUrl, 'from', '/' + requested);
+        }, 1000);
+        return () => window.clearTimeout(timer);
+    }, [loginUrl]);
+
     if (error && error.status === 401) {
-        const loginUrl = window.concord?.loginUrl;
         if (loginUrl) {
-            const requested = new URL(window.location.href).hash;
-            // delay the redirect to avoid layout issues
-            setTimeout(() => {
-                window.location.href = setQueryParam(loginUrl, 'from', '/' + requested);
-            }, 1000);
 
             return (
                 <Dimmer active={true} inverted={true} page={true}>
