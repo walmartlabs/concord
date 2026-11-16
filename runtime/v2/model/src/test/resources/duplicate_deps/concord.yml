@@ -1,0 +1,4 @@
+configuration:
+  dependencies:
+    - "mvn://com.example:test:1.0.0"
+    - "mvn://com.example:test:1.0.0"
