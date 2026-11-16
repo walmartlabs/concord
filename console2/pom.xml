@@ -85,7 +85,7 @@
                     <environmentVariables>
                         <ADBLOCK>true</ADBLOCK> <!-- disable annoying npm postinstall messages -->
                     </environmentVariables>
-                    <installDirectory>target</installDirectory>
+                    <installDirectory>${project.basedir}/.frontend</installDirectory>
                     <nodeDownloadRoot>${node.downloadRoot}</nodeDownloadRoot>
                     <nodeVersion>v${node.version}</nodeVersion>
                     <workingDirectory>${basedir}</workingDirectory>
