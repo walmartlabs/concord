@@ -62,14 +62,12 @@ spec:
           payloadDir = "/tmp/concord/payload"
           logDir = "/tmp/concord/logs"
           repositoryCache {
-              cacheDir = "/tmp/concord/repos"
-              cacheInfoDir = "/tmp/concord/repos_info"
+              cacheDir = "/tmp/concord/repoCache"
+              cacheInfoDir = "/tmp/concord/repoCacheInfo"
           }
 
-          # the runner configuration files are named after their content hash, so all runtimes
-          # can safely share one directory
           runner {
-              cfgDir = "/tmp/concord/cfgDir"
+              cfgDir = "/tmp/concord/cfg"
           }
 
           server {

@@ -106,12 +106,14 @@ the cluster role binding (modify the commands according to your namespace):
 4. Check the operator's pod logs;
 5. Deploy one or more CRs using `deploy/crds/example.agentpool.yml` as a template.
 
-   Keep the directory settings in the template's `agent.conf` (`dependencyCacheDir`,
-   `dependencyListsDir`, `payloadDir`, `logDir`, `repositoryCache.*` and `runner.cfgDir`).
-   They are fixed absolute paths under `/tmp`. With relative or missing paths the agent
-   creates new, randomly named directories on every start and never removes the old ones.
-   As `/tmp` is a volume that survives container restarts, each restart would leave a
-   full set of caches behind until the pod runs out of ephemeral storage.
+### Configuration Notes
+
+Keep the directory settings in the template's `agent.conf` (`dependencyCacheDir`,
+`dependencyListsDir`, `payloadDir`, `logDir`, `repositoryCache.*` and `runner.cfgDir`).
+They are fixed absolute paths under `/tmp`. With relative or missing paths the agent
+creates new, randomly named directories on every start and never removes the old ones.
+As `/tmp` is a volume that survives container restarts, each restart would leave a
+full set of caches behind until the pod runs out of ephemeral storage.
 
 ## AgentPool CRD
 
