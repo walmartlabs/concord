@@ -27,7 +27,6 @@ import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.client2.ProcessListFilter;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.PathUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
@@ -44,17 +43,6 @@ import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ProcessIT extends AbstractServerIT {
-
-    @Test
-    @Disabled
-    public void testLotsOfProcesses() throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
-
-        int count = 100;
-        for (int i = 0; i < count; i++) {
-            start(payload);
-        }
-    }
 
     @Test
     public void testTimeout() throws Exception {
