@@ -46,6 +46,8 @@ const pathToTab = (s: string): TabLink => {
         return 'events';
     } else if (s.endsWith('/wait')) {
         return 'wait';
+    } else if (s.endsWith('/notify')) {
+        return 'notify';
     }
 
     return null;
