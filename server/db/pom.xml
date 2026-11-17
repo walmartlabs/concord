@@ -136,7 +136,7 @@
                     </execution>
                     <execution>
                         <id>stop</id>
-                        <phase>prepare-package</phase>
+                        <phase>process-sources</phase>
                         <goals>
                             <goal>stop</goal>
                         </goals>

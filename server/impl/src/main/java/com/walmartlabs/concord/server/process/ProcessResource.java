@@ -77,6 +77,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
@@ -532,22 +533,19 @@ public class ProcessResource implements Resource {
     @GET
     @jakarta.ws.rs.Path("/{id}/attachment/{name:.*}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Validate
     @Operation(description = "Download a process' attachment")
     @ApiResponse(responseCode = "200", description = "File content",
             content = @Content(mediaType = "application/octet-stream",
                     schema = @Schema(type = "string", format = "binary"))
     )
     public Response downloadAttachment(@PathParam("id") UUID instanceId,
-                                       @PathParam("name") @NotNull @Size(min = 1) String attachmentName) {
+                                       @PathParam("name") @NotNull @Size(min = 1)
+                                       @Pattern(regexp = "(?s).*[^/]", message = "Invalid attachment name") String attachmentName) {
 
         ProcessEntry processEntry = processManager.assertProcess(instanceId);
         assertProcessAccessOwner(processEntry, "attachment");
         PartialProcessKey processKey = new ProcessKey(processEntry.instanceId(), processEntry.createdAt());
-
-        // TODO replace with jakarta.validation
-        if (attachmentName.endsWith("/")) {
-            throw new ConcordApplicationException("Invalid attachment name: " + attachmentName, Status.BAD_REQUEST);
-        }
 
         String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME, attachmentName);
         assertResourceAccess(processEntry, resource);
