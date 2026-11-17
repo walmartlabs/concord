@@ -114,6 +114,7 @@ public class ProcessResource implements Resource {
     private final ProcessKeyCache processKeyCache;
     private final ObjectMapper objectMapper;
     private final ProjectAccessManager projectAccessManager;
+    private final ProcessAccessManager processAccessManager;
     private final ProcessConfiguration processCfg;
     private final ProcessLogManager logManager;
     private final ProcessLogAccessManager logAccessManager;
@@ -134,6 +135,7 @@ public class ProcessResource implements Resource {
                            SecretStoreConfiguration secretStoreCfg,
                            EncryptedProjectValueManager encryptedValueManager,
                            ProjectAccessManager projectAccessManager,
+                           ProcessAccessManager processAccessManager,
                            ProcessKeyCache processKeyCache,
                            ObjectMapper objectMapper,
                            ProcessConfiguration processCfg,
@@ -154,6 +156,7 @@ public class ProcessResource implements Resource {
         this.secretStoreCfg = requireNonNull(secretStoreCfg);
         this.encryptedValueManager = requireNonNull(encryptedValueManager);
         this.projectAccessManager = requireNonNull(projectAccessManager);
+        this.processAccessManager = requireNonNull(processAccessManager);
         this.processKeyCache = requireNonNull(processKeyCache);
         this.objectMapper = requireNonNull(objectMapper);
         this.processCfg = requireNonNull(processCfg);
@@ -818,6 +821,7 @@ public class ProcessResource implements Resource {
     )
     public void uploadAttachments(@PathParam("id") UUID instanceId, InputStream data) {
         ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
+        processAccessManager.assertWriteAccess(entry);
         ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
         Path tmpIn = null;

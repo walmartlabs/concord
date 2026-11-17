@@ -35,12 +35,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.walmartlabs.concord.forms.FormUtils.*;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 
 public class FormAccessManager {
@@ -86,13 +88,13 @@ public class FormAccessManager {
 
         UserPrincipal p = UserPrincipal.assertCurrent();
 
-        Set<String> expectedUsers = com.walmartlabs.concord.forms.FormUtils.getRunAsUsers(formName, runAsParams);
+        Set<String> expectedUsers = getRunAsUsers(formName, runAsParams);
         if (!expectedUsers.isEmpty() && !expectedUsers.contains(p.getUsername())) {
             throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
                     "the necessary permissions to access the form.");
         }
 
-        Set<String> formRunAsGroups = com.walmartlabs.concord.forms.FormUtils.getRunAsLdapGroups(formName, runAsParams);
+        Set<String> formRunAsGroups = getRunAsLdapGroups(formName, runAsParams);
         if (!formRunAsGroups.isEmpty()) {
             Set<String> userLdapGroups = Optional.ofNullable(userManager.getCurrentUserInfo())
                     .map(UserInfoProvider.UserInfo::groups)
@@ -106,6 +108,37 @@ public class FormAccessManager {
                         "the necessary permissions to resume process. Expected LDAP group(s) '" + formRunAsGroups + "'");
             }
         }
+    }
+
+    /**
+     * Unlike optional form restrictions, explicit delegation requires at least one recognized
+     * username or LDAP group constraint. All configured restrictions must still match.
+     *
+     * @return false when no explicit delegation is configured
+     * @throws UnauthorizedException when a configured restriction does not match
+     */
+    public boolean assertExplicitFormAccess(String formName, Map<String, ?> runAsParams) {
+        if (runAsParams == null || runAsParams.isEmpty()) {
+            return false;
+        }
+
+        Map<String, Serializable> params = new HashMap<>();
+        runAsParams.forEach((key, value) -> {
+            if (value == null || value instanceof Serializable) {
+                params.put(key, (Serializable) value);
+            } else {
+                throw new IllegalArgumentException("Invalid runAs parameter for form '" + formName + "': " + key);
+            }
+        });
+
+        Set<String> users = getRunAsUsers(formName, params);
+        Set<String> groups = getRunAsLdapGroups(formName, params);
+        if (users.isEmpty() && groups.isEmpty()) {
+            return false;
+        }
+
+        assertFormAccess(formName, params);
+        return true;
     }
 
     // TODO: move to the formManager
