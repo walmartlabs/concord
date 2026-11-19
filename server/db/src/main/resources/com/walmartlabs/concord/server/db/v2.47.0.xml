@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="2470000" author="benjamin.broadaway@walmart.com">
+        <createTable tableName="EXTERNAL_IDENTITIES">
+            <column name="PROVIDER_ID" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="AUTHORITY" type="varchar(512)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="SUBJECT_ID" type="varchar(512)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="USER_ID" type="uuid">
+                <constraints nullable="false" unique="true"
+                             uniqueConstraintName="UK_EXTERNAL_IDENTITIES_USER_ID"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="EXTERNAL_IDENTITIES"
+                       columnNames="PROVIDER_ID, AUTHORITY, SUBJECT_ID"
+                       constraintName="PK_EXTERNAL_IDENTITIES"/>
+        <addForeignKeyConstraint baseTableName="EXTERNAL_IDENTITIES"
+                                 baseColumnNames="USER_ID"
+                                 constraintName="FK_EXTERNAL_IDENTITIES_USER_ID"
+                                 referencedTableName="USERS"
+                                 referencedColumnNames="USER_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="2470010" author="benjamin.broadaway@walmart.com">
+        <addColumn tableName="EXTERNAL_APP_USERS">
+            <column name="IS_AUTHORITATIVE" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

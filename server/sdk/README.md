@@ -15,7 +15,36 @@ verification from authoritative profile and group lookup:
 
 These are foundation contracts only. This module does not register or invoke
 providers, provision external users, persist memberships or change authorization.
-Server-side integration will supply those behaviors separately.
+The server implementation now has persistence primitives described below;
+provider invocation and execution support will be integrated separately.
+
+### Persistence foundation
+
+The server's `ExternalIdentityDao` provisions a disabled `EXTERNAL` user and a
+unique `(providerId, authority, subjectId)` binding in one transaction. Each user
+has at most one binding. Concord generates an opaque username rather than using
+a mutable external login. Repeated provisioning preserves the original user's
+profile and disable state and does not add default teams, roles or memberships.
+
+Persisted references support provider IDs up to 128 characters and authority and
+subject IDs up to 512 characters each. Identity components remain case-sensitive.
+
+Authoritative aliases reuse `EXTERNAL_APP_USERS`. Claiming an alias is idempotent
+for the same user, but conflicts with any other user's mapping. The legacy mapping
+writer retains its existing reassignment behavior for nonauthoritative mappings
+and cannot overwrite an authoritative alias. Deleting a user cascades to its
+binding and aliases.
+
+This is not an execution feature: no external `UserInfoProvider` is registered,
+ordinary user provisioning rejects `EXTERNAL`, and internal impersonation and
+API-key authentication explicitly reject these users even if enabled manually.
+Do not remove these gates until lifecycle, freshness and restricted-delegation
+enforcement are integrated. Membership state and refresh timestamps belong to
+the subsequent synchronization slice.
+
+Upgrade all server nodes before provisioning external identities or claiming
+authoritative aliases. Older nodes do not recognize `EXTERNAL` and their legacy
+mapping writer does not enforce authoritative-alias protection.
 
 ### Identity and trust
 
@@ -74,7 +103,9 @@ Each slice is intended to be a separate branch based on its predecessor:
 3. Membership synchronization and team-only RBAC semantics.
 4. GitHub actor-resolution integration, preserving human mappings and
    `useInitiator` behavior.
-5. Lifecycle and freshness enforcement for new and restored execution contexts.
+5. Lifecycle, freshness and restricted-delegation enforcement for new and restored
+   execution contexts. A shared app's accumulated team grants must not become
+   unrestricted authority for tenant-controlled workflow code.
 6. API and console representation without ordinary manual external provisioning.
 
 Intermediate slices must not enable execution as an external identity before

@@ -25,5 +25,6 @@ public enum UserType {
 
     LOCAL,
     LDAP,
-    SSO
+    SSO,
+    EXTERNAL
 }

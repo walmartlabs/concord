@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.jooq.Tables;
 import com.walmartlabs.concord.server.jooq.tables.records.UsersRecord;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.team.TeamRole;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import org.jooq.*;
 
@@ -185,17 +186,26 @@ public class UserDao extends AbstractDao {
      * of <code>{external_system} + {actual_user_id}</code> to avoid clashing of
      * IDs that are unique to the system but potentially duplicated across other
      * external systems that have been integrated (e.g. multiple GitHub instances).
+     * Existing nonauthoritative mappings may be reassigned, but authoritative
+     * aliases can only be written again for the same user.
      * @param userId existing Concord user ID
      * @param externalId identifier for user in an external system
      */
     public void createExternalUserMapping(UUID userId, String externalId) {
-        tx(tx -> tx.insertInto(EXTERNAL_APP_USERS)
-                .columns(EXTERNAL_APP_USERS.EXTERNAL_USER_ID, EXTERNAL_APP_USERS.USER_ID)
-                .values(externalId, userId)
-                .onConflict(EXTERNAL_APP_USERS.EXTERNAL_USER_ID)
-                .doUpdate()
-                .set(EXTERNAL_APP_USERS.USER_ID, userId)
-                .execute());
+        tx(tx -> {
+            int updated = tx.insertInto(EXTERNAL_APP_USERS)
+                    .columns(EXTERNAL_APP_USERS.EXTERNAL_USER_ID, EXTERNAL_APP_USERS.USER_ID)
+                    .values(externalId, userId)
+                    .onConflict(EXTERNAL_APP_USERS.EXTERNAL_USER_ID)
+                    .doUpdate()
+                    .set(EXTERNAL_APP_USERS.USER_ID, userId)
+                    .where(EXTERNAL_APP_USERS.IS_AUTHORITATIVE.isFalse()
+                            .or(EXTERNAL_APP_USERS.USER_ID.eq(userId)))
+                    .execute();
+            if (updated != 1) {
+                throw new ConcordApplicationException("External alias is already authoritatively bound to another user");
+            }
+        });
     }
 
     /**

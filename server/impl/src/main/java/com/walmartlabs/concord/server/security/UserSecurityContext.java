@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.security;
 import com.walmartlabs.concord.server.security.internal.InternalRealm;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
+import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
@@ -51,6 +52,9 @@ public class UserSecurityContext {
         if (u == null) {
             throw new UnauthorizedException("User '" + userID + "'not found");
         }
+        if (u.getType() == UserType.EXTERNAL) {
+            throw new UnauthorizedException("External identity execution is not enabled");
+        }
 
         try {
             ThreadContext.bind(securityManager);
@@ -76,6 +80,9 @@ public class UserSecurityContext {
     public boolean isPermitted(UUID userId, Permission permission) {
         var user = userManager.get(userId).orElse(null);
         if (user == null) {
+            return false;
+        }
+        if (user.getType() == UserType.EXTERNAL) {
             return false;
         }
 

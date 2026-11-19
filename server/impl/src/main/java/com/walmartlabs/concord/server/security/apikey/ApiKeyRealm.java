@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
+import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAccount;
@@ -68,6 +69,9 @@ public class ApiKeyRealm extends AuthorizingRealm {
             u = userManager.get(t.getUserId()).orElse(null);
             if (u == null) {
                 return null;
+            }
+            if (u.getType() == UserType.EXTERNAL) {
+                throw new AuthenticationException("External identity authentication is not enabled");
             }
 
             if (u.isDisabled()) {
