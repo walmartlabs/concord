@@ -16,7 +16,8 @@ verification from authoritative profile and group lookup:
 These are foundation contracts only. This module does not register or invoke
 providers, provision external users, persist memberships or change authorization.
 The server implementation now has persistence and explicit refresh primitives
-described below. Event integration and execution support remain disabled.
+described below. GitHub event resolution is integrated; external execution
+remains disabled.
 
 ### Persistence foundation
 
@@ -30,7 +31,7 @@ Persisted references support provider IDs up to 128 characters and authority and
 subject IDs up to 512 characters each. Identity components remain case-sensitive.
 
 Authoritative aliases reuse `EXTERNAL_APP_USERS`. Claiming an alias is idempotent
-for the same user, but conflicts with any other user's mapping. The legacy mapping
+for the same user, but conflicts with any other user's mapping. The user mapping
 writer retains its existing reassignment behavior for nonauthoritative mappings
 and cannot overwrite an authoritative alias. Deleting a user cascades to its
 binding and aliases.
@@ -42,7 +43,7 @@ Do not remove these gates until lifecycle, freshness and restricted-delegation
 enforcement are integrated.
 
 Upgrade all server nodes before provisioning external identities or claiming
-authoritative aliases. Older nodes do not recognize `EXTERNAL` and their legacy
+authoritative aliases. Older nodes do not recognize `EXTERNAL` and their
 mapping writer does not enforce authoritative-alias protection.
 
 ### Explicit membership synchronization
@@ -88,6 +89,39 @@ Persisted membership is a cache, not sufficient authorization. A failed refresh
 may leave the last successful membership set in storage; no external execution
 is enabled by this slice, and future use must enforce freshness, source state,
 administrator disable state and restricted delegation before using that cache.
+
+### GitHub event integration
+
+Plugins register `ExternalEventIdentityResolver` using Guice's
+`Multibinder.newSetBinder(binder, ExternalEventIdentityResolver.class)`. With any
+resolver registered, `github.externalIdentityAuthority` must be explicitly
+configured (1 to 512 characters), or server initialization fails. This version
+supports one canonical GitHub authority per webhook endpoint. Keep its signing
+secret exclusive to that authority; multiple independently authenticated
+authorities require separate ingress support, not routing by payload hostname.
+
+For `useInitiator: true`, resolvers run before the user mapping cache,
+LDAP DN, email and login paths. Only all-`Unhandled` outcomes permit those paths.
+Null results, rejection, verification errors, authority mismatches and multiple
+claims fail the initiator lookup rather than selecting a different identity.
+Resolvers receive the original immutable request body captured by the
+authentication filter, not the subsequently parsed or enriched event map.
+Authentication mode comes from the credential path actually accepted by that
+filter, never from signature-header presence alone. Repository-token deliveries
+remain `ENDPOINT_CREDENTIAL` even if they include a signature header.
+
+A resolved external actor is currently rejected explicitly: it is not
+automatically provisioned, refreshed or permitted to execute. Cached mappings to
+`EXTERNAL` users also fail, including when no resolver is installed.
+`useInitiator: false` does not invoke actor resolution and retains the existing
+webhook-principal behavior. With no resolver installed, user-account resolution needs
+no new configuration and preserves its existing behavior. This path includes
+LDAP service accounts, not just people. User-account resolution remains a
+first-class, supported path alongside plugin-managed external actor resolution.
+
+Initiator failures follow the existing trigger executor's logged-error and
+skip-trigger handling; the webhook response may still be `ok`. A successful
+webhook delivery response is not proof that a process started.
 
 ### Identity and trust
 
@@ -144,7 +178,7 @@ Each slice is intended to be a separate branch based on its predecessor:
 1. SDK contracts (this module; no runtime behavior change).
 2. External users, authoritative identity bindings and conflict-safe aliases.
 3. Membership synchronization and team-only RBAC semantics.
-4. GitHub actor-resolution integration, preserving human mappings and
+4. GitHub actor-resolution integration, preserving user mappings and
    `useInitiator` behavior.
 5. Lifecycle, freshness and restricted-delegation enforcement for new and restored
    execution contexts. A shared app's accumulated team grants must not become

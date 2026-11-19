@@ -25,6 +25,7 @@ import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
+import com.walmartlabs.concord.server.sdk.identity.ExternalEventContext;
 import com.walmartlabs.concord.server.security.github.GithubKey;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
@@ -62,6 +63,17 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
     public static final String HOOK_PROJECT_ID = "hookProjectId";
     public static final String HOOK_REPO_TOKEN = "hookRepoToken";
 
+    private static final String AUTHENTICATED_PAYLOAD = GithubAuthenticatingFilter.class.getName() + ".payload";
+
+    public static ExternalEventContext getEventContext(HttpServletRequest request, String authority,
+                                                      String eventType, String deliveryId) {
+        if (!(request.getAttribute(AUTHENTICATED_PAYLOAD) instanceof AuthenticatedPayload payload)) {
+            throw new IllegalStateException("Authenticated GitHub payload is unavailable");
+        }
+        return new ExternalEventContext("github", eventType, deliveryId, authority,
+                payload.authentication(), payload.json());
+    }
+
     private final GithubConfiguration cfg;
     private final EncryptedProjectValueManager encryptedValueManager;
     private final ObjectMapper objectMapper;
@@ -94,6 +106,7 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
 
     @Override
     protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) throws Exception {
+        request.removeAttribute(AUTHENTICATED_PAYLOAD);
         if (!isReady) {
             throw new IllegalStateException("GithubAuthenticatingFilter is disabled because github.secret is not configured");
         }
@@ -106,7 +119,13 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
         UUID projectId = getUUID(req, HOOK_PROJECT_ID);
         String repoToken = getString(req, HOOK_REPO_TOKEN);
         if (projectId != null && repoToken != null) {
-            return processSpecificRepo(projectId, repoToken, payload);
+            AuthenticationToken token = processSpecificRepo(projectId, repoToken, payload);
+            if (token instanceof GithubKey) {
+                req.setAttribute(AUTHENTICATED_PAYLOAD, new AuthenticatedPayload(
+                        ExternalEventContext.Authentication.ENDPOINT_CREDENTIAL,
+                        new String(payload, StandardCharsets.UTF_8)));
+            }
+            return token;
         }
 
         String h = req.getHeader(SIGNATURE_HEADER);
@@ -138,6 +157,9 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
                 return new UsernamePasswordToken();
             }
 
+            req.setAttribute(AUTHENTICATED_PAYLOAD, new AuthenticatedPayload(
+                    ExternalEventContext.Authentication.SIGNED_PAYLOAD,
+                    new String(payload, StandardCharsets.UTF_8)));
             return new GithubKey(h, projectId, repoToken);
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             log.error("createToken -> internal error", e);
@@ -213,6 +235,9 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
         byte[] ab = md.digest(value.getBytes(StandardCharsets.UTF_8));
 
         return Base64.getEncoder().withoutPadding().encodeToString(ab);
+    }
+
+    private record AuthenticatedPayload(ExternalEventContext.Authentication authentication, String json) {
     }
 
     static class CachingRequestWrapper extends HttpServletRequestWrapper {

@@ -66,6 +66,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
@@ -111,6 +112,7 @@ public class GithubEventResource implements Resource {
     private final UserManager userManager;
     private final LdapManager ldapManager;
     private final TriggerEventInitiatorResolver initiatorResolver;
+    private final GithubEventIdentityService identityService;
     private final Histogram startedProcessesPerEvent;
     private final Map<String, Long> rateLimitGauges;
     private final LoadingCache<EmailCacheKey, Optional<String>> ghUserEmailCache;
@@ -123,6 +125,7 @@ public class GithubEventResource implements Resource {
                                UserManager userManager,
                                LdapManager ldapManager,
                                TriggerEventInitiatorResolver initiatorResolver,
+                               GithubEventIdentityService identityService,
                                MetricRegistry metricRegistry,
                                AuthTokenProvider authTokenProvider,
                                ObjectMapperProvider objectMapperProvider) {
@@ -134,6 +137,7 @@ public class GithubEventResource implements Resource {
         this.userManager = userManager;
         this.ldapManager = ldapManager;
         this.initiatorResolver = initiatorResolver;
+        this.identityService = identityService;
         this.startedProcessesPerEvent = metricRegistry.histogram("started-processes-per-github-event");
         this.rateLimitGauges = new ConcurrentHashMap<>(githubCfg.getAuthConfigs().size());
         this.ghUserEmailCache = CacheBuilder.newBuilder()
@@ -161,7 +165,8 @@ public class GithubEventResource implements Resource {
     public String onEvent(Map<String, Object> data,
                           @HeaderParam("X-GitHub-Delivery") String deliveryId,
                           @HeaderParam("X-GitHub-Event") String eventName,
-                          @Context UriInfo uriInfo) {
+                          @Context UriInfo uriInfo,
+                          @Context HttpServletRequest request) {
 
         log.info("onEvent ['{}', '{}'] -> processing...", deliveryId, eventName);
 
@@ -192,7 +197,8 @@ public class GithubEventResource implements Resource {
         List<GithubTriggerProcessor.Result> results = new ArrayList<>();
         processor.process(eventName, payload, uriInfo, results);
 
-        Supplier<UserEntry> initiatorSupplier = memo(new GithubEventInitiatorSupplier(githubCfg, userManager, ldapManager, payload, ghUserEmailCache));
+        Supplier<UserEntry> initiatorSupplier = memo(new GithubEventInitiatorSupplier(githubCfg, userManager, ldapManager,
+                payload, ghUserEmailCache, () -> identityService.assertInitiatorAllowed(request, eventName, deliveryId)));
 
         int startedProcesses = 0;
         for (GithubTriggerProcessor.Result r : results) {
@@ -284,18 +290,21 @@ public class GithubEventResource implements Resource {
         private final LoadingCache<EmailCacheKey, Optional<String>> ghUserEmailCache;
         private final Payload payload;
         private final Supplier<UserEntry> fallback;
+        private final Runnable externalIdentityCheck;
 
         public GithubEventInitiatorSupplier(GithubConfiguration githubCfg,
                                             UserManager userManager,
                                             LdapManager ldapManager,
                                             Payload payload,
-                                            LoadingCache<EmailCacheKey, Optional<String>> ghUserEmailCache) {
+                                            LoadingCache<EmailCacheKey, Optional<String>> ghUserEmailCache,
+                                            Runnable externalIdentityCheck) {
 
             this.githubCfg = githubCfg;
             this.userManager = userManager;
             this.ldapManager = ldapManager;
             this.ghUserEmailCache = ghUserEmailCache;
             this.payload = payload;
+            this.externalIdentityCheck = externalIdentityCheck;
             this.fallback = () -> {
                 String initiator = payload.getSender();
                 if (initiator == null || initiator.trim().isEmpty()) {
@@ -315,10 +324,15 @@ public class GithubEventResource implements Resource {
 
         @Override
         public UserEntry get() {
+            externalIdentityCheck.run();
+
             // GitHub user -> Concord user mapping may already exist in DB
             UserEntry fromDbMapping = findUserInDbMapping();
 
             if (fromDbMapping != null) {
+                if (fromDbMapping.getType() == UserType.EXTERNAL) {
+                    throw new ConcordApplicationException("External GitHub actor execution is disabled; cached aliases cannot authorize execution");
+                }
                 return fromDbMapping;
             }
 

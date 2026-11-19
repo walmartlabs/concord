@@ -37,6 +37,11 @@ public class GithubConfiguration implements GitHubAppInstallationConfig {
     private String secret;
 
     @Inject
+    @Config("github.externalIdentityAuthority")
+    @Nullable
+    private String externalIdentityAuthority;
+
+    @Inject
     @Config("github.useSenderLdapDn")
     private boolean useSenderLdapDn;
 
@@ -78,6 +83,10 @@ public class GithubConfiguration implements GitHubAppInstallationConfig {
 
     public String getSecret() {
         return secret;
+    }
+
+    public String getExternalIdentityAuthority() {
+        return externalIdentityAuthority;
     }
 
     public boolean isUseSenderLdapDn() {
