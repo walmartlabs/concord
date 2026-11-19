@@ -375,6 +375,8 @@ public class ProcessResource implements Resource {
             throw new ValidationErrorsException("Unknown parent instance ID: " + parentInstanceId);
         }
 
+        assertForkAccess(parent);
+
         PartialProcessKey processKey = PartialProcessKey.from(uuidGenerator.generate());
         ProcessKey parentProcessKey = new ProcessKey(parent.instanceId(), parent.createdAt());
 
@@ -987,6 +989,26 @@ public class ProcessResource implements Resource {
 
         throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
                 "the necessary permissions to download " + entity + " : " + pe.instanceId());
+    }
+    
+    private void assertForkAccess(ProcessEntry parent) {
+        UserPrincipal principal = UserPrincipal.assertCurrent();
+
+        if (Roles.isAdmin()) {
+            return;
+        }
+
+        if (principal.getId().equals(parent.initiatorId())) {
+            return;
+        }
+
+        if (parent.projectId() != null) {
+            projectAccessManager.assertAccess(parent.projectId(), ResourceAccessLevel.WRITER, true);
+            return;
+        }
+
+        throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
+                "the necessary permissions to fork the process: " + parent.instanceId());
     }
 
     private void assertResourceAccess(ProcessEntry pe, String resource) {
