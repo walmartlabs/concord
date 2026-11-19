@@ -54,6 +54,10 @@ public class ForkPipeline extends Pipeline {
                 injector.getInstance(ForkRepositoryInfoProcessor.class),
                 injector.getInstance(RepositoryInfoUpdateProcessor.class),
                 injector.getInstance(ForkRuntimeProcessor.class),
+                // must run after StateImportingProcessor: the fork's state is copied from the parent
+                // and includes the parent's ".concord/current_user" which must be overwritten
+                // with the identity of the current user (the fork's initiator)
+                injector.getInstance(SecuritySubjectProcessor.class),
                 injector.getInstance(EnqueueingProcessor.class)
         ));
 
