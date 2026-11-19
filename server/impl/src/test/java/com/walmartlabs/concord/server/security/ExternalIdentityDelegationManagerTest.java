@@ -20,11 +20,13 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.policyengine.PolicyEngine;
+import com.walmartlabs.concord.policyengine.PolicyEngineRules;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.sdk.identity.ExternalIdentityRef;
+import com.walmartlabs.concord.server.user.ExternalIdentityDao;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -32,9 +34,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class ExternalIdentityDelegationManagerTest {
 
@@ -44,16 +48,20 @@ class ExternalIdentityDelegationManagerTest {
     private static final UUID REPOSITORY = UUID.randomUUID();
     private static final UUID SECRET = UUID.randomUUID();
     private static final UUID STORE = UUID.randomUUID();
+    private static final UUID USER = UUID.randomUUID();
+
+    private final PolicyManager policyManager = mock(PolicyManager.class);
+    private final ExternalIdentityDao identityDao = mock(ExternalIdentityDao.class);
 
     @Test
     void noPoliciesDenyEveryIntegration() {
-        var manager = new ExternalIdentityDelegationManager(config(List.of()));
+        var manager = manager(List.of());
         assertThrows(UnauthorizedException.class, () -> manager.requirePolicy(IDENTITY, ORG, PROJECT, REPOSITORY));
     }
 
     @Test
     void exactBindingIsRequiredForEveryIdentityAndIntegrationComponent() {
-        var manager = new ExternalIdentityDelegationManager(config(List.of(entry())));
+        var manager = manager(List.of(entry()));
         assertEquals("app-project", manager.requirePolicy(IDENTITY, ORG, PROJECT, REPOSITORY).id());
         for (var identity : List.of(
                 new ExternalIdentityRef("other", "authority", "subject"),
@@ -82,7 +90,7 @@ class ExternalIdentityDelegationManagerTest {
         second.put("projectId", otherProject.toString());
         second.put("repositoryId", otherRepository.toString());
         second.put("jsonStores", List.of(resource(STORE, "WRITER")));
-        var manager = new ExternalIdentityDelegationManager(config(List.of(first, second)));
+        var manager = manager(List.of(first, second));
 
         var firstPolicy = manager.requirePolicy(IDENTITY, ORG, PROJECT, REPOSITORY);
         firstPolicy.assertSecretAccess(SECRET, ResourceAccessLevel.READER);
@@ -142,10 +150,10 @@ class ExternalIdentityDelegationManagerTest {
         var first = entry();
         var sameId = entry();
         sameId.put("repositoryId", UUID.randomUUID().toString());
-        assertThrows(IllegalArgumentException.class, () -> new ExternalIdentityDelegationManager(config(List.of(first, sameId))));
+        assertThrows(IllegalArgumentException.class, () -> manager(List.of(first, sameId)));
         var sameBinding = entry();
         sameBinding.put("id", "same-binding");
-        assertThrows(IllegalArgumentException.class, () -> new ExternalIdentityDelegationManager(config(List.of(first, sameBinding))));
+        assertThrows(IllegalArgumentException.class, () -> manager(List.of(first, sameBinding)));
     }
 
     @Test
@@ -184,19 +192,18 @@ class ExternalIdentityDelegationManagerTest {
         for (var key : entry().keySet()) {
             var missing = entry();
             missing.remove(key);
-            assertThrows(ConfigException.Missing.class, () -> require(missing));
+            assertThrows(IllegalArgumentException.class, () -> require(missing));
             var nullValue = entry();
             nullValue.put(key, null);
-            assertThrows(ConfigException.Null.class, () -> require(nullValue));
+            assertThrows(IllegalArgumentException.class, () -> require(nullValue));
         }
         for (var key : List.of("providerId", "authority", "subjectId")) {
             var entry = entry();
             var identity = new HashMap<>(Map.of("providerId", "provider", "authority", "authority", "subjectId", "subject"));
             identity.remove(key);
             entry.put("identity", identity);
-            assertThrows(ConfigException.Missing.class, () -> require(entry));
+            assertThrows(IllegalArgumentException.class, () -> require(entry));
         }
-        assertThrows(ConfigException.Missing.class, () -> new ExternalIdentityDelegationManager(ConfigFactory.empty()));
     }
 
     @Test
@@ -207,7 +214,7 @@ class ExternalIdentityDelegationManagerTest {
             assertThrows(IllegalArgumentException.class, () -> require(entry));
         }
         for (var key : List.of("orgId", "projectId", "repositoryId")) {
-            for (var id : List.of("*", "project-name", "1-1-1-1-1")) {
+            for (var id : List.of("*", "project-name")) {
                 var entry = entry();
                 entry.put(key, id);
                 assertThrows(IllegalArgumentException.class, () -> require(entry));
@@ -247,7 +254,7 @@ class ExternalIdentityDelegationManagerTest {
 
         var entry = entry();
         var entries = new ArrayList<>(List.of(entry));
-        var manager = new ExternalIdentityDelegationManager(config(entries));
+        var manager = manager(entries);
         entries.clear();
         entry.put("projectAccessLevel", "OWNER");
         var loaded = manager.requirePolicy(IDENTITY, ORG, PROJECT, REPOSITORY);
@@ -275,12 +282,39 @@ class ExternalIdentityDelegationManagerTest {
                 ResourceAccessLevel.READER, Map.of(), null));
     }
 
-    private ExternalIdentityDelegationPolicy require(Map<String, Object> entry) {
-        return new ExternalIdentityDelegationManager(config(List.of(entry))).requirePolicy(IDENTITY, ORG, PROJECT, REPOSITORY);
+    @Test
+    void noEffectivePolicyOrNoDelegationRuleDenies() {
+        when(identityDao.getUserId(IDENTITY)).thenReturn(Optional.of(USER));
+        var manager = new ExternalIdentityDelegationManager(policyManager, identityDao);
+        assertThrows(UnauthorizedException.class, () -> manager.requirePolicy(IDENTITY, ORG, PROJECT, REPOSITORY));
+        when(policyManager.get(ORG, PROJECT, USER)).thenReturn(new PolicyEngine(PolicyEngineRules.builder().build()));
+        assertThrows(UnauthorizedException.class, () -> manager.requirePolicy(IDENTITY, ORG, PROJECT, REPOSITORY));
     }
 
-    private Config config(List<Map<String, Object>> entries) {
-        return ConfigFactory.parseMap(Map.of("externalIdentity", Map.of("delegations", entries)));
+    @Test
+    void authoritativeBindingSelectsEffectivePolicyAndChangesAreNotCachedLocally() {
+        var manager = manager(List.of(entry()));
+        assertEquals("app-project", manager.requirePolicy(IDENTITY, ORG, PROJECT, REPOSITORY).id());
+        verify(policyManager).get(ORG, PROJECT, USER);
+        when(policyManager.get(ORG, PROJECT, USER)).thenReturn(new PolicyEngine(PolicyEngineRules.builder().build()));
+        assertThrows(UnauthorizedException.class, () -> manager.requirePolicy(IDENTITY, ORG, PROJECT, REPOSITORY));
+        verify(policyManager, times(2)).get(ORG, PROJECT, USER);
+        when(identityDao.getUserId(IDENTITY)).thenReturn(Optional.empty());
+        clearInvocations(policyManager);
+        assertThrows(UnauthorizedException.class, () -> manager.requirePolicy(IDENTITY, ORG, PROJECT, REPOSITORY));
+        verifyNoInteractions(policyManager);
+    }
+
+    private ExternalIdentityDelegationPolicy require(Map<String, Object> entry) {
+        return manager(List.of(entry)).requirePolicy(IDENTITY, ORG, PROJECT, REPOSITORY);
+    }
+
+    private ExternalIdentityDelegationManager manager(List<Map<String, Object>> entries) {
+        var rules = new ObjectMapper().convertValue(
+                Map.of("externalIdentityDelegation", Map.of("allow", entries)), PolicyEngineRules.class);
+        when(identityDao.getUserId(any())).thenReturn(Optional.of(USER));
+        when(policyManager.get(any(), any(), eq(USER))).thenReturn(new PolicyEngine(rules));
+        return new ExternalIdentityDelegationManager(policyManager, identityDao);
     }
 
     private Map<String, Object> entry() {

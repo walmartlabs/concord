@@ -124,6 +124,10 @@ public interface PolicyEngineRules extends Serializable {
     @Nullable
     EffectiveYamlRule effectiveYamlRule();
 
+    @JsonProperty("externalIdentityDelegation")
+    @Nullable
+    ExternalIdentityDelegationRule externalIdentityDelegationRule();
+
     static ImmutablePolicyEngineRules.Builder builder() {
         return ImmutablePolicyEngineRules.builder();
     }

@@ -20,7 +20,9 @@ package com.walmartlabs.concord.server.policy;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.policyengine.CheckResult;
+import com.walmartlabs.concord.policyengine.ExternalIdentityDelegationRule;
 import com.walmartlabs.concord.policyengine.EntityRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.org.policy.PolicyDao;
@@ -40,12 +42,14 @@ public class PolicyManager {
     private final PolicyCache policyCache;
     private final PolicyDao policyDao;
     private final UserManager userManager;
+    private final ObjectMapper objectMapper;
 
     @Inject
-    public PolicyManager(PolicyCache policyCache, PolicyDao policyDao, UserManager userManager) {
+    public PolicyManager(PolicyCache policyCache, PolicyDao policyDao, UserManager userManager, ObjectMapper objectMapper) {
         this.policyCache = policyCache;
         this.policyDao = policyDao;
         this.userManager = userManager;
+        this.objectMapper = objectMapper;
     }
 
     public void refresh() {
@@ -73,10 +77,12 @@ public class PolicyManager {
     }
 
     public UUID insert(String name, UUID parentId, Map<String, Object> rules) {
+        validateDelegationRule(rules);
         return policyDao.insert(name, parentId, rules);
     }
 
     public void update(UUID id, String name, UUID parentId, Map<String, Object> rules) {
+        validateDelegationRule(rules);
         policyDao.update(id, name, parentId, rules);
         policyCache.refresh();
     }
@@ -119,6 +125,20 @@ public class PolicyManager {
 
     public PolicyEngine getPolicyEngine(Payload payload) {
         return get(payload.getHeader(Payload.ORGANIZATION_ID), payload.getHeader(Payload.PROJECT_ID), payload.getHeader(Payload.INITIATOR_ID));
+    }
+
+    private void validateDelegationRule(Map<String, Object> rules) {
+        if (rules == null || !rules.containsKey("externalIdentityDelegation")) {
+            return;
+        }
+        if (rules.get("externalIdentityDelegation") == null) {
+            throw new ValidationErrorsException("Invalid externalIdentityDelegation rule: use an empty allow list to deny delegation");
+        }
+        try {
+            objectMapper.convertValue(rules.get("externalIdentityDelegation"), ExternalIdentityDelegationRule.class);
+        } catch (IllegalArgumentException e) {
+            throw new ValidationErrorsException("Invalid externalIdentityDelegation rule: " + e.getMessage());
+        }
     }
 
     private Map<String, Object> getOwnerAttrs(UserEntry owner) {

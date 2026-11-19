@@ -30,9 +30,72 @@ import org.junit.jupiter.api.Test;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class PolicyCacheTest {
+
+    @Test
+    public void delegationUsesExistingPolicyLinksAndSelection() {
+        var dao = mock(PolicyCache.Dao.class);
+        var cache = new PolicyCache(TestObjectMapper.INSTANCE, new PolicyCacheConfiguration(), dao);
+        var orgId = UUID.randomUUID();
+        var projectId = UUID.randomUUID();
+        var userId = UUID.randomUUID();
+        var defaultId = UUID.randomUUID();
+        var orgPolicyId = UUID.randomUUID();
+        var projectPolicyId = UUID.randomUUID();
+        when(dao.listPolicies()).thenReturn(List.of(
+                PolicyCache.PolicyRules.builder().id(defaultId).name("default").rules(delegationRules()).build(),
+                PolicyCache.PolicyRules.builder().id(orgPolicyId).name("org").rules(Map.of()).build(),
+                PolicyCache.PolicyRules.builder().id(projectPolicyId).name("project").rules(delegationRules()).build()));
+        when(dao.listLinks()).thenReturn(List.of(
+                ImmutablePolicyLink.builder().policyId(defaultId).build(),
+                ImmutablePolicyLink.builder().policyId(orgPolicyId).orgId(orgId).build(),
+                ImmutablePolicyLink.builder().policyId(projectPolicyId).projectId(projectId).build()));
+        cache.refresh();
+
+        assertEquals(List.of("project"), cache.get(orgId, projectId, userId).policyNames());
+        assertTrue(cache.get(orgId, projectId, userId).getRules().externalIdentityDelegationRule().allow().isEmpty());
+        assertEquals(List.of("org"), cache.get(orgId, UUID.randomUUID(), userId).policyNames());
+        assertNull(cache.get(orgId, UUID.randomUUID(), userId).getRules().externalIdentityDelegationRule());
+        assertEquals(List.of("default"), cache.get(UUID.randomUUID(), UUID.randomUUID(), userId).policyNames());
+    }
+
+    @Test
+    public void delegationListInheritsReplacesAndClearsUsingNormalParentMerge() {
+        var cache = new PolicyCache(TestObjectMapper.INSTANCE, new PolicyCacheConfiguration(), mock(PolicyCache.Dao.class));
+        var parentId = UUID.randomUUID();
+        var inheritedId = UUID.randomUUID();
+        var deniedId = UUID.randomUUID();
+        var replacedId = UUID.randomUUID();
+        var entry = delegationEntry("parent");
+        var merged = cache.mergePolicies(List.of(
+                PolicyCache.PolicyRules.builder().id(parentId).name("parent")
+                        .rules(Map.of("externalIdentityDelegation", Map.of("allow", List.of(entry)))).build(),
+                PolicyCache.PolicyRules.builder().id(inheritedId).parentId(parentId).name("inherited").rules(Map.of()).build(),
+                PolicyCache.PolicyRules.builder().id(deniedId).parentId(parentId).name("denied").rules(delegationRules()).build(),
+                PolicyCache.PolicyRules.builder().id(replacedId).parentId(parentId).name("replaced")
+                        .rules(Map.of("externalIdentityDelegation", Map.of("allow", List.of(delegationEntry("child"))))).build()));
+        assertEquals("parent", merged.get(inheritedId).rules().externalIdentityDelegationRule().allow().get(0).id());
+        assertTrue(merged.get(deniedId).rules().externalIdentityDelegationRule().allow().isEmpty());
+        assertEquals(1, merged.get(replacedId).rules().externalIdentityDelegationRule().allow().size());
+        assertEquals("child", merged.get(replacedId).rules().externalIdentityDelegationRule().allow().get(0).id());
+    }
+
+    private static Map<String, Object> delegationRules() {
+        return Map.of("externalIdentityDelegation", Map.of("allow", List.of()));
+    }
+
+    private static Map<String, Object> delegationEntry(String id) {
+        return Map.of("id", id,
+                "identity", Map.of("providerId", "provider", "authority", "authority", "subjectId", "subject"),
+                "orgId", UUID.randomUUID().toString(), "projectId", UUID.randomUUID().toString(),
+                "repositoryId", UUID.randomUUID().toString(),
+                "projectAccessLevel", "READER", "secrets", List.of(), "jsonStores", List.of());
+    }
 
     @Test
     public void allowNullValues() {

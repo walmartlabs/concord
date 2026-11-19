@@ -29,7 +29,7 @@ import java.util.UUID;
 
 /**
  * An additional authorization ceiling, never a resource grant or proof of
- * lifecycle eligibility. Only trusted server configuration may supply it.
+ * lifecycle eligibility. Only administrator-managed Concord policy may supply it.
  */
 public record ExternalIdentityDelegationPolicy(String id,
                                                Binding binding,

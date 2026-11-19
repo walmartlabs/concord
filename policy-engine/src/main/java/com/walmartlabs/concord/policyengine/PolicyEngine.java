@@ -50,6 +50,7 @@ public class PolicyEngine {
     private final CronTriggerPolicy cronTriggerPolicy;
     private final KvPolicy kvPolicy;
     private final EffectiveYamlPolicy effectiveYamlPolicy;
+    private final ExternalIdentityDelegationPolicy externalIdentityDelegationPolicy;
 
     public PolicyEngine(PolicyEngineRules rules) {
         this(Collections.emptyList(), rules);
@@ -87,6 +88,7 @@ public class PolicyEngine {
         this.runtimePolicy = new RuntimePolicy(rules.runtimeRule());
         this.cronTriggerPolicy = new CronTriggerPolicy(rules.cronTriggerRule());
         this.kvPolicy = new KvPolicy(rules.kvRule());
+        this.externalIdentityDelegationPolicy = new ExternalIdentityDelegationPolicy(rules.externalIdentityDelegationRule());
     }
 
     public List<String> policyNames() {
@@ -183,6 +185,10 @@ public class PolicyEngine {
 
     public EffectiveYamlPolicy getEffectiveYamlPolicy() {
         return effectiveYamlPolicy;
+    }
+
+    public ExternalIdentityDelegationPolicy getExternalIdentityDelegationPolicy() {
+        return externalIdentityDelegationPolicy;
     }
 
     @Override

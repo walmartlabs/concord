@@ -126,26 +126,67 @@ and restricted-delegation enforcement before those gates can be removed.
 
 ### Delegation policy foundation
 
-The server's `ExternalIdentityDelegationManager` loads
-`externalIdentity.delegations` at startup, independently of workflow
-configuration. The default empty list denies selection for every integration.
-Each policy binds one exact external identity reference to Concord organization,
-project and repository UUIDs. No hostname, username, project name, wildcard,
-group membership or event-body field can select a broader policy. Selection
-requires all binding components to match; policies are never combined.
+Delegation is part of Concord's existing policy engine, not a list in server
+configuration. System administrators create and update policy documents and link
+them using the existing admin-only policy API. Existing global, organization,
+project and user links apply; this feature adds no new link types. Policies
+live in the existing policy database and follow its cache refresh mechanism.
+No server restart or per-project server configuration entry is required.
 
-Each entry requires an `id` (1 to 128 characters), `identity` (`providerId`,
-`authority`, `subjectId`), `orgId`, `projectId`, `repositoryId`,
+The `externalIdentityDelegation` rule has an explicit `allow` list. Each entry
+binds one exact external identity reference to Concord organization, project
+and repository UUIDs. No hostname, username, project name, wildcard, group
+membership or event-body field can select a broader delegation.
+
+Each entry requires an `id` (1 to 128 characters, unique within this rule),
+`identity` (`providerId`, `authority`, `subjectId`), `orgId`, `projectId`, `repositoryId`,
 `projectAccessLevel`, `secrets` and `jsonStores`. Resource lists can be empty, but
 must be explicit. Each resource entry contains `id` and `accessLevel`. Access
 levels are `READER`, `WRITER` and `OWNER`, following Concord's existing ordering.
-All UUIDs must use the canonical hyphenated representation. Unknown fields,
-missing values, invalid levels, duplicate policy IDs, duplicate bindings and
-duplicate resource IDs within a resource kind fail server initialization.
-The distribution configuration contains a complete commented example.
+Use stable resource UUIDs, not names. Unknown fields, missing values, invalid
+levels, duplicate entry IDs, duplicate bindings and duplicate resource IDs within
+a resource kind are rejected by typed rule validation. The policy manager
+validates this rule before inserting or updating a policy.
+
+For example, the `rules` portion of an administrator-managed policy can contain:
+
+```json
+{
+  "externalIdentityDelegation": {
+    "allow": [{
+      "id": "app-project-integration",
+      "identity": {
+        "providerId": "registrar",
+        "authority": "https://github.example.com",
+        "subjectId": "immutable-app-id"
+      },
+      "orgId": "11111111-1111-1111-1111-111111111111",
+      "projectId": "22222222-2222-2222-2222-222222222222",
+      "repositoryId": "33333333-3333-3333-3333-333333333333",
+      "projectAccessLevel": "READER",
+      "secrets": [{
+        "id": "44444444-4444-4444-4444-444444444444",
+        "accessLevel": "READER"
+      }],
+      "jsonStores": []
+    }]
+  }
+}
+```
+
+The server's `ExternalIdentityDelegationManager` first resolves the authoritative
+Concord user binding, then calls `PolicyManager.get(orgId, projectId, userId)`.
+It uses that selected effective policy only, with the existing user/project/org/
+default precedence and explicit parent inheritance. Policies linked at different
+levels are not intersected or unioned. A child that omits the rule inherits it
+from its explicit parent; a child `allow` list replaces the parent's list, not
+appends to it. `{"externalIdentityDelegation":{"allow":[]}}` explicitly denies
+all delegation; null rule values are rejected on policy writes. An absent
+effective policy, absent rule or unmatched entry denies delegation. Empty allow lists survive policy
+serialization, so they cannot accidentally disappear and restore inheritance.
 
 `requirePolicy(identity, orgId, projectId, repositoryId)` returns an immutable
-policy or throws `UnauthorizedException`. Its checks allow only the bound source
+ceiling or throws `UnauthorizedException`. Its checks allow only the bound source
 project and individually listed secret and JSON-store UUIDs, at or below their
 configured caps. Listing a project does not implicitly include any secrets or
 stores. Resource kinds are independent. There is no cross-project process
@@ -159,15 +200,17 @@ and operations must remain denied for delegated execution until deliberately
 supported. Do not copy policies from process arguments or serialize a policy as
 an irrevocable authorization capability.
 
-This slice provides policy storage, exact selection and standalone checks only.
+This slice provides typed policy rules, exact selection and standalone checks only.
 It does not yet invoke selection from GitHub triggers, install resource-manager
 interceptors, persist execution scope or enforce inheritance through child,
 resume and session contexts. External execution remains blocked; defining a
 policy does not enable it. The next enforcement slice must obtain the integration
 UUIDs from validated Concord records, retain a trusted scope outside editable
 workflow state, prevent scope expansion and recheck current policy on use.
-Configuration changes currently require server restart, with consistent
-configuration across all nodes.
+The manager rereads the effective policy on each selection instead of retaining
+a separate startup-loaded registry. Policy changes become visible according to
+the existing policy cache refresh behavior, not an instantaneous cross-node
+revocation guarantee. Live execution-context enforcement remains future work.
 
 ### GitHub event integration
 
@@ -261,7 +304,7 @@ Each slice is intended to be a separate branch based on its predecessor:
 4. GitHub actor-resolution integration, preserving user mappings and
    `useInitiator` behavior.
 5. Lifecycle eligibility and on-demand freshness checks.
-6. Server-controlled delegation policy selection and access ceilings.
+6. Administrator-managed policy-engine delegation rules and access ceilings.
 7. Restricted delegation and lifecycle revalidation for new, child and restored
    execution contexts. A shared app's accumulated team grants must not become
    unrestricted authority for tenant-controlled workflow code.
