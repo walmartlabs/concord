@@ -39,4 +39,31 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="2470020" author="benjamin.broadaway@walmart.com">
+        <addColumn tableName="EXTERNAL_IDENTITIES">
+            <column name="REFRESH_GENERATION" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="APPLIED_GENERATION" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="SOURCE_STATUS" type="varchar(32)"/>
+            <column name="LAST_SUCCESSFUL_SYNC" type="timestamp with time zone"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="2470030" author="benjamin.broadaway@walmart.com">
+        <createView viewName="V_USER_ROLES" replaceIfExists="true">
+            select USER_ID, ROLE_ID
+            from USER_ROLES
+            union
+            select distinct ulg.USER_ID, rlg.ROLE_ID
+            from ROLE_LDAP_GROUPS rlg
+            join USER_LDAP_GROUPS ulg on ulg.LDAP_GROUP = rlg.LDAP_GROUP
+            join USERS u on u.USER_ID = ulg.USER_ID
+            where u.USER_TYPE != 'EXTERNAL'
+            and not exists(select 1 from USER_ROLES ur where ur.USER_ID = ulg.USER_ID and ur.ROLE_ID = rlg.ROLE_ID)
+        </createView>
+    </changeSet>
 </databaseChangeLog>

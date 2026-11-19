@@ -22,6 +22,8 @@ package com.walmartlabs.concord.server.security.ldap;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 
 import javax.inject.Inject;
@@ -43,6 +45,7 @@ public class LdapGroupDao extends AbstractDao {
 
     public void updateIfNeeded(UUID userId, Set<String> groups, Field<OffsetDateTime> cutOff) {
         tx(tx -> {
+            assertNotExternal(tx, userId);
             Record1<Integer> r = tx.select(value(1)).from(USERS).where(USERS.USER_ID.eq(userId)
                     .and(USERS.LAST_GROUP_SYNC_DT.isNull()
                             .or(USERS.LAST_GROUP_SYNC_DT.lessThan(cutOff))))
@@ -60,9 +63,18 @@ public class LdapGroupDao extends AbstractDao {
 
     public void update(UUID userId, Set<String> groups) {
         tx(tx -> {
+            assertNotExternal(tx, userId);
             updateGroups(tx, userId, groups);
             updateLastSyncTimestamp(tx, userId);
         });
+    }
+
+    private void assertNotExternal(DSLContext tx, UUID userId) {
+        Record1<String> user = tx.select(USERS.USER_TYPE).from(USERS)
+                .where(USERS.USER_ID.eq(userId)).forUpdate().fetchOne();
+        if (user != null && UserType.EXTERNAL.name().equals(user.value1())) {
+            throw new ConcordApplicationException("External identity groups must be synchronized by their provider");
+        }
     }
 
     private void updateGroups(DSLContext tx, UUID userId, Set<String> groups) {

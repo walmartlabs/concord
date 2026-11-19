@@ -25,10 +25,12 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.identity.ExternalIdentityRef;
-import org.jooq.Configuration;
+import com.walmartlabs.concord.server.sdk.identity.ExternalIdentitySnapshot;
 import org.jooq.Condition;
+import org.jooq.Configuration;
 
 import javax.inject.Inject;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,6 +38,7 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.jooq.Tables.EXTERNAL_APP_USERS;
 import static com.walmartlabs.concord.server.jooq.Tables.EXTERNAL_IDENTITIES;
 import static com.walmartlabs.concord.server.jooq.Tables.USERS;
+import static com.walmartlabs.concord.server.jooq.Tables.USER_LDAP_GROUPS;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 
 /**
@@ -57,6 +60,102 @@ public class ExternalIdentityDao extends AbstractDao {
                 .from(EXTERNAL_IDENTITIES)
                 .where(matches(identity))
                 .fetchOptional(EXTERNAL_IDENTITIES.USER_ID);
+    }
+
+    public Optional<SyncState> getSyncState(ExternalIdentityRef identity) {
+        return dsl().select(EXTERNAL_IDENTITIES.USER_ID, EXTERNAL_IDENTITIES.SOURCE_STATUS,
+                        EXTERNAL_IDENTITIES.LAST_SUCCESSFUL_SYNC)
+                .from(EXTERNAL_IDENTITIES)
+                .where(matches(identity))
+                .fetchOptional(r -> new SyncState(r.value1(),
+                        r.value2() == null ? null : ExternalIdentitySnapshot.Status.valueOf(r.value2()), r.value3()));
+    }
+
+    /**
+     * Reserves an ordering token before contacting the provider. A newer attempt
+     * supersedes older in-flight attempts even if that newer lookup fails.
+     */
+    public RefreshToken beginRefresh(ExternalIdentityRef identity) {
+        return txResult(tx -> {
+            var result = tx.update(EXTERNAL_IDENTITIES)
+                    .set(EXTERNAL_IDENTITIES.REFRESH_GENERATION, EXTERNAL_IDENTITIES.REFRESH_GENERATION.plus(1))
+                    .where(matches(identity))
+                    .returning(EXTERNAL_IDENTITIES.USER_ID, EXTERNAL_IDENTITIES.REFRESH_GENERATION)
+                    .fetchOne();
+            if (result == null) {
+                throw new ConcordApplicationException("External identity is not provisioned");
+            }
+            return new RefreshToken(result.getUserId(), result.getRefreshGeneration());
+        });
+    }
+
+    /**
+     * Commits memberships, profile and successful-sync metadata atomically.
+     * Never changes the administrator-controlled disable state or direct grants.
+     *
+     * @return false when the lookup was superseded or its binding was deleted
+     */
+    public boolean applySnapshot(ExternalIdentitySnapshot snapshot, RefreshToken token) {
+        Objects.requireNonNull(snapshot, "snapshot");
+        Objects.requireNonNull(token, "token");
+        return txResult(tx -> {
+            var binding = tx.select(EXTERNAL_IDENTITIES.USER_ID)
+                    .from(EXTERNAL_IDENTITIES)
+                    .where(matches(snapshot.identity()))
+                    .and(EXTERNAL_IDENTITIES.USER_ID.eq(token.userId()))
+                    .and(EXTERNAL_IDENTITIES.REFRESH_GENERATION.eq(token.generation()))
+                    .and(EXTERNAL_IDENTITIES.APPLIED_GENERATION.lessThan(token.generation()))
+                    .forUpdate()
+                    .fetchOne();
+            if (binding == null) {
+                return false;
+            }
+            var userId = binding.value1();
+            var user = tx.select(USERS.USER_TYPE).from(USERS)
+                    .where(USERS.USER_ID.eq(userId)).forUpdate().fetchSingle();
+            if (!UserType.EXTERNAL.name().equals(user.value1())) {
+                throw new ConcordApplicationException("External binding does not refer to an external user");
+            }
+
+            tx.deleteFrom(USER_LDAP_GROUPS).where(USER_LDAP_GROUPS.USER_ID.eq(userId)).execute();
+            if (!snapshot.groups().isEmpty()) {
+                var batch = tx.batch(tx.insertInto(USER_LDAP_GROUPS, USER_LDAP_GROUPS.USER_ID, USER_LDAP_GROUPS.LDAP_GROUP)
+                        .values((UUID) null, null));
+                for (var group : snapshot.groups()) {
+                    batch.bind(userId, group);
+                }
+                batch.execute();
+            }
+            tx.update(USERS)
+                    .set(USERS.DISPLAY_NAME, snapshot.displayName())
+                    .set(USERS.USER_EMAIL, snapshot.email())
+                    .where(USERS.USER_ID.eq(userId))
+                    .execute();
+            tx.update(EXTERNAL_IDENTITIES)
+                    .set(EXTERNAL_IDENTITIES.APPLIED_GENERATION, token.generation())
+                    .set(EXTERNAL_IDENTITIES.SOURCE_STATUS, snapshot.status().name())
+                    .set(EXTERNAL_IDENTITIES.LAST_SUCCESSFUL_SYNC, currentOffsetDateTime())
+                    .where(matches(snapshot.identity()))
+                    .execute();
+            return true;
+        });
+    }
+
+    /**
+     * A null status or timestamp means that no authoritative lookup has succeeded.
+     * This state alone is not authorization to execute.
+     */
+    public record SyncState(UUID userId, ExternalIdentitySnapshot.Status status, OffsetDateTime lastSuccessfulSync) {
+    }
+
+    public record RefreshToken(UUID userId, long generation) {
+
+        public RefreshToken {
+            Objects.requireNonNull(userId, "userId");
+            if (generation <= 0) {
+                throw new IllegalArgumentException("Refresh generation must be positive");
+            }
+        }
     }
 
     /**

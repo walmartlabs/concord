@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import com.walmartlabs.concord.server.user.UserManager;
+import com.walmartlabs.concord.server.user.UserType;
 import io.takari.bpm.form.Form;
 
 import javax.inject.Inject;
@@ -94,6 +95,9 @@ public class FormAccessManager {
 
         Set<String> formRunAsGroups = com.walmartlabs.concord.forms.FormUtils.getRunAsLdapGroups(formName, runAsParams);
         if (!formRunAsGroups.isEmpty()) {
+            if (p.getType() == UserType.EXTERNAL) {
+                throw new UnauthorizedException("External identities cannot satisfy LDAP-group form access");
+            }
             Set<String> userLdapGroups = Optional.ofNullable(userManager.getCurrentUserInfo())
                     .map(UserInfoProvider.UserInfo::groups)
                     .orElseGet(Set::of);

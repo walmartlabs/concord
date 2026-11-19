@@ -27,13 +27,23 @@ import com.walmartlabs.concord.server.UuidGenerator;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.identity.ExternalIdentityRef;
+import com.walmartlabs.concord.server.sdk.identity.ExternalIdentitySnapshot;
+import com.walmartlabs.concord.server.sdk.identity.ExternalIdentityProvider;
+import com.walmartlabs.concord.server.sdk.identity.ExternalIdentityException;
 import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
 import com.walmartlabs.concord.server.security.Permission;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserSecurityContext;
+import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.ldap.LdapGroupDao;
+import com.walmartlabs.concord.server.process.form.FormAccessManager;
+import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyRealm;
 import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.subject.Subject;
+import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.apache.shiro.util.ThreadContext;
 import org.jooq.Configuration;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
@@ -46,9 +56,11 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -57,6 +69,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -340,6 +353,238 @@ public class ExternalIdentityDaoTest {
         var realm = new ApiKeyRealm(manager, mock(AuditLog.class));
         assertThrows(AuthenticationException.class, () -> realm.getAuthenticationInfo(
                 new ApiKey(UUID.randomUUID(), id, "test-key", false)));
+    }
+
+    @Test
+    public void testAtomicMembershipReplacementAndLifecycle() {
+        var ref = identity();
+        var id = identities.getOrCreate(ref, null, null);
+        assertNull(identities.getSyncState(ref).orElseThrow().lastSuccessfulSync());
+        assertTrue(identities.applySnapshot(snapshot(ref, Set.of("first", "second")), identities.beginRefresh(ref)));
+        assertEquals(Set.of("first", "second"), groups(id));
+        var state = identities.getSyncState(ref).orElseThrow();
+        assertEquals(ExternalIdentitySnapshot.Status.ACTIVE, state.status());
+        assertNotNull(state.lastSuccessfulSync());
+        assertTrue(users.get(id).isDisabled());
+
+        assertTrue(identities.applySnapshot(snapshot(ref, Set.of("replacement")), identities.beginRefresh(ref)));
+        assertEquals(Set.of("replacement"), groups(id));
+        assertTrue(identities.applySnapshot(snapshot(ref, Set.of()), identities.beginRefresh(ref)));
+        assertTrue(groups(id).isEmpty());
+        assertEquals(ExternalIdentitySnapshot.Status.ACTIVE, identities.getSyncState(ref).orElseThrow().status());
+
+        users.disable(id, true);
+        for (var status : new ExternalIdentitySnapshot.Status[]{
+                ExternalIdentitySnapshot.Status.INACTIVE, ExternalIdentitySnapshot.Status.NOT_FOUND}) {
+            assertTrue(identities.applySnapshot(snapshot(ref, Set.of("removed")), identities.beginRefresh(ref)));
+            assertTrue(identities.applySnapshot(new ExternalIdentitySnapshot(ref, status, null, null, Set.of()),
+                    identities.beginRefresh(ref)));
+            assertTrue(groups(id).isEmpty());
+            assertEquals(status, identities.getSyncState(ref).orElseThrow().status());
+            assertTrue(users.get(id).isPermanentlyDisabled());
+            assertTrue(users.get(id).isDisabled());
+        }
+        users.enable(id);
+        assertTrue(identities.applySnapshot(new ExternalIdentitySnapshot(ref,
+                ExternalIdentitySnapshot.Status.INACTIVE, null, null, Set.of()), identities.beginRefresh(ref)));
+        assertFalse(users.get(id).isDisabled());
+        assertEquals(ExternalIdentitySnapshot.Status.INACTIVE, identities.getSyncState(ref).orElseThrow().status());
+    }
+
+    @Test
+    public void testSupersededReplayAndRecreatedBindingCannotApply() {
+        var ref = identity();
+        var id = identities.getOrCreate(ref, null, null);
+        var older = identities.beginRefresh(ref);
+        var newer = identities.beginRefresh(ref);
+        assertFalse(identities.applySnapshot(snapshot(ref, Set.of("older")), older));
+        assertTrue(identities.applySnapshot(snapshot(ref, Set.of("newer")), newer));
+        assertFalse(identities.applySnapshot(snapshot(ref, Set.of("replay")), newer));
+        assertEquals(Set.of("newer"), groups(id));
+        var priorState = identities.getSyncState(ref).orElseThrow();
+        var pending = identities.beginRefresh(ref);
+        identities.beginRefresh(ref);
+        assertFalse(identities.applySnapshot(snapshot(ref, Set.of("late")), pending));
+        assertEquals(priorState, identities.getSyncState(ref).orElseThrow());
+
+        users.delete(id);
+        var replacement = identities.getOrCreate(ref, null, null);
+        identities.beginRefresh(ref);
+        assertFalse(identities.applySnapshot(snapshot(ref, Set.of("deleted-user")), older));
+        assertTrue(groups(replacement).isEmpty());
+        assertNull(identities.getSyncState(ref).orElseThrow().lastSuccessfulSync());
+    }
+
+    @Test
+    public void testFailedSnapshotRollsBackMembershipAndMetadata() {
+        var ref = identity();
+        var id = identities.getOrCreate(ref, null, null);
+        identities.applySnapshot(snapshot(ref, Set.of("original")), identities.beginRefresh(ref));
+        var state = identities.getSyncState(ref).orElseThrow();
+        var invalid = new ExternalIdentitySnapshot(ref, ExternalIdentitySnapshot.Status.ACTIVE,
+                "n".repeat(UserEntry.MAX_DISPLAY_NAME_LENGTH + 1), null, Set.of("replacement"));
+        assertThrows(DataAccessException.class, () -> identities.applySnapshot(invalid, identities.beginRefresh(ref)));
+        assertEquals(Set.of("original"), groups(id));
+        assertEquals(state, identities.getSyncState(ref).orElseThrow());
+    }
+
+    @Test
+    public void testProviderFailuresPreserveLastSuccessfulSnapshot() throws Exception {
+        var ref = identity();
+        var id = identities.getOrCreate(ref, null, null);
+        var provider = mock(ExternalIdentityProvider.class);
+        when(provider.getId()).thenReturn(ref.providerId());
+        when(provider.fetch(ref)).thenReturn(snapshot(ref, Set.of("original")));
+        var synchronizer = new ExternalIdentitySynchronizer(identities, mock(AuditLog.class, RETURNS_DEEP_STUBS), Set.of(provider));
+        synchronizer.refresh(ref);
+        var state = identities.getSyncState(ref).orElseThrow();
+        when(provider.fetch(ref)).thenThrow(new ExternalIdentityException("Authority unavailable"));
+        assertThrows(ExternalIdentityException.class, () -> synchronizer.refresh(ref));
+        doReturn(snapshot(identity(), Set.of("wrong-identity"))).when(provider).fetch(ref);
+        assertThrows(ExternalIdentityException.class, () -> synchronizer.refresh(ref));
+        doReturn(null).when(provider).fetch(ref);
+        assertThrows(ExternalIdentityException.class, () -> synchronizer.refresh(ref));
+        assertEquals(Set.of("original"), groups(id));
+        assertEquals(state, identities.getSyncState(ref).orElseThrow());
+
+        var duplicate = mock(ExternalIdentityProvider.class);
+        when(duplicate.getId()).thenReturn(ref.providerId());
+        assertThrows(ConcordApplicationException.class, () -> new ExternalIdentitySynchronizer(
+                identities, mock(AuditLog.class), Set.of(provider, duplicate)));
+        when(duplicate.getId()).thenReturn(" ");
+        assertThrows(ConcordApplicationException.class, () -> new ExternalIdentitySynchronizer(
+                identities, mock(AuditLog.class), Set.of(duplicate)));
+        var empty = new ExternalIdentitySynchronizer(identities, mock(AuditLog.class), Set.of());
+        assertThrows(ExternalIdentityException.class, () -> empty.refresh(ref));
+        assertEquals(state, identities.getSyncState(ref).orElseThrow());
+    }
+
+    @Test
+    public void testExternalGroupsGrantTeamsButNotGlobalRoles() {
+        var ref = identity();
+        var id = identities.getOrCreate(ref, null, null);
+        var ldap = users.insertOrUpdate("ldap-" + UUID.randomUUID(), "example.org", null, null, UserType.LDAP, null);
+        var local = users.insertOrUpdate("local-" + UUID.randomUUID(), null, null, null, UserType.LOCAL, null);
+        var sso = users.insertOrUpdate("sso-" + UUID.randomUUID(), "example.org", null, null, UserType.SSO, null);
+        var tx = DSL.using(configuration);
+        var group = "CN=" + UUID.randomUUID() + ",DC=example";
+        var role = UUID.randomUUID();
+        var directRole = UUID.randomUUID();
+        var team = UUID.randomUUID();
+        var directTeam = UUID.randomUUID();
+        tx.insertInto(ROLES).set(ROLES.ROLE_ID, role).set(ROLES.ROLE_NAME, "role-" + role).execute();
+        tx.insertInto(ROLES).set(ROLES.ROLE_ID, directRole).set(ROLES.ROLE_NAME, "role-" + directRole).execute();
+        tx.insertInto(ROLE_LDAP_GROUPS).set(ROLE_LDAP_GROUPS.ROLE_ID, role)
+                .set(ROLE_LDAP_GROUPS.LDAP_GROUP, group).execute();
+        tx.insertInto(USER_ROLES).set(USER_ROLES.USER_ID, id).set(USER_ROLES.ROLE_ID, directRole).execute();
+        var orgId = tx.select(ORGANIZATIONS.ORG_ID).from(ORGANIZATIONS)
+                .where(ORGANIZATIONS.ORG_NAME.eq("Default")).fetchSingle(ORGANIZATIONS.ORG_ID);
+        for (var teamId : Set.of(team, directTeam)) {
+            tx.insertInto(TEAMS).set(TEAMS.TEAM_ID, teamId).set(TEAMS.TEAM_NAME, "team-" + teamId)
+                    .set(TEAMS.ORG_ID, orgId).execute();
+        }
+        tx.insertInto(USER_TEAMS).set(USER_TEAMS.USER_ID, id).set(USER_TEAMS.TEAM_ID, directTeam)
+                .set(USER_TEAMS.TEAM_ROLE, "MEMBER").execute();
+        tx.insertInto(TEAM_LDAP_GROUPS).set(TEAM_LDAP_GROUPS.TEAM_ID, team)
+                .set(TEAM_LDAP_GROUPS.LDAP_GROUP, group).set(TEAM_LDAP_GROUPS.TEAM_ROLE, "MEMBER").execute();
+        identities.applySnapshot(snapshot(ref, Set.of(group)), identities.beginRefresh(ref));
+        var ldapGroups = new LdapGroupDao(configuration);
+        for (var userId : Set.of(ldap, local, sso)) {
+            ldapGroups.update(userId, Set.of(group));
+            assertEquals(Set.of(role), tx.select(V_USER_ROLES.ROLE_ID).from(V_USER_ROLES)
+                    .where(V_USER_ROLES.USER_ID.eq(userId)).fetchSet(V_USER_ROLES.ROLE_ID));
+        }
+        assertEquals(Set.of(directRole), tx.select(V_USER_ROLES.ROLE_ID).from(V_USER_ROLES)
+                .where(V_USER_ROLES.USER_ID.eq(id)).fetchSet(V_USER_ROLES.ROLE_ID));
+        assertEquals(Set.of(team, directTeam), tx.select(V_USER_TEAMS.TEAM_ID).from(V_USER_TEAMS)
+                .where(V_USER_TEAMS.USER_ID.eq(id)).fetchSet(V_USER_TEAMS.TEAM_ID));
+        assertThrows(ConcordApplicationException.class, () -> ldapGroups.update(id, Set.of("wrong-owner")));
+        assertThrows(ConcordApplicationException.class, () -> ldapGroups.updateIfNeeded(id, Set.of("wrong-owner"),
+                org.jooq.impl.DSL.currentOffsetDateTime()));
+        assertEquals(Set.of(group), groups(id));
+        identities.applySnapshot(snapshot(ref, Set.of()), identities.beginRefresh(ref));
+        assertEquals(Set.of(directTeam), tx.select(V_USER_TEAMS.TEAM_ID).from(V_USER_TEAMS)
+                .where(V_USER_TEAMS.USER_ID.eq(id)).fetchSet(V_USER_TEAMS.TEAM_ID));
+        assertEquals(Set.of(directRole), tx.select(V_USER_ROLES.ROLE_ID).from(V_USER_ROLES)
+                .where(V_USER_ROLES.USER_ID.eq(id)).fetchSet(V_USER_ROLES.ROLE_ID));
+    }
+
+    @Test
+    public void testOverlappingProviderLookupsCannotApplyOutOfOrder() throws Exception {
+        var ref = identity();
+        var id = identities.getOrCreate(ref, null, null);
+        var firstStarted = new CountDownLatch(1);
+        var releaseFirst = new CountDownLatch(1);
+        var calls = new AtomicInteger();
+        var provider = mock(ExternalIdentityProvider.class);
+        when(provider.getId()).thenReturn(ref.providerId());
+        when(provider.fetch(ref)).thenAnswer(invocation -> {
+            if (calls.getAndIncrement() == 0) {
+                firstStarted.countDown();
+                if (!releaseFirst.await(20, TimeUnit.SECONDS)) {
+                    throw new IllegalStateException("First lookup was not released");
+                }
+                return snapshot(ref, Set.of("older"));
+            }
+            return snapshot(ref, Set.of("newer"));
+        });
+        var audit = mock(AuditLog.class, RETURNS_DEEP_STUBS);
+        var synchronizer = new ExternalIdentitySynchronizer(identities, audit, Set.of(provider));
+        try (var executor = Executors.newSingleThreadExecutor()) {
+            var first = executor.submit(() -> assertThrows(ExternalIdentityException.class,
+                    () -> synchronizer.refresh(ref)));
+            try {
+                assertTrue(firstStarted.await(20, TimeUnit.SECONDS));
+                synchronizer.refresh(ref);
+            } finally {
+                releaseFirst.countDown();
+            }
+            assertEquals("External identity refresh was superseded or its binding was deleted",
+                    first.get(30, TimeUnit.SECONDS).getMessage());
+        }
+        assertEquals(Set.of("newer"), groups(id));
+        verify(audit, times(1)).add(any(), any());
+    }
+
+    @Test
+    public void testExternalGroupsDoNotSatisfyLdapFormAccess() {
+        var id = identities.getOrCreate(identity(), null, null);
+        var subject = mock(Subject.class);
+        when(subject.getPrincipals()).thenReturn(new SimplePrincipalCollection(
+                new UserPrincipal("internal", users.get(id)), "internal"));
+        var previous = ThreadContext.getResources();
+        try {
+            ThreadContext.bind(mock(SecurityManager.class));
+            ThreadContext.bind(subject);
+            var usersManager = mock(UserManager.class);
+            var manager = new FormAccessManager(mock(ProcessStateManager.class), usersManager);
+            var runAs = new HashMap<String, Serializable>();
+            runAs.put("ldap", new HashMap<>(Map.of("group", "CN=group,DC=example")));
+            assertThrows(UnauthorizedException.class, () -> manager.assertFormAccess(
+                    "approval", runAs));
+            verifyNoInteractions(usersManager);
+            for (var type : new UserType[]{UserType.LDAP, UserType.LOCAL, UserType.SSO}) {
+                var user = mock(UserEntry.class);
+                when(user.getType()).thenReturn(type);
+                when(subject.getPrincipals()).thenReturn(new SimplePrincipalCollection(
+                        new UserPrincipal("internal", user), "internal"));
+                when(usersManager.getCurrentUserInfo()).thenReturn(UserInfoProvider.UserInfo.builder()
+                        .groups(Set.of("CN=group,DC=example")).build());
+                manager.assertFormAccess("approval", runAs);
+            }
+        } finally {
+            ThreadContext.remove();
+            ThreadContext.setResources(previous);
+        }
+    }
+
+    private Set<String> groups(UUID id) {
+        return DSL.using(configuration).select(USER_LDAP_GROUPS.LDAP_GROUP).from(USER_LDAP_GROUPS)
+                .where(USER_LDAP_GROUPS.USER_ID.eq(id)).fetchSet(USER_LDAP_GROUPS.LDAP_GROUP);
+    }
+
+    private static ExternalIdentitySnapshot snapshot(ExternalIdentityRef ref, Set<String> groups) {
+        return new ExternalIdentitySnapshot(ref, ExternalIdentitySnapshot.Status.ACTIVE, "App", null, groups);
     }
 
     private static ExternalIdentityRef identity() {

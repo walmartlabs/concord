@@ -22,13 +22,17 @@ package com.walmartlabs.concord.server.user;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.walmartlabs.concord.server.sdk.identity.ExternalIdentityProvider;
 
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
 
 public class UserModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        newSetBinder(binder, ExternalIdentityProvider.class);
+        binder.bind(ExternalIdentitySynchronizer.class).asEagerSingleton();
         bindJaxRsResource(binder, UserResource.class);
         bindJaxRsResource(binder, UserResourceV2.class);
     }

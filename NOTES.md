@@ -24,6 +24,7 @@ Server and server plugin types that currently require explicit binding using `Mu
 - CustomEnqueueProcessor
 - DatabaseChangeLogProvider
 - ExceptionMapper
+- ExternalIdentityProvider
 - ExternalEventTriggerProcessor
 - Filter
 - FilterChainConfigurator

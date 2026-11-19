@@ -15,8 +15,8 @@ verification from authoritative profile and group lookup:
 
 These are foundation contracts only. This module does not register or invoke
 providers, provision external users, persist memberships or change authorization.
-The server implementation now has persistence primitives described below;
-provider invocation and execution support will be integrated separately.
+The server implementation now has persistence and explicit refresh primitives
+described below. Event integration and execution support remain disabled.
 
 ### Persistence foundation
 
@@ -39,12 +39,55 @@ This is not an execution feature: no external `UserInfoProvider` is registered,
 ordinary user provisioning rejects `EXTERNAL`, and internal impersonation and
 API-key authentication explicitly reject these users even if enabled manually.
 Do not remove these gates until lifecycle, freshness and restricted-delegation
-enforcement are integrated. Membership state and refresh timestamps belong to
-the subsequent synchronization slice.
+enforcement are integrated.
 
 Upgrade all server nodes before provisioning external identities or claiming
 authoritative aliases. Older nodes do not recognize `EXTERNAL` and their legacy
 mapping writer does not enforce authoritative-alias protection.
+
+### Explicit membership synchronization
+
+Plugins register `ExternalIdentityProvider` using Guice's
+`Multibinder.newSetBinder(binder, ExternalIdentityProvider.class)`. Provider IDs
+must be unique and contain between 1 and 128 characters; invalid registrations
+fail server initialization.
+
+The server's `ExternalIdentitySynchronizer.refresh(identity)` refreshes an
+already provisioned identity. This slice does not introduce a REST endpoint,
+automatic provisioning on events, a background scheduler or a freshness TTL.
+Those callers and policies will be integrated separately before execution can
+be enabled.
+
+Each refresh reserves a database ordering token before contacting the provider.
+The remote lookup does not hold a database lock. Only the newest attempt may
+commit, and a token is consumed at most once. Tokens also bind the Concord user
+ID so an old lookup cannot apply to a deleted and subsequently recreated identity.
+A newer failed attempt still supersedes older in-flight attempts.
+
+Successful refresh atomically replaces the complete cached group set, updates
+the optional display name and email (including clearing absent values), and
+stores `SOURCE_STATUS` and `LAST_SUCCESSFUL_SYNC`. Provider failures, null or
+mismatched snapshots and superseded results are explicit errors; they do not
+clear memberships or advance successful-sync metadata. Successful updates are
+audited. A snapshot rejected by the database rolls back all its changes.
+
+`ACTIVE` with zero groups removes all provider-derived memberships without
+claiming the identity is missing. `INACTIVE` and `NOT_FOUND` clear those
+memberships and record the authoritative source state. Refresh never enables or
+disables the Concord user, overrides an administrator's disable decision, or
+changes direct team/role grants. Source lifecycle and administrator disable
+state remain separate and must both be checked by future execution integration.
+
+External memberships join existing team mappings, but the role view explicitly
+excludes them from group-derived global roles. Explicit direct roles retain their
+existing semantics. LDAP-group form conditions reject external identities, and
+the LDAP group writer rejects attempts to modify their memberships. Existing
+LDAP, LOCAL and SSO group behavior is preserved.
+
+Persisted membership is a cache, not sufficient authorization. A failed refresh
+may leave the last successful membership set in storage; no external execution
+is enabled by this slice, and future use must enforce freshness, source state,
+administrator disable state and restricted delegation before using that cache.
 
 ### Identity and trust
 
