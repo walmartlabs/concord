@@ -1,4 +1,3 @@
-        // TODO: assert project access
 package com.walmartlabs.concord.server.org.project;
 
 /*-
