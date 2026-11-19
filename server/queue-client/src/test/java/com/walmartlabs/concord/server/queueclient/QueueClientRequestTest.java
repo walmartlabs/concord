@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.queueclient;
 import com.walmartlabs.concord.server.queueclient.message.CommandRequest;
 import com.walmartlabs.concord.server.queueclient.message.CommandResponse;
 import com.walmartlabs.concord.server.queueclient.message.Message;
+import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
 import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
 import org.junit.jupiter.api.BeforeEach;
@@ -94,6 +95,54 @@ class QueueClientRequestTest {
         assertSendFailed(future);
     }
 
+    @Test
+    void testMaintenanceModeCompletesFutureRequestsWithNull() throws Exception {
+        field(client, "workerThread", new Thread());
+
+        client.maintenanceMode();
+
+        var commandRequest = client.<Message>request(new CommandRequest(UUID.randomUUID()));
+        var processRequest = client.<Message>request(new ProcessRequest(Map.of()));
+
+        assertTrue(commandRequest.isDone(), "Command requests must not wait while maintenance mode is active");
+        assertNull(commandRequest.get());
+        assertTrue(processRequest.isDone(), "Process requests must not wait while maintenance mode is active");
+        assertNull(processRequest.get());
+    }
+
+    @Test
+    void testWebSocketCloseKeepsMaintenanceState() throws Exception {
+        field(client, "workerThread", new Thread());
+
+        client.maintenanceMode();
+        worker.onWebSocketClose(1000, "test");
+
+        assertEquals("MAINTENANCE", field(worker, "state").toString());
+    }
+
+    @Test
+    void testDisconnectKeepsMaintenanceState() throws Exception {
+        field(client, "workerThread", new Thread());
+
+        client.maintenanceMode();
+        worker.disconnect();
+
+        assertEquals("MAINTENANCE", field(worker, "state").toString());
+    }
+
+    @Test
+    void testQueuedRequestIsCancelledInMaintenanceMode() throws Exception {
+        var future = client.<Message>request(new CommandRequest(UUID.randomUUID()));
+        var session = session(true, (text, callback) -> fail("Must not send after maintenance mode is active"));
+
+        field(client, "workerThread", new Thread());
+        client.maintenanceMode();
+        processRequests(session);
+
+        assertTrue(future.isDone(), "A queued request must not wait after maintenance mode is active");
+        assertNull(future.get());
+    }
+
     private void assertSendFailed(Future<Message> future) throws Exception {
         assertTrue(future.isDone(), "A failed send must complete the caller's future");
         assertNull(future.get());
@@ -117,6 +166,12 @@ class QueueClientRequestTest {
         var field = target.getClass().getDeclaredField(name);
         field.setAccessible(true);
         return field.get(target);
+    }
+
+    private static void field(Object target, String name, Object value) throws Exception {
+        var field = target.getClass().getDeclaredField(name);
+        field.setAccessible(true);
+        field.set(target, value);
     }
 
     private static Session session(boolean open, BiConsumer<String, Callback> onSend) {

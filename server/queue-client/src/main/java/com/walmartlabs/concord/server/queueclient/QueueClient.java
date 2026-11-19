@@ -49,7 +49,6 @@ public class QueueClient {
 
     private static final Logger log = LoggerFactory.getLogger(QueueClient.class);
 
-    private final Set<MessageType> ignoreRequests;
     private final List<RequestEntry> requests;
 
     private final Worker worker;
@@ -57,7 +56,6 @@ public class QueueClient {
     private boolean onMaintenanceMode;
 
     public QueueClient(QueueClientConfiguration cfg) throws URISyntaxException {
-        this.ignoreRequests = new HashSet<>();
         this.requests = new ArrayList<>();
 
         this.worker = new Worker(cfg, requests);
@@ -86,9 +84,8 @@ public class QueueClient {
             if (onMaintenanceMode) {
                 return;
             }
-            ignoreRequests.add(MessageType.PROCESS_REQUEST);
-            worker.disconnect();
             onMaintenanceMode = true;
+            worker.maintenanceMode();
         }
     }
 
@@ -96,11 +93,12 @@ public class QueueClient {
     public <E extends Message> Future<E> request(Message request) {
         SettableFuture<Message> f = SettableFuture.create();
         synchronized (requests) {
-            if (ignoreRequests.contains(request.getMessageType())) {
+            if (onMaintenanceMode) {
                 f.set(null);
-            } else {
-                requests.add(new RequestEntry(request, f));
+                return (Future<E>) f;
             }
+
+            requests.add(new RequestEntry(request, f));
         }
         return (Future<E>) f;
     }
@@ -113,7 +111,8 @@ public class QueueClient {
         private enum State {
             CONNECTING,
             CONNECTED,
-            DISCONNECTING
+            DISCONNECTING,
+            MAINTENANCE
         }
 
         private final AtomicLong requestIdGenerator = new AtomicLong();
@@ -166,7 +165,15 @@ public class QueueClient {
                     switch (state.get()) {
                         case CONNECTING: {
                             session = connect(destUris[destUriIndex]);
-                            state.set(State.CONNECTED);
+                            if (!state.compareAndSet(State.CONNECTING, State.CONNECTED)) {
+                                close(session);
+                                session = null;
+                                if (state.get() == State.MAINTENANCE) {
+                                    return;
+                                }
+                                break;
+                            }
+
                             lastRequestTimestamp = System.currentTimeMillis();
                             lastResponseTimestamp = lastRequestTimestamp;
                             log.info("connect ['{}'] -> done", destUris[destUriIndex]);
@@ -181,14 +188,23 @@ public class QueueClient {
                         case DISCONNECTING: {
                             close(session);
                             session = null;
-                            state.set(State.CONNECTING);
-                            sleep(reconnectDelay);
+                            if (state.compareAndSet(State.DISCONNECTING, State.CONNECTING)) {
+                                sleep(reconnectDelay);
+                            } else if (state.get() == State.MAINTENANCE) {
+                                return;
+                            }
                             break;
+                        }
+                        case MAINTENANCE: {
+                            close(session);
+                            return;
                         }
                     }
                 } catch (Exception e) {
                     log.error("mainLoop -> error", e);
-                    state.set(State.DISCONNECTING);
+                    if (!disconnecting()) {
+                        return;
+                    }
 
                     if (++destUriIndex >= destUris.length) {
                         destUriIndex = 0;
@@ -235,8 +251,10 @@ public class QueueClient {
 
         @Override
         public void onWebSocketClose(int statusCode, String reason) {
-            state.set(State.DISCONNECTING);
-            closeFuture.complete(null);
+            disconnecting();
+            if (closeFuture != null) {
+                closeFuture.complete(null);
+            }
             log.info("onWebSocketClose [{}, '{}'] -> done", statusCode, reason);
         }
 
@@ -255,7 +273,15 @@ public class QueueClient {
         }
 
         public void disconnect() {
-            state.set(State.DISCONNECTING);
+            disconnecting();
+        }
+
+        public void maintenanceMode() {
+            state.set(State.MAINTENANCE);
+        }
+
+        private boolean disconnecting() {
+            return state.getAndUpdate(s -> s == State.MAINTENANCE ? State.MAINTENANCE : State.DISCONNECTING) != State.MAINTENANCE;
         }
 
         private Session connect(URI destUri) throws Exception {
@@ -272,7 +298,7 @@ public class QueueClient {
         }
 
         private boolean send(Session session, Message message) {
-            if (!session.isOpen()) {
+            if (state.get() == State.MAINTENANCE || !session.isOpen()) {
                 return false;
             }
 
@@ -295,6 +321,11 @@ public class QueueClient {
                 return;
             }
 
+            if (state.get() == State.MAINTENANCE) {
+                e.cancel();
+                return;
+            }
+
             // register the request before sending it, the response may arrive before send() returns
             e.request.setCorrelationId(requestIdGenerator.incrementAndGet());
             awaitResponses.put(e.getCorrelationId(), e);
@@ -303,7 +334,7 @@ public class QueueClient {
             if (!sent) {
                 awaitResponses.remove(e.getCorrelationId());
                 e.cancel();
-                state.set(State.DISCONNECTING);
+                disconnecting();
             }
         }
 
