@@ -31,6 +31,13 @@ import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.UiProcessCardsRecord;
 import com.walmartlabs.concord.server.org.EntityOwner;
 import com.walmartlabs.concord.server.org.ResourceAccessUtils;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
+import com.walmartlabs.concord.server.org.team.TeamDao;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UnauthorizedException;
@@ -55,14 +62,29 @@ import static org.jooq.impl.DSL.*;
 public class ProcessCardManager {
 
     private final Dao dao;
+    private final ProjectAccessManager projectAccessManager;
+    private final ProjectDao projectDao;
+    private final RepositoryDao repositoryDao;
+    private final TeamDao teamDao;
 
     @Inject
-    public ProcessCardManager(Dao dao) {
+    public ProcessCardManager(Dao dao, ProjectAccessManager projectAccessManager, ProjectDao projectDao,
+                              RepositoryDao repositoryDao, TeamDao teamDao) {
         this.dao = dao;
+        this.projectAccessManager = projectAccessManager;
+        this.projectDao = projectDao;
+        this.repositoryDao = repositoryDao;
+        this.teamDao = teamDao;
     }
 
     public ProcessCardEntry get(UUID cardId) {
         return dao.get(cardId);
+    }
+
+    public record Target(UUID projectId, UUID repositoryId, String entryPoint) {}
+
+    public Target getTarget(UUID cardId) {
+        return dao.getTarget(cardId);
     }
 
     public void delete(UUID cardId) {
@@ -70,6 +92,7 @@ public class ProcessCardManager {
     }
 
     public void assertAccess(UUID cardId) {
+        projectAccessManager.assertAccess(dao.getProjectId(cardId), ResourceAccessLevel.WRITER, true);
         if (Roles.isAdmin()) {
             return;
         }
@@ -86,6 +109,20 @@ public class ProcessCardManager {
     }
 
     public void updateAccess(UUID cardId, List<UUID> teamIds, List<UUID> userIds) {
+        assertAccess(cardId);
+        ProjectEntry project = projectDao.get(dao.getProjectId(cardId));
+        for (UUID userId : userIds) {
+            if (!projectAccessManager.hasUserReadAccess(project, userId)) {
+                throw new ValidationErrorsException("Process card recipient must have project read access: " + userId);
+            }
+        }
+        for (UUID teamId : teamIds) {
+            if (!project.getOrgId().equals(teamDao.getOrgId(teamId))
+                    || projectDao.getAccessLevel(project.getId()).stream().noneMatch(e ->
+                    teamId.equals(e.getTeamId()) && Arrays.asList(ResourceAccessLevel.atLeast(ResourceAccessLevel.READER)).contains(e.getLevel()))) {
+                throw new ValidationErrorsException("Process card team must belong to the project organization and have project read access: " + teamId);
+            }
+        }
         dao.tx(tx -> {
             dao.rewriteTeamAccess(tx, cardId, teamIds);
             dao.rewriteUserAccess(tx, cardId, userIds);
@@ -93,10 +130,37 @@ public class ProcessCardManager {
     }
 
     public List<ProcessCardEntry> listUserCards(UUID userId) {
-        return dao.listCards(userId);
+        return dao.listCards(userId, Roles.isAdmin()).stream()
+                .filter(card -> canRead(card.id()))
+                .toList();
+    }
+
+    public void assertReadable(UUID cardId) {
+        if (!canRead(cardId)) {
+            throw new UnauthorizedException("No read access to process card: " + cardId);
+        }
+    }
+
+    private boolean canRead(UUID cardId) {
+        if (!Roles.isAdmin() && !dao.hasGrant(cardId, UserPrincipal.assertCurrent().getId())) {
+            return false;
+        }
+        try {
+            projectAccessManager.assertAccess(dao.getProjectId(cardId), ResourceAccessLevel.READER, true);
+            return true;
+        } catch (UnauthorizedException e) {
+            return false;
+        }
     }
 
     public ProcessCardOperationResponse createOrUpdate(UUID id, UUID projectId, UUID repoId, String name, Optional<String> entryPoint, String description, InputStream icon, InputStream form, Map<String, Object> data, Integer orderId) {
+        if (projectId == null) {
+            throw new ValidationErrorsException("Project ID or name is required");
+        }
+        projectAccessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, true);
+        if (repoId != null && !projectId.equals(repositoryDao.getProjectId(repoId))) {
+            throw new ValidationErrorsException("Repository must belong to the project");
+        }
         boolean exists;
         if (id == null) {
             if (projectId == null) {
@@ -112,12 +176,19 @@ public class ProcessCardManager {
         }
 
         if (!exists) {
+            if (name == null) {
+                throw new ValidationErrorsException("name is required");
+            }
             UUID resultId = dao.insert(id, projectId, repoId, name, entryPoint.orElse(Constants.Request.DEFAULT_ENTRY_POINT_NAME), description, icon, form, data, orderId);
             return new ProcessCardOperationResponse(resultId, OperationResult.CREATED);
         } else {
             assertAccess(id);
-
-            dao.update(id, projectId, repoId, name, entryPoint.orElse(null), description, icon, form, data, orderId);
+            UUID effectiveRepoId = repoId != null ? repoId : dao.getRepositoryId(id);
+            if (effectiveRepoId != null && !projectId.equals(repositoryDao.getProjectId(effectiveRepoId))) {
+                throw new ValidationErrorsException("Repository must belong to the project");
+            }
+            dao.update(id, projectId, repoId, name, entryPoint.orElse(null), description, icon, form, data, orderId,
+                    !projectId.equals(dao.getProjectId(id)));
             return new ProcessCardOperationResponse(id, OperationResult.UPDATED);
         }
     }
@@ -151,6 +222,41 @@ public class ProcessCardManager {
 
         public ProcessCardEntry get(UUID cardId) {
             return txResult(tx -> get(tx, cardId));
+        }
+
+        public UUID getProjectId(UUID cardId) {
+            return dsl().select(UI_PROCESS_CARDS.PROJECT_ID).from(UI_PROCESS_CARDS)
+                    .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(cardId)).fetchOne(UI_PROCESS_CARDS.PROJECT_ID);
+        }
+
+        public Target getTarget(UUID cardId) {
+            return dsl().select(UI_PROCESS_CARDS.PROJECT_ID, UI_PROCESS_CARDS.REPO_ID, UI_PROCESS_CARDS.ENTRY_POINT)
+                    .from(UI_PROCESS_CARDS).where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(cardId))
+                    .fetchOne(r -> new Target(r.value1(), r.value2(), r.value3()));
+        }
+
+        public UUID getRepositoryId(UUID cardId) {
+            return dsl().select(UI_PROCESS_CARDS.REPO_ID).from(UI_PROCESS_CARDS)
+                    .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(cardId)).fetchOne(UI_PROCESS_CARDS.REPO_ID);
+        }
+
+        public boolean hasGrant(UUID cardId, UUID userId) {
+            return dsl().fetchExists(selectFrom(UI_PROCESS_CARDS)
+                    .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(cardId))
+                    .and(UI_PROCESS_CARDS.OWNER_ID.eq(userId)
+                            .or(exists(selectOne().from(USER_UI_PROCESS_CARDS)
+                                    .where(USER_UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(cardId))
+                                    .and(USER_UI_PROCESS_CARDS.USER_ID.eq(userId))))
+                            .or(exists(selectOne().from(TEAM_UI_PROCESS_CARDS)
+                                    .join(V_USER_TEAMS).on(V_USER_TEAMS.TEAM_ID.eq(TEAM_UI_PROCESS_CARDS.TEAM_ID))
+                                    .join(TEAMS).on(TEAMS.TEAM_ID.eq(TEAM_UI_PROCESS_CARDS.TEAM_ID))
+                                    .join(PROJECTS).on(PROJECTS.PROJECT_ID.eq(UI_PROCESS_CARDS.PROJECT_ID)
+                                            .and(PROJECTS.ORG_ID.eq(TEAMS.ORG_ID)))
+                                    .join(PROJECT_TEAM_ACCESS).on(PROJECT_TEAM_ACCESS.PROJECT_ID.eq(PROJECTS.PROJECT_ID)
+                                            .and(PROJECT_TEAM_ACCESS.TEAM_ID.eq(TEAMS.TEAM_ID)))
+                                    .where(TEAM_UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(cardId))
+                                    .and(PROJECT_TEAM_ACCESS.ACCESS_LEVEL.in("READER", "WRITER", "OWNER"))
+                                    .and(V_USER_TEAMS.USER_ID.eq(userId))))));
         }
 
         private ProcessCardEntry get(DSLContext tx, UUID cardId) {
@@ -213,8 +319,12 @@ public class ProcessCardManager {
 
         public void update(UUID cardId, UUID projectId, UUID repoId, String name,
                            String entryPoint, String description, InputStream icon, InputStream form,
-                           Map<String, Object> data, Integer orderId) {
+                           Map<String, Object> data, Integer orderId, boolean clearShares) {
             tx(tx -> {
+                if (clearShares) {
+                    rewriteTeamAccess(tx, cardId, List.of());
+                    rewriteUserAccess(tx, cardId, List.of());
+                }
                 List<Object> params = new ArrayList<>();
                 UpdateSetStep<UiProcessCardsRecord> q = tx.update(UI_PROCESS_CARDS);
 
@@ -339,11 +449,11 @@ public class ProcessCardManager {
                     .fetchOne(r -> toOwner(r.get(c.OWNER_ID), r.get(u.USERNAME), r.get(u.DOMAIN), r.get(u.DISPLAY_NAME), r.get(u.USER_TYPE))));
         }
 
-        public List<ProcessCardEntry> listCards(UUID userId) {
-            return txResult(tx -> listCards(tx, userId));
+        public List<ProcessCardEntry> listCards(UUID userId, boolean admin) {
+            return txResult(tx -> listCards(tx, userId, admin));
         }
 
-        private List<ProcessCardEntry> listCards(DSLContext tx, UUID userId) {
+        private List<ProcessCardEntry> listCards(DSLContext tx, UUID userId, boolean admin) {
             var userTeams = tx.select(V_USER_TEAMS.TEAM_ID)
                     .from(V_USER_TEAMS)
                     .where(V_USER_TEAMS.USER_ID.eq(userId));
@@ -368,7 +478,7 @@ public class ProcessCardManager {
                     .from(userCards);
 
             var query = buildSelect(tx)
-                    .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.in(userCardsFilter));
+                    .where(admin ? trueCondition() : UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.in(userCardsFilter));
 
             return query
                     .orderBy(UI_PROCESS_CARDS.ORDER_ID, UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)

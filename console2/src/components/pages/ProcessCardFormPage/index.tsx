@@ -28,6 +28,7 @@ import { useApi } from '../../../hooks/useApi';
 import { RequestErrorMessage } from '../../molecules';
 import { useCallback, useContext } from 'react';
 import { UserSessionContext } from '../../../session';
+import ProcessCardForm from '../../organisms/ProcessCardForm';
 
 interface RouteProps {
     cardId: string;
@@ -81,13 +82,7 @@ function ProcessCardFormPage(props: RouteComponentProps<RouteProps>) {
                 <Divider />
                 {card.isCustomForm && (
                     <div className={'ui active embed'}>
-                        <iframe
-                            title={card.id}
-                            src={`/api/v1/processcard/${card.id}/form`}
-                            height={'100%'}
-                            width={'100%'}
-                            allowFullScreen={true}
-                        />
+                        <ProcessCardForm cardId={card.id} />
                     </div>
                 )}
 

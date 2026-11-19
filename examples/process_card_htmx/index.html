@@ -2,51 +2,50 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Process start form example</title>
-    <script src="data.js"></script>
-    <script src="https://unpkg.com/htmx.org@2.0.10/dist/htmx.min.js"></script>
-    <script src="https://unpkg.com/htmx.org@2.0.10/dist/ext/client-side-templates.js"></script>
-    <script src="https://unpkg.com/mustache@4.2.0/mustache.min.js"></script>
-    <style>
-        body {
-            background-color: white;
-            font-family: sans-serif;
-        }
-    </style>
+    <title>Process card form</title>
+    <style>body { background: white; font-family: sans-serif; } label, button { margin: 10px; }</style>
 </head>
-<body hx-ext="client-side-templates">
-
-<form id='form'
-      hx-encoding='multipart/form-data'
-      hx-post='/api/v1/process'
-      hx-swap="innerHTML"
-      mustache-template="response-template">
-    <div style="display: flex; flex-direction: column">
-        <div style="padding: 10px">
-            <label for="name">Name</label>
-            <input id="name" name="arguments.name" type="text" required/>
-        </div>
-        <input type="hidden" name="org"/>
-        <input type="hidden" name="project"/>
-        <input type="hidden" name="repo"/>
-        <input type="hidden" name="entryPoint"/>
-        <button style="padding: 10px" type="submit">Run process</button>
-    </div>
+<body>
+<form id="form">
+    <label>Name <input name="name" required></label>
+    <button type="button" disabled>Run process</button>
 </form>
-
-<template id="response-template">
-    <div>
-        The process has been started, see <a href="/#/process/{{instanceId}}/log" target="_parent">the log</a> for
-        details.
-    </div>
-</template>
-
+<p id="status">Open this card in the Concord console to start a process.</p>
 <script>
-    document.getElementsByName('org')[0].value = data.org;
-    document.getElementsByName('project')[0].value = data.project;
-    document.getElementsByName('repo')[0].value = data.repo;
-    document.getElementsByName('entryPoint')[0].value = data.entryPoint;
+    const protocol = 'concord-process-card-v1';
+    const form = document.getElementById('form');
+    const status = document.getElementById('status');
+    let channel;
+    window.addEventListener('message', (event) => {
+        const message = event.data;
+        if (event.source !== window.parent || window.parent === window ||
+            !message || message.protocol !== protocol) return;
+        if (message.type === 'init' && typeof message.channel === 'string' && !channel) {
+            channel = message.channel;
+            form.elements.name.value = message.data.values?.name || '';
+            form.querySelector('button').disabled = false;
+            status.textContent = '';
+        } else if (message.channel === channel && message.type === 'error') {
+            status.textContent = message.message;
+            form.querySelector('button').disabled = false;
+        } else if (message.channel === channel && message.type === 'started') {
+            status.textContent = 'Process started. Opening its log in the console…';
+        }
+    });
+    form.querySelector('button').addEventListener('click', (event) => {
+        event.preventDefault();
+        if (!channel || !form.reportValidity()) return;
+        form.querySelector('button').disabled = true;
+        window.parent.postMessage({
+            protocol, type: 'start', channel, arguments: { name: form.elements.name.value }
+        }, '*');
+    });
+    form.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            form.querySelector('button').click();
+        }
+    });
 </script>
-
 </body>
 </html>
