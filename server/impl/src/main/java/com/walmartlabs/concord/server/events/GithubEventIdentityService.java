@@ -24,8 +24,10 @@ import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.identity.ExternalEventIdentityResolver;
 import com.walmartlabs.concord.server.sdk.identity.ExternalIdentityException;
+import com.walmartlabs.concord.server.sdk.identity.ExternalIdentityRef;
 import com.walmartlabs.concord.server.sdk.identity.ExternalIdentityResolution;
 import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;
+import com.walmartlabs.concord.server.user.ExternalIdentityLifecycleManager;
 import jakarta.servlet.http.HttpServletRequest;
 
 import javax.inject.Inject;
@@ -35,11 +37,14 @@ public class GithubEventIdentityService {
 
     private final Set<ExternalEventIdentityResolver> resolvers;
     private final String authority;
+    private final ExternalIdentityLifecycleManager lifecycleManager;
 
     @Inject
-    public GithubEventIdentityService(GithubConfiguration cfg, Set<ExternalEventIdentityResolver> resolvers) {
+    public GithubEventIdentityService(GithubConfiguration cfg, Set<ExternalEventIdentityResolver> resolvers,
+                                      ExternalIdentityLifecycleManager lifecycleManager) {
         this.resolvers = Set.copyOf(resolvers);
         this.authority = cfg.getExternalIdentityAuthority();
+        this.lifecycleManager = lifecycleManager;
         if (!resolvers.isEmpty() && (authority == null || authority.isBlank() || authority.length() > 512)) {
             throw new IllegalArgumentException("github.externalIdentityAuthority must contain 1 to 512 characters when external event identity resolvers are registered");
         }
@@ -51,7 +56,7 @@ public class GithubEventIdentityService {
         }
 
         var context = GithubAuthenticatingFilter.getEventContext(request, authority, eventType, deliveryId);
-        var claimed = false;
+        ExternalIdentityRef claimed = null;
         try {
             for (var resolver : resolvers) {
                 var resolution = resolver.resolve(context);
@@ -65,18 +70,21 @@ public class GithubEventIdentityService {
                     if (!authority.equals(resolved.identity().authority())) {
                         throw new ConcordApplicationException("Resolved GitHub identity has a different authority");
                     }
-                    if (claimed) {
+                    if (claimed != null) {
                         throw new ConcordApplicationException("Multiple external event identity resolvers claimed the GitHub actor");
                     }
-                    claimed = true;
+                    claimed = resolved.identity();
                 }
+            }
+            if (claimed != null) {
+                lifecycleManager.requireActive(claimed);
             }
         } catch (ExternalIdentityException e) {
             throw new ConcordApplicationException("GitHub event actor verification failed", e);
         }
 
-        if (claimed) {
-            throw new ConcordApplicationException("External GitHub actor execution is disabled pending lifecycle, freshness and restricted-delegation enforcement");
+        if (claimed != null) {
+            throw new ConcordApplicationException("External GitHub actor execution is disabled pending restricted-delegation enforcement and execution-context lifecycle revalidation");
         }
     }
 }

@@ -53,11 +53,10 @@ Plugins register `ExternalIdentityProvider` using Guice's
 must be unique and contain between 1 and 128 characters; invalid registrations
 fail server initialization.
 
-The server's `ExternalIdentitySynchronizer.refresh(identity)` refreshes an
-already provisioned identity. This slice does not introduce a REST endpoint,
-automatic provisioning on events, a background scheduler or a freshness TTL.
-Those callers and policies will be integrated separately before execution can
-be enabled.
+The server's `ExternalIdentitySynchronizer.refresh(identity)` explicitly refreshes
+an already provisioned identity. The lifecycle manager described below also uses
+this primitive for on-demand refresh. There is no REST refresh endpoint,
+automatic provisioning on events or background scheduler.
 
 Each refresh reserves a database ordering token before contacting the provider.
 The remote lookup does not hold a database lock. Only the newest attempt may
@@ -77,7 +76,7 @@ claiming the identity is missing. `INACTIVE` and `NOT_FOUND` clear those
 memberships and record the authoritative source state. Refresh never enables or
 disables the Concord user, overrides an administrator's disable decision, or
 changes direct team/role grants. Source lifecycle and administrator disable
-state remain separate and must both be checked by future execution integration.
+state remain separate and are both checked by lifecycle verification.
 
 External memberships join existing team mappings, but the role view explicitly
 excludes them from group-derived global roles. Explicit direct roles retain their
@@ -87,8 +86,43 @@ LDAP, LOCAL and SSO group behavior is preserved.
 
 Persisted membership is a cache, not sufficient authorization. A failed refresh
 may leave the last successful membership set in storage; no external execution
-is enabled by this slice, and future use must enforce freshness, source state,
-administrator disable state and restricted delegation before using that cache.
+is enabled by this slice. Lifecycle verification enforces freshness, source state
+and administrator disable state; execution still requires restricted delegation.
+
+### Lifecycle eligibility and freshness
+
+`ExternalIdentityLifecycleManager.requireActive(identity)` returns the bound
+Concord user ID only when the provider is registered, the binding refers to an
+`EXTERNAL` user, neither Concord disable flag is set, and the source snapshot is
+fresh and `ACTIVE`. It never provisions users or enables an account. Missing
+bindings, missing providers and disabled accounts fail before a provider fetch.
+Newly provisioned accounts therefore remain unusable until deliberately enabled
+by an administrator; this slice adds no new enablement API.
+
+`externalIdentity.maxSnapshotAge` defaults to **15 minutes** and must be positive;
+invalid configuration fails server initialization. Snapshots younger than that
+age can be reused. At exactly the age limit, or with missing source metadata or
+a future timestamp, verification refreshes on demand. A fresh `INACTIVE` or
+`NOT_FOUND` snapshot is denied without a fetch; explicit refresh or expiry allows
+the provider to report reactivation. Provider removal denies even a fresh cache.
+
+Binding, account flags, source state and database time are read in one query.
+Freshness uses the database clock that timestamps successful synchronization,
+not the server node's clock. After a required refresh, verification rereads all
+state and rejects a replaced binding, newly disabled account, non-active source
+or still-unusable snapshot. Refresh failure is propagated; the invocation does
+not fall back to the old cache or another identity. Other callers may reuse a
+previously successful snapshot only while it is still within the configured
+freshness window. Source-side revocation can therefore remain cached for up to
+that window.
+
+This is a point-in-time eligibility check, not an authorization capability or
+permission to use the app's accumulated resource grants. The returned user ID
+must not be treated as an execution permit or persisted as proof of continuing
+eligibility. Only resolved GitHub actor lookup is wired to it so far. External
+execution, API-key authentication and internal impersonation remain blocked.
+New, child and restored execution contexts still need lifecycle revalidation
+and restricted-delegation enforcement before those gates can be removed.
 
 ### GitHub event integration
 
@@ -110,8 +144,9 @@ Authentication mode comes from the credential path actually accepted by that
 filter, never from signature-header presence alone. Repository-token deliveries
 remain `ENDPOINT_CREDENTIAL` even if they include a signature header.
 
-A resolved external actor is currently rejected explicitly: it is not
-automatically provisioned, refreshed or permitted to execute. Cached mappings to
+A resolved external actor must pass lifecycle verification, including on-demand
+refresh when required, and is then still rejected by the external execution
+gate. It is not automatically provisioned or enabled. Cached mappings to
 `EXTERNAL` users also fail, including when no resolver is installed.
 `useInitiator: false` does not invoke actor resolution and retains the existing
 webhook-principal behavior. With no resolver installed, user-account resolution needs
@@ -180,10 +215,11 @@ Each slice is intended to be a separate branch based on its predecessor:
 3. Membership synchronization and team-only RBAC semantics.
 4. GitHub actor-resolution integration, preserving user mappings and
    `useInitiator` behavior.
-5. Lifecycle, freshness and restricted-delegation enforcement for new and restored
+5. Lifecycle eligibility and on-demand freshness checks.
+6. Restricted delegation and lifecycle revalidation for new, child and restored
    execution contexts. A shared app's accumulated team grants must not become
    unrestricted authority for tenant-controlled workflow code.
-6. API and console representation without ordinary manual external provisioning.
+7. API and console representation without ordinary manual external provisioning.
 
 Intermediate slices must not enable execution as an external identity before
 the required lifecycle and authorization enforcement is in place.

@@ -55,6 +55,7 @@ public class ConfigurationModule implements Module {
         binder.bind(EmailNotifierConfiguration.class).in(SINGLETON);
         binder.bind(EnqueueWorkersConfiguration.class).in(SINGLETON);
         binder.bind(ExternalEventsConfiguration.class).in(SINGLETON);
+        binder.bind(ExternalIdentityConfiguration.class).in(SINGLETON);
         binder.bind(GitConfiguration.class).in(SINGLETON);
         binder.bind(OauthTokenConfig.class).to(GitConfiguration.class).in(SINGLETON);
         binder.bind(GithubConfiguration.class).in(SINGLETON);

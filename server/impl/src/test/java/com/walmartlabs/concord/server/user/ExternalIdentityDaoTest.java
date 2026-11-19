@@ -24,6 +24,7 @@ import com.walmartlabs.concord.db.DataSourceUtils;
 import com.walmartlabs.concord.db.DatabaseConfiguration;
 import com.walmartlabs.concord.db.MainDBChangeLogProvider;
 import com.walmartlabs.concord.server.UuidGenerator;
+import com.walmartlabs.concord.server.cfg.ExternalIdentityConfiguration;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.identity.ExternalIdentityRef;
@@ -460,6 +461,119 @@ public class ExternalIdentityDaoTest {
     }
 
     @Test
+    public void testLifecycleRefreshOnDemandAndImmediateDisableChecks() throws Exception {
+        var ref = identity();
+        var id = identities.getOrCreate(ref, null, null);
+        var provider = mock(ExternalIdentityProvider.class);
+        when(provider.getId()).thenReturn(ref.providerId());
+        when(provider.fetch(ref)).thenReturn(snapshot(ref, Set.of("current")));
+        var synchronizer = new ExternalIdentitySynchronizer(identities, mock(AuditLog.class, RETURNS_DEEP_STUBS), Set.of(provider));
+        var lifecycle = lifecycle(synchronizer);
+
+        var initial = identities.getLifecycleState(ref).orElseThrow();
+        assertEquals(id, initial.userId());
+        assertEquals(UserType.EXTERNAL, initial.userType());
+        assertTrue(initial.disabled());
+        assertFalse(initial.permanentlyDisabled());
+        assertNull(initial.status());
+        assertNull(initial.lastSuccessfulSync());
+        assertNotNull(initial.checkedAt());
+        assertThrows(ExternalIdentityException.class, () -> lifecycle.requireActive(ref));
+        verify(provider, never()).fetch(any());
+
+        users.enable(id);
+        assertEquals(id, lifecycle.requireActive(ref));
+        assertEquals(Set.of("current"), groups(id));
+        var state = identities.getLifecycleState(ref).orElseThrow();
+        assertFalse(state.disabled());
+        assertEquals(ExternalIdentitySnapshot.Status.ACTIVE, state.status());
+        assertFalse(state.checkedAt().isBefore(state.lastSuccessfulSync()));
+        assertEquals(id, lifecycle.requireActive(ref));
+        verify(provider, times(1)).fetch(ref);
+
+        users.disable(id, false);
+        assertThrows(ExternalIdentityException.class, () -> lifecycle.requireActive(ref));
+        users.enable(id);
+        DSL.using(configuration).update(USERS).set(USERS.IS_PERMANENTLY_DISABLED, true)
+                .where(USERS.USER_ID.eq(id)).execute();
+        assertThrows(ExternalIdentityException.class, () -> lifecycle.requireActive(ref));
+        verify(provider, times(1)).fetch(ref);
+    }
+
+    @Test
+    public void testExpiredLifecycleRefreshFailureAndSourceRevocation() throws Exception {
+        var ref = identity();
+        var id = identities.getOrCreate(ref, null, null);
+        users.enable(id);
+        var provider = mock(ExternalIdentityProvider.class);
+        when(provider.getId()).thenReturn(ref.providerId());
+        when(provider.fetch(ref)).thenReturn(snapshot(ref, Set.of("original")));
+        var synchronizer = new ExternalIdentitySynchronizer(identities, mock(AuditLog.class, RETURNS_DEEP_STUBS), Set.of(provider));
+        var lifecycle = lifecycle(synchronizer);
+        lifecycle.requireActive(ref);
+        DSL.using(configuration).update(EXTERNAL_IDENTITIES)
+                .set(EXTERNAL_IDENTITIES.LAST_SUCCESSFUL_SYNC, java.time.OffsetDateTime.now().minusMinutes(16))
+                .where(EXTERNAL_IDENTITIES.USER_ID.eq(id)).execute();
+        var before = identities.getSyncState(ref).orElseThrow();
+
+        doThrow(new ExternalIdentityException("Provider unavailable")).when(provider).fetch(ref);
+        assertThrows(ExternalIdentityException.class, () -> lifecycle.requireActive(ref));
+        assertEquals(before, identities.getSyncState(ref).orElseThrow());
+        assertEquals(Set.of("original"), groups(id));
+
+        doReturn(new ExternalIdentitySnapshot(ref, ExternalIdentitySnapshot.Status.INACTIVE, null, null, Set.of()))
+                .when(provider).fetch(ref);
+        assertThrows(ExternalIdentityException.class, () -> lifecycle.requireActive(ref));
+        assertTrue(groups(id).isEmpty());
+        assertEquals(ExternalIdentitySnapshot.Status.INACTIVE, identities.getSyncState(ref).orElseThrow().status());
+        assertFalse(users.get(id).isDisabled());
+        assertThrows(ExternalIdentityException.class, () -> lifecycle.requireActive(ref));
+        verify(provider, times(3)).fetch(ref);
+    }
+
+    @Test
+    public void testLifecycleRejectsProviderRemovalAndBindingChanges() throws Exception {
+        var ref = identity();
+        var id = identities.getOrCreate(ref, null, null);
+        users.enable(id);
+        var provider = mock(ExternalIdentityProvider.class);
+        when(provider.getId()).thenReturn(ref.providerId());
+        when(provider.fetch(ref)).thenReturn(snapshot(ref, Set.of()));
+        var synchronizer = new ExternalIdentitySynchronizer(identities, mock(AuditLog.class, RETURNS_DEEP_STUBS), Set.of(provider));
+        lifecycle(synchronizer).requireActive(ref);
+        assertThrows(ExternalIdentityException.class, () -> lifecycle(
+                new ExternalIdentitySynchronizer(identities, mock(AuditLog.class), Set.of())).requireActive(ref));
+
+        DSL.using(configuration).update(USERS).set(USERS.USER_TYPE, UserType.LOCAL.name())
+                .where(USERS.USER_ID.eq(id)).execute();
+        assertEquals(UserType.LOCAL, identities.getLifecycleState(ref).orElseThrow().userType());
+        assertThrows(ExternalIdentityException.class, () -> lifecycle(synchronizer).requireActive(ref));
+        verify(provider, times(1)).fetch(ref);
+        users.delete(id);
+        assertTrue(identities.getLifecycleState(ref).isEmpty());
+        assertThrows(ExternalIdentityException.class, () -> lifecycle(synchronizer).requireActive(ref));
+    }
+
+    @Test
+    public void testDisableDuringProviderLookupIsNotOverriddenBySuccessfulRefresh() throws Exception {
+        var ref = identity();
+        var id = identities.getOrCreate(ref, null, null);
+        users.enable(id);
+        var provider = mock(ExternalIdentityProvider.class);
+        when(provider.getId()).thenReturn(ref.providerId());
+        when(provider.fetch(ref)).thenAnswer(invocation -> {
+            users.disable(id, true);
+            return snapshot(ref, Set.of("updated"));
+        });
+        var synchronizer = new ExternalIdentitySynchronizer(identities, mock(AuditLog.class, RETURNS_DEEP_STUBS), Set.of(provider));
+        assertThrows(ExternalIdentityException.class, () -> lifecycle(synchronizer).requireActive(ref));
+        assertEquals(Set.of("updated"), groups(id));
+        assertTrue(users.get(id).isDisabled());
+        assertTrue(users.get(id).isPermanentlyDisabled());
+        assertEquals(ExternalIdentitySnapshot.Status.ACTIVE, identities.getSyncState(ref).orElseThrow().status());
+    }
+
+    @Test
     public void testExternalGroupsGrantTeamsButNotGlobalRoles() {
         var ref = identity();
         var id = identities.getOrCreate(ref, null, null);
@@ -581,6 +695,12 @@ public class ExternalIdentityDaoTest {
     private Set<String> groups(UUID id) {
         return DSL.using(configuration).select(USER_LDAP_GROUPS.LDAP_GROUP).from(USER_LDAP_GROUPS)
                 .where(USER_LDAP_GROUPS.USER_ID.eq(id)).fetchSet(USER_LDAP_GROUPS.LDAP_GROUP);
+    }
+
+    private ExternalIdentityLifecycleManager lifecycle(ExternalIdentitySynchronizer synchronizer) {
+        var cfg = mock(ExternalIdentityConfiguration.class);
+        when(cfg.getMaxSnapshotAge()).thenReturn(Duration.ofMinutes(15));
+        return new ExternalIdentityLifecycleManager(identities, synchronizer, cfg);
     }
 
     private static ExternalIdentitySnapshot snapshot(ExternalIdentityRef ref, Set<String> groups) {

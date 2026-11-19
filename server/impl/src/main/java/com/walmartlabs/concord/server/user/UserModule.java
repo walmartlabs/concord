@@ -33,6 +33,7 @@ public class UserModule implements Module {
     public void configure(Binder binder) {
         newSetBinder(binder, ExternalIdentityProvider.class);
         binder.bind(ExternalIdentitySynchronizer.class).asEagerSingleton();
+        binder.bind(ExternalIdentityLifecycleManager.class).asEagerSingleton();
         bindJaxRsResource(binder, UserResource.class);
         bindJaxRsResource(binder, UserResourceV2.class);
     }

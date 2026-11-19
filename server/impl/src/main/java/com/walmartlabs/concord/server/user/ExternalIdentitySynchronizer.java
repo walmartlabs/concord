@@ -66,11 +66,15 @@ public class ExternalIdentitySynchronizer {
         this.providers = Map.copyOf(indexed);
     }
 
-    public void refresh(ExternalIdentityRef identity) throws ExternalIdentityException {
-        var provider = providers.get(identity.providerId());
-        if (provider == null) {
+    public void assertProviderRegistered(ExternalIdentityRef identity) throws ExternalIdentityException {
+        if (!providers.containsKey(identity.providerId())) {
             throw new ExternalIdentityException("External identity provider is not registered: " + identity.providerId());
         }
+    }
+
+    public void refresh(ExternalIdentityRef identity) throws ExternalIdentityException {
+        assertProviderRegistered(identity);
+        var provider = providers.get(identity.providerId());
         var token = dao.beginRefresh(identity);
         try {
             var snapshot = provider.fetch(identity);

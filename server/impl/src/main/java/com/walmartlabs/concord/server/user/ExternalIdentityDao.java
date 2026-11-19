@@ -71,6 +71,19 @@ public class ExternalIdentityDao extends AbstractDao {
                         r.value2() == null ? null : ExternalIdentitySnapshot.Status.valueOf(r.value2()), r.value3()));
     }
 
+    public Optional<LifecycleState> getLifecycleState(ExternalIdentityRef identity) {
+        return dsl().select(EXTERNAL_IDENTITIES.USER_ID, USERS.USER_TYPE, USERS.IS_DISABLED,
+                        USERS.IS_PERMANENTLY_DISABLED, EXTERNAL_IDENTITIES.SOURCE_STATUS,
+                        EXTERNAL_IDENTITIES.LAST_SUCCESSFUL_SYNC, currentOffsetDateTime())
+                .from(EXTERNAL_IDENTITIES)
+                .join(USERS).on(USERS.USER_ID.eq(EXTERNAL_IDENTITIES.USER_ID))
+                .where(matches(identity))
+                .fetchOptional(r -> new LifecycleState(r.value1(), UserType.valueOf(r.value2()),
+                        r.value3(), r.value4(),
+                        r.value5() == null ? null : ExternalIdentitySnapshot.Status.valueOf(r.value5()),
+                        r.value6(), r.value7()));
+    }
+
     /**
      * Reserves an ordering token before contacting the provider. A newer attempt
      * supersedes older in-flight attempts even if that newer lookup fails.
@@ -146,6 +159,15 @@ public class ExternalIdentityDao extends AbstractDao {
      * This state alone is not authorization to execute.
      */
     public record SyncState(UUID userId, ExternalIdentitySnapshot.Status status, OffsetDateTime lastSuccessfulSync) {
+    }
+
+    /**
+     * One database snapshot of the binding, account flags and source state.
+     * checkedAt uses the same database clock as lastSuccessfulSync.
+     */
+    public record LifecycleState(UUID userId, UserType userType, boolean disabled, boolean permanentlyDisabled,
+                                 ExternalIdentitySnapshot.Status status, OffsetDateTime lastSuccessfulSync,
+                                 OffsetDateTime checkedAt) {
     }
 
     public record RefreshToken(UUID userId, long generation) {

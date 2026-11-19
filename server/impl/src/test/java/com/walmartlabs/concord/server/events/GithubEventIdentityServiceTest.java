@@ -31,6 +31,7 @@ import com.walmartlabs.concord.server.sdk.identity.ExternalIdentityRef;
 import com.walmartlabs.concord.server.sdk.identity.ExternalIdentityResolution;
 import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.github.GithubKey;
+import com.walmartlabs.concord.server.user.ExternalIdentityLifecycleManager;
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.ServletRequest;
@@ -62,10 +63,13 @@ class GithubEventIdentityServiceTest {
     private static final String PAYLOAD = "{ \"repository\": {\"full_name\":\"org/repo\"}, \"sender\": {\"url\":\"https://untrusted.example.com/bot\", \"type\":\"Bot\"} }";
     private static final ExternalIdentityRef IDENTITY = new ExternalIdentityRef("registrar", AUTHORITY, "123");
 
+    private final ExternalIdentityLifecycleManager lifecycleManager = mock(ExternalIdentityLifecycleManager.class);
+
     @Test
     void noPluginRequiresNeitherAuthorityNorAuthenticatedContext() {
-        new GithubEventIdentityService(mock(GithubConfiguration.class), Set.of())
+        new GithubEventIdentityService(mock(GithubConfiguration.class), Set.of(), lifecycleManager)
                 .assertInitiatorAllowed(null, null, null);
+        verifyNoInteractions(lifecycleManager);
     }
 
     @Test
@@ -74,7 +78,7 @@ class GithubEventIdentityServiceTest {
             var cfg = mock(GithubConfiguration.class);
             when(cfg.getExternalIdentityAuthority()).thenReturn(authority);
             assertThrows(IllegalArgumentException.class, () -> new GithubEventIdentityService(cfg,
-                    Set.of(context -> new ExternalIdentityResolution.Unhandled())));
+                    Set.of(context -> new ExternalIdentityResolution.Unhandled()), lifecycleManager));
         }
     }
 
@@ -94,6 +98,7 @@ class GithubEventIdentityServiceTest {
         };
         service(resolver).assertInitiatorAllowed(request, "push", "delivery-123");
         assertEquals(1, calls.get());
+        verifyNoInteractions(lifecycleManager);
     }
 
     @Test
@@ -122,9 +127,21 @@ class GithubEventIdentityServiceTest {
     @Test
     void recognizedExternalActorRemainsBlocked() throws Exception {
         var request = authenticate(signature(), false, true);
+        when(lifecycleManager.requireActive(IDENTITY)).thenReturn(UUID.randomUUID());
         var error = assertThrows(ConcordApplicationException.class, () -> service(context ->
                 new ExternalIdentityResolution.Resolved(IDENTITY)).assertInitiatorAllowed(request, "push", null));
         assertTrue(error.getMessage().contains("execution is disabled"));
+        verify(lifecycleManager).requireActive(IDENTITY);
+    }
+
+    @Test
+    void lifecycleFailureDoesNotFallBackToUserResolution() throws Exception {
+        var request = authenticate(signature(), false, true);
+        var failure = new ExternalIdentityException("Snapshot refresh failed");
+        when(lifecycleManager.requireActive(IDENTITY)).thenThrow(failure);
+        var error = assertThrows(ConcordApplicationException.class, () -> service(context ->
+                new ExternalIdentityResolution.Resolved(IDENTITY)).assertInitiatorAllowed(request, "push", null));
+        assertSame(failure, error.getCause());
     }
 
     @Test
@@ -151,7 +168,7 @@ class GithubEventIdentityServiceTest {
         var second = mock(ExternalEventIdentityResolver.class);
         when(first.resolve(any())).thenReturn(new ExternalIdentityResolution.Unhandled());
         when(second.resolve(any())).thenReturn(new ExternalIdentityResolution.Unhandled());
-        new GithubEventIdentityService(configuration(), Set.of(first, second)).assertInitiatorAllowed(request, "push", null);
+        new GithubEventIdentityService(configuration(), Set.of(first, second), lifecycleManager).assertInitiatorAllowed(request, "push", null);
         verify(first).resolve(any());
         verify(second).resolve(any());
     }
@@ -163,6 +180,7 @@ class GithubEventIdentityServiceTest {
                 new ExternalIdentityResolution.Resolved(new ExternalIdentityRef("registrar", "other", "123")))
                 .assertInitiatorAllowed(request, "push", null));
         assertTrue(error.getMessage().contains("different authority"));
+        verifyNoInteractions(lifecycleManager);
     }
 
     @Test
@@ -172,14 +190,15 @@ class GithubEventIdentityServiceTest {
         ExternalEventIdentityResolver second = context -> new ExternalIdentityResolution.Resolved(IDENTITY);
         for (var order : Set.of(java.util.List.of(first, second), java.util.List.of(second, first))) {
             var cfg = configuration();
-            var service = new GithubEventIdentityService(cfg, new LinkedHashSet<>(order));
+            var service = new GithubEventIdentityService(cfg, new LinkedHashSet<>(order), lifecycleManager);
             var error = assertThrows(ConcordApplicationException.class, () -> service.assertInitiatorAllowed(request, "push", null));
             assertTrue(error.getMessage().contains("Multiple external event identity resolvers"));
         }
+        verifyNoInteractions(lifecycleManager);
     }
 
     private GithubEventIdentityService service(ExternalEventIdentityResolver resolver) {
-        return new GithubEventIdentityService(configuration(), Set.of(resolver));
+        return new GithubEventIdentityService(configuration(), Set.of(resolver), lifecycleManager);
     }
 
     private GithubConfiguration configuration() {
