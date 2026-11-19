@@ -124,6 +124,51 @@ execution, API-key authentication and internal impersonation remain blocked.
 New, child and restored execution contexts still need lifecycle revalidation
 and restricted-delegation enforcement before those gates can be removed.
 
+### Delegation policy foundation
+
+The server's `ExternalIdentityDelegationManager` loads
+`externalIdentity.delegations` at startup, independently of workflow
+configuration. The default empty list denies selection for every integration.
+Each policy binds one exact external identity reference to Concord organization,
+project and repository UUIDs. No hostname, username, project name, wildcard,
+group membership or event-body field can select a broader policy. Selection
+requires all binding components to match; policies are never combined.
+
+Each entry requires an `id` (1 to 128 characters), `identity` (`providerId`,
+`authority`, `subjectId`), `orgId`, `projectId`, `repositoryId`,
+`projectAccessLevel`, `secrets` and `jsonStores`. Resource lists can be empty, but
+must be explicit. Each resource entry contains `id` and `accessLevel`. Access
+levels are `READER`, `WRITER` and `OWNER`, following Concord's existing ordering.
+All UUIDs must use the canonical hyphenated representation. Unknown fields,
+missing values, invalid levels, duplicate policy IDs, duplicate bindings and
+duplicate resource IDs within a resource kind fail server initialization.
+The distribution configuration contains a complete commented example.
+
+`requirePolicy(identity, orgId, projectId, repositoryId)` returns an immutable
+policy or throws `UnauthorizedException`. Its checks allow only the bound source
+project and individually listed secret and JSON-store UUIDs, at or below their
+configured caps. Listing a project does not implicitly include any secrets or
+stores. Resource kinds are independent. There is no cross-project process
+delegation, even for an app with grants in multiple projects.
+
+These are **ceilings, not RBAC grants**. A later execution integration must require
+both the policy and ordinary resource authorization, including visibility,
+project-scoped secret restrictions and project execution mode. Policy `OWNER`
+does not imply administrative or global permissions. Unmodeled resource types
+and operations must remain denied for delegated execution until deliberately
+supported. Do not copy policies from process arguments or serialize a policy as
+an irrevocable authorization capability.
+
+This slice provides policy storage, exact selection and standalone checks only.
+It does not yet invoke selection from GitHub triggers, install resource-manager
+interceptors, persist execution scope or enforce inheritance through child,
+resume and session contexts. External execution remains blocked; defining a
+policy does not enable it. The next enforcement slice must obtain the integration
+UUIDs from validated Concord records, retain a trusted scope outside editable
+workflow state, prevent scope expansion and recheck current policy on use.
+Configuration changes currently require server restart, with consistent
+configuration across all nodes.
+
 ### GitHub event integration
 
 Plugins register `ExternalEventIdentityResolver` using Guice's
@@ -216,10 +261,11 @@ Each slice is intended to be a separate branch based on its predecessor:
 4. GitHub actor-resolution integration, preserving user mappings and
    `useInitiator` behavior.
 5. Lifecycle eligibility and on-demand freshness checks.
-6. Restricted delegation and lifecycle revalidation for new, child and restored
+6. Server-controlled delegation policy selection and access ceilings.
+7. Restricted delegation and lifecycle revalidation for new, child and restored
    execution contexts. A shared app's accumulated team grants must not become
    unrestricted authority for tenant-controlled workflow code.
-7. API and console representation without ordinary manual external provisioning.
+8. API and console representation without ordinary manual external provisioning.
 
 Intermediate slices must not enable execution as an external identity before
 the required lifecycle and authorization enforcement is in place.

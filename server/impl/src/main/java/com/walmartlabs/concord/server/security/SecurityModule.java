@@ -43,6 +43,7 @@ public class SecurityModule implements Module {
     @Override
     public void configure(Binder binder) {
         binder.bind(UserSecurityContext.class);
+        binder.bind(ExternalIdentityDelegationManager.class).asEagerSingleton();
 
         newSetBinder(binder, AuthenticationHandler.class).addBinding().to(BasicAuthenticationHandler.class).in(SINGLETON);
         newSetBinder(binder, AuthenticationHandler.class).addBinding().to(ApiKeyAuthenticationHandler.class).in(SINGLETON);
