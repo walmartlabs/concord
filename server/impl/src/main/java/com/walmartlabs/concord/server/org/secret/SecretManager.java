@@ -58,8 +58,8 @@ import com.walmartlabs.concord.server.user.UserManager;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;

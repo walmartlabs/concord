@@ -34,7 +34,7 @@ package com.walmartlabs.concord.server.boot.validation;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorXO;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.ext.Provider;
 import java.util.List;
 
 /**

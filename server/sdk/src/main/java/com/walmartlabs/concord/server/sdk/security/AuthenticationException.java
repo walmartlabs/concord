@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.sdk.security;
 
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import static jakarta.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 public class AuthenticationException extends ConcordApplicationException {
 

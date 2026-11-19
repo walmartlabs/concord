@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -56,10 +57,15 @@ public class Planner {
         List<Change> changes = new ArrayList<>();
 
         // process pods marked for removal first
-        AgentPod.listMarkedForRemoval(client, resourceName)
+        AgentPod.listMarkedForRemoval(client, resourceName).stream()
+                .filter(p -> !AgentPod.isTerminated(p))
                 .forEach(n -> changes.add(new TryToDeletePodChange(n.getMetadata().getName(), agentClientFactory.create(n))));
 
-        List<Pod> pods = AgentPod.list(client, resourceName);
+        List<Pod> allPods = AgentPod.list(client, resourceName);
+        Map<Boolean, List<Pod>> podsByTerminated = allPods.stream().collect(Collectors.partitioningBy(AgentPod::isTerminated));
+        List<Pod> pods = podsByTerminated.get(false);
+        changes.addAll(deleteTerminated(podsByTerminated.get(true)));
+
         int currentSize = pods.size();
         int currentNotMarkedForDeleteSize = (int) pods.stream()
                 .filter(p -> !p.getMetadata().getLabels().containsKey(AgentPod.TAGGED_FOR_REMOVAL_LABEL))
@@ -134,7 +140,7 @@ public class Planner {
 
         // create or remove pods according to the configured pool size
         if (targetSize > currentSize) {
-            Set<String> podNames = pods.stream().map(p -> p.getMetadata().getName()).collect(Collectors.toSet());
+            Set<String> podNames = allPods.stream().map(p -> p.getMetadata().getName()).collect(Collectors.toSet());
             for (int i = 0; i < targetSize - currentSize; i++) {
                 String podName = generatePodName(resourceName, podNames);
                 changes.add(new CreatePodChange(poolInstance, podName, configMapName(resourceName), newHash));
@@ -166,6 +172,22 @@ public class Planner {
         }
 
         return changes;
+    }
+
+    private static List<Change> deleteTerminated(List<Pod> terminatedPods) {
+        List<Change> result = new ArrayList<>();
+        for (Pod p : terminatedPods) {
+            String name = p.getMetadata().getName();
+
+            if (p.getMetadata().getDeletionTimestamp() != null) {
+                continue;
+            }
+
+            log.info("plan -> pod '{}' is terminated (phase: {}, reason: {}), deleting",
+                    name, p.getStatus().getPhase(), p.getStatus().getReason());
+            result.add(new DeletePodChange(name));
+        }
+        return result;
     }
 
     private static String generatePodName(String resourceName, Set<String> podNames) {

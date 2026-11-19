@@ -23,9 +23,9 @@ package com.walmartlabs.concord.server.boot.filters;
 import com.walmartlabs.concord.server.RequestContext;
 import com.walmartlabs.concord.server.RequestUtils;
 
-import javax.servlet.*;
-import javax.servlet.annotation.WebFilter;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.*;
+import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;

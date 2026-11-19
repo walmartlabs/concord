@@ -41,7 +41,7 @@ import org.jooq.DSLContext;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.util.*;
 
 public class ProjectRepositoryManager {

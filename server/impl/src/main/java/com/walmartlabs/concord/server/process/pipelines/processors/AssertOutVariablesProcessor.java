@@ -30,7 +30,7 @@ import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.user.UserManager;
 
 import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.Response.Status;
 import java.util.Set;
 import java.util.UUID;
 

@@ -24,7 +24,7 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 public final class HttpUtils {
 

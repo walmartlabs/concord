@@ -21,6 +21,8 @@ package com.walmartlabs.concord.agentoperator.crd;
  */
 
 import com.walmartlabs.concord.agentoperator.scheduler.DefaultAutoScaler;
+import io.fabric8.crd.generator.annotation.PreserveUnknownFields;
+import io.fabric8.crd.generator.annotation.SchemaFrom;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Pod;
 
@@ -94,6 +96,12 @@ public class AgentPoolConfiguration implements Serializable {
      */
     private double decrementThresholdFactor = getDoubleFromEnv(ENV_DECREMENT_THRESHOLD_FACTOR, DEFAULT_DECREMENT_THRESHOLD_FACTOR);
 
+    /**
+     * Free-form: holds objects (e.g. {@code agent.flavor}) as well as lists ({@code queryParams}),
+     * so the CRD schema must not constrain the value types.
+     */
+    @PreserveUnknownFields
+    @SchemaFrom(type = FreeFormObject.class)
     private Map<String, Object> queueSelector;
     private ConfigMap configMap;
 
@@ -241,5 +249,11 @@ public class AgentPoolConfiguration implements Serializable {
     private static String getStringFromEnv(String key, String defaultValue) {
         String envValue = System.getenv(key);
         return envValue != null ? envValue : defaultValue;
+    }
+
+    /**
+     * Schema placeholder for free-form CRD fields: renders as a plain {@code type: object}.
+     */
+    private static final class FreeFormObject {
     }
 }

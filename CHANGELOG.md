@@ -1,5 +1,72 @@
 # Change Log
 
+## [2.47.0] - 2026-11-10
+
+### Added
+
+- runtime-v2, agent, server: record the time of log segment statuses
+([#1389](https://github.com/walmartlabs/concord/pull/1389));
+
+### Changed
+
+- project: update dependencies, minimal compiler version to 21
+([#1381](https://github.com/walmartlabs/concord/pull/1381));
+- concord-console2: use Vite development mode
+([#1386](https://github.com/walmartlabs/concord/pull/1386));
+- github-app-installation: stop caching token-fetch failures as "no auth"
+([#1387](https://github.com/walmartlabs/concord/pull/1387));
+- runtime-v2: keep the order of parallel errors
+([#1390](https://github.com/walmartlabs/concord/pull/1390));
+- it: use dind for in-process containers
+([#1391](https://github.com/walmartlabs/concord/pull/1391));
+- project: update dependencies
+([#1392](https://github.com/walmartlabs/concord/pull/1392));
+- docker-images: stage artifacts directly, omit .tar.gz
+([#1397](https://github.com/walmartlabs/concord/pull/1397));
+- concord-repository: fix askpass handling after redirects
+([#1405](https://github.com/walmartlabs/concord/pull/1405));
+- console2: preserve API error messages and HTTP status
+([#1406](https://github.com/walmartlabs/concord/pull/1406));
+- console2: recover polling after transient API failures
+([#1407](https://github.com/walmartlabs/concord/pull/1407));
+- console2: retain process page during transient polling errors
+([#1409](https://github.com/walmartlabs/concord/pull/1409));
+- project: drop unused resteasy-jaxb-provider, jetty javax websocket and siesta.version
+([#1413](https://github.com/walmartlabs/concord/pull/1413));
+- project: replace javax.xml.bind.DatatypeConverter with java.util/java.time
+([#1414](https://github.com/walmartlabs/concord/pull/1414));
+- http-tasks: drop the JAX-RS API dependency
+([#1415](https://github.com/walmartlabs/concord/pull/1415));
+- queue-client: switch to the Jetty core websocket client, drop JAX-RS
+([#1416](https://github.com/walmartlabs/concord/pull/1416));
+- noderoster: drop unused JAX-RS, servlet, Jetty and validation deps
+([#1417](https://github.com/walmartlabs/concord/pull/1417));
+- server: serve the agent websocket with Jetty's core API
+([#1418](https://github.com/walmartlabs/concord/pull/1418));
+- queue-client: register a request before sending it
+([#1419](https://github.com/walmartlabs/concord/pull/1419));
+- client2: guard OpenAPI contracts during Jakarta migration
+([#1420](https://github.com/walmartlabs/concord/pull/1420));
+- server: add validation contract tests
+([#1421](https://github.com/walmartlabs/concord/pull/1421));
+- server: send API key expiration emails with angus-mail
+([#1422](https://github.com/walmartlabs/concord/pull/1422));
+- project: update dependencies
+([#1425](https://github.com/walmartlabs/concord/pull/1425));
+- project: update dependencies
+([#1426](https://github.com/walmartlabs/concord/pull/1426)).
+
+### Breaking
+
+- server: migrate to RESTEasy 7, Jakarta EE 10 and Jetty ee10
+([#1423](https://github.com/walmartlabs/concord/pull/1423)).
+    - common: migrate `ConcordId` and `ConcordKey` constraints to Jakarta
+      Validation. Consumers must use the Jakarta Validation API.
+    - External server plugins must be rebuilt against the Jakarta APIs. Plugins
+      retaining `javax.validation` or `javax.annotation.Priority` can silently
+      lose validation or ordering behavior.
+
+
 ## [2.46.0] - 2026-09-18
 
 ### Changed

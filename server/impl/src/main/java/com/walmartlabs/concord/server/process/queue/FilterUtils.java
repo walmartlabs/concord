@@ -27,7 +27,7 @@ import org.jooq.JSONB;
 import org.jooq.Record;
 import org.jooq.SelectQuery;
 
-import javax.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.UriInfo;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
