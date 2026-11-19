@@ -20,10 +20,17 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.KvManager;
+import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
+import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response.Status;
 import java.util.UUID;
 
 @Path("/api/v1/process")
@@ -45,11 +53,15 @@ public class ProcessKvResource implements Resource {
 
     private final ProcessQueueManager processQueueManager;
     private final KvManager kvManager;
+    private final ProjectAccessManager projectAccessManager;
 
     @Inject
-    public ProcessKvResource(ProcessQueueManager processQueueManager, KvManager kvManager) {
+    public ProcessKvResource(ProcessQueueManager processQueueManager,
+                             KvManager kvManager,
+                             ProjectAccessManager projectAccessManager) {
         this.processQueueManager = processQueueManager;
         this.kvManager = kvManager;
+        this.projectAccessManager = projectAccessManager;
     }
 
     @DELETE
@@ -58,7 +70,7 @@ public class ProcessKvResource implements Resource {
     public void removeKey(@PathParam("id") UUID instanceId,
                           @PathParam("key") String key) {
 
-        UUID projectId = assertProjectId(instanceId);
+        UUID projectId = assertProjectId(instanceId, ResourceAccessLevel.WRITER);
         kvManager.remove(projectId, key);
     }
 
@@ -70,7 +82,7 @@ public class ProcessKvResource implements Resource {
                           @PathParam("key") String key,
                           @Parameter(required = true) String value) {
 
-        UUID projectId = assertProjectId(instanceId);
+        UUID projectId = assertProjectId(instanceId, ResourceAccessLevel.WRITER);
         kvManager.putString(projectId, key, value);
     }
 
@@ -81,7 +93,7 @@ public class ProcessKvResource implements Resource {
     public String getString(@PathParam("id") UUID instanceId,
                             @PathParam("key") String key) {
 
-        UUID projectId = assertProjectId(instanceId);
+        UUID projectId = assertProjectId(instanceId, ResourceAccessLevel.READER);
         return kvManager.getString(projectId, key);
     }
 
@@ -93,7 +105,7 @@ public class ProcessKvResource implements Resource {
                         @PathParam("key") String key,
                         @Parameter(required = true) long value) {
 
-        UUID projectId = assertProjectId(instanceId);
+        UUID projectId = assertProjectId(instanceId, ResourceAccessLevel.WRITER);
         kvManager.putLong(projectId, key, value);
     }
 
@@ -104,7 +116,7 @@ public class ProcessKvResource implements Resource {
     public Long getLong(@PathParam("id") UUID instanceId,
                         @PathParam("key") String key) {
 
-        UUID projectId = assertProjectId(instanceId);
+        UUID projectId = assertProjectId(instanceId, ResourceAccessLevel.READER);
         return kvManager.getLong(projectId, key);
     }
 
@@ -115,17 +127,57 @@ public class ProcessKvResource implements Resource {
     public long incLong(@PathParam("id") UUID instanceId,
                         @PathParam("key") String key) {
 
-        UUID projectId = assertProjectId(instanceId);
+        UUID projectId = assertProjectId(instanceId, ResourceAccessLevel.WRITER);
         return kvManager.inc(projectId, key);
     }
 
-    private UUID assertProjectId(UUID instanceId) {
-        UUID projectId = processQueueManager.getProjectId(PartialProcessKey.from(instanceId));
+    /**
+     * Resolves the project ID of the process and verifies that the current
+     * principal is allowed to access the project's KV store.
+     * <p>
+     * Access is granted to:
+     * <ul>
+     *     <li>admins;</li>
+     *     <li>the process itself (session key issued for this process), which is
+     *     how the {@code kv} task calls this API;</li>
+     *     <li>users with at least the {@code level} access to the process' project.</li>
+     * </ul>
+     */
+    private UUID assertProjectId(UUID instanceId, ResourceAccessLevel level) {
+        ProcessEntry entry = processQueueManager.get(PartialProcessKey.from(instanceId));
+        if (entry == null) {
+            throw new ConcordApplicationException("Process instance not found: " + instanceId, Status.NOT_FOUND);
+        }
+
+        boolean admin = Roles.isAdmin();
+        boolean ownSession = isOwnSession(entry);
+
+        UUID projectId = entry.projectId();
         if (projectId == null) {
-            log.warn("assertProjectId ['{}'] -> no project found, using the default value", instanceId);
-            projectId = DEFAULT_PROJECT_ID;
+            // processes without a project have no project-level ACLs to check against,
+            // only the process itself (or an admin) can use the shared KV namespace
+            if (!admin && !ownSession) {
+                throw new UnauthorizedException("Access to the KV store of a process without a project is not allowed: " + instanceId);
+            }
+            log.warn("assertProjectId ['{}'] -> process has no project, using the default value", instanceId);
+            return DEFAULT_PROJECT_ID;
+        }
+
+        if (!admin && !ownSession) {
+            // orgMembersOnly = true, otherwise PUBLIC projects skip the access level check
+            projectAccessManager.assertAccess(entry.orgId(), projectId, null, level, true);
         }
 
         return projectId;
+    }
+
+    private static boolean isOwnSession(ProcessEntry entry) {
+        SessionKeyPrincipal sessionKey = SessionKeyPrincipal.getCurrent();
+        if (sessionKey == null) {
+            return false;
+        }
+
+        ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
+        return processKey.partOf(sessionKey.getProcessKey());
     }
 }

@@ -1,3 +1,4 @@
+        // TODO: assert project access
 package com.walmartlabs.concord.server.org.project;
 
 /*-
@@ -49,39 +50,30 @@ public class KvManager {
     }
 
     public void remove(UUID projectId, String key) {
-        // TODO: assert project access
         kvDao.remove(projectId, key);
     }
 
     public void putString(UUID projectId, String key, String value) {
-        // TODO: assert project access
-
         assertPolicy(projectId, key);
 
         kvDao.putString(projectId, key, value);
     }
 
     public String getString(UUID projectId, String key) {
-        // TODO: assert project access
         return kvDao.getString(projectId, key);
     }
 
     public void putLong(UUID projectId, String key, long value) {
-        // TODO: assert project access
-
         assertPolicy(projectId, key);
 
         kvDao.putLong(projectId, key, value);
     }
 
     public Long getLong(UUID projectId, String key) {
-        // TODO: assert project access
         return kvDao.getLong(projectId, key);
     }
 
     public long inc(UUID projectId, String key) {
-        // TODO: assert project access
-
         assertPolicy(projectId, key);
 
         return kvDao.inc(projectId, key);
