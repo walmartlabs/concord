@@ -33,7 +33,7 @@ import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.user.UserInfoProvider.UserInfo;

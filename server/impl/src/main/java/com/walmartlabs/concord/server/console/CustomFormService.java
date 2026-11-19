@@ -28,16 +28,16 @@ import com.walmartlabs.concord.server.sdk.validation.Validate;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.*;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.*;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 
-@javax.ws.rs.Path("/api/service/custom_form")
+@jakarta.ws.rs.Path("/api/service/custom_form")
 public class CustomFormService implements Resource {
 
     private final ProcessStateManager stateManager;
@@ -52,7 +52,7 @@ public class CustomFormService implements Resource {
     }
 
     @POST
-    @javax.ws.rs.Path("{processInstanceId}/{formName}/start")
+    @jakarta.ws.rs.Path("{processInstanceId}/{formName}/start")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
     public FormSessionResponse startSession(@PathParam("processInstanceId") UUID processInstanceId,
@@ -66,7 +66,7 @@ public class CustomFormService implements Resource {
     }
 
     @POST
-    @javax.ws.rs.Path("{processInstanceId}/{formName}/continue")
+    @jakarta.ws.rs.Path("{processInstanceId}/{formName}/continue")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
@@ -84,7 +84,7 @@ public class CustomFormService implements Resource {
     }
 
     @POST
-    @javax.ws.rs.Path("{processInstanceId}/{formName}/continue")
+    @jakarta.ws.rs.Path("{processInstanceId}/{formName}/continue")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public Response continueSession(@Context UriInfo uriInfo,

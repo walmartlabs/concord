@@ -29,7 +29,7 @@ import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.nio.file.Path;
 import java.util.*;
 

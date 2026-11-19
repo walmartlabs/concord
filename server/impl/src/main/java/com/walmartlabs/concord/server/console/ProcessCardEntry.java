@@ -28,7 +28,7 @@ import com.walmartlabs.concord.server.org.ImmutableEntityOwner;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.UUID;
 

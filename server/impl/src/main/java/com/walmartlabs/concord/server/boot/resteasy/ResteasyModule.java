@@ -25,7 +25,7 @@ import com.google.inject.Module;
 import com.walmartlabs.concord.server.sdk.rest.ApiDescriptor;
 import com.walmartlabs.concord.server.sdk.rest.Component;
 
-import javax.servlet.ServletContextListener;
+import jakarta.servlet.ServletContextListener;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;

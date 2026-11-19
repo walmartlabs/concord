@@ -43,16 +43,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.util.List;
 import java.util.UUID;
 
-@javax.ws.rs.Path("/api/v1/org")
+@jakarta.ws.rs.Path("/api/v1/org")
 @Tag(name = "Triggers")
 public class TriggerResource implements Resource {
 
@@ -95,7 +95,7 @@ public class TriggerResource implements Resource {
      * List process trigger definitions for the specified project and repository.
      */
     @GET
-    @javax.ws.rs.Path("/{orgName}/project/{projectName}/repo/{repositoryName}/trigger")
+    @jakarta.ws.rs.Path("/{orgName}/project/{projectName}/repo/{repositoryName}/trigger")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "List trigger definitions", operationId = "listTriggers")
     public List<TriggerEntry> list(@PathParam("orgName") @ConcordKey String orgName,
@@ -115,7 +115,7 @@ public class TriggerResource implements Resource {
      * Refresh process trigger definitions for all projects.
      */
     @POST
-    @javax.ws.rs.Path("/trigger/refresh")
+    @jakarta.ws.rs.Path("/trigger/refresh")
     @Operation(description = "Refresh trigger definitions for all projects", operationId = "refreshAllTriggers")
     public Response refreshAll() {
         assertAdmin();
@@ -134,7 +134,7 @@ public class TriggerResource implements Resource {
      */
     @POST
     @Operation(description = "Refresh trigger definitions for the specified project and repository", operationId = "refreshTriggers")
-    @javax.ws.rs.Path("/{orgName}/project/{projectName}/repo/{repositoryName}/trigger")
+    @jakarta.ws.rs.Path("/{orgName}/project/{projectName}/repo/{repositoryName}/trigger")
     public Response refresh(@PathParam("orgName") @ConcordKey String orgName,
                             @PathParam("projectName") @ConcordKey String projectName,
                             @PathParam("repositoryName") @ConcordKey String repositoryName) {

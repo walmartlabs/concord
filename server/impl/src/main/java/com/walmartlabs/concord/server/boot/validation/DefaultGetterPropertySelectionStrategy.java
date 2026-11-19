@@ -28,9 +28,9 @@ package com.walmartlabs.concord.server.boot.validation;
 import org.hibernate.validator.spi.properties.ConstrainableExecutable;
 import org.hibernate.validator.spi.properties.GetterPropertySelectionStrategy;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * A version of the original org.hibernate.validator.internal.properties.DefaultGetterPropertySelectionStrategy
@@ -65,9 +65,9 @@ public class DefaultGetterPropertySelectionStrategy implements GetterPropertySel
     }
 
     @Override
-    public Set<String> getGetterMethodNameCandidates(String propertyName) {
+    public List<String> getGetterMethodNameCandidates(String propertyName) {
 
-        Set<String> nameCandidates = new HashSet<>(GETTER_PREFIXES.length);
+        List<String> nameCandidates = new ArrayList<>(GETTER_PREFIXES.length);
         for (String prefix : GETTER_PREFIXES) {
             nameCandidates.add(prefix + Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1));
         }
