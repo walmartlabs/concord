@@ -79,11 +79,13 @@ public class ProcessQueueDao extends AbstractDao {
     private static final Field<?>[] PROCESS_QUEUE_FIELDS = processEntryFields();
 
     private final ConcordObjectMapper objectMapper;
+    private final ExternalProcessScopeDao externalScopeDao;
 
     @Inject
     public ProcessQueueDao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
         super(cfg);
         this.objectMapper = objectMapper;
+        this.externalScopeDao = new ExternalProcessScopeDao(cfg, objectMapper);
     }
 
     @Override
@@ -121,6 +123,8 @@ public class ProcessQueueDao extends AbstractDao {
                 .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
                 .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
                 .execute();
+
+        externalScopeDao.inherit(tx, parentInstanceId, processKey);
 
         tx.insertInto(PROCESS_META)
                 .set(PROCESS_META.INSTANCE_ID, processKey.getInstanceId())
@@ -915,15 +919,15 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     /**
-     * Returns an array of all fields of {@link ProcessQueue#PROCESS_QUEUE}, but
-     * replaces the meta field with a version with all null values stripped out.
+     * Returns queue fields used by public process entries, excluding imports
+     * and the server-owned delegation scope.
      */
     private static Field<?>[] processEntryFields() {
         Field<?>[] fields = PROCESS_QUEUE.fields();
 
         List<Field<?>> l = new ArrayList<>(fields.length);
         for (Field<?> f : fields) {
-            if (f == PROCESS_QUEUE.IMPORTS) {
+            if (f == PROCESS_QUEUE.IMPORTS || f == PROCESS_QUEUE.EXTERNAL_IDENTITY_SCOPE) {
                 continue;
             }
 

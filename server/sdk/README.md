@@ -201,16 +201,51 @@ supported. Do not copy policies from process arguments or serialize a policy as
 an irrevocable authorization capability.
 
 This slice provides typed policy rules, exact selection and standalone checks only.
-It does not yet invoke selection from GitHub triggers, install resource-manager
-interceptors, persist execution scope or enforce inheritance through child,
-resume and session contexts. External execution remains blocked; defining a
-policy does not enable it. The next enforcement slice must obtain the integration
-UUIDs from validated Concord records, retain a trusted scope outside editable
-workflow state, prevent scope expansion and recheck current policy on use.
+It does not yet invoke selection from GitHub triggers or install resource-manager
+interceptors. External execution remains blocked; defining a policy does not
+enable it. Trigger integration must obtain the integration UUIDs from validated
+Concord records and initialize the trusted binding described below.
 The manager rereads the effective policy on each selection instead of retaining
 a separate startup-loaded registry. Policy changes become visible according to
 the existing policy cache refresh behavior, not an instantaneous cross-node
 revocation guarantee. Live execution-context enforcement remains future work.
+
+### Trusted process scope
+
+The server stores an `ExternalProcessScope` binding in
+`PROCESS_QUEUE.EXTERNAL_IDENTITY_SCOPE`, not in workflow configuration,
+`.concord/current_user`, process payloads or exported state. It contains the
+original identity reference and Concord user UUID, organization, source project
+and repository UUIDs; it contains no copied resource grants.
+
+The internal root-binding primitive must be called in the queue insertion
+transaction, before execution or children exist. It verifies the authoritative
+identity binding and integration records, accepts an identical retry and rejects
+replacement. It is not exposed through REST or workflow arguments and is not yet
+called by GitHub triggers. Initialization is not an execution permit.
+
+Child queue insertion inherits the exact original binding in the same transaction.
+A scoped child cannot change the user or source project, substitute a different
+repository or bind a new root scope. Forks may initially have no repository
+metadata; their binding still retains the original repository. Unscoped external
+parents cannot create unscoped children. A missing parent now rejects insertion
+rather than silently losing its scope. Ordinary account forks with existing
+parents retain their existing behavior.
+
+Process and session-principal restoration checks the queue binding independently
+of the principal cache. Scoped processes reject changed/missing saved identities,
+changed integration metadata and recreated identity bindings. Restoration checks
+current lifecycle eligibility and selects the current effective policy, then
+**still denies external execution** pending resource-level delegation enforcement.
+Resume validates the saved subject before hooks or `runAs.keep` identity changes,
+and subject storage cannot discard a scope. No trusted scope is reconstructed
+from serialized principals.
+
+Restart and checkpoint state replacement do not replace the queue binding.
+Deleting a queue row removes its scope with it; no separate orphan table or
+cleanup path is needed. A newly submitted archive cannot restore a delegation
+binding. Complete enforcement for all child-start paths, operation types and
+live resource access is still required before enabling external execution.
 
 ### GitHub event integration
 

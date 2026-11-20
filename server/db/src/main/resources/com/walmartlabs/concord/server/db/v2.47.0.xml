@@ -66,4 +66,11 @@
             and not exists(select 1 from USER_ROLES ur where ur.USER_ID = ulg.USER_ID and ur.ROLE_ID = rlg.ROLE_ID)
         </createView>
     </changeSet>
+
+    <changeSet id="2470040" author="benjamin.broadaway@walmart.com">
+        <addColumn tableName="PROCESS_QUEUE">
+            <column name="EXTERNAL_IDENTITY_SCOPE" type="jsonb"
+                    remarks="Server-owned immutable delegation binding, never restored from process state"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

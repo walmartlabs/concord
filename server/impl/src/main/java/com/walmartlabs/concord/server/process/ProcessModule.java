@@ -72,6 +72,8 @@ public class ProcessModule implements Module {
         binder.bind(ProcessLogAccessManager.class).in(SINGLETON);
         binder.bind(ProcessLogManager.class).in(SINGLETON);
         binder.bind(ProcessSecurityContext.class).in(SINGLETON);
+        binder.bind(ExternalProcessScopeDao.class).in(SINGLETON);
+        binder.bind(ExternalProcessScopeManager.class).in(SINGLETON);
         binder.bind(ProcessCheckpointDao.class).in(SINGLETON);
         binder.bind(ProcessCheckpointManager.class).in(SINGLETON);
         binder.bind(ProcessStateManager.class).in(SINGLETON);

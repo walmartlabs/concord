@@ -47,12 +47,15 @@ public class ProcessSecurityContext {
 
     private final SecurityManager securityManager;
     private final ProcessStateManager stateManager;
+    private final ExternalProcessScopeManager externalScopeManager;
     private final Cache<PartialProcessKey, PrincipalCollection> principalCache;
 
     @Inject
-    public ProcessSecurityContext(SecurityManager securityManager, ProcessStateManager stateManager) {
+    public ProcessSecurityContext(SecurityManager securityManager, ProcessStateManager stateManager,
+                                  ExternalProcessScopeManager externalScopeManager) {
         this.securityManager = securityManager;
         this.stateManager = stateManager;
+        this.externalScopeManager = externalScopeManager;
         this.principalCache = CacheBuilder.newBuilder()
                 .expireAfterAccess(1, TimeUnit.MINUTES)
                 .build();
@@ -92,21 +95,24 @@ public class ProcessSecurityContext {
         return !previousUserId.equals(currentUserId);
     }
 
-    // TODO: invalidate cache for processKey?
     public void storeCurrentSubject(ProcessKey processKey) {
         Subject s = SecurityUtils.getSubject();
         PrincipalCollection src = s.getPrincipals();
         storeSubject(processKey, src);
     }
 
-    // TODO: invalidate cache for processKey?
     public void storeSubject(ProcessKey processKey, PrincipalCollection src) {
+        externalScopeManager.assertRestorationAllowed(processKey, src);
         stateManager.replace(processKey, PRINCIPAL_FILE_PATH, serializePrincipals(src));
+        principalCache.invalidate(processKey);
+        principalCache.invalidate(PartialProcessKey.from(processKey.getInstanceId()));
     }
 
     public PrincipalCollection getPrincipals(PartialProcessKey processKey) {
         try {
-            return principalCache.get(processKey, () -> doGetPrincipals(processKey));
+            PrincipalCollection principals = principalCache.get(processKey, () -> doGetPrincipals(processKey));
+            externalScopeManager.assertRestorationAllowed(processKey, principals);
+            return principals;
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }

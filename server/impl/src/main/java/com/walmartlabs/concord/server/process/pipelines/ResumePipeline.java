@@ -38,6 +38,7 @@ public class ResumePipeline extends Pipeline {
     public ResumePipeline(Injector injector) {
         super(List.of(
                 injector.getInstance(LoggingMDCProcessor.class),
+                injector.getInstance(ProcessSubjectValidationProcessor.class),
                 injector.getInstance(ChangeUserProcessor.class),
                 injector.getInstance(ResumingProcessor.class),
                 injector.getInstance(ResumingHooksProcessor.class),
