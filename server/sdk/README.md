@@ -210,6 +210,12 @@ a separate startup-loaded registry. Policy changes become visible according to
 the existing policy cache refresh behavior, not an instantaneous cross-node
 revocation guarantee. Live execution-context enforcement remains future work.
 
+The server-only `externalIdentityDelegation` rule is omitted from the policy file
+exported into process state for agents, regardless of the initiator's account
+type. Other built-in and custom rules are preserved. Server-side policy
+evaluation retains the complete effective policy; this export does not supply
+delegation authority.
+
 ### Trusted process scope
 
 The server stores an `ExternalProcessScope` binding in
