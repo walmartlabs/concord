@@ -55,6 +55,12 @@ public class LocalProcessLog extends AbstractProcessLog {
                 log.warn("delete -> error while removing a log file: {}", p);
             }
         }
+
+        try {
+            Files.deleteIfExists(baseDir);
+        } catch (IOException e) {
+            log.warn("delete -> error while removing the log directory {}: {}", baseDir, e.toString());
+        }
     }
 
     @Override
