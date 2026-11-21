@@ -1819,6 +1819,22 @@ public class MainTest  {
     }
 
     @Test
+    public void nestedLoopOutVariables() throws Exception {
+        deploy("nestedLoopOutVariables");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLogAtLeast(log, 2, ".*" + Pattern.quote("nested different inner: []") + ".*");
+        assertLog(log, ".*" + Pattern.quote("nested different parent: [1, 2]") + ".*");
+        assertLogAtLeast(log, 2, ".*" + Pattern.quote("nested same inner empty: []") + ".*");
+        assertLog(log, ".*" + Pattern.quote("nested same parent after empty inners: [[], []]") + ".*");
+        assertLog(log, ".*" + Pattern.quote("nested same both items: [[a, b], [a, b]]") + ".*");
+        assertLog(log, ".*" + Pattern.quote("nested same mixed: [[], [z]]") + ".*");
+    }
+
+    @Test
     public void prefixedFunctionsInExpressions() throws Exception {
         deploy("prefixedFunctions");
 
