@@ -1,0 +1,63 @@
+flows:
+  default:
+    # 1. Single out variable with empty loop (issue #748 scenario)
+    - call: testFlow
+      out: myVar
+      loop:
+        items: []
+    - log: "empty loop out var: ${myVar}"
+
+    # 2. Multiple out variables with empty loop
+    - call: testFlow
+      out:
+        - var1
+        - var2
+      loop:
+        items: []
+    - log: "empty loop multi out: ${var1}, ${var2}"
+
+    # 3. Out expression with empty loop
+    - set:
+        outArray: ["exprOut"]
+    - call: testFlow
+      out: "${outArray}"
+      loop:
+        items: []
+    - log: "empty loop out expression: ${exprOut}"
+
+    # 4. Out mapping with empty loop
+    - set:
+        outMap:
+          mapResult: "\\${myFlowOut}"
+    - call: testFlow
+      out: "${outMap}"
+      loop:
+        items: []
+    - log: "empty loop out map: ${mapResult}"
+
+    # 5. Parallel loop mode with empty items
+    - call: testFlow
+      out: parallelOut
+      loop:
+        mode: parallel
+        items: []
+    - log: "empty parallel loop out var: ${parallelOut}"
+
+    # 6. Empty list from expression in loop
+    - set:
+        emptyList: []
+    - call: testFlow
+      out: exprItemsOut
+      loop:
+        items: "${emptyList}"
+    - log: "empty expr loop out var: ${exprItemsOut}"
+
+  testFlow:
+    - set:
+        myVar: "inTest"
+        var1: "v1"
+        var2: "v2"
+        exprOut: "eo"
+        myFlowOut: "mfo"
+        parallelOut: "po"
+        exprItemsOut: "eio"

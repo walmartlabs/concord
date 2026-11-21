@@ -100,15 +100,18 @@ public abstract class LoopWrapper implements Command {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
-        Serializable value = items;
-        if (value == null) {
-            // value is null, not going to run the wrapped command at all
-            return;
-        }
-
         // create the context explicitly
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
         Context ctx = contextFactory.create(runtime, state, threadId, getCurrentStep());
+
+        Collection<String> effectiveOutVariables = getEffectiveOutVariables(runtime, ctx);
+
+        Serializable value = items;
+        if (value == null) {
+            // value is null, not going to run the wrapped command at all
+            initOutVariables(state, threadId, effectiveOutVariables);
+            return;
+        }
 
         EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
@@ -118,20 +121,37 @@ public abstract class LoopWrapper implements Command {
         // store items in an ArrayList because it is Serializable
         ArrayList<Serializable> items = LoopItemSanitizer.sanitize(value);
         if (items == null || items.isEmpty()) {
+            initOutVariables(state, threadId, effectiveOutVariables);
             return;
         }
 
-        Collection<String> effectiveOUtVariables = outVariables;
+        eval(runtime, state, threadId, ctx, items, effectiveOutVariables);
+    }
+
+    private Collection<String> getEffectiveOutVariables(Runtime runtime, Context ctx) {
+        Collection<String> effectiveOutVariables = outVariables;
         if (outExpression != null) {
+            EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
+            ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
             Object outExpr = ee.eval(ecf.global(ctx), outExpression, Object.class);
             if (outExpr instanceof List<?> l) {
-                effectiveOUtVariables = l.stream().filter(Objects::nonNull).map(Object::toString).toList();
-            } else if (outExpr instanceof Map<?,?> m) {
-                effectiveOUtVariables = m.keySet().stream().filter(Objects::nonNull).map(Object::toString).toList();
+                effectiveOutVariables = l.stream().filter(Objects::nonNull).map(Object::toString).toList();
+            } else if (outExpr instanceof Map<?, ?> m) {
+                effectiveOutVariables = m.keySet().stream().filter(Objects::nonNull).map(Object::toString).toList();
             }
         }
+        return effectiveOutVariables;
+    }
 
-        eval(runtime, state, threadId, ctx, items, effectiveOUtVariables);
+    private static void initOutVariables(State state, ThreadId threadId, Collection<String> outVars) {
+        if (outVars == null || outVars.isEmpty()) {
+            return;
+        }
+
+        Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
+        for (String var : outVars) {
+            VMUtils.putLocal(targetFrame, var, new ArrayList<>());
+        }
     }
 
     protected abstract void eval(Runtime runtime, State state, ThreadId threadId, Context ctx, ArrayList<Serializable> items, Collection<String> outVariables);
