@@ -21,6 +21,13 @@ package com.walmartlabs.concord.server.user;
  */
 
 
+/**
+ * @deprecated {@code USERS.USER_TYPE} doesn't work for users who log in with more than
+ * one provider (e.g. LDAP and OIDC). Use {@code UserPrincipal#getRealm()} to find out
+ * how the current user logged in, and read user data for other users from the DB.
+ * See <a href="https://github.com/walmartlabs/concord/issues/1064">#1064</a>.
+ */
+@Deprecated
 public enum UserType {
 
     LOCAL,
