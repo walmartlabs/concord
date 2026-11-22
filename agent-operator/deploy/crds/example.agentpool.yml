@@ -52,6 +52,24 @@ spec:
 
           workersCount = 1
 
+          # For every directory setting that is relative or not set, the agent creates a new
+          # randomly named directory on each start and never removes the old ones. The pod's
+          # /tmp is a volume that survives container restarts, so every restart (e.g. after an
+          # OOM kill) leaves a full set of caches behind until the pod runs out of ephemeral
+          # storage. Use fixed absolute paths, so a restarted agent reuses the same directories.
+          dependencyCacheDir = "/tmp/concord/dependencyCache"
+          dependencyListsDir = "/tmp/concord/dependencyLists"
+          payloadDir = "/tmp/concord/payload"
+          logDir = "/tmp/concord/logs"
+          repositoryCache {
+              cacheDir = "/tmp/concord/repoCache"
+              cacheInfoDir = "/tmp/concord/repoCacheInfo"
+          }
+
+          runner {
+              cfgDir = "/tmp/concord/cfg"
+          }
+
           server {
               apiBaseUrl = "http://11.12.13.14:8001"
               websocketUrl = "ws://11.12.13.14:8001/websocket"
