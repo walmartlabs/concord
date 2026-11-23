@@ -49,6 +49,7 @@ public class QueueClient {
 
     private static final Logger log = LoggerFactory.getLogger(QueueClient.class);
 
+    private final Set<MessageType> ignoreRequests;
     private final List<RequestEntry> requests;
 
     private final Worker worker;
@@ -56,9 +57,10 @@ public class QueueClient {
     private boolean onMaintenanceMode;
 
     public QueueClient(QueueClientConfiguration cfg) throws URISyntaxException {
+        this.ignoreRequests = new HashSet<>();
         this.requests = new ArrayList<>();
 
-        this.worker = new Worker(cfg, requests);
+        this.worker = new Worker(cfg, ignoreRequests, requests);
     }
 
     public void start() {
@@ -84,8 +86,9 @@ public class QueueClient {
             if (onMaintenanceMode) {
                 return;
             }
+            ignoreRequests.add(MessageType.PROCESS_REQUEST);
+            worker.cancel(MessageType.PROCESS_REQUEST);
             onMaintenanceMode = true;
-            worker.maintenanceMode();
         }
     }
 
@@ -93,12 +96,11 @@ public class QueueClient {
     public <E extends Message> Future<E> request(Message request) {
         SettableFuture<Message> f = SettableFuture.create();
         synchronized (requests) {
-            if (onMaintenanceMode) {
+            if (ignoreRequests.contains(request.getMessageType())) {
                 f.set(null);
-                return (Future<E>) f;
+            } else {
+                requests.add(new RequestEntry(request, f));
             }
-
-            requests.add(new RequestEntry(request, f));
         }
         return (Future<E>) f;
     }
@@ -111,8 +113,7 @@ public class QueueClient {
         private enum State {
             CONNECTING,
             CONNECTED,
-            DISCONNECTING,
-            MAINTENANCE
+            DISCONNECTING
         }
 
         private final AtomicLong requestIdGenerator = new AtomicLong();
@@ -122,6 +123,7 @@ public class QueueClient {
         private final String apiToken;
         private final URI[] destUris;
         private final Map<Long, RequestEntry> awaitResponses;
+        private final Set<MessageType> ignoreRequests;
         private final List<RequestEntry> requests;
         private final long pingInterval;
         private final long maxNoActivityPeriod;
@@ -138,11 +140,12 @@ public class QueueClient {
 
         private final AtomicReference<State> state;
 
-        public Worker(QueueClientConfiguration cfg, List<RequestEntry> requests) throws URISyntaxException {
+        public Worker(QueueClientConfiguration cfg, Set<MessageType> ignoreRequests, List<RequestEntry> requests) throws URISyntaxException {
             this.agentId = cfg.getAgentId();
             this.userAgent = cfg.getUserAgent();
             this.apiToken = cfg.getApiKey();
 
+            this.ignoreRequests = ignoreRequests;
             this.requests = requests;
             this.destUris = toURIs(cfg.getAddresses());
             this.awaitResponses = new ConcurrentHashMap<>();
@@ -168,9 +171,6 @@ public class QueueClient {
                             if (!state.compareAndSet(State.CONNECTING, State.CONNECTED)) {
                                 close(session);
                                 session = null;
-                                if (state.get() == State.MAINTENANCE) {
-                                    return;
-                                }
                                 break;
                             }
 
@@ -190,21 +190,13 @@ public class QueueClient {
                             session = null;
                             if (state.compareAndSet(State.DISCONNECTING, State.CONNECTING)) {
                                 sleep(reconnectDelay);
-                            } else if (state.get() == State.MAINTENANCE) {
-                                return;
                             }
                             break;
-                        }
-                        case MAINTENANCE: {
-                            close(session);
-                            return;
                         }
                     }
                 } catch (Exception e) {
                     log.error("mainLoop -> error", e);
-                    if (!disconnecting()) {
-                        return;
-                    }
+                    disconnecting();
 
                     if (++destUriIndex >= destUris.length) {
                         destUriIndex = 0;
@@ -276,12 +268,23 @@ public class QueueClient {
             disconnecting();
         }
 
-        public void maintenanceMode() {
-            state.set(State.MAINTENANCE);
+        public void cancel(MessageType requestType) {
+            synchronized (this.requests) {
+                this.requests.removeIf(e -> cancelIfMatches(e, requestType));
+                this.awaitResponses.entrySet().removeIf(e -> cancelIfMatches(e.getValue(), requestType));
+            }
         }
 
-        private boolean disconnecting() {
-            return state.getAndUpdate(s -> s == State.MAINTENANCE ? State.MAINTENANCE : State.DISCONNECTING) != State.MAINTENANCE;
+        private void disconnecting() {
+            state.set(State.DISCONNECTING);
+        }
+
+        private static boolean cancelIfMatches(RequestEntry entry, MessageType requestType) {
+            if (entry.request.getMessageType() != requestType) {
+                return false;
+            }
+            entry.cancel();
+            return true;
         }
 
         private Session connect(URI destUri) throws Exception {
@@ -298,7 +301,7 @@ public class QueueClient {
         }
 
         private boolean send(Session session, Message message) {
-            if (state.get() == State.MAINTENANCE || !session.isOpen()) {
+            if (!session.isOpen()) {
                 return false;
             }
 
@@ -321,9 +324,11 @@ public class QueueClient {
                 return;
             }
 
-            if (state.get() == State.MAINTENANCE) {
-                e.cancel();
-                return;
+            synchronized (requests) {
+                if (ignoreRequests.contains(e.request.getMessageType())) {
+                    e.cancel();
+                    return;
+                }
             }
 
             // register the request before sending it, the response may arrive before send() returns
@@ -390,6 +395,11 @@ public class QueueClient {
                 Iterator<RequestEntry> it = requests.iterator();
                 while (it.hasNext()) {
                     RequestEntry request = it.next();
+                    if (ignoreRequests.contains(request.request.getMessageType())) {
+                        it.remove();
+                        request.cancel();
+                        continue;
+                    }
                     if (!alreadySent(request.request.getMessageType())) {
                         it.remove();
                         return request;

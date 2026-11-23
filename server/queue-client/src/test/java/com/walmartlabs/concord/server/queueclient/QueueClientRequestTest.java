@@ -96,50 +96,54 @@ class QueueClientRequestTest {
     }
 
     @Test
-    void testMaintenanceModeCompletesFutureRequestsWithNull() throws Exception {
+    void testMaintenanceModeSuppressesOnlyProcessRequests() throws Exception {
         field(client, "workerThread", new Thread());
 
         client.maintenanceMode();
 
-        var commandRequest = client.<Message>request(new CommandRequest(UUID.randomUUID()));
         var processRequest = client.<Message>request(new ProcessRequest(Map.of()));
-
-        assertTrue(commandRequest.isDone(), "Command requests must not wait while maintenance mode is active");
-        assertNull(commandRequest.get());
         assertTrue(processRequest.isDone(), "Process requests must not wait while maintenance mode is active");
         assertNull(processRequest.get());
+
+        var agentId = UUID.randomUUID();
+        var commandFuture = client.<Message>request(new CommandRequest(agentId));
+        assertFalse(commandFuture.isDone(), "Command requests must still poll for cancellation in maintenance mode");
+
+        var session = session(true, (text, callback) -> {
+            var sentRequest = (CommandRequest) MessageSerializer.deserialize(text);
+            var response = CommandResponse.cancel(sentRequest.getCorrelationId(),
+                    Map.of("agentId", sentRequest.getAgentId().toString()));
+
+            worker.onWebSocketText(MessageSerializer.serialize(response));
+            callback.succeed();
+        });
+
+        processRequests(session);
+
+        assertTrue(commandFuture.isDone(), "Command requests should still complete in maintenance mode");
+        var response = assertInstanceOf(CommandResponse.class, commandFuture.get());
+        assertEquals(agentId.toString(), response.getPayload().get("agentId"));
     }
 
     @Test
-    void testWebSocketCloseKeepsMaintenanceState() throws Exception {
+    void testMaintenanceModeDoesNotDisconnectWorker() throws Exception {
         field(client, "workerThread", new Thread());
 
         client.maintenanceMode();
-        worker.onWebSocketClose(1000, "test");
 
-        assertEquals("MAINTENANCE", field(worker, "state").toString());
+        assertEquals("CONNECTING", field(worker, "state").toString());
     }
 
     @Test
-    void testDisconnectKeepsMaintenanceState() throws Exception {
-        field(client, "workerThread", new Thread());
-
-        client.maintenanceMode();
-        worker.disconnect();
-
-        assertEquals("MAINTENANCE", field(worker, "state").toString());
-    }
-
-    @Test
-    void testQueuedRequestIsCancelledInMaintenanceMode() throws Exception {
-        var future = client.<Message>request(new CommandRequest(UUID.randomUUID()));
-        var session = session(true, (text, callback) -> fail("Must not send after maintenance mode is active"));
+    void testQueuedProcessRequestIsCancelledInMaintenanceMode() throws Exception {
+        var future = client.<Message>request(new ProcessRequest(Map.of()));
+        var session = session(true, (text, callback) -> fail("Must not send process requests after maintenance mode is active"));
 
         field(client, "workerThread", new Thread());
         client.maintenanceMode();
         processRequests(session);
 
-        assertTrue(future.isDone(), "A queued request must not wait after maintenance mode is active");
+        assertTrue(future.isDone(), "A queued process request must not wait after maintenance mode is active");
         assertNull(future.get());
     }
 

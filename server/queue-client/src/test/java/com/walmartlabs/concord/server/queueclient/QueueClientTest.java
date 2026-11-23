@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.queueclient;
 import com.walmartlabs.concord.server.queueclient.message.CommandRequest;
 import com.walmartlabs.concord.server.queueclient.message.CommandResponse;
 import com.walmartlabs.concord.server.queueclient.message.Message;
+import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.websocket.api.Callback;
@@ -144,13 +145,16 @@ public class QueueClientTest {
             client.maintenanceMode();
 
             Thread workerThread = (Thread) field(client, "workerThread");
-            workerThread.join(5000);
-            assertFalse(workerThread.isAlive(), "Maintenance mode should stop the queue client worker");
+            assertTrue(workerThread.isAlive(), "Maintenance mode should keep command polling alive for cancellation");
             assertFalse(secondConnection.await(500, TimeUnit.MILLISECONDS), "Maintenance mode must not reconnect");
 
-            var ignoredRequest = client.<Message>request(new CommandRequest(UUID.randomUUID()));
-            assertTrue(ignoredRequest.isDone(), "Requests must not wait while maintenance mode is active");
+            var ignoredRequest = client.<Message>request(new ProcessRequest(Map.of()));
+            assertTrue(ignoredRequest.isDone(), "Process requests must not wait while maintenance mode is active");
             assertNull(ignoredRequest.get());
+
+            var commandResponse = client.<Message>request(new CommandRequest(UUID.randomUUID())).get(10, TimeUnit.SECONDS);
+            assertInstanceOf(CommandResponse.class, commandResponse);
+            assertEquals(1, connectionCount.get(), "Command polling in maintenance mode should use the existing connection");
         } finally {
             client.stop();
         }
