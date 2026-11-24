@@ -27,12 +27,12 @@
         <docker.host.addr>localhost</docker.host.addr>
         <is.docker.profile>false</is.docker.profile>
         <it.db.addr>db-node:5432</it.db.addr>
-        <it.ldap.addr>ldap-node:389</it.ldap.addr>
+        <it.ldap.addr>ldap-node:3890</it.ldap.addr>
         <it.server.network.mode>custom</it.server.network.mode>
         <it.server.port>8001</it.server.port>
         <local.repository.src.mount>${settings.localRepository}</local.repository.src.mount>
         <network>net-server-it</network>
-        <oldap.image>osixia/openldap</oldap.image>
+        <oldap.image>osixia/openldap:2.6</oldap.image>
         <server.image>walmartlabs/concord-server</server.image>
         <tmp.dir.src.mount>${java.io.tmpdir}</tmp.dir.src.mount>
         <tmp.dir>${java.io.tmpdir}</tmp.dir>
@@ -450,15 +450,24 @@
                                     <alias>openldap</alias>
                                     <run>
                                         <ports>
-                                            <port>${it.ldap.port}:389</port>
+                                            <port>it.ldap.port:3890</port>
                                         </ports>
                                         <network>
                                             <mode>custom</mode>
                                             <name>${network}</name>
                                             <alias>ldap-node</alias>
                                         </network>
+                                        <env>
+                                            <OPENLDAP_BOOTSTRAP_SUFFIX>dc=example,dc=org</OPENLDAP_BOOTSTRAP_SUFFIX>
+                                            <OPENLDAP_BOOTSTRAP_DATA_ROOT_DN>cn=admin,dc=example,dc=org</OPENLDAP_BOOTSTRAP_DATA_ROOT_DN>
+                                            <!-- Hash of the integration tests' "admin" password. -->
+                                            <OPENLDAP_BOOTSTRAP_DATA_ROOT_PASSWORD_HASHED>{SSHA}yWqjHS3kku5YILp7h893q4qZPWneRiAm</OPENLDAP_BOOTSTRAP_DATA_ROOT_PASSWORD_HASHED>
+                                            <OPENLDAP_BOOTSTRAP_MEMBEROF>true</OPENLDAP_BOOTSTRAP_MEMBEROF>
+                                            <OPENLDAP_BOOTSTRAP_MEMBEROF_GROUP_OC>groupOfUniqueNames</OPENLDAP_BOOTSTRAP_MEMBEROF_GROUP_OC>
+                                            <OPENLDAP_BOOTSTRAP_MEMBEROF_MEMBER_AD>uniqueMember</OPENLDAP_BOOTSTRAP_MEMBEROF_MEMBER_AD>
+                                        </env>
                                         <wait>
-                                            <log>(?s).*slapd starting*</log>
+                                            <log>(?s).*slapd starting.*</log>
                                             <time>60000</time>
                                         </wait>
                                         <labels>
