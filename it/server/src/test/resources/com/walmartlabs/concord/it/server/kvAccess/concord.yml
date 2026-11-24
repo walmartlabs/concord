@@ -1,0 +1,4 @@
+flows:
+  default:
+    - ${kv.putString(kvKey, "fromProcess")}
+    - log: "kv written: ${kv.getString(kvKey)}"
