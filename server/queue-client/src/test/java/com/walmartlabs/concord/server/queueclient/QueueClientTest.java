@@ -123,7 +123,7 @@ public class QueueClientTest {
     }
 
     @Test
-    public void testMaintenanceModeDoesNotReconnect() throws Exception {
+    public void testMaintenanceModeReconnectsForCancellationOnly() throws Exception {
         QueueClientConfiguration cfg = new QueueClientConfiguration.Builder(new String[]{"ws://localhost:" + port + "/websocket"})
                 .agentId("test-agent")
                 .apiKey("test-key")
@@ -146,7 +146,7 @@ public class QueueClientTest {
 
             Thread workerThread = (Thread) field(client, "workerThread");
             assertTrue(workerThread.isAlive(), "Maintenance mode should keep command polling alive for cancellation");
-            assertFalse(secondConnection.await(500, TimeUnit.MILLISECONDS), "Maintenance mode must not reconnect");
+            assertTrue(secondConnection.await(10, TimeUnit.SECONDS), "Maintenance mode should reconnect to unregister server-side process requests");
 
             var ignoredRequest = client.<Message>request(new ProcessRequest(Map.of()));
             assertTrue(ignoredRequest.isDone(), "Process requests must not wait while maintenance mode is active");
@@ -154,7 +154,7 @@ public class QueueClientTest {
 
             var commandResponse = client.<Message>request(new CommandRequest(UUID.randomUUID())).get(10, TimeUnit.SECONDS);
             assertInstanceOf(CommandResponse.class, commandResponse);
-            assertEquals(1, connectionCount.get(), "Command polling in maintenance mode should use the existing connection");
+            assertTrue(connectionCount.get() >= 2, "Command polling in maintenance mode should continue after reconnect");
         } finally {
             client.stop();
         }

@@ -126,12 +126,12 @@ class QueueClientRequestTest {
     }
 
     @Test
-    void testMaintenanceModeDoesNotDisconnectWorker() throws Exception {
+    void testMaintenanceModeDisconnectsWorkerToUnregisterServerProcessRequest() throws Exception {
         field(client, "workerThread", new Thread());
 
         client.maintenanceMode();
 
-        assertEquals("CONNECTING", field(worker, "state").toString());
+        assertEquals("DISCONNECTING", field(worker, "state").toString());
     }
 
     @Test

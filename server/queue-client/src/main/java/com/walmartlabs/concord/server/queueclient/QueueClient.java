@@ -88,6 +88,7 @@ public class QueueClient {
             }
             ignoreRequests.add(MessageType.PROCESS_REQUEST);
             worker.cancel(MessageType.PROCESS_REQUEST);
+            worker.disconnect();
             onMaintenanceMode = true;
         }
     }
