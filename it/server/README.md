@@ -23,8 +23,15 @@ reachable Docker endpoint.
 To run tests such as [LdapIT](./src/test/java/com/walmartlabs/concord/it/server/LdapIT.java)
 locally:
 - start the OpenLDAP docker container:
-  ```
-  $ docker run -it --rm -p 1389:389 osixia/openldap
+  ```shell
+  docker run -it --rm -p 1389:3890 \
+    -e OPENLDAP_BOOTSTRAP_SUFFIX=dc=example,dc=org \
+    -e OPENLDAP_BOOTSTRAP_DATA_ROOT_DN=cn=admin,dc=example,dc=org \
+    -e 'OPENLDAP_BOOTSTRAP_DATA_ROOT_PASSWORD_HASHED={SSHA}yWqjHS3kku5YILp7h893q4qZPWneRiAm' \
+    -e OPENLDAP_BOOTSTRAP_MEMBEROF=true \
+    -e OPENLDAP_BOOTSTRAP_MEMBEROF_GROUP_OC=groupOfUniqueNames \
+    -e OPENLDAP_BOOTSTRAP_MEMBEROF_MEMBER_AD=uniqueMember \
+    osixia/openldap:2.6
   ```
 - start the DB and Concord Agent as usual;
 - run the server with the following `ldap` configuration:
@@ -45,4 +52,9 @@ locally:
   ```
   IT_LDAP_URL=ldap://localhost:1389
   ```
- 
+
+The Docker Maven profile applies the same bootstrap settings and publishes
+container port `3890` to a dynamically allocated host port. The hash above sets
+the test-only admin password to `admin`; without it, the 2.x image generates a
+random password. The `memberOf` overlay must be enabled explicitly and configured
+for the tests' `groupOfUniqueNames`/`uniqueMember` entries.
