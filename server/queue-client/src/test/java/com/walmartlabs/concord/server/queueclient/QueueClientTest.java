@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.queueclient;
 import com.walmartlabs.concord.server.queueclient.message.CommandRequest;
 import com.walmartlabs.concord.server.queueclient.message.CommandResponse;
 import com.walmartlabs.concord.server.queueclient.message.Message;
+import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.websocket.api.Callback;
@@ -39,6 +40,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -53,6 +55,8 @@ public class QueueClientTest {
 
     private final Map<String, String> upgradeHeaders = new ConcurrentHashMap<>();
     private final CountDownLatch pingReceived = new CountDownLatch(1);
+    private final CountDownLatch secondConnection = new CountDownLatch(1);
+    private final AtomicInteger connectionCount = new AtomicInteger();
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -118,6 +122,50 @@ public class QueueClientTest {
         }
     }
 
+    @Test
+    public void testMaintenanceModeReconnectsForCancellationOnly() throws Exception {
+        QueueClientConfiguration cfg = new QueueClientConfiguration.Builder(new String[]{"ws://localhost:" + port + "/websocket"})
+                .agentId("test-agent")
+                .apiKey("test-key")
+                .userAgent("test-ua")
+                .connectTimeout(5000)
+                .pingInterval(100)
+                .maxNoActivityPeriod(30000)
+                .processRequestDelay(10)
+                .reconnectDelay(50)
+                .build();
+
+        QueueClient client = new QueueClient(cfg);
+        client.start();
+        try {
+            Message response = client.<Message>request(new CommandRequest(UUID.randomUUID())).get(10, TimeUnit.SECONDS);
+            assertInstanceOf(CommandResponse.class, response);
+            assertEquals(1, connectionCount.get());
+
+            client.maintenanceMode();
+
+            Thread workerThread = (Thread) field(client, "workerThread");
+            assertTrue(workerThread.isAlive(), "Maintenance mode should keep command polling alive for cancellation");
+            assertTrue(secondConnection.await(10, TimeUnit.SECONDS), "Maintenance mode should reconnect to unregister server-side process requests");
+
+            var ignoredRequest = client.<Message>request(new ProcessRequest(Map.of()));
+            assertTrue(ignoredRequest.isDone(), "Process requests must not wait while maintenance mode is active");
+            assertNull(ignoredRequest.get());
+
+            var commandResponse = client.<Message>request(new CommandRequest(UUID.randomUUID())).get(10, TimeUnit.SECONDS);
+            assertInstanceOf(CommandResponse.class, commandResponse);
+            assertTrue(connectionCount.get() >= 2, "Command polling in maintenance mode should continue after reconnect");
+        } finally {
+            client.stop();
+        }
+    }
+
+    private static Object field(Object target, String name) throws Exception {
+        var field = target.getClass().getDeclaredField(name);
+        field.setAccessible(true);
+        return field.get(target);
+    }
+
     public class ServerListener implements Session.Listener.AutoDemanding {
 
         private Session session;
@@ -125,6 +173,9 @@ public class QueueClientTest {
         @Override
         public void onWebSocketOpen(Session session) {
             this.session = session;
+            if (connectionCount.incrementAndGet() == 2) {
+                secondConnection.countDown();
+            }
         }
 
         @Override
