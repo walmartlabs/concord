@@ -104,12 +104,10 @@ public abstract class LoopWrapper implements Command {
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
         Context ctx = contextFactory.create(runtime, state, threadId, getCurrentStep());
 
-        Collection<String> effectiveOutVariables = getEffectiveOutVariables(runtime, ctx);
-
         Serializable value = items;
         if (value == null) {
             // value is null, not going to run the wrapped command at all
-            initOutVariables(state, threadId, effectiveOutVariables);
+            initOutVariables(state, threadId, getEffectiveOutVariables(runtime, ctx));
             return;
         }
 
@@ -120,6 +118,7 @@ public abstract class LoopWrapper implements Command {
         // prepare items
         // store items in an ArrayList because it is Serializable
         ArrayList<Serializable> items = LoopItemSanitizer.sanitize(value);
+        Collection<String> effectiveOutVariables = getEffectiveOutVariables(runtime, ctx);
         if (items == null || items.isEmpty()) {
             initOutVariables(state, threadId, effectiveOutVariables);
             return;
