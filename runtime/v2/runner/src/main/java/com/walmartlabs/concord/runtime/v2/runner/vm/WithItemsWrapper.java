@@ -90,6 +90,7 @@ public abstract class WithItemsWrapper implements Command {
         Serializable value = withItems.value();
         if (value == null) {
             // value is null, not going to run the wrapped command at all
+            initOutVariables(state, threadId);
             return;
         }
 
@@ -111,11 +112,13 @@ public abstract class WithItemsWrapper implements Command {
         ArrayList<Serializable> items;
         if (value == null) {
             // value is null, not going to run the wrapped command at all
+            initOutVariables(state, threadId);
             return;
         } else if (value instanceof Collection) {
             Collection<Serializable> v = (Collection<Serializable>) value;
             if (v.isEmpty()) {
                 // no items, nothing to do
+                initOutVariables(state, threadId);
                 return;
             }
 
@@ -134,10 +137,22 @@ public abstract class WithItemsWrapper implements Command {
         items.forEach(WithItemsWrapper::assertItem);
 
         if (items.isEmpty()) {
+            initOutVariables(state, threadId);
             return;
         }
 
         eval(state, threadId, items);
+    }
+
+    private void initOutVariables(State state, ThreadId threadId) {
+        if (outVariables == null || outVariables.isEmpty()) {
+            return;
+        }
+
+        Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
+        for (String var : outVariables) {
+            VMUtils.putLocal(targetFrame, var, new ArrayList<>());
+        }
     }
 
     protected abstract void eval(State state, ThreadId threadId, ArrayList<Serializable> items);

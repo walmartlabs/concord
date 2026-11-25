@@ -1,0 +1,70 @@
+flows:
+  default:
+    # Nested loops, different out names, inner items empty.
+    # The parent out should still collect the item values; the inner out is [].
+    - block:
+        - call: innerFlow
+          out: innerOut
+          loop:
+            items: []
+        - set:
+            parentOut: "${item}"
+        - log: "nested different inner: ${innerOut}"
+      out: parentOut
+      loop:
+        items:
+          - 1
+          - 2
+    - log: "nested different parent: ${parentOut}"
+
+    # Nested loops sharing the same out name; inner items empty.
+    # Each parent iteration should collect [] from the inner loop,
+    # so the parent out is a list of empty lists.
+    - block:
+        - call: innerFlow
+          out: sharedOut
+          loop:
+            items: []
+        - log: "nested same inner empty: ${sharedOut}"
+      out: sharedOut
+      loop:
+        items:
+          - 1
+          - 2
+    - log: "nested same parent after empty inners: ${sharedOut}"
+
+    # Nested loops sharing the same out name; both have items.
+    # Each parent iteration collects the inner loop's out list.
+    - block:
+        - call: innerFlow
+          out: sharedItemsOut
+          loop:
+            items:
+              - a
+              - b
+      out: sharedItemsOut
+      loop:
+        items:
+          - 1
+          - 2
+    - log: "nested same both items: ${sharedItemsOut}"
+
+    # Nested loops sharing the same out name; some inner loops are empty.
+    - block:
+        - call: innerFlow
+          out: mixedOut
+          loop:
+            items: "${item}"
+      out: mixedOut
+      loop:
+        items:
+          - []
+          - ["z"]
+    - log: "nested same mixed: ${mixedOut}"
+
+  innerFlow:
+    - set:
+        innerOut: "in"
+        sharedOut: "in"
+        sharedItemsOut: "${item}"
+        mixedOut: "${item}"

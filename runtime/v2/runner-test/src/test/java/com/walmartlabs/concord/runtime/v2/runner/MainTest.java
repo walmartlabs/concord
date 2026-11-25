@@ -1803,6 +1803,38 @@ public class MainTest  {
     }
 
     @Test
+    public void emptyLoopOutVariables() throws Exception {
+        deploy("emptyLoopOutVariables");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("empty loop out var: []") + ".*");
+        assertLog(log, ".*" + Pattern.quote("empty loop multi out: [], []") + ".*");
+        assertLog(log, ".*" + Pattern.quote("empty loop out expression: []") + ".*");
+        assertLog(log, ".*" + Pattern.quote("empty loop out map: []") + ".*");
+        assertLog(log, ".*" + Pattern.quote("empty parallel loop out var: []") + ".*");
+        assertLog(log, ".*" + Pattern.quote("empty expr loop out var: []") + ".*");
+    }
+
+    @Test
+    public void nestedLoopOutVariables() throws Exception {
+        deploy("nestedLoopOutVariables");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLogAtLeast(log, 2, ".*" + Pattern.quote("nested different inner: []") + ".*");
+        assertLog(log, ".*" + Pattern.quote("nested different parent: [1, 2]") + ".*");
+        assertLogAtLeast(log, 2, ".*" + Pattern.quote("nested same inner empty: []") + ".*");
+        assertLog(log, ".*" + Pattern.quote("nested same parent after empty inners: [[], []]") + ".*");
+        assertLog(log, ".*" + Pattern.quote("nested same both items: [[a, b], [a, b]]") + ".*");
+        assertLog(log, ".*" + Pattern.quote("nested same mixed: [[], [z]]") + ".*");
+    }
+
+    @Test
     public void prefixedFunctionsInExpressions() throws Exception {
         deploy("prefixedFunctions");
 
