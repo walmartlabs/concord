@@ -128,6 +128,7 @@ public class ServerConfiguration {
         if (cfg.hasPath(oldKey)) {
             String[] as = getCSV(cfg.getString(oldKey));
             if (as != null) {
+                log.warn("'{}' is deprecated, use 'server.websocketUrl' instead", oldKey);
                 return as;
             }
         }
