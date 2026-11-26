@@ -20,9 +20,11 @@ package com.walmartlabs.concord.server.boot.filters;
  * =====
  */
 
+import com.walmartlabs.concord.config.Config;
 import com.walmartlabs.concord.server.boot.FilterChainConfigurator;
 import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.LocalRequestFilter;
+import com.walmartlabs.concord.server.security.Permission;
 import org.apache.shiro.web.filter.mgt.FilterChainManager;
 
 import javax.inject.Inject;
@@ -31,13 +33,16 @@ public class ConcordFilterChainConfigurator implements FilterChainConfigurator {
 
     private final ConcordAuthenticatingFilter concordAuthenticatingFilter;
     private final GithubAuthenticatingFilter githubAuthenticatingFilter;
+    private final boolean metricsAuthEnabled;
 
     @Inject
     public ConcordFilterChainConfigurator(ConcordAuthenticatingFilter concordAuthenticatingFilter,
-                                          GithubAuthenticatingFilter githubAuthenticatingFilter) {
+                                          GithubAuthenticatingFilter githubAuthenticatingFilter,
+                                          @Config("metrics.auth.enabled") boolean metricsAuthEnabled) {
 
         this.concordAuthenticatingFilter = concordAuthenticatingFilter;
         this.githubAuthenticatingFilter = githubAuthenticatingFilter;
+        this.metricsAuthEnabled = metricsAuthEnabled;
     }
 
     @Override
@@ -56,6 +61,10 @@ public class ConcordFilterChainConfigurator implements FilterChainConfigurator {
         manager.addFilter("concord", concordAuthenticatingFilter);
         manager.createChain("/api/**", "concord");
         manager.createChain("/forms/**", "concord");
+
+        if (metricsAuthEnabled) {
+            manager.createChain("/metrics", "concord,perms[" + Permission.READ_METRICS.getKey() + "]");
+        }
 
         // special auth for GitHub, only enabled if secret is configured
         if (githubAuthenticatingFilter.isReady()) {

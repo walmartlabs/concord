@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <property name="readMetricsPermissionId" value="8c5ca104-9346-4d32-a414-ff70315f2c5f"/>
+
+    <changeSet id="2480000" author="ibodrov@gmail.com">
+        <insert tableName="PERMISSIONS">
+            <column name="PERMISSION_ID" value="${readMetricsPermissionId}"/>
+            <column name="PERMISSION_NAME" value="readMetrics"/>
+            <column name="DESCRIPTION" value="Read Prometheus metrics when metrics authentication is enabled"/>
+        </insert>
+
+        <sql>
+            insert into ROLE_PERMISSIONS values (
+                (select ROLE_ID from ROLES where ROLE_NAME = 'concordAdmin'),
+                '${readMetricsPermissionId}'
+            )
+        </sql>
+    </changeSet>
+</databaseChangeLog>
