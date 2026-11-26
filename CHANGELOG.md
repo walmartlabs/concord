@@ -1,5 +1,11 @@
 # Change Log
 
+## [2.48.0] - TBD
+
+- agent-operator: generate the AgentPool CRD from the model
+([#1437](https://github.com/walmartlabs/concord/pull/1437)).
+
+
 ## [2.47.0] - 2026-11-10
 
 ### Added
