@@ -51,6 +51,8 @@ import PollErrorBanner from './PollErrorBanner';
 import { useStatusFavicon } from './favicon';
 import { gitUrlParse } from '../../molecules/GitHubLink';
 import { useIdleTimer } from 'react-idle-timer';
+import CreateNotificationActivity from '../CreateNotificationActivity';
+import { get as getUserInfo } from '../../../api/profile/user';
 
 import './styles.css';
 
@@ -63,6 +65,7 @@ export type TabLink =
     | 'wait'
     | 'children'
     | 'attachments'
+    | 'notify'
     | null;
 
 interface ExternalProps {
@@ -187,6 +190,20 @@ const ProcessActivityView = (props: ExternalProps) => {
 
     const error = usePolling(fetchData, dataFetchInterval, loadingHandler, refresh);
 
+    const [canNotify, setCanNotify] = useState(false);
+    useEffect(() => {
+        getUserInfo()
+            .then((info) => {
+                setCanNotify(
+                    info.roles?.some(
+                        (r) => r === 'concordAdmin' || r === 'concordModerator'
+                    ) ?? false
+                );
+            })
+            .catch(() => {});
+    }, []);
+
+    if (error) {
     const [tabErrors, setTabErrors] = useState<Map<object, PollingError>>(() => new Map());
     const reportTabError = useCallback((id: object, tabError?: PollingError) => {
         setTabErrors((prev) => {
@@ -209,6 +226,21 @@ const ProcessActivityView = (props: ExternalProps) => {
     }
 
     const { instanceId, activeTab } = props;
+
+    // Derive notification defaults from the loaded process
+    const notifyProps = process
+        ? process.projectName
+            ? {
+                  defaultOwnerType: 'PROJECT' as const,
+                  defaultOrgName: process.orgName,
+                  defaultProjectName: process.projectName,
+                  defaultRepoName: process.repoName,
+              }
+            : {
+                  defaultOwnerType: 'USER' as const,
+                  defaultInitiatorUsername: process.initiator,
+              }
+        : {};
 
     const baseUrl = `/process/${instanceId}`;
 
@@ -265,6 +297,12 @@ const ProcessActivityView = (props: ExternalProps) => {
                     <Icon name="paperclip" />
                     <Link to={`${baseUrl}/attachments`}>Attachments</Link>
                 </Menu.Item>
+                {canNotify && (
+                    <Menu.Item active={activeTab === 'notify'}>
+                        <Icon name="bell" />
+                        <Link to={`${baseUrl}/notify`}>Notify</Link>
+                    </Menu.Item>
+                )}
             </Menu>
 
             <PollingErrorContext.Provider value={reportTabError}>
@@ -319,6 +357,64 @@ const ProcessActivityView = (props: ExternalProps) => {
                                         dataFetchInterval={dataFetchInterval}
                                     />
                                 )}
+                        </>
+                    }
+                />
+                <Route
+                    path="history"
+                    element={
+                        <ProcessHistoryActivity
+                            instanceId={instanceId}
+                            loadingHandler={loadingHandler}
+                            forceRefresh={refresh}
+                            dataFetchInterval={dataFetchInterval}
+                        />
+                    }
+                />
+                <Route
+                    path="wait"
+                    element={
+                        <ProcessWaitActivity
+                            instanceId={instanceId}
+                            processStatus={process ? process.status : undefined}
+                            loadingHandler={loadingHandler}
+                            forceRefresh={refresh}
+                            dataFetchInterval={dataFetchInterval}
+                        />
+                    }
+                />
+                <Route
+                    path="children"
+                    element={
+                        <ProcessChildrenActivity
+                            instanceId={instanceId}
+                            processStatus={process ? process.status : undefined}
+                            processOrgName={process ? process.orgName : undefined}
+                            processProjectName={process ? process.projectName : undefined}
+                            loadingHandler={loadingHandler}
+                            forceRefresh={refresh}
+                            dataFetchInterval={dataFetchInterval}
+                        />
+                    }
+                />
+                <Route
+                    path="attachments"
+                    element={
+                        <ProcessAttachmentsActivity
+                            instanceId={instanceId}
+                            processStatus={process ? process.status : undefined}
+                            loadingHandler={loadingHandler}
+                            forceRefresh={refresh}
+                            dataFetchInterval={dataFetchInterval}
+                        />
+                    }
+                />
+                <Route
+                    path="notify"
+                    element={<CreateNotificationActivity {...notifyProps} />}
+                />
+                <Route path="*" element={<NotFoundPage />} />
+            </Routes>
                                 {process &&
                                     (process.runtime === 'concord-v2' ||
                                         process.runtime === undefined) && (

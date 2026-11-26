@@ -28,6 +28,11 @@ public final class Roles {
     public static final String ADMIN = "concordAdmin";
 
     /**
+     * Moderators can create and manage notifications.
+     */
+    public static final String MODERATOR = "concordModerator";
+
+    /**
      * System readers can access any resource.
      */
     public static final String SYSTEM_READER = "concordSystemReader";
@@ -39,6 +44,14 @@ public final class Roles {
 
     public static boolean isAdmin() {
         return SecurityUtils.hasRole(ADMIN);
+    }
+
+    public static boolean isModerator() {
+        return SecurityUtils.hasRole(MODERATOR);
+    }
+
+    public static boolean isAdminOrModerator() {
+        return isAdmin() || isModerator();
     }
 
     public static boolean isGlobalReader() {
