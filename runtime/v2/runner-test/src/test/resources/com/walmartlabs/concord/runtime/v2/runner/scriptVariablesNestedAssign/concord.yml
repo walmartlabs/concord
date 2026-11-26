@@ -1,0 +1,11 @@
+flows:
+  default:
+    - set:
+        config:
+          env: "prod"
+    - script: js
+      body: |
+        config.servers = [{host: 'a.example.com'}, {host: 'b.example.com'}];
+    - log: "first server: ${config.servers[0].host}"
+    - checkpoint: "afterScript"
+    - log: "after checkpoint: ${config.servers[1].host}"
