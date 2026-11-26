@@ -37,5 +37,10 @@ public enum WaitType {
     /**
      * Waiting for a specific timeout to resume process.
      */
-    PROCESS_SLEEP
+    PROCESS_SLEEP,
+
+    /**
+     * Waiting for an external event to clear the condition.
+     */
+    EXTERNAL_EVENT
 }
