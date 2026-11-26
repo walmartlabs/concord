@@ -24,7 +24,7 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
-            <artifactId>concord-server</artifactId>
+            <artifactId>concord-server-impl</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
