@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.security;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2024 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,20 +20,26 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
+import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.user.RoleEntry;
 import com.walmartlabs.concord.server.user.UserEntry;
+import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.ThreadContext;
 
 import java.io.*;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 /**
  * Utility methods for working with Shiro's security context.
@@ -95,6 +101,144 @@ public final class SecurityUtils {
         return p;
     }
 
+    /**
+     * Serializes a {@link PrincipalCollection} to JSON bytes.
+     * Used for remember-me cookies to avoid Java deserialization risks.
+     */
+    public static byte[] serializeJson(PrincipalCollection data) {
+        Map<String, List<PrincipalPayload>> realms = new LinkedHashMap<>();
+        for (String realm : data.getRealmNames()) {
+            List<PrincipalPayload> items = new ArrayList<>();
+            for (Object p : data.fromRealm(realm)) {
+                PrincipalPayload payload = PrincipalPayload.from(p);
+                if (payload != null) {
+                    items.add(payload);
+                }
+            }
+            if (!items.isEmpty()) {
+                realms.put(realm, items);
+            }
+        }
+        var root = new PrincipalCollectionData(FORMAT_VERSION, realms);
+        try {
+            return MAPPER.writeValueAsBytes(root);
+        } catch (IOException e) {
+            throw new RuntimeException("Error serializing principals to JSON", e);
+        }
+    }
+
+    /**
+     * Deserializes a {@link PrincipalCollection} from JSON bytes.
+     * Returns {@link Optional#empty()} if the data is not in JSON format (legacy Java serialization).
+     */
+    public static Optional<PrincipalCollection> deserializeJson(byte[] data) {
+        if (data.length == 0 || data[0] != '{') {
+            return Optional.empty();
+        }
+
+        PrincipalCollectionData root;
+        try {
+            root = MAPPER.readValue(data, PrincipalCollectionData.class);
+        } catch (IOException e) {
+            return Optional.empty();
+        }
+
+        if (!FORMAT_VERSION.equals(root.format())) {
+            return Optional.empty();
+        }
+
+        Map<String, List<PrincipalPayload>> realms = root.realms();
+        if (realms == null) {
+            return Optional.empty();
+        }
+
+        SimplePrincipalCollection coll = new SimplePrincipalCollection();
+        for (var realmEntry : realms.entrySet()) {
+            for (var item : realmEntry.getValue()) {
+                Object p = item.toPrincipal();
+                if (p != null) {
+                    coll.add(p, realmEntry.getKey());
+                }
+            }
+        }
+        return Optional.of(coll);
+    }
+
+    /**
+     * Top-level container for remember-me principal data.
+     */
+    record PrincipalCollectionData(
+            @JsonProperty("_f") String format,
+            @JsonProperty("r") Map<String, List<PrincipalPayload>> realms) {
+    }
+
+    /**
+     * Polymorphic payload for a single remember-me principal.
+     */
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "t")
+    @JsonSubTypes({
+            @JsonSubTypes.Type(value = PrincipalPayload.Up.class, name = "up"),
+            @JsonSubTypes.Type(value = PrincipalPayload.Api.class, name = "api")
+    })
+    sealed interface PrincipalPayload permits PrincipalPayload.Up, PrincipalPayload.Api {
+
+        Object toPrincipal();
+
+        static PrincipalPayload from(Object p) {
+            if (p instanceof UsernamePasswordToken t) {
+                return new Up(
+                        t.getUsername(),
+                        Base64.getEncoder().encodeToString(
+                                new String(t.getPassword()).getBytes(StandardCharsets.UTF_8)),
+                        t.isRememberMe(),
+                        t.getHost());
+            }
+            if (p instanceof ApiKey k) {
+                return new Api(
+                        k.getKeyId().toString(),
+                        k.getUserId().toString(),
+                        k.getKey(),
+                        k.isRememberMe());
+            }
+            return null;
+        }
+
+        record Up(
+                @JsonProperty("u") String username,
+                @JsonProperty("p") String password,
+                @JsonProperty("rm") boolean rememberMe,
+                @JsonProperty("h") String host
+        ) implements PrincipalPayload {
+            @Override
+            public Object toPrincipal() {
+                byte[] pb = Base64.getDecoder().decode(password);
+                char[] pwd = new String(pb, StandardCharsets.UTF_8).toCharArray();
+                return new UsernamePasswordToken(username, pwd, rememberMe, host);
+            }
+        }
+
+        record Api(
+                @JsonProperty("kid") String keyId,
+                @JsonProperty("uid") String userId,
+                @JsonProperty("k") String key,
+                @JsonProperty("rm") boolean rememberMe
+        ) implements PrincipalPayload {
+            @Override
+            public Object toPrincipal() {
+                return new ApiKey(
+                        UUID.fromString(keyId),
+                        UUID.fromString(userId),
+                        key,
+                        rememberMe);
+            }
+        }
+    }
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    private static final String FORMAT_VERSION = "1";
+
+    // Legacy Java serialization, kept for server-side uses (ProcessSecurityContext)
     public static byte[] serialize(PrincipalCollection data) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
