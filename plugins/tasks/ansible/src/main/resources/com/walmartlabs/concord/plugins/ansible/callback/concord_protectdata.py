@@ -2,6 +2,14 @@ from __future__ import (absolute_import)
 __metaclass__ = type
 
 from ansible.plugins.callback.default import CallbackModule as CallbackModule_default
+DOCUMENTATION = r'''
+    name: concord_protectdata
+    type: stdout
+    short_description: Filter sensitive data from Ansible output
+    extends_documentation_fragment:
+      - default_callback
+      - result_format_callback
+'''
 from collections.abc import Mapping
 
 def enc(s):
@@ -53,5 +61,11 @@ class CallbackModule(CallbackModule_default):
                  print("*********** THIS TASK CONTAINS SENSITIVE INFORMATION. ENABLING NO_LOG ******************")
                  task.no_log = True
 
-    def _dump_results(self, result,  indent=None, sort_keys=True, keep_invocation=False):
-         return super(CallbackModule, self)._dump_results(self.hide_password(result), indent, sort_keys, keep_invocation)
+    def _dump_results(self, result, indent=None, sort_keys=True, keep_invocation=False, serialize=True):
+        return super(CallbackModule, self)._dump_results(
+            self.hide_password(result),
+            indent=indent,
+            sort_keys=sort_keys,
+            keep_invocation=keep_invocation,
+            serialize=serialize
+        )

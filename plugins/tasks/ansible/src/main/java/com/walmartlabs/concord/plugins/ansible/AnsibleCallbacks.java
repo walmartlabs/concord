@@ -54,8 +54,7 @@ public class AnsibleCallbacks {
     };
 
     private static final String[] EVENTS_CALLBACKS = new String[]{
-            "concord_events.py",
-            "concord_strategy_patch.py"
+            "concord_events.py"
     };
     private static final String[] OUTVARS_CALLBACKS = new String[]{
             "concord_out_vars.py"
