@@ -24,6 +24,12 @@
     <!-- Preloaded task dependencies use test scope to keep them out of the agent classpath. -->
     <dependencies>
         <dependency>
+            <groupId>com.walmartlabs.concord.docker</groupId>
+            <artifactId>concord-ansible</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-targetplatform</artifactId>
             <version>${project.version}</version>
