@@ -82,6 +82,7 @@ public class WorkspacePolicyIT extends AbstractServerIT {
         spr = start(input);
 
         ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(), "The process must finish under the relaxed policy");
         ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello!.*", ab);
