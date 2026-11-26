@@ -1,0 +1,13 @@
+flows:
+  default:
+    - name: "outer"
+      call: "inner"
+
+  inner:
+    - block:
+        - expr: "${undefinedVariable.foo()}"
+      error:
+        - name: "handler"
+          task: "log"
+          in:
+            msg: "handled"

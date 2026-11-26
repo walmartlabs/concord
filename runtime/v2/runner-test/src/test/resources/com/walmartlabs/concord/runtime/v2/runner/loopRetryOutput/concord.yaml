@@ -1,0 +1,81 @@
+flows:
+  serial:
+    - name: "list ${item}"
+      call: work
+      in:
+        fail: true
+      out: value
+      loop:
+        mode: serial
+        items: [2, 1, 1]
+        parallelism: 2
+      retry:
+        times: 1
+        delay: 0
+        in:
+          fail: false
+
+    - log: "list output: ${value.stream().sorted().toList()}"
+
+    - name: "mapped ${item}"
+      call: work
+      in:
+        fail: true
+      out:
+        result: "${value += ':' += itemIndex}"
+      loop:
+        mode: serial
+        items: [2, 1, 1]
+        parallelism: 2
+      retry:
+        times: 1
+        delay: 0
+        in:
+          fail: false
+
+    - log: "mapped output: ${result.stream().sorted().toList()}"
+
+  parallel:
+    - name: "list ${item}"
+      call: work
+      in:
+        fail: true
+      out: value
+      loop:
+        mode: parallel
+        items: [2, 1, 1]
+        parallelism: 2
+      retry:
+        times: 1
+        delay: 0
+        in:
+          fail: false
+
+    - log: "list output: ${value.stream().sorted().toList()}"
+
+    - name: "mapped ${item}"
+      call: work
+      in:
+        fail: true
+      out:
+        result: "${value += ':' += itemIndex}"
+      loop:
+        mode: parallel
+        items: [2, 1, 1]
+        parallelism: 2
+      retry:
+        times: 1
+        delay: 0
+        in:
+          fail: false
+
+    - log: "mapped output: ${result.stream().sorted().toList()}"
+
+  work:
+    - set:
+        value: -1
+    - task: conditionallyFailTask
+      in:
+        fail: "${fail}"
+    - set:
+        value: "${item * 10}"

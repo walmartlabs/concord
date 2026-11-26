@@ -26,6 +26,7 @@ import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.EventReportingService;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ElementEventProducer;
+import com.walmartlabs.concord.runtime.v2.runner.vm.LogSegmentUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
@@ -72,6 +73,13 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         m.put("correlationId", s.getCorrelationId());
         if (threadId.id() != 0) {
             m.put("threadId", threadId.id());
+        }
+
+        // links the event to the log segment of this particular run of the step
+        // (loop iterations and retry attempts share the correlation ID)
+        Long segmentId = LogSegmentUtils.getStepSegmentId(LogSegmentUtils.getLogContext(threadId, state), s.getCorrelationId());
+        if (segmentId != null) {
+            m.put("logSegmentId", segmentId);
         }
 
         ProcessEventRequest req = new ProcessEventRequest();

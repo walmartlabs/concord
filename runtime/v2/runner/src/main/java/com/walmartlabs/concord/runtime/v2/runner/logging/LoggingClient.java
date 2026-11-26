@@ -24,5 +24,5 @@ import java.util.UUID;
 
 public interface LoggingClient {
 
-    long createSegment(UUID correlationId, String name);
+    long createSegment(UUID correlationId, String name, LogSegmentAttributes attributes);
 }

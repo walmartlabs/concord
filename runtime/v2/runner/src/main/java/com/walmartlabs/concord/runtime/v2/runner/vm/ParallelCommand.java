@@ -39,8 +39,8 @@ public class ParallelCommand extends StepCommand<ParallelBlock> implements Eleme
 
     private final List<Command> commands;
 
-    public ParallelCommand(ParallelBlock step, List<Command> commands) {
-        super(step);
+    public ParallelCommand(UUID correlationId, ParallelBlock step, List<Command> commands) {
+        super(correlationId, step);
         this.commands = commands;
     }
 

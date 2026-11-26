@@ -1,0 +1,15 @@
+flows:
+  default:
+    - name: "faulty"
+      task: log
+      in:
+        msg: "${throw('boom')}"
+      error:
+        - log: "in error block"
+        - return
+        - log: "unreachable"
+
+    - name: "after"
+      task: log
+      in:
+        msg: "after"

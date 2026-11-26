@@ -137,7 +137,8 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
      * A status marker: its body is not a part of the log.
      */
     private static boolean isStatus(Segment segment) {
-        return segment.header().status() != LogSegmentStatus.RUNNING;
+        // RUNNING log records carry text; the explicit resume marker has no body.
+        return segment.header().status() != LogSegmentStatus.RUNNING || segment.header().length() == 0;
     }
 
     /**
@@ -230,7 +231,13 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
         }
 
         if (done || errorCount > 0 || warnCount > 0) {
-            return new LogSegmentStats(status, errorCount, warnCount, statusUpdatedAt);
+            // Lifecycle notifications may carry no counters (e.g. a freshly resumed runner).
+            // Do not erase previously reported errors/warnings when only changing the status.
+            boolean lifecycle = status == LogSegmentStatus.RUNNING || status == LogSegmentStatus.SUSPENDED;
+            return new LogSegmentStats(status,
+                    lifecycle && errorCount == 0 ? null : Integer.valueOf(errorCount),
+                    lifecycle && warnCount == 0 ? null : Integer.valueOf(warnCount),
+                    statusUpdatedAt);
         }
         return null;
     }
