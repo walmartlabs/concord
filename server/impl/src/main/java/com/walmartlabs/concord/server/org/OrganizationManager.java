@@ -246,7 +246,22 @@ public class OrganizationManager {
     @WithTimer
     public OrganizationEntry assertAccess(DSLContext tx, UUID orgId, String orgName, boolean orgMembersOnly) {
         OrganizationEntry e = assertExisting(tx, orgId, orgName);
+        return assertAccess(tx, e, orgMembersOnly);
+    }
 
+    /**
+     * Asserts visibility-aware access for reading resources within an organization.
+     * Private organizations require membership, ownership, or a privileged role.
+     * Public organizations still require resource-specific authorization.
+     */
+    public OrganizationEntry assertReadAccess(UUID orgId) {
+        return orgDao.txResult(tx -> {
+            OrganizationEntry e = assertExisting(tx, orgId, null);
+            return assertAccess(tx, e, e.getVisibility() == OrganizationVisibility.PRIVATE);
+        });
+    }
+
+    private OrganizationEntry assertAccess(DSLContext tx, OrganizationEntry e, boolean orgMembersOnly) {
         if (Roles.isAdmin()) {
             // an admin can access any organization
             return e;
