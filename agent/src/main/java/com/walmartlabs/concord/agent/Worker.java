@@ -23,6 +23,7 @@ package com.walmartlabs.concord.agent;
 import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.agent.guice.AgentImportManager;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
+import com.walmartlabs.concord.agent.remote.FinalizationHeartbeat;
 import com.walmartlabs.concord.agent.remote.ProcessStatusUpdater;
 import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.common.PathUtils;
@@ -47,9 +48,10 @@ public class Worker implements Runnable {
     private final StateFetcher stateFetcher;
     private final ProcessStatusUpdater processStatusUpdater;
     private final ProcessLog processLog;
+    private final FinalizationHeartbeat heartbeat;
     private final JobRequest jobRequest;
 
-    private JobInstance jobInstance;
+    private volatile JobInstance jobInstance;
     private boolean throwOnFailure;
 
     @Inject
@@ -60,7 +62,8 @@ public class Worker implements Runnable {
                   StateFetcher stateFetcher,
                   ProcessStatusUpdater processStatusUpdater,
                   ProcessLog processLog,
-                  JobRequest jobRequest) {
+                  JobRequest jobRequest,
+                  FinalizationHeartbeat heartbeat) {
 
         this.repositoryManager = repositoryManager;
         this.importManager = importManager;
@@ -69,6 +72,7 @@ public class Worker implements Runnable {
         this.stateFetcher = stateFetcher;
         this.processStatusUpdater = processStatusUpdater;
         this.processLog = processLog;
+        this.heartbeat = heartbeat;
         this.jobRequest = jobRequest;
     }
 
@@ -78,30 +82,34 @@ public class Worker implements Runnable {
         UUID instanceId = jobRequest.getInstanceId();
 
         try {
-            // fetch the git repo's data...
-            fetchRepo(jobRequest);
-            // ...and process imports
-            processImports(jobRequest);
-            // ...and download the saved process state from the server
-            downloadState(jobRequest);
+            try {
+                // fetch the git repo's data...
+                fetchRepo(jobRequest);
+                // ...and process imports
+                processImports(jobRequest);
+                // ...and download the saved process state from the server
+                downloadState(jobRequest);
 
-            // load the process' configuration
-            ConfiguredJobRequest configuredJobRequest = ConfiguredJobRequest.from(jobRequest);
+                // load the process' configuration
+                ConfiguredJobRequest configuredJobRequest = ConfiguredJobRequest.from(jobRequest);
 
-            // execute the job
-            jobInstance = executor.exec(configuredJobRequest);
-            jobInstance.waitForCompletion();
+                // execute the job
+                jobInstance = executor.exec(configuredJobRequest);
+                jobInstance.waitForCompletion();
 
-            // successful completion
-            log.info("run -> done with {}", configuredJobRequest);
+                // successful completion
+                log.info("run -> done with {}", configuredJobRequest);
+            } catch (Throwable e) {
+                // unwrap the exception if needed
+                Throwable t = unwrap(e);
+
+                // handle any error during the startup or the execution
+                handleError(instanceId, t);
+                return;
+            }
             onStatusChange(instanceId, StatusEnum.FINISHED);
-        } catch (Throwable e) {
-            // unwrap the exception if needed
-            Throwable t = unwrap(e);
-
-            // handle any error during the startup or the execution
-            handleError(instanceId, t);
         } finally {
+            heartbeat.close();
             Path payloadDir = jobRequest.getPayloadDir();
             try {
                 log.info("exec ['{}'] -> removing the payload directory: {}", instanceId, payloadDir);
@@ -146,6 +154,10 @@ public class Worker implements Runnable {
     }
 
     private void onStatusChange(UUID instanceId, StatusEnum status) {
+        heartbeat.close();
+        if (jobInstance != null && jobInstance.isCancelled()) {
+            status = StatusEnum.CANCELLED;
+        }
         try {
             processStatusUpdater.update(instanceId, status);
         } finally {

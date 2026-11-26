@@ -53,6 +53,8 @@ public class AgentConfiguration {
 
     private final Path logDir;
     private final long logMaxDelay;
+    private final Duration logDrainTimeout;
+    private final Duration attachmentsUploadTimeout;
     private final boolean workDirMasking;
 
     private final int workersCount;
@@ -82,6 +84,8 @@ public class AgentConfiguration {
 
         this.logDir = getOrCreatePath(cfg, "logDir");
         this.logMaxDelay = cfg.getDuration("logMaxDelay", TimeUnit.MILLISECONDS);
+        this.logDrainTimeout = Utils.getTimeout(cfg, "logDrainTimeout", Duration.ofMinutes(1));
+        this.attachmentsUploadTimeout = Utils.getTimeout(cfg, "attachmentsUploadTimeout", Duration.ofMinutes(5));
         this.workDirMasking = cfg.getBoolean("workDirMasking");
 
         this.workersCount = cfg.getInt("workersCount");
@@ -136,6 +140,14 @@ public class AgentConfiguration {
 
     public long getLogMaxDelay() {
         return logMaxDelay;
+    }
+
+    public Duration getLogDrainTimeout() {
+        return logDrainTimeout;
+    }
+
+    public Duration getAttachmentsUploadTimeout() {
+        return attachmentsUploadTimeout;
     }
 
     public boolean isWorkDirMaskings() {

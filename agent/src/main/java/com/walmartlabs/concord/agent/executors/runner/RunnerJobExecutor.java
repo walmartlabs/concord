@@ -36,6 +36,8 @@ import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
+import com.walmartlabs.concord.agent.remote.FinalizationHeartbeat;
+import com.walmartlabs.concord.agent.remote.RemoteOperations;
 import com.walmartlabs.concord.common.PathUtils;
 import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
@@ -89,6 +91,7 @@ public class RunnerJobExecutor implements JobExecutor {
     private final ProcessPool processPool;
     private final ProcessLogFactory logFactory;
     private final ExecutorService executor;
+    private final FinalizationHeartbeat heartbeat;
 
     private final ObjectMapper objectMapper;
 
@@ -100,7 +103,8 @@ public class RunnerJobExecutor implements JobExecutor {
                              AttachmentsUploader attachmentsUploader,
                              ProcessPool processPool,
                              ProcessLogFactory processLogFactory,
-                             ExecutorService executor) {
+                             ExecutorService executor,
+                             FinalizationHeartbeat heartbeat) {
 
         this.cfg = cfg;
         this.dependencyManager = dependencyManager;
@@ -109,6 +113,7 @@ public class RunnerJobExecutor implements JobExecutor {
         this.processPool = processPool;
         this.logFactory = processLogFactory;
         this.executor = executor;
+        this.heartbeat = heartbeat;
 
         // sort JSON keys for consistency
         this.objectMapper = new ObjectMapper()
@@ -305,39 +310,50 @@ public class RunnerJobExecutor implements JobExecutor {
         UUID instanceId = job.getInstanceId();
         ProcessLog processLog = job.getLog();
 
-        // start the log's maintenance thread (e.g. streaming to the server)
-        LogStream logStream = new LogStream(job, proc);
-        logStream.start();
+        try (RunnerLogStream logStream = new RunnerLogStream(instanceId, job.getLog(), cfg.logDrainTimeout())) {
+            proc.onExit().thenRun(heartbeat::start);
 
-        try {
-            // save the process' log
-            processLog.log(proc.getInputStream());
+            try (InputStream stdout = new ProcessOutputInputStream(proc)) {
+                processLog.log(stdout);
+            }
 
-            // wait for the process to finish
             int code;
             try {
                 code = proc.waitFor();
-            } catch (Exception e) {
-                // wait for the log to finish
-                logStream.waitForCompletion();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 handleError(job, proc, e.getMessage());
-                throw new ExecutionException("Error while executing a job: " + e.getMessage());
+                throw new ExecutionException("Interrupted while executing a job", e);
             }
 
-            // wait for the log to finish
-            logStream.waitForCompletion();
+            heartbeat.start();
+            String logFailure = logStream.finish();
+            // Diagnostics are best effort too: a stalled warning must not prevent saving state.
+            try {
+                RemoteOperations.call(Duration.ofSeconds(5), () -> {
+                    if (logFailure != null) {
+                        processLog.warn("Not all process logs were delivered: {}. Unprocessed local bytes: {}",
+                                logFailure, job.getLog().remainingBytes());
+                    }
+                    if (code != 0) {
+                        handleError(job, proc, "Process exit code: " + code);
+                    } else {
+                        processLog.info("Process finished with: {}", code);
+                    }
+                    return null;
+                });
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw e;
+            } catch (Exception e) {
+                log.warn("exec ['{}'] -> final log message failed; continuing post-processing", instanceId, e);
+            }
 
             if (code != 0) {
                 log.warn("exec ['{}'] -> finished with {}", instanceId, code);
-                handleError(job, proc, "Process exit code: " + code);
                 throw new ExecutionException("Error while executing a job, process exit code: " + code);
             }
-
             log.info("exec ['{}'] -> finished with {}", instanceId, code);
-            processLog.info("Process finished with: {}", code);
-        } finally {
-            // wait for the log to finish
-            logStream.waitForCompletion();
         }
     }
 
@@ -688,51 +704,6 @@ public class RunnerJobExecutor implements JobExecutor {
         }
     }
 
-    /**
-     * A tiny wrapper to simplify working with the log streaming.
-     */
-    private class LogStream {
-
-        private final RunnerJob job;
-        private final Process proc;
-
-        private Future<?> f;
-        private transient boolean doStop = false;
-
-        private LogStream(RunnerJob job, Process proc) {
-            this.job = job;
-            this.proc = proc;
-        }
-
-        /**
-         * Starts the log streaming in a separate thread.
-         */
-        public void start() {
-            RunnerLog processLog = job.getLog();
-
-            f = executor.submit(() -> {
-                try {
-                    processLog.run(() -> doStop);
-                } catch (Exception e) {
-                    handleError(job, proc, e.getMessage());
-                }
-            });
-        }
-
-        /**
-         * Waits for the log stream to finish and removes the log file.
-         */
-        public void waitForCompletion() {
-            this.doStop = true;
-
-            try {
-                f.get(1, TimeUnit.MINUTES);
-            } catch (Exception e) {
-                log.warn("waitForCompletion -> timeout waiting for the log stream of {}", job.getInstanceId());
-            }
-        }
-    }
-
     private static void writeInstanceId(UUID instanceId, Path dst) throws IOException {
         Path idPath = dst.resolve(Constants.Files.INSTANCE_ID_FILE_NAME);
         Files.write(idPath, instanceId.toString().getBytes(), StandardOpenOption.CREATE, StandardOpenOption.SYNC);
@@ -783,6 +754,11 @@ public class RunnerJobExecutor implements JobExecutor {
 
         long maxHeartbeatInterval();
 
+        @Value.Default
+        default Duration logDrainTimeout() {
+            return Duration.ofMinutes(1);
+        }
+
         @Nullable
         Path persistentWorkDir();
 
@@ -801,7 +777,7 @@ public class RunnerJobExecutor implements JobExecutor {
         private final Process proc;
         private final boolean cleanRunnerDescendants;
 
-        private transient boolean cancelled = false;
+        private volatile boolean cancelled = false;
 
         private JobInstanceImpl(Future<?> f, Process proc, boolean cleanRunnerDescendants) {
             this.f = f;
@@ -816,11 +792,11 @@ public class RunnerJobExecutor implements JobExecutor {
 
         @Override
         public void cancel() {
+            // Cancellation also applies after runner/post-processing exit, until Worker reports the status.
+            cancelled = true;
             if (f.isCancelled() || f.isDone()) {
                 return;
             }
-
-            cancelled = true;
 
             Utils.kill(proc, cleanRunnerDescendants);
         }
