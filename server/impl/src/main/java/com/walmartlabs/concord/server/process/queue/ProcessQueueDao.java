@@ -295,31 +295,29 @@ public class ProcessQueueDao extends AbstractDao {
         return i == 1;
     }
 
-    public List<ProcessKey> updateStatus(List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
-        return txResult(tx -> {
-            List<UUID> instanceIds = processKeys.stream()
-                    .map(PartialProcessKey::getInstanceId)
+    public List<ProcessKey> updateStatus(DSLContext tx, List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
+        List<UUID> instanceIds = processKeys.stream()
+                .map(PartialProcessKey::getInstanceId)
+                .collect(Collectors.toList());
+
+        UpdateConditionStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
+                .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
+                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
+                .set(PROCESS_QUEUE.LAST_RUN_AT, createRunningAtValue(status))
+                .where(PROCESS_QUEUE.INSTANCE_ID.in(instanceIds));
+
+        if (expected != null) {
+            List<String> l = expected.stream()
+                    .map(Enum::toString)
                     .collect(Collectors.toList());
 
-            UpdateConditionStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
-                    .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
-                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
-                    .set(PROCESS_QUEUE.LAST_RUN_AT, createRunningAtValue(status))
-                    .where(PROCESS_QUEUE.INSTANCE_ID.in(instanceIds));
+            q.and(PROCESS_QUEUE.CURRENT_STATUS.in(l));
+        }
 
-            if (expected != null) {
-                List<String> l = expected.stream()
-                        .map(Enum::toString)
-                        .collect(Collectors.toList());
-
-                q.and(PROCESS_QUEUE.CURRENT_STATUS.in(l));
-            }
-
-            return q.returningResult(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT)
-                    .fetch().stream()
-                    .map(r -> new ProcessKey(r.value1(), r.value2()))
-                    .collect(Collectors.toList());
-        });
+        return q.returningResult(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT)
+                .fetch().stream()
+                .map(r -> new ProcessKey(r.value1(), r.value2()))
+                .collect(Collectors.toList());
     }
 
     public boolean updateMeta(ProcessKey processKey, Map<String, Object> meta) {
