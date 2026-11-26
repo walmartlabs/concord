@@ -56,3 +56,16 @@ export const getProcessCard = (
     fetchJson(
         `/api/v1/processcard/${cardId}`
     );
+
+export const getProcessCardData = (cardId: ConcordId): Promise<Record<string, unknown>> =>
+    fetchJson(`/api/v1/processcard/${cardId}/data`);
+
+export const startProcessCard = (
+    cardId: ConcordId,
+    args: Record<string, unknown>
+): Promise<{ instanceId: ConcordId }> =>
+    fetchJson(`/api/v1/processcard/${cardId}/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(args),
+    });
